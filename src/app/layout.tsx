@@ -7,8 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Business Mantra",
-  description: "One stop for your business needs",
+  title: "Dehix",
+  description: "Freelancer platform",
 };
 
 export default function RootLayout({
