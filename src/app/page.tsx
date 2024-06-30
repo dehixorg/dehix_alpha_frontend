@@ -18,6 +18,12 @@ import AboutFreelancingPlatform from "./home/about/page";
 import Portfolio from "./home/portfolio/page";
 import Question from "./home/ques/page";
 import ContactForm from "./home/contact/page";
+import { Button } from "@/components/ui/button";
+import Testimonials from "./home/testimonial/page";
+import AboutFreelancingPlatform from "./home/about/page";
+import Portfolio from "./home/portfolio/page";
+import Question from "./home/ques/page";
+import ContactForm from "./home/contact/page";
 
 const HomePage = () => {
   return (
@@ -31,11 +37,31 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      <div className="min-h-screen container text-center mx-auto px-4 py-16">
-        <h1 className="text-5xl text-bold font-extrabold tracking-tight lg:text-5xl">Welcome to Our Business Platform</h1>
-        <p className="mb-16 mt-6 text-gray-500 text-xl text-muted-foreground">
-          Manage your business with our comprehensive suite of applications.
+      <div className="container text-center mx-auto px-4 py-16">
+      <div className="container text-center max-w-2xl mx-auto px-4 py-16">
+        <h1 className="text-5xl text-bold">Unlock Your Freelancing Potential</h1>
+        <p className="mb-16 mt-6 text-gray-500">
+          Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
         </p>
+        <Button>Get Start</Button>
+        </div>
+
+        <section className="about-section">
+          <AboutFreelancingPlatform/>
+        </section>
+        <section className="testimonials-section">
+          <Testimonials />
+        </section>
+        <section className="portfolio-section">
+            <Portfolio/>
+        </section>
+        <section className="ques-section">
+           <Question/>
+        </section>
+        <section className="contact-section">
+           <ContactForm/>
+        </section>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {services.map(({ title, icon, description }) => (
             <IconCard
