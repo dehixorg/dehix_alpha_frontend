@@ -23,7 +23,7 @@ export const IconCard: React.FC<
       <Tooltip>
         <TooltipTrigger asChild>
           <div>
-            <Card className="items-center justify-center text-center p-5 mb-3">
+            <Card className="items-center justify-center text-center p-5 mb-3 shadow-2xl transform transition-transform duration-300 hover:scale-105">
               {icon}
             </Card>
             <div className="flex">

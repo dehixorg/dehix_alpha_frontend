@@ -25,9 +25,9 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      <div className="container text-center mx-auto px-4 py-16">
-        <h1 className="text-5xl text-bold">Welcome to Our Business Platform</h1>
-        <p className="mb-16 mt-6 text-gray-500">
+      <div className="min-h-screen container text-center mx-auto px-4 py-16 bg-slate-950">
+        <h1 className="text-5xl text-bold font-extrabold tracking-tight lg:text-5xl">Welcome to Our Business Platform</h1>
+        <p className="mb-16 mt-6 text-gray-500 text-xl text-muted-foreground">
           Manage your business with our comprehensive suite of applications.
         </p>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
