@@ -1,7 +1,12 @@
 "use client";
 import React, { useState } from 'react';
 
-const Question = ({ question, answer }) => {
+interface QuestionProps {
+  question: string;
+  answer: string;
+}
+
+const Question: React.FC<QuestionProps> = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggle = () => setIsOpen(!isOpen);
@@ -15,7 +20,7 @@ const Question = ({ question, answer }) => {
           aria-expanded={isOpen}
           data-state={isOpen ? 'open' : 'closed'}
           className="flex w-[700px] items-center justify-between rounded-lg bg-[#1a1a1a] px-6 py-4"
-          onClick={toggle} // <-- Ensure the onClick event is here
+          onClick={toggle}
         >
           <h3 className="text-lg font-bold text-[#00ffff]">{question}</h3>
           <svg
@@ -30,7 +35,7 @@ const Question = ({ question, answer }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="m6 9 6 6 6-6" />
+            <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
         {isOpen && (
@@ -47,7 +52,7 @@ const Question = ({ question, answer }) => {
   );
 };
 
-const Faq = () => {
+const Faq: React.FC = () => {
   const faqData = [
     {
       question: "How do I hire a freelancer?",
