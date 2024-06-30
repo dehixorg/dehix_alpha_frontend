@@ -12,6 +12,12 @@ import { IconCard } from "../components/shared/iconCard";
 import { NavMenu } from "../components/navbar";
 import { Search } from "../components/search";
 import { UserNav } from "../components/userNav";
+import { Button } from "@/components/ui/button";
+import Testimonials from "./home/testimonial/page";
+import AboutFreelancingPlatform from "./home/about/page";
+import Portfolio from "./home/portfolio/page";
+import Question from "./home/ques/page";
+import ContactForm from "./home/contact/page";
 
 const HomePage = () => {
   return (
