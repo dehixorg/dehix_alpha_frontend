@@ -18,12 +18,8 @@ import AboutFreelancingPlatform from "./home/about/page";
 import Portfolio from "./home/portfolio/page";
 import Question from "./home/ques/page";
 import ContactForm from "./home/contact/page";
-import { Button } from "@/components/ui/button";
-import Testimonials from "./home/testimonial/page";
-import AboutFreelancingPlatform from "./home/about/page";
-import Portfolio from "./home/portfolio/page";
-import Question from "./home/ques/page";
-import ContactForm from "./home/contact/page";
+import ProjectCard from "@/dashboard/card/page";
+import Footer from "./home/footer/page";
 
 const HomePage = () => {
   return (
@@ -61,67 +57,28 @@ const HomePage = () => {
         <section className="contact-section">
            <ContactForm/>
         </section>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {services.map(({ title, icon, description }) => (
-            <IconCard
-              title={title}
-              icon={icon}
-              description={description}
-              key={title}
-            />
-          ))}
-        </div>
+        
+       <section className="card-section">
+       <div>
+      <ProjectCard
+        title="Pending Projects"
+        content="This is a list of pending projects"
+        buttonText="View All"
+        padding="p-6"
+      />
+      <ProjectCard
+        title="Completed Projects"
+        content="This is a list of completed projects"
+        buttonText="See More"
+        padding="p-4"
+      />
+    </div>
+       </section>
+       <section className="footer-section">
+          <Footer/>
+        </section>
       </div>
     </>
   );
 };
-
-const services = [
-  {
-    title: "ESS",
-    description: "Manage employee self-service requests",
-    icon: <User size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Ticket",
-    description: "Track and manage customer support tickets",
-    icon: <Ticket size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "CRM",
-    description: "Manage customer relationships and sales data",
-    icon: <Home size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Website Builder",
-    description: "Create a professional website for your business",
-    icon: <Laptop size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "E-commerce",
-    description: "Sell products online with our e-commerce platform",
-    icon: (
-      <ShoppingCart size={48} className="text-black dark:text-white m-auto" />
-    ),
-  },
-  {
-    title: "Accounting",
-    description: "Manage your finances with our accounting software",
-    icon: (
-      <CreditCard size={48} className="text-black dark:text-white m-auto" />
-    ),
-  },
-  {
-    title: "Inventory",
-    description: "Track inventory levels and automate your supply chain",
-    icon: <Box size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Project",
-    description:
-      "Manage projects and tasks with our project management software",
-    icon: <Check size={48} className="text-black dark:text-white m-auto" />,
-  },
-];
 export default HomePage;
