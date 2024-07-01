@@ -21,6 +21,24 @@ import ContactForm from "./home/contact/page";
 import ProjectCard from "@/dashboard/card/page";
 import Footer from "./home/footer/page";
 
+const portfolioItems = [
+  {
+    image: "/placeholder.svg",
+    title: "Project Title 1",
+    description: "A brief description of the project.",
+  },
+  {
+    image: "/placeholder.svg",
+    title: "Project Title 2",
+    description: "A brief description of the project.",
+  },
+  {
+    image: "/portfolio.jpg",
+    title: "Project Title 3",
+    description: "A brief description of the project.",
+  },
+];
+
 const HomePage = () => {
   return (
     <>
@@ -49,7 +67,7 @@ const HomePage = () => {
           <Testimonials />
         </section>
         <section className="portfolio-section">
-            <Portfolio/>
+        <Portfolio items={portfolioItems} />
         </section>
         <section className="ques-section">
            <Question/>
@@ -59,18 +77,18 @@ const HomePage = () => {
         </section>
         
        <section className="card-section">
-       <div>
+       <div className="flex justify-center items-center space-x-2">
       <ProjectCard
         title="Pending Projects"
         content="This is a list of pending projects"
         buttonText="View All"
-        padding="p-6"
+      
       />
       <ProjectCard
         title="Completed Projects"
         content="This is a list of completed projects"
         buttonText="See More"
-        padding="p-4"
+      
       />
     </div>
        </section>
