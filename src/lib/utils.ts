@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, UserCredential } from "firebase/auth";
 import { auth } from "@/config/firebaseConfig";
 
 export function cn(...inputs: ClassValue[]) {
@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const loginUser = async (email:string, password:string) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(
+    const userCredential:UserCredential = await signInWithEmailAndPassword(
       auth,
       email,
       password

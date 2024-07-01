@@ -18,6 +18,8 @@ import AboutFreelancingPlatform from "./home/about/page";
 import Portfolio from "./home/portfolio/page";
 import Question from "./home/ques/page";
 import ContactForm from "./home/contact/page";
+import ProjectCard from "@/dashboard/card/page";
+import Footer from "./home/footer/page";
 
 const HomePage = () => {
   return (
@@ -31,71 +33,52 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      <div className="min-h-screen container text-center mx-auto px-4 py-16">
-        <h1 className="text-5xl text-bold font-extrabold tracking-tight lg:text-5xl">Welcome to Our Business Platform</h1>
-        <p className="mb-16 mt-6 text-gray-500 text-xl text-muted-foreground">
-          Manage your business with our comprehensive suite of applications.
+      <div className="container text-center mx-auto px-4 py-16">
+      <div className="container text-center max-w-2xl mx-auto px-4 py-16">
+        <h1 className="text-5xl text-bold">Unlock Your Freelancing Potential</h1>
+        <p className="mb-16 mt-6 text-gray-500">
+          Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
         </p>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-          {services.map(({ title, icon, description }) => (
-            <IconCard
-              title={title}
-              icon={icon}
-              description={description}
-              key={title}
-            />
-          ))}
+        <Button>Get Start</Button>
         </div>
+
+        <section className="about-section">
+          <AboutFreelancingPlatform/>
+        </section>
+        <section className="testimonials-section">
+          <Testimonials />
+        </section>
+        <section className="portfolio-section">
+            <Portfolio/>
+        </section>
+        <section className="ques-section">
+           <Question/>
+        </section>
+        <section className="contact-section">
+           <ContactForm/>
+        </section>
+        
+       <section className="card-section">
+       <div>
+      <ProjectCard
+        title="Pending Projects"
+        content="This is a list of pending projects"
+        buttonText="View All"
+        padding="p-6"
+      />
+      <ProjectCard
+        title="Completed Projects"
+        content="This is a list of completed projects"
+        buttonText="See More"
+        padding="p-4"
+      />
+    </div>
+       </section>
+       <section className="footer-section">
+          <Footer/>
+        </section>
       </div>
     </>
   );
 };
-
-const services = [
-  {
-    title: "ESS",
-    description: "Manage employee self-service requests",
-    icon: <User size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Ticket",
-    description: "Track and manage customer support tickets",
-    icon: <Ticket size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "CRM",
-    description: "Manage customer relationships and sales data",
-    icon: <Home size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Website Builder",
-    description: "Create a professional website for your business",
-    icon: <Laptop size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "E-commerce",
-    description: "Sell products online with our e-commerce platform",
-    icon: (
-      <ShoppingCart size={48} className="text-black dark:text-white m-auto" />
-    ),
-  },
-  {
-    title: "Accounting",
-    description: "Manage your finances with our accounting software",
-    icon: (
-      <CreditCard size={48} className="text-black dark:text-white m-auto" />
-    ),
-  },
-  {
-    title: "Inventory",
-    description: "Track inventory levels and automate your supply chain",
-    icon: <Box size={48} className="text-black dark:text-white m-auto" />,
-  },
-  {
-    title: "Project",
-    description:
-      "Manage projects and tasks with our project management software",
-    icon: <Check size={48} className="text-black dark:text-white m-auto" />,
-  },
-];
 export default HomePage;
