@@ -12,6 +12,7 @@ import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC__API_KEY,
   authDomain: process.env.NEXT_PUBLIC__AUTH_DOMAIN,
+  databaseURL: process.env.NEXT_PUBLIC__DATABASE_URL,
   projectId: process.env.NEXT_PUBLIC__PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC__STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC__MESSAGING_SENDER_ID,
