@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/shared/themeToggle";
 import { LoaderCircle, Chrome, Key } from "lucide-react";
 import { loginUser } from "@/lib/utils";
+import { UserCredential } from "firebase/auth";
 
 export default function Login() {
   const router = useRouter();
@@ -18,13 +19,17 @@ export default function Login() {
   const [email, setEmail] = useState<string>("");
   const [pass, setPass] = useState<string>("");
 
-  const handleLogin = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const userCredential = await loginUser(email, pass);
-      console.log("Bearer " + userCredential.user.accessToken);
+      const userCredential:UserCredential = await loginUser(email, pass);
+      const user = userCredential.user;
+
+      // Get the ID token
+      const accessToken = await user.getIdToken();
+      console.log("Bearer " + accessToken);
       console.log("User ID " + userCredential.user.uid);
       // authtoken(userCredential.user.accessToken, userCredential.user.uid);
       router.replace("/auth/sign-up");
