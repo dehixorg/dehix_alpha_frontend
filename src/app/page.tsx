@@ -52,51 +52,49 @@ const HomePage = () => {
         </div>
       </div>
       <div className="container text-center mx-auto px-4 py-16">
-      <div className="container text-center max-w-2xl mx-auto px-4 py-16">
-        <h1 className="text-5xl text-bold">Unlock Your Freelancing Potential</h1>
-        <p className="mb-16 mt-6 text-gray-500">
-          Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
-        </p>
-        <Button>Get Start</Button>
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-5xl font-bold">Unlock Your Freelancing Potential</h1>
+          <p className="mb-16 mt-6 text-gray-500">
+            Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
+          </p>
+          <Button>Get Started</Button>
         </div>
 
         <section className="about-section">
-          <AboutFreelancingPlatform/>
+          <AboutFreelancingPlatform />
         </section>
         <section className="testimonials-section">
           <Testimonials />
         </section>
         <section className="portfolio-section">
-        <Portfolio items={portfolioItems} />
+          <Portfolio items={portfolioItems} />
         </section>
         <section className="ques-section">
-           <Question/>
+          <Question />
         </section>
         <section className="contact-section">
-           <ContactForm/>
+          <ContactForm />
         </section>
-        
-       <section className="card-section">
-       <div className="flex justify-center items-center space-x-2">
-      <ProjectCard
-        title="Pending Projects"
-        content="This is a list of pending projects"
-        buttonText="View All"
-      
-      />
-      <ProjectCard
-        title="Completed Projects"
-        content="This is a list of completed projects"
-        buttonText="See More"
-      
-      />
-    </div>
-       </section>
-       <section className="footer-section">
-          <Footer/>
+        <section className="card-section">
+          <div className="flex justify-center items-center space-x-2">
+            <ProjectCard
+              title="Pending Projects"
+              content="This is a list of pending projects"
+              buttonText="View All"
+            />
+            <ProjectCard
+              title="Completed Projects"
+              content="This is a list of completed projects"
+              buttonText="See More"
+            />
+          </div>
+        </section>
+        <section className="footer-section">
+          <Footer />
         </section>
       </div>
     </>
   );
 };
+
 export default HomePage;

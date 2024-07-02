@@ -13,7 +13,7 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ items }) => {
   return (
     <div className="container max-w-3xl mx-auto text-center">
-      <h2 className="text-2xl font-bold text-[#00ffff] sm:text-3xl">
+      <h2 className="text-2xl font-bold text-cyan-500 sm:text-3xl">
         Our Portfolio
       </h2>
       <div className="grid grid-cols-1 gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -25,10 +25,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ items }) => {
               height={300}
               src={item.image}
               width={400}
-              style={{ aspectRatio: "400/300", objectFit: "cover" }}
+              style={{ objectFit: "cover" }}
             />
-            <div className="bg-[#1a1a1a] p-4">
-              <h3 className="text-xl font-bold text-[#00ffff]">{item.title}</h3>
+            <div className="bg-gray-900 p-4">
+              <h3 className="text-xl font-bold text-cyan-500">{item.title}</h3>
               <p className="mt-2 text-base text-white">{item.description}</p>
             </div>
           </div>
