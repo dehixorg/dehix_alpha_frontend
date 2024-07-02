@@ -15,11 +15,29 @@ import { UserNav } from "../components/userNav";
 import { Button } from "@/components/ui/button";
 import Testimonials from "./home/testimonial/page";
 import AboutFreelancingPlatform from "./home/about/page";
-import Portfolio from "./home/portfolio/page";
-import Question from "./home/ques/page";
+import Portfolio from "../components/home-comp/portfolio/page";
+import Question from "../components/home-comp/ques/page";
 import ContactForm from "./home/contact/page";
-import ProjectCard from "@/dashboard/card/page";
+import ProjectCard from "@/components/dash-comp/card/page";
 import Footer from "./home/footer/page";
+
+const portfolioItems = [
+  {
+    image: "/placeholder.svg",
+    title: "Project Title 1",
+    description: "A brief description of the project.",
+  },
+  {
+    image: "/placeholder.svg",
+    title: "Project Title 2",
+    description: "A brief description of the project.",
+  },
+  {
+    image: "/portfolio.jpg",
+    title: "Project Title 3",
+    description: "A brief description of the project.",
+  },
+];
 
 const HomePage = () => {
   return (
@@ -34,51 +52,49 @@ const HomePage = () => {
         </div>
       </div>
       <div className="container text-center mx-auto px-4 py-16">
-      <div className="container text-center max-w-2xl mx-auto px-4 py-16">
-        <h1 className="text-5xl text-bold">Unlock Your Freelancing Potential</h1>
-        <p className="mb-16 mt-6 text-gray-500">
-          Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
-        </p>
-        <Button>Get Start</Button>
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-5xl font-bold">Unlock Your Freelancing Potential</h1>
+          <p className="mb-16 mt-6 text-gray-500">
+            Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
+          </p>
+          <Button>Get Started</Button>
         </div>
 
         <section className="about-section">
-          <AboutFreelancingPlatform/>
+          <AboutFreelancingPlatform />
         </section>
         <section className="testimonials-section">
           <Testimonials />
         </section>
         <section className="portfolio-section">
-            <Portfolio/>
+          <Portfolio items={portfolioItems} />
         </section>
         <section className="ques-section">
-           <Question/>
+          <Question />
         </section>
         <section className="contact-section">
-           <ContactForm/>
+          <ContactForm />
         </section>
-        
-       <section className="card-section">
-       <div>
-      <ProjectCard
-        title="Pending Projects"
-        content="This is a list of pending projects"
-        buttonText="View All"
-        padding="p-6"
-      />
-      <ProjectCard
-        title="Completed Projects"
-        content="This is a list of completed projects"
-        buttonText="See More"
-        padding="p-4"
-      />
-    </div>
-       </section>
-       <section className="footer-section">
-          <Footer/>
+        <section className="card-section">
+          <div className="flex justify-center items-center space-x-2">
+            <ProjectCard
+              title="Pending Projects"
+              content="This is a list of pending projects"
+              buttonText="View All"
+            />
+            <ProjectCard
+              title="Completed Projects"
+              content="This is a list of completed projects"
+              buttonText="See More"
+            />
+          </div>
+        </section>
+        <section className="footer-section">
+          <Footer />
         </section>
       </div>
     </>
   );
 };
+
 export default HomePage;
