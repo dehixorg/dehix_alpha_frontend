@@ -15,10 +15,10 @@ import { UserNav } from "../components/userNav";
 import { Button } from "@/components/ui/button";
 import Testimonials from "./home/testimonial/page";
 import AboutFreelancingPlatform from "./home/about/page";
-import Portfolio from "./home/portfolio/page";
-import Question from "./home/ques/page";
+import Portfolio from "../components/home-comp/portfolio/page";
+import Question from "../components/home-comp/ques/page";
 import ContactForm from "./home/contact/page";
-import ProjectCard from "@/dashboard/card/page";
+import ProjectCard from "@/components/dash-comp/card/page";
 import Footer from "./home/footer/page";
 
 const portfolioItems = [

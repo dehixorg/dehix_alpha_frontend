@@ -1,5 +1,5 @@
 import React from 'react';
-import PersonalInfoCard from './oracle/page';
+import PersonalInfoCard from '../../components/dash-comp/oracle/page';
 
 const userData = [
   {

@@ -1,6 +1,6 @@
 import React from "react";
-import ProfileCard from "../profilecard/page";
-import ProjectCard from "@/dashboard/card/page";
+import ProfileCard from "../../../components/dash-comp/profilecard/page";
+import ProjectCard from "@/components/dash-comp/card/page";
 
 
   const App = () => {
