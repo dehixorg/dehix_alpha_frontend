@@ -14,8 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const formSchema = z.object({
-  firstName: z.string().nonempty("First name is required"),
-  lastName: z.string().nonempty("Last name is required"),
+  fullName: z.string().nonempty("Full name is required"),
   mobileNumber: z.string().nonempty("Mobile number is required"),
   emailAddress: z.string().email("Invalid email address"),
   username: z.string().nonempty("Username is required"),
@@ -26,12 +25,11 @@ const formSchema = z.object({
 
 type FormSchema = z.infer<typeof formSchema>;
 
-export default function Home() {
+export default function DetailForm() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      fullName: "",
       mobileNumber: "",
       emailAddress: "",
       username: "",
@@ -46,33 +44,21 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+    <main className="flex min-h-screen items-center justify-center p-24">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
-          className="max-w-md w-full flex flex-col gap-4"
+          className="max-w-md w-full grid gap-4"
+          style={{ gridTemplateColumns: "1fr 1fr" }}
         >
           <FormField
             control={form.control}
-            name="firstName"
+            name="fullName"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">First Name</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="First name" type="text" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Last Name</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Last name" type="text" {...field} />
+              <FormItem className="col-span-2">
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Full name" type="text" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -82,10 +68,10 @@ export default function Home() {
             control={form.control}
             name="mobileNumber"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Mobile Number</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Mobile number" type="text" {...field} />
+              <FormItem>
+                <FormLabel>Mobile Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="Mobile number" type="text" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -95,10 +81,10 @@ export default function Home() {
             control={form.control}
             name="emailAddress"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Email Address</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Email address" type="email" {...field} />
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Email address" type="email" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -108,10 +94,10 @@ export default function Home() {
             control={form.control}
             name="username"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Username</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Username" type="text" {...field} />
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="Username" type="text" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,10 +107,10 @@ export default function Home() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Password</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Password" type="password" {...field} />
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="Password" type="password" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -134,10 +120,10 @@ export default function Home() {
             control={form.control}
             name="github"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">GitHub</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="GitHub username" type="text" {...field} />
+              <FormItem>
+                <FormLabel>GitHub</FormLabel>
+                <FormControl>
+                  <Input placeholder="GitHub username" type="text" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,17 +133,17 @@ export default function Home() {
             control={form.control}
             name="instagram"
             render={({ field }) => (
-              <FormItem className="flex items-center gap-4">
-                <FormLabel className="w-1/3">Instagram (optional)</FormLabel>
-                <FormControl className="w-2/3">
-                  <Input placeholder="Instagram username" type="text" {...field} />
+              <FormItem>
+                <FormLabel>Instagram (optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Instagram username" type="text" {...field} className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full mt-4">
-            Done
+          <Button type="submit" className="w-full col-span-2">
+            Submit
           </Button>
         </form>
       </Form>
