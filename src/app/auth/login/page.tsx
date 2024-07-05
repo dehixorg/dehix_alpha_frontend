@@ -12,9 +12,12 @@ import { ThemeToggle } from "@/components/shared/themeToggle";
 import { LoaderCircle, Chrome, Key } from "lucide-react";
 import { loginUser } from "@/lib/utils";
 import { UserCredential } from "firebase/auth";
+import { useDispatch } from 'react-redux';
+import { setUser } from '@/lib/userSlice';
 
 export default function Login() {
   const router = useRouter();
+  const dispatch = useDispatch()
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [pass, setPass] = useState<string>("");
@@ -31,8 +34,8 @@ export default function Login() {
       const accessToken = await user.getIdToken();
       console.log("Bearer " + accessToken);
       console.log("User ID " + userCredential.user.uid);
-      // authtoken(userCredential.user.accessToken, userCredential.user.uid);
-      router.replace("/auth/sign-up");
+      dispatch(setUser(userCredential.user));
+      router.replace("/dashboard");
     } catch (error: any) {
       // Optionally handle error based on its type
       setIsLoading(false);
