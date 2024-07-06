@@ -1,26 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/shared/datePicker";
 import { LoaderCircle, Rocket } from "lucide-react";
+import axiosInstance from "@/lib/axiosinstance";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@radix-ui/react-toast";
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
+    const toast = useToast();
 
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
+    const formData = {
+      firstName: (document.getElementById("first-name") as HTMLInputElement)
+        .value,
+      lastName: (document.getElementById("last-name") as HTMLInputElement)
+        .value,
+      email: (document.getElementById("email") as HTMLInputElement).value,
+      phone: (document.getElementById("phone") as HTMLInputElement).value,
+      userName: (document.getElementById("username") as HTMLInputElement).value,
+      githubLink: (document.getElementById("github") as HTMLInputElement).value,
+      linkedin: (document.getElementById("linkedin") as HTMLInputElement).value,
+      personalWebsite: (
+        document.getElementById("personalWebsite") as HTMLInputElement
+      ).value,
+      perHourPrice: (
+        document.getElementById("perHourPrice") as HTMLInputElement
+      ).value,
+      resume: (document.getElementById("resume") as HTMLInputElement).value,
+      password: (document.getElementById("password") as HTMLInputElement).value,
+      dob: "2024-07-06T20:12:22.047Z",
+      workExperience: (
+        document.getElementById("workExperience") as HTMLInputElement
+      ).value,
+      connects: 0,
+      professionalInfo: [],
+      skills: [],
+      education: [],
+      role: "freelancer",
+      projects: {},
+      isFreelancer: true,
+      refer: {
+        name: "string",
+        contact: "string",
+      },
+      consultant: {
+      },
+      pendingProject: [],
+      rejectedProject: [],
+      acceptedProject: [],
+      oracleProject: [],
+      userDataForVerification: [],
+      interviewsAligned: [],
+      oracleStatus: "notApplied",
+    };
+
+    try {
+        const response = await axiosInstance.post("/register/freelancer", formData);
+        console.log("API Response:", response.data);
+        // toast({
+        //     variant: "destructive",
+        //     title: "Account created successfully!",
+        //     action: <ToastAction altText="Try again">Try again</ToastAction>,
+        //   })
+        formRef.current?.reset();
+      } catch (error:any) {
+        console.error("API Error:", error);
+        // toast({
+        //     variant: "destructive",
+        //     title: "Uh oh! Something went wrong.",
+        //     description: `Error: ${error.response?.data || "Something went wrong!"}`,
+        //     action: <ToastAction altText="Try again">Try again</ToastAction>,
+        //   })
+      } finally {
+        setIsLoading(false);
+      }
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit}  ref={formRef}>
       <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -42,7 +108,12 @@ export default function FreelancerRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="username">Username</Label>
-          <Input id="username" type="text" placeholder="yourusername" required />
+          <Input
+            id="username"
+            type="text"
+            placeholder="yourusername"
+            required
+          />
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="github">GitHub</Label>
@@ -95,7 +166,13 @@ export default function FreelancerRegisterForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="workExperience">Work Experience (Years)</Label>
-            <Input id="workExperience" type="number" placeholder="0" required min="0" />
+            <Input
+              id="workExperience"
+              type="number"
+              placeholder="0"
+              required
+              min="0"
+            />
           </div>
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
