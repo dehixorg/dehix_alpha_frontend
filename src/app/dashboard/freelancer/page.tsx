@@ -24,7 +24,8 @@ import {
   Users2,
   Wallet,
 } from "lucide-react";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -53,12 +54,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
-import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Table,
@@ -78,6 +73,9 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import StatCard from "@/components/shared/statCard";
 import InterviewCard from "@/components/shared/interviewCard";
+import { useEffect, useState } from "react";
+import { axiosInstance } from "@/lib/axiosinstance";
+import SidebarMenu, { MenuItem } from "@/components/menu/sidebarMenu";
 
 const sampleInterview = {
   interviewer: "John Doe",
@@ -89,83 +87,40 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
+  const menuItemsTop: MenuItem[] = [
+      { href: '#', colorClasses: 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base', icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />, label: 'Dehix' },
+      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
+      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Package className="h-5 w-5" />, label: 'Projects' },
+      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Users2 className="h-5 w-5" />, label: 'Customers' },
+      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <LineChart className="h-5 w-5" />, label: 'Analytics' },
+    ];
+  
+    const menuItemsBottom: MenuItem[] = [
+      { href: '/dashboard/settings', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Settings className="h-5 w-5" />, label: 'Settings' },
+    ];
+  
   const user = useSelector((state: RootState) => state.user);
-  console.log(user);
+  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
+
+  console.log(responseData);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
+        console.log("API Response:", response.data.projects);
+        setResponseData(response.data.projects); // Store response data in state
+      } catch (error) {
+        console.error("API Error:", error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, []); // Empty dependency array ensures it runs only once on mount
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-        <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-          <Link
-            href="#"
-            className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
-          >
-            <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />
-            <span className="sr-only">Dehix</span>
-          </Link>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <Home className="h-5 w-5" />
-                <span className="sr-only">Dashboard</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Dashboard</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <Package className="h-5 w-5" />
-                <span className="sr-only">Projects</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Projects</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <Users2 className="h-5 w-5" />
-                <span className="sr-only">Customers</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Customers</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <LineChart className="h-5 w-5" />
-                <span className="sr-only">Analytics</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Analytics</TooltipContent>
-          </Tooltip>
-        </nav>
-        <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                href="#"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-              >
-                <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
-          </Tooltip>
-        </nav>
-      </aside>
+      <SidebarMenu menuItemsTop={menuItemsTop} menuItemsBottom={menuItemsBottom} />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <Sheet>
@@ -239,13 +194,12 @@ export default function Dashboard() {
                 size="icon"
                 className="overflow-hidden rounded-full"
               >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+                  <AvatarFallback>
+                    <UserIcon size={16} />{" "}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -294,12 +248,11 @@ export default function Dashboard() {
                 additionalInfo="2 new projects this week"
               />
             </div>
-            <Tabs defaultValue="week">
+            <Tabs defaultValue="active">
               <div className="flex items-center">
                 <TabsList>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="year">Year</TabsTrigger>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="pending">Pending</TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
                   <DropdownMenu>
@@ -337,7 +290,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <TabsContent value="week">
+              <TabsContent value="active">
                 <Card>
                   <CardHeader className="px-7">
                     <CardTitle>Projects</CardTitle>
@@ -350,111 +303,47 @@ export default function Dashboard() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project Name</TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Type
-                          </TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Status
-                          </TableHead>
-                          <TableHead className="hidden md:table-cell">
-                            Start Date
-                          </TableHead>
-                          <TableHead className="text-right">Budget</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Start Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow className="bg-accent">
-                          <TableCell>
-                            <div className="font-medium">Website Redesign</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Design
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Ongoing
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-01-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $5,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">
-                              Mobile App Development
-                            </div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Development
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="outline">
-                              Pending
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-02-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $8,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">
-                              E-commerce Platform
-                            </div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Development
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Ongoing
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-03-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $12,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">Digital Marketing</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Marketing
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Completed
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-04-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $10,000.00
-                          </TableCell>
-                        </TableRow>
+                        {responseData &&
+                          Object.values(responseData).map((project: any) => (
+                            <TableRow key={project.id}>
+                              <TableCell>
+                                {/* <Link href={project.githubLink}> */}
+                                <div className="font-medium">
+                                  {project.projectName}
+                                </div>
+                                {/* </Link> */}
+                                {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
+                              </TableCell>
+                              <TableCell>{project.projectType}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  className="text-xs"
+                                  variant={
+                                    project.verified ? "secondary" : "outline"
+                                  }
+                                >
+                                  {project.verified
+                                    ? "Verified"
+                                    : "Not Verified"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(project.start).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button size="sm" variant="outline">
+                                  View Details
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -462,7 +351,7 @@ export default function Dashboard() {
               </TabsContent>
             </Tabs>
           </div>
-          <div className="space-y-6"> 
+          <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>

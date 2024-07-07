@@ -14,6 +14,7 @@ import { loginUser } from "@/lib/utils";
 import { UserCredential } from "firebase/auth";
 import { useDispatch } from 'react-redux';
 import { setUser } from '@/lib/userSlice';
+import { initializeAxiosWithToken } from "@/lib/axiosinstance";
 
 export default function Login() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function Login() {
       // Get the ID token
       const accessToken = await user.getIdToken();
       console.log("Bearer " + accessToken);
+      initializeAxiosWithToken(accessToken);
       console.log("User ID " + userCredential.user.uid);
       dispatch(setUser(userCredential.user));
       console.log(userCredential.user)
