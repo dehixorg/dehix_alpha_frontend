@@ -35,7 +35,8 @@ export default function Login() {
       console.log("Bearer " + accessToken);
       console.log("User ID " + userCredential.user.uid);
       dispatch(setUser(userCredential.user));
-      router.replace("/dashboard");
+      console.log(userCredential.user)
+      router.replace("/dashboard/freelancer");
     } catch (error: any) {
       // Optionally handle error based on its type
       setIsLoading(false);

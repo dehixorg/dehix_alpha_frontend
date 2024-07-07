@@ -14,7 +14,7 @@ export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
-  const toast = useToast();
+//   const toast = useToast();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
