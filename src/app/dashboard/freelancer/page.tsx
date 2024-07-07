@@ -53,12 +53,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
-import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Table,
@@ -78,6 +72,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import StatCard from "@/components/shared/statCard";
 import InterviewCard from "@/components/shared/interviewCard";
+import { useEffect ,useState} from "react";
+import { axiosInstance } from "@/lib/axiosinstance";
 
 const sampleInterview = {
   interviewer: "John Doe",
@@ -90,7 +86,25 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+  const [responseData, setResponseData] = useState<any>(null); // State to hold response data
+
   console.log(user);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response:', response.data);
+        setResponseData(response.data); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, []); // Empty dependency array ensures it runs only once on mount
+
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
