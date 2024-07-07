@@ -8,11 +8,13 @@ import { LoaderCircle, Rocket } from "lucide-react";
 import axiosInstance from "@/lib/axiosinstance";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@radix-ui/react-toast";
+import { useRouter } from "next/navigation";
 
 export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const { toast } = useToast();
+  const router = useRouter();
+  const toast = useToast();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -50,6 +52,7 @@ export default function BusinessRegisterForm() {
     //     description: "Your business account has been created.",
     //   });
       formRef.current?.reset();
+      router.replace("/auth/login");
     } catch (error: any) {
       console.error("API Error:", error);
     //   toast({

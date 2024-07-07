@@ -9,10 +9,12 @@ import { LoaderCircle, Rocket } from "lucide-react";
 import axiosInstance from "@/lib/axiosinstance";
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@radix-ui/react-toast";
+import { useRouter } from "next/navigation";
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -72,6 +74,7 @@ export default function FreelancerRegisterForm() {
         //     action: <ToastAction altText="Try again">Try again</ToastAction>,
         //   })
         formRef.current?.reset();
+        router.replace("/auth/login");
       } catch (error:any) {
         console.error("API Error:", error);
         // toast({
