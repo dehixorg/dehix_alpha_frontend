@@ -68,7 +68,7 @@ export default function FreelancerRegisterForm() {
         console.log("API Response:", response.data);
         // toast({
         //     variant: "destructive",
-        //     title: "Account created successfully!",
+        //     title: "Account crcleareated successfully!",
         //     action: <ToastAction altText="Try again">Try again</ToastAction>,
         //   })
         formRef.current?.reset();
