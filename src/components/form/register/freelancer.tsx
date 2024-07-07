@@ -19,7 +19,7 @@ export default function FreelancerRegisterForm() {
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
-    const toast = useToast();
+    // const toast = useToast();
 
     const formData = {
       firstName: (document.getElementById("first-name") as HTMLInputElement)
@@ -55,6 +55,7 @@ export default function FreelancerRegisterForm() {
         contact: "string",
       },
       consultant: {
+        status:"notApplied"
       },
       pendingProject: [],
       rejectedProject: [],
