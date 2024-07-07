@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowBigRight,
   Boxes,
   CheckCircle,
   ChevronLeft,
@@ -22,6 +23,7 @@ import {
   ShoppingCart,
   Truck,
   Users2,
+  Wallet,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -85,12 +87,12 @@ export default function Dashboard() {
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-        <Link
+          <Link
             href="#"
             className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
           >
             <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />
-            <span className="sr-only">Acme Inc</span>
+            <span className="sr-only">Dehix</span>
           </Link>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -172,7 +174,7 @@ export default function Dashboard() {
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
                   <Boxes className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">Acme Inc</span>
+                  <span className="sr-only">Dehix</span>
                 </Link>
                 <Link
                   href="#"
@@ -211,16 +213,6 @@ export default function Dashboard() {
                 <BreadcrumbLink asChild>
                   <Link href="#">Dashboard</Link>
                 </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Orders</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Recent Orders</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -261,16 +253,23 @@ export default function Dashboard() {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
+              <Card
+                className="sm:col-span-2 flex flex-col h-full"
+                x-chunk="dashboard-05-chunk-0"
+              >
                 <CardHeader className="pb-3">
-                  <CardTitle>Your Projects</CardTitle>
-                  <CardDescription className="max-w-lg text-balance leading-relaxed">
-                    Introducing Our Dynamic Projects Dashboard for Seamless
-                    Management and Insightful Analysis.
-                  </CardDescription>
+                    <CardTitle className="text-4xl mb-3">$1000</CardTitle>
                 </CardHeader>
-                <CardFooter>
-                  <Button>Create New Project</Button>
+                <CardFooter className=" grid gap-4 grid-cols-4">
+                  <div className="col-span-3">
+                    <CardTitle>Total Earnings</CardTitle>
+                    <CardDescription className="max-w-lg text-balance leading-relaxed">
+                      Your total earnings from projects.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
+                  </div>
                 </CardFooter>
               </Card>
 
@@ -278,13 +277,13 @@ export default function Dashboard() {
                 title="Active Projects"
                 value={12}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month" 
+                additionalInfo="+10% from last month"
               />
               <StatCard
                 title="Pending Projects"
-                value={5} 
+                value={5}
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week" 
+                additionalInfo="2 new projects this week"
               />
             </div>
             <Tabs defaultValue="week">
