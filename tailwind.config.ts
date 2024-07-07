@@ -52,6 +52,18 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(120, 50%, 60%)", // Adjust hue, saturation, and lightness as needed
+          foreground: "hsl(120, 50%, 30%)", // Muted foreground color
+        },
+        warning: {
+          DEFAULT: "hsl(40, 100%, 60%)", // Adjust hue, saturation, and lightness as needed
+          foreground: "hsl(40, 100%, 30%)", // Muted foreground color
+        },
+        error: {
+          DEFAULT: "hsl(0, 80%, 60%)", // Adjust hue, saturation, and lightness as needed
+          foreground: "hsl(0, 80%, 30%)", // Muted foreground color
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
