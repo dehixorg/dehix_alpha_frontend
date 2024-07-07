@@ -11,7 +11,7 @@ const Testimonials: React.FC = () => {
     {
       quote: "The freelancers on this platform are truly exceptional. They delivered high-quality work that exceeded my expectations.",
       author: "John Doe",
-      title: "CEO, Acme Inc.",
+      title: "CEO, Dehix.",
     },
     {
       quote: "I've been using this freelancing platform for years, and it's been a game-changer for my business. Highly recommended!",
