@@ -72,7 +72,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import StatCard from "@/components/shared/statCard";
 import InterviewCard from "@/components/shared/interviewCard";
-import { useEffect ,useState} from "react";
+import { useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/axiosinstance";
 
 const sampleInterview = {
@@ -94,16 +94,15 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.projects);
+        console.log("API Response:", response.data.projects);
         setResponseData(response.data.projects); // Store response data in state
       } catch (error) {
-        console.error('API Error:', error);
+        console.error("API Error:", error);
       }
     };
 
     fetchData(); // Call fetch data function on component mount
   }, []); // Empty dependency array ensures it runs only once on mount
-
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -311,9 +310,8 @@ export default function Dashboard() {
             <Tabs defaultValue="week">
               <div className="flex items-center">
                 <TabsList>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                  <TabsTrigger value="year">Year</TabsTrigger>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="pending">Pending</TabsTrigger>
                 </TabsList>
                 <div className="ml-auto flex items-center gap-2">
                   <DropdownMenu>
@@ -351,52 +349,68 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <TabsContent value="week">
-              <Card>
-            <CardHeader className="px-7">
-              <CardTitle>Projects</CardTitle>
-              <CardDescription>Recent projects from your account.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Project Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {responseData && Object.values(responseData).map((project: any) => (
-                    <TableRow key={project.id}>
-                      <TableCell>
-                        {/* <Link href={project.githubLink}> */}
-                          <div className="font-medium">{project.projectName}</div>
-                        {/* </Link> */}
-                        {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
-                      </TableCell>
-                      <TableCell>{project.projectType}</TableCell>
-                      <TableCell>
-                        <Badge className="text-xs" variant={project.verified ? "secondary" : "outline"}>
-                          {project.verified ? "Verified" : "Not Verified"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(project.start).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" variant="outline">View Details</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+              <TabsContent value="active">
+                <Card>
+                  <CardHeader className="px-7">
+                    <CardTitle>Projects</CardTitle>
+                    <CardDescription>
+                      Recent projects from your account.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Project Name</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Start Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {responseData &&
+                          Object.values(responseData).map((project: any) => (
+                            <TableRow key={project.id}>
+                              <TableCell>
+                                {/* <Link href={project.githubLink}> */}
+                                <div className="font-medium">
+                                  {project.projectName}
+                                </div>
+                                {/* </Link> */}
+                                {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
+                              </TableCell>
+                              <TableCell>{project.projectType}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  className="text-xs"
+                                  variant={
+                                    project.verified ? "secondary" : "outline"
+                                  }
+                                >
+                                  {project.verified
+                                    ? "Verified"
+                                    : "Not Verified"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(project.start).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button size="sm" variant="outline">
+                                  View Details
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
-          <div className="space-y-6"> 
+          <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
