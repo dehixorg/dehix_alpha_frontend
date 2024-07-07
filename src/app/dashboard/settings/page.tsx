@@ -13,6 +13,7 @@ import {
   CreditCard,
   File,
   Home,
+  HomeIcon,
   LineChart,
   ListFilter,
   MoreVertical,
@@ -134,8 +135,8 @@ export default function Dashboard() {
       href: "/dashboard/freelancer",
       colorClasses:
         "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
-      icon: <Settings className="h-5 w-5" />,
-      label: "Settings",
+      icon: <HomeIcon className="h-5 w-5" />,
+      label: "Home",
     },
   ];
 
