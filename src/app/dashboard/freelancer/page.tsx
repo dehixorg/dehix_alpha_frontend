@@ -86,16 +86,16 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>(null); // State to hold response data
+  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 
-  console.log(user);
+  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data);
-        setResponseData(response.data); // Store response data in state
+        console.log('API Response:', response.data.projects);
+        setResponseData(response.data.projects); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -352,127 +352,47 @@ export default function Dashboard() {
                 </div>
               </div>
               <TabsContent value="week">
-                <Card>
-                  <CardHeader className="px-7">
-                    <CardTitle>Projects</CardTitle>
-                    <CardDescription>
-                      Recent projects from your account.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Project Name</TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Type
-                          </TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Status
-                          </TableHead>
-                          <TableHead className="hidden md:table-cell">
-                            Start Date
-                          </TableHead>
-                          <TableHead className="text-right">Budget</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow className="bg-accent">
-                          <TableCell>
-                            <div className="font-medium">Website Redesign</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Design
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Ongoing
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-01-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $5,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">
-                              Mobile App Development
-                            </div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Development
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="outline">
-                              Pending
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-02-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $8,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">
-                              E-commerce Platform
-                            </div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Development
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Ongoing
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-03-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $12,000.00
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">Digital Marketing</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              client@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Marketing
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="secondary">
-                              Completed
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2024-04-01
-                          </TableCell>
-                          <TableCell className="text-right">
-                            $10,000.00
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+              <Card>
+            <CardHeader className="px-7">
+              <CardTitle>Projects</CardTitle>
+              <CardDescription>Recent projects from your account.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Project Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {responseData && Object.values(responseData).map((project: any) => (
+                    <TableRow key={project.id}>
+                      <TableCell>
+                        {/* <Link href={project.githubLink}> */}
+                          <div className="font-medium">{project.projectName}</div>
+                        {/* </Link> */}
+                        {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
+                      </TableCell>
+                      <TableCell>{project.projectType}</TableCell>
+                      <TableCell>
+                        <Badge className="text-xs" variant={project.verified ? "secondary" : "outline"}>
+                          {project.verified ? "Verified" : "Not Verified"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{new Date(project.start).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline">View Details</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
               </TabsContent>
             </Tabs>
           </div>
