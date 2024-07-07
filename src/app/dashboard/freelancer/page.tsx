@@ -24,7 +24,8 @@ import {
   Users2,
   Wallet,
 } from "lucide-react";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -252,13 +253,12 @@ export default function Dashboard() {
                 size="icon"
                 className="overflow-hidden rounded-full"
               >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+                  <AvatarFallback>
+                    <UserIcon size={16} />{" "}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -307,7 +307,7 @@ export default function Dashboard() {
                 additionalInfo="2 new projects this week"
               />
             </div>
-            <Tabs defaultValue="week">
+            <Tabs defaultValue="active">
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
