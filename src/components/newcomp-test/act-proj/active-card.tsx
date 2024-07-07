@@ -16,17 +16,17 @@ interface CustomCardProps {
 
 const CustomCard: React.FC<CustomCardProps> = ({ heading, icon: IconComponent, content }) => {
     return (
-        <Card className="w-[455px] h-[199px]">
+        <Card className="w-[350px] h-[199px]">
             <CardHeader>
-                <div className="grid grid-cols-[auto,auto] items-center ml-10">
-                    <CardTitle className="text-white text-3xl font-bold items-center"> {heading}</CardTitle>
-                    <div className="items-center ml-4">
+                <div className="grid grid-cols-[auto,auto] items-center">
+                    <CardTitle className="text-white text-3xl font-bold"> {heading}</CardTitle>
+                    <div>
                         {IconComponent && <IconComponent />} {/* Render icon if provided */}
                     </div>
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="items-center ml-4 p-6">
+                <div>
                     <h1>{content}</h1>
                 </div>
             </CardContent>
