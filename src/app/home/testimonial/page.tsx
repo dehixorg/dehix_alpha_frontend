@@ -28,7 +28,7 @@ const Testimonials: React.FC = () => {
           <div key={index} className="rounded-lg bg-[#1a1a1a] p-6 mr-6 text-left">
             <blockquote className="text-lg font-medium text-white">{testimonial.quote}</blockquote>
             <div className="mt-4">
-              <p className="text-[#00ffff] font-bold">{testimonial.author}</p>
+              <p className=" font-bold">{testimonial.author}</p>
               <p className="text-base text-white">{testimonial.title}</p>
             </div>
           </div>

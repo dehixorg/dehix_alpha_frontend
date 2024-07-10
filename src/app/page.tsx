@@ -32,20 +32,20 @@ const HomePage = () => {
     <div className="bg-black text-white">
       <section className="px-4 py-20 md:px-6 lg:py-32 min-h-screen">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-[#00ffff] sm:text-5xl md:text-6xl">
+          <h1 className="sm:text-5xl md:text-6xl">
             Unlock Your Freelancing Potential
           </h1>
           <p className="mt-4 text-white md:text-xl">
             Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
           </p>
-          <Button className="mt-8 bg-primary text-black px-8 py-3 rounded-md text-lg font-medium hover:bg-primary-foreground">
+          <Button className="button-accent mt-8 px-8 py-3 rounded-md text-lg font-medium">
             Get Started
           </Button>
         </div>
       </section>
       <section className="px-4 py-20 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-[#00ffff] sm:text-3xl">
+          <h2 className=" sm:text-3xl">
             About Our Freelancing Platform
           </h2>
           <p className="mt-4 text-white md:text-xl">
@@ -53,8 +53,8 @@ const HomePage = () => {
           </p>
           <div className="grid gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
-              <Pencil className="h-8 w-8 text-[#00ffff]" />
-              <h3 className="mt-4 text-[#00ffff]">
+              <Pencil className="h-8 w-8 " />
+              <h3 className="mt-4 ">
                 Content Creation
               </h3>
               <p className="mt-2 text-white">
@@ -62,8 +62,8 @@ const HomePage = () => {
               </p>
             </div>
             <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
-              <Code className="h-8 w-8 text-[#00ffff]" />
-              <h3 className="mt-4 text-[#00ffff]">
+              <Code className="h-8 w-8 " />
+              <h3 className="mt-4 ">
                 Web Development
               </h3>
               <p className="mt-2 text-white">
@@ -71,8 +71,8 @@ const HomePage = () => {
               </p>
             </div>
             <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
-              <Type className="h-8 w-8 text-[#00ffff]" />
-              <h3 className="mt-4 text-[#00ffff]">
+              <Type className="h-8 w-8 " />
+              <h3 className="mt-4 ">
                 Graphic Design
               </h3>
               <p className="mt-2 text-white">
@@ -84,7 +84,7 @@ const HomePage = () => {
       </section>
       <section className="px-4 py-20 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-[#00ffff] sm:text-3xl">
+          <h2 className=" sm:text-3xl">
             What Our Clients Say
           </h2>
           <div className="grid gap-8 mt-10 sm:grid-cols-2">
@@ -93,7 +93,7 @@ const HomePage = () => {
                 "The freelancers on this platform are truly exceptional. They delivered high-quality work that exceeded my expectations."
               </blockquote>
               <div className="mt-4">
-                <p className="text-[#00ffff] font-bold">John Doe</p>
+                <p className=" font-bold">John Doe</p>
                 <p className="text-white">
                   CEO, Acme Inc.
                 </p>
@@ -104,7 +104,7 @@ const HomePage = () => {
                 "I've been using this freelancing platform for years, and it's been a game-changer for my business. Highly recommended!"
               </blockquote>
               <div className="mt-4">
-                <p className="text-[#00ffff] font-bold">Jane Smith</p>
+                <p className=" font-bold">Jane Smith</p>
                 <p className="text-white">
                   Founder, XYZ Company
                 </p>
@@ -115,7 +115,7 @@ const HomePage = () => {
       </section>
       <section className="px-4 py-20 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-[#00ffff] sm:text-3xl">
+          <h2 className=" sm:text-3xl">
             Our Portfolio
           </h2>
           <div className="grid gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,7 +132,7 @@ const HomePage = () => {
                 width={400}
               />
               <div className="bg-[#1a1a1a] p-4">
-                <h3 className="text-[#00ffff]">
+                <h3 className="">
                   Project Title 1
                 </h3>
                 <p className="mt-2 text-white">
@@ -153,7 +153,7 @@ const HomePage = () => {
                 width={400}
               />
               <div className="bg-[#1a1a1a] p-4">
-                <h3 className="text-[#00ffff]">
+                <h3 className="">
                   Project Title 2
                 </h3>
                 <p className="mt-2 text-white">
@@ -174,7 +174,7 @@ const HomePage = () => {
                 width={400}
               />
               <div className="bg-[#1a1a1a] p-4">
-                <h3 className="text-[#00ffff]">
+                <h3 className="">
                   Project Title 3
                 </h3>
                 <p className="mt-2 text-white">
@@ -195,7 +195,7 @@ const HomePage = () => {
       </section>
       <section className="px-4 py-20 md:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-[#00ffff] sm:text-3xl">
+          <h2 className=" sm:text-3xl">
             Get in Touch
           </h2>
           <p className="mt-4 text-white md:text-xl">
@@ -246,7 +246,7 @@ const HomePage = () => {
             </div>
             <Button
               type="submit"
-              className="bg-[#00ffff] text-black px-8 py-3 rounded-md text-lg font-medium hover:bg-[#00d9d9]"
+              className="bg-primary text-black px-8 py-3 rounded-md text-lg font-medium hover:bg-primary-foreground"
             >
               Send Message
             </Button>

@@ -22,9 +22,9 @@ const Question: React.FC<QuestionProps> = ({ question, answer }) => {
           className="flex w-[700px] items-center justify-between rounded-lg bg-[#1a1a1a] px-6 py-4"
           onClick={toggle}
         >
-          <h3 className="text-lg font-bold text-[#00ffff]">{question}</h3>
+          <h3 className="text-lg font-bold ">{question}</h3>
           <svg
-            className={`h-6 w-6 text-[#00ffff] transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+            className={`h-6 w-6  transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
