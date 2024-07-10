@@ -12,7 +12,7 @@ const CustomIcon: React.FC<CustomIconProps> = ({
   className,
   width = 24, // Default width if not provided
   height = 24, // Default height if not provided
-  viewBox = "0 0 24 24", // Default viewBox if not provided
+  viewBox = '0 0 24 24', // Default viewBox if not provided
 }) => {
   return (
     <svg

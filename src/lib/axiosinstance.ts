@@ -1,6 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // Create an Axios instance
 let axiosInstance: AxiosInstance = axios.create({
@@ -29,7 +27,7 @@ axiosInstance.interceptors.request.use(
   (error) => {
     // Handle request errors
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor (optional)
@@ -42,7 +40,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // Handle errors if needed
     return Promise.reject(error);
-  }
+  },
 );
 
 export { axiosInstance, initializeAxiosWithToken };

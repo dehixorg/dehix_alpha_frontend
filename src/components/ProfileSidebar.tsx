@@ -1,10 +1,12 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutDashboard, LogOut, Menu, Settings } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "./ui/button";
+import React, { useState } from 'react';
+import { LayoutDashboard, LogOut, Menu, Settings } from 'lucide-react';
+
+import { Button } from './ui/button';
+
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 export function ProfileSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -14,19 +16,20 @@ export function ProfileSidebar() {
 
   return (
     <div className="relative">
-      <button
-        className="md:hidden p-4"
-        onClick={toggleSidebar}
-      >
+      <button className="md:hidden p-4" onClick={toggleSidebar}>
         <Menu className="h-6 w-6" />
       </button>
 
-      <div className={`fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out z-40
-        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:relative md:translate-x-0`}>
+      <div
+        className={`fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out z-40
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}
+      >
         <ScrollArea className="min-h-screen w-60 rounded-md border top-0 left-0">
           <div>
             <div className="p-4">
-              <h4 className="mb-6 mt-4 text-xl font-bold leading-none text-center">Profile</h4>
+              <h4 className="mb-6 mt-4 text-xl font-bold leading-none text-center">
+                Profile
+              </h4>
               <div className="p-4">
                 <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
                   Your Profile
