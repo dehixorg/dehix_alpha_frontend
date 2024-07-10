@@ -1,5 +1,5 @@
 import FAQAccordion from "@/components/accordian/faqAccordian";
-import { NavMenu } from "@/components/navbar";
+import { Navbar } from "@/components/navbar";
 import { Search } from "@/components/search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,20 +7,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserNav } from "@/components/userNav";
 import { Pencil, Code, Type } from "lucide-react";
 
+const leftNavItems = [
+  { label: "Home", link: "/" },
+  { label: "About", link: "/" },
+  { label: "Contact", link: "/" }
+];
+
+const rightNavItems = [
+  { label: "Login", link: "/auth/login", isButton: true },
+  { label: "Register", link: "/auth/sign-up/freelancer", isButton: true }
+];
+
 const HomePage = () => {
   return (
     <>
     <div className="border-b">
         <div className="flex h-16 items-center px-4">
-          <NavMenu />
+          <Navbar items={leftNavItems}/>
           <div className="ml-auto flex items-center space-x-4">
-            <Search />
-            <UserNav />
+          <Navbar items={rightNavItems}/>
           </div>
         </div>
       </div>
     <div className="bg-black text-white">
-      <section className="px-4 py-20 md:px-6 lg:py-32">
+      <section className="px-4 py-20 md:px-6 lg:py-32 min-h-screen">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-[#00ffff] sm:text-5xl md:text-6xl">
             Unlock Your Freelancing Potential
@@ -28,7 +38,7 @@ const HomePage = () => {
           <p className="mt-4 text-white md:text-xl">
             Discover a world of opportunities and connect with talented freelancers to bring your projects to life.
           </p>
-          <Button className="mt-8 bg-[#00ffff] text-black px-8 py-3 rounded-md text-lg font-medium hover:bg-[#00d9d9]">
+          <Button className="mt-8 bg-primary text-black px-8 py-3 rounded-md text-lg font-medium hover:bg-primary-foreground">
             Get Started
           </Button>
         </div>
