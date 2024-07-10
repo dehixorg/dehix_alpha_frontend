@@ -52,7 +52,6 @@ export default function BusinessRegisterForm() {
 
     try {
       const response = await axiosInstance.post('/register/business', formData);
-      console.log('API Response:', response.data);
       //   toast({
       //     variant: "success",
       //     title: "Account created successfully!",

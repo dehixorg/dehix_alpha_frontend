@@ -72,7 +72,6 @@ export default function FreelancerRegisterForm() {
         '/register/freelancer',
         formData,
       );
-      console.log('API Response:', response.data);
       // toast({
       //     variant: "destructive",
       //     title: "Account crcleareated successfully!",

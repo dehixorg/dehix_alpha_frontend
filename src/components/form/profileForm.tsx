@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import Link from 'next/link';
 
 import { DatePicker } from '../shared/datePicker';
 import { Card } from '../ui/card';
@@ -26,8 +25,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+
+interface ProfileFormProps {
+  user: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    email: string;
+    phone: string;
+    dob: string; // Ensure this matches the expected format for DatePicker
+    role: string;
+    projects: []; // Adjust this type as per your data structure
+    githubLink: string;
+    linkedin: string;
+    personalWebsite: string;
+    perHourPrice: number;
+    connects: number;
+    resume: {
+      type: string;
+      data: number[];
+    };
+    workExperience: number;
+    isFreelancer: boolean;
+    oracleStatus: string;
+    pendingProject: any[]; // Adjust this type as per your data structure
+    rejectedProject: any[]; // Adjust this type as per your data structure
+    acceptedProject: any[]; // Adjust this type as per your data structure
+    oracleProject: any[]; // Adjust this type as per your data structure
+    userDataForVerification: any[]; // Adjust this type as per your data structure
+    interviewsAligned: string[]; // Adjust this type as per your data structure
+    createdAt: string; // Ensure this matches the expected format for DatePicker
+    updatedAt: string; // Ensure this matches the expected format for DatePicker
+    __v: number;
+  };
+}
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -52,7 +84,6 @@ const profileFormSchema = z.object({
   phone: z.string().min(10, {
     message: 'Phone number must be at least 10 digits.',
   }),
-  dob: z.date(),
   role: z.string(),
   bio: z.string().max(160).min(4),
   urls: z
@@ -66,30 +97,46 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  firstName: '',
-  lastName: '',
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
-};
+export function ProfileForm({ user: initialUser }: ProfileFormProps) {
+  const [user, setUser] = useState(initialUser);
 
-export function ProfileForm() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: 'onChange',
+    defaultValues: {
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      username: user?.userName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      role: user?.role || '',
+      bio: '', // Set initial bio if needed
+    },
+    mode: 'all',
   });
 
-  const { fields, append } = useFieldArray({
-    name: 'urls',
-    control: form.control,
-  });
+  // const { fields, append } = useFieldArray({
+  //   name: 'urls',
+  //   control: form.control,
+  // });
 
   function onSubmit(data: ProfileFormValues) {
+    console.log('SUBMITTED')
+    // Assuming `data` contains all form field values
+    // Update `user` state with new data
+    setUser({
+      ...user,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      userName: data.username,
+      email: data.email,
+      phone: data.phone,
+      // dob: data.dob.toISOString(), // Assuming `dob` is a Date object
+      role: data.role,
+      // Update other fields as needed
+    });
+
+    console.log('Form data:', data); // Log form data
+
     toast({
       title: 'You submitted the following values:',
       description: (
@@ -104,7 +151,7 @@ export function ProfileForm() {
     <Card className="p-10">
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={()=>form.handleSubmit(onSubmit)}
           className="gap-10 lg:grid lg:grid-cols-2 xl:grid-cols-2"
         >
           <FormField
@@ -114,7 +161,11 @@ export function ProfileForm() {
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your first name" {...field} />
+                  <Input
+                    placeholder="Enter your first name"
+                    {...field}
+                    defaultValue={user?.firstName || ''}
+                  />
                 </FormControl>
                 <FormDescription>Enter your first name</FormDescription>
                 <FormMessage />
@@ -128,7 +179,11 @@ export function ProfileForm() {
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your last name" {...field} />
+                  <Input
+                    placeholder="Enter your last name"
+                    {...field}
+                    defaultValue={user?.lastName || ''}
+                  />
                 </FormControl>
                 <FormDescription>Enter your last name</FormDescription>
                 <FormMessage />
@@ -142,7 +197,15 @@ export function ProfileForm() {
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your username" {...field} />
+                  <Input
+                    placeholder="Enter your username"
+                    {...field}
+                    defaultValue={user?.userName || ''}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setUser({ ...user, userName: e.target.value });
+                    }}
+                  />
                 </FormControl>
                 <FormDescription>Enter your username</FormDescription>
                 <FormMessage />
@@ -156,7 +219,11 @@ export function ProfileForm() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your email" {...field} />
+                  <Input
+                    placeholder="Enter your email"
+                    {...field}
+                    defaultValue={user?.email || ''}
+                  />
                 </FormControl>
                 <FormDescription>Enter your email</FormDescription>
                 <FormMessage />
@@ -170,21 +237,25 @@ export function ProfileForm() {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} />
+                  <Input
+                    placeholder="+91"
+                    {...field}
+                    defaultValue={user?.phone || ''}
+                  />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>Enter your phone number</FormDescription>
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="dob"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date of Birth{'\t'} </FormLabel>
                 <FormControl>
-                  <DatePicker />
+                  <DatePicker {...field} />
                 </FormControl>
                 <FormDescription>
                   Your date of birth is used to calculate your age.
@@ -192,7 +263,7 @@ export function ProfileForm() {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <FormField
             control={form.control}
             name="role"
@@ -202,7 +273,7 @@ export function ProfileForm() {
                 <FormControl>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultdefaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -227,38 +298,6 @@ export function ProfileForm() {
               </FormItem>
             )}
           />
-          <div className="lg:col-span-2 xl:col-span-2">
-            {fields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={field.id}
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                      URLs
-                    </FormLabel>
-                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                      Enter URL of your account
-                    </FormDescription>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => append({ value: '' })}
-            >
-              Add URL
-            </Button>
-          </div>
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Update profile
           </Button>

@@ -62,20 +62,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import InterviewCard from '@/components/shared/interviewCard';
@@ -144,14 +130,14 @@ export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 
-  console.log(responseData);
+  console.log('API Response state:',responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.projects);
-        setResponseData(response.data.projects); // Store response data in state
+        console.log('API Response get:', response.data);
+        setResponseData(response.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -258,7 +244,7 @@ export default function Dashboard() {
           </DropdownMenu>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm />
+          <ProfileForm user={responseData} setUser={setResponseData}/>
         </main>
       </div>
     </div>
