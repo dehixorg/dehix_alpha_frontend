@@ -179,7 +179,7 @@ export default function FreelancerRegisterForm() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full bg-primary text-black hover:bg-primary-foreground" disabled={isLoading}>
+        <Button type="submit" className="w-full bg-primary text-black " disabled={isLoading}>
           {isLoading ? (
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           ) : (

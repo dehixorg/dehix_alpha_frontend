@@ -110,7 +110,7 @@ export default function Login() {
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
             <Button variant="outline" size="sm" className="ml-2" asChild>
-              <Link href="/auth/sign-up">Sign up</Link>
+              <Link href="/auth/sign-up/freelancer">Sign up</Link>
             </Button>
           </div>
         </div>

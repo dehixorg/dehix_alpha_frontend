@@ -47,7 +47,7 @@ export function UserNav() {
         <NavigationMenuItem>
           <Link href="/auth/login" legacyBehavior passHref>
             <NavigationMenuLink
-              className={`${navigationMenuTriggerStyle()} text-base font-semibold  text-white px-4 py-2 rounded-md hover:bg-[#00d9d9]`}
+              className={`${navigationMenuTriggerStyle()} text-base font-semibold  text-white px-4 py-2 rounded-md `}
             >
               Login
             </NavigationMenuLink>
