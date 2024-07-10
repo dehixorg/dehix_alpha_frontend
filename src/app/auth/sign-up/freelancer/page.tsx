@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { ThemeToggle } from "@/components/shared/themeToggle";
-import FreelancerRegisterForm from "@/components/form/register/freelancer";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+
+import { ThemeToggle } from '@/components/shared/themeToggle';
+import FreelancerRegisterForm from '@/components/form/register/freelancer';
+import { Button } from '@/components/ui/button';
 
 export default function SignUp() {
   return (
@@ -11,7 +12,7 @@ export default function SignUp() {
       <div className="absolute left-10 top-10">
         <ThemeToggle />
       </div>
-      
+
       <div className="flex items-center justify-center py-12">
         <div className="mx-auto grid gap-6">
           <div className="grid gap-2 text-center">
@@ -21,24 +22,24 @@ export default function SignUp() {
             </p>
           </div>
           <div className="my-4 text-center text-sm">
-            Are you a business?{" "}
+            Are you a business?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
               <Link href="/auth/sign-up/business">Register Business</Link>
             </Button>
           </div>
           <FreelancerRegisterForm />
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
               <Link href="/auth/login">Sign in</Link>
             </Button>
           </div>
           <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
+            By clicking continue, you agree to our{' '}
             <Button variant="link" className="p-0" asChild>
               <Link href="/terms">Terms of Service</Link>
-            </Button>{" "}
-            and{" "}
+            </Button>{' '}
+            and{' '}
             <Button variant="link" className="p-0" asChild>
               <Link href="/privacy">Privacy Policy</Link>
             </Button>

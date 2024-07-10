@@ -1,4 +1,5 @@
 import React from 'react';
+
 import DetailForm from '@/components/form/detail-form';
 
 function App() {

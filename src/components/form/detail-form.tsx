@@ -1,7 +1,8 @@
-"use client";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+'use client';
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import {
   Form,
   FormControl,
@@ -9,17 +10,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const formSchema = z.object({
-  fullName: z.string().nonempty("Full name is required"),
-  mobileNumber: z.string().nonempty("Mobile number is required"),
-  emailAddress: z.string().email("Invalid email address"),
-  username: z.string().nonempty("Username is required"),
-  password: z.string().min(3, "Password must be at least 3 characters"),
-  github: z.string().nonempty("GitHub username is required"),
+  fullName: z.string().nonempty('Full name is required'),
+  mobileNumber: z.string().nonempty('Mobile number is required'),
+  emailAddress: z.string().email('Invalid email address'),
+  username: z.string().nonempty('Username is required'),
+  password: z.string().min(3, 'Password must be at least 3 characters'),
+  github: z.string().nonempty('GitHub username is required'),
   instagram: z.string().optional(),
 });
 
@@ -29,13 +30,13 @@ export default function DetailForm() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      mobileNumber: "",
-      emailAddress: "",
-      username: "",
-      password: "",
-      github: "",
-      instagram: "",
+      fullName: '',
+      mobileNumber: '',
+      emailAddress: '',
+      username: '',
+      password: '',
+      github: '',
+      instagram: '',
     },
   });
 
@@ -49,7 +50,7 @@ export default function DetailForm() {
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
           className="max-w-md w-full grid gap-4"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
+          style={{ gridTemplateColumns: '1fr 1fr' }}
         >
           <FormField
             control={form.control}
@@ -58,7 +59,12 @@ export default function DetailForm() {
               <FormItem className="col-span-2">
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Full name" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Full name"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -71,7 +77,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>Mobile Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Mobile number" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Mobile number"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -84,7 +95,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="Email address" type="email" {...field} className="w-full" />
+                  <Input
+                    placeholder="Email address"
+                    type="email"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,7 +113,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Username" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Username"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -110,7 +131,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="Password" type="password" {...field} className="w-full" />
+                  <Input
+                    placeholder="Password"
+                    type="password"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -123,7 +149,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>GitHub</FormLabel>
                 <FormControl>
-                  <Input placeholder="GitHub username" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="GitHub username"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,7 +167,12 @@ export default function DetailForm() {
               <FormItem>
                 <FormLabel>Instagram (optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Instagram username" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Instagram username"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

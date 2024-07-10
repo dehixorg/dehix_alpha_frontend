@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState } from 'react';
 
 const ContactForm: React.FC = () => {
@@ -14,9 +14,14 @@ const ContactForm: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center  text-white">
-      <form className="w-full max-w-4xl p-8 space-y-6  rounded-lg" onSubmit={handleSubmit}>
+      <form
+        className="w-full max-w-4xl p-8 space-y-6  rounded-lg"
+        onSubmit={handleSubmit}
+      >
         <h2 className="text-3xl font-bold text-center ">Get in Touch</h2>
-        <p className="text-center mb-6">Have a project in mind? Let's discuss how we can help.</p>
+        <p className="text-center mb-6">
+          Have a project in mind? Let's discuss how we can help.
+        </p>
         <div className="flex flex-col space-y-4">
           <div className="flex flex-col">
             <div className="flex justify-between mb-1">

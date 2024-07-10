@@ -1,6 +1,6 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,14 +19,15 @@ import {
   ShoppingCart,
   Truck,
   Users2,
-} from "lucide-react";
-import { Activity } from 'lucide-react';
-import { CircleDollarSign } from 'lucide-react';
-import { FolderKanban } from 'lucide-react';
-import CustomCard from "@/components/newcomp-test/act-proj/active-card";
-import CardWithForm from "@/components/newcomp-test/pen-proj/pending-card";
+  Activity,
+  CircleDollarSign,
+  FolderKanban,
+} from 'lucide-react';
+import { useSelector } from 'react-redux';
 
-import { Badge } from "@/components/ui/badge";
+import CustomCard from '@/components/newcomp-test/act-proj/active-card';
+import CardWithForm from '@/components/newcomp-test/pen-proj/pending-card';
+import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,8 +35,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -43,7 +44,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -52,16 +53,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
-} from "@/components/ui/pagination";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from '@/components/ui/pagination';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -69,20 +70,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useSelector } from 'react-redux'
-import { RootState } from '@/lib/store'
+} from '@/components/ui/tooltip';
+import { RootState } from '@/lib/store';
 
 export default function Dashboard() {
-
-  const user = useSelector((state: RootState) => state.user)
-  console.log(user)
+  const user = useSelector((state: RootState) => state.user);
+  console.log(user);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">

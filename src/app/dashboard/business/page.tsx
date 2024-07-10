@@ -1,11 +1,9 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   Boxes,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Copy,
   CreditCard,
@@ -20,11 +18,10 @@ import {
   Search,
   Settings,
   ShoppingCart,
-  Truck,
   Users2,
-} from "lucide-react";
+} from 'lucide-react';
+import { useSelector } from 'react-redux';
 
-import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,8 +29,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -41,7 +38,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -50,16 +47,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
-} from "@/components/ui/pagination";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from '@/components/ui/pagination';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -67,26 +64,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
-import StatCard from "@/components/shared/statCard";
-import { ProjectCard } from "@/components/cards/projectCard";
-import InterviewCard from "@/components/shared/interviewCard";
+} from '@/components/ui/tooltip';
+import { RootState } from '@/lib/store';
+import StatCard from '@/components/shared/statCard';
+import { ProjectCard } from '@/components/cards/projectCard';
+import InterviewCard from '@/components/shared/interviewCard';
 
 const sampleInterview = {
-  interviewer: "John Doe",
-  interviewee: "Jane Smith",
-  skill: "React Development",
-  interviewDate: new Date("2023-11-23T10:30:00Z"),
+  interviewer: 'John Doe',
+  interviewee: 'Jane Smith',
+  skill: 'React Development',
+  interviewDate: new Date('2023-11-23T10:30:00Z'),
   rating: 4.5,
-  comments: "Great communication skills and technical expertise.",
+  comments: 'Great communication skills and technical expertise.',
 };
 
 export default function Dashboard() {
@@ -96,7 +92,7 @@ export default function Dashboard() {
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
         <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-        <Link
+          <Link
             href="#"
             className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
           >
@@ -272,9 +268,7 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-
               {/* Create project card */}
               <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
                 <CardHeader className="pb-3">
@@ -293,36 +287,36 @@ export default function Dashboard() {
                 title="Active Projects"
                 value={12}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month" 
+                additionalInfo="+10% from last month"
               />
 
               <StatCard
                 title="Pending Projects"
-                value={5} 
+                value={5}
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week" 
+                additionalInfo="2 new projects this week"
               />
             </div>
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Current Projects {"(2)"}
-            </h2>            
+              Current Projects {'(2)'}
+            </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-            <ProjectCard className="min-w-[45%] " projectType={"current"}/>
-            <ProjectCard className="min-w-[45%] " projectType={"current"}/>
+              <ProjectCard className="min-w-[45%] " projectType={'current'} />
+              <ProjectCard className="min-w-[45%] " projectType={'current'} />
             </div>
 
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Completed Projects {"(3)"}
-            </h2>            
+              Completed Projects {'(3)'}
+            </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-            <ProjectCard className="min-w-[45%] " projectType={"completed"}/>
-            <ProjectCard className="min-w-[45%] " projectType={"completed"}/>
-            <ProjectCard className="min-w-[45%] " projectType={"completed"}/>
+              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
+              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
+              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
             </div>
           </div>
-          <div className="space-y-6"> 
+          <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>

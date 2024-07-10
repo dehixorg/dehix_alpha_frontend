@@ -1,6 +1,6 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   BookOpen,
   Boxes,
@@ -27,10 +27,13 @@ import {
   User,
   Users2,
   Wallet,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+  UserIcon,
+} from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,8 +41,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -47,7 +50,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -56,9 +59,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -66,77 +69,75 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
-import StatCard from "@/components/shared/statCard";
-import InterviewCard from "@/components/shared/interviewCard";
-import { useEffect, useState } from "react";
-import { axiosInstance } from "@/lib/axiosinstance";
-import SidebarMenu, { MenuItem } from "@/components/menu/sidebarMenu";
-import { ProfileForm } from "@/components/form/profileForm";
+} from '@/components/ui/tooltip';
+import { RootState } from '@/lib/store';
+import StatCard from '@/components/shared/statCard';
+import InterviewCard from '@/components/shared/interviewCard';
+import { axiosInstance } from '@/lib/axiosinstance';
+import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import { ProfileForm } from '@/components/form/profileForm';
 
 const sampleInterview = {
-  interviewer: "John Doe",
-  interviewee: "Jane Smith",
-  skill: "React Development",
-  interviewDate: new Date("2023-11-23T10:30:00Z"),
+  interviewer: 'John Doe',
+  interviewee: 'Jane Smith',
+  skill: 'React Development',
+  interviewDate: new Date('2023-11-23T10:30:00Z'),
   rating: 4.5,
-  comments: "Great communication skills and technical expertise.",
+  comments: 'Great communication skills and technical expertise.',
 };
 
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
     {
-      href: "#",
+      href: '#',
       colorClasses:
-        "group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base",
+        'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: "Dehix",
+      label: 'Dehix',
     },
     {
-      href: "#",
+      href: '#',
       colorClasses:
-        "flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
+        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <User className="h-5 w-5" />,
-      label: "Personal Info",
+      label: 'Personal Info',
     },
     {
-      href: "#",
+      href: '#',
       colorClasses:
-        "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <Briefcase className="h-5 w-5" />,
-      label: "Professional Info",
+      label: 'Professional Info',
     },
     {
-      href: "#",
+      href: '#',
       colorClasses:
-        "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <Package className="h-5 w-5" />,
-      label: "Projects",
+      label: 'Projects',
     },
     {
-      href: "#",
+      href: '#',
       colorClasses:
-        "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <BookOpen className="h-5 w-5" />,
-      label: "Education",
+      label: 'Education',
     },
   ];
 
   const menuItemsBottom: MenuItem[] = [
     {
-      href: "/dashboard/freelancer",
+      href: '/dashboard/freelancer',
       colorClasses:
-        "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8",
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <HomeIcon className="h-5 w-5" />,
-      label: "Home",
+      label: 'Home',
     },
   ];
 
@@ -149,10 +150,10 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log("API Response:", response.data.projects);
+        console.log('API Response:', response.data.projects);
         setResponseData(response.data.projects); // Store response data in state
       } catch (error) {
-        console.error("API Error:", error);
+        console.error('API Error:', error);
       }
     };
 
@@ -241,7 +242,7 @@ export default function Dashboard() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/avatars/01.png" alt="@shadcn" />
                   <AvatarFallback>
-                    <UserIcon size={16} />{" "}
+                    <UserIcon size={16} />{' '}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -257,7 +258,7 @@ export default function Dashboard() {
           </DropdownMenu>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm/>
+          <ProfileForm />
         </main>
       </div>
     </div>

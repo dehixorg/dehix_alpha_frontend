@@ -1,6 +1,6 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   Boxes,
   CheckCircle,
@@ -23,10 +23,13 @@ import {
   Truck,
   Users2,
   Wallet,
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+  UserIcon,
+} from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,8 +37,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -43,7 +46,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -52,9 +55,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   Table,
   TableBody,
@@ -62,43 +65,77 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
-import StatCard from "@/components/shared/statCard";
-import InterviewCard from "@/components/shared/interviewCard";
-import { useEffect, useState } from "react";
-import { axiosInstance } from "@/lib/axiosinstance";
-import SidebarMenu, { MenuItem } from "@/components/menu/sidebarMenu";
+} from '@/components/ui/tooltip';
+import { RootState } from '@/lib/store';
+import StatCard from '@/components/shared/statCard';
+import InterviewCard from '@/components/shared/interviewCard';
+import { axiosInstance } from '@/lib/axiosinstance';
+import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 
 const sampleInterview = {
-  interviewer: "John Doe",
-  interviewee: "Jane Smith",
-  skill: "React Development",
-  interviewDate: new Date("2023-11-23T10:30:00Z"),
+  interviewer: 'John Doe',
+  interviewee: 'Jane Smith',
+  skill: 'React Development',
+  interviewDate: new Date('2023-11-23T10:30:00Z'),
   rating: 4.5,
-  comments: "Great communication skills and technical expertise.",
+  comments: 'Great communication skills and technical expertise.',
 };
 
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
-      { href: '#', colorClasses: 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base', icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />, label: 'Dehix' },
-      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Home className="h-5 w-5" />, label: 'Dashboard' },
-      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Package className="h-5 w-5" />, label: 'Projects' },
-      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Users2 className="h-5 w-5" />, label: 'Customers' },
-      { href: '#', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <LineChart className="h-5 w-5" />, label: 'Analytics' },
-    ];
-  
-    const menuItemsBottom: MenuItem[] = [
-      { href: '/dashboard/settings', colorClasses: 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8', icon: <Settings className="h-5 w-5" />, label: 'Settings' },
-    ];
-  
+    {
+      href: '#',
+      colorClasses:
+        'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base',
+      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
+      label: 'Dehix',
+    },
+    {
+      href: '#',
+      colorClasses:
+        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      icon: <Home className="h-5 w-5" />,
+      label: 'Dashboard',
+    },
+    {
+      href: '#',
+      colorClasses:
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      icon: <Package className="h-5 w-5" />,
+      label: 'Projects',
+    },
+    {
+      href: '#',
+      colorClasses:
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      icon: <Users2 className="h-5 w-5" />,
+      label: 'Customers',
+    },
+    {
+      href: '#',
+      colorClasses:
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      icon: <LineChart className="h-5 w-5" />,
+      label: 'Analytics',
+    },
+  ];
+
+  const menuItemsBottom: MenuItem[] = [
+    {
+      href: '/dashboard/settings',
+      colorClasses:
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      icon: <Settings className="h-5 w-5" />,
+      label: 'Settings',
+    },
+  ];
+
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 
@@ -108,10 +145,10 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log("API Response:", response.data.projects);
+        console.log('API Response:', response.data.projects);
         setResponseData(response.data.projects); // Store response data in state
       } catch (error) {
-        console.error("API Error:", error);
+        console.error('API Error:', error);
       }
     };
 
@@ -120,7 +157,10 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu menuItemsTop={menuItemsTop} menuItemsBottom={menuItemsBottom} />
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+      />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <Sheet>
@@ -197,7 +237,7 @@ export default function Dashboard() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/avatars/01.png" alt="@shadcn" />
                   <AvatarFallback>
-                    <UserIcon size={16} />{" "}
+                    <UserIcon size={16} />{' '}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -326,12 +366,12 @@ export default function Dashboard() {
                                 <Badge
                                   className="text-xs"
                                   variant={
-                                    project.verified ? "secondary" : "outline"
+                                    project.verified ? 'secondary' : 'outline'
                                   }
                                 >
                                   {project.verified
-                                    ? "Verified"
-                                    : "Not Verified"}
+                                    ? 'Verified'
+                                    : 'Not Verified'}
                                 </Badge>
                               </TableCell>
                               <TableCell>

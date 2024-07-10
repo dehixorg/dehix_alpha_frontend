@@ -1,13 +1,13 @@
-import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ButtonProps } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react';
+
+import { Button, ButtonProps } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 
 interface IconCardProps {
   title: string;

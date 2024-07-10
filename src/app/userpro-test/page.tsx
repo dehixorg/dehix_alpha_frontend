@@ -1,15 +1,16 @@
-import React from "react";
-import UserForm from "@/components/form-test/userprofile/userprofile";
+import React from 'react';
+
+import UserForm from '@/components/form-test/userprofile/userprofile';
 
 const userItems = [
   {
-    fullName: "John Doe",
-    mobileNumber: "123-456-7890",
-    emailAddress: "john.doe@example.com",
-    username: "johndoe",
-    github: "johndoe123",
-    instagram: "johndoe_insta",
-  }
+    fullName: 'John Doe',
+    mobileNumber: '123-456-7890',
+    emailAddress: 'john.doe@example.com',
+    username: 'johndoe',
+    github: 'johndoe123',
+    instagram: 'johndoe_insta',
+  },
 ];
 
 const UserProfile = () => {

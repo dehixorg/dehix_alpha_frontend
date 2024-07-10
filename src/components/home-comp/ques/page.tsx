@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState } from 'react';
 
 interface QuestionProps {
@@ -55,16 +55,19 @@ const Question: React.FC<QuestionProps> = ({ question, answer }) => {
 const Faq: React.FC = () => {
   const faqData = [
     {
-      question: "How do I hire a freelancer?",
-      answer: "To hire a freelancer, simply browse our platform, review freelancer profiles, and send them a project proposal. Our secure payment system and communication tools make the process easy and efficient.",
+      question: 'How do I hire a freelancer?',
+      answer:
+        'To hire a freelancer, simply browse our platform, review freelancer profiles, and send them a project proposal. Our secure payment system and communication tools make the process easy and efficient.',
     },
     {
-      question: "What is the pricing structure?",
-      answer: "Our pricing is flexible and tailored to your specific needs. Freelancers set their own rates, and you can negotiate directly with them. We also offer various subscription plans to fit your budget and project requirements.",
+      question: 'What is the pricing structure?',
+      answer:
+        'Our pricing is flexible and tailored to your specific needs. Freelancers set their own rates, and you can negotiate directly with them. We also offer various subscription plans to fit your budget and project requirements.',
     },
     {
-      question: "How do I ensure quality work?",
-      answer: "We carefully vet and screen all freelancers on our platform to ensure they meet our high standards of quality and expertise. You can also review freelancer portfolios, ratings, and reviews to find the perfect fit for your project.",
+      question: 'How do I ensure quality work?',
+      answer:
+        'We carefully vet and screen all freelancers on our platform to ensure they meet our high standards of quality and expertise. You can also review freelancer portfolios, ratings, and reviews to find the perfect fit for your project.',
     },
     // Add more FAQ items as needed
   ];

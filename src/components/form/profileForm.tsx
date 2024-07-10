@@ -1,10 +1,14 @@
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useFieldArray, useForm } from 'react-hook-form';
+import { z } from 'zod';
+import Link from 'next/link';
+
+import { DatePicker } from '../shared/datePicker';
+import { Card } from '../ui/card';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -13,42 +17,40 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
-import { DatePicker } from "../shared/datePicker";
-import { Card } from "../ui/card";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
-    message: "First Name must be at least 2 characters.",
+    message: 'First Name must be at least 2 characters.',
   }),
   lastName: z.string().min(2, {
-    message: "Last Name must be at least 2 characters.",
+    message: 'Last Name must be at least 2 characters.',
   }),
   username: z
     .string()
     .min(2, {
-      message: "Username must be at least 2 characters.",
+      message: 'Username must be at least 2 characters.',
     })
     .max(30, {
-      message: "Username must not be longer than 30 characters.",
+      message: 'Username must not be longer than 30 characters.',
     }),
   email: z
     .string({
-      required_error: "Please select an email to display.",
+      required_error: 'Please select an email to display.',
     })
     .email(),
   phone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
+    message: 'Phone number must be at least 10 digits.',
   }),
   dob: z.date(),
   role: z.string(),
@@ -56,8 +58,8 @@ const profileFormSchema = z.object({
   urls: z
     .array(
       z.object({
-        value: z.string().url({ message: "Please enter a valid URL." }),
-      })
+        value: z.string().url({ message: 'Please enter a valid URL.' }),
+      }),
     )
     .optional(),
 });
@@ -66,12 +68,12 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
-  firstName: "",
-  lastName: "",
-  bio: "I own a computer.",
+  firstName: '',
+  lastName: '',
+  bio: 'I own a computer.',
   urls: [
-    { value: "https://shadcn.com" },
-    { value: "http://twitter.com/shadcn" },
+    { value: 'https://shadcn.com' },
+    { value: 'http://twitter.com/shadcn' },
   ],
 };
 
@@ -79,17 +81,17 @@ export function ProfileForm() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
-    mode: "onChange",
+    mode: 'onChange',
   });
 
   const { fields, append } = useFieldArray({
-    name: "urls",
+    name: 'urls',
     control: form.control,
   });
 
   function onSubmit(data: ProfileFormValues) {
     toast({
-      title: "You submitted the following values:",
+      title: 'You submitted the following values:',
       description: (
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
           <code className="text-white">{JSON.stringify(data, null, 2)}</code>
@@ -180,7 +182,7 @@ export function ProfileForm() {
             name="dob"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Birth{"\t"} </FormLabel>
+                <FormLabel>Date of Birth{'\t'} </FormLabel>
                 <FormControl>
                   <DatePicker />
                 </FormControl>
@@ -233,10 +235,10 @@ export function ProfileForm() {
                 name={`urls.${index}.value`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className={cn(index !== 0 && "sr-only")}>
+                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
                       URLs
                     </FormLabel>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
+                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
                       Enter URL of your account
                     </FormDescription>
                     <FormControl>
@@ -252,7 +254,7 @@ export function ProfileForm() {
               variant="outline"
               size="sm"
               className="mt-2"
-              onClick={() => append({ value: "" })}
+              onClick={() => append({ value: '' })}
             >
               Add URL
             </Button>

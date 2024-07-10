@@ -1,5 +1,10 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
 
 interface StatCardProps {
   title: string;
@@ -22,9 +27,7 @@ export default function StatCard({
         <CardTitle className="text-4xl">{value}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-xs text-muted-foreground">
-          {additionalInfo}
-        </div>
+        <div className="text-xs text-muted-foreground">{additionalInfo}</div>
       </CardContent>
     </Card>
   );
