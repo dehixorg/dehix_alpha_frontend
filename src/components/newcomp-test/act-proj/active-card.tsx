@@ -1,14 +1,6 @@
 import * as React from 'react';
-import { Activity } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface CustomCardProps {
   heading: string;
   icon?: React.ElementType; // Assuming `icon` is a component

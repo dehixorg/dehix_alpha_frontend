@@ -1,59 +1,31 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   BookOpen,
   Boxes,
   Briefcase,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Copy,
-  CreditCard,
-  File,
-  Home,
   HomeIcon,
   LineChart,
-  ListFilter,
-  MoreVertical,
   Package,
-  Package2,
   PanelLeft,
   Search,
-  Settings,
   ShoppingCart,
-  Truck,
   User,
   Users2,
-  Wallet,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -63,20 +35,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
-import StatCard from '@/components/shared/statCard';
-import InterviewCard from '@/components/shared/interviewCard';
-import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import { ProfileForm } from '@/components/form/profileForm';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
 
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
@@ -227,7 +187,7 @@ export default function Dashboard() {
           </DropdownMenu>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid}/>
+          <ProfileForm user_id={user.uid} />
         </main>
       </div>
     </div>

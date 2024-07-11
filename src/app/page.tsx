@@ -1,12 +1,11 @@
 import { Pencil, Code, Type } from 'lucide-react';
+import Image from 'next/image';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import { Navbar } from '@/components/navbar';
-import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { UserNav } from '@/components/userNav';
 
 const leftNavItems = [
   { label: 'Home', link: '/' },
@@ -50,9 +49,9 @@ const HomePage = () => {
             <h2 className=" sm:text-3xl">About Our Freelancing Platform</h2>
             <p className="mt-4 text-white md:text-xl">
               Our platform connects you with talented freelancers from around
-              the world, empowering you to bring your projects to life. We're
-              dedicated to providing a seamless experience and helping you find
-              the perfect fit for your needs.
+              the world, empowering you to bring your projects to life.
+              We&apos;re dedicated to providing a seamless experience and
+              helping you find the perfect fit for your needs.
             </p>
             <div className="grid gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
@@ -85,8 +84,9 @@ const HomePage = () => {
             <div className="grid gap-8 mt-10 sm:grid-cols-2">
               <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
                 <blockquote className="text-lg font-medium text-white">
-                  "The freelancers on this platform are truly exceptional. They
-                  delivered high-quality work that exceeded my expectations."
+                  &ldquo;The freelancers on this platform are truly exceptional.
+                  They delivered high-quality work that exceeded my
+                  expectations.&rdquo;
                 </blockquote>
                 <div className="mt-4">
                   <p className=" font-bold">John Doe</p>
@@ -95,8 +95,9 @@ const HomePage = () => {
               </div>
               <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">
                 <blockquote className="text-lg font-medium text-white">
-                  "I've been using this freelancing platform for years, and it's
-                  been a game-changer for my business. Highly recommended!"
+                  &ldquo;I&apos;ve been using this freelancing platform for
+                  years, and it&apos;s been a game-changer for my business.
+                  Highly recommended!&rdquo;
                 </blockquote>
                 <div className="mt-4">
                   <p className=" font-bold">Jane Smith</p>
@@ -111,7 +112,7 @@ const HomePage = () => {
             <h2 className=" sm:text-3xl">Our Portfolio</h2>
             <div className="grid gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
               <div className="overflow-hidden rounded-lg">
-                <img
+                <Image
                   alt="Portfolio Item 1"
                   className="object-cover w-full h-auto"
                   height={300}
@@ -130,7 +131,7 @@ const HomePage = () => {
                 </div>
               </div>
               <div className="overflow-hidden rounded-lg">
-                <img
+                <Image
                   alt="Portfolio Item 2"
                   className="object-cover w-full h-auto"
                   height={300}
@@ -149,7 +150,7 @@ const HomePage = () => {
                 </div>
               </div>
               <div className="overflow-hidden rounded-lg">
-                <img
+                <Image
                   alt="Portfolio Item 3"
                   className="object-cover w-full h-auto"
                   height={300}
@@ -182,7 +183,7 @@ const HomePage = () => {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className=" sm:text-3xl">Get in Touch</h2>
             <p className="mt-4 text-white md:text-xl">
-              Have a project in mind? Let's discuss how we can help.
+              Have a project in mind? Let&apos;s discuss how we can help.
             </p>
             <form className="mt-8 space-y-4 text-left">
               <div>

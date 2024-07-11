@@ -1,4 +1,6 @@
+import React from 'react';
 import { Copy } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 import {
   Card,
@@ -8,13 +10,14 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
 interface InterviewCardProps {
   interviewer: string;
   interviewee: string;
   skill: string;
   interviewDate: Date;
-  rating: number | string;
-  comments?: string;
+  rating?: number | string; // Optional rating
+  comments?: string; // Optional comments
 }
 
 const InterviewCard: React.FC<InterviewCardProps> = ({
@@ -89,6 +92,15 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
       </CardFooter>
     </Card>
   );
+};
+
+InterviewCard.propTypes = {
+  interviewer: PropTypes.string.isRequired,
+  interviewee: PropTypes.string.isRequired,
+  skill: PropTypes.string.isRequired,
+  interviewDate: PropTypes.instanceOf(Date).isRequired,
+  rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Optional, can be string or number
+  comments: PropTypes.string, // Optional string
 };
 
 export default InterviewCard;

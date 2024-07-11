@@ -1,28 +1,20 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Boxes,
   CheckCircle,
-  ChevronLeft,
   ChevronRight,
   Clock,
-  Copy,
-  CreditCard,
   File,
   Home,
   LineChart,
   ListFilter,
-  MoreVertical,
   Package,
-  Package2,
   PanelLeft,
   Search,
   Settings,
   ShoppingCart,
-  Truck,
   Users2,
-  Wallet,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -35,8 +27,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,11 +57,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import InterviewCard from '@/components/shared/interviewCard';
@@ -152,7 +137,7 @@ export default function Dashboard() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, []); // Empty dependency array ensures it runs only once on mount
+  }, [user.uid]); // Empty dependency array ensures it runs only once on mount
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

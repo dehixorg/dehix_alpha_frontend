@@ -6,9 +6,9 @@ const AboutFreelancingPlatform: React.FC = () => {
       <h1 className="text-5xl text-bold">About Our Freelancing Platform</h1>
       <p className="mb-16 mt-6 text-gray-500">
         Our platform connects you with talented freelancers from around the
-        world, empowering you to bring your projects to life. We're dedicated to
-        providing a seamless experience and helping you find the perfect fit for
-        your needs.
+        world, empowering you to bring your projects to life. We&apos;re
+        dedicated to providing a seamless experience and helping you find the
+        perfect fit for your needs.
       </p>
       <div className="flex flex-row justify-center items-center text-cyan-400">
         <div className="rounded-lg bg-[#1a1a1a] p-6 text-left">

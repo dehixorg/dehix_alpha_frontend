@@ -1,13 +1,11 @@
-import React, { Dispatch, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { DatePicker } from '../shared/datePicker';
 import { Card } from '../ui/card';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -19,49 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-
-interface ProfileFormProps {
-  user: {
-    firstName: string;
-    lastName: string;
-    userName: string;
-    email: string;
-    phone: string;
-    dob: string; // Ensure this matches the expected format for DatePicker
-    role: string;
-    projects: any[]; // Adjust this type as per your data structure
-    githubLink: string;
-    linkedin: string;
-    personalWebsite: string;
-    perHourPrice: number;
-    connects: number;
-    resume: {
-      type: string;
-      data: number[];
-    };
-    workExperience: number;
-    isFreelancer: boolean;
-    oracleStatus: string;
-    pendingProject: any[]; // Adjust this type as per your data structure
-    rejectedProject: any[]; // Adjust this type as per your data structure
-    acceptedProject: any[]; // Adjust this type as per your data structure
-    oracleProject: any[]; // Adjust this type as per your data structure
-    userDataForVerification: any[]; // Adjust this type as per your data structure
-    interviewsAligned: string[]; // Adjust this type as per your data structure
-    createdAt: string; // Ensure this matches the expected format for DatePicker
-    updatedAt: string; // Ensure this matches the expected format for DatePicker
-    __v: number;
-  };
-  setUser: Dispatch<any>
-}
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -78,9 +34,7 @@ const profileFormSchema = z.object({
     .max(30, {
       message: 'Username must not be longer than 30 characters.',
     }),
-  email: z
-    .string()
-    .email(),
+  email: z.string().email(),
   phone: z.string().min(10, {
     message: 'Phone number must be at least 10 digits.',
   }),
@@ -89,8 +43,7 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export function ProfileForm({user_id}: {user_id:string}) {
-
+export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -100,7 +53,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
       username: '',
       email: '',
       phone: '',
-      role: ''
+      role: '',
     },
     mode: 'all',
   });
@@ -127,10 +80,9 @@ export function ProfileForm({user_id}: {user_id:string}) {
       username: user?.userName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      role: user?.role || ''
+      role: user?.role || '',
     });
   }, [user, form]);
-
 
   async function onSubmit(data: ProfileFormValues) {
     try {
@@ -176,10 +128,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your first name"
-                    {...field}
-                  />
+                  <Input placeholder="Enter your first name" {...field} />
                 </FormControl>
                 <FormDescription>Enter your first name</FormDescription>
                 <FormMessage />
@@ -193,10 +142,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your last name"
-                    {...field}
-                  />
+                  <Input placeholder="Enter your last name" {...field} />
                 </FormControl>
                 <FormDescription>Enter your last name</FormDescription>
                 <FormMessage />
@@ -210,10 +156,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your username"
-                    {...field}
-                  />
+                  <Input placeholder="Enter your username" {...field} />
                 </FormControl>
                 <FormDescription>Enter your username</FormDescription>
                 <FormMessage />
@@ -227,10 +170,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your email"
-                    {...field}
-                  />
+                  <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormDescription>Enter your email</FormDescription>
                 <FormMessage />
@@ -244,10 +184,7 @@ export function ProfileForm({user_id}: {user_id:string}) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="+91"
-                    {...field}
-                  />
+                  <Input placeholder="+91" {...field} />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>Enter your phone number</FormDescription>
