@@ -36,12 +36,6 @@ const profileFormSchema = z.object({
       required_error: 'Please select an email to display.',
     })
     .email(),
-  phone: z.string().min(10, {
-    message: 'Phone number must be at least 10 digits.',
-  }),
-  startDate: z.date(),
-  role: z.string(),
-  bio: z.string().max(160).min(4),
   urls: z
     .array(
       z.object({
@@ -67,11 +61,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
   profiles: [
     {
       domain: '',
@@ -148,22 +137,7 @@ export function CreateProjectBusinessForm() {
               </FormItem>
             )}
           />
-          {/* <FormField
-            control={form.control}
-            name="startDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Date </FormLabel>
-                <FormControl>
-                  <DatePicker />
-                </FormControl>
-                <FormDescription>
-                  Enter Project start date
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
+          
           
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (

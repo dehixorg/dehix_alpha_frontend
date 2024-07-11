@@ -279,7 +279,7 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button>Create New Project</Button>
+                  <Button><Link href="/business/createProject">Create New Project</Link></Button>
                 </CardFooter>
               </Card>
 
