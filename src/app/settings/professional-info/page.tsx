@@ -13,7 +13,6 @@ import {
   User,
   Users2,
   UserIcon,
-  Plus,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
@@ -35,6 +34,7 @@ import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import ExperienceCard from '@/components/cards/experienceCard';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { AddExperience } from '@/components/dialogs/AddExperience';
 
 export default function ProfessionalInfo() {
   const menuItemsTop: MenuItem[] = [
@@ -201,9 +201,7 @@ export default function ProfessionalInfo() {
           {experiences.map((exp: any, index: number) => (
             <ExperienceCard key={index} {...exp} />
           ))}
-          <Button variant="outline" size="icon" className="my-auto">
-            <Plus className="h-4 w-4" />
-          </Button>
+          <AddExperience />
         </main>
       </div>
     </div>

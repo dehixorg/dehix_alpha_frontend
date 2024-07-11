@@ -80,9 +80,9 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
         </p>
         <p>-</p>
         <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
-          {workTo === 'current'
-            ? 'Current'
-            : new Date(workTo).toLocaleDateString()}
+          {workTo !== 'current'
+            ? new Date(workTo).toLocaleDateString()
+            : 'Current'}
         </p>
       </CardFooter>
     </Card>
