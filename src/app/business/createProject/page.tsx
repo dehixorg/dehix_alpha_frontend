@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -7,18 +6,12 @@ import {
   Briefcase,
   HomeIcon,
   LineChart,
-  ListFilter,
-  MoreVertical,
   Package,
-  Package2,
   PanelLeft,
   Search,
-  Settings,
   ShoppingCart,
-  Truck,
   User,
   Users2,
-  Wallet,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -35,16 +28,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -53,36 +37,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { RootState } from '@/lib/store';
-import StatCard from '@/components/shared/statCard';
-import InterviewCard from '@/components/shared/interviewCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
 
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
@@ -150,7 +108,7 @@ export default function Dashboard() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, []); // Empty dependency array ensures it runs only once on mount
+  }, [user.uid]); // Empty dependency array ensures it runs only once on mount
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
