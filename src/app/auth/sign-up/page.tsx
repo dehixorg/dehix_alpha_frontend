@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { LoaderCircle, Chrome, Rocket } from 'lucide-react';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/shared/themeToggle";
-import { LoaderCircle, Chrome, Rocket } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ThemeToggle } from '@/components/shared/themeToggle';
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -64,7 +64,7 @@ export default function SignUp() {
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Rocket className="mr-2 h-4 w-4" />
-                )}{" "}
+                )}{' '}
                 Create an account
               </Button>
               <Button variant="outline" type="button" disabled={isLoading}>
@@ -72,23 +72,23 @@ export default function SignUp() {
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Chrome className="mr-2 h-4 w-4" />
-                )}{" "}
+                )}{' '}
                 Google Login
               </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
               <Link href="/auth/login">Sign in</Link>
             </Button>
           </div>
           <p className="px-8 text-center text-sm text-muted-foreground">
-            By clicking continue, you agree to our{" "}
+            By clicking continue, you agree to our{' '}
             <Button variant="link" className="p-0" asChild>
               <Link href="/terms">Terms of Service</Link>
-            </Button>{" "}
-            and{" "}
+            </Button>{' '}
+            and{' '}
             <Button variant="link" className="p-0" asChild>
               <Link href="/privacy">Privacy Policy</Link>
             </Button>

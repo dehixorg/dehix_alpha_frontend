@@ -1,44 +1,44 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import Link from "next/link";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/shared/themeToggle";
-import { LoaderCircle, Chrome, Key } from "lucide-react";
-import { loginUser } from "@/lib/utils";
-import { UserCredential } from "firebase/auth";
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { LoaderCircle, Chrome, Key } from 'lucide-react';
+import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ThemeToggle } from '@/components/shared/themeToggle';
+import { loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
-import { initializeAxiosWithToken } from "@/lib/axiosinstance";
+import { initializeAxiosWithToken } from '@/lib/axiosinstance';
 
 export default function Login() {
   const router = useRouter();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [email, setEmail] = useState<string>("");
-  const [pass, setPass] = useState<string>("");
+  const [email, setEmail] = useState<string>('');
+  const [pass, setPass] = useState<string>('');
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const userCredential:UserCredential = await loginUser(email, pass);
+      const userCredential: UserCredential = await loginUser(email, pass);
       const user = userCredential.user;
 
       // Get the ID token
       const accessToken = await user.getIdToken();
-      console.log("Bearer " + accessToken);
+      console.log('Bearer ' + accessToken);
       initializeAxiosWithToken(accessToken);
-      console.log("User ID " + userCredential.user.uid);
+      console.log('User ID ' + userCredential.user.uid);
       dispatch(setUser(userCredential.user));
-      console.log(userCredential.user)
-      router.replace("/dashboard/freelancer");
+      console.log(userCredential.user);
+      router.replace('/dashboard/freelancer');
     } catch (error: any) {
       // Optionally handle error based on its type
       setIsLoading(false);
@@ -94,7 +94,7 @@ export default function Login() {
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Key className="mr-2 h-4 w-4" />
-                )}{" "}
+                )}{' '}
                 Login
               </Button>
               <Button variant="outline" className="w-full" disabled={isLoading}>
@@ -102,15 +102,15 @@ export default function Login() {
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Chrome className="mr-2 h-4 w-4" />
-                )}{" "}
+                )}{' '}
                 Google Login
               </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
+            Don&apos;t have an account?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
-              <Link href="/auth/sign-up">Sign up</Link>
+              <Link href="/auth/sign-up/freelancer">Sign up</Link>
             </Button>
           </div>
         </div>

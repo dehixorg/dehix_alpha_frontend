@@ -1,4 +1,5 @@
-import React from "react";
+import Image from 'next/image';
+import React from 'react';
 
 interface PortfolioItem {
   image: string;
@@ -19,13 +20,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ items }) => {
       <div className="grid grid-cols-1 gap-8 mt-10 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, index) => (
           <div key={index} className="overflow-hidden rounded-lg">
-            <img
+            <Image
               alt={item.title}
               className="object-cover w-full h-auto"
               height={300}
               src={item.image}
               width={400}
-              style={{ objectFit: "cover" }}
+              style={{ objectFit: 'cover' }}
             />
             <div className="bg-gray-900 p-4">
               <h3 className="text-xl font-bold text-cyan-500">{item.title}</h3>

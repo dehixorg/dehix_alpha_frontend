@@ -1,19 +1,16 @@
-"use client"
-import { ProfileSidebar } from "@/components/ProfileSidebar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { User } from 'lucide-react';
+'use client';
+import { User, CalendarIcon } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
- 
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ProfileSidebar } from '@/components/ProfileSidebar';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Form,
   FormControl,
@@ -22,34 +19,36 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from '@/components/ui/form';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-
+} from '@/components/ui/popover';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from '@/components/ui/input-otp';
 
 const FormSchema = z.object({
   dob: z.date({
-    required_error: "A date of birth is required.",
+    required_error: 'A date of birth is required.',
   }),
-})
+});
 
 export default function Page() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-  })
+  });
   return (
     <div className="flex flex-col md:flex-row">
       <ProfileSidebar />
       <div className="bg-gray-800 sm:min-h-screen w-full flex justify-center items-center py-6 md:py-0">
-        <div className="bg-black w-full p-1rem rounded-lg flex flex-col items-center justify-center p-4 md:p-8" style={{ height: '100%' }}>
+        <div
+          className="bg-black w-full p-1rem rounded-lg flex flex-col items-center justify-center p-4 md:p-8"
+          style={{ height: '100%' }}
+        >
           <div className="flex flex-col items-center justify-center">
             <section className="flex flex-col items-center justify-center w-full p-6 mt-5 space-y-4 text-white rounded-lg shadow-lg md:ml-5">
               <div className="rounded-full overflow-hidden w-24 h-24 md:w-32 md:h-32 mb-4 bg-gray-700 flex items-center justify-center">
@@ -68,9 +67,7 @@ export default function Page() {
                         required
                         type="text"
                       />
-                      <FormDescription>
-                        Enter your first name
-                      </FormDescription>
+                      <FormDescription>Enter your first name</FormDescription>
                     </div>
                     <div className="space-y-2">
                       <Label>Last Name</Label>
@@ -82,9 +79,7 @@ export default function Page() {
                         required
                         type="text"
                       />
-                      <FormDescription>
-                        Enter your last name
-                      </FormDescription>
+                      <FormDescription>Enter your last name</FormDescription>
                     </div>
                   </div>
 
@@ -98,11 +93,9 @@ export default function Page() {
                       required
                       type="text"
                     />
-                    <FormDescription>
-                        Enter your username
-                      </FormDescription>
+                    <FormDescription>Enter your username</FormDescription>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Email</Label>
                     <Input
@@ -113,9 +106,7 @@ export default function Page() {
                       required
                       type="email"
                     />
-                    <FormDescription>
-                      Enter your email
-                    </FormDescription>
+                    <FormDescription>Enter your email</FormDescription>
                   </div>
 
                   <div className="flex items-end space-x-2">
@@ -136,7 +127,9 @@ export default function Page() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Button className="bg-gray-600 text-white hover:bg-gray-800">Send OTP</Button>
+                      <Button className="bg-gray-600 text-white hover:bg-gray-800">
+                        Send OTP
+                      </Button>
                     </div>
                   </div>
 
@@ -160,7 +153,9 @@ export default function Page() {
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
-                    <Button className="bg-gray-600 text-white hover:bg-gray-800">Verify</Button>
+                    <Button className="bg-gray-600 text-white hover:bg-gray-800">
+                      Verify
+                    </Button>
                   </div>
 
                   <div className="space-y-2">
@@ -174,14 +169,14 @@ export default function Page() {
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
-                                  variant={"outline"}
+                                  variant={'outline'}
                                   className={cn(
-                                    "w-[240px] pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
+                                    'w-[240px] pl-3 text-left font-normal',
+                                    !field.value && 'text-muted-foreground',
                                   )}
                                 >
                                   {field.value ? (
-                                    format(field.value, "PPP")
+                                    format(field.value, 'PPP')
                                   ) : (
                                     <span>Pick a date</span>
                                   )}
@@ -189,13 +184,17 @@ export default function Page() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
                               <Calendar
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 disabled={(date) =>
-                                  date > new Date() || date < new Date("1900-01-01")
+                                  date > new Date() ||
+                                  date < new Date('1900-01-01')
                                 }
                                 initialFocus
                               />
@@ -206,11 +205,10 @@ export default function Page() {
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
-                        
                       )}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Enter your current role or position</Label>
                     <select
@@ -220,7 +218,9 @@ export default function Page() {
                       defaultValue="" // Set a default value if needed
                       required
                     >
-                      <option value="" disabled hidden>Choose your role</option>
+                      <option value="" disabled hidden>
+                        Choose your role
+                      </option>
                       <option value="role1">Software Engineer</option>
                       <option value="role2">Data Scientist</option>
                       <option value="role3">UX UI Designer</option>
@@ -255,10 +255,10 @@ export default function Page() {
                     <FormDescription>
                       Enter URL of your accounts
                     </FormDescription>
-                    <Button className="bg-gray-600 text-white hover:bg-gray-800">Add URL</Button>
+                    <Button className="bg-gray-600 text-white hover:bg-gray-800">
+                      Add URL
+                    </Button>
                   </div>
-
-                  
                 </form>
               </Form>
             </section>

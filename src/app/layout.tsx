@@ -1,16 +1,18 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import StoreProvider from "./storeProvider";
-import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ["latin"] });
+import './globals.css';
+import StoreProvider from './storeProvider';
+
+import { ThemeProvider } from '@/components/theme-provider';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Dehix",
-  description: "Freelancer platform",
+  title: 'Dehix',
+  description: 'Freelancer platform',
 };
 
 export default function RootLayout({
@@ -22,7 +24,7 @@ export default function RootLayout({
     <StoreProvider>
       <html lang="en">
         <body className={inter.className}>
-          {" "}
+          {' '}
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -30,7 +32,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <TooltipProvider>{children}</TooltipProvider>
-            <Toaster/>
+            <Toaster />
           </ThemeProvider>
         </body>
       </html>

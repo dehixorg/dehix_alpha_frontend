@@ -1,12 +1,8 @@
-import React from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfileCardProps {
   name: string;
@@ -26,9 +22,15 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ name, email }) => {
           <div className="mb-4 text-gray-600">{email}</div>
           <div className="font-bold text-gray-600 mb-2">Skills</div>
           <div className="flex space-x-2">
-            <Badge variant="outline" className="text-gray-600">UI/UX</Badge>
-            <Badge variant="outline" className="text-gray-600">Branding</Badge>
-            <Badge variant="outline" className="text-gray-600">Web Development</Badge>
+            <Badge variant="outline" className="text-gray-600">
+              UI/UX
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              Branding
+            </Badge>
+            <Badge variant="outline" className="text-gray-600">
+              Web Development
+            </Badge>
           </div>
         </div>
       </Card>

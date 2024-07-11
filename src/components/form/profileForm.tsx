@@ -1,10 +1,12 @@
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { Card } from '../ui/card';
+
+import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -13,89 +15,103 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
-import { DatePicker } from "../shared/datePicker";
-import { Card } from "../ui/card";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
-    message: "First Name must be at least 2 characters.",
+    message: 'First Name must be at least 2 characters.',
   }),
   lastName: z.string().min(2, {
-    message: "Last Name must be at least 2 characters.",
+    message: 'Last Name must be at least 2 characters.',
   }),
   username: z
     .string()
     .min(2, {
-      message: "Username must be at least 2 characters.",
+      message: 'Username must be at least 2 characters.',
     })
     .max(30, {
-      message: "Username must not be longer than 30 characters.",
+      message: 'Username must not be longer than 30 characters.',
     }),
-  email: z
-    .string({
-      required_error: "Please select an email to display.",
-    })
-    .email(),
+  email: z.string().email(),
   phone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
+    message: 'Phone number must be at least 10 digits.',
   }),
-  dob: z.date(),
   role: z.string(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Please enter a valid URL." }),
-      })
-    )
-    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  firstName: "",
-  lastName: "",
-  bio: "I own a computer.",
-  urls: [
-    { value: "https://shadcn.com" },
-    { value: "http://twitter.com/shadcn" },
-  ],
-};
-
-export function ProfileForm() {
+export function ProfileForm({ user_id }: { user_id: string }) {
+  const [user, setUser] = useState<any>({});
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: "onChange",
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      phone: '',
+      role: '',
+    },
+    mode: 'all',
   });
 
-  const { fields, append } = useFieldArray({
-    name: "urls",
-    control: form.control,
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user_id}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response get:', response.data);
+        setUser(response.data); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
 
-  function onSubmit(data: ProfileFormValues) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+    fetchData(); // Call fetch data function on component mount
+  }, [user_id]);
+
+  useEffect(() => {
+    // Reset form values when user state changes
+    form.reset({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      username: user?.userName || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      role: user?.role || '',
     });
+  }, [user, form]);
+
+  async function onSubmit(data: ProfileFormValues) {
+    try {
+      const response = await axiosInstance.put(`/freelancer/${user_id}`, data);
+      console.log('API Response:', response.data);
+
+      setUser({
+        ...user,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.username,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        // Update other fields as needed
+      });
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been successfully updated.',
+      });
+    } catch (error) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update profile. Please try again later.',
+      });
+    }
   }
 
   return (
@@ -175,14 +191,14 @@ export function ProfileForm() {
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="dob"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Birth{"\t"} </FormLabel>
+                <FormLabel>Date of Birth{'\t'} </FormLabel>
                 <FormControl>
-                  <DatePicker />
+                  <DatePicker {...field} />
                 </FormControl>
                 <FormDescription>
                   Your date of birth is used to calculate your age.
@@ -190,8 +206,8 @@ export function ProfileForm() {
                 <FormMessage />
               </FormItem>
             )}
-          />
-          <FormField
+          /> */}
+          {/* <FormField
             control={form.control}
             name="role"
             render={({ field }) => (
@@ -224,39 +240,7 @@ export function ProfileForm() {
                 <FormMessage />
               </FormItem>
             )}
-          />
-          <div className="lg:col-span-2 xl:col-span-2">
-            {fields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={field.id}
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={cn(index !== 0 && "sr-only")}>
-                      URLs
-                    </FormLabel>
-                    <FormDescription className={cn(index !== 0 && "sr-only")}>
-                      Enter URL of your account
-                    </FormDescription>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => append({ value: "" })}
-            >
-              Add URL
-            </Button>
-          </div>
+          /> */}
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Update profile
           </Button>

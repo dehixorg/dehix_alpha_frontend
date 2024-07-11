@@ -1,28 +1,23 @@
+import React from 'react';
+import { Copy } from 'lucide-react';
+import PropTypes from 'prop-types';
+
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-} from "lucide-react";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+
 interface InterviewCardProps {
   interviewer: string;
   interviewee: string;
   skill: string;
   interviewDate: Date;
-  rating: number | string;
-  comments?: string;
+  rating?: number | string; // Optional rating
+  comments?: string; // Optional comments
 }
 
 const InterviewCard: React.FC<InterviewCardProps> = ({
@@ -35,10 +30,10 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
 }) => {
   const formatDate = (date: Date) => {
     // Implement date formatting as per your preference
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -89,7 +84,7 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
       </CardContent>
       <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
         <div className="text-xs text-muted-foreground">
-          Updated{" "}
+          Updated{' '}
           <time dateTime={interviewDate.toISOString()}>
             {formatDate(interviewDate)}
           </time>
@@ -97,6 +92,15 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
       </CardFooter>
     </Card>
   );
+};
+
+InterviewCard.propTypes = {
+  interviewer: PropTypes.string.isRequired,
+  interviewee: PropTypes.string.isRequired,
+  skill: PropTypes.string.isRequired,
+  interviewDate: PropTypes.instanceOf(Date).isRequired,
+  rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Optional, can be string or number
+  comments: PropTypes.string, // Optional string
 };
 
 export default InterviewCard;

@@ -1,15 +1,16 @@
-"use client";
+'use client';
 
-import { useState,useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/shared/datePicker";
-import { LoaderCircle, Rocket } from "lucide-react";
-import { axiosInstance } from "@/lib/axiosinstance";
-import { useToast } from "@/components/ui/use-toast";
-import { ToastAction } from "@radix-ui/react-toast";
-import { useRouter } from "next/navigation";
+import { useState, useRef } from 'react';
+import { LoaderCircle, Rocket } from 'lucide-react';
+import { ToastAction } from '@radix-ui/react-toast';
+import { useRouter } from 'next/navigation';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/shared/datePicker';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -19,43 +20,42 @@ export default function FreelancerRegisterForm() {
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
-    // const toast = useToast();
 
     const formData = {
-      firstName: (document.getElementById("first-name") as HTMLInputElement)
+      firstName: (document.getElementById('first-name') as HTMLInputElement)
         .value,
-      lastName: (document.getElementById("last-name") as HTMLInputElement)
+      lastName: (document.getElementById('last-name') as HTMLInputElement)
         .value,
-      email: (document.getElementById("email") as HTMLInputElement).value,
-      phone: (document.getElementById("phone") as HTMLInputElement).value,
-      userName: (document.getElementById("username") as HTMLInputElement).value,
-      githubLink: (document.getElementById("github") as HTMLInputElement).value,
-      linkedin: (document.getElementById("linkedin") as HTMLInputElement).value,
+      email: (document.getElementById('email') as HTMLInputElement).value,
+      phone: (document.getElementById('phone') as HTMLInputElement).value,
+      userName: (document.getElementById('username') as HTMLInputElement).value,
+      githubLink: (document.getElementById('github') as HTMLInputElement).value,
+      linkedin: (document.getElementById('linkedin') as HTMLInputElement).value,
       personalWebsite: (
-        document.getElementById("personalWebsite") as HTMLInputElement
+        document.getElementById('personalWebsite') as HTMLInputElement
       ).value,
       perHourPrice: (
-        document.getElementById("perHourPrice") as HTMLInputElement
+        document.getElementById('perHourPrice') as HTMLInputElement
       ).value,
-      resume: (document.getElementById("resume") as HTMLInputElement).value,
-      password: (document.getElementById("password") as HTMLInputElement).value,
-      dob: "2024-07-06T20:12:22.047Z",
+      resume: (document.getElementById('resume') as HTMLInputElement).value,
+      password: (document.getElementById('password') as HTMLInputElement).value,
+      dob: '2024-07-06T20:12:22.047Z',
       workExperience: (
-        document.getElementById("workExperience") as HTMLInputElement
+        document.getElementById('workExperience') as HTMLInputElement
       ).value,
       connects: 0,
       professionalInfo: [],
       skills: [],
       education: [],
-      role: "freelancer",
+      role: 'freelancer',
       projects: {},
       isFreelancer: true,
       refer: {
-        name: "string",
-        contact: "string",
+        name: 'string',
+        contact: 'string',
       },
       consultant: {
-        status:"notApplied"
+        status: 'notApplied',
       },
       pendingProject: [],
       rejectedProject: [],
@@ -63,34 +63,31 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: "notApplied",
+      oracleStatus: 'notApplied',
     };
 
     try {
-        const response = await axiosInstance.post("/register/freelancer", formData);
-        console.log("API Response:", response.data);
-        // toast({
-        //     variant: "destructive",
-        //     title: "Account crcleareated successfully!",
-        //     action: <ToastAction altText="Try again">Try again</ToastAction>,
-        //   })
-        formRef.current?.reset();
-        router.replace("/auth/login");
-      } catch (error:any) {
-        console.error("API Error:", error);
-        // toast({
-        //     variant: "destructive",
-        //     title: "Uh oh! Something went wrong.",
-        //     description: `Error: ${error.response?.data || "Something went wrong!"}`,
-        //     action: <ToastAction altText="Try again">Try again</ToastAction>,
-        //   })
-      } finally {
-        setIsLoading(false);
-      }
+      await axiosInstance.post('/register/freelancer', formData);
+      toast({
+        title: 'Account created successfully!',
+      });
+      formRef.current?.reset();
+      router.replace('/auth/login');
+    } catch (error: any) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <form onSubmit={onSubmit}  ref={formRef}>
+    <form onSubmit={onSubmit} ref={formRef}>
       <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -179,12 +176,16 @@ export default function FreelancerRegisterForm() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          className="w-full bg-primary text-black "
+          disabled={isLoading}
+        >
           {isLoading ? (
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Rocket className="mr-2 h-4 w-4" />
-          )}{" "}
+          )}{' '}
           Create an account
         </Button>
       </div>
