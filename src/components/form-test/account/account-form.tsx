@@ -31,7 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 const languages = [
   { label: 'English', value: 'en' },
@@ -77,7 +77,6 @@ export function AccountForm() {
   });
 
   function onSubmit(data: AccountFormValues) {
-    const { toast } = useToast();
     toast({
       title: 'You submitted the following values:',
       description: (

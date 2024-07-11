@@ -9,13 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
-  //   const toast = useToast();
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -52,21 +51,20 @@ export default function BusinessRegisterForm() {
 
     try {
       const response = await axiosInstance.post('/register/business', formData);
-      //   toast({
-      //     variant: "success",
-      //     title: "Account created successfully!",
-      //     description: "Your business account has been created.",
-      //   });
+        toast({
+          title: "Account created successfully!",
+          description: "Your business account has been created.",
+        });
       formRef.current?.reset();
       router.replace('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
-      //   toast({
-      //     variant: "destructive",
-      //     title: "Uh oh! Something went wrong.",
-      //     description: `Error: ${error.response?.data || "Something went wrong!"}`,
-      //     action: <ToastAction altText="Try again">Try again</ToastAction>,
-      //   });
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: `Error: ${error.response?.data || "Something went wrong!"}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
     } finally {
       setIsLoading(false);
     }

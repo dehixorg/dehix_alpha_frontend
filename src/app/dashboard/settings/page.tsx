@@ -128,23 +128,6 @@ export default function Dashboard() {
   ];
 
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
-
-  console.log('API Response state:',responseData);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response get:', response.data);
-        setResponseData(response.data); // Store response data in state
-      } catch (error) {
-        console.error('API Error:', error);
-      }
-    };
-
-    fetchData(); // Call fetch data function on component mount
-  }, []); // Empty dependency array ensures it runs only once on mount
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -244,7 +227,7 @@ export default function Dashboard() {
           </DropdownMenu>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user={responseData} setUser={setResponseData}/>
+          <ProfileForm user_id={user.uid}/>
         </main>
       </div>
     </div>

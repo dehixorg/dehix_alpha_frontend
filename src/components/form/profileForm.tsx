@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { Dispatch, useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { DatePicker } from '../shared/datePicker';
 import { Card } from '../ui/card';
 
+import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +37,7 @@ interface ProfileFormProps {
     phone: string;
     dob: string; // Ensure this matches the expected format for DatePicker
     role: string;
-    projects: []; // Adjust this type as per your data structure
+    projects: any[]; // Adjust this type as per your data structure
     githubLink: string;
     linkedin: string;
     personalWebsite: string;
@@ -59,6 +60,7 @@ interface ProfileFormProps {
     updatedAt: string; // Ensure this matches the expected format for DatePicker
     __v: number;
   };
+  setUser: Dispatch<any>
 }
 
 const profileFormSchema = z.object({
@@ -77,81 +79,94 @@ const profileFormSchema = z.object({
       message: 'Username must not be longer than 30 characters.',
     }),
   email: z
-    .string({
-      required_error: 'Please select an email to display.',
-    })
+    .string()
     .email(),
   phone: z.string().min(10, {
     message: 'Phone number must be at least 10 digits.',
   }),
   role: z.string(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: 'Please enter a valid URL.' }),
-      }),
-    )
-    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export function ProfileForm({ user: initialUser }: ProfileFormProps) {
-  const [user, setUser] = useState(initialUser);
+export function ProfileForm({user_id}: {user_id:string}) {
 
+  const [user, setUser] = useState<any>({});
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      phone: '',
+      role: ''
+    },
+    mode: 'all',
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user_id}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response get:', response.data);
+        setUser(response.data); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user_id]);
+
+  useEffect(() => {
+    // Reset form values when user state changes
+    form.reset({
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
       username: user?.userName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      role: user?.role || '',
-      bio: '', // Set initial bio if needed
-    },
-    mode: 'all',
-  });
-
-  // const { fields, append } = useFieldArray({
-  //   name: 'urls',
-  //   control: form.control,
-  // });
-
-  function onSubmit(data: ProfileFormValues) {
-    console.log('SUBMITTED')
-    // Assuming `data` contains all form field values
-    // Update `user` state with new data
-    setUser({
-      ...user,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      userName: data.username,
-      email: data.email,
-      phone: data.phone,
-      // dob: data.dob.toISOString(), // Assuming `dob` is a Date object
-      role: data.role,
-      // Update other fields as needed
+      role: user?.role || ''
     });
+  }, [user, form]);
 
-    console.log('Form data:', data); // Log form data
 
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: ProfileFormValues) {
+    try {
+      const response = await axiosInstance.put(`/freelancer/${user_id}`, data);
+      console.log('API Response:', response.data);
+
+      setUser({
+        ...user,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.username,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        // Update other fields as needed
+      });
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your profile has been successfully updated.',
+      });
+    } catch (error) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update profile. Please try again later.',
+      });
+    }
   }
 
   return (
     <Card className="p-10">
       <Form {...form}>
         <form
-          onSubmit={()=>form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(onSubmit)}
           className="gap-10 lg:grid lg:grid-cols-2 xl:grid-cols-2"
         >
           <FormField
@@ -164,7 +179,6 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                   <Input
                     placeholder="Enter your first name"
                     {...field}
-                    defaultValue={user?.firstName || ''}
                   />
                 </FormControl>
                 <FormDescription>Enter your first name</FormDescription>
@@ -182,7 +196,6 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                   <Input
                     placeholder="Enter your last name"
                     {...field}
-                    defaultValue={user?.lastName || ''}
                   />
                 </FormControl>
                 <FormDescription>Enter your last name</FormDescription>
@@ -200,11 +213,6 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                   <Input
                     placeholder="Enter your username"
                     {...field}
-                    defaultValue={user?.userName || ''}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setUser({ ...user, userName: e.target.value });
-                    }}
                   />
                 </FormControl>
                 <FormDescription>Enter your username</FormDescription>
@@ -222,7 +230,6 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                   <Input
                     placeholder="Enter your email"
                     {...field}
-                    defaultValue={user?.email || ''}
                   />
                 </FormControl>
                 <FormDescription>Enter your email</FormDescription>
@@ -240,7 +247,6 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                   <Input
                     placeholder="+91"
                     {...field}
-                    defaultValue={user?.phone || ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -264,7 +270,7 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
               </FormItem>
             )}
           /> */}
-          <FormField
+          {/* <FormField
             control={form.control}
             name="role"
             render={({ field }) => (
@@ -273,7 +279,7 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                 <FormControl>
                   <Select
                     onValueChange={field.onChange}
-                    defaultdefaultValue={field.value}
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -297,7 +303,7 @@ export function ProfileForm({ user: initialUser }: ProfileFormProps) {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Update profile
           </Button>
