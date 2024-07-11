@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/shared/datePicker';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -20,7 +20,6 @@ export default function FreelancerRegisterForm() {
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
-    // const toast = useToast();
 
     const formData = {
       firstName: (document.getElementById('first-name') as HTMLInputElement)
@@ -72,21 +71,19 @@ export default function FreelancerRegisterForm() {
         '/register/freelancer',
         formData,
       );
-      // toast({
-      //     variant: "destructive",
-      //     title: "Account crcleareated successfully!",
-      //     action: <ToastAction altText="Try again">Try again</ToastAction>,
-      //   })
+      toast({
+          title: "Account created successfully!",
+        })
       formRef.current?.reset();
       router.replace('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
-      // toast({
-      //     variant: "destructive",
-      //     title: "Uh oh! Something went wrong.",
-      //     description: `Error: ${error.response?.data || "Something went wrong!"}`,
-      //     action: <ToastAction altText="Try again">Try again</ToastAction>,
-      //   })
+      toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: `Error: ${error.response?.data || "Something went wrong!"}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        })
     } finally {
       setIsLoading(false);
     }
