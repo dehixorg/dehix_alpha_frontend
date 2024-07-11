@@ -34,7 +34,7 @@ import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import ExperienceCard from '@/components/cards/experienceCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { AddExperience } from '@/components/dialogs/AddExperience';
+import { AddExperience } from '@/components/dialogs/addExperience';
 
 export default function ProfessionalInfo() {
   const menuItemsTop: MenuItem[] = [
