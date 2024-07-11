@@ -2,8 +2,10 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
+
 import { DatePicker } from '../shared/datePicker';
 import { Card } from '../ui/card';
+
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -85,13 +87,17 @@ export function CreateProjectBusinessForm() {
     control: form.control,
   });
 
-  const { fields: profileFields, append: appendProfile, remove: removeProfile } = useFieldArray({
+  const {
+    fields: profileFields,
+    append: appendProfile,
+    remove: removeProfile,
+  } = useFieldArray({
     name: 'profiles',
     control: form.control,
   });
 
   function onSubmit(data: ProfileFormValues) {
-    console.log("here we re showing the data",data);
+    console.log('here we re showing the data', data);
     toast({
       title: 'You submitted the following values:',
       description: (
@@ -137,8 +143,7 @@ export function CreateProjectBusinessForm() {
               </FormItem>
             )}
           />
-          
-          
+
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
               <FormField
@@ -191,10 +196,18 @@ export function CreateProjectBusinessForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-                            <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-                            <SelectItem value="Content Writer">Content Writer</SelectItem>
-                            <SelectItem value="Project Manager">Project Manager</SelectItem>
+                            <SelectItem value="Frontend Developer">
+                              Frontend Developer
+                            </SelectItem>
+                            <SelectItem value="Backend Developer">
+                              Backend Developer
+                            </SelectItem>
+                            <SelectItem value="Content Writer">
+                              Content Writer
+                            </SelectItem>
+                            <SelectItem value="Project Manager">
+                              Project Manager
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -209,7 +222,11 @@ export function CreateProjectBusinessForm() {
                     <FormItem>
                       <FormLabel>Number of Freelancers Required</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Enter number" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter number"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -257,7 +274,11 @@ export function CreateProjectBusinessForm() {
                     <FormItem>
                       <FormLabel>Per Hour Rate</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Enter rate" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter rate"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -295,10 +316,10 @@ export function CreateProjectBusinessForm() {
               onClick={() =>
                 appendProfile({
                   domain: '',
-                  freelancersRequired: "",
+                  freelancersRequired: '',
                   skills: [],
                   experience: '',
-                  rate: "",
+                  rate: '',
                   description: '',
                 })
               }

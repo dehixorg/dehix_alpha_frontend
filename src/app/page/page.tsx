@@ -1,5 +1,6 @@
-"use client"
+'use client';
 import React from 'react';
+
 import { ProjectSidebar } from '@/components/project-page/project-page'; // Adjust import path as per your project structure
 
 const ProjectPage = () => {

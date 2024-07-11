@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from "@/components/ui/separator"
+import { Separator } from '@/components/ui/separator';
 
 export function ProjectSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -12,7 +13,7 @@ export function ProjectSidebar() {
   };
 
   return (
-    <div className="mt-10"> 
+    <div className="mt-10">
       <Button className="md:hidden p-4" onClick={toggleSidebar}>
         <Menu className="h-6 w-6" />
       </Button>
@@ -31,7 +32,7 @@ export function ProjectSidebar() {
               <div className="mb-4">
                 <div className="text-lg font-semibold mt-2 space-y-2">
                   <div className="flex items-center gap-2 hover:bg-slate-500 cursor-pointer rounded-lg p-2">
-                   <span>All Project</span> 
+                    <span>All Project</span>
                   </div>
                   <div className="flex items-center gap-2 hover:bg-slate-500 cursor-pointer rounded-lg p-2">
                     <span>Current Project</span>
@@ -53,10 +54,7 @@ export function ProjectSidebar() {
       </div>
 
       {isSidebarOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={toggleSidebar}
-        />
+        <div className="fixed inset-0 z-30" onClick={toggleSidebar} />
       )}
     </div>
   );
