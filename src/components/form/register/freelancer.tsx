@@ -67,23 +67,20 @@ export default function FreelancerRegisterForm() {
     };
 
     try {
-      const response = await axiosInstance.post(
-        '/register/freelancer',
-        formData,
-      );
+      await axiosInstance.post('/register/freelancer', formData);
       toast({
-          title: "Account created successfully!",
-        })
+        title: 'Account created successfully!',
+      });
       formRef.current?.reset();
       router.replace('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong.",
-          description: `Error: ${error.response?.data || "Something went wrong!"}`,
-          action: <ToastAction altText="Try again">Try again</ToastAction>,
-        })
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
     } finally {
       setIsLoading(false);
     }

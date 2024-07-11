@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { ChevronRight } from 'lucide-react';
 
 import { Button, ButtonProps } from '@/components/ui/button';
@@ -13,11 +14,15 @@ interface IconCardProps {
   title: string;
   icon: ReactNode;
   description: string;
+  buttonProps?: ButtonProps; // Optional button props
 }
 
-export const IconCard: React.FC<
-  IconCardProps & { buttonProps?: ButtonProps }
-> = ({ title, icon, description }) => {
+export const IconCard: React.FC<IconCardProps> = ({
+  title,
+  icon,
+  description,
+  buttonProps,
+}) => {
   return (
     <div className="flex flex-col">
       <Tooltip>
@@ -30,7 +35,12 @@ export const IconCard: React.FC<
               <div className="mr-auto text-left px-1">
                 <h1 className="text-md uppercase">{title}</h1>
               </div>
-              <Button variant="outline" size="icon" className="w-6 h-6 mr-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-6 h-6 mr-1"
+                {...buttonProps}
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -41,3 +51,12 @@ export const IconCard: React.FC<
     </div>
   );
 };
+
+// Define propTypes for IconCard
+IconCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  icon: PropTypes.node.isRequired, // Allow any type of node for the icon
+  description: PropTypes.string.isRequired,
+};
+
+export default IconCard;

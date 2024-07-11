@@ -228,7 +228,7 @@ export default function Page() {
                       type="text"
                     />
                     <FormDescription>
-                      Enter your organization's name
+                      Enter your organization&apos;s name
                     </FormDescription>
                   </div>
 

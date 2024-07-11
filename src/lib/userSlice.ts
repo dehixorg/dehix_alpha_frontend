@@ -14,7 +14,7 @@ const userSlice = createSlice({
     setUser: (state, action: PayloadAction<UserState>) => {
       return { ...state, ...action.payload }; // Spread the new object into the state
     },
-    clearUser: (state) => {
+    clearUser: () => {
       return {}; // Clear the user state by returning an empty object
     },
   },
