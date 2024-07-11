@@ -15,6 +15,7 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,43 +31,40 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import ExperienceCard from '@/components/cards/experienceCard';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { AddExperience } from '@/components/dialogs/addExperience';
 
 export default function ProfessionalInfo() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
-      colorClasses:
-        'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base',
+      isActive: 'logo',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
       label: 'Dehix',
     },
     {
       href: '/settings/personal-info',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <User className="h-5 w-5" />,
       label: 'Personal Info',
     },
     {
-      href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      href: '/settings/professional-info',
+      isActive: true,
       icon: <Briefcase className="h-5 w-5" />,
       label: 'Professional Info',
     },
     {
-      href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      href: '/settings/projects',
+      isActive: false,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <BookOpen className="h-5 w-5" />,
       label: 'Education',
     },
@@ -75,15 +73,27 @@ export default function ProfessionalInfo() {
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/dashboard/freelancer',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <HomeIcon className="h-5 w-5" />,
       label: 'Home',
     },
   ];
 
   const user = useSelector((state: RootState) => state.user);
+  const [experiences, setExperiences] = useState<any>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response get:', response.data?.professionalInfo);
+        setExperiences(response.data?.professionalInfo); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
 
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -178,8 +188,14 @@ export default function ProfessionalInfo() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} />
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {experiences.map((exp: any, index: number) => (
+            <ExperienceCard key={index} {...exp} />
+          ))}
+          <AddExperience />
         </main>
       </div>
     </div>

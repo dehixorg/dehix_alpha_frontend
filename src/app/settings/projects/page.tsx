@@ -15,6 +15,7 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,10 +31,12 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import { axiosInstance } from '@/lib/axiosinstance';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
+import { AddProject } from '@/components/dialogs/addProject';
 
-export default function PersonalInfo() {
+export default function Projects() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -43,7 +46,7 @@ export default function PersonalInfo() {
     },
     {
       href: '/settings/personal-info',
-      isActive: true,
+      isActive: false,
       icon: <User className="h-5 w-5" />,
       label: 'Personal Info',
     },
@@ -55,7 +58,7 @@ export default function PersonalInfo() {
     },
     {
       href: '/settings/projects',
-      isActive: false,
+      isActive: true,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
@@ -77,7 +80,20 @@ export default function PersonalInfo() {
   ];
 
   const user = useSelector((state: RootState) => state.user);
+  const [projects, setProjects] = useState<any>([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response get:', response.data?.projects);
+        setProjects(Object.values(response.data?.projects)); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
 
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -136,7 +152,7 @@ export default function PersonalInfo() {
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Personal Info', link: '#' },
+              { label: 'Professional Info', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -172,8 +188,14 @@ export default function PersonalInfo() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} />
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {projects.map((project: any, index: number) => (
+            <ProjectCard key={index} {...project} />
+          ))}
+          <AddProject />
         </main>
       </div>
     </div>

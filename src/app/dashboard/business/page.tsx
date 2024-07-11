@@ -62,36 +62,31 @@ export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
-      colorClasses:
-        'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base',
+      isActive: 'logo',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
       label: 'Dehix',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: true,
       icon: <Home className="h-5 w-5" />,
       label: 'Dashboard',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <Users2 className="h-5 w-5" />,
       label: 'Customers',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <LineChart className="h-5 w-5" />,
       label: 'Analytics',
     },
@@ -100,8 +95,7 @@ export default function Dashboard() {
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/settings/personal-info',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <Settings className="h-5 w-5" />,
       label: 'Settings',
     },
