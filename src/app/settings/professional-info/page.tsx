@@ -40,36 +40,31 @@ export default function ProfessionalInfo() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
-      colorClasses:
-        'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base',
+      isActive: 'logo',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
       label: 'Dehix',
     },
     {
       href: '/settings/personal-info',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <User className="h-5 w-5" />,
       label: 'Personal Info',
     },
     {
-      href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      href: '/settings/professional-info',
+      isActive: true,
       icon: <Briefcase className="h-5 w-5" />,
       label: 'Professional Info',
     },
     {
-      href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      href: '/settings/projects',
+      isActive: false,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
     {
       href: '#',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <BookOpen className="h-5 w-5" />,
       label: 'Education',
     },
@@ -78,8 +73,7 @@ export default function ProfessionalInfo() {
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/dashboard/freelancer',
-      colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+      isActive: false,
       icon: <HomeIcon className="h-5 w-5" />,
       label: 'Home',
     },
