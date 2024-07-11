@@ -113,7 +113,7 @@ export default function Dashboard() {
 
   const menuItemsBottom: MenuItem[] = [
     {
-      href: '/dashboard/settings',
+      href: '/settings/personal-info',
       colorClasses:
         'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <Settings className="h-5 w-5" />,
@@ -219,7 +219,7 @@ export default function Dashboard() {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+                  <AvatarImage src="/user.png" alt="@shadcn" />
                   <AvatarFallback>
                     <UserIcon size={16} />{' '}
                   </AvatarFallback>

@@ -17,12 +17,6 @@ import {
 import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -37,8 +31,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import { ProfileForm } from '@/components/form/profileForm';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 
-export default function Dashboard() {
+export default function PersonalInfo() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -55,7 +50,7 @@ export default function Dashboard() {
       label: 'Personal Info',
     },
     {
-      href: '#',
+      href: '/settings/professional-info',
       colorClasses:
         'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <Briefcase className="h-5 w-5" />,
@@ -144,15 +139,12 @@ export default function Dashboard() {
               </nav>
             </SheetContent>
           </Sheet>
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Personal Info', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -169,7 +161,7 @@ export default function Dashboard() {
                 className="overflow-hidden rounded-full"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+                  <AvatarImage src="/user.png" alt="@shadcn" />
                   <AvatarFallback>
                     <UserIcon size={16} />{' '}
                   </AvatarFallback>

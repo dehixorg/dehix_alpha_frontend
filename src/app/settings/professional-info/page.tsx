@@ -15,17 +15,8 @@ import {
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -38,11 +29,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
+import { ProfileForm } from '@/components/form/profileForm';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 
-export default function Dashboard() {
+export default function ProfessionalInfo() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -52,16 +43,16 @@ export default function Dashboard() {
       label: 'Dehix',
     },
     {
-      href: '#',
+      href: '/settings/personal-info',
       colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <User className="h-5 w-5" />,
       label: 'Personal Info',
     },
     {
       href: '#',
       colorClasses:
-        'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+        'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
       icon: <Briefcase className="h-5 w-5" />,
       label: 'Professional Info',
     },
@@ -92,23 +83,6 @@ export default function Dashboard() {
   ];
 
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
-
-  console.log(responseData);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.projects);
-        setResponseData(response.data.projects); // Store response data in state
-      } catch (error) {
-        console.error('API Error:', error);
-      }
-    };
-
-    fetchData(); // Call fetch data function on component mount
-  }, [user.uid]); // Empty dependency array ensures it runs only once on mount
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -165,19 +139,12 @@ export default function Dashboard() {
               </nav>
             </SheetContent>
           </Sheet>
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Business</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Create Project</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Professional Info', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -212,7 +179,7 @@ export default function Dashboard() {
           </DropdownMenu>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <CreateProjectBusinessForm />
+          <ProfileForm user_id={user.uid} />
         </main>
       </div>
     </div>
