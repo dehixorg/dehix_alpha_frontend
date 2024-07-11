@@ -26,14 +26,8 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <section className="p-4">
+    <section className="p-4 relative">
       <div className="flex flex-col lg:flex-row lg:space-x-10">
-        <button
-          className="block lg:hidden w-1/4 mx-auto mb-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
-          onClick={handleModalToggle}
-        >
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </button>
         <div className="hidden lg:block lg:space-y-4">
           <div className="mb-4">
             <CompanyCard
@@ -210,13 +204,7 @@ const DashboardPage: React.FC = () => {
       {/* Modal for mobile filters */}
       {showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-4  rounded-lg w-full max-w-screen-lg mx-auto item-center">
-            <button
-              className="block w-full mb-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
-              onClick={handleModalToggle}
-            >
-              Hide Filters
-            </button>
+          <div className="bg-white p-4 rounded-lg w-full max-w-screen-lg mx-auto item-center">
             <div className="space-y-4">
               <div className="border-b border-gray-300 pb-4">
                 <MobileCompany
@@ -388,6 +376,15 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Fixed filter button for mobile view */}
+      <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
+        <button
+          className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
+          onClick={handleModalToggle}
+        >
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
+      </div>
     </section>
   );
 };
