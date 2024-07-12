@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { Plus } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -18,6 +19,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectTrigger,
+  SelectItem,
+  SelectValue,
+  SelectContent,
+} from '@/components/ui/select';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -45,6 +55,9 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -57,13 +70,32 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
-
+  const handleAddSkill = () => {
+    if (tmpSkill && !currSkills.includes(tmpSkill)) {
+      setCurrSkills([
+        ...currSkills,
+        {
+          name: tmpSkill,
+          level: '',
+          experience: '',
+          interviewStatus: 'pending',
+          interviewInfo: '',
+          interviewerRating: 0,
+        },
+      ]); // Add tmpSkill to currSkills array if not already present
+      setTmpSkill(''); // Reset tmpSkill to an empty string to clear the input/select
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user_id}`); // Example API endpoint, replace with your actual endpoint
         console.log('API Response get:', response.data);
         setUser(response.data); // Store response data in state
+        setCurrSkills(response.data.skills);
+        const skills = await axiosInstance.get('/skills/all');
+        console.log('API Response get:', skills.data.data);
+        setSkills(skills.data.data);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -86,7 +118,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      const response = await axiosInstance.put(`/freelancer/${user_id}`, data);
+      console.log('API body', {
+        ...data,
+        skills: currSkills,
+      });
+      const response = await axiosInstance.put(`/freelancer/${user_id}`, {
+        ...data,
+        // skills: currSkills,
+      });
       console.log('API Response:', response.data);
 
       setUser({
@@ -97,9 +136,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         email: data.email,
         phone: data.phone,
         role: data.role,
+        skills: currSkills,
         // Update other fields as needed
       });
-
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
@@ -241,6 +280,44 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           /> */}
+          <Separator className="lg:col-span-2 xl:col-span-2" />
+          <div className="col-span-2">
+            <FormLabel>Skills</FormLabel>
+            <div className="flex items-center mt-2">
+              <Select onValueChange={(value) => setTmpSkill(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select skill" />
+                </SelectTrigger>
+                <SelectContent>
+                  {skills.map((skill: any, index: number) => (
+                    <SelectItem key={index} value={skill.label}>
+                      {skill.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                type="button"
+                size="icon"
+                className="ml-2"
+                onClick={handleAddSkill}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 xl:col-span-2">
+            {currSkills.map((skill: any, index: number) => (
+              <Badge
+                className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                key={index}
+              >
+                {skill.name}
+              </Badge>
+            ))}
+          </div>
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Update profile
           </Button>
