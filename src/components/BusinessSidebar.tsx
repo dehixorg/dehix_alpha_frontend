@@ -28,7 +28,7 @@ export function BusinessSidebar() {
           <div>
             <div className="p-4">
               <h4 className="mb-6 mt-4 text-xl font-bold leading-none text-center">
-                Business Profile
+                Business
               </h4>
               <div className="p-4">
                 <div className="text-lg font-semibold mb-6 hover:bg-slate-500 cursor-pointer rounded-lg">
