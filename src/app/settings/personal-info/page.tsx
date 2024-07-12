@@ -135,7 +135,7 @@ export default function PersonalInfo() {
           </Sheet>
           <Breadcrumb
             items={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Settings', link: '#' },
               { label: 'Personal Info', link: '#' },
             ]}
           />

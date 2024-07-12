@@ -281,30 +281,33 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           /> */}
           <Separator className="lg:col-span-2 xl:col-span-2" />
-          <h2>Skills</h2>
+          <div className="col-span-2">
+            <FormLabel>Skills</FormLabel>
+            <div className="flex items-center mt-2">
+              <Select onValueChange={(value) => setTmpSkill(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select skill" />
+                </SelectTrigger>
+                <SelectContent>
+                  {skills.map((skill: any, index: number) => (
+                    <SelectItem key={index} value={skill.label}>
+                      {skill.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                type="button"
+                size="icon"
+                className="ml-2"
+                onClick={handleAddSkill}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-          <Select onValueChange={(value) => setTmpSkill(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select domain" />
-            </SelectTrigger>
-
-            <SelectContent>
-              {skills.map((skill: any, index: number) => (
-                <SelectItem key={index} value={skill.label}>
-                  {skill.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            type="button"
-            size="icon"
-            className="my-auto"
-            onClick={handleAddSkill}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
           <div className="lg:col-span-2 xl:col-span-2">
             {currSkills.map((skill: any, index: number) => (
               <Badge
