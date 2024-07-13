@@ -1,7 +1,5 @@
-//project page for a single live project
 'use client';
-import * as React from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
@@ -19,8 +17,13 @@ const jobData = {
   employees: '10-50 employees',
 };
 
-const DashboardPage: React.FC = () => {
+const Market: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
@@ -202,8 +205,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal for mobile filters */}
-      {showFilters && (
+      {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-4 rounded-lg w-full max-w-screen-lg mx-auto item-center">
             <div className="space-y-4">
@@ -377,17 +379,18 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Fixed filter button for mobile view */}
-      <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
-        <button
-          className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
-          onClick={handleModalToggle}
-        >
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </button>
-      </div>
+      {isClient && (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
+          <button
+            className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
+            onClick={handleModalToggle}
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
+        </div>
+      )}
     </section>
   );
 };
 
-export default DashboardPage;
+export default Market;
