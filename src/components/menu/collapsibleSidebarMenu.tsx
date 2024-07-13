@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button';
 
 interface CollapsibleSidebarMenuProps {
   menuItems: MenuItem[];
+  active: string;
 }
 
 const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
   menuItems,
+  active,
 }) => {
   return (
     <Sheet>
@@ -29,15 +31,15 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
               key={index}
               href={item.href}
               className={`flex items-center gap-4 px-2.5 ${
-                item.isActive === 'logo'
+                item.label === 'Dehix'
                   ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
-                  : item.isActive
+                  : item.label === active
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {item.icon}
-              {item.isActive !== 'logo' && item.label}
+              {item.label !== 'Dehix' && item.label}
             </Link>
           ))}
         </nav>

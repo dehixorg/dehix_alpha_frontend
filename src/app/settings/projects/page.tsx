@@ -21,7 +21,10 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { AddProject } from '@/components/dialogs/addProject';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { menuItemsBottom, menuItemsTop } from '@/config/settingsMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/freelancerSettingsMenuItems';
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
@@ -44,10 +47,11 @@ export default function Projects() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
+        active="Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },
