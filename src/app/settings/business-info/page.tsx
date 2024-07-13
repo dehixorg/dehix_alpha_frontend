@@ -10,7 +10,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/businessSettingsMenuItems';
+} from '@/config/menuItems/business/settingsMenuItems';
 import UserDropdownMenu from '@/components/dropdown/user';
 import { BusinessForm } from '@/components/form/businessForm';
 
