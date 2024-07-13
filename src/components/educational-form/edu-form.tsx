@@ -1,7 +1,8 @@
-"use client";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+'use client';
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import {
   Form,
   FormControl,
@@ -9,20 +10,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const formSchema = z.object({
-  degree: z.string().nonempty("Degree is required"),
-  universityName: z.string().nonempty("University name is required"),
-  fieldOfStudy: z.string().nonempty("Field of study is required"),
-  startDate: z.string().nonempty("Start date is required"),
-  endDate: z.string().nonempty("End date is required"),
-  grade: z.string().nonempty("Grade is required"),
-  oracleAssigned: z.string().nonempty("Oracle assigned is required"),
-  verificationStatus: z.string().nonempty("Verification status is required"),
-  verificationUpdateTime: z.string().nonempty("Verification update time is required"),
+  degree: z.string().nonempty('Degree is required'),
+  universityName: z.string().nonempty('University name is required'),
+  fieldOfStudy: z.string().nonempty('Field of study is required'),
+  startDate: z.string().nonempty('Start date is required'),
+  endDate: z.string().nonempty('End date is required'),
+  grade: z.string().nonempty('Grade is required'),
+  oracleAssigned: z.string().nonempty('Oracle assigned is required'),
+  verificationStatus: z.string().nonempty('Verification status is required'),
+  verificationUpdateTime: z
+    .string()
+    .nonempty('Verification update time is required'),
   comments: z.string().optional(),
 });
 
@@ -32,16 +35,16 @@ export default function EducationForm() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      degree: "",
-      universityName: "",
-      fieldOfStudy: "",
-      startDate: "",
-      endDate: "",
-      grade: "",
-      oracleAssigned: "",
-      verificationStatus: "",
-      verificationUpdateTime: "",
-      comments: "",
+      degree: '',
+      universityName: '',
+      fieldOfStudy: '',
+      startDate: '',
+      endDate: '',
+      grade: '',
+      oracleAssigned: '',
+      verificationStatus: '',
+      verificationUpdateTime: '',
+      comments: '',
     },
   });
 
@@ -55,7 +58,7 @@ export default function EducationForm() {
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
           className="max-w-md w-full grid gap-4"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
+          style={{ gridTemplateColumns: '1fr 1fr' }}
         >
           <FormField
             control={form.control}
@@ -64,7 +67,12 @@ export default function EducationForm() {
               <FormItem className="col-span-2">
                 <FormLabel>Degree</FormLabel>
                 <FormControl>
-                  <Input placeholder="Degree" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Degree"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -77,7 +85,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>University Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="University name" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="University name"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -90,7 +103,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Field of Study</FormLabel>
                 <FormControl>
-                  <Input placeholder="Field of study" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Field of study"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -103,7 +121,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Start Date</FormLabel>
                 <FormControl>
-                  <Input placeholder="Start date" type="date" {...field} className="w-full" />
+                  <Input
+                    placeholder="Start date"
+                    type="date"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -116,7 +139,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>End Date</FormLabel>
                 <FormControl>
-                  <Input placeholder="End date" type="date" {...field} className="w-full" />
+                  <Input
+                    placeholder="End date"
+                    type="date"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,7 +157,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Grade</FormLabel>
                 <FormControl>
-                  <Input placeholder="Grade" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Grade"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,7 +175,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Oracle Assigned</FormLabel>
                 <FormControl>
-                  <Input placeholder="Oracle assigned" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Oracle assigned"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -155,7 +193,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Verification Status</FormLabel>
                 <FormControl>
-                  <Input placeholder="Verification status" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Verification status"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -168,7 +211,12 @@ export default function EducationForm() {
               <FormItem>
                 <FormLabel>Verification Update Time</FormLabel>
                 <FormControl>
-                  <Input placeholder="Verification update time" type="datetime-local" {...field} className="w-full" />
+                  <Input
+                    placeholder="Verification update time"
+                    type="datetime-local"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -181,7 +229,12 @@ export default function EducationForm() {
               <FormItem className="col-span-2">
                 <FormLabel>Comments</FormLabel>
                 <FormControl>
-                  <Input placeholder="Comments" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Comments"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

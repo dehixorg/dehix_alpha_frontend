@@ -1,7 +1,8 @@
 // pages/EducationPage.tsx
 
-import React from "react";
-import EducationForm from "@/components/educational-form/edu-form"; // Adjust the import path as needed
+import React from 'react';
+
+import EducationForm from '@/components/educational-form/edu-form'; // Adjust the import path as needed
 
 const EducationPage = () => {
   return (

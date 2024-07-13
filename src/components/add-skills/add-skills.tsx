@@ -1,7 +1,8 @@
-"use client";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+'use client';
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import {
   Form,
   FormControl,
@@ -9,17 +10,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const formSchema = z.object({
-  skillName: z.string().nonempty("Skill name is required"),
-  skillLevel: z.string().nonempty("Skill level is required"),
-  yearsOfExperience: z.string().nonempty("Years of experience is required"),
-  interviewStatus: z.string().nonempty("Interview status is required"),
-  interviewInfoId: z.string().nonempty("Interview info ID is required"),
-  interviewerRating: z.string().nonempty("Interviewer rating is required"),
+  skillName: z.string().nonempty('Skill name is required'),
+  skillLevel: z.string().nonempty('Skill level is required'),
+  yearsOfExperience: z.string().nonempty('Years of experience is required'),
+  interviewStatus: z.string().nonempty('Interview status is required'),
+  interviewInfoId: z.string().nonempty('Interview info ID is required'),
+  interviewerRating: z.string().nonempty('Interviewer rating is required'),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
@@ -28,12 +29,12 @@ export default function AddSkillForm() {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      skillName: "",
-      skillLevel: "",
-      yearsOfExperience: "",
-      interviewStatus: "",
-      interviewInfoId: "",
-      interviewerRating: "",
+      skillName: '',
+      skillLevel: '',
+      yearsOfExperience: '',
+      interviewStatus: '',
+      interviewInfoId: '',
+      interviewerRating: '',
     },
   });
 
@@ -47,7 +48,7 @@ export default function AddSkillForm() {
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
           className="max-w-md w-full grid gap-4"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
+          style={{ gridTemplateColumns: '1fr 1fr' }}
         >
           <FormField
             control={form.control}
@@ -56,7 +57,12 @@ export default function AddSkillForm() {
               <FormItem className="col-span-2">
                 <FormLabel>Skill Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Skill name" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Skill name"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -69,7 +75,12 @@ export default function AddSkillForm() {
               <FormItem>
                 <FormLabel>Skill Level</FormLabel>
                 <FormControl>
-                  <Input placeholder="Skill level" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Skill level"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -82,7 +93,12 @@ export default function AddSkillForm() {
               <FormItem>
                 <FormLabel>Years of Experience</FormLabel>
                 <FormControl>
-                  <Input placeholder="Years of experience" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Years of experience"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -95,7 +111,12 @@ export default function AddSkillForm() {
               <FormItem>
                 <FormLabel>Interview Status</FormLabel>
                 <FormControl>
-                  <Input placeholder="Interview status" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Interview status"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -108,7 +129,12 @@ export default function AddSkillForm() {
               <FormItem>
                 <FormLabel>Interview Info ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Interview info ID" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Interview info ID"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,7 +147,12 @@ export default function AddSkillForm() {
               <FormItem>
                 <FormLabel>Interviewer Rating</FormLabel>
                 <FormControl>
-                  <Input placeholder="Interviewer rating" type="text" {...field} className="w-full" />
+                  <Input
+                    placeholder="Interviewer rating"
+                    type="text"
+                    {...field}
+                    className="w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
