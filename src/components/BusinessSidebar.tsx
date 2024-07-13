@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { LogOut, Menu, Settings } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 
 import { Button } from './ui/button';
 

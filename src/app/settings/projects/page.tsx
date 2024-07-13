@@ -152,7 +152,7 @@ export default function Projects() {
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Professional Info', link: '#' },
+              { label: 'Projects', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
