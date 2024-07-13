@@ -16,11 +16,20 @@ import { Button } from '@/components/ui/button';
 
 const formSchema = z.object({
   skillName: z.string().nonempty('Skill name is required'),
-  skillLevel: z.string().nonempty('Skill level is required'),
-  yearsOfExperience: z.string().nonempty('Years of experience is required'),
+  skillLevel: z
+    .string()
+    .nonempty('Skill level is required')
+    .regex(/^[0-5]$/, 'Skill level should be between 0 and 5'),
+  yearsOfExperience: z
+    .string()
+    .nonempty('Years of experience is required')
+    .regex(/^\d*$/, 'Years of experience should be a positive integer or zero'),
   interviewStatus: z.string().nonempty('Interview status is required'),
   interviewInfoId: z.string().nonempty('Interview info ID is required'),
-  interviewerRating: z.string().nonempty('Interviewer rating is required'),
+  interviewerRating: z
+    .string()
+    .nonempty('Interviewer rating is required')
+    .regex(/^[0-5]$/, 'Interviewer rating should be between 0 and 5'),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
