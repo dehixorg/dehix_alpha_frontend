@@ -1,17 +1,12 @@
 'use client';
-import Link from 'next/link';
 import {
   BookOpen,
   Boxes,
   Briefcase,
   HomeIcon,
-  LineChart,
   Package,
-  PanelLeft,
   Search,
-  ShoppingCart,
   User,
-  Users2,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -28,13 +23,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { AddProject } from '@/components/dialogs/addProject';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
 export default function Projects() {
   const menuItemsTop: MenuItem[] = [
@@ -102,53 +97,7 @@ export default function Projects() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="sm:hidden">
-                <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs">
-              <nav className="grid gap-6 text-lg font-medium">
-                <Link
-                  href="#"
-                  className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
-                >
-                  <Boxes className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">Dehix</span>
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-foreground"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                >
-                  <Package className="h-5 w-5" />
-                  Projects
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                >
-                  <Users2 className="h-5 w-5" />
-                  Customers
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                >
-                  <LineChart className="h-5 w-5" />
-                  Settings
-                </Link>
-              </nav>
-            </SheetContent>
-          </Sheet>
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },
