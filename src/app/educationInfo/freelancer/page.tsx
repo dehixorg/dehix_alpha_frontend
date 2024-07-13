@@ -43,7 +43,7 @@ const FormSchema = z.object({
     required_error: 'Company Name is required',
   }),
   fieldOfStudy: z.string({
-    required_error: 'Field of study is required'
+    required_error: 'Field of study is required',
   }),
   start: z.date({
     required_error: 'A start date of working',
@@ -52,7 +52,7 @@ const FormSchema = z.object({
     required_error: 'An end date of working.',
   }),
   grade: z.string({
-    required_error: 'A grade score is required'
+    required_error: 'A grade score is required',
   }),
 });
 
@@ -61,9 +61,7 @@ export default function ProfilePage() {
     resolver: zodResolver(FormSchema),
   });
 
-  const [education, setEducation] = useState<z.infer<typeof FormSchema>[]>(
-    [],
-  );
+  const [education, setEducation] = useState<z.infer<typeof FormSchema>[]>([]);
 
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
@@ -79,7 +77,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const savedEducation = localStorage.getItem('experiences');
     if (savedEducation) {
-        setEducation(JSON.parse(savedEducation));
+      setEducation(JSON.parse(savedEducation));
     }
   }, []);
 
@@ -95,7 +93,7 @@ export default function ProfilePage() {
       localStorage.setItem('education', JSON.stringify(updatedEducation));
       console.log('Updated education:', updatedEducation); // Check updated state
     } else {
-        setEducation([...education, data]);
+      setEducation([...education, data]);
     }
     form.reset();
     setIsDialogOpen(false);
@@ -150,7 +148,9 @@ export default function ProfilePage() {
               <p className="text-gray-900 text-xl font-semibold mb-1">
                 {educationInfo.degree}
               </p>
-              <p className="text-gray-700 mb-1">University: {educationInfo.universityName}</p>
+              <p className="text-gray-700 mb-1">
+                University: {educationInfo.universityName}
+              </p>
               {educationInfo.fieldOfStudy && (
                 <p className="text-gray-600 mb-1">
                   Field of Study: {educationInfo.fieldOfStudy}
@@ -356,14 +356,9 @@ export default function ProfilePage() {
                         <FormItem>
                           <FormLabel>Grade</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Enter your grade"
-                              {...field}
-                            />
+                            <Input placeholder="Enter your grade" {...field} />
                           </FormControl>
-                          <FormDescription>
-                            Enter your grade
-                          </FormDescription>
+                          <FormDescription>Enter your grade</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
