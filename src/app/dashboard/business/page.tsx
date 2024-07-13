@@ -1,20 +1,11 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Boxes,
-  CheckCircle,
-  Clock,
-  Home,
-  LineChart,
-  Package,
-  Search,
-  Settings,
-  Users2,
-} from 'lucide-react';
+import { CheckCircle, Clock, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,7 +30,11 @@ import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
 import InterviewCard from '@/components/shared/interviewCard';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { menuItemsBottom, menuItemsTop } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -52,6 +47,23 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
+
+  console.log(responseData);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/business/all_project`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response:', response);
+        setResponseData(response); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
   console.log(user);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -65,10 +77,10 @@ export default function Dashboard() {
           {/* side bar need to make caomponent */}
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
           <Breadcrumb
-            items={[ 
+            items={[
               { label: 'Dashboard', link: '/dashboard/business' },
               { label: 'Business', link: '#' },
-            ]} 
+            ]}
           />
 
           {/* search need to remove without changing the layout */}
