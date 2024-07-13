@@ -19,6 +19,7 @@ import {
   Activity,
   CircleDollarSign,
   FolderKanban,
+  Sparkles,
   Boxes,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -99,6 +100,11 @@ export default function Dashboard() {
       href: '#',
       icon: <LineChart className="h-5 w-5" />,
       label: 'Analytics',
+    },
+    {
+      href: '/dashboard/talent',
+      icon: <Sparkles className="h-5 w-5" />,
+      label: 'Talent',
     },
   ];
 
