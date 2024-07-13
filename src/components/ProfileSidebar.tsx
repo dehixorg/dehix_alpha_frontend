@@ -59,6 +59,15 @@ export function ProfileSidebar() {
                   </div>
                 </div>
                 <Separator className="-mt-2 mb-4" />
+                <div className="mb-6">
+                  <div className="text-lg font-medium text-gray-400 pb-2">
+                    Education Info
+                  </div>
+                  <div className="text-lg font-semibold hover:bg-slate-500 cursor-pointer rounded-lg">
+                    Freelancer
+                  </div>
+                </div>
+                <Separator className="-mt-2 mb-4" />
                 <div>
                   <div className="text-lg font-medium text-gray-400 pb-2">
                     Settings
