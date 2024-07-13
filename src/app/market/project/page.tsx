@@ -1,396 +1,56 @@
-'use client';
-import React, { useState, useEffect } from 'react';
+// src/pages/ProjectPage.tsx
 
-import CompanyCard from '@/components/opportunities/company-size/company';
-import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import Jobs from '@/components/opportunities/jobs/jobs';
-import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
-import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
+import React from 'react';
 
-const jobData = {
-  heading: 'Arya.ai Data Scientist',
-  content:
-    'Arya is an autonomous AI operating platform for banks, insurers, and financial service providers that simplifies buildout and manages the...',
-  skills: ['Generative AI', 'Python', 'NLP', 'PyTorch', 'Transformers'],
-  location: 'Mumbai',
-  founded: '2013',
-  employees: '10-50 employees',
-};
+import ProjectComponent from '@/components/marketComponents/projectComponents/project-comp';
+import ProjectSidebar from '@/components/marketComponents/sidebar-projectComponents/sidebar';
+import OtherBits from '@/components/marketComponents/sidebar-projectComponents/otherBids/other-bids';
 
-const Market: React.FC = () => {
-  const [showFilters, setShowFilters] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const handleModalToggle = () => {
-    setShowFilters(!showFilters);
+const ProjectPage: React.FC = () => {
+  const project = {
+    project_name: 'AI Development Project',
+    project_id: '#12345',
+    location: 'Delhi,India',
+    description: `
+      We're looking for an experienced web developer who's really good at making interactive forms. The perfect candidate should know a lot about web development and have a bunch of cool forms they've made before. Your main job will be making forms that people can use easily and that look nice.
+    `,
+    email: 'contact@aiproject.com',
+    company_name: 'Tech Innovators Inc.',
+    start: new Date('2023-01-01'),
+    end: new Date('2023-12-31'),
+    skills_required: ['JavaScript', 'React', 'Python', 'Machine Learning'],
+    experience: '2+ years of experience in AI development.',
+    role: 'Lead Developer',
+    project_type: 'Full-time',
   };
+  const usernames = [
+    { username: 'Alex004', bitAmount: 100 },
+    { username: 'User2', bitAmount: 150 },
+    { username: 'alen789', bitAmount: 200 },
+  ];
 
   return (
-    <section className="p-4 relative">
-      <div className="flex flex-col lg:flex-row lg:space-x-10">
-        <div className="hidden lg:block lg:space-y-4">
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by company size"
-              checkboxLabels={['All', 'Large', 'Small']}
-            />
-          </div>
-          <div className="mb-4">
-            <SkillDom
-              heading="Filter by location"
-              checkboxLabels={[
-                'All',
-                'Banglore',
-                'Pune',
-                'Noida',
-                'Delhi',
-                'Gurugram',
-              ]}
-            />
-          </div>
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by experience"
-              checkboxLabels={['All', 'Fresher', 'Experienced']}
-            />
-          </div>
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by job type"
-              checkboxLabels={['All', 'Full-time', 'Internship']}
-            />
-          </div>
-          <div className="mb-4">
-            <SkillDom
-              heading="Filter by domain"
-              checkboxLabels={[
-                'frontend',
-                'backend',
-                'database',
-                'cloud computing',
-                'mobile development',
-                'machine learning',
-                'data science',
-                'devops',
-                'cybersecurity',
-                'UI/UX design',
-                'networking',
-                'game development',
-                'e-commerce',
-                'social media',
-                'artificial intelligence',
-                'blockchain',
-                'IoT (Internet of Things)',
-                'big data',
-                'web scraping',
-                'embedded systems',
-              ]}
-            />
-          </div>
-          <div className="mb-4">
-            <SkillDom
-              heading="Filter by skills"
-              checkboxLabels={[
-                'Python',
-                'JavaScript',
-                'React',
-                'Node.js',
-                'TypeScript',
-                'Java',
-                'Spring Boot',
-                'PHP',
-                'HTML',
-                'CSS',
-                'Angular',
-                'Vue.js',
-                'Express.js',
-                'MongoDB',
-                'MySQL',
-                'PostgreSQL',
-                'SQLite',
-                'Firebase',
-                'AWS',
-                'Azure',
-                'Docker',
-                'Kubernetes',
-                'Git',
-                'Jenkins',
-                'CI/CD',
-                'RESTful API',
-                'GraphQL',
-                'Microservices',
-                'Machine Learning',
-                'Artificial Intelligence',
-                'Blockchain',
-                'Cybersecurity',
-                'UI/UX Design',
-                'Responsive Web Design',
-                'Bootstrap',
-                'Tailwind CSS',
-                'Sass',
-                'Less',
-                'WordPress',
-                'Joomla',
-                'Shopify',
-                'Magento',
-                'React Native',
-                'Flutter',
-                'Ionic',
-                'Swift',
-                'Kotlin',
-                'C#',
-                'ASP.NET',
-                'Ruby',
-                'Ruby on Rails',
-                'Scala',
-                'Go',
-                'Rust',
-                'Perl',
-                'C++',
-                'Unity',
-                'Unreal Engine',
-                'Game Development',
-                'AR/VR',
-                'IoT',
-                'Raspberry Pi',
-                'Arduino',
-                'Embedded Systems',
-                'Linux',
-                'Windows',
-                'MacOS',
-                'Android',
-                'iOS',
-                'Cross-Platform Development',
-                'Software Testing',
-                'Quality Assurance',
-                'DevOps',
-                'Agile Methodologies',
-                'Scrum',
-                'Kanban',
-                'Lean',
-                'Project Management',
-                'Product Management',
-                'Business Analysis',
-                'Technical Writing',
-                'Copywriting',
-                'Content Marketing',
-                'SEO',
-                'SEM',
-                'Digital Marketing',
-                'Social Media Marketing',
-                'Email Marketing',
-                'Salesforce',
-                'ERP',
-                'CRM',
-                'Big Data',
-                'Data Science',
-                'Data Engineering',
-                'Data Analytics',
-                'Business Intelligence',
-                'Deep Learning',
-                'Neural Networks',
-                'Computer Vision',
-                'Natural Language Processing',
-                'Quantum Computing',
-              ]}
-            />
-          </div>
+    <div className="container mx-auto p-4 flex">
+      <div className="flex-1 mr-4">
+        <ProjectComponent {...project} />
+      </div>
+      <div className="w-[400px]">
+        <ProjectSidebar />
+        <div className="mt-10 ml-5">
+          <a
+            href="link"
+            className="text-white  hover:text-blue-500 hover:bg-transparent"
+          >
+            Request for more connect
+          </a>
         </div>
-        <div className="mt-4 lg:mt-0 lg:ml-10">
-          <Jobs {...jobData} />
+
+        <div className="mt-10">
+          <OtherBits usernames={usernames} />
         </div>
       </div>
-
-      {isClient && showFilters && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-4 rounded-lg w-full max-w-screen-lg mx-auto item-center">
-            <div className="space-y-4">
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by company size"
-                  checkboxLabels={['All', 'Large', 'Small']}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by location"
-                  checkboxLabels={[
-                    'All',
-                    'Banglore',
-                    'Pune',
-                    'Noida',
-                    'Delhi',
-                    'Gurugram',
-                  ]}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by experience"
-                  checkboxLabels={['All', 'Fresher', 'Experienced']}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by job type"
-                  checkboxLabels={['All', 'Full-time', 'Internship']}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileSkillDom
-                  heading="Filter by domain"
-                  checkboxLabels={[
-                    'frontend',
-                    'backend',
-                    'database',
-                    'cloud computing',
-                    'mobile development',
-                    'machine learning',
-                    'data science',
-                    'devops',
-                    'cybersecurity',
-                    'UI/UX design',
-                    'networking',
-                    'game development',
-                    'e-commerce',
-                    'social media',
-                    'artificial intelligence',
-                    'blockchain',
-                    'IoT (Internet of Things)',
-                    'big data',
-                    'web scraping',
-                    'embedded systems',
-                  ]}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileSkillDom
-                  heading="Filter by skills"
-                  checkboxLabels={[
-                    'Python',
-                    'JavaScript',
-                    'React',
-                    'Node.js',
-                    'TypeScript',
-                    'Java',
-                    'Spring Boot',
-                    'PHP',
-                    'HTML',
-                    'CSS',
-                    'Angular',
-                    'Vue.js',
-                    'Express.js',
-                    'MongoDB',
-                    'MySQL',
-                    'PostgreSQL',
-                    'SQLite',
-                    'Firebase',
-                    'AWS',
-                    'Azure',
-                    'Docker',
-                    'Kubernetes',
-                    'Git',
-                    'Jenkins',
-                    'CI/CD',
-                    'RESTful API',
-                    'GraphQL',
-                    'Microservices',
-                    'Machine Learning',
-                    'Artificial Intelligence',
-                    'Blockchain',
-                    'Cybersecurity',
-                    'UI/UX Design',
-                    'Responsive Web Design',
-                    'Bootstrap',
-                    'Tailwind CSS',
-                    'Sass',
-                    'Less',
-                    'WordPress',
-                    'Joomla',
-                    'Shopify',
-                    'Magento',
-                    'React Native',
-                    'Flutter',
-                    'Ionic',
-                    'Swift',
-                    'Kotlin',
-                    'C#',
-                    'ASP.NET',
-                    'Ruby',
-                    'Ruby on Rails',
-                    'Scala',
-                    'Go',
-                    'Rust',
-                    'Perl',
-                    'C++',
-                    'Unity',
-                    'Unreal Engine',
-                    'Game Development',
-                    'AR/VR',
-                    'IoT',
-                    'Raspberry Pi',
-                    'Arduino',
-                    'Embedded Systems',
-                    'Linux',
-                    'Windows',
-                    'MacOS',
-                    'Android',
-                    'iOS',
-                    'Cross-Platform Development',
-                    'Software Testing',
-                    'Quality Assurance',
-                    'DevOps',
-                    'Agile Methodologies',
-                    'Scrum',
-                    'Kanban',
-                    'Lean',
-                    'Project Management',
-                    'Product Management',
-                    'Business Analysis',
-                    'Technical Writing',
-                    'Copywriting',
-                    'Content Marketing',
-                    'SEO',
-                    'SEM',
-                    'Digital Marketing',
-                    'Social Media Marketing',
-                    'Email Marketing',
-                    'Salesforce',
-                    'ERP',
-                    'CRM',
-                    'Big Data',
-                    'Data Science',
-                    'Data Engineering',
-                    'Data Analytics',
-                    'Business Intelligence',
-                    'Deep Learning',
-                    'Neural Networks',
-                    'Computer Vision',
-                    'Natural Language Processing',
-                    'Quantum Computing',
-                  ]}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {isClient && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
-          <button
-            className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
-            onClick={handleModalToggle}
-          >
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
-          </button>
-        </div>
-      )}
-    </section>
+    </div>
   );
 };
 
-export default Market;
+export default ProjectPage;
