@@ -24,7 +24,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/freelancerSettingsMenuItems';
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
