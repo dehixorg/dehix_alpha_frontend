@@ -15,7 +15,7 @@ export function BusinessSidebar() {
   };
 
   return (
-    <div className="">
+    <div>
       <Button className="md:hidden p-4" onClick={toggleSidebar}>
         <Menu className="h-6 w-6" />
       </Button>

@@ -22,6 +22,16 @@ const Jobs: React.FC<JobsProps> = ({
   founded,
   employees,
 }) => {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   return (
     <Card className="w-auto">
       <CardContent>
