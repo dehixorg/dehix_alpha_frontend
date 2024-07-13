@@ -1,14 +1,5 @@
 'use client';
-import {
-  BookOpen,
-  Boxes,
-  Briefcase,
-  HomeIcon,
-  Package,
-  Search,
-  User,
-  UserIcon,
-} from 'lucide-react';
+import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,54 +14,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import { ProfileForm } from '@/components/form/profileForm';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import { menuItemsBottom, menuItemsTop } from '@/config/settingsMenuItems';
 
 export default function PersonalInfo() {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      isActive: 'logo',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '/settings/personal-info',
-      isActive: true,
-      icon: <User className="h-5 w-5" />,
-      label: 'Personal Info',
-    },
-    {
-      href: '/settings/professional-info',
-      isActive: false,
-      icon: <Briefcase className="h-5 w-5" />,
-      label: 'Professional Info',
-    },
-    {
-      href: '/settings/projects',
-      isActive: false,
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      isActive: false,
-      icon: <BookOpen className="h-5 w-5" />,
-      label: 'Education',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/dashboard/freelancer',
-      isActive: false,
-      icon: <HomeIcon className="h-5 w-5" />,
-      label: 'Home',
-    },
-  ];
-
   const user = useSelector((state: RootState) => state.user);
 
   return (
