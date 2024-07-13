@@ -21,7 +21,10 @@ import ExperienceCard from '@/components/cards/experienceCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddExperience } from '@/components/dialogs/addExperiences';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { menuItemsBottom, menuItemsTop } from '@/config/settingsMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -44,10 +47,14 @@ export default function ProfessionalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
+        active="Professional Info"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
+          <CollapsibleSidebarMenu
+            menuItems={menuItemsTop}
+            active="Professional Info"
+          />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },

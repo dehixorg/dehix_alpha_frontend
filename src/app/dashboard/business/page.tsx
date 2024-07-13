@@ -1,28 +1,12 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Boxes,
-  CheckCircle,
-  Clock,
-  Home,
-  LineChart,
-  Package,
-  Search,
-  Settings,
-  Users2,
-} from 'lucide-react';
+import { CheckCircle, Clock, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,6 +30,11 @@ import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
 import InterviewCard from '@/components/shared/interviewCard';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -57,74 +46,42 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      isActive: 'logo',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      isActive: true,
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      isActive: false,
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      isActive: false,
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      isActive: false,
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/settings/personal-info',
-      isActive: false,
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
   const user = useSelector((state: RootState) => state.user);
+  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
+
+  console.log(responseData);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(`/business/all_project`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response:', response);
+        setResponseData(response); // Store response data in state
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
   console.log(user);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
+        active="Dashboard"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make caomponent */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
-
-          {/* bredcrumbs need to make compont  */}
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Business</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/business' },
+              { label: 'Business', link: '#' },
+            ]}
+          />
 
           {/* search need to remove without changing the layout */}
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -177,9 +134,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardFooter>
                   <Button>
-                    <Link href="/business/createProject">
-                      Create New Project
-                    </Link>
+                    <Link href="/business/add-project">Create New Project</Link>
                   </Button>
                 </CardFooter>
               </Card>

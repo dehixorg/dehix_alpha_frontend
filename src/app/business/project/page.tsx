@@ -1,6 +1,5 @@
 'use client';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   Boxes,
   Home,
@@ -12,14 +11,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
 import {
@@ -53,31 +45,26 @@ export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
-      isActive: 'logo',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
       label: 'Dehix',
     },
     {
       href: '#',
-      isActive: true,
       icon: <Home className="h-5 w-5" />,
       label: 'Dashboard',
     },
     {
       href: '#',
-      isActive: false,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
     {
       href: '#',
-      isActive: false,
       icon: <Users2 className="h-5 w-5" />,
       label: 'Customers',
     },
     {
       href: '#',
-      isActive: false,
       icon: <LineChart className="h-5 w-5" />,
       label: 'Analytics',
     },
@@ -86,7 +73,6 @@ export default function Dashboard() {
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/settings/personal-info',
-      isActive: false,
       icon: <Settings className="h-5 w-5" />,
       label: 'Settings',
     },
@@ -97,32 +83,22 @@ export default function Dashboard() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
+        active="Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make caomponent */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
 
           {/* bredcrumbs need to make compont  */}
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Business</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Project</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>#project_id</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+
+          <Breadcrumb
+            items={[
+              { label: 'Business', link: '/dashboard/business' },
+              { label: 'Project', link: '/dashboard/business' },
+              { label: '#project_id', link: '#' },
+            ]}
+          />
 
           {/* search need to remove without changing the layout */}
           <div className="relative ml-auto flex-1 md:grow-0">

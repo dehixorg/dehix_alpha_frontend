@@ -5,14 +5,14 @@ import { useSelector } from 'react-redux';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
+} from '@/config/menuItems/business/settingsMenuItems';
 import UserDropdownMenu from '@/components/dropdown/user';
+import { BusinessForm } from '@/components/form/businessForm';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -22,7 +22,7 @@ export default function PersonalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Personal Info"
+        active="Business Info"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -33,7 +33,7 @@ export default function PersonalInfo() {
           <Breadcrumb
             items={[
               { label: 'Settings', link: '#' },
-              { label: 'Personal Info', link: '#' },
+              { label: 'Business Info', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -47,7 +47,7 @@ export default function PersonalInfo() {
           <UserDropdownMenu email={user.email} type={user.type} />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} />
+          <BusinessForm user_id={user.uid} />
         </main>
       </div>
     </div>

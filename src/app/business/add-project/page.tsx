@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import {
   BookOpen,
   Boxes,
@@ -8,65 +7,43 @@ import {
   Package,
   Search,
   User,
-  UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import UserDropdownMenu from '@/components/dropdown/user';
 
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
-      isActive: 'logo',
       icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
       label: 'Dehix',
     },
     {
       href: '',
-      isActive: true,
       icon: <User className="h-5 w-5" />,
       label: 'Personal Info',
     },
     {
       href: '#',
-      isActive: false,
       icon: <Briefcase className="h-5 w-5" />,
       label: 'Professional Info',
     },
     {
       href: '#',
-      isActive: false,
       icon: <Package className="h-5 w-5" />,
       label: 'Projects',
     },
     {
       href: '#',
-      isActive: false,
       icon: <BookOpen className="h-5 w-5" />,
       label: 'Education',
     },
@@ -75,7 +52,6 @@ export default function Dashboard() {
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/dashboard/freelancer',
-      isActive: false,
       icon: <HomeIcon className="h-5 w-5" />,
       label: 'Home',
     },
@@ -105,23 +81,18 @@ export default function Dashboard() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
+        active=""
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} />
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Business</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Create Project</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="" />
+
+          <Breadcrumb
+            items={[
+              { label: 'Business', link: '/dashboard/business' },
+              { label: 'Create Project', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -130,30 +101,7 @@ export default function Dashboard() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UserDropdownMenu email={user.email} type={user.type} />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
           <CreateProjectBusinessForm />

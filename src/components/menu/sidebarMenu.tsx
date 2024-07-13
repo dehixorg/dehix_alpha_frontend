@@ -10,7 +10,6 @@ import {
 // Define TypeScript types for menu items
 export interface MenuItem {
   href: string;
-  isActive: boolean | 'logo';
   icon: React.ReactNode;
   label: string;
 }
@@ -18,11 +17,13 @@ export interface MenuItem {
 type SidebarMenuProps = {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
+  active: string;
 };
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
   menuItemsTop,
   menuItemsBottom,
+  active,
 }) => {
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
@@ -31,8 +32,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           <Tooltip key={index}>
             <TooltipTrigger asChild>
               <Link
-                href={item.isActive ? '#' : item.href}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg  ${item.isActive ? (item.isActive === 'logo' ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base' : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8') : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'} transition-colors hover:text-foreground md:h-8 md:w-8`}
+                href={
+                  item.label === active || item.label === 'Dehix'
+                    ? '#'
+                    : item.href
+                }
+                className={`flex h-9 w-9 items-center justify-center rounded-lg  ${item.label === active || item.label === 'Dehix' ? (item.label === 'Dehix' ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base' : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8') : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'} transition-colors hover:text-foreground md:h-8 md:w-8`}
               >
                 {item.icon}
                 <span className="sr-only">{item.label}</span>
@@ -47,8 +52,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           <Tooltip key={index}>
             <TooltipTrigger asChild>
               <Link
-                href={item.isActive ? '#' : item.href}
-                className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.isActive ? (item.isActive === 'logo' ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base' : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8') : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'} transition-colors hover:text-foreground md:h-8 md:w-8`}
+                href={item.href}
+                className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.label === active || item.label === 'Dehix' ? (item.label === 'Dehix' ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base' : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8') : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'} transition-colors hover:text-foreground md:h-8 md:w-8`}
               >
                 {item.icon}
                 <span className="sr-only">{item.label}</span>
