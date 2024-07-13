@@ -57,7 +57,11 @@ export default function BusinessInfo() {
             </div>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(handleSubmit)}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  form.handleSubmit(handleSubmit)(e);
+                  console.log('Form Submitted');
+                }}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-2 gap-6">
@@ -291,25 +295,31 @@ export default function BusinessInfo() {
                 </div>
 
                 <div className="space-y-2">
-                  <FormItem>
-                    <FormLabel>One-Time Password</FormLabel>
-                    <FormControl>
-                      <InputOTP maxLength={6}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </FormControl>
-                    <FormDescription>
-                      Please enter the one-time password sent to your phone.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
+                  <Label>One-Time Password</Label>
+                  <FormField
+                    control={form.control}
+                    name="otp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <InputOTP {...field} maxLength={6}>
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </FormControl>
+                        <FormDescription>
+                          Please enter the one-time password sent to your phone.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <Button

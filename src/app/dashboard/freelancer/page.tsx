@@ -104,6 +104,12 @@ export default function Dashboard() {
       icon: <LineChart className="h-5 w-5" />,
       label: 'Analytics',
     },
+    {
+      href: '/dashboard/freelancer/interview',
+      isActive: false,
+      icon: <Users2 className="h-5 w-5" />,
+      label: 'Interviews',
+    },
   ];
 
   const menuItemsBottom: MenuItem[] = [
