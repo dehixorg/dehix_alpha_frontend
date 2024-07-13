@@ -3,8 +3,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Boxes,
-  CheckCircle,
-  Clock,
   Home,
   LineChart,
   Package,
@@ -14,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,13 +21,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,9 +33,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
-import StatCard from '@/components/shared/statCard';
-import { ProjectCard } from '@/components/cards/projectCard';
 import InterviewCard from '@/components/shared/interviewCard';
+import ProjectDetailCard from '@/components/business/project/projectDetailCard';
+import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
+import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
 const sampleInterview = {
@@ -57,6 +49,7 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
+  const user = useSelector((state: RootState) => state.user);
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -87,36 +80,41 @@ export default function Dashboard() {
 
   const menuItemsBottom: MenuItem[] = [
     {
-      href: '/settings/business-info',
+      href: '/settings/personal-info',
       icon: <Settings className="h-5 w-5" />,
       label: 'Settings',
     },
   ];
-  const user = useSelector((state: RootState) => state.user);
   console.log(user);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
+        active="Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make caomponent */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
 
           {/* bredcrumbs need to make compont  */}
           <Breadcrumb className="hidden md:flex">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
+                  <Link href="#">Business</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Business</BreadcrumbPage>
+                <BreadcrumbLink asChild>
+                  <Link href="#">Project</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>#project_id</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -160,56 +158,19 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {/* Create project card */}
-              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
-                <CardHeader className="pb-3">
-                  <CardTitle>Your Projects</CardTitle>
-                  <CardDescription className="max-w-lg text-balance leading-relaxed">
-                    Introducing Our Dynamic Projects Dashboard for Seamless
-                    Management and Insightful Analysis.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              <StatCard
-                title="Active Projects"
-                value={12}
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
-              />
-
-              <StatCard
-                title="Pending Projects"
-                value={5}
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
-              />
+            <div className="">
+              <ProjectDetailCard />
             </div>
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Current Projects {'(2)'}
+              Profiles
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectCard className="min-w-[45%] " projectType={'current'} />
-              <ProjectCard className="min-w-[45%] " projectType={'current'} />
-            </div>
-
-            <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Completed Projects {'(3)'}
-            </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
+              <ProjectProfileDetailCard className="min-w-[45%] " />
+              <ProjectProfileDetailCard className="min-w-[45%] " />
             </div>
           </div>
+
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews

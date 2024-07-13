@@ -35,10 +35,12 @@ export default function Login() {
       const accessToken = await user.getIdToken();
       console.log('Bearer ' + accessToken);
       initializeAxiosWithToken(accessToken);
+      const claims = await user.getIdTokenResult();
+      console.log('Type:', claims.claims.type);
       console.log('User ID ' + userCredential.user.uid);
-      dispatch(setUser(userCredential.user));
+      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
       console.log(userCredential.user);
-      router.replace('/dashboard/freelancer');
+      router.replace(`/dashboard/${claims.claims.type}`);
     } catch (error: any) {
       // Optionally handle error based on its type
       setIsLoading(false);
