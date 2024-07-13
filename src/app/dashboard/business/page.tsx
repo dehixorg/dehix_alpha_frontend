@@ -15,14 +15,7 @@ import {
 import { useSelector } from 'react-redux';
 
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -105,21 +98,12 @@ export default function Dashboard() {
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make caomponent */}
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
-
-          {/* bredcrumbs need to make compont  */}
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Business</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <Breadcrumb
+            items={[ 
+              { label: 'Dashboard', link: '/dashboard/business' },
+              { label: 'Business', link: '#' },
+            ]} 
+          />
 
           {/* search need to remove without changing the layout */}
           <div className="relative ml-auto flex-1 md:grow-0">
