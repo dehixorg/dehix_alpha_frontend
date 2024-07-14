@@ -77,7 +77,7 @@ const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
             </button>
           </div>
         )}
-        
+
         {filteredSkills.length === 0 && (
           <p className="text-sm text-gray-500 mt-2">No skills found.</p>
         )}

@@ -53,7 +53,7 @@ const SkillDom: React.FC<SkillDomProps> = ({ heading, checkboxLabels }) => {
               <label className="text-sm">{label}</label>
             </div>
           ))}
-          
+
           {showMore &&
             hiddenSkills.map((label, index) => (
               <div key={index} className="flex items-center mb-1">
@@ -68,7 +68,7 @@ const SkillDom: React.FC<SkillDomProps> = ({ heading, checkboxLabels }) => {
                 <label className="text-sm">{label}</label>
               </div>
             ))}
-            {filteredSkills.length > 3 && (
+          {filteredSkills.length > 3 && (
             <div className="flex items-center mb-1">
               <button
                 className="text-sm text-blue-500 cursor-pointer"

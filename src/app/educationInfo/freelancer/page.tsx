@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Search, CalendarIcon, Trash2, Pencil, UserIcon } from 'lucide-react';
+import { Search, CalendarIcon, UserIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -33,7 +33,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
@@ -78,7 +78,7 @@ const educationData = [
     fieldOfStudy: 'Mechanical Engineering',
     start: '2002-01-01',
     end: '2006-01-01',
-    grade: '3.90 GPA'
+    grade: '3.90 GPA',
   },
   {
     degree: 'Bachelor of Arts in English Language and Culture',
@@ -86,7 +86,7 @@ const educationData = [
     fieldOfStudy: 'English Language and Culture',
     start: '2014-01-01',
     end: '2017-01-01',
-    grade: '3.84 GPA'
+    grade: '3.84 GPA',
   },
   {
     degree: 'MBA in Business Administration',
@@ -94,8 +94,8 @@ const educationData = [
     fieldOfStudy: 'Business Administration',
     start: '2014-01-01',
     end: '2016-01-01',
-    grade: 'Magna Cum Laude'
-  }
+    grade: 'Magna Cum Laude',
+  },
 ];
 
 export default function ProfilePage() {
@@ -141,23 +141,23 @@ export default function ProfilePage() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (index: number) => {
-    const updatedEducation = education.filter((_, i) => i !== index);
-    setEducation(updatedEducation);
-    localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
-  };
+  // const handleDelete = (index: number) => {
+  //   const updatedEducation = education.filter((_, i) => i !== index);
+  //   setEducation(updatedEducation);
+  //   localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
+  // };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    const educationInfo = education[index];
-    form.setValue('degree', educationInfo.degree);
-    form.setValue('universityName', educationInfo.universityName);
-    form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
-    form.setValue('start', new Date(educationInfo.start));
-    form.setValue('end', new Date(educationInfo.end));
-    form.setValue('grade', educationInfo.grade);
-    setIsDialogOpen(true);
-  };
+  // const handleEdit = (index: number) => {
+  //   setEditIndex(index);
+  //   const educationInfo = education[index];
+  //   form.setValue('degree', educationInfo.degree);
+  //   form.setValue('universityName', educationInfo.universityName);
+  //   form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
+  //   form.setValue('start', new Date(educationInfo.start));
+  //   form.setValue('end', new Date(educationInfo.end));
+  //   form.setValue('grade', educationInfo.grade);
+  //   setIsDialogOpen(true);
+  // };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -169,7 +169,7 @@ export default function ProfilePage() {
       <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
 
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
           <Breadcrumb
             items={[
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>"user email"</DropdownMenuLabel>
+              <DropdownMenuLabel>&ldquo;user email&rdquo;</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
@@ -219,136 +219,48 @@ export default function ProfilePage() {
           {educationData.map((educationInfo: any, index: number) => (
             <EducationInfoCard key={index} {...educationInfo} />
           ))}
-          
+
           <div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-gray-600"
-                variant="outline"
-                onClick={toggleDialog}
-              >
-                Add Education
-              </Button>
-            </DialogTrigger>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-gray-600"
+                  variant="outline"
+                  onClick={toggleDialog}
+                >
+                  Add Education
+                </Button>
+              </DialogTrigger>
 
-            <DialogContent className="w-full max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add Education</DialogTitle>
-                <DialogDescription>
-                  Add your relevant Education.
-                </DialogDescription>
-              </DialogHeader>
+              <DialogContent className="w-full max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Add Education</DialogTitle>
+                  <DialogDescription>
+                    Add your relevant Education.
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="grid grid-row-4 gap-4 py-4 max-h-[70vh] overflow-y-auto">
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="degree"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Enter Degree</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your degree title"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter your degree title
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="universityName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your university name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter your university name
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="fieldOfStudy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Enter Field of Study</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter Reference Person Name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter Field of Study
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-row-4 gap-4 py-4 max-h-[70vh] overflow-y-auto">
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={form.control}
-                        name="start"
+                        name="degree"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Start Date</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground',
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, 'PPP')
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() ||
-                                    date < new Date('1900-01-01')
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormDescription>Your start date</FormDescription>
+                            <FormLabel>Enter Degree</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your degree title"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter your degree title
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -356,77 +268,168 @@ export default function ProfilePage() {
 
                       <FormField
                         control={form.control}
-                        name="end"
+                        name="universityName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>End Date</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground',
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, 'PPP')
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() ||
-                                    date < new Date('1900-01-01')
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormDescription>Your end date</FormDescription>
+                            <FormLabel>Company Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your university name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter your university name
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="grade"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Grade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your grade" {...field} />
-                          </FormControl>
-                          <FormDescription>Enter your grade</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="fieldOfStudy"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Enter Field of Study</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter Reference Person Name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter Field of Study
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <DialogFooter>
-                      <Button type="submit" onClick={toggleDialog}>
-                        Save changes
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </div>
-            </DialogContent>
-          </Dialog>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="start"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={'outline'}
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground',
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, 'PPP')
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() ||
+                                      date < new Date('1900-01-01')
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormDescription>Your start date</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="end"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={'outline'}
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground',
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, 'PPP')
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() ||
+                                      date < new Date('1900-01-01')
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormDescription>Your end date</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="grade"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grade</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your grade"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>Enter your grade</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter>
+                        <Button type="submit" onClick={toggleDialog}>
+                          Save changes
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </main>
       </div>

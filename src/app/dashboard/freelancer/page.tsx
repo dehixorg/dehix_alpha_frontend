@@ -63,7 +63,6 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 

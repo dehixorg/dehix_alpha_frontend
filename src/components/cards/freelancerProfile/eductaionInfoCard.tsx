@@ -1,7 +1,5 @@
 import React from 'react';
-import { Github, MessageSquareIcon } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -31,9 +29,7 @@ const EducationInfoCard: React.FC<EducationProps> = ({
   return (
     <Card className="max-full mx-auto md:max-w-2xl">
       <CardHeader>
-        <CardTitle className="flex">
-          {universityName}
-        </CardTitle>
+        <CardTitle className="flex">{universityName}</CardTitle>
         <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-white">
           {degree} in {fieldOfStudy}
         </CardDescription>
