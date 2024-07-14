@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+
 import { Card, CardContent } from '@/components/ui/card';
 
 interface CompanyCardProps {
@@ -9,7 +10,12 @@ interface CompanyCardProps {
   setSelectedValues: (values: string[]) => void;
 }
 
-const CompanyCard: React.FC<CompanyCardProps> = ({ heading, checkboxLabels, selectedValues, setSelectedValues }) => {
+const CompanyCard: React.FC<CompanyCardProps> = ({
+  heading,
+  checkboxLabels,
+  selectedValues,
+  setSelectedValues,
+}) => {
   const handleCheckboxChange = (label: string) => {
     if (selectedValues.includes(label)) {
       setSelectedValues([]);
