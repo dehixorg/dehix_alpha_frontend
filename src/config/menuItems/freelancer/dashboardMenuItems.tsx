@@ -4,7 +4,6 @@ import {
   LineChart,
   Package,
   Settings,
-  Users2,
   BriefcaseBusiness,
 } from 'lucide-react';
 
@@ -30,11 +29,6 @@ export const menuItemsTop: MenuItem[] = [
     href: '#',
     icon: <Package className="h-5 w-5" />,
     label: 'Projects',
-  },
-  {
-    href: '#',
-    icon: <Users2 className="h-5 w-5" />,
-    label: 'Customers',
   },
   {
     href: '#',

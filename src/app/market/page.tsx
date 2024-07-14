@@ -13,6 +13,18 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Search, UserIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const jobData = {
   heading: 'Arya.ai Data Scientist',
@@ -24,9 +36,33 @@ const jobData = {
   employees: '10-50 employees',
 };
 
+interface FilterState {
+  location: string[];
+  jobType: string[];
+  domain: string[];
+  skills: string[];
+}
+
 const Market: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    location: [],
+    jobType: [],
+    domain: [],
+    skills: [],
+  });
+  const handleFilterChange = (filterType:any, selectedValues:any) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterType]: selectedValues,
+    }));
+  };
+
+  const handleApply = () => {
+    console.log('Selected Filters:', filters);
+  };
+
 
   useEffect(() => {
     setIsClient(true);
@@ -36,6 +72,8 @@ const Market: React.FC = () => {
     setShowFilters(!showFilters);
   };
 
+
+
   return (
     <section className="p-4 relative">
       <SidebarMenu
@@ -44,177 +82,109 @@ const Market: React.FC = () => {
         active="Freelancer Work"
       />
       <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
-      <div className="md:mx-40 lg:md-20 mx-14">
+      <div className="md:mx-40 lg:md-20 mx-12">
         <div className="mb-6 mt-4">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background  sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Business', link: '#' },
+              { label: 'Projects', link: '#' },
             ]}
           />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="overflow-hidden rounded-full"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/user.png" alt="@shadcn" />
+                  <AvatarFallback>
+                    <UserIcon size={16} />{' '}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>user</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
         </div>
         <div className="flex flex-col lg:flex-row lg:space-x-10">
-          <div className="hidden lg:block lg:space-y-4">
-            <div className="mb-4">
-              <SkillDom
-                heading="Filter by location"
-                checkboxLabels={[
-                  'All',
-                  'Banglore',
-                  'Pune',
-                  'Noida',
-                  'Delhi',
-                  'Gurugram',
-                ]}
-              />
-            </div>
-
-            <div className="mb-4">
-              <CompanyCard
-                heading="Filter by job type"
-                checkboxLabels={['All', 'Full-time', 'Internship']}
-              />
-            </div>
-            <div className="mb-4">
-              <SkillDom
-                heading="Filter by domain"
-                checkboxLabels={[
-                  'frontend',
-                  'backend',
-                  'database',
-                  'cloud computing',
-                  'mobile development',
-                  'machine learning',
-                  'data science',
-                  'devops',
-                  'cybersecurity',
-                  'UI/UX design',
-                  'networking',
-                  'game development',
-                  'e-commerce',
-                  'social media',
-                  'artificial intelligence',
-                  'blockchain',
-                  'IoT (Internet of Things)',
-                  'big data',
-                  'web scraping',
-                  'embedded systems',
-                ]}
-              />
-            </div>
-            <div className="mb-4">
-              <SkillDom
-                heading="Filter by skills"
-                checkboxLabels={[
-                  'Python',
-                  'JavaScript',
-                  'React',
-                  'Node.js',
-                  'TypeScript',
-                  'Java',
-                  'Spring Boot',
-                  'PHP',
-                  'HTML',
-                  'CSS',
-                  'Angular',
-                  'Vue.js',
-                  'Express.js',
-                  'MongoDB',
-                  'MySQL',
-                  'PostgreSQL',
-                  'SQLite',
-                  'Firebase',
-                  'AWS',
-                  'Azure',
-                  'Docker',
-                  'Kubernetes',
-                  'Git',
-                  'Jenkins',
-                  'CI/CD',
-                  'RESTful API',
-                  'GraphQL',
-                  'Microservices',
-                  'Machine Learning',
-                  'Artificial Intelligence',
-                  'Blockchain',
-                  'Cybersecurity',
-                  'UI/UX Design',
-                  'Responsive Web Design',
-                  'Bootstrap',
-                  'Tailwind CSS',
-                  'Sass',
-                  'Less',
-                  'WordPress',
-                  'Joomla',
-                  'Shopify',
-                  'Magento',
-                  'React Native',
-                  'Flutter',
-                  'Ionic',
-                  'Swift',
-                  'Kotlin',
-                  'C#',
-                  'ASP.NET',
-                  'Ruby',
-                  'Ruby on Rails',
-                  'Scala',
-                  'Go',
-                  'Rust',
-                  'Perl',
-                  'C++',
-                  'Unity',
-                  'Unreal Engine',
-                  'Game Development',
-                  'AR/VR',
-                  'IoT',
-                  'Raspberry Pi',
-                  'Arduino',
-                  'Embedded Systems',
-                  'Linux',
-                  'Windows',
-                  'MacOS',
-                  'Android',
-                  'iOS',
-                  'Cross-Platform Development',
-                  'Software Testing',
-                  'Quality Assurance',
-                  'DevOps',
-                  'Agile Methodologies',
-                  'Scrum',
-                  'Kanban',
-                  'Lean',
-                  'Project Management',
-                  'Product Management',
-                  'Business Analysis',
-                  'Technical Writing',
-                  'Copywriting',
-                  'Content Marketing',
-                  'SEO',
-                  'SEM',
-                  'Digital Marketing',
-                  'Social Media Marketing',
-                  'Email Marketing',
-                  'Salesforce',
-                  'ERP',
-                  'CRM',
-                  'Big Data',
-                  'Data Science',
-                  'Data Engineering',
-                  'Data Analytics',
-                  'Business Intelligence',
-                  'Deep Learning',
-                  'Neural Networks',
-                  'Computer Vision',
-                  'Natural Language Processing',
-                  'Quantum Computing',
-                ]}
-              />
-            </div>
-          </div>
-          <div className="mt-4 lg:mt-0 lg:ml-10">
-            <Jobs {...jobData} />
-          </div>
+      <div className="hidden lg:block lg:space-y-4">
+        <div className="mb-4">
+          <SkillDom
+            heading="Filter by location"
+            checkboxLabels={['All', 'Banglore', 'Pune', 'Noida', 'Delhi', 'Gurugram']}
+            selectedValues={filters.location}
+            setSelectedValues={(values) => handleFilterChange('location', values)}
+          />
         </div>
+        <div className="mb-4">
+          <CompanyCard
+            heading="Filter by job type"
+            checkboxLabels={['All', 'Full-time', 'Internship']}
+            selectedValues={filters.jobType}
+            setSelectedValues={(values) => handleFilterChange('jobType', values)}
+          />
+        </div>
+        <div className="mb-4">
+          <SkillDom
+            heading="Filter by domain"
+            checkboxLabels={[
+              'frontend', 'backend', 'database', 'cloud computing', 'mobile development',
+              'machine learning', 'data science', 'devops', 'cybersecurity', 'UI/UX design',
+              'networking', 'game development', 'e-commerce', 'social media', 'artificial intelligence',
+              'blockchain', 'IoT (Internet of Things)', 'big data', 'web scraping', 'embedded systems'
+            ]}
+            selectedValues={filters.domain}
+            setSelectedValues={(values) => handleFilterChange('domain', values)}
+          />
+        </div>
+        <div className="mb-4">
+          <SkillDom
+            heading="Filter by skills"
+            checkboxLabels={[
+              'Python', 'JavaScript', 'React', 'Node.js', 'TypeScript', 'Java', 'Spring Boot', 'PHP', 'HTML', 'CSS',
+              'Angular', 'Vue.js', 'Express.js', 'MongoDB', 'MySQL', 'PostgreSQL', 'SQLite', 'Firebase', 'AWS', 'Azure',
+              'Docker', 'Kubernetes', 'Git', 'Jenkins', 'CI/CD', 'RESTful API', 'GraphQL', 'Microservices', 'Machine Learning',
+              'Artificial Intelligence', 'Blockchain', 'Cybersecurity', 'UI/UX Design', 'Responsive Web Design', 'Bootstrap',
+              'Tailwind CSS', 'Sass', 'Less', 'WordPress', 'Joomla', 'Shopify', 'Magento', 'React Native', 'Flutter', 'Ionic',
+              'Swift', 'Kotlin', 'C#', 'ASP.NET', 'Ruby', 'Ruby on Rails', 'Scala', 'Go', 'Rust', 'Perl', 'C++', 'Unity',
+              'Unreal Engine', 'Game Development', 'AR/VR', 'IoT', 'Raspberry Pi', 'Arduino', 'Embedded Systems', 'Linux',
+              'Windows', 'MacOS', 'Android', 'iOS', 'Cross-Platform Development', 'Software Testing', 'Quality Assurance',
+              'DevOps', 'Agile Methodologies', 'Scrum', 'Kanban', 'Lean', 'Project Management', 'Product Management',
+              'Business Analysis', 'Technical Writing', 'Copywriting', 'Content Marketing', 'SEO', 'SEM', 'Digital Marketing',
+              'Social Media Marketing', 'Email Marketing', 'Salesforce', 'ERP', 'CRM', 'Big Data', 'Data Science', 'Data Engineering',
+              'Data Analytics', 'Business Intelligence', 'Deep Learning', 'Neural Networks', 'Computer Vision', 'Natural Language Processing',
+              'Quantum Computing'
+            ]}
+            selectedValues={filters.skills}
+            setSelectedValues={(values) => handleFilterChange('skills', values)}
+          />
+        </div>
+        <button onClick={handleApply}>Apply</button>
+      </div>
+      <div className="mt-4 lg:mt-0 lg:ml-10">
+        <Jobs {...jobData} />
+      </div>
+    </div>
       </div>
 
       {isClient && showFilters && (
