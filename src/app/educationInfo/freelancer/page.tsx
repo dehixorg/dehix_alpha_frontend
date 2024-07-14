@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { CalendarIcon, Trash2, Pencil } from 'lucide-react';
+import { Search, CalendarIcon, UserIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -33,7 +33,23 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ProfileSidebar } from '@/components/ProfileSidebar';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
+import Breadcrumb from '@/components/shared/breadcrumbList';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import EducationInfoCard from '@/components/cards/freelancerProfile/eductaionInfoCard';
 
 const FormSchema = z.object({
   degree: z.string({
@@ -55,6 +71,32 @@ const FormSchema = z.object({
     required_error: 'A grade score is required',
   }),
 });
+const educationData = [
+  {
+    degree: 'Bachelor of Science in Mechanical Engineering',
+    universityName: 'University of California, Berkeley',
+    fieldOfStudy: 'Mechanical Engineering',
+    start: '2002-01-01',
+    end: '2006-01-01',
+    grade: '3.90 GPA',
+  },
+  {
+    degree: 'Bachelor of Arts in English Language and Culture',
+    universityName: 'University of Groningen',
+    fieldOfStudy: 'English Language and Culture',
+    start: '2014-01-01',
+    end: '2017-01-01',
+    grade: '3.84 GPA',
+  },
+  {
+    degree: 'MBA in Business Administration',
+    universityName: 'University of Maine',
+    fieldOfStudy: 'Business Administration',
+    start: '2014-01-01',
+    end: '2016-01-01',
+    grade: 'Magna Cum Laude',
+  },
+];
 
 export default function ProfilePage() {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -99,203 +141,126 @@ export default function ProfilePage() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = (index: number) => {
-    const updatedEducation = education.filter((_, i) => i !== index);
-    setEducation(updatedEducation);
-    localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
-  };
+  // const handleDelete = (index: number) => {
+  //   const updatedEducation = education.filter((_, i) => i !== index);
+  //   setEducation(updatedEducation);
+  //   localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
+  // };
 
-  const handleEdit = (index: number) => {
-    setEditIndex(index);
-    const educationInfo = education[index];
-    form.setValue('degree', educationInfo.degree);
-    form.setValue('universityName', educationInfo.universityName);
-    form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
-    form.setValue('start', new Date(educationInfo.start));
-    form.setValue('end', new Date(educationInfo.end));
-    form.setValue('grade', educationInfo.grade);
-    setIsDialogOpen(true);
-  };
+  // const handleEdit = (index: number) => {
+  //   setEditIndex(index);
+  //   const educationInfo = education[index];
+  //   form.setValue('degree', educationInfo.degree);
+  //   form.setValue('universityName', educationInfo.universityName);
+  //   form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
+  //   form.setValue('start', new Date(educationInfo.start));
+  //   form.setValue('end', new Date(educationInfo.end));
+  //   form.setValue('grade', educationInfo.grade);
+  //   setIsDialogOpen(true);
+  // };
 
   return (
-    <div className="flex flex-col md:flex-row items-center min-h-screen">
-      <ProfileSidebar />
-      <div className="p-6 rounded-lg w-full h-auto flex flex-col mt-44 m-64">
-        <div className="-mt-44">
-          <h2 className="text-white text-2xl font-bold mb-4">Education Info</h2>
-        </div>
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Freelancer Work"
+      />
+      <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
 
-        <div className="w-full">
-          {education.map((educationInfo, index) => (
-            <div
-              key={index}
-              className="relative bg-white border rounded-lg p-6 mb-4 shadow-lg w-full"
-            >
-              <div className="absolute top-4 right-4 flex space-x-3">
-                <button
-                  className="text-gray-800 hover:text-red-600 focus:outline-none"
-                  onClick={() => handleDelete(index)}
-                >
-                  <Trash2 className="h-6 w-6" />
-                </button>
-                <button
-                  className="text-gray-800 hover:text-blue-700 focus:outline-none"
-                  onClick={() => handleEdit(index)}
-                >
-                  <Pencil className="h-6 w-6" />
-                </button>
-              </div>
-              <p className="text-gray-900 text-xl font-semibold mb-1">
-                {educationInfo.degree}
-              </p>
-              <p className="text-gray-700 mb-1">
-                University: {educationInfo.universityName}
-              </p>
-              {educationInfo.fieldOfStudy && (
-                <p className="text-gray-600 mb-1">
-                  Field of Study: {educationInfo.fieldOfStudy}
-                </p>
-              )}
-              <p className="text-gray-600 mb-1">
-                {format(educationInfo.start, 'PPP')} -{' '}
-                {format(educationInfo.end, 'PPP')}
-              </p>
-              {educationInfo.grade && (
-                <p className="text-gray-600">Grade: {educationInfo.grade}</p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-center items-center mt-8">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Profile', link: '/settings/personal-info' },
+              { label: 'Education Info', link: '#' },
+            ]}
+          />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
-                className="bg-gray-600"
                 variant="outline"
-                onClick={toggleDialog}
+                size="icon"
+                className="overflow-hidden rounded-full"
               >
-                Add Education
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/user.png" alt="@shadcn" />
+                  <AvatarFallback>
+                    <UserIcon size={16} />{' '}
+                  </AvatarFallback>
+                </Avatar>
               </Button>
-            </DialogTrigger>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>&ldquo;user email&rdquo;</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
 
-            <DialogContent className="w-full max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add Education</DialogTitle>
-                <DialogDescription>
-                  Add your relevant Education.
-                </DialogDescription>
-              </DialogHeader>
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {educationData.map((educationInfo: any, index: number) => (
+            <EducationInfoCard key={index} {...educationInfo} />
+          ))}
 
-              <div className="grid grid-row-4 gap-4 py-4 max-h-[70vh] overflow-y-auto">
-                <Form {...form}>
-                  <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
-                  >
-                    <FormField
-                      control={form.control}
-                      name="degree"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Enter Degree</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your degree title"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter your degree title
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+          <div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-gray-600"
+                  variant="outline"
+                  onClick={toggleDialog}
+                >
+                  Add Education
+                </Button>
+              </DialogTrigger>
 
-                    <FormField
-                      control={form.control}
-                      name="universityName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your university name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter your university name
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <DialogContent className="w-full max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Add Education</DialogTitle>
+                  <DialogDescription>
+                    Add your relevant Education.
+                  </DialogDescription>
+                </DialogHeader>
 
-                    <FormField
-                      control={form.control}
-                      name="fieldOfStudy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Enter Field of Study</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter Reference Person Name"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Enter Field of Study
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-row-4 gap-4 py-4 max-h-[70vh] overflow-y-auto">
+                  <Form {...form}>
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                    >
                       <FormField
                         control={form.control}
-                        name="start"
+                        name="degree"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Start Date</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground',
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, 'PPP')
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() ||
-                                    date < new Date('1900-01-01')
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormDescription>Your start date</FormDescription>
+                            <FormLabel>Enter Degree</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your degree title"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter your degree title
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -303,78 +268,170 @@ export default function ProfilePage() {
 
                       <FormField
                         control={form.control}
-                        name="end"
+                        name="universityName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>End Date</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={'outline'}
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground',
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, 'PPP')
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() ||
-                                    date < new Date('1900-01-01')
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormDescription>Your end date</FormDescription>
+                            <FormLabel>Company Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your university name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter your university name
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name="grade"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Grade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your grade" {...field} />
-                          </FormControl>
-                          <FormDescription>Enter your grade</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={form.control}
+                        name="fieldOfStudy"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Enter Field of Study</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter Reference Person Name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter Field of Study
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <DialogFooter>
-                      <Button type="submit" onClick={toggleDialog}>
-                        Save changes
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="start"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={'outline'}
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground',
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, 'PPP')
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() ||
+                                      date < new Date('1900-01-01')
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormDescription>Your start date</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="end"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={'outline'}
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground',
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, 'PPP')
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() ||
+                                      date < new Date('1900-01-01')
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormDescription>Your end date</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="grade"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grade</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your grade"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>Enter your grade</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <DialogFooter>
+                        <Button type="submit" onClick={toggleDialog}>
+                          Save changes
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </main>
       </div>
     </div>
   );

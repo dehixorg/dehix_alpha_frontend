@@ -53,16 +53,7 @@ const SkillDom: React.FC<SkillDomProps> = ({ heading, checkboxLabels }) => {
               <label className="text-sm">{label}</label>
             </div>
           ))}
-          {filteredSkills.length > 3 && (
-            <div className="flex items-center mb-1">
-              <button
-                className="text-sm text-blue-500 cursor-pointer"
-                onClick={() => setShowMore(!showMore)}
-              >
-                {showMore ? 'Less Options' : 'More Options'}
-              </button>
-            </div>
-          )}
+
           {showMore &&
             hiddenSkills.map((label, index) => (
               <div key={index} className="flex items-center mb-1">
@@ -77,6 +68,16 @@ const SkillDom: React.FC<SkillDomProps> = ({ heading, checkboxLabels }) => {
                 <label className="text-sm">{label}</label>
               </div>
             ))}
+          {filteredSkills.length > 3 && (
+            <div className="flex items-center mb-1">
+              <button
+                className="text-sm text-blue-500 cursor-pointer"
+                onClick={() => setShowMore(!showMore)}
+              >
+                {showMore ? 'Less Options' : 'More Options'}
+              </button>
+            </div>
+          )}
           {filteredSkills.length === 0 && (
             <p className="text-sm text-gray-500 mt-2">No skills found.</p>
           )}
