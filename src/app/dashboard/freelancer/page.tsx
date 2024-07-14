@@ -52,10 +52,6 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -67,7 +63,6 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 
