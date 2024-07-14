@@ -4,7 +4,6 @@ import {
   LineChart,
   Package,
   Settings,
-  Users2,
   Briefcase,
   BriefcaseBusiness,
 } from 'lucide-react';
