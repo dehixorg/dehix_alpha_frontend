@@ -25,20 +25,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
-import InterviewCard from '@/components/shared/interviewCard';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);

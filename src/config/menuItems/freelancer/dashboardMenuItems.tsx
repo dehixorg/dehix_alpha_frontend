@@ -16,14 +16,14 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '#',
+    href: '/dashboard/freelancer',
     icon: <Home className="h-5 w-5" />,
     label: 'Dashboard',
   },
   {
-    href: '/market',
+    href: '/market/freelancer',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
-    label: 'Freelancer Work',
+    label: 'Market',
   },
   {
     href: '#',

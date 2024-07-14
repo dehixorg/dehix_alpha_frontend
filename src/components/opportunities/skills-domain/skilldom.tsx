@@ -7,7 +7,7 @@ interface SkillDomProps {
   heading: string;
   checkboxLabels: string[];
   selectedValues: string[];
-  setSelectedValues: (values: string[]) => void; 
+  setSelectedValues: (values: string[]) => void;
 }
 
 const SkillDom: React.FC<SkillDomProps> = ({
