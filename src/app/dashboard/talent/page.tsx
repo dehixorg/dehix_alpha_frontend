@@ -254,22 +254,11 @@ const Dashboard = () => {
         <div className="ml-5">
           <h1 className="text-3xl font-semibold mb-4">Talent</h1>
         </div>
-        <section className="flex justify-center ">
+        <section className="flex justify-center">
           <div className="ml-5 mr-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline">Skills</Button>
-              </PopoverTrigger>
-              <PopoverContentForm
-                tableData={tableData}
-                setTableData={setTableData}
-              />
-            </Popover>
-          </div>
-          <div className="mr-5 ml-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline">Domains</Button>
+                <Button variant="outline">Skills/Domain</Button>
               </PopoverTrigger>
               <PopoverContentForm
                 tableData={tableData}
@@ -278,7 +267,7 @@ const Dashboard = () => {
             </Popover>
           </div>
         </section>
-        <section>
+        <section className='m-5'>
           <Card>
             <CardHeader className="px-7">
               <CardTitle>Skills/Domains</CardTitle>
