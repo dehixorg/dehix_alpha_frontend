@@ -6,6 +6,13 @@ import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import Jobs from '@/components/opportunities/jobs/jobs';
 import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
+import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 
 const jobData = {
   heading: 'Arya.ai Data Scientist',
@@ -31,14 +38,23 @@ const Market: React.FC = () => {
 
   return (
     <section className="p-4 relative">
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Freelancer Work"
+      />
+      <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+      <div className='md:mx-40 lg:md-20 mx-14'>
+        <div className='mb-6 mt-4'>
+      <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Business', link: '#' },
+            ]}
+          />
+          </div>
       <div className="flex flex-col lg:flex-row lg:space-x-10">
         <div className="hidden lg:block lg:space-y-4">
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by company size"
-              checkboxLabels={['All', 'Large', 'Small']}
-            />
-          </div>
           <div className="mb-4">
             <SkillDom
               heading="Filter by location"
@@ -52,12 +68,7 @@ const Market: React.FC = () => {
               ]}
             />
           </div>
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by experience"
-              checkboxLabels={['All', 'Fresher', 'Experienced']}
-            />
-          </div>
+          
           <div className="mb-4">
             <CompanyCard
               heading="Filter by job type"
@@ -204,17 +215,13 @@ const Market: React.FC = () => {
           <Jobs {...jobData} />
         </div>
       </div>
+      </div>
 
       {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-4 rounded-lg w-full max-w-screen-lg mx-auto item-center">
             <div className="space-y-4">
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by company size"
-                  checkboxLabels={['All', 'Large', 'Small']}
-                />
-              </div>
+              
               <div className="border-b border-gray-300 pb-4">
                 <MobileCompany
                   heading="Filter by location"
@@ -228,18 +235,8 @@ const Market: React.FC = () => {
                   ]}
                 />
               </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by experience"
-                  checkboxLabels={['All', 'Fresher', 'Experienced']}
-                />
-              </div>
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by job type"
-                  checkboxLabels={['All', 'Full-time', 'Internship']}
-                />
-              </div>
+              
+              
               <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom
                   heading="Filter by domain"

@@ -5,6 +5,7 @@ import {
   Package,
   Settings,
   Users2,
+  BriefcaseBusiness,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -19,6 +20,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '#',
     icon: <Home className="h-5 w-5" />,
     label: 'Dashboard',
+  },
+  {
+    href: '/market',
+    icon: <BriefcaseBusiness className="h-5 w-5" />,
+    label: 'Freelancer Work',
   },
   {
     href: '#',
