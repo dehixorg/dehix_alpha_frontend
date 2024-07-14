@@ -1,37 +1,9 @@
-/* eslint-disable react/prop-types */
-
 'use client';
-import Link from 'next/link';
-import {
-  Boxes,
-  Sparkles,
-  Home,
-  LineChart,
-  Package,
-  Search,
-  Settings,
-  Users2,
-  UserIcon,
-} from 'lucide-react';
+import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from '@/components/ui/breadcrumb';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -42,182 +14,50 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { RootState } from '@/lib/store';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { axiosInstance } from '@/lib/axiosinstance';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
+import { TalentForm } from '@/components/dash-comp/talentForm/talent-form';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/freelancerSettingsMenuItems';
 
-interface FormData {
-  skills: string;
-  experience: string;
-  monthlyPay: string;
-  domain: string; // Added domain field to FormData interface
-}
-
-interface PopoverContentFormProps {
-  tableData: FormData[];
-  setTableData: React.Dispatch<React.SetStateAction<FormData[]>>;
-}
-// eslint-disable-next-line react/prop-types
-const PopoverContentForm: React.FC<PopoverContentFormProps> = ({
-  tableData,
-  setTableData,
-}) => {
-  const { register, handleSubmit, reset } = useForm<FormData>();
-
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    setTableData([...tableData, data]); // Add new form data to tableData state
-    reset(); // Reset the form after submission
-  };
-
-  return (
-    <PopoverContent className="w-80 right-0">
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <div className="space-y-2">
-          <h4 className="font-medium leading-none">Skills/Domains</h4>
-          <p className="text-sm text-muted-foreground">
-            Enter your skills / Domains, experience, and monthly pay.
-          </p>
-        </div>
-        <div className="grid gap-2">
-          <div className="grid grid-cols-3 items-center gap-4">
-            <Label htmlFor="skills">Skills/Domain</Label>
-            <Input
-              id="skills"
-              {...register('skills')}
-              className="col-span-2 h-8"
-            />
-          </div>
-          <div className="grid grid-cols-3 items-center gap-4">
-            <Label htmlFor="experience">Experience</Label>
-            <Input
-              id="experience"
-              {...register('experience')}
-              className="col-span-2 h-8"
-            />
-          </div>
-          <div className="grid grid-cols-3 items-center gap-4">
-            <Label htmlFor="monthlyPay">Monthly Pay</Label>
-            <Input
-              id="monthlyPay"
-              {...register('monthlyPay')}
-              className="col-span-2 h-8"
-            />
-          </div>
-        </div>
-        <div className="flex justify-center">
-          <button type="submit" className="btn btn-primary">
-            Submit
-          </button>
-        </div>
-      </form>
-    </PopoverContent>
-  );
-};
-
-const Dashboard = () => {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-    {
-      href: '/dashboard/talent',
-      icon: <Sparkles className="h-5 w-5" />,
-      label: 'Talent',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/settings/personal-info',
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
-
+export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({});
-  const [tableData, setTableData] = useState<FormData[]>([]);
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set()); // Use Set for expanded rows
-
+  const [projects, setProjects] = useState<any>([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setResponseData(response.data.projects);
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
+        console.log('API Response get:', response.data?.projects);
+        setProjects(Object.values(response.data?.projects)); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchData();
+    fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-
-  // Function to toggle row expansion
-  const toggleRow = (index: number) => {
-    const newExpandedRows = new Set(expandedRows);
-    if (newExpandedRows.has(index)) {
-      newExpandedRows.delete(index);
-    } else {
-      newExpandedRows.add(index);
-    }
-    setExpandedRows(newExpandedRows);
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
+        active="Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Talent', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -251,87 +91,18 @@ const Dashboard = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {projects.map((project: any, index: number) => (
+            <ProjectCard key={index} {...project} />
+          ))}
+        </main>
         <div className="ml-5">
-          <h1 className="text-3xl font-semibold mb-4">Talent</h1>
+          <TalentForm />
         </div>
-        <section className="flex justify-center">
-          <div className="ml-5 mr-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline">Skills/Domain</Button>
-              </PopoverTrigger>
-              <PopoverContentForm
-                tableData={tableData}
-                setTableData={setTableData}
-              />
-            </Popover>
-          </div>
-        </section>
-        <section className="m-5">
-          <Card>
-            <CardHeader className="px-7">
-              <CardTitle>Skills/Domains</CardTitle>
-              <CardDescription>
-                Recent added skills and domains.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Skills/Domains</TableHead>
-                    <TableHead>Experience</TableHead>
-                    <TableHead>Monthly pay</TableHead>
-                    <TableHead>Show/Hide</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {responseData &&
-                    Object.values(responseData).map(
-                      (project: any, index: number) => (
-                        <TableRow key={project.id}>
-                          {/* Table cells */}
-                          <TableCell>{project.skills}</TableCell>
-                          <TableCell>{project.experience}</TableCell>
-                          <TableCell>{project.monthlyPay}</TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => toggleRow(index)}
-                            >
-                              {expandedRows.has(index) ? 'Hide' : 'Show'}
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ),
-                    )}
-                  {tableData.map((rowData, index) => (
-                    <TableRow key={index + responseData.length}>
-                      <TableCell>{rowData.skills}</TableCell>
-                      <TableCell>{rowData.experience}</TableCell>
-                      <TableCell>{rowData.monthlyPay}</TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleRow(index + responseData.length)}
-                        >
-                          {expandedRows.has(index + responseData.length)
-                            ? 'Hide'
-                            : 'Show'}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </section>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
