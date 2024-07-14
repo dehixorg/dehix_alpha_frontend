@@ -4,34 +4,34 @@ import * as React from 'react';
 interface MobileCompanyProps {
   heading: string;
   checkboxLabels: string[];
+  selectedValues: string[];
+  setSelectedValues: (values: string[]) => void;
 }
 
 const MobileCompany: React.FC<MobileCompanyProps> = ({
   heading,
   checkboxLabels,
+  selectedValues,
+  setSelectedValues,
 }) => {
-  const [checkboxStates, setCheckboxStates] = React.useState<boolean[]>(
-    new Array(checkboxLabels.length).fill(false),
-  );
-
-  const handleCheckboxChange = (index: number) => {
-    setCheckboxStates((prevStates) => {
-      const newStates = new Array(prevStates.length).fill(false); // Reset all to false
-      newStates[index] = true; // Set the clicked checkbox to true
-      return newStates;
-    });
+  const handleCheckboxChange = (label: string) => {
+    if (selectedValues.includes(label)) {
+      setSelectedValues([]);
+    } else {
+      setSelectedValues([label]);
+    }
   };
 
   return (
     <div>
       <h1 className="mt-2 text-black">{heading}</h1>
       <div className="items-center p-2">
-        {checkboxLabels.map((label, index) => (
-          <div key={index} className="flex items-center mb-1">
+        {checkboxLabels.map((label) => (
+          <div key={label} className="flex items-center mb-1">
             <input
               type="checkbox"
-              checked={checkboxStates[index]}
-              onChange={() => handleCheckboxChange(index)}
+              checked={selectedValues.includes(label)}
+              onChange={() => handleCheckboxChange(label)}
               className="mr-2"
             />
             <label className="text-sm text-black">{label}</label>

@@ -4,24 +4,20 @@ import * as React from 'react';
 interface MobileSkillDomProps {
   heading: string;
   checkboxLabels: string[];
+  selectedValues: string[];
+  setSelectedValues: (values: string[]) => void; 
 }
 
-const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
-  heading,
-  checkboxLabels,
-}) => {
-  const [checkboxStates, setCheckboxStates] = React.useState<boolean[]>(
-    new Array(checkboxLabels.length).fill(false),
-  );
+const MobileSkillDom: React.FC<MobileSkillDomProps> = ({ heading, checkboxLabels, selectedValues, setSelectedValues }) => {
   const [showMore, setShowMore] = React.useState<boolean>(false);
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
-  const handleCheckboxChange = (index: number) => {
-    setCheckboxStates((prevStates) => {
-      const newStates = [...prevStates];
-      newStates[index] = !newStates[index]; // Toggle the checkbox state
-      return newStates;
-    });
+  const handleCheckboxChange = (label: string) => {
+    if (selectedValues.includes(label)) {
+      setSelectedValues(selectedValues.filter((item) => item !== label));
+    } else {
+      setSelectedValues([...selectedValues, label]);
+    }
   };
 
   const filteredSkills = checkboxLabels.filter((label) =>
@@ -42,26 +38,24 @@ const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full mb-2 px-2 py-1 border rounded-sm bg-gray-200"
         />
-        {visibleSkills.map((label, index) => (
-          <div key={index} className="flex items-center mb-1">
+        {visibleSkills.map((label) => (
+          <div key={label} className="flex items-center mb-1">
             <input
               type="checkbox"
-              checked={checkboxStates[index]}
-              onChange={() => handleCheckboxChange(index)}
+              checked={selectedValues.includes(label)}
+              onChange={() => handleCheckboxChange(label)}
               className="mr-2"
             />
             <label className="text-sm text-black">{label}</label>
           </div>
         ))}
         {showMore &&
-          hiddenSkills.map((label, index) => (
-            <div key={index} className="flex items-center mb-1">
+          hiddenSkills.map((label) => (
+            <div key={label} className="flex items-center mb-1">
               <input
                 type="checkbox"
-                checked={checkboxStates[visibleSkills.length + index]}
-                onChange={() =>
-                  handleCheckboxChange(visibleSkills.length + index)
-                }
+                checked={selectedValues.includes(label)}
+                onChange={() => handleCheckboxChange(label)}
                 className="mr-2"
               />
               <label className="text-sm text-black">{label}</label>
