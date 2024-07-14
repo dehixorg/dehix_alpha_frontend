@@ -1,17 +1,11 @@
 'use client';
 import {
-  Boxes,
   CheckCircle,
   ChevronRight,
   Clock,
   File,
-  Home,
-  LineChart,
   ListFilter,
-  Package,
   Search,
-  Settings,
-  Users2,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -52,8 +46,12 @@ import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import InterviewCard from '@/components/shared/interviewCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import {
   menuItemsBottom,
   menuItemsTop,
