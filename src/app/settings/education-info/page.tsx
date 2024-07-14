@@ -38,7 +38,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
   DropdownMenu,
@@ -164,17 +164,15 @@ export default function ProfilePage() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Freelancer Work"
+        active="Education"
       />
-      <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
 
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
+          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Education" />
           <Breadcrumb
             items={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Profile', link: '/settings/personal-info' },
+              { label: 'Settings', link: '#' },
               { label: 'Education Info', link: '#' },
             ]}
           />
