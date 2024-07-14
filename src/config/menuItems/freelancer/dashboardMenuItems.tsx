@@ -4,7 +4,6 @@ import {
   LineChart,
   Package,
   Settings,
-  Users2,
   Briefcase,
   BriefcaseBusiness,
 } from 'lucide-react';
@@ -18,24 +17,19 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '#',
+    href: '/dashboard/freelancer',
     icon: <Home className="h-5 w-5" />,
     label: 'Dashboard',
   },
   {
-    href: '/market',
+    href: '/market/freelancer',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
-    label: 'Freelancer Work',
+    label: 'Market',
   },
   {
     href: '#',
     icon: <Package className="h-5 w-5" />,
     label: 'Projects',
-  },
-  {
-    href: '#',
-    icon: <Users2 className="h-5 w-5" />,
-    label: 'Customers',
   },
   {
     href: '#',

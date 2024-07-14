@@ -47,7 +47,7 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
+  const [responseData, setResponseData] = useState<any>([]); // State to hold response data
 
   console.log(responseData);
 
@@ -55,8 +55,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/business/all_project`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response);
-        setResponseData(response); // Store response data in state
+        console.log('API Response:', response.data.data);
+        setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -74,7 +74,7 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* side bar need to make caomponent */}
+          {/* side bar need to make component */}
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
           <Breadcrumb
             items={[
@@ -158,8 +158,15 @@ export default function Dashboard() {
               Current Projects {'(2)'}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectCard className="min-w-[45%] " projectType={'current'} />
-              <ProjectCard className="min-w-[45%] " projectType={'current'} />
+              {responseData
+                .filter((project: any) => project.status !== 'Completed')
+                .map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))}
             </div>
 
             <Separator className="my-1" />
@@ -167,9 +174,15 @@ export default function Dashboard() {
               Completed Projects {'(3)'}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
-              <ProjectCard className="min-w-[45%] " projectType={'completed'} />
+              {responseData
+                .filter((project: any) => project.status === 'Completed')
+                .map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))}
             </div>
           </div>
           <div className="space-y-6">

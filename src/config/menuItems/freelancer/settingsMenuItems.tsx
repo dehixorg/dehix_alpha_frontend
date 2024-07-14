@@ -31,7 +31,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Projects',
   },
   {
-    href: '#',
+    href: '/settings/education-info',
     icon: <BookOpen className="h-5 w-5" />,
     label: 'Education',
   },

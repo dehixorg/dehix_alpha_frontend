@@ -26,7 +26,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Projects',
   },
   {
-    href: '/market/project',
+    href: '/market/business',
     icon: <ShoppingCart className="h-5 w-5" />,
     label: 'Marketplace',
   },
