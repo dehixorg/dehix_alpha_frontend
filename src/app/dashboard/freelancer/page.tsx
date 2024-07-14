@@ -52,10 +52,6 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 const sampleInterview = {
   interviewer: 'John Doe',
