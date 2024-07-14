@@ -21,23 +21,21 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
+} from '@/config/menuItems/freelancer/oracleMenuItems';
+import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
-  const dummyBusinessData = {
-    firstName: 'John',
-    lastName: 'Smith',
-    email: 'john.smith@example.com',
-    phone: '+1234567890',
-    companyName: 'Tech Innovators Inc.',
-    companySize: '500-1000 employees',
-    referenceEmail: 'ref.john.smith@example.com',
-    websiteLink: 'https://www.techinnovators.com',
-    linkedInLink: 'https://www.linkedin.com/in/johnsmith',
-    githubLink: 'https://github.com/johnsmith',
+  const dummyJobData = {
+    jobTitle: 'Frontend Developer',
+    workDescription:
+      'Responsible for developing user-friendly web applications using React and TypeScript.',
+    startFrom: '2022-01-15',
+    endTo: '2023-07-01',
+    referencePersonName: 'Jane Doe',
+    referencePersonEmail: 'jane.doe@example.com',
+    githubRepoLink: 'https://github.com/janedoe/project-repo',
     comments: '',
   };
 
@@ -46,20 +44,24 @@ export default function ProfessionalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Professional Info"
+        active="Experience Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItems={menuItemsTop}
-            active="Professional Info"
+            active="Experience Verification"
           />
           <Breadcrumb
             items={[
-              { label: 'Oracle Dashboard', link: '#' },
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
-                label: 'Business Verification',
-                link: '/oracleDashboard/businessVerification',
+                label: 'Oracle Dashboard',
+                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+              },
+              {
+                label: 'Experience Verification',
+                link: '/dashboard/freelancer/oracleDashboard/workExpVerification',
               },
             ]}
           />
@@ -100,32 +102,26 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <BusinessVerificationCard
-            firstName={dummyBusinessData.firstName}
-            lastName={dummyBusinessData.lastName}
-            email={dummyBusinessData.email}
-            phone={dummyBusinessData.phone}
-            companyName={dummyBusinessData.companyName}
-            companySize={dummyBusinessData.companySize}
-            referenceEmail={dummyBusinessData.referenceEmail}
-            websiteLink={dummyBusinessData.websiteLink}
-            linkedInLink={dummyBusinessData.linkedInLink}
-            githubLink={dummyBusinessData.githubLink}
-            comments={dummyBusinessData.comments}
+          <WorkExpVerificationCard
+            jobTitle={dummyJobData.jobTitle}
+            workDescription={dummyJobData.workDescription}
+            startFrom={dummyJobData.startFrom}
+            endTo={dummyJobData.endTo}
+            referencePersonName={dummyJobData.referencePersonName}
+            referencePersonEmail={dummyJobData.referencePersonEmail}
+            githubRepoLink={dummyJobData.githubRepoLink}
+            comments={dummyJobData.comments}
           />
 
-          <BusinessVerificationCard
-            firstName={dummyBusinessData.firstName}
-            lastName={dummyBusinessData.lastName}
-            email={dummyBusinessData.email}
-            phone={dummyBusinessData.phone}
-            companyName={dummyBusinessData.companyName}
-            companySize={dummyBusinessData.companySize}
-            referenceEmail={dummyBusinessData.referenceEmail}
-            websiteLink={dummyBusinessData.websiteLink}
-            linkedInLink={dummyBusinessData.linkedInLink}
-            githubLink={dummyBusinessData.githubLink}
-            comments={dummyBusinessData.comments}
+          <WorkExpVerificationCard
+            jobTitle={dummyJobData.jobTitle}
+            workDescription={dummyJobData.workDescription}
+            startFrom={dummyJobData.startFrom}
+            endTo={dummyJobData.endTo}
+            referencePersonName={dummyJobData.referencePersonName}
+            referencePersonEmail={dummyJobData.referencePersonEmail}
+            githubRepoLink={dummyJobData.githubRepoLink}
+            comments={dummyJobData.comments}
           />
         </main>
       </div>

@@ -21,42 +21,45 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+} from '@/config/menuItems/freelancer/oracleMenuItems';
+import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
-  const dummyProjectData = {
-    projectName: 'Task Tracker',
-    description:
-      'A web application for managing and tracking daily tasks and projects.',
-    githubLink: 'https://github.com/yourusername/TaskTracker',
-    startFrom: '2023-05-01',
-    endTo: '2023-10-15',
-    reference: 'Mr. Alex Johnson, Senior Developer',
-    techUsed: ['Vue.js', 'JavaScript', 'Firebase', 'CSS'],
+  const dummyEducationData = {
+    type: "Bachelor's Degree",
+    instituteName: 'University of Example',
+    location: 'Example City, Example Country',
+    startFrom: '2018-09-01',
+    endTo: '2022-06-15',
+    grade: 'A',
+    referencePersonName: 'Dr. John Doe',
+    degreeNumber: '123456789',
     comments: '',
   };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Professional Info"
+        active="Education Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItems={menuItemsTop}
-            active="Professional Info"
+            active="Education Verification"
           />
           <Breadcrumb
             items={[
-              { label: 'Oracle Dashboard', link: '#' },
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
-                label: 'Project Verification',
-                link: '/oracleDashboard/projectVerification',
+                label: 'Oracle Dashboard',
+                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+              },
+              {
+                label: 'Education Verification',
+                link: '/dashboard/freelancer/oracleDashboard/educationVerification',
               },
             ]}
           />
@@ -97,26 +100,27 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <ProjectVerificationCard
-            projectName={dummyProjectData.projectName}
-            description={dummyProjectData.description}
-            githubLink={dummyProjectData.githubLink}
-            startFrom={dummyProjectData.startFrom}
-            endTo={dummyProjectData.endTo}
-            reference={dummyProjectData.reference}
-            techUsed={dummyProjectData.techUsed}
-            comments={dummyProjectData.comments}
+          <EducationVerificationCard
+            type={dummyEducationData.type}
+            instituteName={dummyEducationData.instituteName}
+            location={dummyEducationData.location}
+            startFrom={dummyEducationData.startFrom}
+            endTo={dummyEducationData.endTo}
+            grade={dummyEducationData.grade}
+            referencePersonName={dummyEducationData.referencePersonName}
+            degreeNumber={dummyEducationData.degreeNumber}
+            comments={dummyEducationData.comments}
           />
-
-          <ProjectVerificationCard
-            projectName={dummyProjectData.projectName}
-            description={dummyProjectData.description}
-            githubLink={dummyProjectData.githubLink}
-            startFrom={dummyProjectData.startFrom}
-            endTo={dummyProjectData.endTo}
-            reference={dummyProjectData.reference}
-            techUsed={dummyProjectData.techUsed}
-            comments={dummyProjectData.comments}
+          <EducationVerificationCard
+            type={dummyEducationData.type}
+            instituteName={dummyEducationData.instituteName}
+            location={dummyEducationData.location}
+            startFrom={dummyEducationData.startFrom}
+            endTo={dummyEducationData.endTo}
+            grade={dummyEducationData.grade}
+            referencePersonName={dummyEducationData.referencePersonName}
+            degreeNumber={dummyEducationData.degreeNumber}
+            comments={dummyEducationData.comments}
           />
         </main>
       </div>
