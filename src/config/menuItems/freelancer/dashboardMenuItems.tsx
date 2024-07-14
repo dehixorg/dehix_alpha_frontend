@@ -4,6 +4,8 @@ import {
   LineChart,
   Package,
   Settings,
+  Users2,
+  Briefcase,
   BriefcaseBusiness,
 } from 'lucide-react';
 
@@ -34,6 +36,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '#',
     icon: <LineChart className="h-5 w-5" />,
     label: 'Analytics',
+  },
+  {
+    href: '/dashboard/freelancer/interview',
+    icon: <Briefcase className="h-5 w-5" />,
+    label: 'Interviews',
   },
 ];
 
