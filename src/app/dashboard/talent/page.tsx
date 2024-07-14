@@ -267,7 +267,7 @@ const Dashboard = () => {
             </Popover>
           </div>
         </section>
-        <section className='m-5'>
+        <section className="m-5">
           <Card>
             <CardHeader className="px-7">
               <CardTitle>Skills/Domains</CardTitle>
