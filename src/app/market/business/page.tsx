@@ -79,13 +79,13 @@ const Market: React.FC = () => {
         active="Freelancer Work"
       />
       <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
-      <div className="md:mx-40 lg:md-20 mx-12">
-        <div className="mb-6 mt-4">
+      <div className="ml-12">
+        <div className="mb-6 mt-4 ">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background  sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <Breadcrumb
               items={[
                 { label: 'Dashboard', link: '/dashboard/business' },
-                { label: 'Freelancers', link: '#' },
+                { label: 'Freelancers Marketplace', link: '#' },
               ]}
             />
             <div className="relative ml-auto flex-1 md:grow-0">
@@ -122,7 +122,7 @@ const Market: React.FC = () => {
             </DropdownMenu>
           </header>
         </div>
-        <div className="flex flex-col lg:flex-row lg:space-x-10">
+        <div className="flex flex-col lg:flex-row lg:space-x-10 ml-6">
           <div className="hidden lg:block lg:space-y-4">
             <Button onClick={handleApply} className="w-[100%]">
               Apply

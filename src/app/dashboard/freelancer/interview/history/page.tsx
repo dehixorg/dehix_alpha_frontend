@@ -63,8 +63,9 @@ export default function HistoryPage() {
     <div>
       <Breadcrumb
         items={[
-          { label: 'Profile', link: '/dashboard/freelancer/interview/profile' },
-          { label: 'History', link: '#' },
+          { label: 'Freelancer', link: '/dashboard/freelancer' },
+          { label: 'Interview', link: '/dashboard/freelancer/interview/profile' },
+          { label: 'History Interviews', link: '#' },
         ]}
       />
       <div className="mt-5">

@@ -107,8 +107,11 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-4">
-      <Breadcrumb items={[{ label: 'Profile', link: '#' }]} />
+    <div className="px-4">
+      <Breadcrumb items={[
+        { label: 'Freelancer', link: '/dashboard/freelancer' },
+        { label: 'Interview Profile', link: '#' },
+      ]} />
       <div className="mb-8 mt-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Skills</h2>

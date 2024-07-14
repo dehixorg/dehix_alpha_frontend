@@ -2,10 +2,11 @@ import {
   Boxes,
   Home,
   LineChart,
-  Package,
   Settings,
   Briefcase,
   BriefcaseBusiness,
+  Store ,
+  TabletSmartphone ,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -23,12 +24,12 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/market/freelancer',
-    icon: <BriefcaseBusiness className="h-5 w-5" />,
+    icon: <Store className="h-5 w-5" />,
     label: 'Market',
   },
   {
     href: '#',
-    icon: <Package className="h-5 w-5" />,
+    icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
   {
@@ -38,7 +39,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer/interview',
-    icon: <Briefcase className="h-5 w-5" />,
+    icon: <TabletSmartphone  className="h-5 w-5" />,
     label: 'Interviews',
   },
 ];
