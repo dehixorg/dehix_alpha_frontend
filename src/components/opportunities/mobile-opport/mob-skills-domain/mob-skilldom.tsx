@@ -5,10 +5,15 @@ interface MobileSkillDomProps {
   heading: string;
   checkboxLabels: string[];
   selectedValues: string[];
-  setSelectedValues: (values: string[]) => void; 
+  setSelectedValues: (values: string[]) => void;
 }
 
-const MobileSkillDom: React.FC<MobileSkillDomProps> = ({ heading, checkboxLabels, selectedValues, setSelectedValues }) => {
+const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
+  heading,
+  checkboxLabels,
+  selectedValues,
+  setSelectedValues,
+}) => {
   const [showMore, setShowMore] = React.useState<boolean>(false);
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
