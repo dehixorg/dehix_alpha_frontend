@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+
 import { Card, CardContent } from '@/components/ui/card';
 
 interface SkillDomProps {
@@ -9,7 +10,12 @@ interface SkillDomProps {
   setSelectedValues: (values: string[]) => void; 
 }
 
-const SkillDom: React.FC<SkillDomProps> = ({ heading, checkboxLabels, selectedValues, setSelectedValues }) => {
+const SkillDom: React.FC<SkillDomProps> = ({
+  heading,
+  checkboxLabels,
+  selectedValues,
+  setSelectedValues,
+}) => {
   const [showMore, setShowMore] = React.useState<boolean>(false);
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 

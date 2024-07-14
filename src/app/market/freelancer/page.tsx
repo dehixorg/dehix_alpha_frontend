@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { Search, UserIcon } from 'lucide-react';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
@@ -22,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -52,7 +52,7 @@ const Market: React.FC = () => {
     domain: [],
     skills: [],
   });
-  const handleFilterChange = (filterType:any, selectedValues:any) => {
+  const handleFilterChange = (filterType: any, selectedValues: any) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
       [filterType]: selectedValues,
@@ -63,7 +63,6 @@ const Market: React.FC = () => {
     console.log('Selected Filters:', filters);
   };
 
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -71,8 +70,6 @@ const Market: React.FC = () => {
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
   };
-
-
 
   return (
     <section className="p-4 relative">
