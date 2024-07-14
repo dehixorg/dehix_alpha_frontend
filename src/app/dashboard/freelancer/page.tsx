@@ -1,17 +1,11 @@
 'use client';
 import {
-  Boxes,
   CheckCircle,
   ChevronRight,
   Clock,
   File,
-  Home,
-  LineChart,
   ListFilter,
-  Package,
   Search,
-  Settings,
-  Users2,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -52,8 +46,12 @@ import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import InterviewCard from '@/components/shared/interviewCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -65,42 +63,6 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/settings/personal-info',
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
-
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
 
