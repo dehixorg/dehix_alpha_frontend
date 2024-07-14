@@ -25,7 +25,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <User className="h-5 w-5" />,
     label: 'Experience Verification',
   },
-  
   {
     href: '/dashboard/freelancer/oracleDashboard/projectVerification',
     icon: <Package className="h-5 w-5" />,

@@ -1,8 +1,8 @@
-import { Boxes, Home, ListVideo , Users2, History, } from 'lucide-react';
+import { Boxes, Home, ListVideo, Users2, History } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
-export const menuItemsTop: MenuItem[] = [ 
+export const menuItemsTop: MenuItem[] = [
   {
     href: '/dashboard/freelancer/interview',
     icon: <Boxes className="h-5 w-5" />,
@@ -15,7 +15,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer/interview/current',
-    icon: <ListVideo  className="h-5 w-5" />,
+    icon: <ListVideo className="h-5 w-5" />,
     label: 'Current',
   },
   {

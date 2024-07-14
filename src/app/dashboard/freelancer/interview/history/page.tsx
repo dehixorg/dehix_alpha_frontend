@@ -64,7 +64,10 @@ export default function HistoryPage() {
       <Breadcrumb
         items={[
           { label: 'Freelancer', link: '/dashboard/freelancer' },
-          { label: 'Interview', link: '/dashboard/freelancer/interview/profile' },
+          {
+            label: 'Interview',
+            link: '/dashboard/freelancer/interview/profile',
+          },
           { label: 'History Interviews', link: '#' },
         ]}
       />

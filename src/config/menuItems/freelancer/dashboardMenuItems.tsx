@@ -3,11 +3,11 @@ import {
   Home,
   LineChart,
   Settings,
-  Sparkles ,
+  Sparkles,
   BriefcaseBusiness,
-  Store ,
-  TabletSmartphone ,
-  ShieldCheck  ,
+  Store,
+  TabletSmartphone,
+  ShieldCheck,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -40,17 +40,17 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer/interview',
-    icon: <TabletSmartphone  className="h-5 w-5" />,
+    icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
   {
     href: '/dashboard/freelancer/oracleDashboard/businessVerification',
-    icon: <ShieldCheck   className="h-5 w-5" />,
+    icon: <ShieldCheck className="h-5 w-5" />,
     label: 'Oracle',
   },
   {
     href: '/dashboard/freelancer/talent',
-    icon: <Sparkles  className="h-5 w-5" />,
+    icon: <Sparkles className="h-5 w-5" />,
     label: 'Talent',
   },
 ];
