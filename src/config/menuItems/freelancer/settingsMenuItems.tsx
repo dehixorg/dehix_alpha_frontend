@@ -16,9 +16,9 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/settings/business-info',
+    href: '/settings/personal-info',
     icon: <User className="h-5 w-5" />,
-    label: 'Business Info',
+    label: 'Personal Info',
   },
   {
     href: '/settings/professional-info',
@@ -31,7 +31,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Projects',
   },
   {
-    href: '#',
+    href: '/settings/education-info',
     icon: <BookOpen className="h-5 w-5" />,
     label: 'Education',
   },

@@ -11,7 +11,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/freelancerSettingsMenuItems';
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import UserDropdownMenu from '@/components/dropdown/user';
 
 export default function PersonalInfo() {

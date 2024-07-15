@@ -297,6 +297,7 @@ export function TalentForm() {
                             className="text-black"
                             options={skillsOptions}
                             isMulti
+                            {...field}
                             placeholder="Select skills"
                             value={form.getValues('skills').map((skill) => ({
                               value: skill,
@@ -365,6 +366,7 @@ export function TalentForm() {
                             className="text-black"
                             options={domainsOptions}
                             isMulti
+                            {...field}
                             placeholder="Select domains"
                             value={form.getValues('domains').map((domain) => ({
                               value: domain,

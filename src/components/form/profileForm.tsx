@@ -58,6 +58,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [domains, setDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+  const [tmpDomain, setTmpDomain] = useState<any>('');
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -70,6 +74,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
+
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.includes(tmpSkill)) {
       setCurrSkills([
@@ -82,30 +87,47 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewInfo: '',
           interviewerRating: 0,
         },
-      ]); // Add tmpSkill to currSkills array if not already present
-      setTmpSkill(''); // Reset tmpSkill to an empty string to clear the input/select
+      ]);
+      setTmpSkill('');
     }
   };
+
+  const handleAddDomain = () => {
+    if (tmpDomain && !currDomains.includes(tmpDomain)) {
+      setCurrDomains([
+        ...currDomains,
+        {
+          name: tmpDomain,
+        },
+      ]);
+      setTmpDomain('');
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user_id}`); // Example API endpoint, replace with your actual endpoint
+        const response = await axiosInstance.get(`/freelancer/${user_id}`);
         console.log('API Response get:', response.data);
-        setUser(response.data); // Store response data in state
+        setUser(response.data);
         setCurrSkills(response.data.skills);
-        const skills = await axiosInstance.get('/skills/all');
-        console.log('API Response get:', skills.data.data);
-        setSkills(skills.data.data);
+
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        console.log('API Response get:', skillsResponse.data.data);
+        setSkills(skillsResponse.data.data);
+
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        console.log('API Response get:', domainsResponse.data.data);
+        setDomains(domainsResponse.data.data);
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user_id]);
 
   useEffect(() => {
-    // Reset form values when user state changes
     form.reset({
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
@@ -121,10 +143,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.log('API body', {
         ...data,
         skills: currSkills,
+        domains: currDomains,
       });
       const response = await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
-        // skills: currSkills,
+        skills: currSkills,
+        domains: currDomains,
       });
       console.log('API Response:', response.data);
 
@@ -137,8 +161,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         phone: data.phone,
         role: data.role,
         skills: currSkills,
-        // Update other fields as needed
+        domains: currDomains,
       });
+
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
@@ -158,7 +183,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="gap-10 lg:grid lg:grid-cols-2 xl:grid-cols-2"
+          className="grid gap-10 grid-cols-2"
         >
           <FormField
             control={form.control}
@@ -280,45 +305,83 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           /> */}
-          <Separator className="lg:col-span-2 xl:col-span-2" />
-          <div className="col-span-2">
-            <FormLabel>Skills</FormLabel>
-            <div className="flex items-center mt-2">
-              <Select onValueChange={(value) => setTmpSkill(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select skill" />
-                </SelectTrigger>
-                <SelectContent>
-                  {skills.map((skill: any, index: number) => (
-                    <SelectItem key={index} value={skill.label}>
-                      {skill.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                type="button"
-                size="icon"
-                className="ml-2"
-                onClick={handleAddSkill}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+          <Separator className="col-span-2" />
+          <div className="col-span-2 grid grid-cols-2 gap-4">
+            <div>
+              <FormLabel>Skills</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select onValueChange={(value) => setTmpSkill(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select skill" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skills.map((skill: any, index: number) => (
+                      <SelectItem key={index} value={skill.label}>
+                        {skill.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={handleAddSkill}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap mt-5">
+                {currSkills.map((skill: any, index: number) => (
+                  <Badge
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    key={index}
+                  >
+                    {skill.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <FormLabel>Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select onValueChange={(value) => setTmpDomain(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select domain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains.map((domain: any, index: number) => (
+                      <SelectItem key={index} value={domain.label}>
+                        {domain.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={handleAddDomain}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap mt-5">
+                {currDomains.map((domain: any, index: number) => (
+                  <Badge
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    key={index}
+                  >
+                    {domain.name}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-2 xl:col-span-2">
-            {currSkills.map((skill: any, index: number) => (
-              <Badge
-                className="uppercase mx-1 text-xs font-normal bg-gray-300"
-                key={index}
-              >
-                {skill.name}
-              </Badge>
-            ))}
-          </div>
-          <Button type="submit" className="lg:col-span-2 xl:col-span-2">
+          <Button type="submit" className="col-span-2">
             Update profile
           </Button>
         </form>

@@ -1,35 +1,19 @@
 'use client';
-import Link from 'next/link';
 import {
-  Boxes,
   CheckCircle,
   ChevronRight,
   Clock,
-  File,
-  Home,
-  LineChart,
-  ListFilter,
-  Package,
   Search,
-  Settings,
-  Users2,
   UserIcon,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from '@/components/ui/breadcrumb';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -37,7 +21,6 @@ import {
 } from '@/components/ui/card';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -45,21 +28,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import InterviewCard from '@/components/shared/interviewCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
+import ProjectTableCard from '@/components/freelancer/homeTableComponent';
+
+interface Project {
+  id: string;
+  projectName: string;
+  projectType: string;
+  verified: boolean;
+  start: string;
+}
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -71,52 +59,15 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/settings/personal-info',
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
-
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
-
-  console.log(responseData);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        setResponseData(response.data.projects); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Fetch data from API
+        console.log(response.data.projects);
+        setProjects(Object.values(response.data.projects)); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -135,15 +86,8 @@ export default function Dashboard() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+
+          <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -202,13 +146,20 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={12}
+                value={
+                  projects.filter((project) => project.projectType === 'active')
+                    .length
+                }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo="+10% from last month"
               />
               <StatCard
                 title="Pending Projects"
-                value={5}
+                value={
+                  projects.filter(
+                    (project) => project.projectType === 'pending',
+                  ).length
+                }
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo="2 new projects this week"
               />
@@ -217,102 +168,38 @@ export default function Dashboard() {
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
+                  <TabsTrigger value="applied">Applied</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
-                <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 text-sm"
-                      >
-                        <ListFilter className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only">Filter</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem checked>
-                        Completed
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Pending
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Ongoing
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 gap-1 text-sm"
-                  >
-                    <File className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only">Export</span>
-                  </Button>
-                </div>
               </div>
               <TabsContent value="active">
-                <Card>
-                  <CardHeader className="px-7">
-                    <CardTitle>Projects</CardTitle>
-                    <CardDescription>
-                      Recent projects from your account.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Project Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Start Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {responseData &&
-                          Object.values(responseData).map((project: any) => (
-                            <TableRow key={project.id}>
-                              <TableCell>
-                                {/* <Link href={project.githubLink}> */}
-                                <div className="font-medium">
-                                  {project.projectName}
-                                </div>
-                                {/* </Link> */}
-                                {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
-                              </TableCell>
-                              <TableCell>{project.projectType}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  className="text-xs"
-                                  variant={
-                                    project.verified ? 'secondary' : 'outline'
-                                  }
-                                >
-                                  {project.verified
-                                    ? 'Verified'
-                                    : 'Not Verified'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(project.start).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" variant="outline">
-                                  View Details
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'active',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="applied">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'applied',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="completed">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'completed',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="rejected">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'rejected',
+                  )}
+                />
               </TabsContent>
             </Tabs>
           </div>

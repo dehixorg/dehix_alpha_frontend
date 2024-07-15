@@ -16,24 +16,24 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/settings/personal-info',
-    icon: <User className="h-5 w-5" />,
-    label: 'Personal Info',
-  },
-  {
-    href: '/settings/professional-info',
+    href: '/dashboard/freelancer/oracleDashboard/businessVerification',
     icon: <Briefcase className="h-5 w-5" />,
-    label: 'Professional Info',
+    label: 'Business Verification',
   },
   {
-    href: '/settings/projects',
+    href: '/dashboard/freelancer/oracleDashboard/workExpVerification',
+    icon: <User className="h-5 w-5" />,
+    label: 'Experience Verification',
+  },
+  {
+    href: '/dashboard/freelancer/oracleDashboard/projectVerification',
     icon: <Package className="h-5 w-5" />,
-    label: 'Projects',
+    label: 'Project Verification',
   },
   {
-    href: '#',
+    href: '/dashboard/freelancer/oracleDashboard/educationVerification',
     icon: <BookOpen className="h-5 w-5" />,
-    label: 'Education',
+    label: 'Education Verification',
   },
 ];
 

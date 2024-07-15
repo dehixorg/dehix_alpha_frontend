@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import {
   BookOpen,
   Boxes,
@@ -12,14 +11,7 @@ import {
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -94,19 +86,13 @@ export default function Dashboard() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="" />
-          <Breadcrumb className="hidden md:flex">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="#">Business</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Create Project</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+
+          <Breadcrumb
+            items={[
+              { label: 'Business', link: '/dashboard/business' },
+              { label: 'Create Project', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
