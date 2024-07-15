@@ -37,7 +37,7 @@ const Jobs: React.FC<JobsProps> = ({
       <CardContent>
         <div>
           <div className="flex-1">
-            <div className="text-white text-lg font-medium items-center mt-4">
+            <div className="text-lg font-medium items-center mt-4">
               {heading}
             </div>
             <CardDescription>

@@ -2,10 +2,12 @@ import {
   Boxes,
   Home,
   LineChart,
-  Package,
   Settings,
-  Briefcase,
+  Sparkles,
   BriefcaseBusiness,
+  Store,
+  TabletSmartphone,
+  ShieldCheck,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -23,12 +25,12 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/market/freelancer',
-    icon: <BriefcaseBusiness className="h-5 w-5" />,
+    icon: <Store className="h-5 w-5" />,
     label: 'Market',
   },
   {
-    href: '#',
-    icon: <Package className="h-5 w-5" />,
+    href: '/project/current',
+    icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
   {
@@ -38,8 +40,18 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer/interview',
-    icon: <Briefcase className="h-5 w-5" />,
+    icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
+  },
+  {
+    href: '/dashboard/freelancer/oracleDashboard/businessVerification',
+    icon: <ShieldCheck className="h-5 w-5" />,
+    label: 'Oracle',
+  },
+  {
+    href: '/dashboard/freelancer/talent',
+    icon: <Sparkles className="h-5 w-5" />,
+    label: 'Talent',
   },
 ];
 

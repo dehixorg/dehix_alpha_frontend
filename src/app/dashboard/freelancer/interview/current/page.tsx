@@ -61,7 +61,11 @@ export default function CurrentPage() {
     <div>
       <Breadcrumb
         items={[
-          { label: 'Profile', link: '/dashboard/freelancer/interview/profile' },
+          { label: 'Freelancer', link: '/dashboard/freelancer' },
+          {
+            label: 'Interview',
+            link: '/dashboard/freelancer/interview/profile',
+          },
           { label: 'Current Interviews', link: '#' },
         ]}
       />

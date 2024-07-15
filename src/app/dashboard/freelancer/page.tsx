@@ -3,8 +3,6 @@ import {
   CheckCircle,
   ChevronRight,
   Clock,
-  File,
-  ListFilter,
   Search,
   UserIcon,
 } from 'lucide-react';
@@ -12,12 +10,10 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -25,7 +21,6 @@ import {
 } from '@/components/ui/card';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -33,14 +28,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -52,6 +39,33 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import ProjectTableCard from '@/components/freelancer/homeTableComponent';
+
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+}
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -64,15 +78,15 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
-
-  console.log(responseData);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        setResponseData(response.data.projects); // Store response data in state
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project`,
+        ); // Fetch data from API
+        setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -151,117 +165,59 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={12}
+                value={
+                  projects.filter((project) => project.status === 'Active')
+                    .length
+                }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo="+10% from last month"
               />
               <StatCard
                 title="Pending Projects"
-                value={5}
+                value={
+                  projects.filter((project) => project.status === 'Pending')
+                    .length
+                }
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo="2 new projects this week"
               />
             </div>
-            <Tabs defaultValue="active">
+            <Tabs defaultValue="pending">
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
                   <TabsTrigger value="pending">Pending</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
-                <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 text-sm"
-                      >
-                        <ListFilter className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only">Filter</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem checked>
-                        Completed
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Pending
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Ongoing
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 gap-1 text-sm"
-                  >
-                    <File className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only">Export</span>
-                  </Button>
-                </div>
               </div>
               <TabsContent value="active">
-                <Card>
-                  <CardHeader className="px-7">
-                    <CardTitle>Projects</CardTitle>
-                    <CardDescription>
-                      Recent projects from your account.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Project Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Start Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {responseData &&
-                          Object.values(responseData).map((project: any) => (
-                            <TableRow key={project.id}>
-                              <TableCell>
-                                {/* <Link href={project.githubLink}> */}
-                                <div className="font-medium">
-                                  {project.projectName}
-                                </div>
-                                {/* </Link> */}
-                                {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
-                              </TableCell>
-                              <TableCell>{project.projectType}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  className="text-xs"
-                                  variant={
-                                    project.verified ? 'secondary' : 'outline'
-                                  }
-                                >
-                                  {project.verified
-                                    ? 'Verified'
-                                    : 'Not Verified'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(project.start).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" variant="outline">
-                                  View Details
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.status === 'Active',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="pending">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.status === 'Pending',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="completed">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.status === 'Completed',
+                  )}
+                />
+              </TabsContent>
+              <TabsContent value="rejected">
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.status === 'Rejected',
+                  )}
+                />
               </TabsContent>
             </Tabs>
           </div>

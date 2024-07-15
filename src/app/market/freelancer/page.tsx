@@ -79,13 +79,18 @@ const Market: React.FC = () => {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
+        active="Market"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
 
-          <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
+          <Breadcrumb
+            items={[
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
+              { label: 'Work', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -120,8 +125,8 @@ const Market: React.FC = () => {
           </DropdownMenu>
         </header>
       </div>
-      <div className="flex flex-col lg:flex-row lg:space-x-10">
-        <div className="hidden lg:block lg:space-y-4">
+      <div className="flex flex-col lg:flex-row lg:space-x-10 ml-20">
+        <div className="hidden lg:block lg:space-y-4 ">
           <Button onClick={handleApply} className="w-[100%]">
             Apply
           </Button>
