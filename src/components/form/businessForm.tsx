@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Card } from '../ui/card';
+import { toast } from '../ui/use-toast';
 
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -14,16 +15,9 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -32,14 +26,6 @@ const profileFormSchema = z.object({
   lastName: z.string().min(2, {
     message: 'Last Name must be at least 2 characters.',
   }),
-  username: z
-    .string()
-    .min(2, {
-      message: 'Username must be at least 2 characters.',
-    })
-    .max(30, {
-      message: 'Username must not be longer than 30 characters.',
-    }),
   email: z.string().email({
     message: 'Email must be a valid email address.',
   }),
@@ -51,7 +37,6 @@ const profileFormSchema = z.object({
   position: z.string().optional(),
   linkedIn: z.string().url().optional(),
   website: z.string().url().optional(),
-  password: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -63,7 +48,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     defaultValues: {
       firstName: '',
       lastName: '',
-      username: '',
       email: '',
       phone: '',
       companyName: '',
@@ -71,7 +55,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       position: '',
       linkedIn: '',
       website: '',
-      password: '',
     },
     mode: 'all',
   });
@@ -79,7 +62,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user_id}`); // Example API endpoint, replace with your actual endpoint
+        const response = await axiosInstance.get(`/business/${user_id}`);
         console.log('API Response get:', response.data);
         setUser(response.data);
       } catch (error) {
@@ -87,29 +70,27 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user_id]);
 
   useEffect(() => {
-    // Reset form values when user state changes
     form.reset({
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
-      username: user?.userName || '',
       email: user?.email || '',
       phone: user?.phone || '',
       companyName: user?.companyName || '',
       companySize: user?.companySize || '',
       position: user?.position || '',
-      linkedIn: user?.linkedIn || '',
-      website: user?.website || '',
-      password: '',
+      linkedIn: user?.linkedin || '',
+      website: user?.personalWebsite || '',
     });
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      const response = await axiosInstance.put(`/freelancer/${user_id}`, {
+      console.log('Form data:', data);
+      const response = await axiosInstance.put(`/business/${user_id}`, {
         ...data,
       });
       console.log('API Response:', response.data);
@@ -118,16 +99,16 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         ...user,
         firstName: data.firstName,
         lastName: data.lastName,
-        userName: data.username,
         email: data.email,
         phone: data.phone,
         companyName: data.companyName,
         companySize: data.companySize,
         position: data.position,
-        linkedIn: data.linkedIn,
-        website: data.website,
-        // Update other fields as needed
+        linkedin: data.linkedIn,
+        personalWebsite: data.website,
       });
+
+      // You can update other fields here as needed
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
@@ -155,11 +136,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                        placeholder="Enter your first name"
-                        {...field}
-                      />
+                      <Input placeholder="Enter your first name" {...field} />
                     </FormControl>
                     <FormDescription>Enter your first name</FormDescription>
                     <FormMessage />
@@ -175,11 +152,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                        placeholder="Enter your last name"
-                        {...field}
-                      />
+                      <Input placeholder="Enter your last name" {...field} />
                     </FormControl>
                     <FormDescription>Enter your last name</FormDescription>
                     <FormMessage />
@@ -187,27 +160,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 )}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Username</Label>
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                      placeholder="Enter your username"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>Enter your username</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
           <div className="space-y-2">
@@ -219,7 +171,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
                       placeholder="Enter your email"
                       type="email"
                       {...field}
@@ -241,7 +192,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
                       placeholder="Enter your phone number"
                       type="tel"
                       {...field}
@@ -262,11 +212,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                      placeholder="Enter your company name"
-                      {...field}
-                    />
+                    <Input placeholder="Enter your company name" {...field} />
                   </FormControl>
                   <FormDescription>Enter your company name</FormDescription>
                   <FormMessage />
@@ -283,11 +229,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                      placeholder="Enter your company size"
-                      {...field}
-                    />
+                    <Input placeholder="Enter your company size" {...field} />
                   </FormControl>
                   <FormDescription>Enter your company size</FormDescription>
                   <FormMessage />
@@ -304,11 +246,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                      placeholder="Enter your position"
-                      {...field}
-                    />
+                    <Input placeholder="Enter your position" {...field} />
                   </FormControl>
                   <FormDescription>Enter your position</FormDescription>
                   <FormMessage />
@@ -326,7 +264,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
                       placeholder="Enter your LinkedIn URL"
                       type="url"
                       {...field}
@@ -348,7 +285,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
                       placeholder="Enter your website URL"
                       type="url"
                       {...field}
@@ -359,50 +295,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      className="block w-full rounded-md border border-gray-300 bg-gray-950 py-2 px-3 text-gray-400 placeholder-gray-500 focus:border-[#00b8d4] focus:outline-none focus:ring-[#00b8d4]"
-                      placeholder="Enter your password"
-                      type="password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>Enter your password</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <FormItem>
-              <FormLabel>One-Time Password</FormLabel>
-              <FormControl>
-                <InputOTP maxLength={6}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </FormControl>
-              <FormDescription>
-                Please enter the one-time password sent to your phone.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
           </div>
 
           <Button

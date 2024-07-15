@@ -110,8 +110,8 @@ export default function ProfilePage() {
     <div className="px-4">
       <Breadcrumb
         items={[
-          { label: 'Freelancer', link: '/dashboard/freelancer' },
-          { label: 'Interview Profile', link: '#' },
+          { label: 'Interview', link: '#' },
+          { label: 'Profile', link: '#' },
         ]}
       />
       <div className="mb-8 mt-4">

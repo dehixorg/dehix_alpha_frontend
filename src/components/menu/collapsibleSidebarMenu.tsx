@@ -10,11 +10,13 @@ import { Button } from '@/components/ui/button';
 interface CollapsibleSidebarMenuProps {
   menuItems: MenuItem[];
   active: string;
+  setActive?: (page: string) => void; // Making setActive optional
 }
 
 const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
   menuItems,
   active,
+  setActive = () => null, // Defaulting setActive to a no-op function
 }) => {
   return (
     <Sheet>
@@ -30,6 +32,7 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
             <Link
               key={index}
               href={item.href}
+              onClick={() => setActive(item.label)}
               className={`flex items-center gap-4 px-2.5 ${
                 item.label === 'Dehix'
                   ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
