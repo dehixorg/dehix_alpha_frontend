@@ -23,21 +23,31 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+import RejectProjectCards from '@/components/freelancer/rejectProject/rejectProjectCard';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
-  const dummyJobData = {
-    jobTitle: 'Frontend Developer',
-    workDescription:
-      'Responsible for developing user-friendly web applications using React and TypeScript.',
-    startFrom: '2022-01-15',
-    endTo: '2023-07-01',
-    referencePersonName: 'Jane Doe',
-    referencePersonEmail: 'jane.doe@example.com',
-    githubRepoLink: 'https://github.com/janedoe/project-repo',
-    comments: '',
+  const projectData = {
+    companyName: 'Example Company',
+    projectType: 'Internal Project',
+    description: 'This is a detailed description of the project.',
+    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+    role: 'backend', 
+    start: '2023-01-01',
+    email: 'contact@example.com',
+    experience: '5 years',
   };
+  const projectDa = {
+      companyName: 'Example Company',
+      projectType: 'Internal Project',
+      role: 'backend', 
+      description: 'This is a detailed description of the project.',
+      skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+      start: '2023-01-01',
+      email: 'contact@example.com',
+      experience: '5 years',
+    };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -102,27 +112,8 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <WorkExpVerificationCard
-            jobTitle={dummyJobData.jobTitle}
-            workDescription={dummyJobData.workDescription}
-            startFrom={dummyJobData.startFrom}
-            endTo={dummyJobData.endTo}
-            referencePersonName={dummyJobData.referencePersonName}
-            referencePersonEmail={dummyJobData.referencePersonEmail}
-            githubRepoLink={dummyJobData.githubRepoLink}
-            comments={dummyJobData.comments}
-          />
-
-          <WorkExpVerificationCard
-            jobTitle={dummyJobData.jobTitle}
-            workDescription={dummyJobData.workDescription}
-            startFrom={dummyJobData.startFrom}
-            endTo={dummyJobData.endTo}
-            referencePersonName={dummyJobData.referencePersonName}
-            referencePersonEmail={dummyJobData.referencePersonEmail}
-            githubRepoLink={dummyJobData.githubRepoLink}
-            comments={dummyJobData.comments}
-          />
+          <RejectProjectCards {...projectData} />
+          <RejectProjectCards {...projectDa} />
         </main>
       </div>
     </div>

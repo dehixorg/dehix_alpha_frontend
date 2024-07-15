@@ -23,20 +23,28 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import ActiveProjectCards from '@/components/freelancer/activeProject/activeProjectCard';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
-  const dummyEducationData = {
-    type: "Bachelor's Degree",
-    instituteName: 'University of Example',
-    location: 'Example City, Example Country',
-    startFrom: '2018-09-01',
-    endTo: '2022-06-15',
-    grade: 'A',
-    referencePersonName: 'Dr. John Doe',
-    degreeNumber: '123456789',
-    comments: '',
+  const projectData = {
+    companyName: 'Example Company',
+    projectType: 'Internal Project',
+    description: 'This is a detailed description of the project.',
+    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+    role: 'backend', 
+    email: 'contact@example.com',
+    experience: '5 years',
   };
+  const projectDa = {
+      companyName: 'Example Company',
+      projectType: 'Internal Project',
+      role: 'backend', 
+      description: 'This is a detailed description of the project.',
+      skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+      email: 'contact@example.com',
+      experience: '5 years',
+    };
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -100,28 +108,8 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <EducationVerificationCard
-            type={dummyEducationData.type}
-            instituteName={dummyEducationData.instituteName}
-            location={dummyEducationData.location}
-            startFrom={dummyEducationData.startFrom}
-            endTo={dummyEducationData.endTo}
-            grade={dummyEducationData.grade}
-            referencePersonName={dummyEducationData.referencePersonName}
-            degreeNumber={dummyEducationData.degreeNumber}
-            comments={dummyEducationData.comments}
-          />
-          <EducationVerificationCard
-            type={dummyEducationData.type}
-            instituteName={dummyEducationData.instituteName}
-            location={dummyEducationData.location}
-            startFrom={dummyEducationData.startFrom}
-            endTo={dummyEducationData.endTo}
-            grade={dummyEducationData.grade}
-            referencePersonName={dummyEducationData.referencePersonName}
-            degreeNumber={dummyEducationData.degreeNumber}
-            comments={dummyEducationData.comments}
-          />
+          <ActiveProjectCards {...projectData} />
+          <ActiveProjectCards {...projectDa} />
         </main>
       </div>
     </div>

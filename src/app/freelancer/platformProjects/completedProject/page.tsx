@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -16,26 +17,40 @@ import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
-import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+import CompleteProjectCards from '@/components/freelancer/completeProject/completeProjectCards';
 
-export default function ProfessionalInfo() {
+const ExamplePage: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
-  const dummyProjectData = {
-    projectName: 'Task Tracker',
-    description:
-      'A web application for managing and tracking daily tasks and projects.',
-    githubLink: 'https://github.com/yourusername/TaskTracker',
-    startFrom: '2023-05-01',
-    endTo: '2023-10-15',
-    reference: 'Mr. Alex Johnson, Senior Developer',
-    techUsed: ['Vue.js', 'JavaScript', 'Firebase', 'CSS'],
-    comments: '',
+  
+  const projectData = {
+    companyName: 'Example Company',
+    projectType: 'Internal Project',
+    description: 'This is a detailed description of the project.',
+    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+    role: 'backend',
+    start: '2023-01-01',
+    end: '2023-12-31',
+    email: 'contact@example.com',
+    experience: '5 years',
+    isVerified: 'yes',
+  };
+  
+  const projectData2 = {
+    companyName: 'Example Company',
+    projectType: 'Internal Project',
+    role: 'backend',
+    description: 'This is a detailed description of the project.',
+    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+    start: '2023-01-01',
+    end: '2023-12-31',
+    email: 'contact@example.com',
+    experience: '5 years',
+    isVerified: 'no',
   };
 
   return (
@@ -82,7 +97,7 @@ export default function ProfessionalInfo() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/user.png" alt="@shadcn" />
                   <AvatarFallback>
-                    <UserIcon size={16} />{' '}
+                    <UserIcon size={16} />
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -101,29 +116,12 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <ProjectVerificationCard
-            projectName={dummyProjectData.projectName}
-            description={dummyProjectData.description}
-            githubLink={dummyProjectData.githubLink}
-            startFrom={dummyProjectData.startFrom}
-            endTo={dummyProjectData.endTo}
-            reference={dummyProjectData.reference}
-            techUsed={dummyProjectData.techUsed}
-            comments={dummyProjectData.comments}
-          />
-
-          <ProjectVerificationCard
-            projectName={dummyProjectData.projectName}
-            description={dummyProjectData.description}
-            githubLink={dummyProjectData.githubLink}
-            startFrom={dummyProjectData.startFrom}
-            endTo={dummyProjectData.endTo}
-            reference={dummyProjectData.reference}
-            techUsed={dummyProjectData.techUsed}
-            comments={dummyProjectData.comments}
-          />
+          <CompleteProjectCards {...projectData} />
+          <CompleteProjectCards {...projectData2} />
         </main>
       </div>
     </div>
   );
 }
+
+export default ExamplePage;
