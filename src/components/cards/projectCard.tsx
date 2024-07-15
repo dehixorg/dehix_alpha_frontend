@@ -1,3 +1,5 @@
+import { Timer } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,8 +54,19 @@ export function ProjectCard({
       <CardHeader>
         <CardTitle>{project.projectName}</CardTitle>
         <CardDescription className="text-gray-600">
-          Estimated completion time:{' '}
-          {project.end ? new Date(project.end).toLocaleDateString() : 'N/A'}
+          <div className="flex">
+            <Timer />
+            <p className="my-auto ml-1">
+              {project.end ? new Date(project.end).toLocaleDateString() : 'N/A'}
+            </p>
+          </div>
+          <br />
+          <Badge
+            className="text-xs"
+            variant={project.verified ? 'secondary' : 'outline'}
+          >
+            {project.verified ? 'Verified' : 'Not Verified'}
+          </Badge>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
@@ -62,12 +75,6 @@ export function ProjectCard({
           <p className="text-sm text-muted-foreground">{project.description}</p>
         </div>
         <div>
-          <Badge
-            className="text-xs mb-3"
-            variant={project.verified ? 'secondary' : 'outline'}
-          >
-            {project.verified ? 'Verified' : 'Not Verified'}
-          </Badge>
           <p>
             <strong>Company:</strong> {project.companyName}
           </p>
@@ -75,15 +82,19 @@ export function ProjectCard({
             <strong>Role:</strong> {project.role}
           </p>
           <p>
-            <strong>Skills Required:</strong>{' '}
-            {project.skillsRequired.join(', ')}
-          </p>
-          <p>
             <strong>Experience:</strong> {project.experience}
           </p>
           <p>
             <strong>Status:</strong> {project.status}
           </p>
+
+          <div className="flex flex-wrap gap-1 mt-2">
+            {project.skillsRequired.map((skill, index) => (
+              <Badge key={index} className="text-xs text-white bg-muted">
+                {skill}
+              </Badge>
+            ))}
+          </div>
         </div>
       </CardContent>
       <CardFooter>
