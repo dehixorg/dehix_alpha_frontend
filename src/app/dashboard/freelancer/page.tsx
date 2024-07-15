@@ -41,6 +41,14 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 
+interface Project {
+  id: string;
+  projectName: string;
+  projectType: string;
+  verified: boolean;
+  start: string;
+}
+
 const sampleInterview = {
   interviewer: 'John Doe',
   interviewee: 'Jane Smith',
@@ -50,25 +58,16 @@ const sampleInterview = {
   comments: 'Great communication skills and technical expertise.',
 };
 
-interface Project {
-  id: string;
-  projectName: string;
-  projectType: string;
-  verified: boolean;
-  start: string;
-}
-
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>({}); // State to hold response data
   const [projects, setProjects] = useState<Project[]>([]);
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        setResponseData(response.data.projects); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Fetch data from API
+        console.log(response.data.projects);
+        setProjects(Object.values(response.data.projects)); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -147,13 +146,20 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={12}
+                value={
+                  projects.filter((project) => project.projectType === 'active')
+                    .length
+                }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo="+10% from last month"
               />
               <StatCard
                 title="Pending Projects"
-                value={5}
+                value={
+                  projects.filter(
+                    (project) => project.projectType === 'pending',
+                  ).length
+                }
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo="2 new projects this week"
               />
@@ -168,16 +174,32 @@ export default function Dashboard() {
                 </TabsList>
               </div>
               <TabsContent value="active">
-                <ProjectTableCard projects={projects} />
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'active',
+                  )}
+                />
               </TabsContent>
               <TabsContent value="applied">
-                <ProjectTableCard projects={projects} />
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'applied',
+                  )}
+                />
               </TabsContent>
               <TabsContent value="completed">
-                <ProjectTableCard projects={projects} />
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'completed',
+                  )}
+                />
               </TabsContent>
               <TabsContent value="rejected">
-                <ProjectTableCard projects={projects} />
+                <ProjectTableCard
+                  projects={projects.filter(
+                    (project) => project.projectType === 'rejected',
+                  )}
+                />
               </TabsContent>
             </Tabs>
           </div>
