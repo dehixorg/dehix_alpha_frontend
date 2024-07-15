@@ -1,6 +1,14 @@
 'use client';
 import React, { useState } from 'react';
-import { MessageSquareIcon } from 'lucide-react';
+import {
+  MessageSquareIcon,
+  Linkedin,
+  Github,
+  GlobeIcon,
+  Users,
+  Mail,
+  Phone,
+} from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -24,8 +32,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
-interface businessProps {
+interface BusinessProps {
   firstName: string;
   lastName: string;
   email: string;
@@ -45,7 +58,7 @@ const FormSchema = z.object({
   }),
 });
 
-const BusinessVerificationCard: React.FC<businessProps> = ({
+const BusinessVerificationCard: React.FC<BusinessProps> = ({
   firstName,
   lastName,
   email,
@@ -66,99 +79,136 @@ const BusinessVerificationCard: React.FC<businessProps> = ({
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    setVerificationStatus(data.type); // Set status based on selected type
+    setVerificationStatus(data.type);
   }
 
   return (
-    <Card className="max-full mx-auto md:max-w-2xl">
+    <Card className="max-w-full md:max-w-2xl">
       <CardHeader>
-        <CardTitle className="flex">
-          {firstName} {lastName}
+        <CardTitle className="flex justify-between">
+          <span>
+            {firstName} {lastName}
+          </span>
+          <div className="flex flex-row space-x-3">
+            {websiteLink && (
+              <a
+                href={websiteLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline flex items-center"
+              >
+                <GlobeIcon className="mt-auto" />
+              </a>
+            )}
+            {linkedInLink && (
+              <a
+                href={linkedInLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm  underline flex items-center"
+              >
+                <Linkedin />
+              </a>
+            )}
+            {githubLink && (
+              <a
+                href={githubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm  underline flex items-center"
+              >
+                <Github />
+              </a>
+            )}
+          </div>
         </CardTitle>
-        <CardDescription className="block mt-1 text-justify tracking-wide leading-tight font-bold text-gray-600">
+        <CardDescription className="mt-1 text-justify text-gray-600">
           {companyName}
+          <br />
+          {verificationStatus === 'pending' ? (
+            <Badge className="bg-warning-foreground text-white mt-2">
+              PENDING
+            </Badge>
+          ) : verificationStatus === 'verified' ? (
+            <Badge className="bg-success text-white mt-2">VERIFIED</Badge>
+          ) : (
+            <Badge className="bg-red-500 text-white mt-2">REJECTED</Badge>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {verificationStatus === 'pending' ? (
-          <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
-        ) : verificationStatus === 'verified' ? (
-          <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
-        ) : (
-          <Badge className="bg-red-500 hover:bg-red-500">REJECTED</Badge>
-        )}
+        <div className="space-y-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm text-gray-600 flex items-center">
+                <Users className="mr-2" />
+                {companySize}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Company Size</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm text-gray-600 flex items-center">
+                <Mail className="mr-2" />
+                {email}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Email</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm text-gray-600 flex items-center">
+                <Phone className="mr-2" />
+                {phone}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Phone</TooltipContent>
+          </Tooltip>
 
-        <div className="mt-4">
-          <div className="mt-4">
-            <p>
-              <span className="text-gray-500 font-semibold">Company Size:</span>{' '}
-              {companySize}
-            </p>
-            <p>
-              <span className="text-gray-500 font-semibold">Email:</span>{' '}
-              {email}
-            </p>
-            <p>
-              <span className="text-gray-500 font-semibold">Phone:</span>{' '}
-              {phone}
-            </p>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm text-gray-600 flex items-center">
+                <Mail className="mr-2" />
+                {referenceEmail}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Reference Email</TooltipContent>
+          </Tooltip>
 
-          <div className="mt-4">
-            <p>
-              <span className="text-gray-500 font-semibold">Website Link:</span>{' '}
-              {websiteLink}
+          {comments && (
+            <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
+              <MessageSquareIcon className="mr-2" />
+              {comments}
             </p>
-            <p>
-              <span className="text-gray-500 font-semibold">
-                LinkedIn Link:
-              </span>{' '}
-              {linkedInLink}
-            </p>
-            <p>
-              <span className="text-gray-500 font-semibold">Github Link:</span>{' '}
-              {githubLink}
-            </p>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">
-              <span className="text-gray-500 font-semibold">Refer Email:</span>{' '}
-              {referenceEmail}
-            </p>
-          </div>
-
-          <p className="mt-2 flex text-gray-500 border p-3 rounded">
-            <MessageSquareIcon className="pr-1" />
-            {comments}
-          </p>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col items-center">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-2/3 space-y-6"
+            className="w-full space-y-6 mt-6"
           >
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Choose:</FormLabel>
+                  <FormLabel>Choose Verification Status:</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                       className="flex flex-col space-y-1"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-3">
                         <FormControl>
                           <RadioGroupItem value="verified" />
                         </FormControl>
                         <FormLabel className="font-normal">Verified</FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-3">
                         <FormControl>
                           <RadioGroupItem value="rejected" />
                         </FormControl>
@@ -170,7 +220,9 @@ const BusinessVerificationCard: React.FC<businessProps> = ({
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" className="w-full">
+              Submit
+            </Button>
           </form>
         </Form>
       </CardFooter>

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { MessageSquareIcon } from 'lucide-react';
+import { MessageSquareIcon, MapPin, User } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -24,6 +24,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
 interface EducationProps {
   type: string;
@@ -62,45 +67,70 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    setVerificationStatus(data.type); // Set status based on selected type
+    setVerificationStatus(data.type);
   }
 
   return (
-    <Card className="max-full mx-auto md:max-w-2xl">
+    <Card className="max-w-full md:max-w-2xl">
       <CardHeader>
-        <CardTitle className="flex">{type}</CardTitle>
-        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-white">
+        <CardTitle className="flex justify-between">
+          <span>{type}</span>
+          {verificationStatus === 'pending' ? (
+            <Badge className="bg-warning-foreground text-white">PENDING</Badge>
+          ) : verificationStatus === 'verified' ? (
+            <Badge className="bg-success text-white">VERIFIED</Badge>
+          ) : (
+            <Badge className="bg-red-500 text-white">REJECTED</Badge>
+          )}
+        </CardTitle>
+        <CardDescription className="text-justify text-gray-600">
           {instituteName}
+          <br />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-sm text-gray-600 flex items-center mt-3">
+                <MapPin className="mr-2" />
+                {location}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Location</TooltipContent>
+          </Tooltip>
+          <br />
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {verificationStatus === 'pending' ? (
-          <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
-        ) : verificationStatus === 'verified' ? (
-          <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
-        ) : (
-          <Badge className="bg-red-500 hover:bg-red-500">REJECTED</Badge>
-        )}
-
         <div className="mt-4">
-          <p>{location}</p>
-          <p>Degree Number: {degreeNumber}</p>
-          <p>Grade: {grade}</p>
+          <p className="text-sm text-gray-600">
+            <span className="text-gray-500 font-semibold">Degree Number:</span>{' '}
+            {degreeNumber}
+          </p>
+          <p className="text-sm text-gray-600">
+            <span className="text-gray-500 font-semibold">Grade:</span> {grade}
+          </p>
 
           <div className="mt-4">
-            <p className="text-sm text-gray-600">
-              Reference: {referencePersonName}
-            </p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm text-gray-600 flex items-center">
+                  <User className="mr-2" />
+                  {referencePersonName}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Reference Person</TooltipContent>
+            </Tooltip>
           </div>
-          <p className="mt-2 flex text-gray-500 border p-3 rounded">
-            <MessageSquareIcon className="pr-1" />
-            {comments}
-          </p>
+
+          {comments && (
+            <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
+              <MessageSquareIcon className="mr-2" />
+              {comments}
+            </p>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col items-center">
         <div className="flex flex-1 gap-4">
-          {new Date(startFrom).toLocaleDateString()}-
+          {new Date(startFrom).toLocaleDateString()} -
           {endTo !== 'current'
             ? new Date(endTo).toLocaleDateString()
             : 'Current'}
@@ -109,27 +139,27 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-2/3 space-y-6"
+            className="w-full space-y-6 mt-6"
           >
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Choose:</FormLabel>
+                  <FormLabel>Choose Verification Status:</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                       className="flex flex-col space-y-1"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-3">
                         <FormControl>
                           <RadioGroupItem value="verified" />
                         </FormControl>
                         <FormLabel className="font-normal">Verified</FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-3">
                         <FormControl>
                           <RadioGroupItem value="rejected" />
                         </FormControl>
@@ -141,7 +171,9 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button type="submit" className="w-full">
+              Submit
+            </Button>
           </form>
         </Form>
       </CardFooter>
