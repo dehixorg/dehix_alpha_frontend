@@ -18,12 +18,14 @@ type SidebarMenuProps = {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
   active: string;
+  setActive?: (page: string) => void; // Making setActive optional
 };
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
   menuItemsTop,
   menuItemsBottom,
   active,
+  setActive = () => null, // Defaulting setActive to a no-op function
 }) => {
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
@@ -37,6 +39,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     ? '#'
                     : item.href
                 }
+                onClick={() => setActive(item.label)}
                 className={`flex h-9 w-9 items-center justify-center rounded-lg  ${item.label === active || item.label === 'Dehix' ? (item.label === 'Dehix' ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base' : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8') : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'} transition-colors hover:text-foreground md:h-8 md:w-8`}
               >
                 {item.icon}

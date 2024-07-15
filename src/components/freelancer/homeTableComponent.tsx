@@ -64,7 +64,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
               <TableRow>
                 <TableHead>Project Name</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Verification</TableHead>
                 <TableHead>Start Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>

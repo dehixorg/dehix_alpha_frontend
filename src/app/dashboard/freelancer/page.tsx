@@ -182,7 +182,7 @@ export default function Dashboard() {
                 additionalInfo="2 new projects this week"
               />
             </div>
-            <Tabs defaultValue="pending">
+            <Tabs defaultValue="active">
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
