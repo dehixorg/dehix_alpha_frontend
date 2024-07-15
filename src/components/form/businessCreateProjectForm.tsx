@@ -2,6 +2,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
 
 import { Card } from '../ui/card';
 
@@ -27,6 +28,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { MultiSelect } from '@/components/customFormComponents/multiselect'; // Import the custom MultiSelect component
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -44,6 +47,7 @@ const profileFormSchema = z.object({
       }),
     )
     .optional(),
+  description: z.string().max(160).min(4).optional(),
   profiles: z
     .array(
       z.object({
@@ -62,6 +66,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
+  description: '',
   profiles: [
     {
       domain: '',
@@ -75,6 +80,7 @@ const defaultValues: Partial<ProfileFormValues> = {
 };
 
 export function CreateProjectBusinessForm() {
+  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
@@ -95,16 +101,30 @@ export function CreateProjectBusinessForm() {
     control: form.control,
   });
 
-  function onSubmit(data: ProfileFormValues) {
-    console.log('here we re showing the data', data);
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: ProfileFormValues) {
+    try {
+      console.log('Form data:', data);
+      const response = await axiosInstance.put(
+        `/business/${user.uid}/project`,
+        {
+          ...data,
+        },
+      );
+      console.log('API Response:', response.data);
+
+      // You can update other fields here as needed
+      toast({
+        title: 'Profile Updated',
+        description: 'Your project has been successfully added.',
+      });
+    } catch (error) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add project. Please try again later.',
+      });
+    }
   }
 
   return (
@@ -138,6 +158,19 @@ export function CreateProjectBusinessForm() {
                   <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormDescription>Enter your email</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter description" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
