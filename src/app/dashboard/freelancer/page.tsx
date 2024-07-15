@@ -42,11 +42,29 @@ import {
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 
 interface Project {
-  id: string;
+  _id: string;
   projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
   projectType: string;
-  verified: boolean;
-  start: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
 }
 
 const sampleInterview = {
@@ -65,9 +83,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Fetch data from API
-        console.log(response.data.projects);
-        setProjects(Object.values(response.data.projects)); // Store all projects initially
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project`,
+        ); // Fetch data from API
+        setProjects(Object.values(response.data)); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -147,7 +166,7 @@ export default function Dashboard() {
               <StatCard
                 title="Active Projects"
                 value={
-                  projects.filter((project) => project.projectType === 'active')
+                  projects.filter((project) => project.status === 'Active')
                     .length
                 }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
@@ -156,19 +175,18 @@ export default function Dashboard() {
               <StatCard
                 title="Pending Projects"
                 value={
-                  projects.filter(
-                    (project) => project.projectType === 'pending',
-                  ).length
+                  projects.filter((project) => project.status === 'Pending')
+                    .length
                 }
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo="2 new projects this week"
               />
             </div>
-            <Tabs defaultValue="active">
+            <Tabs defaultValue="pending">
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="applied">Applied</TabsTrigger>
+                  <TabsTrigger value="pending">Pending</TabsTrigger>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
@@ -176,28 +194,28 @@ export default function Dashboard() {
               <TabsContent value="active">
                 <ProjectTableCard
                   projects={projects.filter(
-                    (project) => project.projectType === 'active',
+                    (project) => project.status === 'Active',
                   )}
                 />
               </TabsContent>
-              <TabsContent value="applied">
+              <TabsContent value="pending">
                 <ProjectTableCard
                   projects={projects.filter(
-                    (project) => project.projectType === 'applied',
+                    (project) => project.status === 'Pending',
                   )}
                 />
               </TabsContent>
               <TabsContent value="completed">
                 <ProjectTableCard
                   projects={projects.filter(
-                    (project) => project.projectType === 'completed',
+                    (project) => project.status === 'Completed',
                   )}
                 />
               </TabsContent>
               <TabsContent value="rejected">
                 <ProjectTableCard
                   projects={projects.filter(
-                    (project) => project.projectType === 'rejected',
+                    (project) => project.status === 'Rejected',
                   )}
                 />
               </TabsContent>
