@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+
 import {
   Card,
   CardContent,
@@ -46,7 +47,7 @@ const CurrentProjectCard: React.FC<ProjectProps> = ({
           <span>{companyName}</span>
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-400">
-            <Badge className="bg-green-500 text-white my-2">ONGOING</Badge>
+          <Badge className="bg-green-500 text-white my-2">ONGOING</Badge>
           <br />
           <strong className="text-white">Project Type:</strong> {projectType}
           <div className="mt-2">
@@ -66,7 +67,10 @@ const CurrentProjectCard: React.FC<ProjectProps> = ({
               ))}
             </div>
             <div className="mt-2">
-              <p className="text-gray-400"><strong className="font-semibold text-white mr-1">Role:</strong> {role}</p>
+              <p className="text-gray-400">
+                <strong className="font-semibold text-white mr-1">Role:</strong>{' '}
+                {role}
+              </p>
             </div>
           </div>
           <div className="mt-5">
@@ -82,15 +86,18 @@ const CurrentProjectCard: React.FC<ProjectProps> = ({
           </div>
           {experience && (
             <p className="mt-2 flex items-center text-gray-400">
-              <strong className="text-gray-400 mr-1">Experience:</strong> {experience}
+              <strong className="text-gray-400 mr-1">Experience:</strong>{' '}
+              {experience}
             </p>
           )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-col items-center">
         <div className="flex gap-4 text-gray-400">
-          {start ? new Date(start).toLocaleDateString() : 'N/A'} - 
-          {end && end !== 'current' ? new Date(end).toLocaleDateString() : end || 'N/A'}
+          {start ? new Date(start).toLocaleDateString() : 'N/A'} -
+          {end && end !== 'current'
+            ? new Date(end).toLocaleDateString()
+            : end || 'N/A'}
         </div>
       </CardFooter>
     </Card>

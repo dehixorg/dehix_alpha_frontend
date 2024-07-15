@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+
 import {
   Card,
   CardContent,
@@ -44,7 +45,7 @@ const RejectProjectCards: React.FC<ProjectProps> = ({
           <span>{companyName}</span>
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-400">
-            <Badge className="bg-red-500 text-white my-2">REJECTED</Badge>
+          <Badge className="bg-red-500 text-white my-2">REJECTED</Badge>
           <br />
           <strong className="text-white">Project Type:</strong> {projectType}
           <div className="mt-2">
@@ -64,7 +65,10 @@ const RejectProjectCards: React.FC<ProjectProps> = ({
               ))}
             </div>
             <div className="mt-2">
-              <p className="text-gray-400"><strong className="font-semibold text-white mr-1">Role:</strong> {role}</p>
+              <p className="text-gray-400">
+                <strong className="font-semibold text-white mr-1">Role:</strong>{' '}
+                {role}
+              </p>
             </div>
           </div>
           <div className="mt-5">
@@ -80,7 +84,8 @@ const RejectProjectCards: React.FC<ProjectProps> = ({
           </div>
           {experience && (
             <p className="mt-2 flex items-center text-gray-400">
-              <strong className="text-gray-400 mr-1">Experience:</strong> {experience}
+              <strong className="text-gray-400 mr-1">Experience:</strong>{' '}
+              {experience}
             </p>
           )}
         </div>

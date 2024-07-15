@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
-import { MessageSquareIcon, Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+import { Mail } from 'lucide-react';
+import PropTypes, { Validator } from 'prop-types';
+
 import {
   Card,
   CardContent,
@@ -10,7 +11,6 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
 import {
   Tooltip,
   TooltipTrigger,
@@ -19,7 +19,7 @@ import {
 
 interface ProjectProps {
   companyName: string;
-  role: String, 
+  role: string;
   projectType: string;
   description: string;
   skillsRequired: string[];
@@ -42,7 +42,12 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
   experience,
   isVerified,
 }) => {
-  const verificationStatus = isVerified === 'yes' ? 'verified' : isVerified === 'no' ? 'rejected' : 'pending';
+  const verificationStatus =
+    isVerified === 'yes'
+      ? 'verified'
+      : isVerified === 'no'
+        ? 'rejected'
+        : 'pending';
 
   return (
     <Card className="max-w-full md:max-w-2xl ">
@@ -61,9 +66,9 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
             <Badge className="bg-red-500 text-white my-2">REJECTED</Badge>
           )}
           <br />
-          <strong className='text-white'>Project Type:</strong> {projectType}
-          <div className='mt-2'>
-          <p>{description}</p>
+          <strong className="text-white">Project Type:</strong> {projectType}
+          <div className="mt-2">
+            <p>{description}</p>
           </div>
         </CardDescription>
       </CardHeader>
@@ -78,8 +83,11 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
                 </Badge>
               ))}
             </div>
-            <div className='mt-2'>
-            <p className='text-gray-400'><strong className='font-semibold text-white mr-1'>Role:</strong> {role}</p>
+            <div className="mt-2">
+              <p className="text-gray-400">
+                <strong className="font-semibold text-white mr-1">Role:</strong>{' '}
+                {role}
+              </p>
             </div>
           </div>
           <div className="mt-5">
@@ -95,7 +103,8 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
           </div>
           {experience && (
             <p className="mt-2 flex items-center text-gray-400">
-                <strong className='text-gray-400 mr-1'>Experience:</strong>  {experience}
+              <strong className="text-gray-400 mr-1">Experience:</strong>{' '}
+              {experience}
             </p>
           )}
         </div>
@@ -108,6 +117,21 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
       </CardFooter>
     </Card>
   );
+};
+CompleteProjectCards.propTypes = {
+  companyName: PropTypes.string.isRequired,
+  role: PropTypes.string.isRequired,
+  projectType: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  skillsRequired: PropTypes.arrayOf(PropTypes.string).isRequired as Validator<
+    string[]
+  >,
+  start: PropTypes.string.isRequired,
+  end: PropTypes.oneOfType([PropTypes.string, PropTypes.oneOf(['current'])])
+    .isRequired,
+  email: PropTypes.string.isRequired,
+  experience: PropTypes.string.isRequired,
+  isVerified: PropTypes.string.isRequired,
 };
 
 export default CompleteProjectCards;
