@@ -174,8 +174,8 @@ const domainsOptions = [
 const talentFormSchema = z.object({
   skills: z.array(z.string()).min(1, 'At least one skill must be selected.'),
   domains: z.array(z.string()).min(1, 'At least one domain must be selected.'),
-  experience: z.string().min(1, { message: 'Enter 0 if no Experience' }),
-  monthlyPay: z.string().min(1, { message: 'Enter positive value ' }),
+  experience: z.number().min(0, { message: 'Enter 0 if no Experience' }),
+  monthlyPay: z.number().min(0, { message: 'Enter positive value ' }),
 });
 
 type TalentFormValues = z.infer<typeof talentFormSchema>;
@@ -186,21 +186,16 @@ export function TalentForm() {
     defaultValues: {
       skills: [],
       domains: [],
-      experience: '',
-      monthlyPay: '',
+      experience: 0,
+      monthlyPay: 0,
     },
     mode: 'all',
   });
 
-  const [currentForm, setCurrentForm] = useState<'skills' | 'domains'>(
-    'skills',
-  ); // Default to skills form
-  const [skillsData, setSkillsData] = useState<
-    { data: TalentFormValues; active: boolean }[]
-  >([]);
-  const [domainsData, setDomainsData] = useState<
-    { data: TalentFormValues; active: boolean }[]
-  >([]);
+  const [currentForm, setCurrentForm] = useState<'skills' | 'domains'>('skills'); // Default to skills form
+  const [skillsData, setSkillsData] = useState<{ data: TalentFormValues; active: boolean }[]>([]);
+  const [domainsData, setDomainsData] = useState<{ data: TalentFormValues; active: boolean }[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   async function onSubmit(data: TalentFormValues) {
     try {
@@ -223,6 +218,7 @@ export function TalentForm() {
 
       // Reset the form fields
       form.reset();
+      onClose();
     } catch (error) {
       console.error(
         `${currentForm === 'skills' ? 'Skills' : 'Domains'} API Error:`,
@@ -235,13 +231,18 @@ export function TalentForm() {
       });
     }
   }
+  const onClose = () => {
+    setDialogOpen(false);
+  };
 
   const switchToSkillsForm = () => {
     setCurrentForm('skills');
+    setDialogOpen(true);
   };
 
   const switchToDomainsForm = () => {
     setCurrentForm('domains');
+    setDialogOpen(true);
   };
 
   const toggleStatus = (index: number, type: 'skills' | 'domains') => {
@@ -263,7 +264,7 @@ export function TalentForm() {
   return (
     <div>
       <section>
-        <Dialog>
+      <Dialog >
           <DialogTrigger>
             <div className="flex space-x-4">
               <Button variant="outline" onClick={switchToSkillsForm}>
@@ -284,10 +285,7 @@ export function TalentForm() {
             </DialogHeader>
             <Form {...form}>
               {currentForm === 'skills' && (
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="skills"
@@ -324,7 +322,7 @@ export function TalentForm() {
                       <div>
                         <FormLabel>Experience (years)</FormLabel>
                         <FormControl>
-                          <Input {...field} style={{ width: '100%' }} />
+                          <Input type='number'{...field} style={{ width: '100%' }} />
                         </FormControl>
                         <FormDescription>Enter in years</FormDescription>
                         <FormMessage></FormMessage>
@@ -338,7 +336,7 @@ export function TalentForm() {
                       <div>
                         <FormLabel>Monthly Pay</FormLabel>
                         <FormControl>
-                          <Input {...field} style={{ width: '100%' }} />
+                          <Input type='number'{...field} style={{ width: '100%' }} />
                         </FormControl>
                         <FormDescription>Enter in USD</FormDescription>
                         <FormMessage>
@@ -348,20 +346,14 @@ export function TalentForm() {
                     )}
                   />
                   <DialogFooter>
-                    <Button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white hover:bg-blue-700 transition duration-300"
-                    >
+                    <Button type="submit" className="w-full ">
                       Add Skills
                     </Button>
                   </DialogFooter>
                 </form>
               )}
               {currentForm === 'domains' && (
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="domains"
@@ -398,7 +390,7 @@ export function TalentForm() {
                       <div>
                         <FormLabel>Experience (years)</FormLabel>
                         <FormControl>
-                          <Input {...field} style={{ width: '100%' }} />
+                          <Input type='number'{...field} style={{ width: '100%' }} />
                         </FormControl>
                         <FormDescription>Enter in years</FormDescription>
                         <FormMessage></FormMessage>
@@ -412,7 +404,7 @@ export function TalentForm() {
                       <div>
                         <FormLabel>Monthly Pay</FormLabel>
                         <FormControl>
-                          <Input {...field} style={{ width: '100%' }} />
+                          <Input type='number'{...field} style={{ width: '100%' }} />
                         </FormControl>
                         <FormDescription>Enter in USD</FormDescription>
                         <FormMessage></FormMessage>
@@ -420,10 +412,7 @@ export function TalentForm() {
                     )}
                   />
                   <DialogFooter>
-                    <Button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white hover:bg-blue-700 transition duration-300"
-                    >
+                    <Button type="submit" className="w-full ">
                       Add Domain
                     </Button>
                   </DialogFooter>
@@ -442,7 +431,7 @@ export function TalentForm() {
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow >
                   <TableHead>Skill/Domain</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Monthly pay</TableHead>
@@ -456,7 +445,7 @@ export function TalentForm() {
                     <TableCell>{data.data.experience}</TableCell>
                     <TableCell>{data.data.monthlyPay}</TableCell>
                     <TableCell>
-                      <ToggleSwitch
+                      <StatusButton
                         isActive={data.active}
                         onToggle={() => toggleStatus(index, 'skills')}
                       />
@@ -466,10 +455,10 @@ export function TalentForm() {
                 {domainsData.map((data, index) => (
                   <TableRow key={index}>
                     <TableCell>{data.data.domains.join(', ')}</TableCell>
-                    <TableCell>{data.data.experience}</TableCell>
-                    <TableCell>{data.data.monthlyPay}</TableCell>
+                    <TableCell className="">{data.data.experience}</TableCell>
+                    <TableCell className="">{data.data.monthlyPay}</TableCell>
                     <TableCell>
-                      <ToggleSwitch
+                      <StatusButton
                         isActive={data.active}
                         onToggle={() => toggleStatus(index, 'domains')}
                       />
@@ -485,31 +474,18 @@ export function TalentForm() {
   );
 }
 
-interface ToggleSwitchProps {
+interface StatusButtonProps {
   isActive: boolean;
   onToggle: () => void;
 }
 
-function ToggleSwitch({ isActive, onToggle }: ToggleSwitchProps) {
+function StatusButton({ isActive, onToggle }: StatusButtonProps) {
   return (
-    <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-      <input
-        type="checkbox"
-        name="toggle"
-        id="toggle"
-        className={`${
-          isActive ? 'bg-blue-500' : 'bg-gray-200'
-        } absolute block w-6 h-6 rounded-full appearance-none cursor-pointer`}
-        onClick={onToggle}
-      />
-      <label
-        htmlFor="toggle"
-        className={`${
-          isActive ? 'bg-blue-600' : 'bg-gray-300'
-        } block overflow-hidden h-6 rounded-full cursor-pointer`}
-      >
-        T
-      </label>
-    </div>
+    <Button
+    className='w-[55px]'
+      onClick={onToggle}
+    >
+      {isActive ? 'Hide' : 'Show'}
+    </Button>
   );
 }
