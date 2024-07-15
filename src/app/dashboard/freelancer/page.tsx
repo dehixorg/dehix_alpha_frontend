@@ -3,8 +3,6 @@ import {
   CheckCircle,
   ChevronRight,
   Clock,
-  File,
-  ListFilter,
   Search,
   UserIcon,
 } from 'lucide-react';
@@ -25,7 +23,6 @@ import {
 } from '@/components/ui/card';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -52,6 +49,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -62,10 +60,19 @@ const sampleInterview = {
   comments: 'Great communication skills and technical expertise.',
 };
 
+interface Project {
+  id: string;
+  projectName: string;
+  projectType: string;
+  verified: boolean;
+  start: string;
+}
+
+
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>({}); // State to hold response data
-
+  const [projects, setProjects] = useState<Project[]>([]);
   console.log(responseData);
 
   useEffect(() => {
@@ -166,102 +173,22 @@ export default function Dashboard() {
               <div className="flex items-center">
                 <TabsList>
                   <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
+                  <TabsTrigger value="applied">Applied</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
                 </TabsList>
-                <div className="ml-auto flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 text-sm"
-                      >
-                        <ListFilter className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only">Filter</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem checked>
-                        Completed
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Pending
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuCheckboxItem>
-                        Ongoing
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 gap-1 text-sm"
-                  >
-                    <File className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only">Export</span>
-                  </Button>
-                </div>
               </div>
               <TabsContent value="active">
-                <Card>
-                  <CardHeader className="px-7">
-                    <CardTitle>Projects</CardTitle>
-                    <CardDescription>
-                      Recent projects from your account.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Project Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Start Date</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {responseData &&
-                          Object.values(responseData).map((project: any) => (
-                            <TableRow key={project.id}>
-                              <TableCell>
-                                {/* <Link href={project.githubLink}> */}
-                                <div className="font-medium">
-                                  {project.projectName}
-                                </div>
-                                {/* </Link> */}
-                                {/* <div className="hidden text-sm text-muted-foreground md:inline">{project.refer}</div> */}
-                              </TableCell>
-                              <TableCell>{project.projectType}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  className="text-xs"
-                                  variant={
-                                    project.verified ? 'secondary' : 'outline'
-                                  }
-                                >
-                                  {project.verified
-                                    ? 'Verified'
-                                    : 'Not Verified'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(project.start).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Button size="sm" variant="outline">
-                                  View Details
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                <ProjectTableCard projects={projects}/>
+              </TabsContent>
+              <TabsContent value="applied">
+                <ProjectTableCard projects={projects}/>
+              </TabsContent>
+              <TabsContent value="completed">
+                <ProjectTableCard projects={projects}/>
+              </TabsContent>
+              <TabsContent value="rejected">
+                <ProjectTableCard projects={projects}/>
               </TabsContent>
             </Tabs>
           </div>

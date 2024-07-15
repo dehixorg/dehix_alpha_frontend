@@ -29,7 +29,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
-    href: '#',
+    href: '/freelancer/platformProjects/currentProject',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
