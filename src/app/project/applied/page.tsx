@@ -1,6 +1,7 @@
 'use client';
 import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -16,50 +17,84 @@ import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
-import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { ProjectCard } from '@/components/cards/projectCard';
 
-export default function ProfessionalInfo() {
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
+}
+
+export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
-  const dummyEducationData = {
-    type: "Bachelor's Degree",
-    instituteName: 'University of Example',
-    location: 'Example City, Example Country',
-    startFrom: '2018-09-01',
-    endTo: '2022-06-15',
-    grade: 'A',
-    referencePersonName: 'Dr. John Doe',
-    degreeNumber: '123456789',
-    comments: '',
-  };
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project?status=Pending`,
+        ); // Fetch data from API
+        console.log(response.data.data);
+        setProjects(response.data.data); // Store all projects initially
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Education Verification"
+        active="Under Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItems={menuItemsTop}
-            active="Education Verification"
+            active="Under Verification"
           />
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
-                label: 'Project Dashboard',
-                link: '/freelancer/platformProjects/currentProject',
+                label: 'Projects',
+                link: '/project/current',
               },
               {
-                label: 'Applied Project',
-                link: '/freelancer/platformProjects/appliedProject',
+                label: 'Under Verification',
+                link: '#',
               },
             ]}
           />
@@ -100,28 +135,9 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <EducationVerificationCard
-            type={dummyEducationData.type}
-            instituteName={dummyEducationData.instituteName}
-            location={dummyEducationData.location}
-            startFrom={dummyEducationData.startFrom}
-            endTo={dummyEducationData.endTo}
-            grade={dummyEducationData.grade}
-            referencePersonName={dummyEducationData.referencePersonName}
-            degreeNumber={dummyEducationData.degreeNumber}
-            comments={dummyEducationData.comments}
-          />
-          <EducationVerificationCard
-            type={dummyEducationData.type}
-            instituteName={dummyEducationData.instituteName}
-            location={dummyEducationData.location}
-            startFrom={dummyEducationData.startFrom}
-            endTo={dummyEducationData.endTo}
-            grade={dummyEducationData.grade}
-            referencePersonName={dummyEducationData.referencePersonName}
-            degreeNumber={dummyEducationData.degreeNumber}
-            comments={dummyEducationData.comments}
-          />
+          {projects.map((project, index: number) => (
+            <ProjectCard key={index} project={project} />
+          ))}
         </main>
       </div>
     </div>

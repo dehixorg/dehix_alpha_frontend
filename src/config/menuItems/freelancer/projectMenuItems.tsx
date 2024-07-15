@@ -16,22 +16,22 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/freelancer/platformProjects/currentProject',
+    href: '/project/current',
     icon: <FolderDot className="h-5 w-5" />,
     label: 'Current Projects',
   },
   {
-    href: '/freelancer/platformProjects/appliedProject',
+    href: '/project/applied',
     icon: <Pointer className="h-5 w-5" />,
-    label: 'Applied Verification',
+    label: 'Under Verification',
   },
   {
-    href: '/freelancer/platformProjects/completedProject',
+    href: '/project/completed',
     icon: <FileCheck className="h-5 w-5" />,
     label: 'Completed Projects',
   },
   {
-    href: '/freelancer/platformProjects/rejectedProject',
+    href: '/project/rejected',
     icon: <CircleX className="h-5 w-5" />,
     label: 'Rejected Verification',
   },
