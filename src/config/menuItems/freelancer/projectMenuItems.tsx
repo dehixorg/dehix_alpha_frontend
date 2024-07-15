@@ -1,10 +1,10 @@
 import {
   Boxes,
   HomeIcon,
-  FileCheck ,
-  Pointer ,
-  FolderDot ,
-  CircleX ,
+  FileCheck,
+  Pointer,
+  FolderDot,
+  CircleX,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -17,7 +17,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/platformProjects/currentProject',
-    icon: <FolderDot   className="h-5 w-5" />,
+    icon: <FolderDot className="h-5 w-5" />,
     label: 'Current Projects',
   },
   {
@@ -32,7 +32,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/platformProjects/rejectedProject',
-    icon: <CircleX  className="h-5 w-5" />,
+    icon: <CircleX className="h-5 w-5" />,
     label: 'Rejected Verification',
   },
 ];

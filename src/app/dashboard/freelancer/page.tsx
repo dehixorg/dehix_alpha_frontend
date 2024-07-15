@@ -10,12 +10,10 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -30,14 +28,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -67,7 +57,6 @@ interface Project {
   verified: boolean;
   start: string;
 }
-
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -179,16 +168,16 @@ export default function Dashboard() {
                 </TabsList>
               </div>
               <TabsContent value="active">
-                <ProjectTableCard projects={projects}/>
+                <ProjectTableCard projects={projects} />
               </TabsContent>
               <TabsContent value="applied">
-                <ProjectTableCard projects={projects}/>
+                <ProjectTableCard projects={projects} />
               </TabsContent>
               <TabsContent value="completed">
-                <ProjectTableCard projects={projects}/>
+                <ProjectTableCard projects={projects} />
               </TabsContent>
               <TabsContent value="rejected">
-                <ProjectTableCard projects={projects}/>
+                <ProjectTableCard projects={projects} />
               </TabsContent>
             </Tabs>
           </div>
