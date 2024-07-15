@@ -19,7 +19,7 @@ interface ProjectType {
   isVerified?: string;
   companyName: string;
   start?: Date;
-  end?: Date | undefined;
+  end?: Date;
   skillsRequired: string[];
   experience?: string;
   role: string;
@@ -53,7 +53,7 @@ export function ProjectCard({
         <CardTitle>{project.projectName}</CardTitle>
         <CardDescription className="text-gray-600">
           Estimated completion time:{' '}
-          {new Date(project.end).toLocaleDateString()}
+          {project.end ? new Date(project.end).toLocaleDateString() : 'N/A'}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
