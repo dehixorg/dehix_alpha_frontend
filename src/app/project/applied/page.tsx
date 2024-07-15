@@ -1,7 +1,7 @@
 'use client';
-import React from 'react';
 import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -22,60 +22,79 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
-import CompleteProjectCards from '@/components/freelancer/completeProject/completeProjectCards';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { ProjectCard } from '@/components/cards/projectCard';
 
-const ExamplePage: React.FC = () => {
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
+}
+
+export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
-  
-  const projectData = {
-    companyName: 'Example Company',
-    projectType: 'Internal Project',
-    description: 'This is a detailed description of the project.',
-    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
-    role: 'backend',
-    start: '2023-01-01',
-    end: '2023-12-31',
-    email: 'contact@example.com',
-    experience: '5 years',
-    isVerified: 'yes',
-  };
-  
-  const projectData2 = {
-    companyName: 'Example Company',
-    projectType: 'Internal Project',
-    role: 'backend',
-    description: 'This is a detailed description of the project.',
-    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
-    start: '2023-01-01',
-    end: '2023-12-31',
-    email: 'contact@example.com',
-    experience: '5 years',
-    isVerified: 'no',
-  };
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project?status=Pending`,
+        ); // Fetch data from API
+        console.log(response.data.data);
+        setProjects(response.data.data); // Store all projects initially
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Project Verification"
+        active="Under Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItems={menuItemsTop}
-            active="Project Verification"
+            active="Under Verification"
           />
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
-                label: 'Project Dashboard',
-                link: '/freelancer/platformProjects/currentProject',
+                label: 'Projects',
+                link: '/project/current',
               },
               {
-                label: 'Completed Project',
-                link: '/freelancer/platformProjects/completedProject',
+                label: 'Under Verification',
+                link: '#',
               },
             ]}
           />
@@ -97,7 +116,7 @@ const ExamplePage: React.FC = () => {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/user.png" alt="@shadcn" />
                   <AvatarFallback>
-                    <UserIcon size={16} />
+                    <UserIcon size={16} />{' '}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -116,12 +135,11 @@ const ExamplePage: React.FC = () => {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <CompleteProjectCards {...projectData} />
-          <CompleteProjectCards {...projectData2} />
+          {projects.map((project, index: number) => (
+            <ProjectCard key={index} project={project} />
+          ))}
         </main>
       </div>
     </div>
   );
 }
-
-export default ExamplePage;

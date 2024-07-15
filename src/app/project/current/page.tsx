@@ -1,6 +1,7 @@
 'use client';
 import { Search, UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -16,58 +17,83 @@ import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/projectMenuItems';
-import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
-import ActiveProjectCards from '@/components/freelancer/activeProject/activeProjectCard';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { ProjectCard } from '@/components/cards/projectCard';
 
-export default function ProfessionalInfo() {
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
+}
+
+export default function CurrentProject() {
   const user = useSelector((state: RootState) => state.user);
-  const projectData = {
-    companyName: 'Example Company',
-    projectType: 'Internal Project',
-    description: 'This is a detailed description of the project.',
-    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
-    role: 'backend', 
-    email: 'contact@example.com',
-    experience: '5 years',
-  };
-  const projectDa = {
-      companyName: 'Example Company',
-      projectType: 'Internal Project',
-      role: 'backend', 
-      description: 'This is a detailed description of the project.',
-      skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
-      email: 'contact@example.com',
-      experience: '5 years',
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project?status=Active`,
+        ); // Fetch data from API
+        setProjects(response.data.data); // Store all projects initially
+      } catch (error) {
+        console.error('API Error:', error);
+      }
     };
+
+    fetchData(); // Call fetch data function on component mount
+  }, [user.uid]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Education Verification"
+        active="Current Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItems={menuItemsTop}
-            active="Education Verification"
+            active="Current Projects"
           />
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
-                label: 'Project Dashboard',
-                link: '/freelancer/platformProjects/currentProject',
+                label: 'Projects',
+                link: '/project/current',
               },
               {
-                label: 'Applied Project',
-                link: '/freelancer/platformProjects/appliedProject',
+                label: 'Current Projects',
+                link: '#',
               },
             ]}
           />
@@ -108,8 +134,9 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <ActiveProjectCards {...projectData} />
-          <ActiveProjectCards {...projectDa} />
+          {projects.map((project, index: number) => (
+            <ProjectCard key={index} project={project} />
+          ))}
         </main>
       </div>
     </div>

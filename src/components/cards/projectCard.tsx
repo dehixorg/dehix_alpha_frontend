@@ -1,3 +1,5 @@
+import { Timer } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,34 +12,33 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-type ProjectType = {
+interface ProjectType {
   _id: string;
   projectName: string;
   description: string;
   email: string;
-  verified: string;
-  isVerified: string;
+  verified?: any;
+  isVerified?: string;
   companyName: string;
-  start: { $date: string };
-  end: { $date: string };
+  start?: Date;
+  end?: Date;
   skillsRequired: string[];
-  experience: string;
+  experience?: string;
   role: string;
   projectType: string;
-  totalNeedOfFreelancer: {
-    category: string;
-    needOfFreelancer: number;
-    appliedCandidates: string[];
-    rejected: string[];
-    accepted: string[];
-    status: string;
-    _id: { $oid: string };
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
   }[];
-  status: string;
-  team: string[];
+  status?: string;
+  team?: string[];
   createdAt: { $date: string };
   updatedAt: { $date: string };
-};
+}
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
   project: ProjectType;
@@ -49,12 +50,23 @@ export function ProjectCard({
   ...props
 }: ProjectCardProps) {
   return (
-    <Card className={cn('w-[350px] flex flex-col', className)} {...props}>
+    <Card className={cn('flex flex-col', className)} {...props}>
       <CardHeader>
         <CardTitle>{project.projectName}</CardTitle>
         <CardDescription className="text-gray-600">
-          Estimated completion time:{' '}
-          {new Date(project.end.$date).toLocaleDateString()}
+          <div className="flex">
+            <Timer />
+            <p className="my-auto ml-1">
+              {project.end ? new Date(project.end).toLocaleDateString() : 'N/A'}
+            </p>
+          </div>
+          <br />
+          <Badge
+            className="text-xs"
+            variant={project.verified ? 'secondary' : 'outline'}
+          >
+            {project.verified ? 'Verified' : 'Not Verified'}
+          </Badge>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
@@ -63,12 +75,6 @@ export function ProjectCard({
           <p className="text-sm text-muted-foreground">{project.description}</p>
         </div>
         <div>
-          <Badge
-            className="text-xs mb-3"
-            variant={project.verified ? 'secondary' : 'outline'}
-          >
-            {project.verified ? 'Verified' : 'Not Verified'}
-          </Badge>
           <p>
             <strong>Company:</strong> {project.companyName}
           </p>
@@ -76,15 +82,19 @@ export function ProjectCard({
             <strong>Role:</strong> {project.role}
           </p>
           <p>
-            <strong>Skills Required:</strong>{' '}
-            {project.skillsRequired.join(', ')}
-          </p>
-          <p>
             <strong>Experience:</strong> {project.experience}
           </p>
           <p>
             <strong>Status:</strong> {project.status}
           </p>
+
+          <div className="flex flex-wrap gap-1 mt-2">
+            {project.skillsRequired.map((skill, index) => (
+              <Badge key={index} className="text-xs text-white bg-muted">
+                {skill}
+              </Badge>
+            ))}
+          </div>
         </div>
       </CardContent>
       <CardFooter>

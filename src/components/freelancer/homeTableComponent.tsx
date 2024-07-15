@@ -1,5 +1,6 @@
 // src/ProjectCard.tsx
 import React from 'react';
+import { PackageOpen } from 'lucide-react';
 
 import {
   Card,
@@ -20,11 +21,29 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface Project {
-  id: string;
+  _id: string;
   projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
   projectType: string;
-  verified: boolean;
-  start: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
 }
 
 interface ProjectCardProps {
@@ -39,43 +58,52 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
         <CardDescription>Recent projects from your account.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Project Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell>
-                  <div className="font-medium">{project.projectName}</div>
-                </TableCell>
-                <TableCell>{project.projectType}</TableCell>
-                <TableCell>
-                  <Badge
-                    className="text-xs"
-                    variant={project.verified ? 'secondary' : 'outline'}
-                  >
-                    {project.verified ? 'Verified' : 'Not Verified'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {new Date(project.start).toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="outline">
-                    View Details
-                  </Button>
-                </TableCell>
+        {projects.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Project Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Verification</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {projects.map((project) => (
+                <TableRow key={project._id}>
+                  <TableCell>
+                    <div className="font-medium">{project.projectName}</div>
+                  </TableCell>
+                  <TableCell>{project.projectType}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className="text-xs"
+                      variant={project.verified ? 'secondary' : 'outline'}
+                    >
+                      {project.verified ? 'Verified' : 'Not Verified'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {project.start
+                      ? new Date(project.start).toLocaleDateString()
+                      : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No projects available</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
