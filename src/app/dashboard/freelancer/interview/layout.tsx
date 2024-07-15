@@ -25,10 +25,8 @@ import { RootState } from '@/lib/store';
 
 export default function InterviewLayout({
   children,
-  links = [],
 }: {
   children: React.ReactNode;
-  links: any[];
 }) {
   const user = useSelector((state: RootState) => state.user);
   const [activePage, setActivePage] = useState<string>('Profile');
@@ -48,7 +46,7 @@ export default function InterviewLayout({
             active={activePage}
             setActive={setActivePage}
           />
-          <Breadcrumb items={links} />
+          {/* <Breadcrumb items={links} /> */}
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
