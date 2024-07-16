@@ -1,6 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 
+import { ThemeToggle } from '../shared/themeToggle';
+
 import {
   Tooltip,
   TooltipTrigger,
@@ -50,7 +52,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           </Tooltip>
         ))}
       </nav>
-      <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+
+      <div className="mt-auto mx-auto">
+        <ThemeToggle />
+      </div>
+      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
         {menuItemsBottom.map((item, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>
