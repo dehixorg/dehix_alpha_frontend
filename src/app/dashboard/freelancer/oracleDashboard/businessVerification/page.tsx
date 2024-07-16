@@ -1,6 +1,7 @@
 'use client';
-import { Search, UserIcon } from 'lucide-react';
+import { Search, UserIcon, Filter } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -24,21 +33,85 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 
+// Define a union type for the filter options
+type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
-  const dummyBusinessData = {
-    firstName: 'John',
-    lastName: 'Smith',
-    email: 'john.smith@example.com',
-    phone: '+1234567890',
-    companyName: 'Tech Innovators Inc.',
-    companySize: '500-1000 employees',
-    referenceEmail: 'ref.john.smith@example.com',
-    websiteLink: 'https://www.techinnovators.com',
-    linkedInLink: 'https://www.linkedin.com/in/johnsmith',
-    githubLink: 'https://github.com/johnsmith',
-    comments: '',
+  const [dummyBusinessData, setDummyBusinessData] = useState([
+    {
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'john.smith@example.com',
+      phone: '+1234567890',
+      companyName: 'Tech Innovators Inc.',
+      companySize: '500-1000 employees',
+      referenceEmail: 'ref.john.smith@example.com',
+      websiteLink: 'https://www.techinnovators.com',
+      linkedInLink: 'https://www.linkedin.com/in/johnsmith',
+      githubLink: 'https://github.com/johnsmith',
+      comments: '',
+      status: 'pending',
+    },
+    {
+      firstName: 'Alice',
+      lastName: 'Johnson',
+      email: 'alice.johnson@example.com',
+      phone: '+0987654321',
+      companyName: 'Creative Solutions Ltd.',
+      companySize: '100-500 employees',
+      referenceEmail: 'ref.alice.johnson@example.com',
+      websiteLink: 'https://www.creativesolutions.com',
+      linkedInLink: 'https://www.linkedin.com/in/alicejohnson',
+      githubLink: 'https://github.com/alicejohnson',
+      comments: '',
+      status: 'pending',
+    },
+    {
+      firstName: 'Robert',
+      lastName: 'Brown',
+      email: 'robert.brown@example.com',
+      phone: '+1122334455',
+      companyName: 'Global Enterprises',
+      companySize: '1000-5000 employees',
+      referenceEmail: 'ref.robert.brown@example.com',
+      websiteLink: 'https://www.globalenterprises.com',
+      linkedInLink: 'https://www.linkedin.com/in/robertbrown',
+      githubLink: 'https://github.com/robertbrown',
+      comments: '',
+      status: 'pending',
+    },
+  ]);
+
+  const [filter, setFilter] = useState<FilterOption>('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleFilterChange = (newFilter: FilterOption) => {
+    setFilter(newFilter);
+    setIsDialogOpen(false);
+  };
+
+  const filteredData = dummyBusinessData.filter((data) => {
+    if (filter === 'all') {
+      return true;
+    }
+    return (
+      data.status === filter ||
+      (filter === 'current' && data.status === 'pending')
+    );
+  });
+
+  const updateBusinessStatus = (index: number, newStatus: string) => {
+    const updatedData = [...dummyBusinessData];
+    updatedData[index].status = newStatus;
+    setDummyBusinessData(updatedData); // Assuming you set this in state
+  };
+
+  const updateCommentStatus = (index: number, newComment: string) => {
+    const updatedData = [...dummyBusinessData];
+    updatedData[index].comments = newComment;
+    setDummyBusinessData(updatedData);
   };
 
   return (
@@ -75,6 +148,14 @@ export default function ProfessionalInfo() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="ml-4"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -100,37 +181,68 @@ export default function ProfessionalInfo() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Filter Education Status</DialogTitle>
+            </DialogHeader>
+            <RadioGroup
+              defaultValue="all"
+              value={filter}
+              onValueChange={(value: FilterOption) => handleFilterChange(value)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="filter-all" />
+                <label htmlFor="filter-all">All</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="current" id="filter-current" />
+                <label htmlFor="filter-current">Pending</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="verified" id="filter-verified" />
+                <label htmlFor="filter-verified">Verified</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="rejected" id="filter-rejected" />
+                <label htmlFor="filter-rejected">Rejected</label>
+              </div>
+            </RadioGroup>
+            <DialogFooter>
+              <Button type="button" onClick={() => setIsDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          <BusinessVerificationCard
-            firstName={dummyBusinessData.firstName}
-            lastName={dummyBusinessData.lastName}
-            email={dummyBusinessData.email}
-            phone={dummyBusinessData.phone}
-            companyName={dummyBusinessData.companyName}
-            companySize={dummyBusinessData.companySize}
-            referenceEmail={dummyBusinessData.referenceEmail}
-            websiteLink={dummyBusinessData.websiteLink}
-            linkedInLink={dummyBusinessData.linkedInLink}
-            githubLink={dummyBusinessData.githubLink}
-            comments={dummyBusinessData.comments}
-          />
-
-          <BusinessVerificationCard
-            firstName={dummyBusinessData.firstName}
-            lastName={dummyBusinessData.lastName}
-            email={dummyBusinessData.email}
-            phone={dummyBusinessData.phone}
-            companyName={dummyBusinessData.companyName}
-            companySize={dummyBusinessData.companySize}
-            referenceEmail={dummyBusinessData.referenceEmail}
-            websiteLink={dummyBusinessData.websiteLink}
-            linkedInLink={dummyBusinessData.linkedInLink}
-            githubLink={dummyBusinessData.githubLink}
-            comments={dummyBusinessData.comments}
-          />
+          {filteredData.map((data, index) => (
+            <BusinessVerificationCard
+              key={index}
+              firstName={data.firstName}
+              lastName={data.lastName}
+              email={data.email}
+              phone={data.phone}
+              companyName={data.companyName}
+              companySize={data.companySize}
+              referenceEmail={data.referenceEmail}
+              websiteLink={data.websiteLink}
+              linkedInLink={data.linkedInLink}
+              githubLink={data.githubLink}
+              comments={data.comments}
+              status={data.status} // Pass the status to the card component
+              onStatusUpdate={(newStatus) =>
+                updateBusinessStatus(index, newStatus)
+              }
+              onCommentUpdate={(newComment) =>
+                updateCommentStatus(index, newComment)
+              }
+            />
+          ))}
         </main>
       </div>
     </div>
