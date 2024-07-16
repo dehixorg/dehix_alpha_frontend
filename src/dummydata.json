@@ -1,0 +1,12 @@
+{
+    "freelancerEarnings": 1000,
+    "sampleInterview" :{
+        "interviewer": "John Doe",
+        "interviewee": "Jane Smith",
+        "skill": "React Development",
+        "interviewDate": "new Date('2023-11-23T10:30:00Z')",
+        "rating": 4.5,
+        "comments": "Great communication skills and technical expertise."
+      }
+}
+
