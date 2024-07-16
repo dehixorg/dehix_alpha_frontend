@@ -188,7 +188,6 @@ export default function Dashboard() {
               Talent
             </CardTitle>
             <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
           </div>
         </main>
       </div>

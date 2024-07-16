@@ -176,7 +176,7 @@ export default function Dashboard() {
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="mr-1">
-                    <Plus className="mr-1 h-4 w-4" /> Add Talent
+                    <Plus className="mr-1 h-4 w-4" /> Add your Talent
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
