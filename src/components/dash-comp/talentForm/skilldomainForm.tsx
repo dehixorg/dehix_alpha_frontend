@@ -34,7 +34,6 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 
 interface Skill {
   label: string;
