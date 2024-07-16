@@ -233,7 +233,7 @@ const HomePage = () => {
               </div>
               <Button
                 type="submit"
-                className="bg-primary text-black px-8 py-3 rounded-md text-lg font-medium"
+                className="bg-white text-black px-8 py-3 rounded-md text-lg font-medium"
               >
                 Send Message
               </Button>
