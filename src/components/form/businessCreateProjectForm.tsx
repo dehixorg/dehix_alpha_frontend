@@ -3,7 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+
 import { Card } from '../ui/card';
+
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -364,7 +366,7 @@ export function CreateProjectBusinessForm() {
                   freelancersRequired: '',
                   skills: [],
                   experience: '',
-                  minConnect:'',
+                  minConnect: '',
                   rate: '',
                   description: '',
                 })
