@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -329,33 +330,47 @@ const SkillDomainForm: React.FC = () => {
             </Dialog>
           </div>
         </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Label</TableHead>
-              <TableHead>Experience</TableHead>
-              <TableHead>Monthly Pay</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {skillDomainData.map((data, index) => (
-              <TableRow key={index}>
-                <TableCell>{data.type}</TableCell>
-                <TableCell>{data.label}</TableCell>
-                <TableCell>{data.experience}</TableCell>
-                <TableCell>{data.monthlyPay}</TableCell>
-                <TableCell>
-                  <Button onClick={() => toggleStatusVisibility(index)}>
-                    {statusVisibility[index] ? 'Hide' : 'Show'}
-                  </Button>
-                </TableCell>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Label</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Monthly Pay</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {skillDomainData.map((data, index) => (
+                <TableRow key={index}>
+                  <TableCell>{data.type}</TableCell>
+                  <TableCell>{data.label}</TableCell>
+                  <TableCell>{data.experience}</TableCell>
+                  <TableCell>{data.monthlyPay}</TableCell>
+                  <TableCell>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        value=""
+                        className="sr-only peer"
+                        checked={statusVisibility[index]}
+                        onChange={() => toggleStatusVisibility(index)}
+                      />
+                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                      <span
+                        className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+                        style={{ width: '50px', textAlign: 'center' }}
+                      >
+                        {statusVisibility[index] ? 'Hide' : 'Show'}
+                      </span>
+                    </label>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
     </div>
   );
