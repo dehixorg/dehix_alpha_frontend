@@ -31,7 +31,7 @@ export function Navbar({ items }: UserNavProps) {
               <NavigationMenuLink
                 className={`${navigationMenuTriggerStyle()} text-base font-semibold ${
                   item.isButton
-                    ? 'bg-primary text-black px-5 py-3 rounded-md'
+                    ? 'dark:bg-primary dark:text-black text-white bg-black px-5 py-3'
                     : ''
                 }`}
               >
