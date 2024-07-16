@@ -67,6 +67,7 @@ interface Project {
   status?: string;
   team?: string[];
 }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const interviewData = {
   ...dummyData.sampleInterview,
   interviewDate: new Date(dummyData.sampleInterview.interviewDate),
@@ -152,7 +153,9 @@ export default function Dashboard() {
                 x-chunk="dashboard-05-chunk-0"
               >
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">{dummyData?.freelancerEarnings}</CardTitle>
+                  <CardTitle className="text-4xl mb-3">
+                    {dummyData?.freelancerEarnings}
+                  </CardTitle>
                 </CardHeader>
                 <CardFooter className=" grid gap-4 grid-cols-4">
                   <div className="col-span-3">
