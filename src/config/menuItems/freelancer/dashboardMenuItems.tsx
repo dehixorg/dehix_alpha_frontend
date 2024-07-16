@@ -35,7 +35,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '#',
-    icon: <LineChart className="h-5 w-5" />,
+    icon: <LineChart className="h-5 w-5 cursor-not-allowed" />,
     label: 'Analytics',
   },
   {

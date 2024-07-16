@@ -67,7 +67,10 @@ interface Project {
   status?: string;
   team?: string[];
 }
-
+const interviewData = {
+  ...dummyData.sampleInterview,
+  interviewDate: new Date(dummyData.sampleInterview.interviewDate),
+};
 const sampleInterview = {
   interviewer: 'John Doe',
   interviewee: 'Jane Smith',
