@@ -43,7 +43,7 @@ const HomePage = () => {
               Discover a world of opportunities and connect with talented
               freelancers to bring your projects to life.
             </p>
-            <Button className="button-accent mt-8 px-8 py-3 rounded-md text-lg font-medium">
+            <Button className="mt-8 px-8 py-3 rounded-md text-lg font-medium bg-white text-black">
               Get Started
             </Button>
           </div>
