@@ -24,18 +24,18 @@ const Testimonials: React.FC = () => {
 
   return (
     <div className="container text-center max-w-2xl mx-auto px-4 py-16">
-      <h1 className="text-5xl text-bold mb-4">What Our Clients Say</h1>
-      <div className="flex flex-row justify-center items-center">
+      <h1 className="text-5xl font-bold mb-4">What Our Clients Say</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 p-5">
         {testimonials.map((testimonial, index) => (
           <div
             key={index}
-            className="rounded-lg bg-[#1a1a1a] p-6 mr-6 text-left"
+            className="rounded-lg bg-[#1a1a1a] p-6 text-left w-full"
           >
             <blockquote className="text-lg font-medium text-white">
               {testimonial.quote}
             </blockquote>
             <div className="mt-4">
-              <p className=" font-bold">{testimonial.author}</p>
+              <p className="font-bold">{testimonial.author}</p>
               <p className="text-base text-white">{testimonial.title}</p>
             </div>
           </div>
