@@ -55,6 +55,7 @@ const profileFormSchema = z.object({
         freelancersRequired: z.string(),
         skills: z.array(z.string()),
         experience: z.string(),
+        minConnect: z.string(),
         rate: z.string(),
         description: z.string().max(160).min(4),
       }),
@@ -73,6 +74,7 @@ const defaultValues: Partial<ProfileFormValues> = {
       freelancersRequired: '',
       skills: [],
       experience: '',
+      minConnect: '',
       rate: '',
       description: '',
     },
@@ -301,6 +303,19 @@ export function CreateProjectBusinessForm() {
                 />
                 <FormField
                   control={form.control}
+                  name={`profiles.${index}.minConnect`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Min Connect</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter Min Connects" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name={`profiles.${index}.rate`}
                   render={({ field }) => (
                     <FormItem>
@@ -351,6 +366,7 @@ export function CreateProjectBusinessForm() {
                   freelancersRequired: '',
                   skills: [],
                   experience: '',
+                  minConnect: '',
                   rate: '',
                   description: '',
                 })

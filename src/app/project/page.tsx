@@ -77,10 +77,7 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* side bar need to make caomponent */}
           <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
-
-          {/* bredcrumbs need to make compont  */}
 
           <Breadcrumb
             items={[
@@ -90,7 +87,6 @@ export default function Dashboard() {
             ]}
           />
 
-          {/* search need to remove without changing the layout */}
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -100,7 +96,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* profile dropdown need to create separeant component */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -129,15 +124,15 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="">
+            <div>
               <ProjectDetailCard />
             </div>
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Profiles
             </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="min-w-[45%] " />
+            <div className="flex flex-col gap-4 sm:flex-row sm:gap-4 sm:overflow-x-scroll sm:no-scrollbar pb-8">
+              <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
             </div>
           </div>
 
@@ -145,8 +140,8 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Other Profiles
             </CardTitle>
-            <ProjectProfileDetailCard className="min-w-[45%] " />
-            <ProjectProfileDetailCard className="min-w-[45%] " />
+            <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
+            <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
           </div>
         </main>
       </div>

@@ -23,6 +23,7 @@ const ProjectPage: React.FC = () => {
     role: 'Lead Developer',
     project_type: 'Full-time',
   };
+
   const usernames = [
     { username: 'Alex004', bitAmount: 100 },
     { username: 'User2', bitAmount: 150 },
@@ -30,23 +31,27 @@ const ProjectPage: React.FC = () => {
   ];
 
   return (
-    <div className="container mx-auto p-4 flex">
-      <div className="flex-1 mr-4">
-        <ProjectComponent {...project} />
+    <div className="container mx-auto p-4 flex flex-col md:flex-row">
+      <div className="flex-1 mb-4 md:mb-0 md:mr-4 w-full">
+        <div className="w-full">
+          <ProjectComponent {...project} />
+        </div>
       </div>
-      <div className="w-[400px]">
+      <div className="w-full md:w-[400px] p-6">
         <ProjectSidebar />
         <div className="mt-10 ml-5">
           <a
             href="link"
-            className="text-white  hover:text-blue-500 hover:bg-transparent"
+            className="text-white hover:text-blue-500 hover:bg-transparent"
           >
             Request for more connect
           </a>
         </div>
 
-        <div className="mt-10">
-          <OtherBits usernames={usernames} />
+        <div className="mt-10 w-full">
+          <div className="w-full">
+            <OtherBits usernames={usernames} />
+          </div>
         </div>
       </div>
     </div>
