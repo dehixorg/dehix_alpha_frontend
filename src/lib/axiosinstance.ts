@@ -5,8 +5,12 @@ let axiosInstance: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC__BASE_URL,
 });
 
+// Log the base URL for debugging
+console.log('Base URL:', process.env.NEXT_PUBLIC__BASE_URL);
+
 // Function to initialize Axios with Bearer token
 const initializeAxiosWithToken = (token: string | null) => {
+  console.log('Initializing Axios with token:', token);
   axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC__BASE_URL,
     headers: {
@@ -16,16 +20,15 @@ const initializeAxiosWithToken = (token: string | null) => {
 };
 
 // Request interceptor to add Authorization header
-
-// Request interceptor to add Authorization header
 axiosInstance.interceptors.request.use(
   (config) => {
-    // You can modify the request configuration here
-    // For example, adding authentication headers
+    // Log the config for debugging
+    console.log('Request config:', config);
     return config;
   },
   (error) => {
     // Handle request errors
+    console.error('Request error:', error);
     return Promise.reject(error);
   },
 );
@@ -33,12 +36,13 @@ axiosInstance.interceptors.request.use(
 // Response interceptor (optional)
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Handle responses if needed
+    // Log the response for debugging
     console.log('Response:', response.data);
     return response;
   },
   (error) => {
     // Handle errors if needed
+    console.error('Response error:', error);
     return Promise.reject(error);
   },
 );

@@ -34,7 +34,7 @@ export default function ProfessionalInfo() {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
         console.log('API Response get:', response.data?.professionalInfo);
-        setExperiences(response.data?.professionalInfo); // Store response data in state
+        setExperiences(Object.values(response.data?.professionalInfo)); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }

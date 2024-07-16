@@ -19,7 +19,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
-import { TalentForm } from '@/components/dash-comp/talentForm/talent-form';
+import SkillDomainForm from '@/components/dash-comp/talentForm/skilldomainForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
@@ -100,7 +100,7 @@ export default function Projects() {
           ))}
         </main>
         <div className="ml-5">
-          <TalentForm />
+          <SkillDomainForm />
         </div>
       </div>
     </div>

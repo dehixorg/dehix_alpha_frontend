@@ -65,6 +65,12 @@ export default function Dashboard() {
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
   console.log(user);
+  const completedProjects = responseData.filter(
+    (project: any) => project.status == 'Completed',
+  );
+  const pendingProjects = responseData.filter(
+    (project: any) => project.status !== 'Completed',
+  );
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -140,49 +146,45 @@ export default function Dashboard() {
               </Card>
 
               <StatCard
-                title="Active Projects"
-                value={12}
+                title="Completed Projects"
+                value={completedProjects.length}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo="+10% from last month"
               />
 
               <StatCard
                 title="Pending Projects"
-                value={5}
+                value={pendingProjects.length}
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo="2 new projects this week"
               />
             </div>
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Current Projects {'(2)'}
+              Current Projects {`(${pendingProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {responseData
-                .filter((project: any) => project.status !== 'Completed')
-                .map((project: any, index: number) => (
-                  <ProjectCard
-                    key={index}
-                    className="min-w-[45%]"
-                    project={project}
-                  />
-                ))}
+              {pendingProjects.map((project: any, index: number) => (
+                <ProjectCard
+                  key={index}
+                  className="min-w-[45%]"
+                  project={project}
+                />
+              ))}
             </div>
 
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Completed Projects {'(3)'}
+              Completed Projects {`(${completedProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {responseData
-                .filter((project: any) => project.status === 'Completed')
-                .map((project: any, index: number) => (
-                  <ProjectCard
-                    key={index}
-                    className="min-w-[45%]"
-                    project={project}
-                  />
-                ))}
+              {completedProjects.map((project: any, index: number) => (
+                <ProjectCard
+                  key={index}
+                  className="min-w-[45%]"
+                  project={project}
+                />
+              ))}
             </div>
           </div>
           <div className="space-y-6">

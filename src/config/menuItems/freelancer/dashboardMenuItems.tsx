@@ -29,13 +29,13 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
-    href: '/freelancer/platformProjects/currentProject',
+    href: '/project/current',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
   {
     href: '#',
-    icon: <LineChart className="h-5 w-5" />,
+    icon: <LineChart className="h-5 w-5 cursor-not-allowed" />,
     label: 'Analytics',
   },
   {

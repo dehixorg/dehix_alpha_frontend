@@ -90,9 +90,8 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
       </CardHeader>
       <CardContent>
         <Badge
-          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
-            interview.status === 'Pending' ? 'warning' : 'success'
-          } text-xs`}
+          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'
+            } text-xs`}
         >
           {interview.status.toUpperCase()}
         </Badge>
