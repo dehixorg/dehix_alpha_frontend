@@ -47,7 +47,8 @@ interface SkillDomainData {
   label: string;
   experience: string;
   monthlyPay: string;
-  status: boolean;
+  show:boolean;
+  status: string;
 }
 
 const defaultStatus = false;
@@ -339,6 +340,7 @@ const SkillDomainForm: React.FC = () => {
                 <TableHead>Experience</TableHead>
                 <TableHead>Monthly Pay</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Show</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -348,6 +350,7 @@ const SkillDomainForm: React.FC = () => {
                   <TableCell>{data.label}</TableCell>
                   <TableCell>{data.experience}</TableCell>
                   <TableCell>{data.monthlyPay}</TableCell>
+                  <TableCell>{data.status}</TableCell>
                   <TableCell>
                     <label className="inline-flex items-center cursor-pointer">
                       <input
@@ -362,7 +365,6 @@ const SkillDomainForm: React.FC = () => {
                         className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
                         style={{ width: '50px', textAlign: 'center' }}
                       >
-                        {statusVisibility[index] ? 'Hide' : 'Show'}
                       </span>
                     </label>
                   </TableCell>
