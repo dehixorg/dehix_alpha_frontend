@@ -2,6 +2,8 @@ import * as React from 'react';
 import Link from 'next/link';
 import { PanelLeft } from 'lucide-react';
 
+import { ThemeToggle } from '../shared/themeToggle';
+
 import { MenuItem } from './sidebarMenu';
 
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -45,6 +47,9 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
               {item.label !== 'Dehix' && item.label}
             </Link>
           ))}
+          <div className="pt-5 mx-auto">
+            <ThemeToggle />
+          </div>
         </nav>
       </SheetContent>
     </Sheet>
