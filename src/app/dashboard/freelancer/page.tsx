@@ -156,6 +156,9 @@ export default function Dashboard() {
                   <CardTitle className="text-4xl mb-3">
                     {dummyData?.freelancerEarnings}
                   </CardTitle>
+                  <CardTitle className="text-4xl mb-3">
+                    {dummyData?.freelancerEarnings}
+                  </CardTitle>
                 </CardHeader>
                 <CardFooter className=" grid gap-4 grid-cols-4">
                   <div className="col-span-3">
