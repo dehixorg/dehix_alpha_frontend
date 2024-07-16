@@ -11,7 +11,6 @@ import {
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
