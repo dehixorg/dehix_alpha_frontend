@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageSquareIcon, MapPin, User } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import { Textarea } from '@/components/ui/textarea';
 
 interface EducationProps {
   type: string;
@@ -39,13 +40,17 @@ interface EducationProps {
   grade: string;
   referencePersonName: string;
   degreeNumber: string;
-  comments: string | '';
+  comments: string;
+  status: string | 'pending'; // Add initial status prop
+  onStatusUpdate: (newStatus: string) => void;
+  onCommentUpdate: (newComment: string) => void;
 }
 
 const FormSchema = z.object({
   type: z.enum(['verified', 'rejected'], {
     required_error: 'You need to select a type.',
   }),
+  comment: z.string().optional(),
 });
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
@@ -58,16 +63,26 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   referencePersonName,
   degreeNumber,
   comments,
+  status, // Get initial status from props
+  onStatusUpdate,
+  onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState<
-    'pending' | 'verified' | 'rejected'
-  >('pending');
+  const [verificationStatus, setVerificationStatus] = useState(status); // Use initial status
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
+  useEffect(() => {
+    // Ensure verificationStatus is set after the component mounts
+    setVerificationStatus(status);
+  }, [status]);
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
+    // Update status based on selection
     setVerificationStatus(data.type);
+    onStatusUpdate(data.type);
+    // console.log("Comments:", data.comment || "");
+    onCommentUpdate(data.comment || '');
   }
 
   return (
@@ -136,46 +151,67 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
             : 'Current'}
         </div>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-6 mt-6"
-          >
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Choose Verification Status:</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3">
-                        <FormControl>
-                          <RadioGroupItem value="verified" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Verified</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3">
-                        <FormControl>
-                          <RadioGroupItem value="rejected" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Rejected</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full">
-              Submit
-            </Button>
-          </form>
-        </Form>
+        {verificationStatus === 'pending' && (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="w-full space-y-6 mt-6"
+            >
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Choose Verification Status:</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-row space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <RadioGroupItem value="verified" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Verified
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3">
+                          <FormControl>
+                            <RadioGroupItem value="rejected" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Rejected
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="comment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comments:</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter comments:" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full">
+                Submit
+              </Button>
+            </form>
+          </Form>
+        )}
       </CardFooter>
     </Card>
   );
