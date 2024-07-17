@@ -6,6 +6,7 @@ import { Navbar } from '@/components/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ThemeToggle } from '@/components/shared/themeToggle';
 
 const leftNavItems = [
   { label: 'Home', link: '/' },
@@ -21,6 +22,9 @@ const rightNavItems = [
 const HomePage = () => {
   return (
     <>
+      <div className="fixed right-10 bottom-10">
+        <ThemeToggle />
+      </div>
       <div className="border-b">
         <div className="flex h-16 items-center px-4">
           <Navbar items={leftNavItems} />
@@ -39,7 +43,7 @@ const HomePage = () => {
               Discover a world of opportunities and connect with talented
               freelancers to bring your projects to life.
             </p>
-            <Button className="button-accent mt-8 px-8 py-3 rounded-md text-lg font-medium">
+            <Button className="mt-8 px-8 py-3 rounded-md text-lg font-medium bg-white text-black">
               Get Started
             </Button>
           </div>
@@ -229,7 +233,7 @@ const HomePage = () => {
               </div>
               <Button
                 type="submit"
-                className="bg-primary text-black px-8 py-3 rounded-md text-lg font-medium"
+                className="bg-white text-black px-8 py-3 rounded-md text-lg font-medium"
               >
                 Send Message
               </Button>

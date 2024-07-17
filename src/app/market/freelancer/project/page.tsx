@@ -29,12 +29,12 @@ const ProjectPage: React.FC = () => {
           project_type={project.project_type}
         />
       </div>
-      <div className="w-[400px]">
+      <div className="w-full md:w-[400px] p-6">
         <ProjectSidebar />
         <div className="mt-10 ml-5">
           <a
             href="link"
-            className="text-white  hover:text-blue-500 hover:bg-transparent"
+            className="text-white hover:text-blue-500 hover:bg-transparent"
           >
             Request for more connect
           </a>
