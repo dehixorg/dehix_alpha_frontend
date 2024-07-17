@@ -5,34 +5,29 @@ import React from 'react';
 import ProjectComponent from '@/components/marketComponents/projectComponents/project-comp';
 import ProjectSidebar from '@/components/marketComponents/sidebar-projectComponents/sidebar';
 import OtherBits from '@/components/marketComponents/sidebar-projectComponents/otherBids/other-bids';
+import dummyData from '@/dummydata.json';
 
 const ProjectPage: React.FC = () => {
-  const project = {
-    project_name: 'AI Development Project',
-    project_id: '#12345',
-    location: 'Delhi,India',
-    description: `
-      We're looking for an experienced web developer who's really good at making interactive forms. The perfect candidate should know a lot about web development and have a bunch of cool forms they've made before. Your main job will be making forms that people can use easily and that look nice.
-    `,
-    email: 'contact@aiproject.com',
-    company_name: 'Tech Innovators Inc.',
-    start: new Date('2023-01-01'),
-    end: new Date('2023-12-31'),
-    skills_required: ['JavaScript', 'React', 'Python', 'Machine Learning'],
-    experience: '2+ years of experience in AI development.',
-    role: 'Lead Developer',
-    project_type: 'Full-time',
-  };
-  const usernames = [
-    { username: 'Alex004', bitAmount: 100 },
-    { username: 'User2', bitAmount: 150 },
-    { username: 'alen789', bitAmount: 200 },
-  ];
+  const project = dummyData.marketFreelancerProject;
+  const users = dummyData.marketFreelancerProjectOtherBits;
 
   return (
     <div className="container mx-auto p-4 flex">
       <div className="flex-1 mr-4">
-        <ProjectComponent {...project} />
+        <ProjectComponent
+          project_name={project.project_name}
+          project_id={project.project_id}
+          location={project.location}
+          description={project.description}
+          email={project.email}
+          company_name={project.company_name}
+          start={new Date(project.start)}
+          end={new Date(project.end)}
+          skills_required={project.skills_required}
+          experience={project.experience}
+          role={project.role}
+          project_type={project.project_type}
+        />
       </div>
       <div className="w-[400px]">
         <ProjectSidebar />
@@ -46,7 +41,7 @@ const ProjectPage: React.FC = () => {
         </div>
 
         <div className="mt-10">
-          <OtherBits usernames={usernames} />
+          <OtherBits usernames={users} />
         </div>
       </div>
     </div>

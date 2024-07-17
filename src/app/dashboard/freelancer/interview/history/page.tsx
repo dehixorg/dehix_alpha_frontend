@@ -21,32 +21,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import dummyData from '@/dummydata.json';
 
 export default function HistoryPage() {
-  const sampleInterviews = [
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Jane Smith',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ];
+  const sampleInterviews = dummyData.dashboardfreelancerhistoryInterview; // Replace with your actual data path from dummyData
 
   const [filter, setFilter] = useState('All');
 
@@ -115,7 +93,11 @@ export default function HistoryPage() {
               </CardHeader>
               <CardContent>
                 <Badge
-                  className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'} text-xs`}
+                  className={`bg-${
+                    interview.status === 'Pending' ? 'warning' : 'success'
+                  } hover:bg-${
+                    interview.status === 'Pending' ? 'warning' : 'success'
+                  } text-xs`}
                 >
                   {interview.status.toUpperCase()}
                 </Badge>

@@ -30,15 +30,7 @@ import ProjectDetailCard from '@/components/business/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
+import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -156,8 +148,26 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
           </div>
         </main>
       </div>

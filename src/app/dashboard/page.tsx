@@ -64,6 +64,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -165,29 +166,29 @@ export default function Dashboard() {
             <section className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 pb-2">
               <div className="col-span-1 pb-1.2">
                 <CustomCard
-                  heading="Active Project"
+                  heading={dummyData.dashboardactiveProject.heading}
                   icon={Activity}
-                  content="+11 Current active projects"
+                  content={dummyData.dashboardactiveProject.content}
                 />
               </div>
               <div className="col-span-1 ">
                 <CardWithForm
-                  title="Pending projects"
-                  itemCounts={{ total: 15, low: 5, medium: 5, high: 5 }}
+                  title={dummyData.dashboardpendingProject.title}
+                  itemCounts={dummyData.dashboardpendingProject.itemCounts}
                 />
               </div>
               <div className="col-span-1 ">
                 <CustomCard
-                  heading="Total Revenue"
+                  heading={dummyData.dashboardtotalRevenue.heading}
                   icon={CircleDollarSign}
-                  content="$45,231.89 +20.1% from last month"
+                  content={dummyData.dashboardtotalRevenue.content}
                 />
               </div>
               <div className="col-span-1 ">
                 <CustomCard
-                  heading="Oracle Work"
+                  heading={dummyData.dashboardoracleWork.heading}
                   icon={FolderKanban}
-                  content="+11 projects"
+                  content={dummyData.dashboardoracleWork.content}
                 />
               </div>
             </section>
@@ -263,163 +264,195 @@ export default function Dashboard() {
                       <TableBody>
                         <TableRow className="bg-accent">
                           <TableCell>
-                            <div className="font-medium">Liam Johnson</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              liam@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Sale
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-23
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$250.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <div className="font-medium">Olivia Smith</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              olivia@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Refund
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="outline">
-                              Declined
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2023-06-24
-                          </TableCell>
-                          <TableCell className="text-right">$150.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">Noah Williams</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              noah@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Subscription
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-25
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$350.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <div className="font-medium">Emma Brown</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              emma@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Sale
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-26
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$450.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <div className="font-medium">Liam Johnson</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              liam@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Sale
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-23
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$250.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <div className="font-medium">Liam Johnson</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              liam@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Sale
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-23
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$250.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell>
-                            <div className="font-medium">Olivia Smith</div>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
                             <div className="hidden text-sm text-muted-foreground md:inline">
-                              olivia@example.com
+                              {dummyData.dashboardorderTable.customerEmail}
                             </div>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            Refund
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge className="text-xs" variant="outline">
-                              Declined
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            2023-06-24
-                          </TableCell>
-                          <TableCell className="text-right">$150.00</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell>
-                            <div className="font-medium">Emma Brown</div>
-                            <div className="hidden text-sm text-muted-foreground md:inline">
-                              emma@example.com
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            Sale
+                            {dummyData.dashboardorderTable.customerType}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge className="text-xs" variant="secondary">
-                              Fulfilled
+                              {dummyData.dashboardorderTable.customerStatus}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            2023-06-26
+                            {dummyData.dashboardorderTable.customerDate}
                           </TableCell>
-                          <TableCell className="text-right">$450.00</TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
+                            <div className="hidden text-sm text-muted-foreground md:inline">
+                              {dummyData.dashboardorderTable.customerEmail}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {dummyData.dashboardorderTable.customerType}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <Badge className="text-xs" variant="secondary">
+                              {dummyData.dashboardorderTable.customerStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {dummyData.dashboardorderTable.customerDate}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <div className="font-medium">
+                              {dummyData.dashboardorderTable.customerName}
+                            </div>
+                            <div className="hidden text-sm text-muted-foreground md:inline">
+                              {dummyData.dashboardorderTable.customerEmail}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {dummyData.dashboardorderTable.customerType}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <Badge className="text-xs" variant="secondary">
+                              {dummyData.dashboardorderTable.customerStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {dummyData.dashboardorderTable.customerDate}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {dummyData.dashboardorderTable.customerAmount}
+                          </TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -443,7 +476,10 @@ export default function Dashboard() {
                       <span className="sr-only">Copy Order ID</span>
                     </Button>
                   </CardTitle>
-                  <CardDescription>Date: November 23, 2023</CardDescription>
+                  dashboard
+                  <CardDescription>
+                    {dummyData.dashboardorderDate}
+                  </CardDescription>
                 </div>
                 <div className="ml-auto flex items-center gap-1">
                   <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -510,9 +546,15 @@ export default function Dashboard() {
                   <div className="grid gap-3">
                     <div className="font-semibold">Shipping Information</div>
                     <address className="grid gap-0.5 not-italic text-muted-foreground">
-                      <span>Liam Johnson</span>
-                      <span>1234 Main St.</span>
-                      <span>Anytown, CA 12345</span>
+                      <span>
+                        {dummyData.dashboardorderShippingAddress.name}
+                      </span>
+                      <span>
+                        {dummyData.dashboardorderShippingAddress.address}
+                      </span>
+                      <span>
+                        {dummyData.dashboardorderShippingAddress.state}
+                      </span>
                     </address>
                   </div>
                   <div className="grid auto-rows-max gap-3">
@@ -528,18 +570,22 @@ export default function Dashboard() {
                   <dl className="grid gap-3">
                     <div className="flex items-center justify-between">
                       <dt className="text-muted-foreground">Customer</dt>
-                      <dd>Liam Johnson</dd>
+                      <dd>{dummyData.dashboardorderCustomerInfo.customer}</dd>
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-muted-foreground">Email</dt>
                       <dd>
-                        <a href="mailto:">liam@acme.com</a>
+                        <a href="mailto:">
+                          {dummyData.dashboardorderCustomerInfo.email}
+                        </a>
                       </dd>
                     </div>
                     <div className="flex items-center justify-between">
                       <dt className="text-muted-foreground">Phone</dt>
                       <dd>
-                        <a href="tel:">+1 234 567 890</a>
+                        <a href="tel:">
+                          {dummyData.dashboardorderCustomerInfo.phone}
+                        </a>
                       </dd>
                     </div>
                   </dl>
@@ -551,16 +597,19 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <dt className="flex items-center gap-1 text-muted-foreground">
                         <CreditCard className="h-4 w-4" />
-                        Visa
+                        {dummyData.dashboardorderCard.card}
                       </dt>
-                      <dd>**** **** **** 4532</dd>
+                      <dd>{dummyData.dashboardorderCard.cardNumber}</dd>
                     </div>
                   </dl>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-row items-center border-t bg-muted/50 px-6 py-3">
                 <div className="text-xs text-muted-foreground">
-                  Updated <time dateTime="2023-11-23">November 23, 2023</time>
+                  Updated{' '}
+                  <time dateTime="2023-11-23">
+                    {dummyData.dashboardorderUpdateDate}
+                  </time>
                 </div>
                 <Pagination className="ml-auto mr-0 w-auto">
                   <PaginationContent>

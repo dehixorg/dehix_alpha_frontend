@@ -20,33 +20,17 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import dummyData from '@/dummydata.json';
+
+// Convert interviewDate strings to Date objects
+const sampleInterviews = dummyData.dashboardfreelancercurrentInterview.map(
+  (interview) => ({
+    ...interview,
+    interviewDate: new Date(interview.interviewDate),
+  }),
+);
 
 export default function CurrentPage() {
-  const sampleInterviews = [
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Jane Smith',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Pending',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ];
-
   const [filter, setFilter] = useState('All');
 
   const filteredInterviews = sampleInterviews.filter((interview) => {
@@ -125,7 +109,7 @@ export default function CurrentPage() {
             </CardContent>
             <CardFooter className="flex">
               <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-                {new Date(interview.interviewDate).toLocaleDateString()}
+                {interview.interviewDate.toLocaleDateString()}
               </p>
             </CardFooter>
           </Card>

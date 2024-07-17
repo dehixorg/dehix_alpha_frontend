@@ -92,6 +92,9 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
 
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [isDomainDialogOpen, setIsDomainDialogOpen] = useState(false);
+
   const {
     control: skillControl,
     handleSubmit: handleSkillSubmit,
@@ -143,6 +146,7 @@ const SkillDomainForm: React.FC = () => {
     ]);
     setStatusVisibility([...statusVisibility, false]);
     resetSkillForm();
+    setIsSkillDialogOpen(false);
   };
 
   const onSubmitDomain = (data: any) => {
@@ -152,6 +156,7 @@ const SkillDomainForm: React.FC = () => {
     ]);
     setStatusVisibility([...statusVisibility, false]);
     resetDomainForm();
+    setIsDomainDialogOpen(false);
   };
 
   return (
@@ -159,9 +164,12 @@ const SkillDomainForm: React.FC = () => {
       <div className="mb-8 mt-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex space-x-4">
-            <Dialog>
+            <Dialog
+              open={isSkillDialogOpen}
+              onOpenChange={setIsSkillDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsSkillDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -240,9 +248,12 @@ const SkillDomainForm: React.FC = () => {
                 </form>
               </DialogContent>
             </Dialog>
-            <Dialog>
+            <Dialog
+              open={isDomainDialogOpen}
+              onOpenChange={setIsDomainDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsDomainDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
