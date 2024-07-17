@@ -24,6 +24,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import CurrentProjectCard from '@/components/freelancer/currentProject/currentProjectCard';
+import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;
@@ -137,6 +139,32 @@ export default function CurrentProject() {
           {projects.map((project, index: number) => (
             <ProjectCard key={index} project={project} />
           ))}
+          <div>
+            <CurrentProjectCard
+              companyName={dummydata.projectCurrentCard.companyName}
+              role={dummydata.projectCurrentCard.role}
+              projectType={dummydata.projectCurrentCard.projectType}
+              description={dummydata.projectCurrentCard.description}
+              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
+              start={dummydata.projectCurrentCard.start}
+              end={dummydata.projectCurrentCard.end}
+              email={dummydata.projectCurrentCard.email}
+              experience={dummydata.projectCurrentCard.experience}
+            />
+          </div>
+          <div>
+            <CurrentProjectCard
+              companyName={dummydata.projectCurrentCard.companyName}
+              role={dummydata.projectCurrentCard.role}
+              projectType={dummydata.projectCurrentCard.projectType}
+              description={dummydata.projectCurrentCard.description}
+              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
+              start={dummydata.projectCurrentCard.start}
+              end={dummydata.projectCurrentCard.end}
+              email={dummydata.projectCurrentCard.email}
+              experience={dummydata.projectCurrentCard.experience}
+            />
+          </div>
         </main>
       </div>
     </div>

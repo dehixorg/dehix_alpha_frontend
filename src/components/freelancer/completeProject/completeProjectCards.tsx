@@ -27,7 +27,7 @@ interface ProjectProps {
   end: string | 'current';
   email: string;
   experience: string;
-  isVerified: string;
+  isVerified?: string;
 }
 
 const CompleteProjectCards: React.FC<ProjectProps> = ({
@@ -40,7 +40,7 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
   end,
   email,
   experience,
-  isVerified,
+  isVerified = 'yes',
 }) => {
   const verificationStatus =
     isVerified === 'yes'

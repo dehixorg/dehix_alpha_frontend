@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { LoaderCircle, Rocket } from 'lucide-react';
+import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
 
@@ -13,8 +13,13 @@ import { toast } from '@/components/ui/use-toast';
 
 export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -128,7 +133,24 @@ export default function BusinessRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" required />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+            />
+            <button
+              type="button"
+              onClick={toggleShowPassword}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            >
+              {showPassword ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (

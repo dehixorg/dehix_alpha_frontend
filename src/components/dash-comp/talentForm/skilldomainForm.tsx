@@ -330,7 +330,6 @@ const SkillDomainForm: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
                 <TableHead>Label</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Monthly Pay</TableHead>
@@ -341,7 +340,6 @@ const SkillDomainForm: React.FC = () => {
             <TableBody>
               {skillDomainData.map((data, index) => (
                 <TableRow key={index}>
-                  <TableCell>{data.type}</TableCell>
                   <TableCell>{data.label}</TableCell>
                   <TableCell>{data.experience}</TableCell>
                   <TableCell>{data.monthlyPay}</TableCell>

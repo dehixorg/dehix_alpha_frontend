@@ -24,6 +24,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import RejectProjectCards from '@/components/freelancer/rejectProject/rejectProjectCard';
+import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;
@@ -137,6 +139,30 @@ export default function RejectedProject() {
           {projects.map((project, index: number) => (
             <ProjectCard key={index} project={project} />
           ))}
+          <div>
+            <RejectProjectCards
+              companyName={dummydata.projectRejectedCard.companyName}
+              role={dummydata.projectRejectedCard.role}
+              projectType={dummydata.projectRejectedCard.projectType}
+              description={dummydata.projectRejectedCard.description}
+              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
+              start={dummydata.projectRejectedCard.start}
+              email={dummydata.projectRejectedCard.email}
+              experience={dummydata.projectRejectedCard.experience}
+            />
+          </div>
+          <div>
+            <RejectProjectCards
+              companyName={dummydata.projectRejectedCard.companyName}
+              role={dummydata.projectRejectedCard.role}
+              projectType={dummydata.projectRejectedCard.projectType}
+              description={dummydata.projectRejectedCard.description}
+              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
+              start={dummydata.projectRejectedCard.start}
+              email={dummydata.projectRejectedCard.email}
+              experience={dummydata.projectRejectedCard.experience}
+            />
+          </div>
         </main>
       </div>
     </div>

@@ -1,12 +1,57 @@
 {
-    "freelancerEarnings": 1000,
-    "sampleInterview" :{
-        "interviewer": "John Doe",
-        "interviewee": "Jane Smith",
-        "skill": "React Development",
-        "interviewDate": "new Date('2023-11-23T10:30:00Z')",
-        "rating": 4.5,
-        "comments": "Great communication skills and technical expertise."
-      }
+  "freelancerEarnings": 1000,
+  "sampleInterview": {
+    "interviewer": "John Doe",
+    "interviewee": "Jane Smith",
+    "skill": "React Development",
+    "interviewDate": "new Date('2023-11-23T10:30:00Z')",
+    "rating": 4.5,
+    "comments": "Great communication skills and technical expertise."
+  },
+  "projectRejectedCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description",
+    "skillsRequired": [
+      "JavaScript",
+      "React",
+      "Node.js"
+    ],
+    "start": "2023-02-15",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectCurrentCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "end": "current",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectCompleteCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "end": "2023-09-24",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectUnderVerificatinCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  }
 }
-
