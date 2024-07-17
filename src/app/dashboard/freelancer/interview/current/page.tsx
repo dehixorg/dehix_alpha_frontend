@@ -183,8 +183,8 @@ export default function CurrentPage() {
               </Card>
             ))}
           </div>
-          </div>
         </div>
       </div>
-      );
+    </div>
+  );
 }
