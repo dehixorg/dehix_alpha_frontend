@@ -171,7 +171,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        className="flex flex-col space-y-1"
+                        className="flex flex-row space-x-4"
                       >
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>

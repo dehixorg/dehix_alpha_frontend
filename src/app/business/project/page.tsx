@@ -10,6 +10,7 @@ import {
   Users2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import ProjectDetailCard from '@/components/business/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import { Spinner } from '@/components/ui/spinner';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -42,6 +44,16 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -78,6 +90,7 @@ export default function Dashboard() {
     },
   ];
   console.log(user);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -137,29 +150,35 @@ export default function Dashboard() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="">
-              <ProjectDetailCard />
-            </div>
-            <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Profiles
-            </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="min-w-[45%] " />
-              <ProjectProfileDetailCard className="min-w-[45%] " />
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen bg-muted/40">
+            <Spinner size="large">Loading...</Spinner>
           </div>
+        ) : (
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+              <div className="">
+                <ProjectDetailCard />
+              </div>
+              <Separator className="my-1" />
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Profiles
+              </h2>
+              <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+                <ProjectProfileDetailCard className="min-w-[45%] " />
+                <ProjectProfileDetailCard className="min-w-[45%] " />
+              </div>
+            </div>
 
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Interviews
-            </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
-          </div>
-        </main>
+            <div className="space-y-6">
+              <CardTitle className="group flex items-center gap-2 text-2xl">
+                Interviews
+              </CardTitle>
+              <InterviewCard {...sampleInterview} />
+              <InterviewCard {...sampleInterview} />
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );

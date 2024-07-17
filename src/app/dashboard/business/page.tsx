@@ -35,6 +35,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Spinner } from '@/components/ui/spinner';
 
 const sampleInterview = {
   interviewer: 'John Doe',
@@ -47,6 +48,16 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
 
   console.log(responseData);
@@ -126,75 +137,83 @@ export default function Dashboard() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {/* Create project card */}
-              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
-                <CardHeader className="pb-3">
-                  <CardTitle>Your Projects</CardTitle>
-                  <CardDescription className="max-w-lg text-balance leading-relaxed">
-                    Introducing Our Dynamic Projects Dashboard for Seamless
-                    Management and Insightful Analysis.
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              <StatCard
-                title="Completed Projects"
-                value={completedProjects.length}
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
-              />
-
-              <StatCard
-                title="Pending Projects"
-                value={pendingProjects.length}
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
-              />
-            </div>
-            <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Current Projects {`(${pendingProjects.length})`}
-            </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects.map((project: any, index: number) => (
-                <ProjectCard
-                  key={index}
-                  className="min-w-[45%]"
-                  project={project}
-                />
-              ))}
-            </div>
-
-            <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Completed Projects {`(${completedProjects.length})`}
-            </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {completedProjects.map((project: any, index: number) => (
-                <ProjectCard
-                  key={index}
-                  className="min-w-[45%]"
-                  project={project}
-                />
-              ))}
-            </div>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen bg-muted/40">
+            <Spinner size="large">Loading...</Spinner>
           </div>
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Interviews
-            </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
-          </div>
-        </main>
+        ) : (
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                {/* Create project card */}
+                <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
+                  <CardHeader className="pb-3">
+                    <CardTitle>Your Projects</CardTitle>
+                    <CardDescription className="max-w-lg text-balance leading-relaxed">
+                      Introducing Our Dynamic Projects Dashboard for Seamless
+                      Management and Insightful Analysis.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button>
+                      <Link href="/business/add-project">
+                        Create New Project
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                <StatCard
+                  title="Completed Projects"
+                  value={completedProjects.length}
+                  icon={<CheckCircle className="h-6 w-6 text-success" />}
+                  additionalInfo="+10% from last month"
+                />
+
+                <StatCard
+                  title="Pending Projects"
+                  value={pendingProjects.length}
+                  icon={<Clock className="h-6 w-6 text-warning" />}
+                  additionalInfo="2 new projects this week"
+                />
+              </div>
+              <Separator className="my-1" />
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Current Projects {`(${pendingProjects.length})`}
+              </h2>
+              <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+                {pendingProjects.map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))}
+              </div>
+
+              <Separator className="my-1" />
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Completed Projects {`(${completedProjects.length})`}
+              </h2>
+              <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+                {completedProjects.map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-6">
+              <CardTitle className="group flex items-center gap-2 text-2xl">
+                Interviews
+              </CardTitle>
+              <InterviewCard {...sampleInterview} />
+              <InterviewCard {...sampleInterview} />
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );

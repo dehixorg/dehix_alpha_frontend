@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { MessageSquare, UserIcon, Search, ListFilter } from 'lucide-react';
@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RootState } from '@/lib/store';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Interview {
   reference: string;
@@ -139,6 +140,16 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
 
 export default function CurrentPage() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
     {
       reference: 'Jane Smith',
@@ -245,48 +256,58 @@ export default function CurrentPage() {
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={filter === 'All'}
-                onSelect={() => setFilter('All')}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Skills'}
-                onSelect={() => setFilter('Skills')}
-              >
-                Skills
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Domain'}
-                onSelect={() => setFilter('Domain')}
-              >
-                Domain
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredInterviews.map((interview, index) => (
-              <InterviewCard
-                key={index}
-                index={index}
-                interview={interview}
-                handleCommentSubmit={handleCommentSubmit}
-              />
-            ))}
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen bg-muted/40">
+            <Spinner size="large">Loading...</Spinner>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-sm"
+                >
+                  <ListFilter className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only">Filter</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'All'}
+                  onSelect={() => setFilter('All')}
+                >
+                  All
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'Skills'}
+                  onSelect={() => setFilter('Skills')}
+                >
+                  Skills
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'Domain'}
+                  onSelect={() => setFilter('Domain')}
+                >
+                  Domain
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredInterviews.map((interview, index) => (
+                <InterviewCard
+                  key={index}
+                  index={index}
+                  interview={interview}
+                  handleCommentSubmit={handleCommentSubmit}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

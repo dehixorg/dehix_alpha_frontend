@@ -41,6 +41,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import dummyData from '@/dummydata.json';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Project {
   _id: string;
@@ -83,6 +84,16 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
@@ -145,97 +156,103 @@ export default function Dashboard() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card
-                className="sm:col-span-2 flex flex-col h-full"
-                x-chunk="dashboard-05-chunk-0"
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">
-                    {dummyData?.freelancerEarnings}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className=" grid gap-4 grid-cols-4">
-                  <div className="col-span-3">
-                    <CardTitle>Total Earnings</CardTitle>
-                    <CardDescription className="max-w-lg text-balance leading-relaxed">
-                      Your total earnings from projects.
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                </CardFooter>
-              </Card>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen bg-muted/40">
+            <Spinner size="large">Loading...</Spinner>
+          </div>
+        ) : (
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                <Card
+                  className="sm:col-span-2 flex flex-col h-full"
+                  x-chunk="dashboard-05-chunk-0"
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-4xl mb-3">
+                      {dummyData?.freelancerEarnings}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardFooter className=" grid gap-4 grid-cols-4">
+                    <div className="col-span-3">
+                      <CardTitle>Total Earnings</CardTitle>
+                      <CardDescription className="max-w-lg text-balance leading-relaxed">
+                        Your total earnings from projects.
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-end justify-end">
+                      <ChevronRight className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  </CardFooter>
+                </Card>
 
-              <StatCard
-                title="Active Projects"
-                value={
-                  projects.filter((project) => project.status === 'Active')
-                    .length
-                }
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
-              />
-              <StatCard
-                title="Pending Projects"
-                value={
-                  projects.filter((project) => project.status === 'Pending')
-                    .length
-                }
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
-              />
-            </div>
-            <Tabs defaultValue="active">
-              <div className="flex items-center">
-                <TabsList>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                </TabsList>
+                <StatCard
+                  title="Active Projects"
+                  value={
+                    projects.filter((project) => project.status === 'Active')
+                      .length
+                  }
+                  icon={<CheckCircle className="h-6 w-6 text-success" />}
+                  additionalInfo="+10% from last month"
+                />
+                <StatCard
+                  title="Pending Projects"
+                  value={
+                    projects.filter((project) => project.status === 'Pending')
+                      .length
+                  }
+                  icon={<Clock className="h-6 w-6 text-warning" />}
+                  additionalInfo="2 new projects this week"
+                />
               </div>
-              <TabsContent value="active">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Active',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="pending">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Pending',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="completed">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Completed',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="rejected">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Rejected',
-                  )}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Interviews
-            </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
-          </div>
-        </main>
+              <Tabs defaultValue="active">
+                <div className="flex items-center">
+                  <TabsList>
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="pending">Pending</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="active">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Active',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="pending">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Pending',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="completed">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Completed',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="rejected">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Rejected',
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+            <div className="space-y-6">
+              <CardTitle className="group flex items-center gap-2 text-2xl">
+                Interviews
+              </CardTitle>
+              <InterviewCard {...sampleInterview} />
+              <InterviewCard {...sampleInterview} />
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );

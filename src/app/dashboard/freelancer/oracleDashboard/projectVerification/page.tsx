@@ -1,7 +1,7 @@
 'use client';
 import { Search, UserIcon, Filter } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -32,12 +32,22 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+import { Spinner } from '@/components/ui/spinner';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the delay
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const [dummyProjectData, setDummyProjectData] = useState([
     {
@@ -210,31 +220,37 @@ export default function ProfessionalInfo() {
           </DialogContent>
         </Dialog>
 
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
-          {filteredData.map((data, index) => (
-            <ProjectVerificationCard
-              key={index}
-              projectName={data.projectName}
-              description={data.description}
-              githubLink={data.githubLink}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
-              reference={data.reference}
-              techUsed={data.techUsed}
-              comments={data.comments}
-              status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) =>
-                updateProjectStatus(index, newStatus)
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(index, newComment)
-              }
-            />
-          ))}
-        </main>
+        {loading ? (
+          <div className="flex items-center justify-center min-h-screen bg-muted/40">
+            <Spinner size="large">Loading...</Spinner>
+          </div>
+        ) : (
+          <main
+            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                    grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+          >
+            {filteredData.map((data, index) => (
+              <ProjectVerificationCard
+                key={index}
+                projectName={data.projectName}
+                description={data.description}
+                githubLink={data.githubLink}
+                startFrom={data.startFrom}
+                endTo={data.endTo}
+                reference={data.reference}
+                techUsed={data.techUsed}
+                comments={data.comments}
+                status={data.status} // Pass the status to the card component
+                onStatusUpdate={(newStatus) =>
+                  updateProjectStatus(index, newStatus)
+                }
+                onCommentUpdate={(newComment) =>
+                  updateCommentStatus(index, newComment)
+                }
+              />
+            ))}
+          </main>
+        )}
       </div>
     </div>
   );
