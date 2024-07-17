@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   DropdownMenu,
@@ -20,7 +19,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { RootState } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Input } from '@/components/ui/input';
@@ -96,7 +94,9 @@ export default function HistoryPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {dummyData.dashboardfreelancerhistoryUserEmail}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
@@ -138,30 +138,30 @@ export default function HistoryPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {filteredInterviews.map((interview, index) => (
-            <Card key={index} className="max-w-full mx-auto md:max-w-lg">
-              <CardHeader>
-                <CardTitle className="flex text-2xl">
-                  {interview.reference}
-                </CardTitle>
-                <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
-                  {interview.skill || interview.domain}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Badge
-                  className={`bg-${
-                    interview.status === 'Pending' ? 'warning' : 'success'
-                  } hover:bg-${
-                    interview.status === 'Pending' ? 'warning' : 'success'
-                  } text-xs`}
-                >
-                  {interview.status.toUpperCase()}
-                </Badge>
-                <p className="text-gray-300 pt-4 text-sm">
-                  {interview.description}
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+            {filteredInterviews.map((interview, index) => (
+              <Card key={index} className="max-w-full mx-auto md:max-w-lg">
+                <CardHeader>
+                  <CardTitle className="flex text-2xl">
+                    {interview.reference}
+                  </CardTitle>
+                  <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
+                    {interview.skill || interview.domain}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Badge
+                    className={`bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } hover:bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } text-xs`}
+                  >
+                    {interview.status.toUpperCase()}
+                  </Badge>
+                  <p className="text-gray-300 pt-4 text-sm">
+                    {interview.description}
+                  </p>
 
                   <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
                     <MessageSquare className="pr-1 mr-1 h-5 w-5" />

@@ -1,15 +1,10 @@
 'use client';
-import React from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { MessageSquare, UserIcon, Search, ListFilter } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from 'react';
+import { MessageSquare, ListFilter } from 'lucide-react';
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
-  DropdownMenuItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -23,14 +18,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/interviewMenuItems';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import dummyData from '@/dummydata.json';
