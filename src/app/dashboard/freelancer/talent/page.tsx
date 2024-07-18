@@ -8,7 +8,6 @@ import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { axiosInstance } from '@/lib/axiosinstance';
-import ProjectCard from '@/components/cards/freelancerProjectCard';
 import SkillDomainForm from '@/components/dash-comp/talentForm/skilldomainForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -64,16 +63,11 @@ export default function Projects() {
           <DropdownProfile />
         </header>
         <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+          className="ml-5"
         >
-          {projects.map((project: any, index: number) => (
-            <ProjectCard key={index} {...project} />
-          ))}
+                    <SkillDomainForm />
+
         </main>
-        <div className="ml-5">
-          <SkillDomainForm />
-        </div>
       </div>
     </div>
   );

@@ -142,8 +142,8 @@ export default function Dashboard() {
           <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 pb-2">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2 min-w-2">
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 pt-2 pb-2 ml-1 md:gap-4">
               <div className="col-span-1 pb-1.2">
                 <CustomCard
                   heading={dummyData.dashboardactiveProject.heading}
@@ -151,13 +151,13 @@ export default function Dashboard() {
                   content={dummyData.dashboardactiveProject.content}
                 />
               </div>
-              <div className="col-span-1 ">
+              <div className="col-span-1">
                 <CardWithForm
                   title={dummyData.dashboardpendingProject.title}
                   itemCounts={dummyData.dashboardpendingProject.itemCounts}
                 />
               </div>
-              <div className="col-span-1 ">
+              <div className="col-span-1">
                 <CustomCard
                   heading={dummyData.dashboardtotalRevenue.heading}
                   icon={CircleDollarSign}
@@ -441,7 +441,7 @@ export default function Dashboard() {
               </TabsContent>
             </Tabs>
           </div>
-          <div>
+          <div className="">
             <Card className="overflow-hidden" x-chunk="dashboard-05-chunk-4">
               <CardHeader className="flex flex-row items-start bg-muted/50">
                 <div className="grid gap-0.5">

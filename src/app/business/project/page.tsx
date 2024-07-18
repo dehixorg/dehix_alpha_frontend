@@ -110,8 +110,8 @@ export default function Dashboard() {
               Profiles
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="min-w-[45%] " />
-              <ProjectProfileDetailCard className="min-w-[45%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
             </div>
           </div>
 
