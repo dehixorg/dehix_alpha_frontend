@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { MessageSquare, Search, ListFilter } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PackageOpen } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -256,7 +257,7 @@ export default function CurrentPage() {
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredInterviews.map((interview, index) => (
               <InterviewCard
                 key={index}
@@ -265,6 +266,10 @@ export default function CurrentPage() {
                 handleCommentSubmit={handleCommentSubmit}
               />
             ))}
+          </div>  */}
+          <div className="text-center py-10 w-[90vw] mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No Inverview Scheduled for you.</p>
           </div>
         </div>
       </div>
