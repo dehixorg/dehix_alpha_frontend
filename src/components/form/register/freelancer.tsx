@@ -1,21 +1,54 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { LoaderCircle, Rocket } from 'lucide-react';
+import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
+import { UserCredential } from 'firebase/auth';
+import { useDispatch } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/shared/datePicker';
-import { axiosInstance } from '@/lib/axiosinstance';
+import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import { loginUser } from '@/lib/utils';
+import { setUser } from '@/lib/userSlice';
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleLogin = async (email: string, pass: string): Promise<void> => {
+    try {
+      const userCredential: UserCredential = await loginUser(email, pass);
+      const user = userCredential.user;
+
+      // Get the ID token
+      const accessToken = await user.getIdToken();
+      console.log('Bearer ' + accessToken);
+      initializeAxiosWithToken(accessToken);
+      const claims = await user.getIdTokenResult();
+      console.log('Type:', claims.claims.type);
+      console.log('User ID ' + userCredential.user.uid);
+      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
+      console.log(userCredential.user);
+      router.replace(`/dashboard/${claims.claims.type}`);
+    } catch (error: any) {
+      // Optionally handle error based on its type
+      setIsLoading(false);
+      console.error(error.message);
+      return error.message;
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -44,19 +77,14 @@ export default function FreelancerRegisterForm() {
         document.getElementById('workExperience') as HTMLInputElement
       ).value,
       connects: 0,
-      professionalInfo: [],
+      professionalInfo: {},
       skills: [],
-      education: [],
+      education: {},
       role: 'freelancer',
       projects: {},
       isFreelancer: true,
-      refer: {
-        name: 'string',
-        contact: 'string',
-      },
-      consultant: {
-        status: 'notApplied',
-      },
+      refer: { name: 'string', contact: 'string' },
+      consultant: { status: 'notApplied' },
       pendingProject: [],
       rejectedProject: [],
       acceptedProject: [],
@@ -68,11 +96,9 @@ export default function FreelancerRegisterForm() {
 
     try {
       await axiosInstance.post('/register/freelancer', formData);
-      toast({
-        title: 'Account created successfully!',
-      });
+      toast({ title: 'Account created successfully!' });
+      handleLogin(formData.email, formData.password);
       formRef.current?.reset();
-      router.replace('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
@@ -158,7 +184,24 @@ export default function FreelancerRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-0 px-3 flex items-center"
+            >
+              {showPassword ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4 mt-3">
           <div className="grid gap-2">

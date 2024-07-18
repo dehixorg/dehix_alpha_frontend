@@ -31,6 +31,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -38,45 +39,10 @@ type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
-  // Example data with different statuses
-  const [dummyEducationData, setDummyEducationData] = useState([
-    {
-      type: "Bachelor's Degree",
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2018-09-01',
-      endTo: '2022-06-15',
-      grade: 'A',
-      referencePersonName: 'Dr. John Doe',
-      degreeNumber: '123456789',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      type: "Master's Degree",
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2022-09-01',
-      endTo: '2024-06-15',
-      grade: 'A+',
-      referencePersonName: 'Dr. Jane Smith',
-      degreeNumber: '987654321',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      type: 'Ph.D.',
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2024-09-01',
-      endTo: '2028-06-15',
-      grade: 'A+',
-      referencePersonName: 'Dr. Emily Johnson',
-      degreeNumber: '456789123',
-      comments: '',
-      status: 'pending',
-    },
-  ]);
+  // Initialize state with education data from dummydata.json
+  const [dummyEducationData, setDummyEducationData] = useState(
+    dummyData.dashboardFreelancerOracleEducation,
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,13 +65,13 @@ export default function ProfessionalInfo() {
   const updateEducationStatus = (index: number, newStatus: string) => {
     const updatedData = [...dummyEducationData];
     updatedData[index].status = newStatus;
-    setDummyEducationData(updatedData); // Assuming you set this in state
+    setDummyEducationData(updatedData); // Update state with new status
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
     const updatedData = [...dummyEducationData];
     updatedData[index].comments = newComment;
-    setDummyEducationData(updatedData);
+    setDummyEducationData(updatedData); // Update state with new comment
   };
 
   return (
@@ -118,7 +84,8 @@ export default function ProfessionalInfo() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Education Verification"
           />
           <Breadcrumb

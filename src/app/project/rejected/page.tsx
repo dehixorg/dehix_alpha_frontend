@@ -24,6 +24,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import RejectProjectCards from '@/components/freelancer/rejectProject/rejectProjectCard';
+import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;
@@ -82,7 +84,8 @@ export default function RejectedProject() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Rejected Verification"
           />
           <Breadcrumb
@@ -137,6 +140,30 @@ export default function RejectedProject() {
           {projects.map((project, index: number) => (
             <ProjectCard key={index} project={project} />
           ))}
+          <div>
+            <RejectProjectCards
+              companyName={dummydata.projectRejectedCard.companyName}
+              role={dummydata.projectRejectedCard.role}
+              projectType={dummydata.projectRejectedCard.projectType}
+              description={dummydata.projectRejectedCard.description}
+              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
+              start={dummydata.projectRejectedCard.start}
+              email={dummydata.projectRejectedCard.email}
+              experience={dummydata.projectRejectedCard.experience}
+            />
+          </div>
+          <div>
+            <RejectProjectCards
+              companyName={dummydata.projectRejectedCard.companyName}
+              role={dummydata.projectRejectedCard.role}
+              projectType={dummydata.projectRejectedCard.projectType}
+              description={dummydata.projectRejectedCard.description}
+              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
+              start={dummydata.projectRejectedCard.start}
+              email={dummydata.projectRejectedCard.email}
+              experience={dummydata.projectRejectedCard.experience}
+            />
+          </div>
         </main>
       </div>
     </div>
