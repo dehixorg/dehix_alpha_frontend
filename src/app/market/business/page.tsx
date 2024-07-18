@@ -14,15 +14,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import dummyData from '@/dummydata.json';
@@ -91,30 +83,7 @@ const Market: React.FC = () => {
                 className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/user.png" alt="@shadcn" />
-                    <AvatarFallback>
-                      <UserIcon size={16} />{' '}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>user</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownProfile />
           </header>
         </div>
         <div className="flex flex-col lg:flex-row lg:space-x-10 ml-6">

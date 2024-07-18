@@ -32,6 +32,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
@@ -113,30 +114,7 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

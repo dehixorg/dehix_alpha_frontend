@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
-import { LoaderCircle, Chrome, Key } from 'lucide-react';
+import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
@@ -23,6 +23,7 @@ export default function Login() {
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -54,6 +55,10 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
@@ -93,13 +98,25 @@ export default function Login() {
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={pass}
-                  onChange={(e) => setPass(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    onChange={(e) => setPass(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleShowPassword}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

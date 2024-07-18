@@ -26,6 +26,7 @@ import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -117,32 +118,8 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
-
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>

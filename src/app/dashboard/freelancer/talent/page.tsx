@@ -1,18 +1,8 @@
 'use client';
-import { Search, UserIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -21,6 +11,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import SkillDomainForm from '@/components/dash-comp/talentForm/skilldomainForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -70,30 +61,7 @@ export default function Projects() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
