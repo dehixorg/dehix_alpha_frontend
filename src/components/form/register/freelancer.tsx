@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { LoaderCircle, Rocket } from 'lucide-react';
+import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
 
@@ -14,8 +14,13 @@ import { toast } from '@/components/ui/use-toast';
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -50,13 +55,8 @@ export default function FreelancerRegisterForm() {
       role: 'freelancer',
       projects: {},
       isFreelancer: true,
-      refer: {
-        name: 'string',
-        contact: 'string',
-      },
-      consultant: {
-        status: 'notApplied',
-      },
+      refer: { name: 'string', contact: 'string' },
+      consultant: { status: 'notApplied' },
       pendingProject: [],
       rejectedProject: [],
       acceptedProject: [],
@@ -68,9 +68,7 @@ export default function FreelancerRegisterForm() {
 
     try {
       await axiosInstance.post('/register/freelancer', formData);
-      toast({
-        title: 'Account created successfully!',
-      });
+      toast({ title: 'Account created successfully!' });
       formRef.current?.reset();
       router.replace('/auth/login');
     } catch (error: any) {
@@ -158,7 +156,24 @@ export default function FreelancerRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-0 px-3 flex items-center"
+            >
+              {showPassword ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4 mt-3">
           <div className="grid gap-2">

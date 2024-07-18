@@ -329,7 +329,51 @@
     { "username": "Alex004", "bitAmount": 100 },
     { "username": "User2", "bitAmount": 150 },
     { "username": "alen789", "bitAmount": 200 }
-  ]
-  
-
+  ],
+  "projectRejectedCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description",
+    "skillsRequired": [
+      "JavaScript",
+      "React",
+      "Node.js"
+    ],
+    "start": "2023-02-15",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectCurrentCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "end": "current",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectCompleteCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "end": "2023-09-24",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  },
+  "projectUnderVerificatinCard": {
+    "companyName": "ABC Corporation",
+    "role": "Software Engineer",
+    "projectType": "Web Development",
+    "description": "This is a sample project description for a current ongoing project.",
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
+    "start": "2023-02-15",
+    "email": "john.doe@example.com",
+    "experience": "5+ years"
+  }
 }

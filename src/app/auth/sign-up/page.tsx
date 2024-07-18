@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { LoaderCircle, Chrome, Rocket } from 'lucide-react';
+import { LoaderCircle, Chrome, Rocket, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { ThemeToggle } from '@/components/shared/themeToggle';
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -21,6 +22,11 @@ export default function SignUp() {
       setIsLoading(false);
     }, 3000);
   }
+
+  const toggleShowPassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-screen">
       <div className="absolute left-10 top-10">
@@ -57,7 +63,25 @@ export default function SignUp() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="********"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleShowPassword}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
