@@ -12,6 +12,7 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import EducationInfoCard from '@/components/cards/freelancerProfile/eductaionInfoCard';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
@@ -83,6 +84,7 @@ export default function Education() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
+            <DropdownProfile />
           </div>
         </header>
 

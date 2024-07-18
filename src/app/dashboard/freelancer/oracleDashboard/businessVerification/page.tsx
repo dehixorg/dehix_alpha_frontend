@@ -1,18 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter, PackageOpen } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -22,22 +12,20 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import dummyData from '@/dummydata.json'; // Import your JSON data here
-import { PackageOpen } from 'lucide-react';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
   const [dummyBusinessData, setDummyBusinessData] = useState(
     dummyData.dashboardFreelancerOracleBusiness,
   ); // Initialize with data from JSON
@@ -58,7 +46,7 @@ export default function ProfessionalInfo() {
       data.status === filter ||
       (filter === 'current' && data.status === 'pending')
     );
-  }); 
+  });
 
   const updateBusinessStatus = (index: number, newStatus: string) => {
     const updatedData = [...dummyBusinessData];
@@ -115,30 +103,7 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
@@ -204,7 +169,9 @@ export default function ProfessionalInfo() {
           ))} */}
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No Business verification for you now.</p>
+            <p className="text-gray-500">
+              No Business verification for you now.
+            </p>
           </div>
         </main>
       </div>

@@ -39,7 +39,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/dashboard/freelancer/interview',
+    href: '/dashboard/freelancer/interview/profile',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },

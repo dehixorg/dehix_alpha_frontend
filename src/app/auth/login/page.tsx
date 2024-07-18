@@ -1,12 +1,12 @@
 'use client';
-
-import Image from 'next/image';
-import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
-import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
+import { UserCredential } from 'firebase/auth';
+import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import Cookies from 'js-cookie';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,11 +22,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       const userCredential: UserCredential = await loginUser(email, pass);
@@ -34,19 +36,24 @@ export default function Login() {
 
       // Get the ID token
       const accessToken = await user.getIdToken();
-      console.log('Bearer ' + accessToken);
       initializeAxiosWithToken(accessToken);
       const claims = await user.getIdTokenResult();
-      console.log('Type:', claims.claims.type);
-      console.log('User ID ' + userCredential.user.uid);
-      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
-      console.log(userCredential.user);
-      router.replace(`/dashboard/${claims.claims.type}`);
+      const userType = claims.claims.type as string;
+
+      // Log userType for debugging
+      console.log('User Type to be stored in cookie:', userType);
+
+      // Storing user type and token in cookies
+      Cookies.set('userType', userType, { expires: 1, path: '/' });
+      Cookies.set('token', accessToken, { expires: 1, path: '/' });
+
+      dispatch(setUser({ ...user, type: userType }));
+      router.replace(`/dashboard/${userType}`);
     } catch (error: any) {
-      // Optionally handle error based on its type
-      setIsLoading(false);
+      setError(error.message);
       console.error(error.message);
-      return error.message;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,6 +74,7 @@ export default function Login() {
               Enter your email below to login to your account
             </p>
           </div>
+          {error && <p className="text-red-500">{error}</p>}
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="grid gap-2">
@@ -75,6 +83,7 @@ export default function Login() {
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
