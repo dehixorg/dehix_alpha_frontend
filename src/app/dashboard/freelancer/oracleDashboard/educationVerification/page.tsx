@@ -1,5 +1,5 @@
 'use client';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, PackageOpen } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
-import { PackageOpen } from 'lucide-react';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -172,7 +171,9 @@ export default function ProfessionalInfo() {
           ))} */}
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No Education verification for you now.</p>
+            <p className="text-gray-500">
+              No Education verification for you now.
+            </p>
           </div>
         </main>
       </div>

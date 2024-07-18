@@ -2,9 +2,8 @@
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { MessageSquare, Search, ListFilter } from 'lucide-react';
+import { MessageSquare, Search, ListFilter, PackageOpen } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PackageOpen } from 'lucide-react';
 
 import {
   DropdownMenu,

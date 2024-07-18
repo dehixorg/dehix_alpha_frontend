@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, PackageOpen } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import dummyData from '@/dummydata.json'; // Import your JSON data here
-import { PackageOpen } from 'lucide-react';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
@@ -47,7 +46,7 @@ export default function ProfessionalInfo() {
       data.status === filter ||
       (filter === 'current' && data.status === 'pending')
     );
-  }); 
+  });
 
   const updateBusinessStatus = (index: number, newStatus: string) => {
     const updatedData = [...dummyBusinessData];
@@ -170,7 +169,9 @@ export default function ProfessionalInfo() {
           ))} */}
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No Business verification for you now.</p>
+            <p className="text-gray-500">
+              No Business verification for you now.
+            </p>
           </div>
         </main>
       </div>

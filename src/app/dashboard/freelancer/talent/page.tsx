@@ -62,11 +62,8 @@ export default function Projects() {
           </div>
           <DropdownProfile />
         </header>
-        <main
-          className="ml-5"
-        >
-                    <SkillDomainForm />
-
+        <main className="ml-5">
+          <SkillDomainForm />
         </main>
       </div>
     </div>

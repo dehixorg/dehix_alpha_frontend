@@ -1,8 +1,13 @@
 'use client';
-import { CheckCircle, ChevronRight, Clock, Search } from 'lucide-react';
+import {
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Search,
+  PackageOpen,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { PackageOpen } from 'lucide-react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
@@ -112,9 +117,7 @@ export default function Dashboard() {
                 x-chunk="dashboard-05-chunk-0"
               >
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">
-                    0
-                  </CardTitle>
+                  <CardTitle className="text-4xl mb-3">0</CardTitle>
                 </CardHeader>
                 <CardFooter className=" grid gap-4 grid-cols-4">
                   <div className="col-span-3">
@@ -192,9 +195,9 @@ export default function Dashboard() {
               Interviews
             </CardTitle>
             <div className="text-center py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No interviews scheduled</p>
-          </div>
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">No interviews scheduled</p>
+            </div>
             {/* <InterviewCard
               interviewer={dummyData.freelancersampleInterview.interviewer}
               interviewee={dummyData.freelancersampleInterview.interviewee}

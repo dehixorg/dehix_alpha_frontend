@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, MessageSquare, Search } from 'lucide-react';
-import { PackageOpen } from 'lucide-react';
+import { ListFilter, MessageSquare, Search, PackageOpen } from 'lucide-react';
 
 import {
   DropdownMenu,
