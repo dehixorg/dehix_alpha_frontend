@@ -1,7 +1,9 @@
 'use client';
 import React from 'react';
 import { Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -98,6 +100,11 @@ const ActiveProjectCards: React.FC<ProjectProps> = ({
           {end && end !== 'current'
             ? new Date(end).toLocaleDateString()
             : end || 'N/A'}
+        </div>
+        <div className="mt-2">
+          <Button>
+            <Link href="/project/applied/applidPage">view more</Link>
+          </Button>
         </div>
       </CardFooter>
     </Card>

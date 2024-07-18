@@ -55,6 +55,8 @@ interface DomainData {
 
 const levels = ['Mastery', 'Proficient', 'Beginner'];
 const defaultStatus = 'Pending';
+const MIN_EXPERIENCE = 0;
+const MAX_EXPERIENCE = 60;
 
 export default function ProfilePage() {
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -65,6 +67,7 @@ export default function ProfilePage() {
   const [level, setLevel] = useState<string>('');
   const [skillData, setSkillData] = useState<SkillData[]>([]);
   const [domainData, setDomainData] = useState<DomainData[]>([]);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchData() {
@@ -83,10 +86,27 @@ export default function ProfilePage() {
   }, []);
 
   const handleExperienceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setExperience(e.target.value);
+    const value = e.target.value;
+    setExperience(value);
+
+    const numericValue = parseFloat(value);
+    if (numericValue < MIN_EXPERIENCE || numericValue > MAX_EXPERIENCE) {
+      setError('Experience should be between 0 and 60 years.');
+    } else {
+      setError('');
+    }
   };
 
   const handleSubmitSkill = () => {
+    const numericExperience = parseFloat(experience);
+    if (
+      numericExperience < MIN_EXPERIENCE ||
+      numericExperience > MAX_EXPERIENCE
+    ) {
+      setError('Experience should be between 0 and 60 years.');
+      return;
+    }
+
     setSkillData([
       ...skillData,
       { skill: selectedSkill, experience, level, status: defaultStatus },
@@ -94,9 +114,19 @@ export default function ProfilePage() {
     setSelectedSkill('');
     setExperience('');
     setLevel('');
+    setError('');
   };
 
   const handleSubmitDomain = () => {
+    const numericExperience = parseFloat(experience);
+    if (
+      numericExperience < MIN_EXPERIENCE ||
+      numericExperience > MAX_EXPERIENCE
+    ) {
+      setError('Experience should be between 0 and 60 years.');
+      return;
+    }
+
     setDomainData([
       ...domainData,
       { domain: selectedDomain, experience, level, status: defaultStatus },
@@ -104,6 +134,7 @@ export default function ProfilePage() {
     setSelectedDomain('');
     setExperience('');
     setLevel('');
+    setError('');
   };
 
   return (
@@ -163,6 +194,7 @@ export default function ProfilePage() {
                 onChange={handleExperienceChange}
                 className="border p-2 rounded mt-2 w-full"
               />
+              {error && <p className="text-red-500">{error}</p>}
               <DialogFooter>
                 <Button onClick={handleSubmitSkill}>Submit</Button>
               </DialogFooter>
@@ -241,6 +273,7 @@ export default function ProfilePage() {
                 onChange={handleExperienceChange}
                 className="border p-2 rounded mt-2 w-full"
               />
+              {error && <p className="text-red-500">{error}</p>}
               <DialogFooter>
                 <Button onClick={handleSubmitDomain}>Submit</Button>
               </DialogFooter>

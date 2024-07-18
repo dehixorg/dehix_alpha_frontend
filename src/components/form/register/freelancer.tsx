@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { z, ZodError } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
@@ -16,9 +17,22 @@ import { toast } from '@/components/ui/use-toast';
 import { loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 
+// Define Zod schema for password validation
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters long');
+const workExperienceSchema = z
+  .number()
+  .min(0, 'Work experience must be at least 0 years')
+  .max(60, 'Work experience must not exceed 60 years');
+
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [workExperience, setWorkExperience] = useState<number | string>('');
+  const [workExperienceError, setWorkExperienceError] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -42,12 +56,30 @@ export default function FreelancerRegisterForm() {
       // Optionally handle error based on its type
       setIsLoading(false);
       console.error(error.message);
-      return error.message;
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: `Error: ${error.message}`,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
     }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError(''); // Clear the error message as user types
+  };
+  const handleWorkExperienceChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const value = e.target.value;
+    setWorkExperience(value);
+    setWorkExperienceError(''); // Clear the error message as user types
   };
 
   async function onSubmit(event: React.SyntheticEvent) {
@@ -95,18 +127,29 @@ export default function FreelancerRegisterForm() {
     };
 
     try {
+      // Validate password using Zod schema
+      passwordSchema.parse(password);
+      workExperienceSchema.parse(Number(workExperience));
+
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();
     } catch (error: any) {
-      console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message);
+      } else if (error.errors[0].path.includes('workExperience')) {
+        setWorkExperienceError(error.errors[0].message);
+      } else {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -188,6 +231,8 @@ export default function FreelancerRegisterForm() {
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePasswordChange}
               required
             />
             <button
@@ -202,6 +247,9 @@ export default function FreelancerRegisterForm() {
               )}
             </button>
           </div>
+          {passwordError && (
+            <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-4 mt-3">
           <div className="grid gap-2">
@@ -214,14 +262,20 @@ export default function FreelancerRegisterForm() {
               id="workExperience"
               type="number"
               placeholder="0"
+              value={workExperience}
+              onChange={handleWorkExperienceChange}
               required
               min="0"
+              max="60"
             />
+            {workExperienceError && (
+              <p className="text-red-500 text-xs mt-1">{workExperienceError}</p>
+            )}
           </div>
         </div>
         <Button
           type="submit"
-          className="w-full bg-primary text-black "
+          className="w-full bg-primary text-black"
           disabled={isLoading}
         >
           {isLoading ? (

@@ -6,8 +6,18 @@ import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
+import { z, ZodError } from 'zod';
 
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
@@ -15,9 +25,16 @@ import { toast } from '@/components/ui/use-toast';
 import { loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 
+// Define Zod schema for password validation
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters long');
+
 export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -29,24 +46,24 @@ export default function BusinessRegisterForm() {
 
       // Get the ID token
       const accessToken = await user.getIdToken();
-      console.log('Bearer ' + accessToken);
       initializeAxiosWithToken(accessToken);
       const claims = await user.getIdTokenResult();
-      console.log('Type:', claims.claims.type);
-      console.log('User ID ' + userCredential.user.uid);
       dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
-      console.log(userCredential.user);
       router.replace(`/dashboard/${claims.claims.type}`);
     } catch (error: any) {
-      // Optionally handle error based on its type
       setIsLoading(false);
       console.error(error.message);
-      return error.message;
     }
   };
 
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError(''); // Clear the error message as user types
   };
 
   async function onSubmit(event: React.SyntheticEvent) {
@@ -83,6 +100,9 @@ export default function BusinessRegisterForm() {
     };
 
     try {
+      // Validate password using Zod schema
+      passwordSchema.parse(password);
+
       await axiosInstance.post('/register/business', formData);
       toast({
         title: 'Account created successfully!',
@@ -91,13 +111,18 @@ export default function BusinessRegisterForm() {
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();
     } catch (error: any) {
-      console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message);
+      } else {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +147,21 @@ export default function BusinessRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="company-size">Company Size</Label>
-          <Input id="company-size" placeholder="50-100" required />
+          <Select>
+            <SelectTrigger id="company-size" className="w-auto">
+              <SelectValue placeholder="Select a Company Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel> Company Size</SelectLabel>
+                <SelectItem value="0-20">0-20</SelectItem>
+                <SelectItem value="20-50">20-50</SelectItem>
+                <SelectItem value="50-100">50-100</SelectItem>
+                <SelectItem value="100-500">100-500</SelectItem>
+                <SelectItem value="500+">500 +</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="position">Position</Label>
@@ -165,6 +204,8 @@ export default function BusinessRegisterForm() {
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePasswordChange}
               required
             />
             <button
@@ -179,6 +220,9 @@ export default function BusinessRegisterForm() {
               )}
             </button>
           </div>
+          {passwordError && (
+            <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+          )}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (

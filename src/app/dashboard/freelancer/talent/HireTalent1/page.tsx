@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 // eslint-disable-next-line import/order
-import React from 'react'; // Import 'react' first
+import React, { useState } from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
@@ -60,9 +60,12 @@ import {
 // Menu components
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-new Date('2023-11-23T10:30:00Z');
+
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [experience, setExperience] = useState<number | ''>('');
+  const [experienceError, setExperienceError] = useState<string | null>(null);
 
   const menuItemsTop: MenuItem[] = [
     {
@@ -105,6 +108,27 @@ export default function Dashboard() {
     },
   ];
 
+  const handleExperienceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numericValue = value === '' ? '' : Number(value);
+    setExperience(numericValue);
+
+    // Clear error message if input is valid
+    if (numericValue === '' || (numericValue >= 0 && numericValue <= 60)) {
+      setExperienceError(null);
+    }
+  };
+
+  const handleExperienceBlur = () => {
+    if (experience === '' || experience < 0) {
+      setExperienceError('Experience must be at least 0 years');
+    } else if (experience > 60) {
+      setExperienceError('Experience must be at most 60 years');
+    } else {
+      setExperienceError(null);
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -114,14 +138,12 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* CollapsibleSidebarMenu component */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             active="Projects"
           />
 
-          {/* Breadcrumb component */}
           <Breadcrumb
             items={[
               { label: 'Business', link: '/dashboard/business' },
@@ -129,7 +151,6 @@ export default function Dashboard() {
             ]}
           />
 
-          {/* Search and Input components */}
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -139,7 +160,6 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* DropdownMenu component */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -173,7 +193,6 @@ export default function Dashboard() {
               Dehix Hire Talent
             </h2>
 
-            {/* Dialog component */}
             <div className="mb-4 mt-3">
               <h2 className="text-xl font-semibold">Talent</h2>
 
@@ -239,16 +258,25 @@ export default function Dashboard() {
                     <input
                       type="number"
                       id="experience"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      value={experience}
+                      onChange={handleExperienceChange}
+                      onBlur={handleExperienceBlur}
+                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+                        experienceError ? 'border-red-500' : ''
+                      }`}
                       placeholder="Years of experience"
                     />
+                    {experienceError && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {experienceError}
+                      </p>
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
           </div>
 
-          {/* DropdownMenu component */}
           <div className="absolute right-0 px-8">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

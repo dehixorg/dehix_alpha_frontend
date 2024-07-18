@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { LoaderCircle, Chrome, Rocket, Eye, EyeOff } from 'lucide-react';
+import { z, ZodError } from 'zod'; // Import Zod for validation
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,18 +14,52 @@ import { ThemeToggle } from '@/components/shared/themeToggle';
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string>('');
 
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
+  // Define Zod schema for password validation
+  const passwordSchema = z
+    .string()
+    .min(8, 'Password must be at least 8 characters long');
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); // Ensure event is of type React.FormEvent<HTMLFormElement>
     setIsLoading(true);
 
-    setTimeout(() => {
+    const formData = new FormData(event.currentTarget); // Access form data correctly
+    const firstName = formData.get('first-name') as string;
+    const lastName = formData.get('last-name') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      // Validate password using Zod schema
+      passwordSchema.parse(password);
+
+      // Simulate API request
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log(
+          `Submitted data: ${firstName}, ${lastName}, ${email}, ${password}`,
+        );
+      }, 3000);
+    } catch (error: any) {
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message);
+      } else {
+        console.error(error.message);
+      }
       setIsLoading(false);
-    }, 3000);
+    }
   }
 
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordError(''); // Clear the error message as user types
   };
 
   return (
@@ -45,17 +80,28 @@ export default function SignUp() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" placeholder="Max" required />
+                  <Input
+                    id="first-name"
+                    name="first-name"
+                    placeholder="Max"
+                    required
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" placeholder="Robinson" required />
+                  <Input
+                    id="last-name"
+                    name="last-name"
+                    placeholder="Robinson"
+                    required
+                  />
                 </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -66,9 +112,11 @@ export default function SignUp() {
                 <div className="relative">
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="********"
                     required
+                    onChange={handlePasswordChange} // Attach handler
                   />
                   <button
                     type="button"
@@ -82,6 +130,9 @@ export default function SignUp() {
                     )}
                   </button>
                 </div>
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
