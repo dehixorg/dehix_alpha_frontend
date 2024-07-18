@@ -39,47 +39,55 @@ export default function HistoryPage() {
 
   return (
     <>
-      <Breadcrumb
-        items={[
-          {
-            label: 'Interview',
-            link: '/dashboard/freelancer/interview/profile',
-          },
-          { label: 'History', link: '#' },
-        ]}
-      />
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
-        <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={filter === 'All'}
-                onSelect={() => setFilter('All')}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Skills'}
-                onSelect={() => setFilter('Skills')}
-              >
-                Skills
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={filter === 'Domain'}
-                onSelect={() => setFilter('Domain')}
-              >
-                Domain
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex flex-1 flex-col items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-4 lg:flex-row lg:flex-wrap xl:flex-row xl:flex-wrap pt-2 pl-4 sm:pt-4 sm:pl-1 sm:-ml-10 md:pt-6 md:pl-0 md:-ml-16 lg:px-12">
+          <div className="w-full">
+            <Breadcrumb
+              items={[
+                {
+                  label: 'Interview',
+                  link: '/dashboard/freelancer/interview/profile',
+                },
+                { label: 'History', link: '#' },
+              ]}
+            />
+          </div>
+          <div className="lg:w-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-sm"
+                >
+                  <ListFilter className="h-3.5 w-3.5" />
+                  <span className="sr-only sm:not-sr-only">Filter</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'All'}
+                  onSelect={() => setFilter('All')}
+                >
+                  All
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'Skills'}
+                  onSelect={() => setFilter('Skills')}
+                >
+                  Skills
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={filter === 'Domain'}
+                  onSelect={() => setFilter('Domain')}
+                >
+                  Domain
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredInterviews.map((interview, index) => (

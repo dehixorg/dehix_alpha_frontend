@@ -1,20 +1,21 @@
 'use client';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { MessageSquare, ListFilter, Search, UserIcon } from 'lucide-react';
+// import { useSelector } from 'react-redux';
+import { MessageSquare, ListFilter } from 'lucide-react';
+// import { Search, UserIcon } from 'lucide-react';
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuItem,
+  // DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { RootState } from '@/lib/store';
+// import { Input } from '@/components/ui/input';
+// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+// import { RootState } from '@/lib/store';
 import {
   Card,
   CardContent,
@@ -44,7 +45,7 @@ const sampleInterviews = dummyData.dashboardfreelancercurrentInterview.map(
 
 export default function CurrentPage() {
   const [filter, setFilter] = useState('All');
-  const user = useSelector((state: RootState) => state.user);
+  // const user = useSelector((state: RootState) => state.user);
 
   const filteredInterviews = sampleInterviews.filter((interview) => {
     if (filter === 'All') return true;
@@ -78,38 +79,6 @@ export default function CurrentPage() {
                 { label: 'Current Interview', link: '#' },
               ]}
             />
-          </div>
-          <div className="relative flex items-center gap-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/user.png" alt="@shadcn" />
-                    <AvatarFallback>
-                      <UserIcon size={16} />{' '}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
