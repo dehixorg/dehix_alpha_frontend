@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
+import { ListFilter, MessageSquare } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -18,14 +18,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { Input } from '@/components/ui/input';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -46,7 +38,7 @@ export default function HistoryPage() {
   });
 
   return (
-    <div>
+    <>
       <Breadcrumb
         items={[
           {
@@ -57,58 +49,6 @@ export default function HistoryPage() {
         ]}
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
-          <div className="flex items-center ml-2 gap-4">
-            <CollapsibleSidebarMenu
-              menuItems={menuItemsTop}
-              active="Dashboard"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                {
-                  label: 'Interview',
-                  link: '/dashboard/freelancer/interview/profile',
-                },
-                { label: 'History Interviews', link: '#' },
-              ]}
-            />
-          </div>
-          <div className="relative flex items-center gap-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/user.png" alt="@shadcn" />
-                    <AvatarFallback>
-                      <UserIcon size={16} />{' '}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  {dummyData.dashboardfreelancerhistoryUserEmail}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -165,28 +105,29 @@ export default function HistoryPage() {
                   <p className="text-gray-300 pt-4 text-sm">
                     {interview.description}
                   </p>
-                <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-                  <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-                  {interview.comments}
-                </p>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    Reference: {interview.reference}
+                  <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
+                    <MessageSquare className="pr-1 mr-1 h-5 w-5" />
+                    {interview.comments}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Contact: {interview.contact}
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      Reference: {interview.reference}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Contact: {interview.contact}
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex">
+                  <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+                    {new Date(interview.interviewDate).toLocaleDateString()}
                   </p>
-                </div>
-              </CardContent>
-              <CardFooter className="flex">
-                <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-                  {new Date(interview.interviewDate).toLocaleDateString()}
-                </p>
-              </CardFooter>
-            </Card>
-          ))}
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
