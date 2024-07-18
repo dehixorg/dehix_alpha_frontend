@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   DropdownMenu,
@@ -20,7 +19,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { RootState } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Input } from '@/components/ui/input';
@@ -32,33 +30,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import dummyData from '@/dummydata.json';
 
 export default function HistoryPage() {
-  const user = useSelector((state: RootState) => state.user);
-  const sampleInterviews = [
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Jane Smith',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ];
+  const sampleInterviews = dummyData.dashboardfreelancerhistoryInterview; // Replace with your actual data path from dummyData
 
   const [filter, setFilter] = useState('All');
 
@@ -119,7 +94,9 @@ export default function HistoryPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {dummyData.dashboardfreelancerhistoryUserEmail}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
@@ -161,7 +138,7 @@ export default function HistoryPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredInterviews.map((interview, index) => (
               <Card key={index} className="max-w-full mx-auto md:max-w-lg">
                 <CardHeader>
@@ -174,7 +151,11 @@ export default function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <Badge
-                    className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'} text-xs`}
+                    className={`bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } hover:bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } text-xs`}
                   >
                     {interview.status.toUpperCase()}
                   </Badge>
