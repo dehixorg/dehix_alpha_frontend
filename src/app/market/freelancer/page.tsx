@@ -138,7 +138,9 @@ const Market: React.FC = () => {
       </div>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen bg-muted/40">
-          <Spinner size="large">Loading...</Spinner>
+          <Spinner size="large" className="-mt-32">
+            Loading...
+          </Spinner>
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row lg:space-x-10 ml-20">

@@ -258,7 +258,9 @@ export default function CurrentPage() {
         </header>
         {loading ? (
           <div className="flex items-center justify-center min-h-screen bg-muted/40">
-            <Spinner size="large">Loading...</Spinner>
+            <Spinner size="large" className="-mt-32">
+              Loading...
+            </Spinner>
           </div>
         ) : (
           <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">

@@ -175,7 +175,9 @@ export default function Dashboard() {
 
         {loading ? (
           <div className="flex items-center justify-center min-h-screen bg-muted/40">
-            <Spinner size="large">Loading...</Spinner>
+            <Spinner size="large" className="-mt-32">
+              Loading...
+            </Spinner>
           </div>
         ) : (
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">

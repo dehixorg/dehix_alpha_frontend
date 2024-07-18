@@ -224,7 +224,9 @@ export default function ProfessionalInfo() {
 
         {loading ? (
           <div className="flex items-center justify-center min-h-screen bg-muted/40">
-            <Spinner size="large">Loading...</Spinner>
+            <Spinner size="large" className="-mt-32">
+              Loading...
+            </Spinner>
           </div>
         ) : (
           <main
