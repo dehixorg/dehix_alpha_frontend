@@ -1,5 +1,5 @@
 'use client';
-import { Search, UserIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 

@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { Plus, Search } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,7 +32,6 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { RootState } from '@/lib/store';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -175,9 +173,11 @@ export default function ProfilePage() {
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
           <div className="flex items-center gap-4">
-            <CollapsibleSidebarMenu menuItemsTop={menuItemsTop}
+            <CollapsibleSidebarMenu
+              menuItemsTop={menuItemsTop}
               menuItemsBottom={menuItemsBottom}
-              active="Profile" />
+              active="Profile"
+            />
             <Breadcrumb
               items={[
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
@@ -194,7 +194,6 @@ export default function ProfilePage() {
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
             <DropdownProfile />
-
           </div>
         </header>
         <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">

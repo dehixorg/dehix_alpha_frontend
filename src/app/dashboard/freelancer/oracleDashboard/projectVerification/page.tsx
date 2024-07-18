@@ -1,18 +1,8 @@
 'use client';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -22,7 +12,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 // import { axiosInstance } from '@/lib/axiosinstance';
@@ -39,8 +28,6 @@ import dummyData from '@/dummydata.json';
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
   const [dummyProjectData, setDummyProjectData] = useState(
     dummyData.dashboardFreelancerOracleProject,
   );

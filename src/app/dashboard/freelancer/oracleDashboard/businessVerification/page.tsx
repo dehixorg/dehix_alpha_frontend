@@ -1,18 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -22,7 +12,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -37,7 +26,6 @@ import dummyData from '@/dummydata.json'; // Import your JSON data here
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
   const [dummyBusinessData, setDummyBusinessData] = useState(
     dummyData.dashboardFreelancerOracleBusiness,
   ); // Initialize with data from JSON

@@ -2,8 +2,7 @@
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { MessageSquare, UserIcon, Search, ListFilter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { MessageSquare, Search, ListFilter } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import {
@@ -32,7 +31,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RootState } from '@/lib/store';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 interface Interview {
@@ -90,8 +88,9 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
       </CardHeader>
       <CardContent>
         <Badge
-          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'
-            } text-xs`}
+          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
+            interview.status === 'Pending' ? 'warning' : 'success'
+          } text-xs`}
         >
           {interview.status.toUpperCase()}
         </Badge>

@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Search, UserIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search } from 'lucide-react';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
@@ -18,7 +17,6 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RootState } from '@/lib/store';
 import dummyData from '@/dummydata.json';
 
 interface FilterState {
@@ -29,7 +27,6 @@ interface FilterState {
 }
 
 const Market: React.FC = () => {
-  const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [filters, setFilters] = useState<FilterState>({

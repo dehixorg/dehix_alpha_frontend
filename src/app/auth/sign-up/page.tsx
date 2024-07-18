@@ -10,7 +10,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/shared/themeToggle';
 import {
   Form,
@@ -74,10 +73,7 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>First name</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Max"
-                            {...field}
-                          />
+                          <Input placeholder="Max" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -90,10 +86,7 @@ export default function SignUp() {
                       <FormItem>
                         <FormLabel>Last name</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Robinson"
-                            {...field}
-                          />
+                          <Input placeholder="Robinson" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

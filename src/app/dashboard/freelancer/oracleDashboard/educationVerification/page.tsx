@@ -1,18 +1,8 @@
 'use client';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -38,8 +28,6 @@ import dummyData from '@/dummydata.json';
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
   // Initialize state with education data from dummydata.json
   const [dummyEducationData, setDummyEducationData] = useState(
     dummyData.dashboardFreelancerOracleEducation,

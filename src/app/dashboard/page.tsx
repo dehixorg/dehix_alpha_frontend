@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import {
   ChevronLeft,
   ChevronRight,
@@ -65,7 +64,6 @@ import { RootState } from '@/lib/store';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-
 import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {

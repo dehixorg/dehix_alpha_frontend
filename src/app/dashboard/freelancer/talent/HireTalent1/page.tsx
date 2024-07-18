@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 // eslint-disable-next-line import/order
 import React from 'react'; // Import 'react' first
 
@@ -18,12 +17,6 @@ import {
   Users2,
 } from 'lucide-react';
 
-// Redux hooks and selectors
-import { useSelector } from 'react-redux';
-
-// eslint-disable-next-line import/order
-import { RootState } from '@/lib/store';
-
 // Shared components
 // eslint-disable-next-line import/order
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -34,7 +27,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -63,8 +55,6 @@ import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 new Date('2023-11-23T10:30:00Z');
 export default function Dashboard() {
-  const user = useSelector((state: RootState) => state.user);
-
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',

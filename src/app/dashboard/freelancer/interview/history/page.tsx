@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { ListFilter, MessageSquare, Search } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -19,7 +18,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { RootState } from '@/lib/store';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';

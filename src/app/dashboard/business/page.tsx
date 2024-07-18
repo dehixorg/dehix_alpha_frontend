@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
 import { CheckCircle, Clock, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
