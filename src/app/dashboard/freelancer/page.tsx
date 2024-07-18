@@ -101,7 +101,11 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Dashboard"
+          />
 
           <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
           <div className="relative ml-auto flex-1 md:grow-0">
