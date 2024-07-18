@@ -24,6 +24,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import CurrentProjectCard from '@/components/freelancer/currentProject/currentProjectCard';
+import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;
@@ -82,7 +84,8 @@ export default function CurrentProject() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Current Projects"
           />
           <Breadcrumb
@@ -137,6 +140,32 @@ export default function CurrentProject() {
           {projects.map((project, index: number) => (
             <ProjectCard key={index} project={project} />
           ))}
+          <div>
+            <CurrentProjectCard
+              companyName={dummydata.projectCurrentCard.companyName}
+              role={dummydata.projectCurrentCard.role}
+              projectType={dummydata.projectCurrentCard.projectType}
+              description={dummydata.projectCurrentCard.description}
+              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
+              start={dummydata.projectCurrentCard.start}
+              end={dummydata.projectCurrentCard.end}
+              email={dummydata.projectCurrentCard.email}
+              experience={dummydata.projectCurrentCard.experience}
+            />
+          </div>
+          <div>
+            <CurrentProjectCard
+              companyName={dummydata.projectCurrentCard.companyName}
+              role={dummydata.projectCurrentCard.role}
+              projectType={dummydata.projectCurrentCard.projectType}
+              description={dummydata.projectCurrentCard.description}
+              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
+              start={dummydata.projectCurrentCard.start}
+              end={dummydata.projectCurrentCard.end}
+              email={dummydata.projectCurrentCard.email}
+              experience={dummydata.projectCurrentCard.experience}
+            />
+          </div>
         </main>
       </div>
     </div>

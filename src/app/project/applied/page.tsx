@@ -24,6 +24,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import dummydata from '@/dummydata.json';
+import ActiveProjectCards from '@/components/freelancer/activeProject/activeProjectCard';
 
 interface Project {
   _id: string;
@@ -83,7 +85,8 @@ export default function AppliedProject() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Under Verification"
           />
           <Breadcrumb
@@ -138,6 +141,34 @@ export default function AppliedProject() {
           {projects.map((project, index: number) => (
             <ProjectCard key={index} project={project} />
           ))}
+          <div>
+            <ActiveProjectCards
+              companyName={dummydata.projectUnderVerificatinCard.companyName}
+              role={dummydata.projectUnderVerificatinCard.role}
+              projectType={dummydata.projectUnderVerificatinCard.projectType}
+              description={dummydata.projectUnderVerificatinCard.description}
+              skillsRequired={
+                dummydata.projectUnderVerificatinCard.skillsRequired
+              }
+              start={dummydata.projectUnderVerificatinCard.start}
+              email={dummydata.projectUnderVerificatinCard.email}
+              experience={dummydata.projectUnderVerificatinCard.experience}
+            />
+          </div>
+          <div>
+            <ActiveProjectCards
+              companyName={dummydata.projectUnderVerificatinCard.companyName}
+              role={dummydata.projectUnderVerificatinCard.role}
+              projectType={dummydata.projectUnderVerificatinCard.projectType}
+              description={dummydata.projectUnderVerificatinCard.description}
+              skillsRequired={
+                dummydata.projectUnderVerificatinCard.skillsRequired
+              }
+              start={dummydata.projectUnderVerificatinCard.start}
+              email={dummydata.projectUnderVerificatinCard.email}
+              experience={dummydata.projectUnderVerificatinCard.experience}
+            />
+          </div>
         </main>
       </div>
     </div>

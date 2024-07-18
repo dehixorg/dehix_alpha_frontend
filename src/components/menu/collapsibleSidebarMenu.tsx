@@ -10,13 +10,15 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 
 interface CollapsibleSidebarMenuProps {
-  menuItems: MenuItem[];
+  menuItemsTop: MenuItem[];
+  menuItemsBottom: MenuItem[];
   active: string;
   setActive?: (page: string) => void; // Making setActive optional
 }
 
 const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
-  menuItems,
+  menuItemsTop,
+  menuItemsBottom,
   active,
   setActive = () => null, // Defaulting setActive to a no-op function
 }) => {
@@ -28,9 +30,12 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="sm:max-w-xs">
+      <SheetContent
+        side="left"
+        className="flex flex-col justify-between sm:max-w-xs"
+      >
         <nav className="grid gap-6 text-lg font-medium">
-          {menuItems.map((item, index) => (
+          {menuItemsTop.map((item, index) => (
             <Link
               key={index}
               href={item.href}
@@ -47,9 +52,28 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
               {item.label !== 'Dehix' && item.label}
             </Link>
           ))}
-          <div className="pt-5 mx-auto">
-            <ThemeToggle />
-          </div>
+        </nav>
+        <div className="pt-5 mx-auto">
+          <ThemeToggle />
+        </div>
+        <nav className="grid gap-6 text-lg font-medium">
+          {menuItemsBottom.map((item, index) => (
+            <Link
+              key={index}
+              href={item.href}
+              onClick={() => setActive(item.label)}
+              className={`flex items-center gap-4 px-2.5 ${
+                item.label === 'Dehix'
+                  ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
+                  : item.label === active
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {item.icon}
+              {item.label !== 'Dehix' && item.label}
+            </Link>
+          ))}
         </nav>
       </SheetContent>
     </Sheet>

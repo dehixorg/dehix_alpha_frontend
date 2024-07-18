@@ -32,6 +32,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -39,44 +40,9 @@ type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
-  const [dummyJobData, setDummyJobData] = useState([
-    {
-      jobTitle: 'Frontend Developer',
-      workDescription:
-        'Responsible for developing user-friendly web applications using React and TypeScript.',
-      startFrom: '2022-01-15',
-      endTo: '2023-07-01',
-      referencePersonName: 'Jane Doe',
-      referencePersonEmail: 'jane.doe@example.com',
-      githubRepoLink: 'https://github.com/janedoe/project-repo',
-      comments: '',
-      status: 'pending', // or 'in progress', 'pending', etc.
-    },
-    {
-      jobTitle: 'Backend Developer',
-      workDescription:
-        'Developed and maintained server-side logic using Node.js and Express.',
-      startFrom: '2021-02-01',
-      endTo: '2021-12-31',
-      referencePersonName: 'John Smith',
-      referencePersonEmail: 'john.smith@example.com',
-      githubRepoLink: 'https://github.com/johnsmith/backend-project',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      jobTitle: 'Full Stack Developer',
-      workDescription:
-        'Worked on both frontend and backend development using MERN stack.',
-      startFrom: '2020-03-01',
-      endTo: '2021-01-31',
-      referencePersonName: 'Alice Johnson',
-      referencePersonEmail: 'alice.johnson@example.com',
-      githubRepoLink: 'https://github.com/alicejohnson/fullstack-project',
-      comments: '',
-      status: 'pending',
-    },
-  ]);
+  const [dummyJobData, setDummyJobData] = useState(
+    dummyData.dashboardFreelancerOracleExperience,
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -118,7 +84,8 @@ export default function ProfessionalInfo() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Experience Verification"
           />
           <Breadcrumb
@@ -179,7 +146,7 @@ export default function ProfessionalInfo() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Education Status</DialogTitle>
+              <DialogTitle>Filter Experience Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"

@@ -35,15 +35,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
+import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -81,7 +73,11 @@ export default function Dashboard() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make component */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Dashboard"
+          />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/business' },
@@ -149,14 +145,14 @@ export default function Dashboard() {
                 title="Completed Projects"
                 value={completedProjects.length}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
+                additionalInfo={dummyData.dashboardBusinessCompleteProject}
               />
 
               <StatCard
                 title="Pending Projects"
                 value={pendingProjects.length}
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
+                additionalInfo={dummyData.dashboardBusinessPendingProject}
               />
             </div>
             <Separator className="my-1" />
@@ -191,8 +187,26 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
           </div>
         </main>
       </div>

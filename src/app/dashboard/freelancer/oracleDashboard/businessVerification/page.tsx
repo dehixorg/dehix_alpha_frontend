@@ -1,7 +1,7 @@
 'use client';
+import React, { useState } from 'react';
 import { Search, UserIcon, Filter } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -25,64 +25,21 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
+import dummyData from '@/dummydata.json'; // Import your JSON data here
 
-// Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
-
-  const [dummyBusinessData, setDummyBusinessData] = useState([
-    {
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'john.smith@example.com',
-      phone: '+1234567890',
-      companyName: 'Tech Innovators Inc.',
-      companySize: '500-1000 employees',
-      referenceEmail: 'ref.john.smith@example.com',
-      websiteLink: 'https://www.techinnovators.com',
-      linkedInLink: 'https://www.linkedin.com/in/johnsmith',
-      githubLink: 'https://github.com/johnsmith',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      firstName: 'Alice',
-      lastName: 'Johnson',
-      email: 'alice.johnson@example.com',
-      phone: '+0987654321',
-      companyName: 'Creative Solutions Ltd.',
-      companySize: '100-500 employees',
-      referenceEmail: 'ref.alice.johnson@example.com',
-      websiteLink: 'https://www.creativesolutions.com',
-      linkedInLink: 'https://www.linkedin.com/in/alicejohnson',
-      githubLink: 'https://github.com/alicejohnson',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      firstName: 'Robert',
-      lastName: 'Brown',
-      email: 'robert.brown@example.com',
-      phone: '+1122334455',
-      companyName: 'Global Enterprises',
-      companySize: '1000-5000 employees',
-      referenceEmail: 'ref.robert.brown@example.com',
-      websiteLink: 'https://www.globalenterprises.com',
-      linkedInLink: 'https://www.linkedin.com/in/robertbrown',
-      githubLink: 'https://github.com/robertbrown',
-      comments: '',
-      status: 'pending',
-    },
-  ]);
+  const [dummyBusinessData, setDummyBusinessData] = useState(
+    dummyData.dashboardFreelancerOracleBusiness,
+  ); // Initialize with data from JSON
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -124,7 +81,8 @@ export default function ProfessionalInfo() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Business Verification"
           />
           <Breadcrumb
