@@ -5,7 +5,6 @@ import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
-  DropdownMenuItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -47,11 +46,15 @@ export default function HistoryPage() {
   });
 
   return (
-    <div className="flex min-h-screen w-full">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="History"
+    <div>
+      <Breadcrumb
+        items={[
+          {
+            label: 'Interview',
+            link: '/dashboard/freelancer/interview/profile',
+          },
+          { label: 'History', link: '#' },
+        ]}
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
@@ -162,28 +165,26 @@ export default function HistoryPage() {
                   <p className="text-gray-300 pt-4 text-sm">
                     {interview.description}
                   </p>
-
-                  <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-                    <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-                    {interview.comments}
+                <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
+                  <MessageSquare className="pr-1 mr-1 h-5 w-5" />
+                  {interview.comments}
+                </p>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">
+                    Reference: {interview.reference}
                   </p>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600">
-                      Reference: {interview.reference}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Contact: {interview.contact}
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex">
-                  <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-                    {new Date(interview.interviewDate).toLocaleDateString()}
+                  <p className="text-sm text-gray-600">
+                    Contact: {interview.contact}
                   </p>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex">
+                <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+                  {new Date(interview.interviewDate).toLocaleDateString()}
+                </p>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

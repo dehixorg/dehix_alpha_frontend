@@ -47,7 +47,6 @@ export default function CurrentPage() {
   const user = useSelector((state: RootState) => state.user);
 
   const filteredInterviews = sampleInterviews.filter((interview) => {
-    if (interview.status === 'Complete') return false;
     if (filter === 'All') return true;
     if (filter === 'Skills' && interview.skill) return true;
     if (filter === 'Domain' && interview.domain) return true;
