@@ -13,7 +13,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
   content,
 }) => {
   return (
-    <Card className="w-[455px] h-[199px]">
+    <Card className=" sm:w-fit h-[234px] md:w-[320px] lg:w-[375px]">
       <CardHeader>
         <div className="grid grid-cols-[auto,auto] items-center ml-10">
           <CardTitle className="text-white text-3xl font-bold items-center">
