@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import { PackageOpen } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -31,7 +32,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
-import InterviewCard from '@/components/shared/interviewCard';
+// import InterviewCard from '@/components/shared/interviewCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -150,7 +151,7 @@ export default function Dashboard() {
               >
                 <CardHeader className="pb-3">
                   <CardTitle className="text-4xl mb-3">
-                    {dummyData?.freelancerEarnings}
+                    0
                   </CardTitle>
                 </CardHeader>
                 <CardFooter className=" grid gap-4 grid-cols-4">
@@ -173,7 +174,7 @@ export default function Dashboard() {
                     .length
                 }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
+                additionalInfo="Earning stats will be here"
               />
               <StatCard
                 title="Pending Projects"
@@ -182,7 +183,7 @@ export default function Dashboard() {
                     .length
                 }
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
+                additionalInfo="Project stats will be here"
               />
             </div>
             <Tabs defaultValue="active">
@@ -228,22 +229,18 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard
+            <div className="text-center py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No interviews scheduled</p>
+          </div>
+            {/* <InterviewCard
               interviewer={dummyData.freelancersampleInterview.interviewer}
               interviewee={dummyData.freelancersampleInterview.interviewee}
               skill={dummyData.freelancersampleInterview.skill}
               interviewDate={interviewData.interviewDate}
               rating={dummyData.freelancersampleInterview.rating}
               comments={dummyData.freelancersampleInterview.comments}
-            />
-            <InterviewCard
-              interviewer={dummyData.freelancersampleInterview.interviewer}
-              interviewee={dummyData.freelancersampleInterview.interviewee}
-              skill={dummyData.freelancersampleInterview.skill}
-              interviewDate={interviewData.interviewDate}
-              rating={dummyData.freelancersampleInterview.rating}
-              comments={dummyData.freelancersampleInterview.comments}
-            />
+            /> */}
           </div>
         </main>
       </div>
