@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { PackageOpen, Plus, Search } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               <h2 className="text-xl font-semibold">Skills</h2>
               <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button disabled>
                     <Plus className="mr-2 h-4 w-4" /> Add Skill
                   </Button>
                 </DialogTrigger>
@@ -323,6 +323,10 @@ export default function ProfilePage() {
                 ))}
               </TableBody>
             </Table>
+            <div className="text-center py-10 w-[100%] mt-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">No data available<br/> You can earn reward and help community by being interviewer.<br/> </p>
+            </div>
           </div>
           <div className="mb-8 w-full sm:w-1/2">
             <div className="flex items-center justify-between mb-4">
@@ -332,7 +336,7 @@ export default function ProfilePage() {
                 onOpenChange={setOpenDomainDialog}
               >
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button disabled>
                     <Plus className="mr-2 h-4 w-4" /> Add Domain
                   </Button>
                 </DialogTrigger>
@@ -456,6 +460,10 @@ export default function ProfilePage() {
                 ))}
               </TableBody>
             </Table>
+            <div className="text-center py-10 w-[100%] mt-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">No data available<br/> You can select different domain for which you want to be interviewer.<br/> </p>
+            </div>
           </div>
         </div>
       </div>

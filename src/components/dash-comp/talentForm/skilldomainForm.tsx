@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, PackageOpen } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -168,8 +168,11 @@ const SkillDomainForm: React.FC = () => {
               open={isSkillDialogOpen}
               onOpenChange={setIsSkillDialogOpen}
             >
-              <DialogTrigger asChild>
-                <Button onClick={() => setIsSkillDialogOpen(true)}>
+              <DialogTrigger asChild >
+                <Button 
+                onClick={() => setIsSkillDialogOpen(true)}
+                disabled
+                  >
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -253,7 +256,9 @@ const SkillDomainForm: React.FC = () => {
               onOpenChange={setIsDomainDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setIsDomainDialogOpen(true)}>
+                <Button 
+                onClick={() => setIsDomainDialogOpen(true)}
+                 disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
@@ -363,6 +368,11 @@ const SkillDomainForm: React.FC = () => {
             </TableBody>
           </Table>
         </Card>
+        <div className="text-center py-10 w-[90vw] mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No data available.<br/> This feature will be available soon.<br/> 
+              Here you can get directly hired for different roles.</p>
+          </div>
       </div>
     </div>
   );
