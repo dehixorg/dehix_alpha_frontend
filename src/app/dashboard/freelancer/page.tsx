@@ -69,16 +69,8 @@ interface Project {
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const interviewData = {
-  ...dummyData.sampleInterview,
-  interviewDate: new Date(dummyData.sampleInterview.interviewDate),
-};
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
+  ...dummyData.freelancersampleInterview,
+  interviewDate: new Date(dummyData.freelancersampleInterview.interviewDate),
 };
 
 export default function Dashboard() {
@@ -232,8 +224,22 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={interviewData.interviewDate}
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={interviewData.interviewDate}
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
           </div>
         </main>
       </div>

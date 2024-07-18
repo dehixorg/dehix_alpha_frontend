@@ -1,13 +1,335 @@
 {
   "freelancerEarnings": 1000,
-  "sampleInterview": {
+  "freelancersampleInterview": {
     "interviewer": "John Doe",
     "interviewee": "Jane Smith",
     "skill": "React Development",
-    "interviewDate": "new Date('2023-11-23T10:30:00Z')",
+    "interviewDate": "2023-11-23T10:30:00Z",
     "rating": 4.5,
     "comments": "Great communication skills and technical expertise."
   },
+  "dashboardactiveProject": {
+    "heading": "Active Project",
+    "content": "+11 Current active projects"
+  },
+  "dashboardpendingProject": {
+    "title": "Pending projects",
+    "itemCounts": {
+      "total": 15,
+      "low": 5,
+      "medium": 5,
+      "high": 5
+    }
+  },
+  "dashboardBusinessCompleteProject":"+10% from last month",
+  "dashboardBusinessPendingProject":"+2 new projects this week",
+  "dashboardtotalRevenue": {
+    "heading": "Total Revenue",
+    "content": "$45,231.89 +20.1% from last month"
+  },
+  "dashboardoracleWork": {
+    "heading": "Oracle Work",
+    "content": "+11 projects"
+  },
+  "dashboardorderTable": {
+    "customerName": "Jack smith",
+    "customerEmail": "liam@example.com",
+    "customerType": "Sale",
+    "customerStatus": "Fulfilled",
+    "customerDate": "2023-06-23",
+    "customerAmount": "$250.00"
+  },
+  "dashboardorderDate": "Date: November 23, 2023",
+  "dashboardorderShippingAddress": {
+    "name": "Liam Johnson",
+    "address": "1234 Main St.",
+    "state": "Anytown, CA 12345"
+  },
+  "dashboardorderCustomerInfo": {
+    "customer": "Liam Johnson",
+    "email": "liam@acme.com",
+    "phone": "+1 234 567 890"
+  },
+  "dashboardorderCard": {
+    "card": "Visa",
+    "cardNumber": "**** **** **** 4532"
+  },
+  "dashboardorderUpdateDate": "November 23, 2023",
+  "marketfreelancerJob": {
+    "heading": "Arya.ai Data Scientist",
+    "content": "Arya is an autonomous AI operating platform for banks, insurers, and financial service providers that simplifies buildout and manages the...",
+    "skills": [
+      "Generative AI",
+      "Python",
+      "NLP",
+      "PyTorch",
+      "Transformers"
+    ],
+    "location": "Mumbai",
+    "founded": "2013",
+    "employees": "10-50 employees"
+  },
+  "dashboardfreelancercurrentInterview": [
+    {
+      "reference": "Jane Smith",
+      "skill": "HTML/CSS",
+      "interviewDate": "2023-11-23T10:30:00Z",
+      "rating": 9,
+      "comments": "Great communication skills and technical expertise.",
+      "status": "Completed",
+      "description": "This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.",
+      "contact": "jane.smith@example.com"
+    },
+    {
+      "reference": "Jane Smith",
+      "domain": "DevOps",
+      "interviewDate": "2023-11-23T10:30:00Z",
+      "rating": 9,
+      "comments": "Great communication skills and technical expertise.",
+      "status": "Pending",
+      "description": "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
+      "contact": "jane.smith@example.com"
+    }
+  ],
+  "dashboardfreelancerhistoryUserEmail":"xyz@gmail.com",
+  "dashboardfreelancerhistoryInterview": [
+    {
+      "reference": "Jane Smith",
+      "skill": "HTML/CSS",
+      "interviewDate": "2023-11-23T10:30:00Z",
+      "rating": 9,
+      "comments": "Great communication skills and technical expertise.",
+      "status": "Completed",
+      "description": "This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.",
+      "contact": "jane.smith@example.com"
+    },
+    {
+      "reference": "Jane Smith",
+      "domain": "DevOps",
+      "interviewDate": "2023-11-23T10:30:00Z",
+      "rating": 9,
+      "comments": "Great communication skills and technical expertise.",
+      "status": "Completed",
+      "description": "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
+      "contact": "jane.smith@example.com"
+    }
+  ],
+  "dashboardFreelancerOracleBusiness": [
+    {
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@example.com",
+      "phone": "+1234567890",
+      "companyName": "Tech Innovators Inc.",
+      "companySize": "500-1000 employees",
+      "referenceEmail": "ref.john.smith@example.com",
+      "websiteLink": "https://www.techinnovators.com",
+      "linkedInLink": "https://www.linkedin.com/in/johnsmith",
+      "githubLink": "https://github.com/johnsmith",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "email": "alice.johnson@example.com",
+      "phone": "+0987654321",
+      "companyName": "Creative Solutions Ltd.",
+      "companySize": "100-500 employees",
+      "referenceEmail": "ref.alice.johnson@example.com",
+      "websiteLink": "https://www.creativesolutions.com",
+      "linkedInLink": "https://www.linkedin.com/in/alicejohnson",
+      "githubLink": "https://github.com/alicejohnson",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "firstName": "Robert",
+      "lastName": "Brown",
+      "email": "robert.brown@example.com",
+      "phone": "+1122334455",
+      "companyName": "Global Enterprises",
+      "companySize": "1000-5000 employees",
+      "referenceEmail": "ref.robert.brown@example.com",
+      "websiteLink": "https://www.globalenterprises.com",
+      "linkedInLink": "https://www.linkedin.com/in/robertbrown",
+      "githubLink": "https://github.com/robertbrown",
+      "comments": "",
+      "status": "pending"
+    }
+  ],
+  "dashboardFreelancerOracleEducation": [
+    {
+      "type": "Bachelor's Degree",
+      "instituteName": "University of Example",
+      "location": "Example City, Example Country",
+      "startFrom": "2018-09-01",
+      "endTo": "2022-06-15",
+      "grade": "A",
+      "referencePersonName": "Dr. John Doe",
+      "degreeNumber": "123456789",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "type": "Master's Degree",
+      "instituteName": "University of Example",
+      "location": "Example City, Example Country",
+      "startFrom": "2022-09-01",
+      "endTo": "2024-06-15",
+      "grade": "A+",
+      "referencePersonName": "Dr. Jane Smith",
+      "degreeNumber": "987654321",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "type": "Ph.D.",
+      "instituteName": "University of Example",
+      "location": "Example City, Example Country",
+      "startFrom": "2024-09-01",
+      "endTo": "2028-06-15",
+      "grade": "A+",
+      "referencePersonName": "Dr. Emily Johnson",
+      "degreeNumber": "456789123",
+      "comments": "",
+      "status": "pending"
+    }
+  ],
+  "dashboardFreelancerOracleProject": [
+    {
+      "projectName": "Task Tracker",
+      "description": "A web application for managing and tracking daily tasks and projects.",
+      "githubLink": "https://github.com/yourusername/TaskTracker",
+      "startFrom": "2023-05-01",
+      "endTo": "2023-10-15",
+      "reference": "Mr. Alex Johnson, Senior Developer",
+      "techUsed": [
+        "Vue.js",
+        "JavaScript",
+        "Firebase",
+        "CSS"
+      ],
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "projectName": "Inventory Management System",
+      "description": "A system for managing inventory in warehouses.",
+      "githubLink": "https://github.com/yourusername/InventoryManagementSystem",
+      "startFrom": "2022-01-01",
+      "endTo": "2022-06-01",
+      "reference": "Ms. Maria Gonzalez, Project Manager",
+      "techUsed": [
+        "React",
+        "Node.js",
+        "MongoDB",
+        "Sass"
+      ],
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "projectName": "E-commerce Platform",
+      "description": "An online platform for buying and selling products.",
+      "githubLink": "https://github.com/yourusername/EcommercePlatform",
+      "startFrom": "2021-02-01",
+      "endTo": "2021-08-01",
+      "reference": "Mr. John Smith, Lead Developer",
+      "techUsed": [
+        "Angular",
+        "TypeScript",
+        "Firebase",
+        "Bootstrap"
+      ],
+      "comments": "",
+      "status": "pending"
+    }
+  ],
+  "dashboardFreelancerOracleExperience": [
+    {
+      "jobTitle": "Frontend Developer",
+      "workDescription": "Responsible for developing user-friendly web applications using React and TypeScript.",
+      "startFrom": "2022-01-15",
+      "endTo": "2023-07-01",
+      "referencePersonName": "Jane Doe",
+      "referencePersonEmail": "jane.doe@example.com",
+      "githubRepoLink": "https://github.com/janedoe/project-repo",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "jobTitle": "Backend Developer",
+      "workDescription": "Developed and maintained server-side logic using Node.js and Express.",
+      "startFrom": "2021-02-01",
+      "endTo": "2021-12-31",
+      "referencePersonName": "John Smith",
+      "referencePersonEmail": "john.smith@example.com",
+      "githubRepoLink": "https://github.com/johnsmith/backend-project",
+      "comments": "",
+      "status": "pending"
+    },
+    {
+      "jobTitle": "Full Stack Developer",
+      "workDescription": "Worked on both frontend and backend development using MERN stack.",
+      "startFrom": "2020-03-01",
+      "endTo": "2021-01-31",
+      "referencePersonName": "Alice Johnson",
+      "referencePersonEmail": "alice.johnson@example.com",
+      "githubRepoLink": "https://github.com/alicejohnson/fullstack-project",
+      "comments": "",
+      "status": "pending"
+    }
+  ],
+  "businessProjectDetailCard": {
+    "description": "Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project ]. Through thisproject, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches ormethodologies]. We believe this project will [state the expected impact or benefits ]. Feel free to replace the placeholders with specific details about your project. \nIf you need further customization or additional sections, let me know!  \nWelcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project ]. Through this project, we intend to [mention key objectives or outcomes ]. Our team is dedicated to [highlight any unique approaches or methodologies ]. We believe this project will [state the expected impact or benefits ]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know! ",
+    "email":"arpit@xyz.com",
+    "status":"Current",
+    "startDate":"22/22/2222",
+    "endDate":"24/22/2222"
+  },
+  "businessprojectCardDomains": [
+      "Frontend" ,
+      "Backend" ,
+      "Graphic Designer" ,
+      "3D artist" ,
+      "Fullstack" 
+  ],
+  "businessprojectCardSkills": [
+     "React" ,
+      "Mongo" ,
+      "Golang" ,
+      "Java" ,
+      "Html",
+      "Css" 
+  ],
+  "businessprojectProfileCard":{
+    "heading":"Frontend Developer",
+    "description":"Your requirement is of 2 freelancers for this profile, 6 people have appplied via bid and 1 person is selected till now.",
+    "email":"arpit@xyz.com",
+    "status":"Current",
+    "startDate":"22/22/2222",
+    "endDate":"24/22/2222"
+  },
+  "marketFreelancerProject": {
+    "project_name": "AI Development Project",
+    "project_id": "#12345",
+    "location": "Delhi, India",
+    "description": "We're looking for an experienced web developer who's really good at making interactive forms. The perfect candidate should know a lot about web development and have a bunch of cool forms they've made before. Your main job will be making forms that people can use easily and that look nice.",
+    "email": "contact@aiproject.com",
+    "company_name": "Tech Innovators Inc.",
+    "start": "2023-01-01T00:00:00.000Z",
+    "end": "2023-12-31T00:00:00.000Z",
+    "skills_required": ["JavaScript", "React", "Python", "Machine Learning"],
+    "experience": "2+ years of experience in AI development.",
+    "role": "Lead Developer",
+    "project_type": "Full-time"
+  },
+  "marketFreelancerProjectOtherBits": [
+    { "username": "Alex004", "bitAmount": 100 },
+    { "username": "User2", "bitAmount": 150 },
+    { "username": "alen789", "bitAmount": 200 }
+  ],
   "projectRejectedCard": {
     "companyName": "ABC Corporation",
     "role": "Software Engineer",

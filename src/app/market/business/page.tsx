@@ -25,16 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
-const jobData = {
-  heading: 'Arya.ai Data Scientist',
-  content:
-    'Arya is an autonomous AI operating platform for banks, insurers, and financial service providers that simplifies buildout and manages the...',
-  skills: ['Generative AI', 'Python', 'NLP', 'PyTorch', 'Transformers'],
-  location: 'Mumbai',
-  founded: '2013',
-  employees: '10-50 employees',
-};
+import dummyData from '@/dummydata.json';
 
 interface FilterState {
   location: string[];
@@ -283,7 +274,14 @@ const Market: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 lg:mt-0 lg:ml-10">
-            <Jobs {...jobData} />
+            <Jobs
+              heading={dummyData.marketfreelancerJob.heading}
+              content={dummyData.marketfreelancerJob.content}
+              skills={dummyData.marketfreelancerJob.skills}
+              location={dummyData.marketfreelancerJob.location}
+              founded={dummyData.marketfreelancerJob.founded}
+              employees={dummyData.marketfreelancerJob.employees}
+            />
           </div>
         </div>
       </div>
