@@ -7,40 +7,34 @@ export async function middleware(request: NextRequest) {
   const userType = cookies.userType;
   const token = cookies.token;
 
-  const url = request.nextUrl.clone();
-
-  if (url.pathname === '/auth/login') {
-    if (token && userType) {
-      url.pathname = `/dashboard/${userType}`;
-      return NextResponse.redirect(url);
+  const { pathname } = request.nextUrl;
+  if (token && userType) {
+    if (
+      userType === 'freelancer' &&
+      pathname.startsWith('/dashboard/business')
+    ) {
+      return NextResponse.redirect(
+        new URL('/dashboard/freelancer', request.url),
+      );
+    } else if (
+      userType === 'business' &&
+      pathname.startsWith('/dashboard/freelancer')
+    ) {
+      return NextResponse.redirect(new URL('/dashboard/business', request.url));
     }
-    return NextResponse.next();
+  } else {
+    const protectedRoutes = [
+      '/dashboard',
+      '/dashboard/business',
+      '/dashboard/freelancer',
+    ];
+    if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
-
-  if (!token || !userType) {
-    url.pathname = '/auth/login';
-    return NextResponse.redirect(url);
-  }
-
-  if (
-    url.pathname.startsWith('/dashboard/freelancer') &&
-    userType !== 'freelancer'
-  ) {
-    url.pathname = '/dashboard/business';
-    return NextResponse.redirect(url);
-  }
-
-  if (
-    url.pathname.startsWith('/dashboard/business') &&
-    userType !== 'business'
-  ) {
-    url.pathname = '/dashboard/freelancer';
-    return NextResponse.redirect(url);
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/auth/login', '/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/protected/:path*'],
 };

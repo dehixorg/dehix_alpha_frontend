@@ -23,9 +23,9 @@ export default function DropdownProfile() {
 
   const handleLogout = () => {
     dispatch(clearUser());
-    Cookies.remove('user');
+    Cookies.remove('userType');
     Cookies.remove('token');
-    router.replace('/auth/login');
+    router.replace('/');
   };
 
   return (
