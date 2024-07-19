@@ -26,12 +26,12 @@ const EducationInfoCard: React.FC<EducationProps> = ({
   endDate,
   grade,
 }) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | undefined) => {
     return date ? new Date(date).toLocaleDateString() : 'N/A';
   };
 
   return (
-    <Card className="max-full mx-auto md:max-w-2xl">
+    <Card className="w-full mx-auto md:max-w-2xl">
       <CardHeader>
         <CardTitle className="flex">
           {universityName || 'University Name'}

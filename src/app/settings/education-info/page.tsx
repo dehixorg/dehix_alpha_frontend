@@ -11,8 +11,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import EducationInfoCard from '@/components/cards/freelancerProfile/eductaionInfoCard';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
