@@ -1,15 +1,13 @@
 'use client';
 import Image from 'next/image';
 import {
-  Boxes,
-  Home,
-  LineChart,
-  Package,
+  
   Search,
   Settings,
-  Users2,
+
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import {  useState } from 'react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
@@ -24,41 +22,45 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import {
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/projectMenuItems';
 import { RootState } from '@/lib/store';
 import CompletedProjectDetailCard from '@/components/freelancer/project/projectPages/completeProjectCards/completeProjectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
+}
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-  ];
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const menuItemsBottom: MenuItem[] = [
     {
@@ -73,20 +75,23 @@ export default function Dashboard() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Projects"
+        active="Completed Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Projects"
+            active="Completed Projects"
           />
 
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Project', link: '/dashboard/freelancer' },
+              {
+                label: 'Projects',
+                link: '/project/completed',
+              },
+              { label: 'Complete Project', link: '/project/completed' },
               { label: '#completed_id', link: '#' },
             ]}
           />

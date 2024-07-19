@@ -103,7 +103,7 @@ const ActiveProjectCards: React.FC<ProjectProps> = ({
         </div>
         <div className="mt-2">
           <Button>
-            <Link href="/project/applied/applidPage">view more</Link>
+          <Link href="/project/applied/appliedPage">view more</Link>
           </Button>
         </div>
       </CardFooter>
