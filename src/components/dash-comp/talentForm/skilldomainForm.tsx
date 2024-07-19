@@ -168,11 +168,8 @@ const SkillDomainForm: React.FC = () => {
               open={isSkillDialogOpen}
               onOpenChange={setIsSkillDialogOpen}
             >
-              <DialogTrigger asChild >
-                <Button 
-                onClick={() => setIsSkillDialogOpen(true)}
-                disabled
-                  >
+              <DialogTrigger asChild>
+                <Button onClick={() => setIsSkillDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -256,9 +253,7 @@ const SkillDomainForm: React.FC = () => {
               onOpenChange={setIsDomainDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button 
-                onClick={() => setIsDomainDialogOpen(true)}
-                 disabled>
+                <Button onClick={() => setIsDomainDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
@@ -369,10 +364,14 @@ const SkillDomainForm: React.FC = () => {
           </Table>
         </Card>
         <div className="text-center py-10 w-[90vw] mt-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No data available.<br/> This feature will be available soon.<br/> 
-              Here you can get directly hired for different roles.</p>
-          </div>
+          <PackageOpen className="mx-auto text-gray-500" size="100" />
+          <p className="text-gray-500">
+            No data available.
+            <br /> This feature will be available soon.
+            <br />
+            Here you can get directly hired for different roles.
+          </p>
+        </div>
       </div>
     </div>
   );

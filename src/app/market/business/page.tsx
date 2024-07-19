@@ -55,7 +55,7 @@ const Market: React.FC = () => {
   };
 
   return (
-    <section className="p-4 relative">
+    <section className="p-3 relative">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -86,7 +86,7 @@ const Market: React.FC = () => {
             <DropdownProfile />
           </header>
         </div>
-        <div className="flex flex-col lg:flex-row lg:space-x-10 ml-6">
+        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 -ml-12 md:ml-6 lg:ml-6">
           <div className="hidden lg:block lg:space-y-4">
             <Button onClick={handleApply} className="w-[100%]">
               Apply
