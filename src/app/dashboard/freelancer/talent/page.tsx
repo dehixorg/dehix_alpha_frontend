@@ -18,6 +18,7 @@ import {
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [projects, setProjects] = useState<any>([]);
   useEffect(() => {
     const fetchData = async () => {

@@ -1,12 +1,13 @@
 'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
 import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
-import { UserCredential } from 'firebase/auth';
-import { useDispatch } from 'react-redux';
 import { z, ZodError } from 'zod'; // Import Zod for validation
+import Cookies from 'js-cookie';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

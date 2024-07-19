@@ -29,7 +29,7 @@ interface ProjectProps {
   email: string;
   experience: string;
 }
-
+const project_id = 4;
 const RejectProjectCards: React.FC<ProjectProps> = ({
   companyName,
   role,
@@ -97,9 +97,9 @@ const RejectProjectCards: React.FC<ProjectProps> = ({
           {new Date(start).toLocaleDateString()}
         </div>
         <div className="mt-2">
-          <Button>
-            <Link href="/project/rejected/rejectedPage">view more</Link>
-          </Button>
+          <Link href={`/project/rejected/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

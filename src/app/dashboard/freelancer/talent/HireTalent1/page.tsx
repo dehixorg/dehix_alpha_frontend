@@ -55,6 +55,8 @@ import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
 export default function Dashboard() {
+  const [experience, setExperience] = useState<number | ''>('');
+  const [experienceError, setExperienceError] = useState<string | null>(null);
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',

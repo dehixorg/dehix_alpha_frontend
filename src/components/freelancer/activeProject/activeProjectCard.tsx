@@ -30,7 +30,7 @@ interface ProjectProps {
   email: string;
   experience: string;
 }
-
+const project_id = 1;
 const ActiveProjectCards: React.FC<ProjectProps> = ({
   companyName,
   role,
@@ -102,9 +102,9 @@ const ActiveProjectCards: React.FC<ProjectProps> = ({
             : end || 'N/A'}
         </div>
         <div className="mt-2">
-          <Button>
-          <Link href="/project/applied/appliedPage">view more</Link>
-          </Button>
+          <Link href={`/project/applied/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

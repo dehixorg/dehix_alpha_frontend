@@ -1,11 +1,9 @@
 'use client';
 import Image from 'next/image';
-import {  useState } from 'react';
-import {
-  Search,
-  Settings,
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Settings } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'next/navigation';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
@@ -18,13 +16,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/projectMenuItems';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
-import AppliedProjectDetailCard from '@/components/freelancer/project/projectPages/appliedProjectCards/appliedProjectDetailCard';
+import { menuItemsTop } from '@/config/menuItems/freelancer/projectMenuItems';
+import CurrentProjectDetailCard from '@/components/freelancer/project/projectPages/currentProjectCards/currentProjectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -58,8 +54,16 @@ interface Project {
 }
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [projects, setProjects] = useState<Project[]>([]);
-
+  const { projectId } = useParams();
+  useEffect(() => {
+    if (projectId) {
+      // Fetch project details using the projectId
+      // Example:
+      // fetchProjectDetails(projectId);
+    }
+  }, [projectId]);
   const menuItemsBottom: MenuItem[] = [
     {
       href: '/settings/personal-info',
@@ -73,21 +77,27 @@ export default function Dashboard() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Applied Projects"
+        active="Current Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Applied Projects"
+            active="Current Projects"
           />
 
           <Breadcrumb
             items={[
-              { label: 'Projects', link: '/project/current' },
-              { label: 'Applied Project', link: '/project/applied' },
-              { label: '#applied_id', link: '#' },
+              {
+                label: 'Projects',
+                link: '/project/current',
+              },
+              {
+                label: 'Current Project',
+                link: '/project/current',
+              },
+              { label: '#current_id', link: '#' },
             ]}
           />
 
@@ -129,7 +139,7 @@ export default function Dashboard() {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div>
-              <AppliedProjectDetailCard />
+              <CurrentProjectDetailCard />
             </div>
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">

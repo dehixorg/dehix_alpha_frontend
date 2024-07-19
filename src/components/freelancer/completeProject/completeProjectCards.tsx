@@ -31,6 +31,7 @@ interface ProjectProps {
   experience: string;
   isVerified?: string;
 }
+const project_id = 2;
 
 const CompleteProjectCards: React.FC<ProjectProps> = ({
   companyName,
@@ -117,9 +118,9 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
           {end !== 'current' ? new Date(end).toLocaleDateString() : 'Current'}
         </div>
         <div className="mt-2">
-          <Button>
-            <Link href="/project/completed/completedPage">view more</Link>
-          </Button>
+          <Link href={`/project/completed/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>
