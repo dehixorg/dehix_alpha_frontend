@@ -19,7 +19,12 @@ import UserDropdownMenu from '@/components/dropdown/user';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
+  const [refresh, setRefresh] = useState(false);
   const [educationInfo, setEducationInfo] = useState<any>([]);
+  const handleFormSubmit = () => {
+    // Toggle the refresh state to trigger useEffect
+    setRefresh((prev) => !prev);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +41,7 @@ export default function Education() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, [user.uid]);
+  }, [user.uid, refresh]);
 
   // const handleDelete = (index: number) => {
   //   const updatedEducation = education.filter((_, i) => i !== index);
@@ -94,7 +99,7 @@ export default function Education() {
           {educationInfo.map((education: any, index: number) => (
             <EducationInfoCard key={index} {...education} />
           ))}
-          <AddEducation />
+          <AddEducation onFormSubmit={handleFormSubmit} />
         </main>
       </div>
     </div>

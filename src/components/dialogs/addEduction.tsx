@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,7 +39,11 @@ const FormSchema = z.object({
   grade: z.string().optional(),
 });
 
-export function AddEducation() {
+interface AddEducationProps {
+  onFormSubmit: () => void;
+}
+
+export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   const user = useSelector((state: RootState) => state.user);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -53,8 +57,22 @@ export function AddEducation() {
     },
   });
 
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      form.reset({
+        degree: '',
+        universityName: '',
+        fieldOfStudy: '',
+        startDate: '',
+        endDate: '',
+        grade: '',
+      });
+    }
+  }, [isDialogOpen, form]);
+
   async function onSubmit(data: any) {
-    console.log(data);
     try {
       const formattedData = {
         ...data,
@@ -67,13 +85,13 @@ export function AddEducation() {
         verificationUpdateTime: data.verificationUpdateTime || new Date(),
         comments: '',
       };
-      console.log(formattedData.startDate, formattedData.endDate);
       const response = await axiosInstance.post(
-        `/freelancer/education/${user.uid}`,
+        `/freelancer/${user.uid}/education`,
         formattedData,
       );
       console.log('API Response:', response.data);
-
+      onFormSubmit();
+      setIsDialogOpen(false);
       toast({
         title: 'Education Added',
         description: 'The education has been successfully added.',
@@ -87,21 +105,6 @@ export function AddEducation() {
       });
     }
   }
-
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const toggleDialog = () => {
-    setIsDialogOpen(!isDialogOpen);
-    if (!isDialogOpen) {
-      form.reset({
-        degree: '',
-        universityName: '',
-        fieldOfStudy: '',
-        startDate: new Date().toISOString(),
-        endDate: new Date().toISOString(),
-        grade: '',
-      }); // Reset the form when opening the dialog
-    }
-  };
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -212,13 +215,11 @@ export function AddEducation() {
             />
 
             <DialogFooter>
-              <Button type="submit" onClick={toggleDialog}>
-                Save changes
-              </Button>
+              <Button type="submit">Create</Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   );
-}
+};

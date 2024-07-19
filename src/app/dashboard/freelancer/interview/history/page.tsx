@@ -28,14 +28,14 @@ export default function HistoryPage() {
 
   const [filter, setFilter] = useState('All');
 
-  const filteredInterviews = sampleInterviews.filter((interview) => {
-    if (filter === 'All') return interview.status === 'Completed';
-    if (filter === 'Skills' && interview.skill)
-      return interview.status === 'Completed';
-    if (filter === 'Domain' && interview.domain)
-      return interview.status === 'Completed';
-    return false;
-  });
+  // const filteredInterviews = sampleInterviews.filter((interview) => {
+  //   if (filter === 'All') return interview.status === 'Completed';
+  //   if (filter === 'Skills' && interview.skill)
+  //     return interview.status === 'Completed';
+  //   if (filter === 'Domain' && interview.domain)
+  //     return interview.status === 'Completed';
+  //   return false;
+  // });
 
   return (
     <>

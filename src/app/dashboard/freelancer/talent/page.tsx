@@ -1,13 +1,9 @@
 'use client';
 import { Search } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
 
 import { Input } from '@/components/ui/input';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { axiosInstance } from '@/lib/axiosinstance';
 import SkillDomainForm from '@/components/dash-comp/talentForm/skilldomainForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -16,23 +12,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
-export default function Projects() {
-  const user = useSelector((state: RootState) => state.user);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [projects, setProjects] = useState<any>([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response get:', response.data?.projects);
-        setProjects(Object.values(response.data?.projects)); // Store response data in state
-      } catch (error) {
-        console.error('API Error:', error);
-      }
-    };
-
-    fetchData(); // Call fetch data function on component mount
-  }, [user.uid]);
+export default function Talent() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu

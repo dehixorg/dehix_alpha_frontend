@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,6 +29,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
+// Schema for form validation using zod
 const projectFormSchema = z.object({
   projectName: z.string().min(1, { message: 'Project name is required.' }),
   description: z.string().min(1, { message: 'Description is required.' }),
@@ -43,10 +44,17 @@ const projectFormSchema = z.object({
   comments: z.string().optional(),
 });
 
+// Type for form values
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
-export function AddProject() {
+interface AddProjectProps {
+  onFormSubmit: () => void;
+}
+
+export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const user = useSelector((state: RootState) => state.user);
+
+  // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -65,6 +73,27 @@ export function AddProject() {
     mode: 'all',
   });
 
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      form.reset({
+        projectName: '',
+        description: '',
+        githubLink: '',
+        start: '',
+        end: '',
+        refer: '',
+        techUsed: '',
+        role: '',
+        projectType: '',
+        verificationStatus: 'added',
+        comments: '',
+      });
+    }
+  }, [isDialogOpen, form]);
+
+  // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
     try {
       // Convert comma-separated techUsed string into an array
@@ -86,7 +115,8 @@ export function AddProject() {
         },
       );
       console.log('API Response:', response.data);
-
+      onFormSubmit();
+      setIsDialogOpen(false);
       toast({
         title: 'Project Added',
         description: 'The project has been successfully added.',
@@ -102,7 +132,7 @@ export function AddProject() {
   }
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -282,4 +312,4 @@ export function AddProject() {
       </DialogContent>
     </Dialog>
   );
-}
+};
