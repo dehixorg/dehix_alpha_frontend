@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('token');
         setUserState(null);
         dispatch(clearUser());
-        router.replace('/auth/login');
+        // router.replace('/auth/login');
       }
       setLoading(false);
     });
