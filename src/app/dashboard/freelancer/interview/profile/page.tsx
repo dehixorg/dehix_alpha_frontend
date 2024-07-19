@@ -325,7 +325,12 @@ export default function ProfilePage() {
             </Table>
             <div className="text-center py-10 w-[100%] mt-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">No data available<br/> You can earn reward and help community by being interviewer.<br/> </p>
+              <p className="text-gray-500">
+                No data available
+                <br /> You can earn reward and help community by being
+                interviewer.
+                <br />{' '}
+              </p>
             </div>
           </div>
           <div className="mb-8 w-full sm:w-1/2">
@@ -462,7 +467,12 @@ export default function ProfilePage() {
             </Table>
             <div className="text-center py-10 w-[100%] mt-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">No data available<br/> You can select different domain for which you want to be interviewer.<br/> </p>
+              <p className="text-gray-500">
+                No data available
+                <br /> You can select different domain for which you want to be
+                interviewer.
+                <br />{' '}
+              </p>
             </div>
           </div>
         </div>

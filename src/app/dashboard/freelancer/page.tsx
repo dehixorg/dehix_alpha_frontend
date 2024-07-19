@@ -32,7 +32,6 @@ import {
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Calendar } from '@/components/ui/calendar';
 
 interface Project {
   _id: string;

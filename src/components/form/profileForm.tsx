@@ -248,7 +248,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} disabled/>
+                  <Input placeholder="+91" {...field} disabled />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>Non editable field</FormDescription>
