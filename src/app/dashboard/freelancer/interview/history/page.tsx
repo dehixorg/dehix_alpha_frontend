@@ -10,15 +10,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardFooter,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import dummyData from '@/dummydata.json';
@@ -28,14 +28,14 @@ export default function HistoryPage() {
 
   const [filter, setFilter] = useState('All');
 
-  // const filteredInterviews = sampleInterviews.filter((interview) => {
-  //   if (filter === 'All') return interview.status === 'Completed';
-  //   if (filter === 'Skills' && interview.skill)
-  //     return interview.status === 'Completed';
-  //   if (filter === 'Domain' && interview.domain)
-  //     return interview.status === 'Completed';
-  //   return false;
-  // });
+  const filteredInterviews = sampleInterviews.filter((interview) => {
+    if (filter === 'All') return interview.status === 'Completed';
+    if (filter === 'Skills' && interview.skill)
+      return interview.status === 'Completed';
+    if (filter === 'Domain' && interview.domain)
+      return interview.status === 'Completed';
+    return false;
+  });
 
   return (
     <>

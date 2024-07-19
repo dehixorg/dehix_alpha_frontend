@@ -31,7 +31,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
