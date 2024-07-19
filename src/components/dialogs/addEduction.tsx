@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { toast } from '../ui/use-toast';
 
 import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import {
   Form,
   FormControl,
@@ -21,11 +19,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
   Dialog,
   DialogTrigger,
   DialogContent,
@@ -35,32 +28,50 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
 
 const FormSchema = z.object({
-  degree: z.string({
-    required_error: 'Degree is required',
-  }),
-  universityName: z.string({
-    required_error: 'University Name is required',
-  }),
-  fieldOfStudy: z.string({
-    required_error: 'Field of study is required',
-  }),
-  start: z.date({
-    required_error: 'A start date is required',
-  }),
-  end: z.date({
-    required_error: 'An end date is required',
-  }),
-  grade: z.string({
-    required_error: 'A grade score is required',
-  }),
+  degree: z.string().optional(),
+  universityName: z.string().optional(),
+  fieldOfStudy: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  grade: z.string().optional(),
 });
 
 export function AddEducation() {
+  const user = useSelector((state: RootState) => state.user);
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      degree: '',
+      universityName: '',
+      fieldOfStudy: '',
+      startDate: '',
+      endDate: '',
+      grade: '',
+    },
+  });
+
   async function onSubmit(data: any) {
+    console.log(data);
     try {
-      const response = await axiosInstance.post('/education', data);
+      const formattedData = {
+        ...data,
+        startDate: data.startDate
+          ? new Date(data.startDate).toISOString()
+          : null,
+        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+        oracleAssigned: data.oracleAssigned || '',
+        verificationStatus: data.verificationStatus || 'added',
+        verificationUpdateTime: data.verificationUpdateTime || new Date(),
+        comments: '',
+      };
+      console.log(formattedData.startDate, formattedData.endDate);
+      const response = await axiosInstance.post(
+        `/freelancer/education/${user.uid}`,
+        formattedData,
+      );
       console.log('API Response:', response.data);
 
       toast({
@@ -76,16 +87,19 @@ export function AddEducation() {
       });
     }
   }
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {},
-  });
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const toggleDialog = () => {
     setIsDialogOpen(!isDialogOpen);
     if (!isDialogOpen) {
-      form.reset({}); // Reset the form when opening the dialog
+      form.reset({
+        degree: '',
+        universityName: '',
+        fieldOfStudy: '',
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+        grade: '',
+      }); // Reset the form when opening the dialog
     }
   };
 
@@ -97,7 +111,7 @@ export function AddEducation() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-2xl">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
         <DialogHeader>
           <DialogTitle>Add Education</DialogTitle>
           <DialogDescription>Add your relevant Education.</DialogDescription>
@@ -152,93 +166,35 @@ export function AddEducation() {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="start"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'w-full pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date('1900-01-01')
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>Your start date</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormDescription>Select the start date</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="end"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'w-full pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date('1900-01-01')
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>Your end date</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormDescription>Select the end date</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

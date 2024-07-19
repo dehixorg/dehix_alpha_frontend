@@ -11,11 +11,11 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import EducationInfoCard from '@/components/cards/freelancerProfile/eductaionInfoCard';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
+import UserDropdownMenu from '@/components/dropdown/user';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -63,7 +63,6 @@ export default function Education() {
         menuItemsBottom={menuItemsBottom}
         active="Education"
       />
-
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
@@ -74,7 +73,7 @@ export default function Education() {
           <Breadcrumb
             items={[
               { label: 'Settings', link: '#' },
-              { label: 'Education Info', link: '#' },
+              { label: 'Educational Info', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -84,8 +83,8 @@ export default function Education() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
-            <DropdownProfile />
           </div>
+          <UserDropdownMenu email={user.email} type={user.type} />
         </header>
 
         <main

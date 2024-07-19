@@ -4,7 +4,7 @@ import {
   ChevronRight,
   Clock,
   Search,
-  PackageOpen,
+  CalendarX2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
@@ -195,7 +195,7 @@ export default function Dashboard() {
               Interviews
             </CardTitle>
             <div className="text-center py-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
             </div>
             {/* <InterviewCard

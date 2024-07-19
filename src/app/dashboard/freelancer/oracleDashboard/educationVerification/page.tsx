@@ -22,7 +22,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -32,6 +31,7 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
+import { RootState } from '@/lib/store';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';

@@ -177,7 +177,7 @@ const SkillDomainForm: React.FC = () => {
               onOpenChange={setIsSkillDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setIsSkillDialogOpen(true)}>
+                <Button onClick={() => setIsSkillDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -261,7 +261,7 @@ const SkillDomainForm: React.FC = () => {
               onOpenChange={setIsDomainDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setIsDomainDialogOpen(true)}>
+                <Button onClick={() => setIsDomainDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>

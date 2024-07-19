@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -26,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
 
 const projectFormSchema = z.object({
   projectName: z.string().min(1, { message: 'Project name is required.' }),
@@ -34,18 +36,17 @@ const projectFormSchema = z.object({
   start: z.string().min(1, { message: 'Start date is required.' }),
   end: z.string().min(1, { message: 'End date is required.' }),
   refer: z.string().min(1, { message: 'Reference is required.' }),
-  techUsed: z
-    .array(z.string())
-    .min(1, { message: 'At least one technology must be selected.' }),
+  techUsed: z.string().min(1, { message: 'Technologies used are required.' }),
   role: z.string().min(1, { message: 'Role is required.' }),
-  projectType: z.string().min(1, { message: 'Project type is required.' }),
-  verificationStatus: z.string(),
+  projectType: z.string().optional(),
+  verificationStatus: z.string().optional(),
   comments: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export function AddProject() {
+  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -55,7 +56,7 @@ export function AddProject() {
       start: '',
       end: '',
       refer: '',
-      techUsed: [],
+      techUsed: '',
       role: '',
       projectType: '',
       verificationStatus: 'added',
@@ -66,7 +67,24 @@ export function AddProject() {
 
   async function onSubmit(data: ProjectFormValues) {
     try {
-      const response = await axiosInstance.post('/projects', data);
+      // Convert comma-separated techUsed string into an array
+      const techUsedArray = data.techUsed
+        .split(',')
+        .map((tech) => tech.trim())
+        .filter((tech) => tech !== '');
+
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/project`,
+        {
+          ...data,
+          techUsed: techUsedArray,
+          verified: false,
+          oracleAssigned: '',
+          start: data.start ? new Date(data.start).toISOString() : null,
+          end: data.end ? new Date(data.end).toISOString() : null,
+          verificationUpdateTime: new Date().toISOString(),
+        },
+      );
       console.log('API Response:', response.data);
 
       toast({
@@ -198,7 +216,10 @@ export function AddProject() {
                 <FormItem>
                   <FormLabel>Technologies Used</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter technologies used" {...field} />
+                    <Input
+                      placeholder="Enter technologies used (comma separated)"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     Enter the technologies used (comma separated)
@@ -230,7 +251,9 @@ export function AddProject() {
                   <FormControl>
                     <Input placeholder="Enter project type" {...field} />
                   </FormControl>
-                  <FormDescription>Enter the project type</FormDescription>
+                  <FormDescription>
+                    Enter the project type (optional)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

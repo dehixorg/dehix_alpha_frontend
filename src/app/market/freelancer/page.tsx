@@ -86,7 +86,7 @@ const Market: React.FC = () => {
           <DropdownProfile />
         </header>
       </div>
-      <div className="flex flex-col lg:flex-row lg:space-x-10 ml-20">
+      <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
         <div className="hidden lg:block lg:space-y-4 ">
           <Button onClick={handleApply} className="w-[100%]">
             Apply
