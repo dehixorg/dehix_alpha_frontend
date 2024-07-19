@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, MessageSquare } from 'lucide-react';
+import { ListFilter, MessageSquare, Search, PackageOpen } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -18,13 +18,43 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import { Input } from '@/components/ui/input';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import dummyData from '@/dummydata.json';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function HistoryPage() {
-  const sampleInterviews = dummyData.dashboardfreelancerhistoryInterview; // Replace with your actual data path from dummyData
+  const sampleInterviews = [
+    {
+      reference: 'Jane Smith',
+      skill: 'HTML/CSS',
+      interviewDate: '2023-11-23T10:30:00Z',
+      rating: 9,
+      comments: 'Great communication skills and technical expertise.',
+      status: 'Completed',
+      description:
+        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
+      contact: 'jane.smith@example.com',
+    },
+    {
+      reference: 'Jane Smith',
+      domain: 'DevOps',
+      interviewDate: '2023-11-23T10:30:00Z',
+      rating: 9,
+      comments: 'Great communication skills and technical expertise.',
+      status: 'Completed',
+      description:
+        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
+      contact: 'jane.smith@example.com',
+    },
+  ];
 
   const [filter, setFilter] = useState('All');
 
@@ -38,17 +68,41 @@ export default function HistoryPage() {
   });
 
   return (
-    <>
-      <Breadcrumb
-        items={[
-          {
-            label: 'Interview',
-            link: '/dashboard/freelancer/interview/profile',
-          },
-          { label: 'History', link: '#' },
-        ]}
+    <div className="flex min-h-screen w-full">
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="History"
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
+          <div className="flex items-center ml-2 gap-4">
+            <CollapsibleSidebarMenu
+              menuItemsTop={menuItemsTop}
+              menuItemsBottom={menuItemsBottom}
+              active="History"
+            />
+            <Breadcrumb
+              items={[
+                { label: 'Freelancer', link: '/dashboard/freelancer' },
+                {
+                  label: 'Interview',
+                  link: '/dashboard/freelancer/interview/profile',
+                },
+                { label: 'History Interviews', link: '#' },
+              ]}
+            />
+          </div>
+          <div className="relative flex items-center gap-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
+            />
+            <DropdownProfile />
+          </div>
+        </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -81,7 +135,7 @@ export default function HistoryPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredInterviews.map((interview, index) => (
               <Card key={index} className="max-w-full mx-auto md:max-w-lg">
                 <CardHeader>
@@ -94,17 +148,14 @@ export default function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <Badge
-                    className={`bg-${
-                      interview.status === 'Pending' ? 'warning' : 'success'
-                    } hover:bg-${
-                      interview.status === 'Pending' ? 'warning' : 'success'
-                    } text-xs`}
+                    className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'} text-xs`}
                   >
                     {interview.status.toUpperCase()}
                   </Badge>
                   <p className="text-gray-300 pt-4 text-sm">
                     {interview.description}
                   </p>
+
                   <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
                     <MessageSquare className="pr-1 mr-1 h-5 w-5" />
                     {interview.comments}
@@ -125,9 +176,13 @@ export default function HistoryPage() {
                 </CardFooter>
               </Card>
             ))}
+          </div> */}
+          <div className="text-center py-10 w-[90vw] mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No Inverview Scheduled for you.</p>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

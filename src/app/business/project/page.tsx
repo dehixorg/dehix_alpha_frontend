@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import {
   Boxes,
   Home,
@@ -12,16 +11,8 @@ import {
 import { useSelector } from 'react-redux';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
@@ -107,31 +98,7 @@ export default function Dashboard() {
           </div>
 
           {/* profile dropdown need to create separeant component */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -143,8 +110,8 @@ export default function Dashboard() {
               Profiles
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="min-w-[45%] " />
-              <ProjectProfileDetailCard className="min-w-[45%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
             </div>
           </div>
 
