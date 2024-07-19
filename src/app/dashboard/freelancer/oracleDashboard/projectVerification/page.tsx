@@ -20,7 +20,6 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
 

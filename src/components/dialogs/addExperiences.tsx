@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -43,7 +43,13 @@ const experienceFormSchema = z.object({
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 
-export function AddExperience() {
+interface AddExperienceProps {
+  onFormSubmit: () => void;
+}
+
+export const AddExperience: React.FC<AddExperienceProps> = ({
+  onFormSubmit,
+}) => {
   const user = useSelector((state: RootState) => state.user);
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
@@ -61,10 +67,28 @@ export function AddExperience() {
     mode: 'all',
   });
 
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      form.reset({
+        company: '',
+        jobTitle: '',
+        workDescription: '',
+        workFrom: '',
+        workTo: '',
+        referencePersonName: '',
+        referencePersonContact: '',
+        githubRepoLink: '',
+        comments: '',
+      });
+    }
+  }, [isDialogOpen, form]);
+
   async function onSubmit(data: ExperienceFormValues) {
     try {
       const response = await axiosInstance.post(
-        `/freelancer/experience/${user.uid}`,
+        `/freelancer/${user.uid}/experience`,
         {
           company: data.company || '',
           jobTitle: data.jobTitle || '',
@@ -83,7 +107,8 @@ export function AddExperience() {
         },
       );
       console.log('API Response:', response.data);
-
+      onFormSubmit();
+      setIsDialogOpen(false);
       toast({
         title: 'Experience Added',
         description: 'The experience has been successfully added.',
@@ -99,7 +124,7 @@ export function AddExperience() {
   }
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -266,4 +291,4 @@ export function AddExperience() {
       </DialogContent>
     </Dialog>
   );
-}
+};

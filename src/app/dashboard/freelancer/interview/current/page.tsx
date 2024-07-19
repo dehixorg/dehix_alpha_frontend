@@ -1,9 +1,9 @@
 'use client';
 import React from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { MessageSquare, Search, ListFilter, PackageOpen } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
+// import { useForm } from 'react-hook-form';
+import { Search, ListFilter, PackageOpen } from 'lucide-react';
+// import { zodResolver } from '@hookform/resolvers/zod';
 
 import {
   DropdownMenu,
@@ -13,14 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardFooter,
+// } from '@/components/ui/card';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -29,7 +29,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
@@ -59,81 +59,81 @@ interface InterviewCardProps {
   handleCommentSubmit: (index: number, comment: string) => void;
 }
 
-const InterviewCard: React.FC<InterviewCardProps> = ({
-  index,
-  interview,
-  handleCommentSubmit,
-}) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CommentFormData>({
-    resolver: zodResolver(CommentSchema),
-  });
+// const InterviewCard: React.FC<InterviewCardProps> = ({
+//   index,
+//   interview,
+//   handleCommentSubmit,
+// }) => {
+//   const {
+//     register,
+//     handleSubmit,
+//     formState: { errors },
+//     reset,
+//   } = useForm<CommentFormData>({
+//     resolver: zodResolver(CommentSchema),
+//   });
 
-  const onSubmit = (data: CommentFormData) => {
-    handleCommentSubmit(index, data.comment);
-    reset();
-  };
+//   const onSubmit = (data: CommentFormData) => {
+//     handleCommentSubmit(index, data.comment);
+//     reset();
+//   };
 
-  return (
-    <Card className="max-w-full mx-auto md:max-w-lg">
-      <CardHeader>
-        <CardTitle className="flex text-2xl">{interview.reference}</CardTitle>
-        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
-          {interview.skill || interview.domain}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Badge
-          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
-            interview.status === 'Pending' ? 'warning' : 'success'
-          } text-xs`}
-        >
-          {interview.status.toUpperCase()}
-        </Badge>
-        <p className="text-gray-300 pt-4 text-sm">{interview.description}</p>
-        {interview.status === 'Pending' && (
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-            <Input
-              type="text"
-              placeholder="Enter comment..."
-              className="p-2 border rounded"
-              {...register('comment')}
-            />
-            {errors.comment && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.comment.message}
-              </p>
-            )}
-            <Button type="submit" className="mt-2">
-              Submit Comment
-            </Button>
-          </form>
-        )}
-        {interview.status === 'Complete' && (
-          <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-            <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-            {interview.comments}
-          </p>
-        )}
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            Reference: {interview.reference}
-          </p>
-          <p className="text-sm text-gray-600">Contact: {interview.contact}</p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-          {new Date(interview.interviewDate).toLocaleDateString()}
-        </p>
-      </CardFooter>
-    </Card>
-  );
-};
+//   return (
+//     <Card className="max-w-full mx-auto md:max-w-lg">
+//       <CardHeader>
+//         <CardTitle className="flex text-2xl">{interview.reference}</CardTitle>
+//         <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
+//           {interview.skill || interview.domain}
+//         </CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <Badge
+//           className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
+//             interview.status === 'Pending' ? 'warning' : 'success'
+//           } text-xs`}
+//         >
+//           {interview.status.toUpperCase()}
+//         </Badge>
+//         <p className="text-gray-300 pt-4 text-sm">{interview.description}</p>
+//         {interview.status === 'Pending' && (
+//           <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
+//             <Input
+//               type="text"
+//               placeholder="Enter comment..."
+//               className="p-2 border rounded"
+//               {...register('comment')}
+//             />
+//             {errors.comment && (
+//               <p className="text-red-500 text-xs mt-1">
+//                 {errors.comment.message}
+//               </p>
+//             )}
+//             <Button type="submit" className="mt-2">
+//               Submit Comment
+//             </Button>
+//           </form>
+//         )}
+//         {interview.status === 'Complete' && (
+//           <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
+//             <MessageSquare className="pr-1 mr-1 h-5 w-5" />
+//             {interview.comments}
+//           </p>
+//         )}
+//         <div className="mt-4">
+//           <p className="text-sm text-gray-600">
+//             Reference: {interview.reference}
+//           </p>
+//           <p className="text-sm text-gray-600">Contact: {interview.contact}</p>
+//         </div>
+//       </CardContent>
+//       <CardFooter className="flex">
+//         <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+//           {new Date(interview.interviewDate).toLocaleDateString()}
+//         </p>
+//       </CardFooter>
+//     </Card>
+//   );
+// };
 
 export default function CurrentPage() {
   const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([

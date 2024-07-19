@@ -19,7 +19,12 @@ import {
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
+  const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
+  const handleFormSubmit = () => {
+    // Toggle the refresh state to trigger useEffect
+    setRefresh((prev) => !prev);
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -32,7 +37,7 @@ export default function ProfessionalInfo() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, [user.uid]);
+  }, [user.uid, refresh]);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -70,7 +75,7 @@ export default function ProfessionalInfo() {
           {experiences.map((exp: any, index: number) => (
             <ExperienceCard key={index} {...exp} />
           ))}
-          <AddExperience />
+          <AddExperience onFormSubmit={handleFormSubmit} />
         </main>
       </div>
     </div>
