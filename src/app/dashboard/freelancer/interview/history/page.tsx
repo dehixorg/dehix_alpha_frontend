@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, MessageSquare, Search, PackageOpen } from 'lucide-react';
+import { ListFilter, Search, PackageOpen } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -10,14 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -25,7 +17,6 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
