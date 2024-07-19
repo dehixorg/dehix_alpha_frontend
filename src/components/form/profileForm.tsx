@@ -234,9 +234,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your email" {...field} />
+                  <Input placeholder="Enter your email" {...field} disabled />
                 </FormControl>
-                <FormDescription>Enter your email</FormDescription>
+                <FormDescription>Non editable field</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -248,10 +248,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} />
+                  <Input placeholder="+91" {...field} disabled />
                 </FormControl>
                 <FormMessage />
-                <FormDescription>Enter your phone number</FormDescription>
+                <FormDescription>Non editable field</FormDescription>
               </FormItem>
             )}
           />

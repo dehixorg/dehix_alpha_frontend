@@ -12,8 +12,8 @@ const ProjectPage: React.FC = () => {
   const users = dummyData.marketFreelancerProjectOtherBits;
 
   return (
-    <div className="container mx-auto p-4 flex">
-      <div className="flex-1 mr-4">
+    <div className="container mx-auto p-4 flex flex-col md:flex-row">
+      <div className="flex-1 mr-4 mb-4 md:mb-0">
         <ProjectComponent
           project_name={project.project_name}
           project_id={project.project_id}
@@ -29,7 +29,7 @@ const ProjectPage: React.FC = () => {
           project_type={project.project_type}
         />
       </div>
-      <div className="w-full md:w-[400px] p-6">
+      <div className="w-full md:w-[400px] px-5 md:p-2 lg:p-6">
         <ProjectSidebar />
         <div className="mt-10 ml-5">
           <a

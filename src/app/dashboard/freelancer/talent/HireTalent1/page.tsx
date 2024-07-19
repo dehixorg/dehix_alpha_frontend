@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 // eslint-disable-next-line import/order
 import React from 'react'; // Import 'react' first
 
@@ -18,12 +17,6 @@ import {
   Users2,
 } from 'lucide-react';
 
-// Redux hooks and selectors
-import { useSelector } from 'react-redux';
-
-// eslint-disable-next-line import/order
-import { RootState } from '@/lib/store';
-
 // Shared components
 // eslint-disable-next-line import/order
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -34,7 +27,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -59,11 +51,10 @@ import {
 
 // Menu components
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 new Date('2023-11-23T10:30:00Z');
 export default function Dashboard() {
-  const user = useSelector((state: RootState) => state.user);
-
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -140,33 +131,8 @@ export default function Dashboard() {
           </div>
 
           {/* DropdownMenu component */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
-
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">

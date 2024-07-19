@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Search, UserIcon } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search } from 'lucide-react';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
@@ -15,18 +14,9 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RootState } from '@/lib/store';
 import dummyData from '@/dummydata.json';
 
 interface FilterState {
@@ -37,7 +27,6 @@ interface FilterState {
 }
 
 const Market: React.FC = () => {
-  const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -94,33 +83,10 @@ const Market: React.FC = () => {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
       </div>
-      <div className="flex flex-col lg:flex-row lg:space-x-10 ml-20">
+      <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
         <div className="hidden lg:block lg:space-y-4 ">
           <Button onClick={handleApply} className="w-[100%]">
             Apply

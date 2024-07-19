@@ -1,18 +1,9 @@
 'use client';
-import { Search, UserIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -28,7 +19,12 @@ import {
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
+  const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
+  const handleFormSubmit = () => {
+    // Toggle the refresh state to trigger useEffect
+    setRefresh((prev) => !prev);
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -41,7 +37,7 @@ export default function ProfessionalInfo() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, [user.uid]);
+  }, [user.uid, refresh]);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -70,30 +66,7 @@ export default function ProfessionalInfo() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
@@ -102,7 +75,7 @@ export default function ProfessionalInfo() {
           {experiences.map((exp: any, index: number) => (
             <ExperienceCard key={index} {...exp} />
           ))}
-          <AddExperience />
+          <AddExperience onFormSubmit={handleFormSubmit} />
         </main>
       </div>
     </div>
