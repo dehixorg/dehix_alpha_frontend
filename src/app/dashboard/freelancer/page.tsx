@@ -74,6 +74,7 @@ export default function Dashboard() {
         const response = await axiosInstance.get(
           `/freelancer/${user.uid}/project`,
         ); // Fetch data from API
+        console.log(response);
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
