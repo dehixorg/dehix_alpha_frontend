@@ -4,7 +4,7 @@ import {
   ChevronRight,
   Clock,
   Search,
-  PackageOpen,
+  CalendarX2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
@@ -32,6 +32,7 @@ import {
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import { Calendar } from '@/components/ui/calendar';
 
 interface Project {
   _id: string;
@@ -195,7 +196,7 @@ export default function Dashboard() {
               Interviews
             </CardTitle>
             <div className="text-center py-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
             </div>
             {/* <InterviewCard
