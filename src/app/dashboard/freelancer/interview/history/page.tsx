@@ -22,31 +22,6 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function HistoryPage() {
-  const sampleInterviews = [
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Jane Smith',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: 'Great communication skills and technical expertise.',
-      status: 'Completed',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ];
-
   const [filter, setFilter] = useState('All');
 
   // const filteredInterviews = sampleInterviews.filter((interview) => {

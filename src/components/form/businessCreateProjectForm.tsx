@@ -204,7 +204,7 @@ export function CreateProjectBusinessForm() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="gap-10 lg:grid lg:grid-cols-2 xl:grid-cols-2"
+          className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
         >
           <FormField
             control={form.control}
@@ -274,7 +274,6 @@ export function CreateProjectBusinessForm() {
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2"
               onClick={() => appendUrl({ value: '' })}
             >
               Add URL
@@ -287,7 +286,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.domain`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
                         <Select
@@ -316,7 +315,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.freelancersRequired`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Number of Freelancers Required</FormLabel>
                       <FormControl>
                         <Input
@@ -329,12 +328,11 @@ export function CreateProjectBusinessForm() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.skills`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
                         <div>
@@ -386,12 +384,11 @@ export function CreateProjectBusinessForm() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.experience`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter experience" {...field} />
@@ -404,7 +401,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.minConnect`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Min Connect</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter Min Connects" {...field} />
@@ -417,7 +414,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.rate`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Per Hour Rate</FormLabel>
                       <FormControl>
                         <Input
@@ -434,7 +431,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.description`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
@@ -474,6 +471,7 @@ export function CreateProjectBusinessForm() {
               Add Profile
             </Button>
           </div>
+
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Create Project
           </Button>
