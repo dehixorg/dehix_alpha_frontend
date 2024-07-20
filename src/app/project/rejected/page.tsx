@@ -15,8 +15,6 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
-import RejectProjectCards from '@/components/freelancer/rejectProject/rejectProjectCard';
-import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;

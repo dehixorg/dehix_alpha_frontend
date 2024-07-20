@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -30,6 +31,7 @@ import { toast } from '@/components/ui/use-toast';
 import { MultiSelect } from '@/components/customFormComponents/multiselect';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -84,8 +86,66 @@ const defaultValues: Partial<ProfileFormValues> = {
   ],
 };
 
+interface Skill {
+  _id: string;
+  label: string;
+}
+
+interface Domain {
+  _id: string;
+  label: string;
+}
+
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  const [domains, setDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+
+  const handleAddSkill = () => {
+    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
+      setCurrSkills([...currSkills, tmpSkill]);
+      setTmpSkill('');
+    }
+  };
+
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const domainResponse = await axiosInstance.get('/domain/all');
+        console.log('Domain API Response get:', domainResponse.data.data);
+        const transformedDomain = domainResponse.data.data.map(
+          (skill: Domain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setDomains(transformedDomain);
+
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        console.log('Skills API Response get:', skillsResponse.data.data);
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
@@ -108,6 +168,12 @@ export function CreateProjectBusinessForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
+      console.log('Form body:', {
+        ...data,
+        skills: currSkills,
+        domains: currDomains,
+      });
+
       const transformedData = {
         ...data,
         profiles: data.profiles?.map((profile) => ({
@@ -120,6 +186,11 @@ export function CreateProjectBusinessForm() {
       console.log('Form data:', transformedData);
       const response = await axiosInstance.put(
         `/business/${user.uid}/project`,
+        {
+          ...data,
+          skills: currSkills,
+          domains: currDomains,
+        },
         transformedData,
       );
       console.log('API Response:', response.data);
@@ -239,18 +310,11 @@ export function CreateProjectBusinessForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Frontend Developer">
-                              Frontend Developer
-                            </SelectItem>
-                            <SelectItem value="Backend Developer">
-                              Backend Developer
-                            </SelectItem>
-                            <SelectItem value="Content Writer">
-                              Content Writer
-                            </SelectItem>
-                            <SelectItem value="Project Manager">
-                              Project Manager
-                            </SelectItem>
+                            {domains.map((domain: any, index: number) => (
+                              <SelectItem key={index} value={domain.label}>
+                                {domain.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -275,6 +339,7 @@ export function CreateProjectBusinessForm() {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.skills`}
@@ -282,21 +347,56 @@ export function CreateProjectBusinessForm() {
                     <FormItem>
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
-                        <MultiSelect
-                          options={[
-                            { value: 'React', label: 'React' },
-                            { value: 'Node.js', label: 'Node.js' },
-                            { value: 'Python', label: 'Python' },
-                            { value: 'AWS', label: 'AWS' },
-                          ]}
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <div>
+                          <div className="flex items-center mt-2">
+                            <Select
+                              onValueChange={(value) => setTmpSkill(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select skill" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skills.map((skill: any, index: number) => (
+                                  <SelectItem key={index} value={skill.label}>
+                                    {skill.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              size="icon"
+                              className="ml-2"
+                              onClick={handleAddSkill}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap mt-5">
+                            {currSkills.map((skill: any, index: number) => (
+                              <Badge
+                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                                key={index}
+                              >
+                                {skill}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(skill)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.experience`}
