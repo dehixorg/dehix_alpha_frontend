@@ -5,30 +5,17 @@ import { Card, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-interface ProjectProps {
+interface JobCardProps {
   projectName: string;
   description: string;
   companyName: string;
   email: string;
-  start: string;
-  end: string;
   skillsRequired: string[];
-  experience: string;
-  role: string;
-  projectType: string;
-  totalNeedOfFreelancer: {
-    category: string;
-    needOfFreelancer: number;
-    appliedCandidates: string[];
-    rejected: string[];
-    accepted: string[];
-    status: string;
-  }[];
-  status: string;
-  team: string[];
+  status: string | undefined;
+  team: string[] | undefined;
 }
 
-const JobCard: React.FC<Partial<ProjectProps>> = ({
+const JobCard: React.FC<JobCardProps> = ({
   projectName,
   description,
   companyName,

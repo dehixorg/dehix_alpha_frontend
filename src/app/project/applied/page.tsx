@@ -40,8 +40,8 @@ interface Project {
   }[];
   status?: string;
   team?: string[];
-  createdAt: { $date: string };
-  updatedAt: { $date: string };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function AppliedProject() {

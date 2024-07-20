@@ -52,8 +52,8 @@ interface Project {
   }[];
   status?: string;
   team?: string[];
-  createdAt: { $date: string };
-  updatedAt: { $date: string };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const Market: React.FC = () => {

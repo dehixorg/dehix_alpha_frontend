@@ -1,5 +1,3 @@
-import { Timer } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,8 +34,8 @@ interface ProjectType {
   }[];
   status?: string;
   team?: string[];
-  createdAt: { $date: string };
-  updatedAt: { $date: string };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
@@ -54,12 +52,12 @@ export function ProjectCard({
       <CardHeader>
         <CardTitle>{project.projectName}</CardTitle>
         <CardDescription className="text-gray-600">
-          <div className="flex">
-            <Timer />
-            <p className="my-auto ml-1">
-              {project.end ? new Date(project.end).toLocaleDateString() : 'N/A'}
-            </p>
-          </div>
+          <p className="my-auto">
+            {project.createdAt
+              ? new Date(project.createdAt).toLocaleDateString()
+              : 'N/A'}
+          </p>
+
           <br />
           <Badge
             className="text-xs"
