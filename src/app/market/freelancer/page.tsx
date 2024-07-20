@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import Jobs from '@/components/opportunities/jobs/jobs';
 import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -17,7 +17,9 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import dummyData from '@/dummydata.json';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
+import JobCard from '@/components/opportunities/jobs/jobs';
 
 interface FilterState {
   location: string[];
@@ -26,7 +28,36 @@ interface FilterState {
   skills: string[];
 }
 
+interface Project {
+  _id: string;
+  projectName: string;
+  description: string;
+  email: string;
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date;
+  skillsRequired: string[];
+  experience?: string;
+  role: string;
+  projectType: string;
+  totalNeedOfFreelancer?: {
+    category?: string;
+    needOfFreelancer?: number;
+    appliedCandidates?: string[];
+    rejected?: string[];
+    accepted?: string[];
+    status?: string;
+  }[];
+  status?: string;
+  team?: string[];
+  createdAt: { $date: string };
+  updatedAt: { $date: string };
+}
+
 const Market: React.FC = () => {
+  const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -35,6 +66,7 @@ const Market: React.FC = () => {
     domain: [],
     skills: [],
   });
+  const [jobs, setJobs] = useState<Project[]>([]);
   const handleFilterChange = (filterType: any, selectedValues: any) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -48,7 +80,17 @@ const Market: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    const fetchData = async () => {
+      try {
+        const response = await axiosInstance.get('/business/all_project'); // Fetch data from API
+        console.log(response.data.data);
+        setJobs(response.data.data); // Store all projects initially
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+    fetchData();
+  }, [user.uid]);
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
@@ -263,14 +305,18 @@ const Market: React.FC = () => {
           </div>
         </div>
         <div className="mt-4 lg:mt-0 lg:ml-10">
-          <Jobs
-            heading={dummyData.marketfreelancerJob.heading}
-            content={dummyData.marketfreelancerJob.content}
-            skills={dummyData.marketfreelancerJob.skills}
-            location={dummyData.marketfreelancerJob.location}
-            founded={dummyData.marketfreelancerJob.founded}
-            employees={dummyData.marketfreelancerJob.employees}
-          />
+          {jobs.map((job: Project, index: number) => (
+            <JobCard
+              key={index}
+              projectName={job.projectName}
+              description={job.description}
+              companyName={job.companyName}
+              email={job.email}
+              skillsRequired={job.skillsRequired}
+              status={job.status}
+              team={job.team}
+            />
+          ))}
         </div>
       </div>
 

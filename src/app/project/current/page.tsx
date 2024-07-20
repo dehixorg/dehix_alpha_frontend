@@ -1,5 +1,5 @@
 'use client';
-import { Search } from 'lucide-react';
+import { PackageOpen, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -15,8 +15,6 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
-import CurrentProjectCard from '@/components/freelancer/currentProject/currentProjectCard';
-import dummydata from '@/dummydata.json';
 
 interface Project {
   _id: string;
@@ -105,35 +103,16 @@ export default function CurrentProject() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {projects.map((project, index: number) => (
-            <ProjectCard key={index} project={project} />
-          ))}
-          <div>
-            <CurrentProjectCard
-              companyName={dummydata.projectCurrentCard.companyName}
-              role={dummydata.projectCurrentCard.role}
-              projectType={dummydata.projectCurrentCard.projectType}
-              description={dummydata.projectCurrentCard.description}
-              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
-              start={dummydata.projectCurrentCard.start}
-              end={dummydata.projectCurrentCard.end}
-              email={dummydata.projectCurrentCard.email}
-              experience={dummydata.projectCurrentCard.experience}
-            />
-          </div>
-          <div>
-            <CurrentProjectCard
-              companyName={dummydata.projectCurrentCard.companyName}
-              role={dummydata.projectCurrentCard.role}
-              projectType={dummydata.projectCurrentCard.projectType}
-              description={dummydata.projectCurrentCard.description}
-              skillsRequired={dummydata.projectCurrentCard.skillsRequired}
-              start={dummydata.projectCurrentCard.start}
-              end={dummydata.projectCurrentCard.end}
-              email={dummydata.projectCurrentCard.email}
-              experience={dummydata.projectCurrentCard.experience}
-            />
-          </div>
+          {projects.length === 0 ? (
+            <div className="col-span-full text-center mt-20 w-full">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">No projects available</p>
+            </div>
+          ) : (
+            projects.map((project, index: number) => (
+              <ProjectCard key={index} project={project} />
+            ))
+          )}
         </main>
       </div>
     </div>

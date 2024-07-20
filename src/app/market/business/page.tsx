@@ -4,7 +4,6 @@ import { Search } from 'lucide-react';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import Jobs from '@/components/opportunities/jobs/jobs';
 import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -246,16 +245,7 @@ const Market: React.FC = () => {
               />
             </div>
           </div>
-          <div className="mt-4 lg:mt-0 lg:ml-10">
-            <Jobs
-              heading={dummyData.marketfreelancerJob.heading}
-              content={dummyData.marketfreelancerJob.content}
-              skills={dummyData.marketfreelancerJob.skills}
-              location={dummyData.marketfreelancerJob.location}
-              founded={dummyData.marketfreelancerJob.founded}
-              employees={dummyData.marketfreelancerJob.employees}
-            />
-          </div>
+          <div className="mt-4 lg:mt-0 lg:ml-10"></div>
         </div>
       </div>
 
