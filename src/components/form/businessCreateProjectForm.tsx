@@ -166,15 +166,19 @@ export function CreateProjectBusinessForm() {
     try {
       console.log('Form body:', {
         ...data,
-        skills: currSkills,
+        role: '',
+        projectType: '',
+        skillsRequired: currSkills,
         domains: currDomains,
       });
 
-      const response = await axiosInstance.put(
+      const response = await axiosInstance.post(
         `/business/${user.uid}/project`,
         {
           ...data,
-          skills: currSkills,
+          role: '',
+          projectType: '',
+          skillsRequired: currSkills,
           domains: currDomains,
         },
       );
@@ -182,7 +186,7 @@ export function CreateProjectBusinessForm() {
 
       // You can update other fields here as needed
       toast({
-        title: 'Profile Updated',
+        title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
     } catch (error) {
@@ -248,7 +252,7 @@ export function CreateProjectBusinessForm() {
             {urlFields.map((field, index) => (
               <FormField
                 control={form.control}
-                key={field.id}
+                key={index}
                 name={`urls.${index}.value`}
                 render={({ field }) => (
                   <FormItem>
@@ -278,7 +282,7 @@ export function CreateProjectBusinessForm() {
           </div>
           <div className="lg:col-span-2 xl:col-span-2">
             {profileFields.map((field, index) => (
-              <div key={field.id} className="border p-4 mb-4 rounded-md">
+              <div key={index} className="border p-4 mb-4 rounded-md">
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.domain`}
