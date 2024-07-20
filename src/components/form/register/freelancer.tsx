@@ -8,14 +8,16 @@ import { useRouter } from 'next/navigation';
 import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 
+import DatePicker from './datepicker';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/shared/datePicker';
 import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
+import 'react-datepicker/dist/react-datepicker.css';
 
 // Define Zod schema for password validation
 const passwordSchema = z
@@ -33,9 +35,11 @@ export default function FreelancerRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [workExperience, setWorkExperience] = useState<number | string>('');
   const [workExperienceError, setWorkExperienceError] = useState<string>('');
+  const [dob, setDob] = useState<Date | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
+  const maxDate = new Date();
 
   const handleLogin = async (email: string, pass: string): Promise<void> => {
     try {
@@ -80,6 +84,10 @@ export default function FreelancerRegisterForm() {
     const value = e.target.value;
     setWorkExperience(value);
     setWorkExperienceError(''); // Clear the error message as user types
+  };
+  const handleDateChange = (date: Date | null) => {
+    setDob(date);
+    console.log('Selected Date:', date);
   };
 
   async function onSubmit(event: React.SyntheticEvent) {
@@ -254,7 +262,13 @@ export default function FreelancerRegisterForm() {
         <div className="grid grid-cols-2 gap-4 mt-3">
           <div className="grid gap-2">
             <Label htmlFor="DOB">DOB</Label>
-            <DatePicker />
+            <div className="">
+              <DatePicker
+                selected={dob}
+                onChange={handleDateChange}
+                maxDate={maxDate}
+              />
+            </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="workExperience">Work Experience (Years)</Label>
