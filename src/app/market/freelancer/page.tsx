@@ -306,7 +306,16 @@ const Market: React.FC = () => {
         </div>
         <div className="mt-4 lg:mt-0 lg:ml-10">
           {jobs.map((job: Project, index: number) => (
-            <JobCard key={index} {...job} />
+            <JobCard
+              key={index}
+              projectName={job.projectName}
+              description={job.description}
+              companyName={job.companyName}
+              email={job.email}
+              skillsRequired={job.skillsRequired}
+              status={job.status}
+              team={job.team}
+            />
           ))}
         </div>
       </div>

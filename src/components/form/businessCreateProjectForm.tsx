@@ -28,14 +28,13 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { MultiSelect } from '@/components/customFormComponents/multiselect';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
-    message: 'Project Name must be at least 2 characters.',
+    message: 'First Name must be at least 2 characters.',
   }),
   email: z
     .string({
@@ -56,11 +55,7 @@ const profileFormSchema = z.object({
         domain: z.string(),
         freelancersRequired: z.string(),
         skills: z.array(z.string()),
-        experience: z
-          .number()
-          .min(0, 'Experience must be at least 0 years')
-          .max(60, 'Experience must not exceed 60 years')
-          .optional(),
+        experience: z.string(),
         minConnect: z.string(),
         rate: z.string(),
         description: z.string().max(160).min(4),
@@ -79,6 +74,7 @@ const defaultValues: Partial<ProfileFormValues> = {
       domain: '',
       freelancersRequired: '',
       skills: [],
+      experience: '',
       minConnect: '',
       rate: '',
       description: '',
@@ -174,16 +170,6 @@ export function CreateProjectBusinessForm() {
         domains: currDomains,
       });
 
-      const transformedData = {
-        ...data,
-        profiles: data.profiles?.map((profile) => ({
-          ...profile,
-          experience:
-            profile.experience != null ? Number(profile.experience) : undefined,
-        })),
-      };
-
-      console.log('Form data:', transformedData);
       const response = await axiosInstance.put(
         `/business/${user.uid}/project`,
         {
@@ -191,10 +177,10 @@ export function CreateProjectBusinessForm() {
           skills: currSkills,
           domains: currDomains,
         },
-        transformedData,
       );
       console.log('API Response:', response.data);
 
+      // You can update other fields here as needed
       toast({
         title: 'Profile Updated',
         description: 'Your project has been successfully added.',
@@ -301,8 +287,8 @@ export function CreateProjectBusinessForm() {
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
                         <Select
-                          value={field.value}
-                          onValueChange={(value) => field.onChange(value)}
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -402,20 +388,9 @@ export function CreateProjectBusinessForm() {
                   name={`profiles.${index}.experience`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Experience (Years)</FormLabel>
+                      <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter experience"
-                          value={field.value ?? ''}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value
-                                ? Number(e.target.value)
-                                : undefined,
-                            )
-                          }
-                        />
+                        <Input placeholder="Enter experience" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -485,10 +460,10 @@ export function CreateProjectBusinessForm() {
                   domain: '',
                   freelancersRequired: '',
                   skills: [],
+                  experience: '',
                   minConnect: '',
                   rate: '',
                   description: '',
-                  experience: undefined,
                 })
               }
             >
