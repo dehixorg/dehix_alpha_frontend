@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -76,7 +76,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   });
 
   const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.includes(tmpSkill)) {
+    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
         ...currSkills,
         {
@@ -93,7 +93,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   };
 
   const handleAddDomain = () => {
-    if (tmpDomain && !currDomains.includes(tmpDomain)) {
+    if (
+      tmpDomain &&
+      !currDomains.some((domain: any) => domain.name === tmpDomain)
+    ) {
       setCurrDomains([
         ...currDomains,
         {
@@ -102,6 +105,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       ]);
       setTmpDomain('');
     }
+  };
+
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(
+      currSkills.filter((skill: any) => skill.name !== skillToDelete),
+    );
+  };
+
+  const handleDeleteDomain = (domainToDelete: string) => {
+    setCurrDomains(
+      currDomains.filter((domain: any) => domain.name !== domainToDelete),
+    );
   };
 
   useEffect(() => {
@@ -335,15 +350,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <div className="flex flex-wrap mt-5">
                 {currSkills.map((skill: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
                     key={index}
                   >
                     {skill.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSkill(skill.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </Badge>
                 ))}
               </div>
             </div>
-            <div>
+            {/* <div>
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select onValueChange={(value) => setTmpDomain(value)}>
@@ -371,14 +393,21 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <div className="flex flex-wrap mt-5">
                 {currDomains.map((domain: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
                     key={index}
                   >
                     {domain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDomain(domain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </Badge>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           <Button type="submit" className="col-span-2">

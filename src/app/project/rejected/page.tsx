@@ -1,5 +1,5 @@
 'use client';
-import { Search } from 'lucide-react';
+import { PackageOpen, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -105,33 +105,16 @@ export default function RejectedProject() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
-          {projects.map((project, index: number) => (
-            <ProjectCard key={index} project={project} />
-          ))}
-          <div>
-            <RejectProjectCards
-              companyName={dummydata.projectRejectedCard.companyName}
-              role={dummydata.projectRejectedCard.role}
-              projectType={dummydata.projectRejectedCard.projectType}
-              description={dummydata.projectRejectedCard.description}
-              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
-              start={dummydata.projectRejectedCard.start}
-              email={dummydata.projectRejectedCard.email}
-              experience={dummydata.projectRejectedCard.experience}
-            />
-          </div>
-          <div>
-            <RejectProjectCards
-              companyName={dummydata.projectRejectedCard.companyName}
-              role={dummydata.projectRejectedCard.role}
-              projectType={dummydata.projectRejectedCard.projectType}
-              description={dummydata.projectRejectedCard.description}
-              skillsRequired={dummydata.projectRejectedCard.skillsRequired}
-              start={dummydata.projectRejectedCard.start}
-              email={dummydata.projectRejectedCard.email}
-              experience={dummydata.projectRejectedCard.experience}
-            />
-          </div>
+          {projects.length === 0 ? (
+            <div className="col-span-full text-center mt-20 w-full">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">No projects available</p>
+            </div>
+          ) : (
+            projects.map((project, index: number) => (
+              <ProjectCard key={index} project={project} />
+            ))
+          )}
         </main>
       </div>
     </div>
