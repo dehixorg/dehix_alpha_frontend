@@ -72,11 +72,11 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         ))}
       </div>
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-full bg-white border rounded-md shadow-lg">
+        <div className="absolute z-10 mt-2 w-full bg-muted/100 border rounded-md shadow-lg">
           {options.map((option) => (
             <div
               key={option.value}
-              className="flex items-center p-2 cursor-pointer hover:bg-gray-100"
+              className="flex items-center p-2 cursor-pointer hover:bg-gray-500"
               onClick={() => handleSelect(option.value)}
             >
               <input
