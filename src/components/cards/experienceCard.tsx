@@ -54,7 +54,7 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-      {verificationStatus === 'pending' ? (
+        {verificationStatus === 'pending' ? (
           <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
         ) : verificationStatus === 'verified' ? (
           <Badge className="bg-success hover:bg-success">VERIFIED</Badge>

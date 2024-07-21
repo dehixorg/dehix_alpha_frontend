@@ -1,99 +1,107 @@
 import React from 'react';
+import { Mail } from 'lucide-react';
 
 import {
   Card,
-  CardDescription,
+  CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-function ProjectDetailCard() {
+
+export interface ProjectDetailCardProps {
+  projectName: string;
+  description: string;
+  email: string;
+  status: string | undefined;
+  startDate: Date | null | undefined;
+  endDate: Date | null | undefined;
+  domains: string[];
+  skills: string[];
+}
+
+const getStatusBadge = (status: string | undefined) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return { text: 'ACTIVE', className: 'bg-blue-500 hover:bg-blue-600' };
+    case 'pending':
+      return { text: 'PENDING', className: 'bg-warning hover:bg-warning' };
+    case 'completed':
+      return { text: 'COMPLETED', className: 'bg-success hover:bg-success' };
+    case 'rejected':
+      return { text: 'REJECTED', className: 'bg-red-500 hover:bg-red-600' };
+    default:
+      return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
+  }
+};
+function ProjectDetailCard({
+  projectName,
+  description,
+  email,
+  status,
+  startDate,
+  endDate,
+  domains,
+  skills,
+}: ProjectDetailCardProps) {
+  const { text, className } = getStatusBadge(status);
+
+  console.log(startDate);
+
   return (
-    <div>
-      <Card className="">
-        <CardHeader className="pb-3">
-          <CardTitle>Project Name</CardTitle>
-          <CardDescription className="">
-            <div className="mt-4 grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-4 xl:grid-cols-4">
-              <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-3 border-r-2 pr-6 border-gray-300">
-                Welcome to our project! This initiative aims to [briefly
-                describe the main goal or purpose of the project]. Through this
-                project, we intend to [mention key objectives or outcomes]. Our
-                team is dedicated to [highlight any unique approaches or
-                methodologies]. We believe this project will [state the expected
-                impact or benefits]. Feel free to replace the placeholders with
-                specific details about your project. If you need further
-                customization or additional sections, let me know!
-                <br />
-                <br />
-                Welcome to our project! This initiative aims to [briefly
-                describe the main goal or purpose of the project]. Through this
-                project, we intend to [mention key objectives or outcomes]. Our
-                team is dedicated to [highlight any unique approaches or
-                methodologies]. We believe this project will [state the expected
-                impact or benefits]. Feel free to replace the placeholders with
-                specific details about your project. If you need further
-                customization or additional sections, let me know!
-                <div className=" ml-4">
-                  <ul className="flex flex-wrap gap-4">
-                    <li className="min-w-[45%] ">
-                      <span className="text-gray-700 font-semibold ">
-                        Email-{' '}
-                      </span>{' '}
-                      sample@xyz.com
-                    </li>
-                    <li className="min-w-[45%] ">
-                      <span className="text-gray-700 font-semibold ">
-                        Staus-{' '}
-                      </span>{' '}
-                      Current
-                    </li>
-                    <li className="min-w-[45%] ">
-                      <span className="text-gray-700 font-semibold ">
-                        Start Date-{' '}
-                      </span>{' '}
-                      22/22/2222
-                    </li>
-                    <li className="min-w-[45%] ">
-                      <span className="text-gray-700 font-semibold ">
-                        End date-{' '}
-                      </span>{' '}
-                      24/22/2222
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className=" ">
-                <div className="my-4">
-                  <h4 className="text-center scroll-m-20 text-xl font-semibold tracking-tight transition-colors first:mt-0">
-                    Project Domains
-                  </h4>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 my-2">
-                    <Badge>Frontend</Badge>
-                    <Badge>Blackend</Badge>
-                    <Badge>Graphic Designer</Badge>
-                    <Badge>3D artist</Badge>
-                    <Badge>Fullstack</Badge>
-                  </div>
-                </div>
-                <div className="pt-4">
-                  <h4 className="text-center scroll-m-20 text-xl font-semibold tracking-tight transition-colors first:mt-0">
-                    Skills
-                  </h4>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 my-4">
-                    <Badge>React</Badge>
-                    <Badge>Mongo</Badge>
-                    <Badge>Golang</Badge>
-                    <Badge>API integration</Badge>
-                    <Badge>Figma</Badge>
-                  </div>
-                </div>
+    <Card className="p-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Badge className={className}>{text}</Badge>
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+          <div className="lg:col-span-full">
+            <p className="mb-6">{description}</p>
+            <div className="flex items-center text-sm">
+              <Mail className="mr-2 h-4 w-4" />
+              <span>{email}</span>
+            </div>
+            <div className="my-4">
+              <h4 className="text-xl font-semibold">Project Domains</h4>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {domains.map((domain, index) => (
+                  <Badge
+                    key={index}
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                  >
+                    {domain}
+                  </Badge>
+                ))}
               </div>
             </div>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    </div>
+            <div className="pt-4">
+              <h4 className="text-xl font-semibold">Skills</h4>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {skills?.map((skill, index) => (
+                  <Badge
+                    key={index}
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex">
+        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+          {startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}
+        </p>
+        <p>-</p>
+        <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
+          {endDate ? new Date(endDate).toLocaleDateString() : 'Current'}
+        </p>
+      </CardFooter>
+    </Card>
   );
 }
 
