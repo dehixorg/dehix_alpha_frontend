@@ -125,7 +125,6 @@ const Market: React.FC = () => {
       const response = await axiosInstance.get(
         `/business/all_project?${queryString}`,
       );
-      console.log(response.data.data);
       setJobs(response.data.data);
     } catch (error) {
       console.error('API Error:', error);
