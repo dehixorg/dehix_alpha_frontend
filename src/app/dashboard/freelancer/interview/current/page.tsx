@@ -87,9 +87,8 @@ export default function CurrentPage() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
-            
           </div>
-          <DropdownProfile/>
+          <DropdownProfile />
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
@@ -125,7 +124,10 @@ export default function CurrentPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredInterviews.map((interview, index) => (
-              <Card key={index} className="w-full max-w-sm mx-auto sm:max-w-md md:max-w-lg lg:max-w-xl">
+              <Card
+                key={index}
+                className="w-full max-w-sm mx-auto sm:max-w-md md:max-w-lg lg:max-w-xl"
+              >
                 <CardHeader>
                   <CardTitle className="flex text-2xl">
                     {interview.reference}

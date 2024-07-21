@@ -109,7 +109,7 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownProfile/>
+          <DropdownProfile />
         </header>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

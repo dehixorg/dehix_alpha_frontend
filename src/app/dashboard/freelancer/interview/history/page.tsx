@@ -82,9 +82,8 @@ export default function HistoryPage() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
-            
           </div>
-          <DropdownProfile/>
+          <DropdownProfile />
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>

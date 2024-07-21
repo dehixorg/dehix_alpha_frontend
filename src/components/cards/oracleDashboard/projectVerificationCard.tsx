@@ -83,7 +83,6 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   }
 
   return (
-    
     <Card className="max-w-full md:max-w-2xl">
       <CardHeader>
         <CardTitle className="flex justify-between">
@@ -211,7 +210,6 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         )}
       </CardFooter>
     </Card>
-    
   );
 };
 

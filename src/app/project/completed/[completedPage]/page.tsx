@@ -24,6 +24,7 @@ import CompletedProjectDetailCard from '@/components/freelancer/project/projectP
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 interface Project {
   _id: string;
@@ -73,6 +74,23 @@ export default function Dashboard() {
       label: 'Settings',
     },
   ];
+  const projectProfileDetails = [
+    {
+      domain: 'Web Development',
+      freelancersRequired: '2',
+      skills: ['React', 'TypeScript', 'CSS'],
+      experience: 3,
+      minConnect: 5,
+      rate: 50,
+      description: 'Looking for experienced web developers.',
+      email: 'contact@company.com',
+      status: 'Open',
+      startDate: '2023-01-01',
+      endDate: '2023-12-31',
+      className: 'w-full min-w-full p-4 shadow-md rounded-lg',
+    },
+    // Add more dummy data as needed
+  ];
   console.log(user);
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -109,31 +127,7 @@ export default function Dashboard() {
             />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -145,7 +139,9 @@ export default function Dashboard() {
               Profiles
             </h2>
             <div className="flex flex-col gap-4 sm:flex-row sm:gap-4 sm:overflow-x-scroll sm:no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
+              {projectProfileDetails.map((details, index) => (
+                <ProjectProfileDetailCard key={index} {...details} />
+              ))}
             </div>
           </div>
 
@@ -153,8 +149,9 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Other Projects
             </CardTitle>
-            <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
-            <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
+            {projectProfileDetails.map((details, index) => (
+              <ProjectProfileDetailCard key={index} {...details} />
+            ))}
           </div>
         </main>
       </div>
