@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -96,11 +98,13 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button
-          className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
-        >
-          View Full details
-        </Button>
+        <Link href={`/project/${project._id}`} className="w-full">
+          <Button
+            className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
+          >
+            View full details
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

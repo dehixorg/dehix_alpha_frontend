@@ -47,8 +47,6 @@ function ProjectDetailCard({
 }: ProjectDetailCardProps) {
   const { text, className } = getStatusBadge(status);
 
-  console.log(startDate);
-
   return (
     <Card className="p-4">
       <CardHeader className="pb-3">

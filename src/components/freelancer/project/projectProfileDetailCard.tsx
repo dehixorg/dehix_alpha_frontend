@@ -49,8 +49,11 @@ export function ProjectProfileDetailCard({
           {`(${freelancersRequired})`}
         </CardTitle>
         <CardDescription className="text-gray-600">
-          Requirement is of {freelancersRequired} freelancer(s) for this
+          Requirement is of {freelancersRequired} freelancer(s) for{' '}
+          {domain.toLowerCase() + ' '}
           profile.
+          <br />
+          {description}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -78,29 +81,21 @@ export function ProjectProfileDetailCard({
             )}
             {endDate && (
               <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">End Date - </span>
+                <span className="text-gray-400 font-semibold">End Date - </span>
                 {endDate}
               </li>
             )}
             <li className="min-w-[45%]">
-              <span className="text-gray-700 font-semibold">Experience - </span>
+              <span className="text-gray-400 font-semibold">Experience - </span>
               {experience} years
             </li>
             <li className="min-w-[45%]">
-              <span className="text-gray-700 font-semibold">
+              <span className="text-gray-400 font-semibold">
                 Min Connect -{' '}
               </span>
               {minConnect}
             </li>
-            <li className="min-w-[45%]">
-              <span className="text-gray-700 font-semibold">Rate - </span>
-              {rate}
-            </li>
           </ul>
-          <p className="mt-2">
-            <span className="text-gray-700 font-semibold">Description - </span>
-            {description}
-          </p>
           {skills.length > 0 && (
             <div className="mt-2">
               <span className="text-gray-700 font-semibold">Skills - </span>
@@ -119,7 +114,7 @@ export function ProjectProfileDetailCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full">View Bids</Button>
+        <Button className="w-full">Bid(${rate})</Button>
       </CardFooter>
     </Card>
   );
