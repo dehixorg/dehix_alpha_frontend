@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { CheckCircle, Clock, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import { PackageOpen } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -32,7 +33,7 @@ import dummyData from '@/dummydata.json';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-
+  const sampleInterviewData=dummyData.freelancersampleInterview;
   console.log(responseData);
 
   useEffect(() => {
@@ -155,26 +156,24 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard
-              interviewer={dummyData.freelancersampleInterview.interviewer}
-              interviewee={dummyData.freelancersampleInterview.interviewee}
-              skill={dummyData.freelancersampleInterview.skill}
+            
+            { dummyData?.freelancersampleInterview ?
+            <div className="text-center py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No projects available</p>
+          </div>:
+              <InterviewCard
+              interviewer={sampleInterviewData.interviewer}
+              interviewee={sampleInterviewData.interviewee}
+              skill={sampleInterviewData.skill}
               interviewDate={
-                new Date(dummyData.freelancersampleInterview.interviewDate)
+                new Date(sampleInterviewData.interviewDate)
               }
-              rating={dummyData.freelancersampleInterview.rating}
-              comments={dummyData.freelancersampleInterview.comments}
+              rating={sampleInterviewData.rating}
+              comments={sampleInterviewData.comments}
             />
-            <InterviewCard
-              interviewer={dummyData.freelancersampleInterview.interviewer}
-              interviewee={dummyData.freelancersampleInterview.interviewee}
-              skill={dummyData.freelancersampleInterview.skill}
-              interviewDate={
-                new Date(dummyData.freelancersampleInterview.interviewDate)
-              }
-              rating={dummyData.freelancersampleInterview.rating}
-              comments={dummyData.freelancersampleInterview.comments}
-            />
+            
+            }
           </div>
         </main>
       </div>
