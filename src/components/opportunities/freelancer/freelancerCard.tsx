@@ -1,15 +1,8 @@
 // FreelancerCard.tsx
 
 import React from 'react';
-import { User } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface FreelancerCardProps {
