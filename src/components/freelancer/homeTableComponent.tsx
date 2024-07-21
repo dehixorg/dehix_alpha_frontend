@@ -1,6 +1,7 @@
 // src/ProjectCard.tsx
 import React from 'react';
 import { PackageOpen } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   Card,
@@ -90,9 +91,11 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                       : 'N/A'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
+                    <Link href={`/project/${project._id}`}>
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}
