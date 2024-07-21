@@ -2,6 +2,7 @@
 import * as React from 'react';
 
 interface MobileSkillDomProps {
+  label: string;
   heading: string;
   checkboxLabels: string[];
   selectedValues: string[];
@@ -9,6 +10,7 @@ interface MobileSkillDomProps {
 }
 
 const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
+  label,
   heading,
   checkboxLabels,
   selectedValues,
@@ -38,7 +40,7 @@ const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
       <div className="items-center p-2">
         <input
           type="text"
-          placeholder="Search skills"
+          placeholder={`Search ${label}`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full mb-2 px-2 py-1 border rounded-sm bg-gray-200"
