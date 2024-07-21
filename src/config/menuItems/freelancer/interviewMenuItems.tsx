@@ -16,12 +16,12 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/dashboard/freelancer/interview/current',
     icon: <ListVideo className="h-5 w-5" />,
-    label: 'Current Interviews',
+    label: 'Current',
   },
   {
     href: '/dashboard/freelancer/interview/history',
     icon: <History className="h-5 w-5" />,
-    label: 'History ',
+    label: 'History',
   },
 ];
 

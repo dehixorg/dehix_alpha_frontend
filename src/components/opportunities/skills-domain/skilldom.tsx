@@ -1,9 +1,19 @@
 'use client';
 import * as React from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface SkillDomProps {
+  label: string;
   heading: string;
   checkboxLabels: string[];
   selectedValues: string[];
@@ -11,6 +21,7 @@ interface SkillDomProps {
 }
 
 const SkillDom: React.FC<SkillDomProps> = ({
+  label,
   heading,
   checkboxLabels,
   selectedValues,
@@ -36,17 +47,31 @@ const SkillDom: React.FC<SkillDomProps> = ({
 
   return (
     <Card className="w-[250px]">
+      <CardHeader>
+        <CardTitle className="text-lg">{heading}</CardTitle>
+      </CardHeader>
       <CardContent>
-        <h1 className="mt-2">{heading}</h1>
-        <div className="items-center p-2">
-          <input
-            type="text"
-            placeholder="Search skills"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full mb-2 px-2 py-1 border rounded-sm"
-          />
-          {visibleSkills.map((label) => (
+        <Input
+          type="text"
+          placeholder={`Search ${label}`}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full mb-2"
+        />
+        {visibleSkills.map((label) => (
+          <div key={label} className="flex items-center mb-1">
+            <input
+              type="checkbox"
+              checked={selectedValues.includes(label)}
+              onChange={() => handleCheckboxChange(label)}
+              className="mr-2"
+            />
+            <label className="text-sm">{label}</label>
+          </div>
+        ))}
+
+        {showMore &&
+          hiddenSkills.map((label) => (
             <div key={label} className="flex items-center mb-1">
               <input
                 type="checkbox"
@@ -57,34 +82,27 @@ const SkillDom: React.FC<SkillDomProps> = ({
               <label className="text-sm">{label}</label>
             </div>
           ))}
-
-          {showMore &&
-            hiddenSkills.map((label) => (
-              <div key={label} className="flex items-center mb-1">
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(label)}
-                  onChange={() => handleCheckboxChange(label)}
-                  className="mr-2"
-                />
-                <label className="text-sm">{label}</label>
-              </div>
-            ))}
-          {filteredSkills.length > 3 && (
-            <div className="flex items-center mb-1">
-              <button
-                className="text-sm text-blue-500 cursor-pointer"
-                onClick={() => setShowMore(!showMore)}
-              >
-                {showMore ? 'Less Options' : 'More Options'}
-              </button>
-            </div>
-          )}
-          {filteredSkills.length === 0 && (
-            <p className="text-sm text-gray-500 mt-2">No skills found.</p>
-          )}
-        </div>
       </CardContent>
+      <CardFooter>
+        {filteredSkills.length > 3 && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex items-center text-sm cursor-pointer ml-auto"
+            onClick={() => setShowMore(!showMore)}
+          >
+            {showMore ? 'Less' : 'More'}
+            {showMore ? (
+              <ChevronUp className="ml-1 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-1 h-4 w-4" />
+            )}
+          </Button>
+        )}
+        {filteredSkills.length === 0 && (
+          <p className="text-sm text-gray-500 mt-2">No skills found.</p>
+        )}
+      </CardFooter>
     </Card>
   );
 };

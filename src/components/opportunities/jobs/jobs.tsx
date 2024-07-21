@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MapPin } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -60,7 +60,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const { text, className } = getStatusBadge(status);
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-4xl">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
       </CardHeader>
@@ -74,14 +74,14 @@ const JobCard: React.FC<JobCardProps> = ({
           <p className="text-gray-600">{description}</p>
         </CardDescription>
         <div className="flex items-center text-gray-600">
-          <p className="font-medium">Contact: </p>
-          <p className="ml-2">{email}</p>
+          <Mail className="h-4 w-4 text-gray-600" />
+          <p className="ml-2 text-sm">{email}</p>
         </div>
         <div className="mt-4">
           <p className="font-medium">Skills Required:</p>
           <div className="mt-2">
             {skillsRequired?.map((skill, index) => (
-              <Badge variant="outline" key={index} className="mr-2 mb-2">
+              <Badge key={index} className="mr-2 mb-2 uppercase">
                 {skill}
               </Badge>
             ))}

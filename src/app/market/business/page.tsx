@@ -102,6 +102,7 @@ const Market: React.FC = () => {
             </div>
             <div className="mb-4">
               <SkillDom
+                label="Domains"
                 heading="Filter by domain"
                 checkboxLabels={[
                   'frontend',
@@ -133,6 +134,7 @@ const Market: React.FC = () => {
             </div>
             <div className="mb-4">
               <SkillDom
+                label="Skills"
                 heading="Filter by skills"
                 checkboxLabels={[
                   'Python',
@@ -257,6 +259,7 @@ const Market: React.FC = () => {
               </Button>
 
               <MobileSkillDom
+                label="Locations"
                 heading="Filter by location"
                 checkboxLabels={[
                   'All',
@@ -286,6 +289,7 @@ const Market: React.FC = () => {
 
             {/* <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom
+                  label="Domains"
                   heading="Filter by domain"
                   checkboxLabels={[
                     'frontend',
@@ -316,6 +320,7 @@ const Market: React.FC = () => {
 
             <div className="border-b border-gray-300 pb-4">
               <MobileSkillDom
+                label="Skills"
                 heading="Filter by skills"
                 checkboxLabels={[
                   'Python',
