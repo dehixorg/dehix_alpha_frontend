@@ -8,42 +8,113 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+interface ProjectProfileDetailCardProps {
+  domain: string;
+  freelancersRequired: string;
+  skills: string[];
+  experience: number;
+  minConnect: number;
+  rate: number;
+  description: string;
+  email?: string; // Optional fields
+  status?: string; // Optional fields
+  startDate?: string; // Optional fields
+  endDate?: string; // Optional fields
+  className?: string; // For custom styling
+}
 
-type CardProps = React.ComponentProps<typeof Card>;
-export function ProjectProfileDetailCard({ className, ...props }: CardProps) {
+type CardProps = React.ComponentProps<typeof Card> &
+  ProjectProfileDetailCardProps;
+
+export function ProjectProfileDetailCard({
+  domain,
+  freelancersRequired,
+  skills,
+  experience,
+  minConnect,
+  rate,
+  description,
+  email,
+  status,
+  startDate,
+  endDate,
+  className,
+  ...props
+}: CardProps) {
   return (
     <Card className={cn('w-[350px]', className)} {...props}>
       <CardHeader>
-        <CardTitle>Frontend Developer{'(2)'}</CardTitle>
+        <CardTitle>
+          {domain}
+          {`(${freelancersRequired})`}
+        </CardTitle>
         <CardDescription className="text-gray-600">
-          Your requirement is of 2 freelancers for this profile, 6 people have
-          appplied via bid and 1 person is selected till now.
+          Requirement is of {freelancersRequired} freelancer(s) for{' '}
+          {domain.toLowerCase() + ' '}
+          profile.
+          <br />
+          {description}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div>
           <ul className="flex flex-wrap gap-2">
-            <li className="min-w-[45%] ">
-              <span className="text-gray-700 font-semibold ">Email- </span>{' '}
-              sample@xyz.com
+            {email && (
+              <li className="min-w-[45%]">
+                <span className="text-gray-700 font-semibold">Email - </span>
+                {email}
+              </li>
+            )}
+            {status && (
+              <li className="min-w-[45%]">
+                <span className="text-gray-700 font-semibold">Status - </span>
+                {status}
+              </li>
+            )}
+            {startDate && (
+              <li className="min-w-[45%]">
+                <span className="text-gray-700 font-semibold">
+                  Start Date -{' '}
+                </span>
+                {startDate}
+              </li>
+            )}
+            {endDate && (
+              <li className="min-w-[45%]">
+                <span className="text-gray-400 font-semibold">End Date - </span>
+                {endDate}
+              </li>
+            )}
+            <li className="min-w-[45%]">
+              <span className="text-gray-400 font-semibold">Experience - </span>
+              {experience} years
             </li>
-            <li className="min-w-[45%] ">
-              <span className="text-gray-700 font-semibold ">Staus- </span>{' '}
-              Current
-            </li>
-            <li className="min-w-[45%] ">
-              <span className="text-gray-700 font-semibold ">Start Date- </span>{' '}
-              22/22/2222
-            </li>
-            <li className="min-w-[45%] ">
-              <span className="text-gray-700 font-semibold ">End date- </span>{' '}
-              24/22/2222
+            <li className="min-w-[45%]">
+              <span className="text-gray-400 font-semibold">
+                Min Connect -{' '}
+              </span>
+              {minConnect}
             </li>
           </ul>
+          {skills.length > 0 && (
+            <div className="mt-2">
+              <span className="text-gray-700 font-semibold">Skills - </span>
+              <ul className="flex flex-wrap gap-1 mt-1">
+                {skills.map((skill, index) => (
+                  <li
+                    key={index}
+                    className="bg-gray-200 rounded px-2 py-1 text-sm"
+                  >
+                    {skill}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter>
-        <Button className={`w-full `}>View Bids</Button>
+        <Button className="w-full">Bid(${rate})</Button>
       </CardFooter>
     </Card>
   );
