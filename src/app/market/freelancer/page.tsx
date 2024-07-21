@@ -308,6 +308,7 @@ const Market: React.FC = () => {
           {jobs.map((job: Project, index: number) => (
             <JobCard
               key={index}
+              id={job._id}
               projectName={job.projectName}
               description={job.description}
               companyName={job.companyName}
