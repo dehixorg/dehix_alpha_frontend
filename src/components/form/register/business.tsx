@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
 import { z, ZodError } from 'zod';
+
+import PhoneNumberForm from './phoneNumberChecker';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +37,7 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [password, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -59,6 +62,9 @@ export default function BusinessRegisterForm() {
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
+  const handlePhoneNumberChange = (value: string) => {
+    setPhoneNumber(value);
+  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -66,68 +72,80 @@ export default function BusinessRegisterForm() {
     setPasswordError(''); // Clear the error message as user types
   };
 
+  useEffect(() => {
+    if (isLoading) {
+      const formData = {
+        firstName: (document.getElementById('first-name') as HTMLInputElement)
+          .value,
+        lastName: (document.getElementById('last-name') as HTMLInputElement)
+          .value,
+        companyName: (
+          document.getElementById('company-name') as HTMLInputElement
+        ).value,
+        companySize: (
+          document.getElementById('company-size') as HTMLInputElement
+        ).value,
+        password: (document.getElementById('password') as HTMLInputElement)
+          .value,
+        email: (document.getElementById('email') as HTMLInputElement).value,
+        phone: phoneNumber,
+        position: (document.getElementById('position') as HTMLInputElement)
+          .value,
+        refer: 'Jane Smith',
+        verified: 'No',
+        isVerified: false,
+        linkedin: (document.getElementById('linkedin') as HTMLInputElement)
+          .value,
+        personalWebsite: (
+          document.getElementById('personalWebsite') as HTMLInputElement
+        ).value,
+        isBusiness: true,
+        connects: 0,
+        otp: '123456',
+        otpverified: 'No',
+        ProjectList: [],
+        Appliedcandidates: [],
+        hirefreelancer: [],
+      };
+
+      try {
+        // Validate password using Zod schema
+        passwordSchema.parse(password);
+
+        // comment the API call
+        /*
+        await axiosInstance.post('/register/business', formData);
+        toast({
+          title: 'Account created successfully!',
+          description: 'Your business account has been created.',
+        });
+        handleLogin(formData.email, formData.password);
+        formRef.current?.reset();
+        */
+        console.log('Form Data:', formData);
+      } catch (error: any) {
+        // Handle Zod validation error
+        if (error instanceof ZodError) {
+          setPasswordError(error.errors[0].message);
+        } else {
+          console.error('API Error:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [isLoading, password, phoneNumber]);
+
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
-
-    const formData = {
-      firstName: (document.getElementById('first-name') as HTMLInputElement)
-        .value,
-      lastName: (document.getElementById('last-name') as HTMLInputElement)
-        .value,
-      companyName: (document.getElementById('company-name') as HTMLInputElement)
-        .value,
-      companySize: (document.getElementById('company-size') as HTMLInputElement)
-        .value,
-      password: (document.getElementById('password') as HTMLInputElement).value,
-      email: (document.getElementById('email') as HTMLInputElement).value,
-      phone: (document.getElementById('phone') as HTMLInputElement).value,
-      position: (document.getElementById('position') as HTMLInputElement).value,
-      refer: 'Jane Smith',
-      verified: 'No',
-      isVerified: false,
-      linkedin: (document.getElementById('linkedin') as HTMLInputElement).value,
-      personalWebsite: (
-        document.getElementById('personalWebsite') as HTMLInputElement
-      ).value,
-      isBusiness: true,
-      connects: 0,
-      otp: '123456',
-      otpverified: 'No',
-      ProjectList: [],
-      Appliedcandidates: [],
-      hirefreelancer: [],
-    };
-
-    try {
-      // Validate password using Zod schema
-      passwordSchema.parse(password);
-
-      await axiosInstance.post('/register/business', formData);
-      toast({
-        title: 'Account created successfully!',
-        description: 'Your business account has been created.',
-      });
-      handleLogin(formData.email, formData.password);
-      formRef.current?.reset();
-    } catch (error: any) {
-      // Handle Zod validation error
-      if (error instanceof ZodError) {
-        setPasswordError(error.errors[0].message);
-      } else {
-        console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: `Error: ${error.response?.data || 'Something went wrong!'}`,
-          action: <ToastAction altText="Try again">Try again</ToastAction>,
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
   }
-
   return (
     <form onSubmit={onSubmit} ref={formRef}>
       <div className="grid gap-4">
@@ -178,7 +196,10 @@ export default function BusinessRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="phone">Phone Number</Label>
-          <Input id="phone" type="tel" placeholder="123-456-7890" required />
+          <PhoneNumberForm
+            phoneNumber={phoneNumber}
+            onPhoneNumberChange={handlePhoneNumberChange}
+          />
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="linkedin">LinkedIn</Label>

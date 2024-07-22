@@ -9,6 +9,7 @@ import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 
 import DatePicker from './datepicker';
+import PhoneNumberForm from './phoneNumberChecker';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ export default function FreelancerRegisterForm() {
   const [workExperience, setWorkExperience] = useState<number | string>('');
   const [workExperienceError, setWorkExperienceError] = useState<string>('');
   const [dob, setDob] = useState<Date | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -89,6 +91,9 @@ export default function FreelancerRegisterForm() {
     setDob(date);
     console.log('Selected Date:', date);
   };
+  const handlePhoneNumberChange = (value: string) => {
+    setPhoneNumber(value);
+  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -100,7 +105,7 @@ export default function FreelancerRegisterForm() {
       lastName: (document.getElementById('last-name') as HTMLInputElement)
         .value,
       email: (document.getElementById('email') as HTMLInputElement).value,
-      phone: (document.getElementById('phone') as HTMLInputElement).value,
+      phone: phoneNumber,
       userName: (document.getElementById('username') as HTMLInputElement).value,
       githubLink: (document.getElementById('github') as HTMLInputElement).value,
       linkedin: (document.getElementById('linkedin') as HTMLInputElement).value,
@@ -138,11 +143,16 @@ export default function FreelancerRegisterForm() {
       // Validate password using Zod schema
       passwordSchema.parse(password);
       workExperienceSchema.parse(Number(workExperience));
-
+      // comment the API call
+      {
+        /*
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();
+      */
+      }
+      console.log('Form Data:', formData);
     } catch (error: any) {
       // Handle Zod validation error
       if (error instanceof ZodError) {
@@ -182,7 +192,12 @@ export default function FreelancerRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="phone">Phone Number</Label>
-          <Input id="phone" type="tel" placeholder="123-456-7890" required />
+          <div>
+            <PhoneNumberForm
+              phoneNumber={phoneNumber}
+              onPhoneNumberChange={handlePhoneNumberChange}
+            />
+          </div>
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="username">Username</Label>

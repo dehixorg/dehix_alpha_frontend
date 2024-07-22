@@ -20,6 +20,12 @@ export default function SignUp() {
               Enter your information to create an account
             </p>
           </div>
+          <div className="my-4 text-center text-sm">
+            Are you a Freelancer?{' '}
+            <Button variant="outline" size="sm" className="ml-2" asChild>
+              <Link href="/auth/sign-up/freelancer">Register</Link>
+            </Button>
+          </div>
           <BusinessRegisterForm />
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}

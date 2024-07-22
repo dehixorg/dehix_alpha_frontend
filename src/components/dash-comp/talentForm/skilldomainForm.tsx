@@ -346,37 +346,39 @@ const SkillDomainForm: React.FC = () => {
           </div>
         </div>
         <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Monthly Pay</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Visibility</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {skillDomainData.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.label}</TableCell>
-                  <TableCell>{item.experience} years</TableCell>
-                  <TableCell>${item.monthlyPay}</TableCell>
-                  <TableCell>{item.status}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={statusVisibility[index]}
-                      onCheckedChange={() => {
-                        const newVisibility = [...statusVisibility];
-                        newVisibility[index] = !newVisibility[index];
-                        setStatusVisibility(newVisibility);
-                      }}
-                    />
-                  </TableCell>
+          <div className="md:overflow-x-auto w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Monthly Pay</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Visibility</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {skillDomainData.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell>{item.experience} years</TableCell>
+                    <TableCell>${item.monthlyPay}</TableCell>
+                    <TableCell>{item.status}</TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={statusVisibility[index]}
+                        onCheckedChange={() => {
+                          const newVisibility = [...statusVisibility];
+                          newVisibility[index] = !newVisibility[index];
+                          setStatusVisibility(newVisibility);
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
         <div className="text-center py-10 w-[90vw] mt-10">
           <PackageOpen className="mx-auto text-gray-500" size="100" />
