@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CompanyCardProps {
   heading: string;
@@ -25,9 +25,11 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
   };
 
   return (
-    <Card className="w-[250px] h-[120px]">
+    <Card className="w-[250px]">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">{heading}</CardTitle>
+      </CardHeader>
       <CardContent>
-        <h1 className="mt-2">{heading}</h1>
         <div className="items-center p-2">
           {checkboxLabels.map((label) => (
             <div key={label} className="flex items-center mb-1">

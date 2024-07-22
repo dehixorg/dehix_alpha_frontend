@@ -1,8 +1,12 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { signInWithEmailAndPassword, UserCredential } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  UserCredential,
+} from 'firebase/auth';
 
-import { auth } from '@/config/firebaseConfig';
+import { auth, googleProvider } from '@/config/firebaseConfig';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -23,4 +27,9 @@ export const loginUser = async (email: string, password: string) => {
     console.log(errorCode, errorMessage);
     throw new Error(errorMessage);
   }
+};
+
+export const loginGoogleUser = async () => {
+  //console.log(googleProvider);
+  return await signInWithPopup(auth, googleProvider);
 };
