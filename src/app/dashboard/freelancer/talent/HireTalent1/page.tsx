@@ -1,6 +1,6 @@
 'use client';
 // eslint-disable-next-line import/order
-import React from 'react'; // Import 'react' first
+import React, { useEffect, useState } from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
@@ -53,7 +53,18 @@ import {
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import { axiosInstance } from '@/lib/axiosinstance';
 new Date('2023-11-23T10:30:00Z');
+
+interface Skill {
+  _id: string;
+  label: string;
+}
+interface Domain {
+  _id: string;
+  label: string;
+}
+
 export default function Dashboard() {
   const menuItemsTop: MenuItem[] = [
     {
@@ -95,6 +106,38 @@ export default function Dashboard() {
       label: 'Settings',
     },
   ];
+
+  const [skills, setSkills] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const domainResponse = await axiosInstance.get('/domain/all');
+        console.log('Domain API Response get:', domainResponse.data.data);
+        const transformedDomain = domainResponse.data.data.map(
+          (skill: Domain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setDomains(transformedDomain);
+
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        console.log('Skills API Response get:', skillsResponse.data.data);
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -162,11 +205,11 @@ export default function Dashboard() {
                       <SelectValue placeholder="Select a Domain" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="webDevelopment">
-                        Web Development
-                      </SelectItem>
-                      <SelectItem value="dataScience">Data Science</SelectItem>
-                      <SelectItem value="design">Design</SelectItem>
+                      {domains.map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
@@ -175,9 +218,11 @@ export default function Dashboard() {
                       <SelectValue placeholder="Select a Skill" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="javascript">JavaScript</SelectItem>
-                      <SelectItem value="python">Python</SelectItem>
-                      <SelectItem value="uiux">UI/UX Design</SelectItem>
+                      {skills.map((skill: any, index: number) => (
+                        <SelectItem key={index} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
