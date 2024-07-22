@@ -48,60 +48,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 // Menu components
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 new Date('2023-11-23T10:30:00Z');
 export default function Dashboard() {
-  const menuItemsTop: MenuItem[] = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-    {
-      href: '#',
-      icon: <Lightbulb className="h-5 w-5" />,
-      label: 'Talent',
-    },
-  ];
-
-  const menuItemsBottom: MenuItem[] = [
-    {
-      href: '/settings/personal-info',
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Projects"
+        active="Dehix Talent"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -109,7 +71,7 @@ export default function Dashboard() {
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Projects"
+            active="Dehix Talent"
           />
 
           {/* Breadcrumb component */}
