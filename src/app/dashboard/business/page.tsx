@@ -38,7 +38,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/business/all_project`); // Example API endpoint, replace with your actual endpoint
+        const response = await axiosInstance.get(
+          `/business/${user.uid}/projects`,
+        ); // Example API endpoint, replace with your actual endpoint
         console.log('API Response:', response.data.data);
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
