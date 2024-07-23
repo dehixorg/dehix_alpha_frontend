@@ -1,28 +1,26 @@
 'use client';
 import React from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { MessageSquare, UserIcon, Search, ListFilter } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { zodResolver } from '@hookform/resolvers/zod';
+// import { useForm } from 'react-hook-form';
+import { Search, ListFilter, PackageOpen } from 'lucide-react';
+// import { zodResolver } from '@hookform/resolvers/zod';
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
-  DropdownMenuItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardFooter,
+// } from '@/components/ui/card';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -31,9 +29,9 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RootState } from '@/lib/store';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 interface Interview {
   reference: string;
@@ -61,84 +59,83 @@ interface InterviewCardProps {
   handleCommentSubmit: (index: number, comment: string) => void;
 }
 
-const InterviewCard: React.FC<InterviewCardProps> = ({
-  index,
-  interview,
-  handleCommentSubmit,
-}) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CommentFormData>({
-    resolver: zodResolver(CommentSchema),
-  });
+// const InterviewCard: React.FC<InterviewCardProps> = ({
+//   index,
+//   interview,
+//   handleCommentSubmit,
+// }) => {
+//   const {
+//     register,
+//     handleSubmit,
+//     formState: { errors },
+//     reset,
+//   } = useForm<CommentFormData>({
+//     resolver: zodResolver(CommentSchema),
+//   });
 
-  const onSubmit = (data: CommentFormData) => {
-    handleCommentSubmit(index, data.comment);
-    reset();
-  };
+//   const onSubmit = (data: CommentFormData) => {
+//     handleCommentSubmit(index, data.comment);
+//     reset();
+//   };
 
-  return (
-    <Card className="max-w-full mx-auto md:max-w-lg">
-      <CardHeader>
-        <CardTitle className="flex text-2xl">{interview.reference}</CardTitle>
-        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
-          {interview.skill || interview.domain}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Badge
-          className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
-            interview.status === 'Pending' ? 'warning' : 'success'
-          } text-xs`}
-        >
-          {interview.status.toUpperCase()}
-        </Badge>
-        <p className="text-gray-300 pt-4 text-sm">{interview.description}</p>
-        {interview.status === 'Pending' && (
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-            <Input
-              type="text"
-              placeholder="Enter comment..."
-              className="p-2 border rounded"
-              {...register('comment')}
-            />
-            {errors.comment && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.comment.message}
-              </p>
-            )}
-            <Button type="submit" className="mt-2">
-              Submit Comment
-            </Button>
-          </form>
-        )}
-        {interview.status === 'Complete' && (
-          <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-            <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-            {interview.comments}
-          </p>
-        )}
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            Reference: {interview.reference}
-          </p>
-          <p className="text-sm text-gray-600">Contact: {interview.contact}</p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-          {new Date(interview.interviewDate).toLocaleDateString()}
-        </p>
-      </CardFooter>
-    </Card>
-  );
-};
+//   return (
+//     <Card className="max-w-full mx-auto md:max-w-lg">
+//       <CardHeader>
+//         <CardTitle className="flex text-2xl">{interview.reference}</CardTitle>
+//         <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
+//           {interview.skill || interview.domain}
+//         </CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <Badge
+//           className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
+//             interview.status === 'Pending' ? 'warning' : 'success'
+//           } text-xs`}
+//         >
+//           {interview.status.toUpperCase()}
+//         </Badge>
+//         <p className="text-gray-300 pt-4 text-sm">{interview.description}</p>
+//         {interview.status === 'Pending' && (
+//           <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
+//             <Input
+//               type="text"
+//               placeholder="Enter comment..."
+//               className="p-2 border rounded"
+//               {...register('comment')}
+//             />
+//             {errors.comment && (
+//               <p className="text-red-500 text-xs mt-1">
+//                 {errors.comment.message}
+//               </p>
+//             )}
+//             <Button type="submit" className="mt-2">
+//               Submit Comment
+//             </Button>
+//           </form>
+//         )}
+//         {interview.status === 'Complete' && (
+//           <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
+//             <MessageSquare className="pr-1 mr-1 h-5 w-5" />
+//             {interview.comments}
+//           </p>
+//         )}
+//         <div className="mt-4">
+//           <p className="text-sm text-gray-600">
+//             Reference: {interview.reference}
+//           </p>
+//           <p className="text-sm text-gray-600">Contact: {interview.contact}</p>
+//         </div>
+//       </CardContent>
+//       <CardFooter className="flex">
+//         <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+//           {new Date(interview.interviewDate).toLocaleDateString()}
+//         </p>
+//       </CardFooter>
+//     </Card>
+//   );
+// };
 
 export default function CurrentPage() {
-  const user = useSelector((state: RootState) => state.user);
   const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
     {
       reference: 'Jane Smith',
@@ -203,8 +200,9 @@ export default function CurrentPage() {
         <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
           <div className="flex items-center ml-2 gap-4">
             <CollapsibleSidebarMenu
-              menuItems={menuItemsTop}
-              active="Dashboard"
+              menuItemsTop={menuItemsTop}
+              menuItemsBottom={menuItemsBottom}
+              active="Current"
             />
             <Breadcrumb
               items={[
@@ -224,25 +222,7 @@ export default function CurrentPage() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <UserIcon size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownProfile />
           </div>
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
@@ -276,7 +256,7 @@ export default function CurrentPage() {
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredInterviews.map((interview, index) => (
               <InterviewCard
                 key={index}
@@ -285,6 +265,10 @@ export default function CurrentPage() {
                 handleCommentSubmit={handleCommentSubmit}
               />
             ))}
+          </div>  */}
+          <div className="text-center py-10 w-[90vw] mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No Inverview Scheduled for you.</p>
           </div>
         </div>
       </div>

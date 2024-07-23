@@ -37,7 +37,7 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
   comments,
 }) => {
   return (
-    <Card className="max-full mx-auto md:max-w-2xl">
+    <Card className="w-full mx-auto md:max-w-2xl">
       <CardHeader>
         <CardTitle className="flex">
           {company}
@@ -56,9 +56,12 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
       <CardContent>
         {verificationStatus === 'pending' ? (
           <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
-        ) : (
+        ) : verificationStatus === 'verified' ? (
           <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
+        ) : (
+          <Badge className="bg-blue-500 hover:bg-blue-600">ADDED</Badge>
         )}
+
         <p className="text-gray-300 pt-4">{workDescription}</p>
 
         <p className="mt-2 flex text-gray-500 border p-3 rounded">

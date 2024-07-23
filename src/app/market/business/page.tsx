@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Search, UserIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import Jobs from '@/components/opportunities/jobs/jobs';
 import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -14,27 +14,12 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
-const jobData = {
-  heading: 'Arya.ai Data Scientist',
-  content:
-    'Arya is an autonomous AI operating platform for banks, insurers, and financial service providers that simplifies buildout and manages the...',
-  skills: ['Generative AI', 'Python', 'NLP', 'PyTorch', 'Transformers'],
-  location: 'Mumbai',
-  founded: '2013',
-  employees: '10-50 employees',
-};
+import { axiosInstance } from '@/lib/axiosinstance';
+import FreelancerCard from '@/components/opportunities/freelancer/freelancerCard';
+import { RootState } from '@/lib/store';
 
 interface FilterState {
   location: string[];
@@ -43,9 +28,56 @@ interface FilterState {
   skills: string[];
 }
 
+interface Skill {
+  label: string;
+}
+
+interface Domain {
+  label: string;
+}
+
 const Market: React.FC = () => {
+  const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
+  const [freelancers, setFreelancers] = useState<any[]>([]);
+
+  const constructQueryString = (filters: FilterState) => {
+    const query = Object.keys(filters)
+      .map((key) => {
+        const values = filters[key as keyof FilterState];
+        if (values.length > 0) {
+          return `${key}=${values.join(',')}`;
+        }
+        return '';
+      })
+      .filter((part) => part !== '')
+      .join('&');
+
+    return query;
+  };
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillLabels = skillsResponse.data.data.map(
+          (skill: Skill) => skill.label,
+        );
+        setSkills(skillLabels);
+
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainLabels = domainsResponse.data.data.map(
+          (domain: Domain) => domain.label,
+        );
+        setDomains(domainLabels);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    fetchData();
+  }, []);
   const [filters, setFilters] = useState<FilterState>({
     location: [],
     jobType: [],
@@ -59,26 +91,45 @@ const Market: React.FC = () => {
     }));
   };
 
+  const fetchData = async (appliedFilters: FilterState) => {
+    try {
+      const queryString = constructQueryString(appliedFilters);
+      const response = await axiosInstance.get(
+        `/freelancer/allfreelancer?${queryString}`,
+      );
+      console.log(response.data.data);
+      setFreelancers(response.data.data);
+    } catch (error) {
+      console.error('API Error:', error);
+    }
+  };
+
   const handleApply = () => {
     console.log('Selected Filters:', filters);
+    fetchData(filters);
   };
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    fetchData(filters); // Fetch all data initially
+  }, [user.uid]);
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
   };
 
   return (
-    <section className="p-4 relative">
+    <section className="p-3 relative">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+      <CollapsibleSidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Dashboard"
+      />
       <div className="ml-12">
         <div className="mb-6 mt-4 ">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background  sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -96,33 +147,10 @@ const Market: React.FC = () => {
                 className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/user.png" alt="@shadcn" />
-                    <AvatarFallback>
-                      <UserIcon size={16} />{' '}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>user</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownProfile />
           </header>
         </div>
-        <div className="flex flex-col lg:flex-row lg:space-x-10 ml-6">
+        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 -ml-12 md:ml-6 lg:ml-6">
           <div className="hidden lg:block lg:space-y-4">
             <Button onClick={handleApply} className="w-[100%]">
               Apply
@@ -130,7 +158,7 @@ const Market: React.FC = () => {
 
             <div className="mb-4">
               <CompanyCard
-                heading="Filter by Experience"
+                heading="Filter by experience"
                 checkboxLabels={['0-2', '3-6', '7+']}
                 selectedValues={filters.jobType}
                 setSelectedValues={(values) =>
@@ -140,29 +168,9 @@ const Market: React.FC = () => {
             </div>
             <div className="mb-4">
               <SkillDom
-                heading="Filter by domain"
-                checkboxLabels={[
-                  'frontend',
-                  'backend',
-                  'database',
-                  'cloud computing',
-                  'mobile development',
-                  'machine learning',
-                  'data science',
-                  'devops',
-                  'cybersecurity',
-                  'UI/UX design',
-                  'networking',
-                  'game development',
-                  'e-commerce',
-                  'social media',
-                  'artificial intelligence',
-                  'blockchain',
-                  'IoT (Internet of Things)',
-                  'big data',
-                  'web scraping',
-                  'embedded systems',
-                ]}
+                label="Domains"
+                heading="Filter by domains"
+                checkboxLabels={domains}
                 selectedValues={filters.domain}
                 setSelectedValues={(values) =>
                   handleFilterChange('domain', values)
@@ -171,110 +179,9 @@ const Market: React.FC = () => {
             </div>
             <div className="mb-4">
               <SkillDom
+                label="Skills"
                 heading="Filter by skills"
-                checkboxLabels={[
-                  'Python',
-                  'JavaScript',
-                  'React',
-                  'Node.js',
-                  'TypeScript',
-                  'Java',
-                  'Spring Boot',
-                  'PHP',
-                  'HTML',
-                  'CSS',
-                  'Angular',
-                  'Vue.js',
-                  'Express.js',
-                  'MongoDB',
-                  'MySQL',
-                  'PostgreSQL',
-                  'SQLite',
-                  'Firebase',
-                  'AWS',
-                  'Azure',
-                  'Docker',
-                  'Kubernetes',
-                  'Git',
-                  'Jenkins',
-                  'CI/CD',
-                  'RESTful API',
-                  'GraphQL',
-                  'Microservices',
-                  'Machine Learning',
-                  'Artificial Intelligence',
-                  'Blockchain',
-                  'Cybersecurity',
-                  'UI/UX Design',
-                  'Responsive Web Design',
-                  'Bootstrap',
-                  'Tailwind CSS',
-                  'Sass',
-                  'Less',
-                  'WordPress',
-                  'Joomla',
-                  'Shopify',
-                  'Magento',
-                  'React Native',
-                  'Flutter',
-                  'Ionic',
-                  'Swift',
-                  'Kotlin',
-                  'C#',
-                  'ASP.NET',
-                  'Ruby',
-                  'Ruby on Rails',
-                  'Scala',
-                  'Go',
-                  'Rust',
-                  'Perl',
-                  'C++',
-                  'Unity',
-                  'Unreal Engine',
-                  'Game Development',
-                  'AR/VR',
-                  'IoT',
-                  'Raspberry Pi',
-                  'Arduino',
-                  'Embedded Systems',
-                  'Linux',
-                  'Windows',
-                  'MacOS',
-                  'Android',
-                  'iOS',
-                  'Cross-Platform Development',
-                  'Software Testing',
-                  'Quality Assurance',
-                  'DevOps',
-                  'Agile Methodologies',
-                  'Scrum',
-                  'Kanban',
-                  'Lean',
-                  'Project Management',
-                  'Product Management',
-                  'Business Analysis',
-                  'Technical Writing',
-                  'Copywriting',
-                  'Content Marketing',
-                  'SEO',
-                  'SEM',
-                  'Digital Marketing',
-                  'Social Media Marketing',
-                  'Email Marketing',
-                  'Salesforce',
-                  'ERP',
-                  'CRM',
-                  'Big Data',
-                  'Data Science',
-                  'Data Engineering',
-                  'Data Analytics',
-                  'Business Intelligence',
-                  'Deep Learning',
-                  'Neural Networks',
-                  'Computer Vision',
-                  'Natural Language Processing',
-                  'Quantum Computing',
-                ]}
+                checkboxLabels={skills}
                 selectedValues={filters.skills}
                 setSelectedValues={(values) =>
                   handleFilterChange('skills', values)
@@ -282,8 +189,16 @@ const Market: React.FC = () => {
               />
             </div>
           </div>
-          <div className="mt-4 lg:mt-0 lg:ml-10">
-            <Jobs {...jobData} />
+          <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
+            {freelancers.map((freelancer: any, index: number) => (
+              <FreelancerCard
+                key={index}
+                name={freelancer.firstName + ' ' + freelancer.lastName}
+                skills={freelancer.skills}
+                domains={freelancer.domains}
+                experience={freelancer.workExperience}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -297,6 +212,7 @@ const Market: React.FC = () => {
               </Button>
 
               <MobileSkillDom
+                label="Locations"
                 heading="Filter by location"
                 checkboxLabels={[
                   'All',
@@ -315,7 +231,7 @@ const Market: React.FC = () => {
 
             <div className="border-b border-gray-300 pb-4">
               <MobileCompany
-                heading="Filter by Experience"
+                heading="Filter by experience"
                 checkboxLabels={['0-2', '3-6', '7+']}
                 selectedValues={filters.jobType}
                 setSelectedValues={(values) =>
@@ -324,142 +240,23 @@ const Market: React.FC = () => {
               />
             </div>
 
-            {/* <div className="border-b border-gray-300 pb-4">
-                <MobileSkillDom
-                  heading="Filter by domain"
-                  checkboxLabels={[
-                    'frontend',
-                    'backend',
-                    'database',
-                    'cloud computing',
-                    'mobile development',
-                    'machine learning',
-                    'data science',
-                    'devops',
-                    'cybersecurity',
-                    'UI/UX design',
-                    'networking',
-                    'game development',
-                    'e-commerce',
-                    'social media',
-                    'artificial intelligence',
-                    'blockchain',
-                    'IoT (Internet of Things)',
-                    'big data',
-                    'web scraping',
-                    'embedded systems',
-                  ]}
-                  selectedValues={filters.domain}
-            setSelectedValues={(values) => handleFilterChange('domain', values)}
-                />
-              </div> */}
+            <div className="border-b border-gray-300 pb-4">
+              <MobileSkillDom
+                label="Domains"
+                heading="Filter by domains"
+                checkboxLabels={domains}
+                selectedValues={filters.domain}
+                setSelectedValues={(values) =>
+                  handleFilterChange('domain', values)
+                }
+              />
+            </div>
 
             <div className="border-b border-gray-300 pb-4">
               <MobileSkillDom
+                label="Skills"
                 heading="Filter by skills"
-                checkboxLabels={[
-                  'Python',
-                  'JavaScript',
-                  'React',
-                  'Node.js',
-                  'TypeScript',
-                  'Java',
-                  'Spring Boot',
-                  'PHP',
-                  'HTML',
-                  'CSS',
-                  'Angular',
-                  'Vue.js',
-                  'Express.js',
-                  'MongoDB',
-                  'MySQL',
-                  'PostgreSQL',
-                  'SQLite',
-                  'Firebase',
-                  'AWS',
-                  'Azure',
-                  'Docker',
-                  'Kubernetes',
-                  'Git',
-                  'Jenkins',
-                  'CI/CD',
-                  'RESTful API',
-                  'GraphQL',
-                  'Microservices',
-                  'Machine Learning',
-                  'Artificial Intelligence',
-                  'Blockchain',
-                  'Cybersecurity',
-                  'UI/UX Design',
-                  'Responsive Web Design',
-                  'Bootstrap',
-                  'Tailwind CSS',
-                  'Sass',
-                  'Less',
-                  'WordPress',
-                  'Joomla',
-                  'Shopify',
-                  'Magento',
-                  'React Native',
-                  'Flutter',
-                  'Ionic',
-                  'Swift',
-                  'Kotlin',
-                  'C#',
-                  'ASP.NET',
-                  'Ruby',
-                  'Ruby on Rails',
-                  'Scala',
-                  'Go',
-                  'Rust',
-                  'Perl',
-                  'C++',
-                  'Unity',
-                  'Unreal Engine',
-                  'Game Development',
-                  'AR/VR',
-                  'IoT',
-                  'Raspberry Pi',
-                  'Arduino',
-                  'Embedded Systems',
-                  'Linux',
-                  'Windows',
-                  'MacOS',
-                  'Android',
-                  'iOS',
-                  'Cross-Platform Development',
-                  'Software Testing',
-                  'Quality Assurance',
-                  'DevOps',
-                  'Agile Methodologies',
-                  'Scrum',
-                  'Kanban',
-                  'Lean',
-                  'Project Management',
-                  'Product Management',
-                  'Business Analysis',
-                  'Technical Writing',
-                  'Copywriting',
-                  'Content Marketing',
-                  'SEO',
-                  'SEM',
-                  'Digital Marketing',
-                  'Social Media Marketing',
-                  'Email Marketing',
-                  'Salesforce',
-                  'ERP',
-                  'CRM',
-                  'Big Data',
-                  'Data Science',
-                  'Data Engineering',
-                  'Data Analytics',
-                  'Business Intelligence',
-                  'Deep Learning',
-                  'Neural Networks',
-                  'Computer Vision',
-                  'Natural Language Processing',
-                  'Quantum Computing',
-                ]}
+                checkboxLabels={skills}
                 selectedValues={filters.skills}
                 setSelectedValues={(values: any) =>
                   handleFilterChange('skills', values)

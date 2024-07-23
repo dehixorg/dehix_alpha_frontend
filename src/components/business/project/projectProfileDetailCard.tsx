@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import dummyData from '@/dummydata.json';
 import {
   Card,
   CardContent,
@@ -14,10 +15,12 @@ export function ProjectProfileDetailCard({ className, ...props }: CardProps) {
   return (
     <Card className={cn('w-[350px]', className)} {...props}>
       <CardHeader>
-        <CardTitle>Frontend Developer{'(2)'}</CardTitle>
+        <CardTitle>
+          {dummyData.businessprojectProfileCard.heading}
+          {'(2)'}
+        </CardTitle>
         <CardDescription className="text-gray-600">
-          Your requirement is of 2 freelancers for this profile, 6 people have
-          appplied via bid and 1 person is selected till now.
+          {dummyData.businessprojectProfileCard.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -25,19 +28,19 @@ export function ProjectProfileDetailCard({ className, ...props }: CardProps) {
           <ul className="flex flex-wrap gap-2">
             <li className="min-w-[45%] ">
               <span className="text-gray-700 font-semibold ">Email- </span>{' '}
-              arpit@xyz.com
+              {dummyData.businessprojectProfileCard.email}
             </li>
             <li className="min-w-[45%] ">
               <span className="text-gray-700 font-semibold ">Staus- </span>{' '}
-              Current
+              {dummyData.businessprojectProfileCard.status}
             </li>
             <li className="min-w-[45%] ">
               <span className="text-gray-700 font-semibold ">Start Date- </span>{' '}
-              22/22/2222
+              {dummyData.businessprojectProfileCard.startDate}
             </li>
             <li className="min-w-[45%] ">
               <span className="text-gray-700 font-semibold ">End date- </span>{' '}
-              24/22/2222
+              {dummyData.businessprojectProfileCard.endDate}
             </li>
           </ul>
         </div>

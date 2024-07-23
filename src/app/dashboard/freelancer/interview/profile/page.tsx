@@ -1,20 +1,11 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { Plus, Search, UserIcon } from 'lucide-react';
+import { PackageOpen, Plus, Search } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogTrigger,
@@ -41,8 +32,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { RootState } from '@/lib/store';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -51,6 +41,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
+import { Card } from '@/components/ui/card';
 
 interface Skill {
   label: string;
@@ -102,7 +93,6 @@ interface DomainFormData {
 }
 
 export default function ProfilePage() {
-  const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillData, setSkillData] = useState<SkillData[]>([]);
@@ -184,7 +174,11 @@ export default function ProfilePage() {
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
           <div className="flex items-center gap-4">
-            <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Current" />
+            <CollapsibleSidebarMenu
+              menuItemsTop={menuItemsTop}
+              menuItemsBottom={menuItemsBottom}
+              active="Profile"
+            />
             <Breadcrumb
               items={[
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
@@ -200,30 +194,7 @@ export default function ProfilePage() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/user.png" alt="@shadcn" />
-                    <AvatarFallback>
-                      <UserIcon size={16} />{' '}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <DropdownProfile />
           </div>
         </header>
         <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
@@ -232,7 +203,7 @@ export default function ProfilePage() {
               <h2 className="text-xl font-semibold">Skills</h2>
               <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button disabled>
                     <Plus className="mr-2 h-4 w-4" /> Add Skill
                   </Button>
                 </DialogTrigger>
@@ -333,26 +304,37 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Skill</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {skillData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.skill}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
+            <Card className="p-4 bg-gray-100">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Skill</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {skillData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.skill}</TableCell>
+                      <TableCell>{item.experience}</TableCell>
+                      <TableCell>{item.level}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="text-center py-10 w-[100%] mt-10">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">
+                  No data available
+                  <br /> You can earn reward and help community by being
+                  interviewer.
+                  <br />{' '}
+                </p>
+              </div>
+            </Card>
           </div>
           <div className="mb-8 w-full sm:w-1/2">
             <div className="flex items-center justify-between mb-4">
@@ -362,7 +344,7 @@ export default function ProfilePage() {
                 onOpenChange={setOpenDomainDialog}
               >
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button disabled>
                     <Plus className="mr-2 h-4 w-4" /> Add Domain
                   </Button>
                 </DialogTrigger>
@@ -466,26 +448,37 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {domainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.domain}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
+            <Card className="p-4 bg-gray-100">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {domainData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.domain}</TableCell>
+                      <TableCell>{item.experience}</TableCell>
+                      <TableCell>{item.level}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="text-center py-10 w-[100%] mt-10">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">
+                  No data available
+                  <br /> You can select different domain for which you want to
+                  be interviewer.
+                  <br />{' '}
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

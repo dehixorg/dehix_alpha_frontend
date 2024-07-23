@@ -19,7 +19,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
-    href: '/settings/dehix-talent',
+    href: '/dashboard/business/talent/HireTalent1',
     icon: <Users className="h-5 w-5" />,
     label: 'Dehix Talent',
   },

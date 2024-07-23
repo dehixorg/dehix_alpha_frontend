@@ -117,11 +117,15 @@ export default function FreelancerRegisterForm() {
       ).value,
       connects: 0,
       professionalInfo: {},
+      professionalInfo: {},
       skills: [],
+      education: {},
       education: {},
       role: 'freelancer',
       projects: {},
       isFreelancer: true,
+      refer: { name: 'string', contact: 'string' },
+      consultant: { status: 'notApplied' },
       refer: { name: 'string', contact: 'string' },
       consultant: { status: 'notApplied' },
       pendingProject: [],
@@ -140,6 +144,8 @@ export default function FreelancerRegisterForm() {
       //API call
 
       await axiosInstance.post('/register/freelancer', formData);
+      toast({ title: 'Account created successfully!' });
+      handleLogin(formData.email, formData.password);
       toast({ title: 'Account created successfully!' });
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();

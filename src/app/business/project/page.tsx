@@ -1,5 +1,4 @@
 'use client';
-import Image from 'next/image';
 import {
   Boxes,
   Home,
@@ -12,16 +11,8 @@ import {
 import { useSelector } from 'react-redux';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
@@ -30,15 +21,7 @@ import ProjectDetailCard from '@/components/business/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
+import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -88,7 +71,11 @@ export default function Dashboard() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make caomponent */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Projects" />
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Projects"
+          />
 
           {/* bredcrumbs need to make compont  */}
 
@@ -111,31 +98,7 @@ export default function Dashboard() {
           </div>
 
           {/* profile dropdown need to create separeant component */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -147,8 +110,8 @@ export default function Dashboard() {
               Profiles
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="min-w-[45%] " />
-              <ProjectProfileDetailCard className="min-w-[45%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
+              <ProjectProfileDetailCard className="min-w-[55%] " />
             </div>
           </div>
 
@@ -156,8 +119,26 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
+            <InterviewCard
+              interviewer={dummyData.freelancersampleInterview.interviewer}
+              interviewee={dummyData.freelancersampleInterview.interviewee}
+              skill={dummyData.freelancersampleInterview.skill}
+              interviewDate={
+                new Date(dummyData.freelancersampleInterview.interviewDate)
+              }
+              rating={dummyData.freelancersampleInterview.rating}
+              comments={dummyData.freelancersampleInterview.comments}
+            />
           </div>
         </main>
       </div>

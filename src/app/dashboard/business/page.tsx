@@ -1,7 +1,6 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
-import { CheckCircle, Clock, Search } from 'lucide-react';
+import { CheckCircle, Clock, Search, PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -15,14 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
@@ -35,26 +27,20 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
+import dummyData from '@/dummydata.json';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-
+  const sampleInterviewData = dummyData.freelancersampleInterview;
   console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/business/all_project`); // Example API endpoint, replace with your actual endpoint
+        const response = await axiosInstance.get(
+          `/business/${user.uid}/projects`,
+        ); // Example API endpoint, replace with your actual endpoint
         console.log('API Response:', response.data.data);
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
@@ -81,7 +67,11 @@ export default function Dashboard() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* side bar need to make component */}
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Dashboard" />
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Dashboard"
+          />
           <Breadcrumb
             items={[
               { label: 'Dashboard', link: '/dashboard/business' },
@@ -100,31 +90,7 @@ export default function Dashboard() {
           </div>
 
           {/* profile dropdown need to create separeant component */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Image
-                  src="/placeholder-user.jpg"
-                  width={36}
-                  height={36}
-                  alt="Avatar"
-                  className="overflow-hidden rounded-full"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -149,14 +115,14 @@ export default function Dashboard() {
                 title="Completed Projects"
                 value={completedProjects.length}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo="+10% from last month"
+                additionalInfo={'Project stats will be here'}
               />
 
               <StatCard
                 title="Pending Projects"
                 value={pendingProjects.length}
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo="2 new projects this week"
+                additionalInfo={'Pending project stats will be here'}
               />
             </div>
             <Separator className="my-1" />
@@ -164,13 +130,20 @@ export default function Dashboard() {
               Current Projects {`(${pendingProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects.map((project: any, index: number) => (
-                <ProjectCard
-                  key={index}
-                  className="min-w-[45%]"
-                  project={project}
-                />
-              ))}
+              {pendingProjects ? (
+                pendingProjects.map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10 w-[100%] ">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No projects available</p>
+                </div>
+              )}
             </div>
 
             <Separator className="my-1" />
@@ -178,21 +151,43 @@ export default function Dashboard() {
               Completed Projects {`(${completedProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {completedProjects.map((project: any, index: number) => (
-                <ProjectCard
-                  key={index}
-                  className="min-w-[45%]"
-                  project={project}
-                />
-              ))}
+              {completedProjects.length > 0 ? (
+                completedProjects.map((project: any, index: number) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    project={project}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-10 w-[100%] ">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No projects available</p>
+                </div>
+              )}
             </div>
           </div>
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
-            <InterviewCard {...sampleInterview} />
+
+            {dummyData?.freelancersampleInterview ? (
+              // just reverse the condition while integrating the api
+              <div className="text-center py-10">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">No projects available</p>
+              </div>
+            ) : (
+              <InterviewCard
+                interviewer={sampleInterviewData.interviewer}
+                interviewee={sampleInterviewData.interviewee}
+                skill={sampleInterviewData.skill}
+                interviewDate={new Date(sampleInterviewData.interviewDate)}
+                rating={sampleInterviewData.rating}
+                comments={sampleInterviewData.comments}
+              />
+            )}
           </div>
         </main>
       </div>

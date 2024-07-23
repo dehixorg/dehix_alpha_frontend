@@ -1,18 +1,8 @@
 'use client';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter, PackageOpen } from 'lucide-react';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -22,61 +12,25 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+// import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
-  // Example data with different statuses
-  const [dummyEducationData, setDummyEducationData] = useState([
-    {
-      type: "Bachelor's Degree",
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2018-09-01',
-      endTo: '2022-06-15',
-      grade: 'A',
-      referencePersonName: 'Dr. John Doe',
-      degreeNumber: '123456789',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      type: "Master's Degree",
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2022-09-01',
-      endTo: '2024-06-15',
-      grade: 'A+',
-      referencePersonName: 'Dr. Jane Smith',
-      degreeNumber: '987654321',
-      comments: '',
-      status: 'pending',
-    },
-    {
-      type: 'Ph.D.',
-      instituteName: 'University of Example',
-      location: 'Example City, Example Country',
-      startFrom: '2024-09-01',
-      endTo: '2028-06-15',
-      grade: 'A+',
-      referencePersonName: 'Dr. Emily Johnson',
-      degreeNumber: '456789123',
-      comments: '',
-      status: 'pending',
-    },
-  ]);
+  // Initialize state with education data from dummydata.json
+  const [dummyEducationData, setDummyEducationData] = useState(
+    dummyData.dashboardFreelancerOracleEducation,
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,13 +53,13 @@ export default function ProfessionalInfo() {
   const updateEducationStatus = (index: number, newStatus: string) => {
     const updatedData = [...dummyEducationData];
     updatedData[index].status = newStatus;
-    setDummyEducationData(updatedData); // Assuming you set this in state
+    setDummyEducationData(updatedData); // Update state with new status
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
     const updatedData = [...dummyEducationData];
     updatedData[index].comments = newComment;
-    setDummyEducationData(updatedData);
+    setDummyEducationData(updatedData); // Update state with new comment
   };
 
   return (
@@ -118,7 +72,8 @@ export default function ProfessionalInfo() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
             active="Education Verification"
           />
           <Breadcrumb
@@ -150,32 +105,8 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
-
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -216,7 +147,7 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {filteredData.map((data, index) => (
+          {/* {filteredData.map((data, index) => (
             <EducationVerificationCard
               key={index}
               type={data.type}
@@ -236,7 +167,13 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))}
+          ))} */}
+          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">
+              No Education verification for you now.
+            </p>
+          </div>
         </main>
       </div>
     </div>

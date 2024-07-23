@@ -1,18 +1,8 @@
 'use client';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter, PackageOpen } from 'lucide-react';
 import { useState } from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -22,59 +12,24 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 // import { axiosInstance } from '@/lib/axiosinstance';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+import DropdownProfile from '@/components/shared/DropdownProfile';
+import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
-  const [dummyProjectData, setDummyProjectData] = useState([
-    {
-      projectName: 'Task Tracker',
-      description:
-        'A web application for managing and tracking daily tasks and projects.',
-      githubLink: 'https://github.com/yourusername/TaskTracker',
-      startFrom: '2023-05-01',
-      endTo: '2023-10-15',
-      reference: 'Mr. Alex Johnson, Senior Developer',
-      techUsed: ['Vue.js', 'JavaScript', 'Firebase', 'CSS'],
-      comments: '',
-      status: 'pending',
-    },
-    {
-      projectName: 'Inventory Management System',
-      description: 'A system for managing inventory in warehouses.',
-      githubLink: 'https://github.com/yourusername/InventoryManagementSystem',
-      startFrom: '2022-01-01',
-      endTo: '2022-06-01',
-      reference: 'Ms. Maria Gonzalez, Project Manager',
-      techUsed: ['React', 'Node.js', 'MongoDB', 'Sass'],
-      comments: '',
-      status: 'pending',
-    },
-    {
-      projectName: 'E-commerce Platform',
-      description: 'An online platform for buying and selling products.',
-      githubLink: 'https://github.com/yourusername/EcommercePlatform',
-      startFrom: '2021-02-01',
-      endTo: '2021-08-01',
-      reference: 'Mr. John Smith, Lead Developer',
-      techUsed: ['Angular', 'TypeScript', 'Firebase', 'Bootstrap'],
-      comments: '',
-      status: 'pending',
-    },
-  ]);
+  const [dummyProjectData, setDummyProjectData] = useState(
+    dummyData.dashboardFreelancerOracleProject,
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -109,16 +64,13 @@ export default function ProfessionalInfo() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
+        menuItemsTop={menuItemsTop} // Assuming these are defined elsewhere
+        menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
         active="Project Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItems={menuItemsTop}
-            active="Project Verification"
-          />
+          {/* CollapsibleSidebarMenu and Breadcrumb components */}
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
@@ -148,36 +100,13 @@ export default function ProfessionalInfo() {
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="overflow-hidden rounded-full"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/user.png" alt="@shadcn" />
-                  <AvatarFallback>
-                    <UserIcon size={16} />{' '}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownProfile />
         </header>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Education Status</DialogTitle>
+              <DialogTitle>Filter Project Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"
@@ -210,11 +139,8 @@ export default function ProfessionalInfo() {
           </DialogContent>
         </Dialog>
 
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
-          {filteredData.map((data, index) => (
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+          {/* {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
               projectName={data.projectName}
@@ -233,7 +159,13 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))}
+          ))} */}
+          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">
+              No Project verification for you now.
+            </p>
+          </div>
         </main>
       </div>
     </div>

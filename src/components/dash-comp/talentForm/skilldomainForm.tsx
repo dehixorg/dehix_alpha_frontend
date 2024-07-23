@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, PackageOpen } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -92,6 +92,9 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
 
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [isDomainDialogOpen, setIsDomainDialogOpen] = useState(false);
+
   const {
     control: skillControl,
     handleSubmit: handleSkillSubmit,
@@ -143,6 +146,7 @@ const SkillDomainForm: React.FC = () => {
     ]);
     setStatusVisibility([...statusVisibility, false]);
     resetSkillForm();
+    setIsSkillDialogOpen(false);
   };
 
   const onSubmitDomain = (data: any) => {
@@ -152,6 +156,7 @@ const SkillDomainForm: React.FC = () => {
     ]);
     setStatusVisibility([...statusVisibility, false]);
     resetDomainForm();
+    setIsDomainDialogOpen(false);
   };
 
   return (
@@ -159,9 +164,12 @@ const SkillDomainForm: React.FC = () => {
       <div className="mb-8 mt-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex space-x-4">
-            <Dialog>
+            <Dialog
+              open={isSkillDialogOpen}
+              onOpenChange={setIsSkillDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsSkillDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -240,9 +248,12 @@ const SkillDomainForm: React.FC = () => {
                 </form>
               </DialogContent>
             </Dialog>
-            <Dialog>
+            <Dialog
+              open={isDomainDialogOpen}
+              onOpenChange={setIsDomainDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsDomainDialogOpen(true)} disabled>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
@@ -330,7 +341,6 @@ const SkillDomainForm: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
                 <TableHead>Label</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Monthly Pay</TableHead>
@@ -341,7 +351,6 @@ const SkillDomainForm: React.FC = () => {
             <TableBody>
               {skillDomainData.map((data, index) => (
                 <TableRow key={index}>
-                  <TableCell>{data.type}</TableCell>
                   <TableCell>{data.label}</TableCell>
                   <TableCell>{data.experience}</TableCell>
                   <TableCell>{data.monthlyPay}</TableCell>
@@ -354,6 +363,15 @@ const SkillDomainForm: React.FC = () => {
             </TableBody>
           </Table>
         </Card>
+        <div className="text-center py-10 w-[90vw] mt-10">
+          <PackageOpen className="mx-auto text-gray-500" size="100" />
+          <p className="text-gray-500">
+            No data available.
+            <br /> This feature will be available soon.
+            <br />
+            Here you can get directly hired for different roles.
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -11,14 +11,20 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import EducationInfoCard from '@/components/cards/freelancerProfile/eductaionInfoCard';
+import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
+import UserDropdownMenu from '@/components/dropdown/user';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
+  const [refresh, setRefresh] = useState(false);
   const [educationInfo, setEducationInfo] = useState<any>([]);
+  const handleFormSubmit = () => {
+    // Toggle the refresh state to trigger useEffect
+    setRefresh((prev) => !prev);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +41,7 @@ export default function Education() {
     };
 
     fetchData(); // Call fetch data function on component mount
-  }, [user.uid]);
+  }, [user.uid, refresh]);
 
   // const handleDelete = (index: number) => {
   //   const updatedEducation = education.filter((_, i) => i !== index);
@@ -62,14 +68,17 @@ export default function Education() {
         menuItemsBottom={menuItemsBottom}
         active="Education"
       />
-
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu menuItems={menuItemsTop} active="Education" />
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Education"
+          />
           <Breadcrumb
             items={[
               { label: 'Settings', link: '#' },
-              { label: 'Education Info', link: '#' },
+              { label: 'Educational Info', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -80,6 +89,7 @@ export default function Education() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
+          <UserDropdownMenu email={user.email} type={user.type} />
         </header>
 
         <main
@@ -89,7 +99,7 @@ export default function Education() {
           {educationInfo.map((education: any, index: number) => (
             <EducationInfoCard key={index} {...education} />
           ))}
-          <AddEducation />
+          <AddEducation onFormSubmit={handleFormSubmit} />
         </main>
       </div>
     </div>

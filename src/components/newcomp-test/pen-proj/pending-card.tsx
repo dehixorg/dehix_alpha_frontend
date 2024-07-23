@@ -17,7 +17,7 @@ interface CardWithFormProps {
 
 const CardWithForm: React.FC<CardWithFormProps> = ({ title, itemCounts }) => {
   return (
-    <Card className="w-[455px]">
+    <Card className="sm:w-fit md:w-[320px] lg:w-[375px]">
       <CardHeader>
         <div className="grid grid-cols-[auto,auto] items-center ml-9">
           <CardTitle className="text-white text-3xl font-bold">
