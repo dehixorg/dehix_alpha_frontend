@@ -32,23 +32,11 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import InterviewCard from '@/components/shared/interviewCard';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 
-// Import Lucid icons and Redux hooks
-
-// Import components that were not used in this file (commented out)
-// import InterviewCard from '@/components/shared/interviewCard';
-// import ProjectDetailCard from '@/components/business/project/projectDetailCard';
-// import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
-// import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
-// import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from '@/components/ui/dialog';
 new Date('2023-11-23T10:30:00Z');
 
 const sampleInterview = {
@@ -62,53 +50,13 @@ const sampleInterview = {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user); // Adjusted RootState to state
-  const menuItemsTop = [
-    {
-      href: '#',
-      icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-      label: 'Dehix',
-    },
-    {
-      href: '#',
-      icon: <Home className="h-5 w-5" />,
-      label: 'Dashboard',
-    },
-    {
-      href: '#',
-      icon: <Package className="h-5 w-5" />,
-      label: 'Projects',
-    },
-    {
-      href: '#',
-      icon: <Users2 className="h-5 w-5" />,
-      label: 'Customers',
-    },
-    {
-      href: '#',
-      icon: <LineChart className="h-5 w-5" />,
-      label: 'Analytics',
-    },
-    {
-      href: '#',
-      icon: <Lightbulb className="h-5 w-5" />,
-      label: 'Talent',
-    },
-  ];
-
-  const menuItemsBottom = [
-    {
-      href: '/settings/personal-info',
-      icon: <Settings className="h-5 w-5" />,
-      label: 'Settings',
-    },
-  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-gray-100 bg-opacity-40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Projects"
+        active="Dehix Talent"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-white px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
