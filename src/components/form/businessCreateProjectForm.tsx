@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -27,9 +28,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { MultiSelect } from '@/components/customFormComponents/multiselect'; // Import the custom MultiSelect component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -81,8 +82,66 @@ const defaultValues: Partial<ProfileFormValues> = {
   ],
 };
 
+interface Skill {
+  _id: string;
+  label: string;
+}
+
+interface Domain {
+  _id: string;
+  label: string;
+}
+
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
+
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  const [domains, setDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+
+  const handleAddSkill = () => {
+    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
+      setCurrSkills([...currSkills, tmpSkill]);
+      setTmpSkill('');
+    }
+  };
+
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const domainResponse = await axiosInstance.get('/domain/all');
+        console.log('Domain API Response get:', domainResponse.data.data);
+        const transformedDomain = domainResponse.data.data.map(
+          (skill: Domain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setDomains(transformedDomain);
+
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        console.log('Skills API Response get:', skillsResponse.data.data);
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
@@ -105,18 +164,29 @@ export function CreateProjectBusinessForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      console.log('Form data:', data);
-      const response = await axiosInstance.put(
+      console.log('Form body:', {
+        ...data,
+        role: '',
+        projectType: '',
+        skillsRequired: currSkills,
+        domains: currDomains,
+      });
+
+      const response = await axiosInstance.post(
         `/business/${user.uid}/project`,
         {
           ...data,
+          role: '',
+          projectType: '',
+          skillsRequired: currSkills,
+          domains: currDomains,
         },
       );
       console.log('API Response:', response.data);
 
       // You can update other fields here as needed
       toast({
-        title: 'Profile Updated',
+        title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
     } catch (error) {
@@ -134,7 +204,7 @@ export function CreateProjectBusinessForm() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="gap-10 lg:grid lg:grid-cols-2 xl:grid-cols-2"
+          className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
         >
           <FormField
             control={form.control}
@@ -182,7 +252,7 @@ export function CreateProjectBusinessForm() {
             {urlFields.map((field, index) => (
               <FormField
                 control={form.control}
-                key={field.id}
+                key={index}
                 name={`urls.${index}.value`}
                 render={({ field }) => (
                   <FormItem>
@@ -204,7 +274,6 @@ export function CreateProjectBusinessForm() {
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2"
               onClick={() => appendUrl({ value: '' })}
             >
               Add URL
@@ -212,12 +281,12 @@ export function CreateProjectBusinessForm() {
           </div>
           <div className="lg:col-span-2 xl:col-span-2">
             {profileFields.map((field, index) => (
-              <div key={field.id} className="border p-4 mb-4 rounded-md">
+              <div key={index} className="border p-4 mb-4 rounded-md">
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.domain`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
                         <Select
@@ -230,18 +299,11 @@ export function CreateProjectBusinessForm() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Frontend Developer">
-                              Frontend Developer
-                            </SelectItem>
-                            <SelectItem value="Backend Developer">
-                              Backend Developer
-                            </SelectItem>
-                            <SelectItem value="Content Writer">
-                              Content Writer
-                            </SelectItem>
-                            <SelectItem value="Project Manager">
-                              Project Manager
-                            </SelectItem>
+                            {domains.map((domain: any, index: number) => (
+                              <SelectItem key={index} value={domain.label}>
+                                {domain.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -253,7 +315,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.freelancersRequired`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Number of Freelancers Required</FormLabel>
                       <FormControl>
                         <Input
@@ -270,19 +332,53 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.skills`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
-                        <MultiSelect
-                          options={[
-                            { value: 'React', label: 'React' },
-                            { value: 'Node.js', label: 'Node.js' },
-                            { value: 'Python', label: 'Python' },
-                            { value: 'AWS', label: 'AWS' },
-                          ]}
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <div>
+                          <div className="flex items-center mt-2">
+                            <Select
+                              onValueChange={(value) => setTmpSkill(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select skill" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skills.map((skill: any, index: number) => (
+                                  <SelectItem key={index} value={skill.label}>
+                                    {skill.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              size="icon"
+                              className="ml-2"
+                              onClick={handleAddSkill}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap mt-5">
+                            {currSkills.map((skill: any, index: number) => (
+                              <Badge
+                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                                key={index}
+                              >
+                                {skill}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(skill)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -292,7 +388,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.experience`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter experience" {...field} />
@@ -305,7 +401,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.minConnect`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Min Connect</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter Min Connects" {...field} />
@@ -318,7 +414,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.rate`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Per Hour Rate</FormLabel>
                       <FormControl>
                         <Input
@@ -335,7 +431,7 @@ export function CreateProjectBusinessForm() {
                   control={form.control}
                   name={`profiles.${index}.description`}
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea placeholder="Enter description" {...field} />
@@ -375,6 +471,7 @@ export function CreateProjectBusinessForm() {
               Add Profile
             </Button>
           </div>
+
           <Button type="submit" className="lg:col-span-2 xl:col-span-2">
             Create Project
           </Button>

@@ -41,6 +41,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
+import { Card } from '@/components/ui/card';
 
 interface Skill {
   label: string;
@@ -303,35 +304,37 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Skill</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {skillData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.skill}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
+            <Card className="p-4 bg-gray-100">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Skill</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />{' '}
-              </p>
-            </div>
+                </TableHeader>
+                <TableBody>
+                  {skillData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.skill}</TableCell>
+                      <TableCell>{item.experience}</TableCell>
+                      <TableCell>{item.level}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="text-center py-10 w-[100%] mt-10">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">
+                  No data available
+                  <br /> You can earn reward and help community by being
+                  interviewer.
+                  <br />{' '}
+                </p>
+              </div>
+            </Card>
           </div>
           <div className="mb-8 w-full sm:w-1/2">
             <div className="flex items-center justify-between mb-4">
@@ -445,35 +448,37 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {domainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.domain}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
+            <Card className="p-4 bg-gray-100">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can select different domain for which you want to be
-                interviewer.
-                <br />{' '}
-              </p>
-            </div>
+                </TableHeader>
+                <TableBody>
+                  {domainData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.domain}</TableCell>
+                      <TableCell>{item.experience}</TableCell>
+                      <TableCell>{item.level}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="text-center py-10 w-[100%] mt-10">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">
+                  No data available
+                  <br /> You can select different domain for which you want to
+                  be interviewer.
+                  <br />{' '}
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

@@ -15,8 +15,6 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
-import dummydata from '@/dummydata.json';
-import CompleteProjectCards from '@/components/freelancer/completeProject/completeProjectCards';
 
 interface Project {
   _id: string;
@@ -42,8 +40,8 @@ interface Project {
   }[];
   status?: string;
   team?: string[];
-  createdAt: { $date: string };
-  updatedAt: { $date: string };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function CompletedProject() {
