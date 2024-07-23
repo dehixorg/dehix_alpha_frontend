@@ -1,64 +1,20 @@
 'use client';
-import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Search, Settings } from 'lucide-react';
-import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { menuItemsTop } from '@/config/menuItems/freelancer/projectMenuItems';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { RootState } from '@/lib/store';
 import AppliedProjectDetailCard from '@/components/freelancer/project/projectPages/appliedProjectCards/appliedProjectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
-interface Project {
-  _id: string;
-  projectName: string;
-  description: string;
-  email: string;
-  verified?: any;
-  isVerified?: string;
-  companyName: string;
-  start?: Date;
-  end?: Date;
-  skillsRequired: string[];
-  experience?: string;
-  role: string;
-  projectType: string;
-  totalNeedOfFreelancer?: {
-    category?: string;
-    needOfFreelancer?: number;
-    appliedCandidates?: string[];
-    rejected?: string[];
-    accepted?: string[];
-    status?: string;
-  }[];
-  status?: string;
-  team?: string[];
-  createdAt: { $date: string };
-  updatedAt: { $date: string };
-}
-
 export default function Dashboard() {
-  const user = useSelector((state: RootState) => state.user);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [projects, setProjects] = useState<Project[]>([]);
-
   // Get dynamic parameters from the URL using useParams
   const { projectId } = useParams();
   useEffect(() => {

@@ -4,18 +4,7 @@ import React from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
-import {
-  Boxes,
-  Home,
-  Lightbulb,
-  LineChart,
-  ListFilter,
-  Package,
-  Plus,
-  Search,
-  Settings,
-  Users2,
-} from 'lucide-react';
+import { ListFilter, Plus, Search } from 'lucide-react';
 
 // Shared components
 // eslint-disable-next-line import/order
@@ -53,7 +42,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 // Menu components
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 new Date('2023-11-23T10:30:00Z');

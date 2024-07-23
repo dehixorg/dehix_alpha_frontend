@@ -1,6 +1,5 @@
 'use client';
-import { Search, UserIcon, Filter } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Search, Filter } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -22,15 +21,12 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
-import { RootState } from '@/lib/store';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
   // Initialize state with education data from dummydata.json
   const [dummyEducationData, setDummyEducationData] = useState(
     dummyData.dashboardFreelancerOracleEducation,

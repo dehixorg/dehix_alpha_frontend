@@ -1,20 +1,16 @@
 'use client';
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { MessageSquare, ListFilter, Search, UserIcon } from 'lucide-react';
+import { MessageSquare, ListFilter, Search } from 'lucide-react';
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { RootState } from '@/lib/store';
 import {
   Card,
   CardContent,
@@ -45,7 +41,6 @@ const sampleInterviews = dummyData.dashboardfreelancercurrentInterview.map(
 
 export default function CurrentPage() {
   const [filter, setFilter] = useState('All');
-  const user = useSelector((state: RootState) => state.user);
 
   const filteredInterviews = sampleInterviews.filter((interview) => {
     if (filter === 'All') return true;

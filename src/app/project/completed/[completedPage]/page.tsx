@@ -1,21 +1,11 @@
 'use client';
-import Image from 'next/image';
 import { Search, Settings } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { Button } from '@/components/ui/button';
 import { CardTitle } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { menuItemsTop } from '@/config/menuItems/freelancer/projectMenuItems';

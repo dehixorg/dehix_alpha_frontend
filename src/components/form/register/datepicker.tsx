@@ -13,7 +13,6 @@ const DatePicker: React.FC<DatePickerProps> = ({
   selected,
   onChange,
   maxDate,
-  placeholderText,
 }) => {
   return (
     <div className="w-full  px-2  border p-1.5 rounded-md">

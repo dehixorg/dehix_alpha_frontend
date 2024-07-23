@@ -4,16 +4,7 @@ import Image from 'next/image';
 import React from 'react'; // 'react' should be imported first
 
 // Import components from '@/components/shared'
-import {
-  Boxes,
-  Home,
-  Lightbulb,
-  LineChart,
-  Package,
-  Search,
-  Settings,
-  Users2,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';

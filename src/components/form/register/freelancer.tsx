@@ -4,11 +4,13 @@ import { useState, useRef } from 'react';
 import { z, ZodError } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
-import { z } from 'zod';
 import { useForm, FormProvider } from 'react-hook-form';
-import { signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+import {
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  UserCredential,
+} from 'firebase/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ToastAction } from '@radix-ui/react-toast';
 
@@ -40,6 +42,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { auth } from '@/config/firebaseConfig';
+import { DatePicker } from '@/components/shared/datePicker';
 
 const FormSchema = z.object({
   otp: z.string().length(6, 'OTP must be exactly 6 digits').optional(),
@@ -56,6 +59,7 @@ export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [password, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
+  const [workExperienceError, setWorkExperienceError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>('');

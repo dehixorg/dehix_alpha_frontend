@@ -1,16 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
+import { ListFilter, MessageSquare, Search } from 'lucide-react';
 
-import { RootState } from '@/lib/store';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -38,7 +35,6 @@ export default function HistoryPage() {
   const sampleInterviews = dummyData.dashboardfreelancerhistoryInterview; // Replace with your actual data path from dummyData
 
   const [filter, setFilter] = useState('All');
-  const user = useSelector((state: RootState) => state.user);
 
   const filteredInterviews = sampleInterviews.filter((interview) => {
     if (filter === 'All') return interview.status === 'Completed';

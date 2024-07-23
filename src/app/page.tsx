@@ -1,6 +1,5 @@
 import { Pencil, Code, Type } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import { Navbar } from '@/components/navbar';
