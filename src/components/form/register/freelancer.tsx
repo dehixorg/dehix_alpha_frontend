@@ -36,12 +36,10 @@ export default function FreelancerRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [workExperience, setWorkExperience] = useState<number | string>('');
   const [workExperienceError, setWorkExperienceError] = useState<string>('');
-  const [dob, setDob] = useState<Date | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
-  const maxDate = new Date();
 
   const handleLogin = async (email: string, pass: string): Promise<void> => {
     try {
@@ -86,10 +84,6 @@ export default function FreelancerRegisterForm() {
     const value = e.target.value;
     setWorkExperience(value);
     setWorkExperienceError(''); // Clear the error message as user types
-  };
-  const handleDateChange = (date: Date | null) => {
-    setDob(date);
-    console.log('Selected Date:', date);
   };
   const handlePhoneNumberChange = (value: string) => {
     setPhoneNumber(value);
@@ -143,16 +137,12 @@ export default function FreelancerRegisterForm() {
       // Validate password using Zod schema
       passwordSchema.parse(password);
       workExperienceSchema.parse(Number(workExperience));
-      // comment the API call
-      {
-        /*
+      //API call
+
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();
-      */
-      }
-      console.log('Form Data:', formData);
     } catch (error: any) {
       // Handle Zod validation error
       if (error instanceof ZodError) {
@@ -278,7 +268,7 @@ export default function FreelancerRegisterForm() {
           <div className="grid gap-2">
             <Label htmlFor="DOB">DOB</Label>
             <div className="">
-              <DatePicker/>
+              <DatePicker />
             </div>
           </div>
           <div className="grid gap-2">

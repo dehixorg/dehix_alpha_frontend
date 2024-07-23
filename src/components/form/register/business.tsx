@@ -38,6 +38,7 @@ export default function BusinessRegisterForm() {
   const [password, setPassword] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [companySize, setCompanySize] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -71,6 +72,9 @@ export default function BusinessRegisterForm() {
     setPassword(value);
     setPasswordError(''); // Clear the error message as user types
   };
+  const handleCompanySizeChange = (value: string) => {
+    setCompanySize(value);
+  };
 
   useEffect(() => {
     const registerBusiness = async () => {
@@ -82,9 +86,7 @@ export default function BusinessRegisterForm() {
         companyName: (
           document.getElementById('company-name') as HTMLInputElement
         ).value,
-        companySize: (
-          document.getElementById('company-size') as HTMLInputElement
-        ).value,
+        companySize: companySize,
         password: (document.getElementById('password') as HTMLInputElement)
           .value,
         email: (document.getElementById('email') as HTMLInputElement).value,
@@ -113,6 +115,7 @@ export default function BusinessRegisterForm() {
         passwordSchema.parse(password);
 
         // API call
+
         await axiosInstance.post('/register/business', formData);
         toast({
           title: 'Account created successfully!',
@@ -141,7 +144,7 @@ export default function BusinessRegisterForm() {
     if (isLoading) {
       registerBusiness();
     }
-  }, [isLoading, password, phoneNumber]);
+  }, [isLoading, password, phoneNumber, companySize]);
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -166,7 +169,7 @@ export default function BusinessRegisterForm() {
         </div>
         <div className="grid gap-2 mt-3">
           <Label htmlFor="company-size">Company Size</Label>
-          <Select>
+          <Select onValueChange={handleCompanySizeChange}>
             <SelectTrigger id="company-size" className="w-auto">
               <SelectValue placeholder="Select a Company Size" />
             </SelectTrigger>
