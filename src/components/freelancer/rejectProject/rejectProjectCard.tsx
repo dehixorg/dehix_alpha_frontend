@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+import Link from 'next/link';
 
 import {
   Card,
@@ -11,6 +12,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipTrigger,
@@ -27,7 +29,7 @@ interface ProjectProps {
   email: string;
   experience: string;
 }
-
+const project_id = 4;
 const RejectProjectCards: React.FC<ProjectProps> = ({
   companyName,
   role,
@@ -93,6 +95,11 @@ const RejectProjectCards: React.FC<ProjectProps> = ({
       <CardFooter className="flex flex-col items-center">
         <div className="flex gap-4 text-gray-400">
           {new Date(start).toLocaleDateString()}
+        </div>
+        <div className="mt-2">
+          <Link href={`/project/rejected/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

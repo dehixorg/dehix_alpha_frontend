@@ -1,7 +1,9 @@
 'use client';
 import { Mail } from 'lucide-react';
 import PropTypes, { Validator } from 'prop-types';
+import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -29,6 +31,7 @@ interface ProjectProps {
   experience: string;
   isVerified?: string;
 }
+const project_id = 2;
 
 const CompleteProjectCards: React.FC<ProjectProps> = ({
   companyName,
@@ -113,6 +116,11 @@ const CompleteProjectCards: React.FC<ProjectProps> = ({
         <div className="flex gap-4 text-gray-400">
           {new Date(start).toLocaleDateString()} -{' '}
           {end !== 'current' ? new Date(end).toLocaleDateString() : 'Current'}
+        </div>
+        <div className="mt-2">
+          <Link href={`/project/completed/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

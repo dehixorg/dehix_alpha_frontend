@@ -54,12 +54,17 @@ interface SkillDomainData {
 
 const defaultStatus = 'Pending';
 
+const experienceRangeMessage = 'Experience must be between 0 and 60 years';
+
 const skillSchema = z.object({
   label: z.string().nonempty('Please select a skill'),
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
+    .regex(/^\d+$/, 'Experience must be a number')
+    .refine((val) => Number(val) >= 0 && Number(val) <= 60, {
+      message: experienceRangeMessage,
+    }),
   monthlyPay: z
     .string()
     .nonempty('Please enter your monthly pay')
@@ -71,7 +76,10 @@ const domainSchema = z.object({
   experience: z
     .string()
     .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
+    .regex(/^\d+$/, 'Experience must be a number')
+    .refine((val) => Number(val) >= 0 && Number(val) <= 60, {
+      message: experienceRangeMessage,
+    }),
   monthlyPay: z
     .string()
     .nonempty('Please enter your monthly pay')
@@ -338,30 +346,39 @@ const SkillDomainForm: React.FC = () => {
           </div>
         </div>
         <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Monthly Pay</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Activity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {skillDomainData.map((data, index) => (
-                <TableRow key={index}>
-                  <TableCell>{data.label}</TableCell>
-                  <TableCell>{data.experience}</TableCell>
-                  <TableCell>{data.monthlyPay}</TableCell>
-                  <TableCell>{data.status}</TableCell>
-                  <TableCell>
-                    <Switch />
-                  </TableCell>
+          <div className="md:overflow-x-auto w-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Monthly Pay</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Visibility</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {skillDomainData.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell>{item.experience} years</TableCell>
+                    <TableCell>${item.monthlyPay}</TableCell>
+                    <TableCell>{item.status}</TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={statusVisibility[index]}
+                        onCheckedChange={() => {
+                          const newVisibility = [...statusVisibility];
+                          newVisibility[index] = !newVisibility[index];
+                          setStatusVisibility(newVisibility);
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
         <div className="text-center py-10 w-[90vw] mt-10">
           <PackageOpen className="mx-auto text-gray-500" size="100" />

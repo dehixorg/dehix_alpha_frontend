@@ -4,49 +4,62 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { LoaderCircle, Chrome, Rocket, Eye, EyeOff } from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { z, ZodError } from 'zod'; // Import Zod for validation
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/shared/themeToggle';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-
-const FormSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string>('');
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
+  // Define Zod schema for password validation
+  const passwordSchema = z
+    .string()
+    .min(8, 'Password must be at least 8 characters long');
 
-  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); // Ensure event is of type React.FormEvent<HTMLFormElement>
     setIsLoading(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    const formData = new FormData(event.currentTarget); // Access form data correctly
+    const firstName = formData.get('first-name') as string;
+    const lastName = formData.get('last-name') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      // Validate password using Zod schema
+      passwordSchema.parse(password);
+
+      // Simulate API request
+      setTimeout(() => {
+        setIsLoading(false);
+        console.log(
+          `Submitted data: ${firstName}, ${lastName}, ${email}, ${password}`,
+        );
+      }, 3000);
+    } catch (error: any) {
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message);
+      } else {
+        console.error(error.message);
+      }
       setIsLoading(false);
-      console.log('Form data submitted:', data);
-    }, 3000);
-  };
+    }
+  }
 
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordError(''); // Clear the error message as user types
   };
 
   return (
@@ -62,103 +75,83 @@ export default function SignUp() {
               Enter your information to create an account
             </p>
           </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Max" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Robinson" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+          <form onSubmit={onSubmit}>
+            <div className="grid gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="first-name">First name</Label>
+                  <Input
+                    id="first-name"
+                    name="first-name"
+                    placeholder="Max"
+                    required
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="m@example.com"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="********"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={toggleShowPassword}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                          >
-                            {showPassword ? (
-                              <Eye className="h-4 w-4" />
-                            ) : (
-                              <EyeOff className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Rocket className="mr-2 h-4 w-4" />
-                  )}{' '}
-                  Create an account
-                </Button>
-                <Button variant="outline" type="button" disabled={isLoading}>
-                  {isLoading ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Chrome className="mr-2 h-4 w-4" />
-                  )}{' '}
-                  Google Login
-                </Button>
+                <div className="grid gap-2">
+                  <Label htmlFor="last-name">Last name</Label>
+                  <Input
+                    id="last-name"
+                    name="last-name"
+                    placeholder="Robinson"
+                    required
+                  />
+                </div>
               </div>
-            </form>
-          </Form>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="********"
+                    required
+                    onChange={handlePasswordChange} // Attach handler
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleShowPassword}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Rocket className="mr-2 h-4 w-4" />
+                )}{' '}
+                Create an account
+              </Button>
+              <Button variant="outline" type="button" disabled={isLoading}>
+                {isLoading ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Chrome className="mr-2 h-4 w-4" />
+                )}{' '}
+                Google Login
+              </Button>
+            </div>
+          </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>

@@ -1,5 +1,6 @@
 'use client';
-import { Search, Filter, PackageOpen } from 'lucide-react';
+import { Search, UserIcon, Filter } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,18 +16,21 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
+import { RootState } from '@/lib/store';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
+  const user = useSelector((state: RootState) => state.user);
+
   // Initialize state with education data from dummydata.json
   const [dummyEducationData, setDummyEducationData] = useState(
     dummyData.dashboardFreelancerOracleEducation,
@@ -107,6 +111,7 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -147,7 +152,7 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <EducationVerificationCard
               key={index}
               type={data.type}
@@ -167,13 +172,7 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Education verification for you now.
-            </p>
-          </div>
+          ))}
         </main>
       </div>
     </div>

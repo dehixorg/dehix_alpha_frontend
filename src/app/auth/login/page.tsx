@@ -1,11 +1,12 @@
 'use client';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
 import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { z, ZodError } from 'zod'; // Import Zod for validation
 import Cookies from 'js-cookie';
 
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,12 @@ export default function Login() {
   const [pass, setPass] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string>(''); // State for password error message
+
+  // Define Zod schema for password validation
+  const passwordSchema = z
+    .string()
+    .min(8, 'Password must be at least 8 characters long');
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -31,6 +38,10 @@ export default function Login() {
     setError(null);
 
     try {
+      // Validate password using Zod schema
+      passwordSchema.parse(pass);
+
+      // If password is valid, proceed with login
       const userCredential: UserCredential = await loginUser(email, pass);
       const user = userCredential.user;
 
@@ -50,8 +61,13 @@ export default function Login() {
       dispatch(setUser({ ...user, type: userType }));
       router.replace(`/dashboard/${userType}`);
     } catch (error: any) {
-      setError(error.message);
-      console.error(error.message);
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message); // Set password error message
+      } else {
+        // Handle other errors
+        console.error(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +149,10 @@ export default function Login() {
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    onChange={(e) => setPass(e.target.value)}
+                    onChange={(e) => {
+                      setPass(e.target.value);
+                      setPasswordError(''); // Reset password error message when typing
+                    }}
                     required
                   />
                   <button
@@ -148,6 +167,9 @@ export default function Login() {
                     )}
                   </button>
                 </div>
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

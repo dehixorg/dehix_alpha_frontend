@@ -1,5 +1,6 @@
 import { Pencil, Code, Type } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import { Navbar } from '@/components/navbar';
@@ -10,8 +11,8 @@ import { ThemeToggle } from '@/components/shared/themeToggle';
 
 const leftNavItems = [
   { label: 'Home', link: '/' },
-  { label: 'About', link: '/' },
-  { label: 'Contact', link: '/' },
+  { label: 'About', link: '#about' },
+  { label: 'Contact', link: '#contact' },
 ];
 
 const rightNavItems = [
@@ -25,8 +26,8 @@ const HomePage = () => {
       <div className="fixed right-10 bottom-10">
         <ThemeToggle />
       </div>
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4">
+      <div className="sticky top-0 border-b">
+        <div className=" flex h-16 items-center px-4">
           <Navbar items={leftNavItems} />
           <div className="ml-auto flex items-center space-x-4">
             <Navbar items={rightNavItems} />
@@ -48,7 +49,7 @@ const HomePage = () => {
             </Button>
           </div>
         </section>
-        <section className="px-4 py-20 md:px-6">
+        <section id="about" className="px-4 py-20 md:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className=" sm:text-3xl">About Our Freelancing Platform</h2>
             <p className="mt-4 text-white md:text-xl">
@@ -183,7 +184,7 @@ const HomePage = () => {
             {/* FaqQuestions component to be implemented */}
           </div>
         </section>
-        <section className="px-4 py-20 md:px-6">
+        <section id="contact" className="px-4 py-20 md:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className=" sm:text-3xl">Get in Touch</h2>
             <p className="mt-4 text-white md:text-xl">
