@@ -1,5 +1,6 @@
 'use client';
-import { Search, Filter, PackageOpen } from 'lucide-react';
+import { Search, UserIcon, Filter } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -12,21 +13,25 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 // import { axiosInstance } from '@/lib/axiosinstance';
-//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import dummyData from '@/dummydata.json';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
+  const user = useSelector((state: RootState) => state.user);
+
   const [dummyProjectData, setDummyProjectData] = useState(
     dummyData.dashboardFreelancerOracleProject,
   );
@@ -70,7 +75,11 @@ export default function ProfessionalInfo() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* CollapsibleSidebarMenu and Breadcrumb components */}
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Education Verification"
+          />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
@@ -139,8 +148,11 @@ export default function ProfessionalInfo() {
           </DialogContent>
         </Dialog>
 
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {/* {filteredData.map((data, index) => (
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
               projectName={data.projectName}
@@ -159,13 +171,7 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Project verification for you now.
-            </p>
-          </div>
+          ))}
         </main>
       </div>
     </div>

@@ -1,37 +1,53 @@
 'use client';
 import { useState } from 'react';
-import { ListFilter, Search, PackageOpen } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { ListFilter, MessageSquare, Search, UserIcon } from 'lucide-react';
 
+import { RootState } from '@/lib/store';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
-import { Button } from '@/components/ui/button';
-import Breadcrumb from '@/components/shared/breadcrumbList';
+import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function HistoryPage() {
-  const [filter, setFilter] = useState('All');
+  const sampleInterviews = dummyData.dashboardfreelancerhistoryInterview; // Replace with your actual data path from dummyData
 
-  // const filteredInterviews = sampleInterviews.filter((interview) => {
-  //   if (filter === 'All') return interview.status === 'Completed';
-  //   if (filter === 'Skills' && interview.skill)
-  //     return interview.status === 'Completed';
-  //   if (filter === 'Domain' && interview.domain)
-  //     return interview.status === 'Completed';
-  //   return false;
-  // });
+  const [filter, setFilter] = useState('All');
+  const user = useSelector((state: RootState) => state.user);
+
+  const filteredInterviews = sampleInterviews.filter((interview) => {
+    if (filter === 'All') return interview.status === 'Completed';
+    if (filter === 'Skills' && interview.skill)
+      return interview.status === 'Completed';
+    if (filter === 'Domain' && interview.domain)
+      return interview.status === 'Completed';
+    return false;
+  });
 
   return (
     <div className="flex min-h-screen w-full">
@@ -42,7 +58,7 @@ export default function HistoryPage() {
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
-          <div className="flex items-center ml-2 gap-4">
+          <div className="flex items-center gap-4">
             <CollapsibleSidebarMenu
               menuItemsTop={menuItemsTop}
               menuItemsBottom={menuItemsBottom}
@@ -55,7 +71,7 @@ export default function HistoryPage() {
                   label: 'Interview',
                   link: '/dashboard/freelancer/interview/profile',
                 },
-                { label: 'History Interviews', link: '#' },
+                { label: 'History', link: '#' },
               ]}
             />
           </div>
@@ -66,8 +82,8 @@ export default function HistoryPage() {
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
             />
-            <DropdownProfile />
           </div>
+          <DropdownProfile />
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
@@ -100,8 +116,7 @@ export default function HistoryPage() {
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {filteredInterviews.map((interview, index) => (
               <Card key={index} className="max-w-full mx-auto md:max-w-lg">
                 <CardHeader>
@@ -114,14 +129,17 @@ export default function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   <Badge
-                    className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'} text-xs`}
+                    className={`bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } hover:bg-${
+                      interview.status === 'Pending' ? 'warning' : 'success'
+                    } text-xs`}
                   >
                     {interview.status.toUpperCase()}
                   </Badge>
                   <p className="text-gray-300 pt-4 text-sm">
                     {interview.description}
                   </p>
-
                   <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
                     <MessageSquare className="pr-1 mr-1 h-5 w-5" />
                     {interview.comments}
@@ -142,10 +160,6 @@ export default function HistoryPage() {
                 </CardFooter>
               </Card>
             ))}
-          </div> */}
-          <div className="text-center py-10 w-[90vw] mt-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">No Inverview Scheduled for you.</p>
           </div>
         </div>
       </div>

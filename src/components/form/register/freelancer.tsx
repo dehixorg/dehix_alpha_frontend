@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { z, ZodError } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UserCredential } from 'firebase/auth';
@@ -14,7 +15,6 @@ import { ToastAction } from '@radix-ui/react-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/shared/datePicker';
 import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { loginUser } from '@/lib/utils';
@@ -54,6 +54,8 @@ declare global {
 
 export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>('');
@@ -166,7 +168,7 @@ export default function FreelancerRegisterForm() {
       lastName: (document.getElementById('last-name') as HTMLInputElement)
         .value,
       email: (document.getElementById('email') as HTMLInputElement).value,
-      phone: (document.getElementById('phone') as HTMLInputElement).value,
+      phone: phoneNumber,
       userName: (document.getElementById('username') as HTMLInputElement).value,
       githubLink: (document.getElementById('github') as HTMLInputElement).value,
       linkedin: (document.getElementById('linkedin') as HTMLInputElement).value,
@@ -203,6 +205,9 @@ export default function FreelancerRegisterForm() {
     setPhoneNumber(formData.phone);
     console.log('Form Data:', formData.phone);
 
+    setPhoneNumber(formData.phone);
+    console.log('Form Data:', formData.phone);
+
     try {
       const response = await axiosInstance.post(
         '/register/freelancer',
@@ -215,13 +220,20 @@ export default function FreelancerRegisterForm() {
       }
       formRef.current?.reset();
     } catch (error: any) {
-      console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
+      // Handle Zod validation error
+      if (error instanceof ZodError) {
+        setPasswordError(error.errors[0].message);
+      } else if (error.errors[0].path.includes('workExperience')) {
+        setWorkExperienceError(error.errors[0].message);
+      } else {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
+      }
     } finally {
       setIsLoading(false);
     }

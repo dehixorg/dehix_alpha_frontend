@@ -334,7 +334,7 @@
     "companyName": "ABC Corporation",
     "role": "Software Engineer",
     "projectType": "Web Development",
-    "description": "This is a sample project description",
+    "description": "This is a sample project description for a rejected project.",
     "skillsRequired": [
       "JavaScript",
       "React",
@@ -343,6 +343,9 @@
     "start": "2023-02-15",
     "email": "john.doe@example.com",
     "experience": "5+ years"
+  },
+  "projectRejectCardPage":{
+    "description":"Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!"
   },
   "projectCurrentCard": {
     "companyName": "ABC Corporation",
@@ -355,6 +358,9 @@
     "email": "john.doe@example.com",
     "experience": "5+ years"
   },
+  "projectCurrentCardPage":{
+    "description":"Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!"
+  },
   "projectCompleteCard": {
     "companyName": "ABC Corporation",
     "role": "Software Engineer",
@@ -366,6 +372,9 @@
     "email": "john.doe@example.com",
     "experience": "5+ years"
   },
+  "projectCompletedCardPage":{
+    "description":"Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!"
+  },
   "projectUnderVerificatinCard": {
     "companyName": "ABC Corporation",
     "role": "Software Engineer",
@@ -375,5 +384,9 @@
     "start": "2023-02-15",
     "email": "john.doe@example.com",
     "experience": "5+ years"
+  },
+  "projectUnderVerificatinCardPage":{
+    "description":"Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project]. Through this project, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches or methodologies]. We believe this project will [state the expected impact or benefits]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know!"
   }
+
 }

@@ -68,14 +68,14 @@ export default function RejectedProject() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Rejected Verification"
+        active="Rejected Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Rejected Verification"
+            active="Rejected Projects"
           />
           <Breadcrumb
             items={[
@@ -84,7 +84,7 @@ export default function RejectedProject() {
                 link: '/project/current',
               },
               {
-                label: 'Rejected Verification',
+                label: 'Rejected Project',
                 link: '/#',
               },
             ]}
@@ -101,7 +101,7 @@ export default function RejectedProject() {
         </header>
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {projects.length === 0 ? (
             <div className="col-span-full text-center mt-20 w-full">

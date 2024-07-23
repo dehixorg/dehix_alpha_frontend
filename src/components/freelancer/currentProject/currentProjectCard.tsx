@@ -1,7 +1,9 @@
 'use client';
 import React from 'react';
 import { Mail } from 'lucide-react'; // Importing Mail icon from Lucide React
+import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -28,7 +30,7 @@ interface ProjectProps {
   email: string;
   experience: string;
 }
-
+const project_id = 3;
 const CurrentProjectCard: React.FC<ProjectProps> = ({
   companyName,
   role,
@@ -98,6 +100,11 @@ const CurrentProjectCard: React.FC<ProjectProps> = ({
           {end && end !== 'current'
             ? new Date(end).toLocaleDateString()
             : end || 'N/A'}
+        </div>
+        <div className="mt-2">
+          <Link href={`/project/current/${project_id}`} passHref>
+            <Button>view more</Button>
+          </Link>
         </div>
       </CardFooter>
     </Card>
