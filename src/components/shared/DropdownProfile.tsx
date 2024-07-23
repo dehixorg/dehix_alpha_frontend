@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { UserIcon, LogOut } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RootState } from '@/lib/store';
 import { clearUser } from '@/lib/userSlice';
@@ -20,6 +22,7 @@ export default function DropdownProfile() {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
+  const userType = Cookies.get('userType');
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -46,9 +49,14 @@ export default function DropdownProfile() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+        <DropdownMenuLabel>
+          <Badge className="uppercase">{userType}</Badge>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link href={'/support'}>Support</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut size={18} className="mr-2" />

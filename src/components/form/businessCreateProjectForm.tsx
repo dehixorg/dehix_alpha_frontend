@@ -148,7 +148,11 @@ export function CreateProjectBusinessForm() {
     mode: 'onChange',
   });
 
-  const { fields: urlFields, append: appendUrl } = useFieldArray({
+  const {
+    fields: urlFields,
+    append: appendUrl,
+    remove: removeUrl,
+  } = useFieldArray({
     name: 'urls',
     control: form.control,
   });
@@ -250,34 +254,46 @@ export function CreateProjectBusinessForm() {
 
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={index}
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                      URLs
-                    </FormLabel>
-                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                      Enter URL of your account
-                    </FormDescription>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div key={field.id} className="flex items-center mb-4">
+                <FormField
+                  control={form.control}
+                  name={`urls.${index}.value`}
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                        URLs
+                      </FormLabel>
+                      <FormDescription className={cn(index !== 0 && 'sr-only')}>
+                        Enter URL of your account
+                      </FormDescription>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="ml-2 mt-[3.5rem]"
+                  onClick={() => removeUrl(index)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendUrl({ value: '' })}
-            >
-              Add URL
-            </Button>
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => appendUrl({ value: '' })}
+              >
+                Add URL
+              </Button>
+            </div>
           </div>
           <div className="lg:col-span-2 xl:col-span-2">
             {profileFields.map((field, index) => (
