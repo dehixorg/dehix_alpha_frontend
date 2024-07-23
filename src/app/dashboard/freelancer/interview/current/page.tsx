@@ -67,7 +67,7 @@ export default function CurrentPage() {
             <CollapsibleSidebarMenu
               menuItemsTop={menuItemsTop}
               menuItemsBottom={menuItemsBottom}
-              active="Current" 
+              active="Current"
             />
             <Breadcrumb
               items={[
