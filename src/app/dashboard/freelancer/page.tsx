@@ -152,45 +152,45 @@ export default function Dashboard() {
                 additionalInfo="Project stats will be here"
               />
             </div>
-            <div className='overflow-x-auto'>
-            <Tabs defaultValue="active">
-              <div className="flex items-center">
-                <TabsList>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="pending">Pending</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                </TabsList>
-              </div>
-              <TabsContent value="active">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Active',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="pending">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Pending',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="completed">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Completed',
-                  )}
-                />
-              </TabsContent>
-              <TabsContent value="rejected">
-                <ProjectTableCard
-                  projects={projects.filter(
-                    (project) => project.status === 'Rejected',
-                  )}
-                />
-              </TabsContent>
-            </Tabs>
+            <div className="overflow-x-auto">
+              <Tabs defaultValue="active">
+                <div className="flex items-center">
+                  <TabsList>
+                    <TabsTrigger value="active">Active</TabsTrigger>
+                    <TabsTrigger value="pending">Pending</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="active">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Active',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="pending">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Pending',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="completed">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Completed',
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="rejected">
+                  <ProjectTableCard
+                    projects={projects.filter(
+                      (project) => project.status === 'Rejected',
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
           <div className="space-y-6">
