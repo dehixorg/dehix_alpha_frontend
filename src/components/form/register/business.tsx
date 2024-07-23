@@ -73,29 +73,23 @@ export default function BusinessRegisterForm() {
   };
 
   useEffect(() => {
-    if (isLoading) {
+    const registerBusiness = async () => {
       const formData = {
         firstName: (document.getElementById('first-name') as HTMLInputElement)
           .value,
-        lastName: (document.getElementById('last-name') as HTMLInputElement)
+        lastName: (document.getElementById('last-name') as HTMLInputElement).value,
+        companyName: (document.getElementById('company-name') as HTMLInputElement)
           .value,
-        companyName: (
-          document.getElementById('company-name') as HTMLInputElement
-        ).value,
-        companySize: (
-          document.getElementById('company-size') as HTMLInputElement
-        ).value,
-        password: (document.getElementById('password') as HTMLInputElement)
+        companySize: (document.getElementById('company-size') as HTMLInputElement)
           .value,
+        password: (document.getElementById('password') as HTMLInputElement).value,
         email: (document.getElementById('email') as HTMLInputElement).value,
         phone: phoneNumber,
-        position: (document.getElementById('position') as HTMLInputElement)
-          .value,
+        position: (document.getElementById('position') as HTMLInputElement).value,
         refer: 'Jane Smith',
         verified: 'No',
         isVerified: false,
-        linkedin: (document.getElementById('linkedin') as HTMLInputElement)
-          .value,
+        linkedin: (document.getElementById('linkedin') as HTMLInputElement).value,
         personalWebsite: (
           document.getElementById('personalWebsite') as HTMLInputElement
         ).value,
@@ -107,13 +101,12 @@ export default function BusinessRegisterForm() {
         Appliedcandidates: [],
         hirefreelancer: [],
       };
-
+  
       try {
         // Validate password using Zod schema
         passwordSchema.parse(password);
-
-        // comment the API call
-        /*
+  
+        // API call
         await axiosInstance.post('/register/business', formData);
         toast({
           title: 'Account created successfully!',
@@ -121,8 +114,6 @@ export default function BusinessRegisterForm() {
         });
         handleLogin(formData.email, formData.password);
         formRef.current?.reset();
-        */
-        console.log('Form Data:', formData);
       } catch (error: any) {
         // Handle Zod validation error
         if (error instanceof ZodError) {
@@ -139,6 +130,10 @@ export default function BusinessRegisterForm() {
       } finally {
         setIsLoading(false);
       }
+    };
+  
+    if (isLoading) {
+      registerBusiness();
     }
   }, [isLoading, password, phoneNumber]);
 

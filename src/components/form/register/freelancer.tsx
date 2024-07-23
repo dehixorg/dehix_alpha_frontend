@@ -144,15 +144,13 @@ export default function FreelancerRegisterForm() {
       passwordSchema.parse(password);
       workExperienceSchema.parse(Number(workExperience));
       // comment the API call
-      {
-        /*
+      
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       handleLogin(formData.email, formData.password);
       formRef.current?.reset();
-      */
-      }
-      console.log('Form Data:', formData);
+      
+      
     } catch (error: any) {
       // Handle Zod validation error
       if (error instanceof ZodError) {
