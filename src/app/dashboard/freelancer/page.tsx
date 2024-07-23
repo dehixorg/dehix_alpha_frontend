@@ -152,6 +152,7 @@ export default function Dashboard() {
                 additionalInfo="Project stats will be here"
               />
             </div>
+            <div className='overflow-x-auto'>
             <Tabs defaultValue="active">
               <div className="flex items-center">
                 <TabsList>
@@ -190,6 +191,7 @@ export default function Dashboard() {
                 />
               </TabsContent>
             </Tabs>
+            </div>
           </div>
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">

@@ -449,6 +449,7 @@ export default function ProfilePage() {
               </Dialog>
             </div>
             <Card className="p-4 bg-gray-100">
+            <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -469,6 +470,7 @@ export default function ProfilePage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               <div className="text-center py-10 w-[100%] mt-10">
                 <PackageOpen className="mx-auto text-gray-500" size="100" />
                 <p className="text-gray-500">
