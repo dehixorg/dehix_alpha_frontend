@@ -17,7 +17,6 @@ import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
-import 'react-datepicker/dist/react-datepicker.css';
 import { DatePicker } from '@/components/shared/datePicker';
 
 // Define Zod schema for password validation
