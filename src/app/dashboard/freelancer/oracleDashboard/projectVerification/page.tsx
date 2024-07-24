@@ -22,6 +22,7 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -71,6 +72,11 @@ export default function ProfessionalInfo() {
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           {/* CollapsibleSidebarMenu and Breadcrumb components */}
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Project Verification"
+          />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },

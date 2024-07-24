@@ -449,26 +449,28 @@ export default function ProfilePage() {
               </Dialog>
             </div>
             <Card className="p-4 bg-gray-100">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Experience</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {domainData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.domain}</TableCell>
-                      <TableCell>{item.experience}</TableCell>
-                      <TableCell>{item.level}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Level</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {domainData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.domain}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.level}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               <div className="text-center py-10 w-[100%] mt-10">
                 <PackageOpen className="mx-auto text-gray-500" size="100" />
                 <p className="text-gray-500">
