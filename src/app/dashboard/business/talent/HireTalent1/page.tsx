@@ -154,17 +154,13 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Dehix Hire Talent
-            </h2>
-
             {/* Dialog component */}
             <div className="mb-4 mt-3">
-              <h2 className="text-xl font-semibold">Talent</h2>
+              <h2 className="text-2xl font-semibold">Add Talent</h2>
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="mr-2 mt-2">
+                  <Button className="w-full sm:w-auto mr-2 mt-4">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
                   </Button>
                 </DialogTrigger>
@@ -222,8 +218,8 @@ export default function Dashboard() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="mr-2">
-                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Domain
+                  <Button className="w-full sm:w-auto mr-2 mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -280,8 +276,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="w-48">
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2 -mt-2">
+            <div className="w-fit">
               <Tabs defaultValue="active">
                 <TabsList className="flex items-center space-x-4">
                   <TabsTrigger value="active">Domain</TabsTrigger>
@@ -292,14 +288,14 @@ export default function Dashboard() {
             <div>
               <Card className="sm:col-span-2 flex flex-col h-full">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">Skill/Domain</CardTitle>
+                  <CardTitle className="text-2xl mb-3">Skill/Domain</CardTitle>
                 </CardHeader>
                 <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
               </Card>
             </div>
           </div>
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
+          <div className="space-y-6 lg:-mt-32">
+            <CardTitle className="group flex items-center gap-2 text-2xl lg:-mt-4">
               Talent
             </CardTitle>
             <InterviewCard {...sampleInterview} />
