@@ -1,6 +1,7 @@
 import { UserIcon, LogOut } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Cookies from 'js-cookie';
 
 import {
@@ -47,8 +48,12 @@ export default function DropdownProfile() {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
+        <Link href="/settings/personal-info">
+          <DropdownMenuItem>Settings</DropdownMenuItem>
+        </Link>
+        <Link href="/settings/support">
+          <DropdownMenuItem>Support</DropdownMenuItem>
+        </Link>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut size={18} className="mr-2" />
