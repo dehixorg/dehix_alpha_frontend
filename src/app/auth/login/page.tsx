@@ -6,15 +6,13 @@ import { UserCredential } from 'firebase/auth';
 import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Cookies from 'js-cookie';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/shared/themeToggle';
-import { loginGoogleUser, loginUser } from '@/lib/utils';
+import { getUserData, loginGoogleUser, loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
-import { initializeAxiosWithToken } from '@/lib/axiosinstance';
 
 export default function Login() {
   const router = useRouter();
@@ -32,23 +30,14 @@ export default function Login() {
 
     try {
       const userCredential: UserCredential = await loginUser(email, pass);
-      const user = userCredential.user;
-
-      // Get the ID token
-      const accessToken = await user.getIdToken();
-      initializeAxiosWithToken(accessToken);
-      const claims = await user.getIdTokenResult();
-      const userType = claims.claims.type as string;
-
-      // Log userType for debugging
-      console.log('User Type to be stored in cookie:', userType);
-
-      // Storing user type and token in cookies
-      Cookies.set('userType', userType, { expires: 1, path: '/' });
-      Cookies.set('token', accessToken, { expires: 1, path: '/' });
-
-      dispatch(setUser({ ...user, type: userType }));
-      router.replace(`/dashboard/${userType}`);
+      const { user, claims } = await getUserData(userCredential);
+      dispatch(
+        setUser({
+          ...user,
+          type: claims.type,
+        }),
+      );
+      router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
       setError(error.message);
       console.error(error.message);
@@ -64,23 +53,10 @@ export default function Login() {
 
     try {
       const userCredential: UserCredential = await loginGoogleUser();
-      const user = userCredential.user;
+      const { user, claims } = await getUserData(userCredential);
 
-      // Get the ID token
-      const accessToken = await user.getIdToken();
-      initializeAxiosWithToken(accessToken);
-      const claims = await user.getIdTokenResult();
-      const userType = claims.claims.type as string;
-
-      // Log userType for debugging
-      console.log('User Type to be stored in cookie:', userType);
-
-      // Storing user type and token in cookies
-      Cookies.set('userType', userType, { expires: 1, path: '/' });
-      Cookies.set('token', accessToken, { expires: 1, path: '/' });
-
-      dispatch(setUser({ ...user, type: userType }));
-      router.replace(`/dashboard/${userType}`);
+      dispatch(setUser({ ...user, type: claims.type }));
+      router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
       setError(error.message);
       console.error(error.message);
