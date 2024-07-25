@@ -6,7 +6,7 @@ import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { UserCredential } from 'firebase/auth';
-import { z, ZodError } from 'zod';
+import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -39,11 +39,7 @@ import { setUser } from '@/lib/userSlice';
 import { Label } from '@/components/ui/label';
 import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { Input } from '@/components/ui/input';
-
-// Define Zod schema for password validation
-const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters long');
+import OtpLogin from '@/components/shared/otpDialog';
 
 const businessRegisterSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -64,9 +60,11 @@ export default function BusinessRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
+  const [phone, setPhone] = useState<string>('');
   const router = useRouter();
   const dispatch = useDispatch();
 
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -88,48 +86,35 @@ export default function BusinessRegisterForm() {
     mode: 'all',
   });
 
-  const handleLogin = async (email: string, pass: string): Promise<void> => {
-    try {
-      const userCredential: UserCredential = await loginUser(email, pass);
-      const user = userCredential.user;
-
-      // Get the ID token
-      const accessToken = await user.getIdToken();
-      initializeAxiosWithToken(accessToken);
-      const claims = await user.getIdTokenResult();
-      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
-      router.replace(`/dashboard/${claims.claims.type}`);
-    } catch (error: any) {
-      setIsLoading(false);
-      console.error(error.message);
-    }
-  };
-
   const onSubmit = async (data: BusinessRegisterFormValues) => {
     setIsLoading(true);
-    console.log('TESTF:', data);
-
+    setPhone(
+      `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+    );
+    const formData = {
+      ...data,
+      phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      isBusiness: true,
+      connects: 0,
+      otp: '123456',
+      otpverified: 'No',
+      ProjectList: [],
+      Appliedcandidates: [],
+      hirefreelancer: [],
+      refer: '',
+      verified: '',
+      isVerified: false,
+    };
     try {
-      await axiosInstance.post('/register/business', {
-        ...data,
-        phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-        isBusiness: true,
-        connects: 0,
-        otp: '123456',
-        otpverified: 'No',
-        ProjectList: [],
-        Appliedcandidates: [],
-        hirefreelancer: [],
-        refer: '',
-        verified: '',
-        isVerified: false,
-      });
+      await axiosInstance.post('/register/business', formData);
 
+      console.log('TESTF:', formData);
       toast({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',
       });
-      handleLogin(data.email, data.password);
+      setIsModalOpen(true);
+      // handleLogin(data.email, data.password);
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
@@ -285,6 +270,11 @@ export default function BusinessRegisterForm() {
             )}{' '}
             Create an account
           </Button>
+          <OtpLogin
+            phoneNumber={phone}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
         </div>
       </form>
     </Form>

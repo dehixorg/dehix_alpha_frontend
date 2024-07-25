@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/shared/datePicker';
 import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-import { loginUser } from '@/lib/utils';
+import { getUserData, loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
 import { Label } from '@/components/ui/label';
 import {
@@ -101,17 +101,9 @@ export default function FreelancerRegisterForm() {
   const handleLogin = async (email: string, pass: string): Promise<void> => {
     try {
       const userCredential: UserCredential = await loginUser(email, pass);
-      const user = userCredential.user;
-
-      const accessToken = await user.getIdToken();
-      console.log('Bearer ' + accessToken);
-      initializeAxiosWithToken(accessToken);
-      const claims = await user.getIdTokenResult();
-      console.log('Type:', claims.claims.type);
-      console.log('User ID ' + userCredential.user.uid);
-      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
-      console.log(userCredential.user);
-      router.replace(`/dashboard/${claims.claims.type}`);
+      const { user, claims } = await getUserData(userCredential);
+      dispatch(setUser({ ...user, type: claims.type }));
+      router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
       setIsLoading(false);
       console.error(error.message);
