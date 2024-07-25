@@ -25,7 +25,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { auth } from '@/config/firebaseConfig';
-import { initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
 

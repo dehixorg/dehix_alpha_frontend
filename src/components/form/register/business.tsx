@@ -3,9 +3,6 @@
 import React, { useState } from 'react';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
-import { useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
-import { UserCredential } from 'firebase/auth';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,10 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { loginUser } from '@/lib/utils';
-import { setUser } from '@/lib/userSlice';
 import { Label } from '@/components/ui/label';
-import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
 
@@ -61,8 +56,6 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
-  const router = useRouter();
-  const dispatch = useDispatch();
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const togglePasswordVisibility = () => {
