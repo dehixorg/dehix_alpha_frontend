@@ -32,7 +32,7 @@ export default function Login() {
 
     try {
       const userCredential: UserCredential = await loginUser(email, pass);
-      const user = userCredential.user;
+      const user: any = userCredential.user;
 
       // Get the ID token
       const accessToken = await user.getIdToken();
@@ -46,8 +46,15 @@ export default function Login() {
       // Storing user type and token in cookies
       Cookies.set('userType', userType, { expires: 1, path: '/' });
       Cookies.set('token', accessToken, { expires: 1, path: '/' });
+      const { proactiveRefresh, auth, ...userBasic } = user;
 
-      dispatch(setUser({ ...user, type: userType }));
+      console.log('USER:', user);
+      dispatch(
+        setUser({
+          ...userBasic,
+          type: userType,
+        }),
+      );
       router.replace(`/dashboard/${userType}`);
     } catch (error: any) {
       setError(error.message);
