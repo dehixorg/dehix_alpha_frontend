@@ -1,6 +1,9 @@
 'use client';
+import React, { useEffect, useState } from 'react';
 import { Pencil, Code, Type } from 'lucide-react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
+import Cookies from 'js-cookie';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import {
@@ -15,14 +18,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  menuItemsBottom,
   menuItemsTop,
+  useMenuItemsBottom,
 } from '@/config/menuItems/freelancer/supportMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import { RootState } from '@/lib/store';
 
 const HomePage = () => {
+  const user = useSelector((state: RootState) => state.user);
+  const [userType, setUserType] = useState<string | null>(null);
+  const menuItemsBottom = useMenuItemsBottom();
+
+  useEffect(() => {
+    if (user?.type) {
+      setUserType(user.type);
+    } else {
+      const storedUserType = Cookies.get('userType');
+      setUserType(storedUserType || null);
+    }
+  }, [user]);
   return (
     <div className="">
       <SidebarMenu
@@ -38,10 +54,19 @@ const HomePage = () => {
             active="support"
           />
           <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Support', link: '#' },
-            ]}
+            items={
+              userType === 'freelancer'
+                ? [
+                    { label: 'Freelancer', link: '/dashboard/freelancer' },
+                    { label: 'Support', link: '#' },
+                  ]
+                : userType === 'business'
+                  ? [
+                      { label: 'Business', link: '/dashboard/business' },
+                      { label: 'Support', link: '#' },
+                    ]
+                  : [{ label: 'Loading...', link: '#' }]
+            }
           />
         </header>
 
