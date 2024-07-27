@@ -1,6 +1,8 @@
+import { useSelector } from 'react-redux';
 import { HeartHandshake, Boxes, HomeIcon, User } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
+import { RootState } from '@/lib/store';
 
 export const menuItemsTop: MenuItem[] = [
   {
@@ -15,10 +17,19 @@ export const menuItemsTop: MenuItem[] = [
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [
-  {
-    href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
-  },
-];
+const getUserType = (state: RootState) => state.user.type; // Assuming you have a user slice in Redux
+
+export function useMenuItemsBottom() {
+  const userType = useSelector(getUserType);
+
+  return [
+    {
+      href:
+        userType === 'business'
+          ? '/dashboard/business'
+          : '/dashboard/freelancer',
+      icon: <HomeIcon className="h-5 w-5" />,
+      label: 'Home',
+    },
+  ];
+}

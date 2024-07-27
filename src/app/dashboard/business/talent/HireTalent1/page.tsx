@@ -53,15 +53,27 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 // Menu components
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { Card, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import InterviewCard from '@/components/shared/interviewCard';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-new Date('2023-11-23T10:30:00Z');
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Skill {
   _id: string;
@@ -71,6 +83,13 @@ interface Skill {
 interface Domain {
   _id: string;
   label: string;
+}
+
+interface SkillDomainData {
+  label: string;
+  experience: string;
+  description: string;
+  status: string;
 }
 
 const sampleInterview = {
@@ -83,8 +102,17 @@ const sampleInterview = {
 };
 
 export default function Dashboard() {
-  const [skills, setSkills] = useState<string[]>([]);
-  const [domains, setDomains] = useState<string[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [description, setDescription] = useState<string>('');
+  const [experience, setExperience] = useState<number | string>('');
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [isDomainDialogOpen, setIsDomainDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('All');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -92,8 +120,8 @@ export default function Dashboard() {
         console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setSkills(transformedSkills);
@@ -102,8 +130,8 @@ export default function Dashboard() {
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
           (skill: Domain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setDomains(transformedDomain);
@@ -115,6 +143,57 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const handleAddSkill = () => {
+    if (selectedSkill && description && experience) {
+      const newSkillDomainData = {
+        label: selectedSkill,
+        experience: experience.toString(),
+        description,
+        status: 'Active',
+      };
+
+      console.log('Adding Skill:', newSkillDomainData);
+
+      setSkillDomainData((prevData) => [...prevData, newSkillDomainData]);
+
+      setSelectedSkill(null);
+      setDescription('');
+      setExperience('');
+
+      setIsSkillDialogOpen(false);
+    }
+  };
+
+  const handleAddDomain = () => {
+    if (selectedDomain && description && experience) {
+      const newSkillDomainData = {
+        label: selectedDomain,
+        experience: experience.toString(),
+        description,
+        status: 'Active',
+      };
+
+      console.log('Adding Domain:', newSkillDomainData);
+
+      setSkillDomainData((prevData) => [...prevData, newSkillDomainData]);
+
+      setSelectedDomain(null);
+      setDescription('');
+      setExperience('');
+
+      setIsDomainDialogOpen(false);
+    }
+  };
+
+  const filteredData = skillDomainData.filter((item) => {
+    if (activeTab === 'All') return true;
+    if (activeTab === 'Skills')
+      return skills.some((skill) => skill.label === item.label);
+    if (activeTab === 'Domain')
+      return domains.some((domain) => domain.label === item.label);
+    return false;
+  });
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -124,22 +203,17 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* CollapsibleSidebarMenu component */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             active="Dehix Talent"
           />
-
-          {/* Breadcrumb component */}
           <Breadcrumb
             items={[
               { label: 'Business', link: '/dashboard/business' },
               { label: 'HireTalent', link: '#' },
             ]}
           />
-
-          {/* Search and Input components */}
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -148,8 +222,6 @@ export default function Dashboard() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-
-          {/* DropdownMenu component */}
           <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
@@ -157,12 +229,12 @@ export default function Dashboard() {
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Dehix Hire Talent
             </h2>
-
-            {/* Dialog component */}
             <div className="mb-4 mt-3">
               <h2 className="text-xl font-semibold">Talent</h2>
-
-              <Dialog>
+              <Dialog
+                open={isSkillDialogOpen}
+                onOpenChange={setIsSkillDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button className="mr-2 mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
@@ -175,20 +247,18 @@ export default function Dashboard() {
                       Select your Skill, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
-
-                  <Select>
+                  <Select onValueChange={(value) => setSelectedSkill(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a Skill" />
                     </SelectTrigger>
                     <SelectContent>
-                      {skills.map((skill: any, index: number) => (
-                        <SelectItem key={index} value={skill.label}>
+                      {skills.map((skill) => (
+                        <SelectItem key={skill._id} value={skill.label}>
                           {skill.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-
                   <div className="mt-2">
                     <label
                       htmlFor="description"
@@ -199,8 +269,10 @@ export default function Dashboard() {
                     <textarea
                       id="description"
                       rows={2}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)} // Changed: Set description state
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Describe the talent..."
+                      placeholder="  Describe the talent..."
                     ></textarea>
                   </div>
                   <div className="mt-2">
@@ -213,16 +285,23 @@ export default function Dashboard() {
                     <input
                       type="number"
                       id="experience"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Years of experience"
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)} // Changed: Set experience state
+                      className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="  Years of experience"
                     />
                   </div>
+                  <Button onClick={handleAddSkill} className="mt-4">
+                    Add Talent
+                  </Button>
                 </DialogContent>
               </Dialog>
-
-              <Dialog>
+              <Dialog
+                open={isDomainDialogOpen}
+                onOpenChange={setIsDomainDialogOpen}
+              >
                 <DialogTrigger asChild>
-                  <Button className="mr-2">
+                  <Button className="mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Domain
                   </Button>
                 </DialogTrigger>
@@ -233,20 +312,18 @@ export default function Dashboard() {
                       Select your Domain, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
-
-                  <Select>
+                  <Select onValueChange={(value) => setSelectedDomain(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a Domain" />
                     </SelectTrigger>
                     <SelectContent>
-                      {domains.map((domain: any, index: number) => (
-                        <SelectItem key={index} value={domain.label}>
+                      {domains.map((domain) => (
+                        <SelectItem key={domain._id} value={domain.label}>
                           {domain.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-
                   <div className="mt-2">
                     <label
                       htmlFor="description"
@@ -257,8 +334,10 @@ export default function Dashboard() {
                     <textarea
                       id="description"
                       rows={2}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)} // Changed: Set description state
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Describe the talent..."
+                      placeholder="  Describe the talent..."
                     ></textarea>
                   </div>
                   <div className="mt-2">
@@ -271,61 +350,165 @@ export default function Dashboard() {
                     <input
                       type="number"
                       id="experience"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Years of experience"
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)} // Changed: Set experience state
+                      className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      placeholder="  Years of experience"
                     />
                   </div>
+                  <Button onClick={handleAddDomain} className="mt-4">
+                    Add Talent
+                  </Button>
                 </DialogContent>
               </Dialog>
             </div>
-          </div>
+            <Tabs defaultValue="All" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="All">All</TabsTrigger>
+                <TabsTrigger value="Skills">Skills</TabsTrigger>
+                <TabsTrigger value="Domain">Domain</TabsTrigger>
+              </TabsList>
+              <TabsContent value="All">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Label</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Activity</TableHead>
+                      <TableHead>More</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                        <TableCell>
+                          <Switch />
+                        </TableCell>
+                        <TableCell>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline">click</Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <div className="grid gap-4">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium leading-none">
+                                    Description
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              <TabsContent value="Skills">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Label</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Activity</TableHead>
+                      <TableHead>More</TableHead>
+                    </TableRow>
+                  </TableHeader>
 
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div className="w-48">
-              <Tabs defaultValue="active">
-                <TabsList className="flex items-center space-x-4">
-                  <TabsTrigger value="active">Domain</TabsTrigger>
-                  <TabsTrigger value="pending">Skills</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-            <div>
-              <Card className="sm:col-span-2 flex flex-col h-full">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">Skill/Domain</CardTitle>
-                </CardHeader>
-                <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
-              </Card>
-            </div>
+                  <TableBody>
+                    {filteredData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                        <TableCell>
+                          <Switch />
+                        </TableCell>
+                        <TableCell>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline">click</Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <div className="grid gap-4">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium leading-none">
+                                    Description
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              <TabsContent value="Domain">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Label</TableHead>
+                      <TableHead>Experience</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Activity</TableHead>
+                      <TableHead>More</TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
+                    {filteredData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.label}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                        <TableCell>
+                          <Switch />
+                        </TableCell>
+                        <TableCell>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline">click</Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80">
+                              <div className="grid gap-4">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium leading-none">
+                                    Description
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            </Tabs>
           </div>
-          <div className="space-y-6">
+          <div className="sticky top-14 hidden flex-col gap-4 md:flex">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Talent
             </CardTitle>
             <InterviewCard {...sampleInterview} />
-          </div>
-
-          {/* DropdownMenu component */}
-          <div className="absolute right-0 px-8">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-auto px-4 gap-1 text-sm"
-                >
-                  <ListFilter className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only">Filter</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem>All</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Current</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Completed</DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </main>
       </div>
