@@ -40,7 +40,7 @@ export default function DropdownProfile() {
     dispatch(clearUser());
     Cookies.remove('userType');
     Cookies.remove('token');
-    router.replace('/');
+    router.replace('/auth/login');
   };
 
   return (
