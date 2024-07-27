@@ -25,6 +25,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { RootState } from '@/lib/store';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
@@ -68,6 +69,9 @@ const HomePage = () => {
                   : [{ label: 'Loading...', link: '#' }]
             }
           />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <DropdownProfile />
+          </div>
         </header>
 
         <div className=" ">
@@ -222,6 +226,9 @@ const HomePage = () => {
             </div>
           </section>
           <section className="px-4 pt-20 md:px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className=" sm:text-3xl">FAQs</h2>
+            </div>
             <FAQAccordion />
           </section>
           <section className="px-4 py-20 md:px-6">
