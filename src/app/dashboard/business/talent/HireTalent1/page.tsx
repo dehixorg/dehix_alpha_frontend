@@ -1,7 +1,6 @@
 'use client';
 // eslint-disable-next-line import/order
 import React, { useEffect, useState } from 'react'; // Import 'react' first
-import React, { useEffect, useState } from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
@@ -23,9 +22,14 @@ import {
 
 // Shared components
 // eslint-disable-next-line import/order
-import Breadcrumb from '@/components/shared/breadcrumbList';
+import { TabsContent } from '@radix-ui/react-tabs';
+import { Label } from '@radix-ui/react-label';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 // UI components
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -69,18 +73,19 @@ import {
 import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import InterviewCard from '@/components/shared/interviewCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { TabsContent } from '@radix-ui/react-tabs';
-import { Switch } from "@/components/ui/switch"
-import { Label } from '@radix-ui/react-label';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Textarea } from "@/components/ui/textarea";
-
-import { z } from "zod";
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -88,14 +93,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-
+} from '@/components/ui/form';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 
 new Date('2023-11-23T10:30:00Z');
 
@@ -132,58 +136,58 @@ const sampleInterview = {
   comments: 'Great communication skills and technical expertise.',
 };
 
-const domainDummyData:DomainData[] = [
+const domainDummyData: DomainData[] = [
   {
-    domainName: "Frontend Development",
-    experience: "5 years",
-    status: "Added",
-    visible: "Inactive",
+    domainName: 'Frontend Development',
+    experience: '5 years',
+    status: 'Added',
+    visible: 'Inactive',
   },
   {
-    domainName: "Backend Development",
-    experience: "3 years",
-    status: "Added",
-    visible: "Inactive",
-  }
+    domainName: 'Backend Development',
+    experience: '3 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
 ];
-const skillDummyData:SkillData[] = [
+const skillDummyData: SkillData[] = [
   {
-    skillName: "JavaScript",
-    experience: "4 years",
-    status: "Added",
-    visible: "Inactive",
+    skillName: 'JavaScript',
+    experience: '4 years',
+    status: 'Added',
+    visible: 'Inactive',
   },
   {
-    skillName: "React",
-    experience: "2 years",
-    status: "Added",
-    visible: "Inactive",
-  }
+    skillName: 'React',
+    experience: '2 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
 ];
 
 const skillFormSchema = z.object({
   skillName: z.string({
-    required_error: "Skill must be selected"
+    required_error: 'Skill must be selected',
   }),
   description: z.string({
-    required_error: "Description Must be Added"
+    required_error: 'Description Must be Added',
   }),
   experience: z.string({
-    required_error: "Description Must be Added"
-  })
-})
+    required_error: 'Description Must be Added',
+  }),
+});
 
 const domainFormSchema = z.object({
   domainName: z.string({
-    required_error: "Skill must be selected"
+    required_error: 'Skill must be selected',
   }),
   description: z.string({
-    required_error: "Description Must be Added"
+    required_error: 'Description Must be Added',
   }),
   experience: z.string({
-    required_error: "Description Must be Added"
-  })
-})
+    required_error: 'Description Must be Added',
+  }),
+});
 
 export default function Dashboard() {
   const skillForm = useForm<z.infer<typeof skillFormSchema>>({
@@ -238,15 +242,20 @@ export default function Dashboard() {
   const [selectedDomain, setSelectedDomain] = useState<DomainData | null>(null);
   const handleDomainToggle = (index: number) => {
     console.log('Before Toggle:', domainVisibility); // Debugging line
-    setDomainVisibility(prevDomainVisibility => {
+    setDomainVisibility((prevDomainVisibility) => {
       const updatedDomainVisibility = prevDomainVisibility.map((item, i) =>
-        i === index ? { ...item, visible: item.visible === 'Active' ? 'Inactive' : 'Active' } : item
+        i === index
+          ? {
+              ...item,
+              visible: item.visible === 'Active' ? 'Inactive' : 'Active',
+            }
+          : item,
       );
       console.log('After Toggle:', updatedDomainVisibility); // Debugging line
       return updatedDomainVisibility;
     });
   };
-  const handleViewDomain = (index:number) => {
+  const handleViewDomain = (index: number) => {
     setSelectedDomain(domainVisibility[index]);
   };
   useEffect(() => {
@@ -254,8 +263,10 @@ export default function Dashboard() {
   }, [selectedDomain]);
   const handleDeleteDomain = (index: number) => {
     console.log('Before Deletion:', domainVisibility); // Debugging line
-    setDomainVisibility(prevDomainVisibility => {
-      const updatedDomainVisibility = prevDomainVisibility.filter((_, i) => i !== index);
+    setDomainVisibility((prevDomainVisibility) => {
+      const updatedDomainVisibility = prevDomainVisibility.filter(
+        (_, i) => i !== index,
+      );
       console.log('After Deletion:', updatedDomainVisibility); // Debugging line
       return updatedDomainVisibility;
     });
@@ -265,15 +276,20 @@ export default function Dashboard() {
   const [selectedSkill, setSelectedSkill] = useState<SkillData | null>(null);
   const handleSkillToggle = (index: number) => {
     console.log('Before Toggle:', skillVisibility); // Debugging line
-    setSkillVisibility(prevSkillVisibility => {
+    setSkillVisibility((prevSkillVisibility) => {
       const updatedSkillVisibility = prevSkillVisibility.map((item, i) =>
-        i === index ? { ...item, visible: item.visible === 'Active' ? 'Inactive' : 'Active' } : item
+        i === index
+          ? {
+              ...item,
+              visible: item.visible === 'Active' ? 'Inactive' : 'Active',
+            }
+          : item,
       );
       console.log('After Toggle:', updatedSkillVisibility); // Debugging line
       return updatedSkillVisibility;
     });
   };
-  const handleViewSkill = (index:number) => {
+  const handleViewSkill = (index: number) => {
     setSelectedSkill(skillVisibility[index]);
   };
   useEffect(() => {
@@ -281,8 +297,10 @@ export default function Dashboard() {
   }, [selectedSkill]);
   const handleDeleteSkill = (index: number) => {
     console.log('Before Deletion:', skillVisibility); // Debugging line
-    setSkillVisibility(prevSkillVisibility => {
-      const updatedSkillVisibility = prevSkillVisibility.filter((_, i) => i !== index);
+    setSkillVisibility((prevSkillVisibility) => {
+      const updatedSkillVisibility = prevSkillVisibility.filter(
+        (_, i) => i !== index,
+      );
       console.log('After Deletion:', updatedSkillVisibility); // Debugging line
       return updatedSkillVisibility;
     });
@@ -341,68 +359,80 @@ export default function Dashboard() {
                   <DialogHeader>
                     <DialogTitle>Get Talent by Skill</DialogTitle>
                     <DialogDescription>
-                      Select your Skill, Description, and Experience.
-                      Select your Skill, Description, and Experience.
+                      Select your Skill, Description, and Experience. Select
+                      your Skill, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
 
                   <Form {...skillForm}>
-                    <form onSubmit={skillForm.handleSubmit(onSkillSubmit)} className="space-y-8">
-                        <FormField
-                          control={skillForm.control}
-                          name="skillName"
-                          render={({  field: { onChange, value, }}) => (
-                            <FormItem>
-                              <FormLabel>Skill</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={onChange} value={value}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a Skill" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {skills.map((skill: any, index: number) => (
-                                      <SelectItem key={index} value={skill.label}>
-                                        {skill.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <form
+                      onSubmit={skillForm.handleSubmit(onSkillSubmit)}
+                      className="space-y-8"
+                    >
+                      <FormField
+                        control={skillForm.control}
+                        name="skillName"
+                        render={({ field: { onChange, value } }) => (
+                          <FormItem>
+                            <FormLabel>Skill</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={onChange} value={value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a Skill" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {skills.map((skill: any, index: number) => (
+                                    <SelectItem key={index} value={skill.label}>
+                                      {skill.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={skillForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Describe the talent..." {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={skillForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the talent..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={skillForm.control}
-                          name="experience"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Experience</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Years of experience" {...field} type='number'/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={skillForm.control}
+                        name="experience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Experience</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Years of experience"
+                                {...field}
+                                type="number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <Button type="submit" className='w-full'>Get Talent by Skill</Button>
-                      </form>
+                      <Button type="submit" className="w-full">
+                        Get Talent by Skill
+                      </Button>
+                    </form>
                   </Form>
                 </DialogContent>
               </Dialog>
@@ -422,62 +452,77 @@ export default function Dashboard() {
                   </DialogHeader>
 
                   <Form {...domainForm}>
-                    <form onSubmit={domainForm.handleSubmit(onDomainSubmit)} className="space-y-8">
-                        <FormField
-                          control={domainForm.control}
-                          name="domainName"
-                          render={({  field: { onChange, value, }}) => (
-                            <FormItem>
-                              <FormLabel>Domain</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={onChange} value={value}>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a Domain" />
-                                  </SelectTrigger>
-                                  <SelectContent>
+                    <form
+                      onSubmit={domainForm.handleSubmit(onDomainSubmit)}
+                      className="space-y-8"
+                    >
+                      <FormField
+                        control={domainForm.control}
+                        name="domainName"
+                        render={({ field: { onChange, value } }) => (
+                          <FormItem>
+                            <FormLabel>Domain</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={onChange} value={value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a Domain" />
+                                </SelectTrigger>
+                                <SelectContent>
                                   {domains.map((domain: any, index: number) => (
-                                    <SelectItem key={index} value={domain.label}>
+                                    <SelectItem
+                                      key={index}
+                                      value={domain.label}
+                                    >
                                       {domain.label}
                                     </SelectItem>
                                   ))}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={domainForm.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Describe the talent..." {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={domainForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the talent..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={domainForm.control}
-                          name="experience"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Experience</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Years of experience" {...field} type='number'/>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={domainForm.control}
+                        name="experience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Experience</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Years of experience"
+                                {...field}
+                                type="number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <Button type="submit" className='w-full'>Get Talent By Domain</Button>
-                      </form>
+                      <Button type="submit" className="w-full">
+                        Get Talent By Domain
+                      </Button>
+                    </form>
                   </Form>
                 </DialogContent>
               </Dialog>
@@ -486,232 +531,290 @@ export default function Dashboard() {
 
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2 -mt-2">
             <div className="">
-                <Tabs defaultValue="Domain">
-                  <div className="w-fit">
-                    <TabsList className="flex items-center space-x-4">
-                      <TabsTrigger value="Domain">Domain</TabsTrigger>
-                      <TabsTrigger value="Skills">Skills</TabsTrigger>
-                    </TabsList>
+              <Tabs defaultValue="Domain">
+                <div className="w-fit">
+                  <TabsList className="flex items-center space-x-4">
+                    <TabsTrigger value="Domain">Domain</TabsTrigger>
+                    <TabsTrigger value="Skills">Skills</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="Domain">
+                  <div className="mt-6 w-[397px] md:w-full lg:w-full">
+                    <Card className="sm:col-span-2 flex flex-col h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-2xl mb-3">Domain</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Domain Name</TableHead>
+                              <TableHead>Experience</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Visible</TableHead>
+                              <TableHead>More</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {domainVisibility.map((item, index) => (
+                              <TableRow key={index} className="bg-muted/20">
+                                <TableCell>{item.domainName}</TableCell>
+
+                                <TableCell>{item.experience}</TableCell>
+
+                                <TableCell>{item.status}</TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Switch
+                                      id="domainStatus"
+                                      onClick={() => handleDomainToggle(index)}
+                                    />
+                                    <Label htmlFor="domainStatus">
+                                      {item.visible === 'Active'
+                                        ? 'Active'
+                                        : 'Inactive'}
+                                    </Label>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className="hover:text-blue-500"
+                                          onClick={() =>
+                                            handleViewDomain(index)
+                                          }
+                                        >
+                                          <Eye />
+                                        </Button>
+                                      </DialogTrigger>
+
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            Talent by Domain
+                                          </DialogTitle>
+                                          <DialogDescription>
+                                            Talent Summary
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                          <div className="grid grid-cols-4 items-center gap-24">
+                                            <Label
+                                              htmlFor="name"
+                                              className="text-nowrap"
+                                            >
+                                              Domain Name:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedDomain?.domainName}
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-4 items-center gap-24">
+                                            <Label
+                                              htmlFor="description"
+                                              className="text-nowrap"
+                                            >
+                                              Description:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedDomain?.experience}
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-4 items-center gap-24">
+                                            <Label
+                                              htmlFor="visibility"
+                                              className="text-nowrap"
+                                            >
+                                              Status:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedDomain?.status}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <DialogFooter>
+                                          <Button>
+                                            <div className="flex items-center space-x-2">
+                                              <FilePenLine />
+                                              <Label htmlFor="edit">Edit</Label>
+                                            </div>
+                                          </Button>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            className="hover:text-red-500"
+                                            onClick={() =>
+                                              handleDeleteDomain(index)
+                                            }
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Delete Domain</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                      <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
+                    </Card>
                   </div>
+                </TabsContent>
 
-                  <TabsContent value="Domain">
-                    <div className='mt-6 w-[397px] md:w-full lg:w-full'>
-                      <Card className="sm:col-span-2 flex flex-col h-full">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-2xl mb-3">Domain</CardTitle>
-                        </CardHeader>
+                <TabsContent value="Skills">
+                  <div className="mt-6 w-[397px] md:w-full lg:w-full">
+                    <Card className="sm:col-span-2 flex flex-col h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-2xl mb-3">Skills</CardTitle>
+                      </CardHeader>
 
-                        <CardContent>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Domain Name</TableHead>
-                                <TableHead>Experience</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Visible</TableHead>
-                                <TableHead>More</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {domainVisibility.map((item, index) => (
-                                <TableRow key={index} className="bg-muted/20">
-                                  <TableCell>
-                                    {item.domainName}
-                                  </TableCell>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Skill Name</TableHead>
+                              <TableHead>Experience</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Visible</TableHead>
+                              <TableHead>More</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {skillVisibility.map((item, index) => (
+                              <TableRow key={index} className="bg-muted/25">
+                                <TableCell>{item.skillName}</TableCell>
+                                <TableCell>{item.experience}</TableCell>
+                                <TableCell>{item.status}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Switch
+                                      id="skillStatus"
+                                      onClick={() => handleSkillToggle(index)}
+                                    />
+                                    <Label htmlFor="skillStatus">
+                                      {item.visible === 'Active'
+                                        ? 'Active'
+                                        : 'Inactive'}
+                                    </Label>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className="hover:text-blue-500"
+                                          onClick={() => handleViewSkill(index)}
+                                        >
+                                          <Eye />
+                                        </Button>
+                                      </DialogTrigger>
 
-                                  <TableCell>
-                                    {item.experience}
-                                  </TableCell>
-
-                                  <TableCell>
-                                    {item.status}
-                                  </TableCell>
-
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Switch id="domainStatus" onClick={() => handleDomainToggle(index)}/>
-                                      <Label htmlFor="domainStatus">{item.visible === 'Active' ? 'Active' : 'Inactive'}</Label>
-                                    </div>
-                                  </TableCell>
-
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button variant="outline" className='hover:text-blue-500' onClick={() => handleViewDomain(index)}>
-                                            <Eye />
-                                          </Button>
-                                        </DialogTrigger>
-
-                                        <DialogContent className="sm:max-w-[425px]">
-                                          <DialogHeader>
-                                            <DialogTitle>Talent by Domain</DialogTitle>
-                                            <DialogDescription>
-                                              Talent Summary
-                                            </DialogDescription>
-                                          </DialogHeader>
-                                          <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-24">
-                                                <Label htmlFor="name" className="text-nowrap">
-                                                  Domain Name:
-                                                </Label>
-                                                <div className="col-span-3">{selectedDomain?.domainName}</div>
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-24">
-                                                <Label htmlFor="description" className="text-nowrap">
-                                                  Description:
-                                                </Label>
-                                                <div className="col-span-3">{selectedDomain?.experience}</div>
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-24">
-                                                <Label htmlFor="visibility" className="text-nowrap">
-                                                  Status:
-                                                </Label>
-                                                <div className="col-span-3">{selectedDomain?.status}</div>
-                                              </div>
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            Talent by Skill
+                                          </DialogTitle>
+                                          <DialogDescription>
+                                            Talent Summary
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                          <div className="grid grid-cols-4 items-center gap-10">
+                                            <Label
+                                              htmlFor="name"
+                                              className="text-nowrap"
+                                            >
+                                              Skill Name:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedSkill?.skillName}
+                                            </div>
                                           </div>
-                                          <DialogFooter>
-                                            <Button>
-                                              <div className="flex items-center space-x-2">
-                                                <FilePenLine />
-                                                <Label htmlFor='edit'>Edit</Label>
-                                              </div>
-                                            </Button>
-                                          </DialogFooter>
-                                        </DialogContent>
-                                      </Dialog>
-
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button variant="outline" className='hover:text-red-500' onClick={() => handleDeleteDomain(index)}>
-                                              <Trash2 />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Delete Domain</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </CardContent>
-                        <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
-                      </Card>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value='Skills'>
-                    <div className='mt-6 w-[397px] md:w-full lg:w-full'>
-                      <Card className="sm:col-span-2 flex flex-col h-full">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-2xl mb-3">Skills</CardTitle>
-                        </CardHeader>
-
-                        <CardContent>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Skill Name</TableHead>
-                                <TableHead>Experience</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Visible</TableHead>
-                                <TableHead>More</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {skillVisibility.map((item, index) => (
-                                <TableRow key={index} className="bg-muted/25">
-                                  <TableCell>
-                                    {item.skillName}
-                                  </TableCell>
-                                  <TableCell>
-                                    {item.experience}
-                                  </TableCell>
-                                  <TableCell>
-                                    {item.status}
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Switch id="skillStatus" onClick={() => handleSkillToggle(index)}/>
-                                      <Label htmlFor="skillStatus">{item.visible === 'Active' ? 'Active' : 'Inactive'}</Label>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button variant="outline" className='hover:text-blue-500' onClick={() => handleViewSkill(index)}>
-                                            <Eye />
-                                          </Button>
-                                        </DialogTrigger>
-
-                                        <DialogContent className="sm:max-w-[425px]">
-                                          <DialogHeader>
-                                            <DialogTitle>Talent by Skill</DialogTitle>
-                                            <DialogDescription>
-                                              Talent Summary
-                                            </DialogDescription>
-                                          </DialogHeader>
-                                          <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-10">
-                                                <Label htmlFor="name" className="text-nowrap">
-                                                  Skill Name:
-                                                </Label>
-                                                <div className="col-span-3">{selectedSkill?.skillName}</div>
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-10">
-                                                <Label htmlFor="description" className="text-nowrap">
-                                                  Description:
-                                                </Label>
-                                                <div className="col-span-3">{selectedSkill?.experience}</div>
-                                              </div>
-                                              <div className="grid grid-cols-4 items-center gap-10">
-                                                <Label htmlFor="visibility" className="text-nowrap">
-                                                  Status:
-                                                </Label>
-                                                <div className="col-span-3">{selectedSkill?.status}</div>
-                                              </div>
+                                          <div className="grid grid-cols-4 items-center gap-10">
+                                            <Label
+                                              htmlFor="description"
+                                              className="text-nowrap"
+                                            >
+                                              Description:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedSkill?.experience}
+                                            </div>
                                           </div>
-                                          <DialogFooter>
-                                            <Button>
-                                              <div className="flex items-center space-x-2">
-                                                <FilePenLine />
-                                                <Label htmlFor='edit'>Edit</Label>
-                                              </div>
-                                            </Button>
-                                          </DialogFooter>
-                                        </DialogContent>
-                                      </Dialog>
+                                          <div className="grid grid-cols-4 items-center gap-10">
+                                            <Label
+                                              htmlFor="visibility"
+                                              className="text-nowrap"
+                                            >
+                                              Status:
+                                            </Label>
+                                            <div className="col-span-3">
+                                              {selectedSkill?.status}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <DialogFooter>
+                                          <Button>
+                                            <div className="flex items-center space-x-2">
+                                              <FilePenLine />
+                                              <Label htmlFor="edit">Edit</Label>
+                                            </div>
+                                          </Button>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
 
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button variant="outline" className='hover:text-red-500' onClick={() => handleDeleteSkill(index)}>
-                                              <Trash2 />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Delete Skill</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </CardContent>
-                        <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            className="hover:text-red-500"
+                                            onClick={() =>
+                                              handleDeleteSkill(index)
+                                            }
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Delete Skill</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                      <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
+                    </Card>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
