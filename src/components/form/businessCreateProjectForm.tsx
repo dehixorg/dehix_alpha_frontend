@@ -53,11 +53,19 @@ const profileFormSchema = z.object({
     .array(
       z.object({
         domain: z.string(),
-        freelancersRequired: z.string(),
+        freelancersRequired: z // condition for freelancer
+          .string()
+          .refine((val) => parseInt(val, 10) > 0, {
+            message: 'Number of freelancers required should be greater than 0.',
+          }),
         skills: z.array(z.string()),
         experience: z.string(),
         minConnect: z.string(),
-        rate: z.string(),
+        rate: z //condition for rate
+          .string()
+          .refine((val) => parseFloat(val) >= 0, {
+            message: 'Per hour rate should not be less than 0.',
+          }),
         description: z.string().max(160).min(4),
       }),
     )
@@ -68,6 +76,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
+  email: '', //default field for email
   description: '',
   profiles: [
     {
@@ -197,6 +206,7 @@ export function CreateProjectBusinessForm() {
         description: 'Failed to add project. Please try again later.',
       });
     }
+    form.reset(defaultValues); //add reset after form is submit
   }
 
   return (
