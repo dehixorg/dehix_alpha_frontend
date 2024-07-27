@@ -1,6 +1,7 @@
 'use client';
 // eslint-disable-next-line import/order
 import React, { useEffect, useState } from 'react'; // Import 'react' first
+import React, { useEffect, useState } from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
@@ -340,6 +341,7 @@ export default function Dashboard() {
                   <DialogHeader>
                     <DialogTitle>Get Talent by Skill</DialogTitle>
                     <DialogDescription>
+                      Select your Skill, Description, and Experience.
                       Select your Skill, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>

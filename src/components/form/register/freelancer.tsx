@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useRouter } from 'next/navigation';
-import { UserCredential } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,10 +16,8 @@ import PhoneNumberForm from './phoneNumberChecker';
 import TextInput from '@/components/shared/input'; // Import the reusable TextInput component
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/shared/datePicker';
-import { axiosInstance, initializeAxiosWithToken } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-import { loginUser } from '@/lib/utils';
-import { setUser } from '@/lib/userSlice';
 import { Label } from '@/components/ui/label';
 import {
   Form,
@@ -31,6 +28,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import OtpLogin from '@/components/shared/otpDialog';
 
 const profileFormSchema = z.object({
   firstName: z
@@ -74,10 +72,10 @@ export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
+  const [phone, setPhone] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
-  const dispatch = useDispatch();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -98,43 +96,19 @@ export default function FreelancerRegisterForm() {
     mode: 'all',
   });
 
-  const handleLogin = async (email: string, pass: string): Promise<void> => {
-    try {
-      const userCredential: UserCredential = await loginUser(email, pass);
-      const user = userCredential.user;
-
-      const accessToken = await user.getIdToken();
-      console.log('Bearer ' + accessToken);
-      initializeAxiosWithToken(accessToken);
-      const claims = await user.getIdTokenResult();
-      console.log('Type:', claims.claims.type);
-      console.log('User ID ' + userCredential.user.uid);
-      dispatch(setUser({ ...userCredential.user, type: claims.claims.type }));
-      console.log(userCredential.user);
-      router.replace(`/dashboard/${claims.claims.type}`);
-    } catch (error: any) {
-      setIsLoading(false);
-      console.error(error.message);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.message}`,
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
-    }
-  };
-
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
-    const country = countries.find((c) => c.code === code) || countries[0];
+    setPhone(
+      `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+    );
 
     setIsLoading(true);
     const formData = {
       ...data,
-      phone: `${country.dialCode}${data.phone}`,
+      phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
       role: 'freelancer',
       connects: 0,
       professionalInfo: {},
@@ -153,12 +127,10 @@ export default function FreelancerRegisterForm() {
       oracleStatus: 'notApplied',
       dob: '2024-07-06T20:12:22.047Z',
     };
-    console.log('TESTF:', formData, country.dialCode);
     try {
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
-      handleLogin(formData.email, formData.password);
-      formRef.current?.reset();
+      setIsModalOpen(true);
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
@@ -309,6 +281,11 @@ export default function FreelancerRegisterForm() {
             )}{' '}
             Create an account
           </Button>
+          <OtpLogin
+            phoneNumber={phone}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
         </div>
       </form>
     </Form>
