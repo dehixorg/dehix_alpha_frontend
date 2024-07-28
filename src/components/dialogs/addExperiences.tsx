@@ -29,17 +29,30 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
-const experienceFormSchema = z.object({
-  company: z.string().optional(),
-  jobTitle: z.string().optional(),
-  workDescription: z.string().optional(),
-  workFrom: z.string().optional(),
-  workTo: z.string().optional(),
-  referencePersonName: z.string().optional(),
-  referencePersonContact: z.string().optional(),
-  githubRepoLink: z.string().url().optional(),
-  comments: z.string().optional(),
-});
+const experienceFormSchema = z
+  .object({
+    company: z.string().optional(),
+    jobTitle: z.string().optional(),
+    workDescription: z.string().optional(),
+    workFrom: z.string().optional(),
+    workTo: z.string().optional(),
+    referencePersonName: z.string().optional(),
+    referencePersonContact: z.string().optional(),
+    githubRepoLink: z.string().url().optional(),
+    comments: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.workFrom && data.workTo) {
+        return new Date(data.workFrom) <= new Date(data.workTo);
+      }
+      return true;
+    },
+    {
+      message: 'Work From date must be before Work To date',
+      path: ['workTo'],
+    },
+  );
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 
