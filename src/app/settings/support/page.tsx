@@ -1,6 +1,9 @@
 'use client';
+import React, { useEffect, useState } from 'react';
 import { Pencil, Code, Type } from 'lucide-react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
+import Cookies from 'js-cookie';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import {
@@ -15,14 +18,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  menuItemsBottom,
   menuItemsTop,
+  useMenuItemsBottom,
 } from '@/config/menuItems/freelancer/supportMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+import { RootState } from '@/lib/store';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 const HomePage = () => {
+  const user = useSelector((state: RootState) => state.user);
+  const [userType, setUserType] = useState<string | null>(null);
+  const menuItemsBottom = useMenuItemsBottom();
+
+  useEffect(() => {
+    if (user?.type) {
+      setUserType(user.type);
+    } else {
+      const storedUserType = Cookies.get('userType');
+      setUserType(storedUserType || null);
+    }
+  }, [user]);
   return (
     <div className="">
       <SidebarMenu
@@ -38,11 +55,23 @@ const HomePage = () => {
             active="support"
           />
           <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Support', link: '#' },
-            ]}
+            items={
+              userType === 'freelancer'
+                ? [
+                    { label: 'Freelancer', link: '/dashboard/freelancer' },
+                    { label: 'Support', link: '#' },
+                  ]
+                : userType === 'business'
+                  ? [
+                      { label: 'Business', link: '/dashboard/business' },
+                      { label: 'Support', link: '#' },
+                    ]
+                  : [{ label: 'Loading...', link: '#' }]
+            }
           />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <DropdownProfile />
+          </div>
         </header>
 
         <div className=" ">
@@ -197,6 +226,9 @@ const HomePage = () => {
             </div>
           </section>
           <section className="px-4 pt-20 md:px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className=" sm:text-3xl">FAQs</h2>
+            </div>
             <FAQAccordion />
           </section>
           <section className="px-4 py-20 md:px-6">
