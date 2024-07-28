@@ -75,7 +75,6 @@ const Market: React.FC = () => {
     skills: [],
   });
   const [jobs, setJobs] = useState<Project[]>([]);
-
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
@@ -85,6 +84,7 @@ const Market: React.FC = () => {
       [filterType]: selectedValues,
     }));
   };
+
   const constructQueryString = (filters: FilterState) => {
     const query = Object.keys(filters)
       .map((key) => {
@@ -99,6 +99,7 @@ const Market: React.FC = () => {
 
     return query;
   };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -119,6 +120,7 @@ const Market: React.FC = () => {
     }
     fetchData();
   }, []);
+
   const fetchData = async (appliedFilters: FilterState) => {
     try {
       const queryString = constructQueryString(appliedFilters);
@@ -140,6 +142,16 @@ const Market: React.FC = () => {
     setIsClient(true);
     fetchData(filters); // Fetch all data initially
   }, [user.uid]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setShowFilters(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
@@ -257,7 +269,6 @@ const Market: React.FC = () => {
               <Button onClick={handleApply} className="w-[100%]">
                 Apply
               </Button>
-              a
               <MobileSkillDom
                 label="Locations"
                 heading="Filter by location"
@@ -314,7 +325,7 @@ const Market: React.FC = () => {
         </div>
       )}
       {isClient && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4 flex justify-center z-50">
           <button
             className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
             onClick={handleModalToggle}
