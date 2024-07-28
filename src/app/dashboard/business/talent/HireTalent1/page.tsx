@@ -82,7 +82,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import InterviewCard from '@/components/shared/interviewCard';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -173,19 +173,41 @@ const skillFormSchema = z.object({
     required_error: 'Description Must be Added',
   }),
   experience: z.string({
-    required_error: 'Description Must be Added',
+    required_error: 'Experience Must be Added',
+  }),
+});
+const editSkillFormSchema = z.object({
+  skillName: z.string({
+    required_error: 'Skill must be added',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+  status: z.string({
+    required_error: 'Status Must be Added',
   }),
 });
 
 const domainFormSchema = z.object({
   domainName: z.string({
-    required_error: 'Skill must be selected',
+    required_error: 'Domain must be selected',
   }),
   description: z.string({
     required_error: 'Description Must be Added',
   }),
   experience: z.string({
-    required_error: 'Description Must be Added',
+    required_error: 'Experience Must be Added',
+  }),
+});
+const editDomainFormSchema = z.object({
+  domainName: z.string({
+    required_error: 'Domain must be Addde',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+  status: z.string({
+    required_error: 'Status Must be Added',
   }),
 });
 
@@ -238,6 +260,11 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const editDomainForm = useForm<z.infer<typeof editDomainFormSchema>>({
+    resolver: zodResolver(editDomainFormSchema),
+  });
+  const [isViewDomain, setIsViewDomain] = useState<boolean>(false);
+  const [isEditDomain, setIsEditDomain] = useState<boolean>(false);
   const [domainVisibility, setDomainVisibility] = useState(domainDummyData);
   const [selectedDomain, setSelectedDomain] = useState<DomainData | null>(null);
   const handleDomainToggle = (index: number) => {
@@ -256,11 +283,22 @@ export default function Dashboard() {
     });
   };
   const handleViewDomain = (index: number) => {
+    setIsViewDomain(true);
     setSelectedDomain(domainVisibility[index]);
   };
   useEffect(() => {
     console.log(selectedDomain);
   }, [selectedDomain]);
+  const handleEditDomain = () => {
+    setIsEditDomain(true);
+  };
+  const handleSaveDomain = (values: z.infer<typeof editDomainFormSchema>) => {
+    const updatedDomain = { ...values, visible: 'active' }; // 'visible' is set to 'active'
+    console.log(updatedDomain);
+    setSelectedDomain(updatedDomain);
+    setIsEditDomain(false);
+    setIsViewDomain(false);
+  };
   const handleDeleteDomain = (index: number) => {
     console.log('Before Deletion:', domainVisibility); // Debugging line
     setDomainVisibility((prevDomainVisibility) => {
@@ -272,6 +310,11 @@ export default function Dashboard() {
     });
   };
 
+  const editSkillForm = useForm<z.infer<typeof editSkillFormSchema>>({
+    resolver: zodResolver(editSkillFormSchema),
+  });
+  const [isViewSkill, setIsViewSkill] = useState<boolean>(false);
+  const [isEditSkill, setIsEditSkill] = useState<boolean>(false);
   const [skillVisibility, setSkillVisibility] = useState(skillDummyData);
   const [selectedSkill, setSelectedSkill] = useState<SkillData | null>(null);
   const handleSkillToggle = (index: number) => {
@@ -295,6 +338,16 @@ export default function Dashboard() {
   useEffect(() => {
     console.log(selectedSkill);
   }, [selectedSkill]);
+  const handleEditSkill = () => {
+    setIsEditSkill(true);
+  };
+  const handleSaveSkill = (values: z.infer<typeof editSkillFormSchema>) => {
+    const updatedSkill = { ...values, visible: 'active' }; // 'visible' is set to 'active'
+    console.log(updatedSkill);
+    setSelectedSkill(updatedSkill);
+    setIsEditSkill(false);
+    setIsViewSkill(false);
+  };
   const handleDeleteSkill = (index: number) => {
     console.log('Before Deletion:', skillVisibility); // Debugging line
     setSkillVisibility((prevSkillVisibility) => {
@@ -429,10 +482,7 @@ export default function Dashboard() {
                   </Form>
                 </DialogContent>
               </Dialog>
-              <Dialog
-                open={isDomainDialogOpen}
-                onOpenChange={setIsDomainDialogOpen}
-              >
+              <Dialog>
                 <DialogTrigger asChild>
                   <Button className="w-full sm:w-auto mr-2 mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Get Talent by Domain
@@ -577,7 +627,10 @@ export default function Dashboard() {
 
                                 <TableCell>
                                   <div className="flex items-center space-x-2">
-                                    <Dialog>
+                                    <Dialog
+                                      open={isViewDomain}
+                                      onOpenChange={setIsViewDomain}
+                                    >
                                       <DialogTrigger asChild>
                                         <Button
                                           variant="outline"
@@ -593,54 +646,149 @@ export default function Dashboard() {
                                       <DialogContent className="sm:max-w-[425px]">
                                         <DialogHeader>
                                           <DialogTitle>
-                                            Talent by Domain
+                                            {isEditDomain
+                                              ? 'Edit Talent by Domain'
+                                              : 'Talent by Domain'}
                                           </DialogTitle>
                                           <DialogDescription>
-                                            Talent Summary
+                                            {isEditDomain
+                                              ? 'Edit Talent Summary'
+                                              : 'Talent Summary'}
                                           </DialogDescription>
                                         </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                          <div className="grid grid-cols-4 items-center gap-24">
-                                            <Label
-                                              htmlFor="name"
-                                              className="text-nowrap"
+                                        {isEditDomain ? (
+                                          <Form {...editDomainForm}>
+                                            <form
+                                              onSubmit={editDomainForm.handleSubmit(
+                                                handleSaveDomain,
+                                              )}
+                                              className="grid gap-4 py-4"
                                             >
-                                              Domain Name:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedDomain?.domainName}
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="domainName"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Domain Name:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="domainName"
+                                                        defaultValue={
+                                                          selectedDomain?.domainName
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="experience"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Experience:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="experience"
+                                                        defaultValue={
+                                                          selectedDomain?.experience
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Status:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="status"
+                                                        defaultValue={
+                                                          selectedDomain?.status
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <Button
+                                                type="submit"
+                                                className="w-full"
+                                              >
+                                                Save
+                                              </Button>
+                                            </form>
+                                          </Form>
+                                        ) : (
+                                          <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="name"
+                                                className="text-nowrap"
+                                              >
+                                                Domain Name:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.domainName}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="description"
+                                                className="text-nowrap"
+                                              >
+                                                Experience:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.experience}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="visibility"
+                                                className="text-nowrap"
+                                              >
+                                                Status:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.status}
+                                              </div>
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-4 items-center gap-24">
-                                            <Label
-                                              htmlFor="description"
-                                              className="text-nowrap"
-                                            >
-                                              Description:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedDomain?.experience}
-                                            </div>
-                                          </div>
-                                          <div className="grid grid-cols-4 items-center gap-24">
-                                            <Label
-                                              htmlFor="visibility"
-                                              className="text-nowrap"
-                                            >
-                                              Status:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedDomain?.status}
-                                            </div>
-                                          </div>
-                                        </div>
+                                        )}
                                         <DialogFooter>
-                                          <Button>
-                                            <div className="flex items-center space-x-2">
-                                              <FilePenLine />
-                                              <Label htmlFor="edit">Edit</Label>
-                                            </div>
-                                          </Button>
+                                          {!isEditDomain && (
+                                            <Button onClick={handleEditDomain}>
+                                              <div className="flex items-center space-x-2">
+                                                <FilePenLine />
+                                                <Label htmlFor="edit">
+                                                  Edit
+                                                </Label>
+                                              </div>
+                                            </Button>
+                                          )}
                                         </DialogFooter>
                                       </DialogContent>
                                     </Dialog>
@@ -714,7 +862,10 @@ export default function Dashboard() {
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center space-x-2">
-                                    <Dialog>
+                                    <Dialog
+                                      open={isViewDomain}
+                                      onOpenChange={setIsViewDomain}
+                                    >
                                       <DialogTrigger asChild>
                                         <Button
                                           variant="outline"
@@ -728,54 +879,149 @@ export default function Dashboard() {
                                       <DialogContent className="sm:max-w-[425px]">
                                         <DialogHeader>
                                           <DialogTitle>
-                                            Talent by Skill
+                                            {isEditSkill
+                                              ? 'Edit Talent by Skill'
+                                              : 'Talent by Skill'}
                                           </DialogTitle>
                                           <DialogDescription>
-                                            Talent Summary
+                                            {isEditSkill
+                                              ? 'Edit Talent Summary'
+                                              : 'Talent Summary'}
                                           </DialogDescription>
                                         </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                          <div className="grid grid-cols-4 items-center gap-10">
-                                            <Label
-                                              htmlFor="name"
-                                              className="text-nowrap"
+                                        {isEditSkill ? (
+                                          <Form {...editSkillForm}>
+                                            <form
+                                              onSubmit={editSkillForm.handleSubmit(
+                                                handleSaveSkill,
+                                              )}
+                                              className="grid gap-4 py-4"
                                             >
-                                              Skill Name:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedSkill?.skillName}
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="skillName"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Skill Name:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="domainName"
+                                                        defaultValue={
+                                                          selectedSkill?.skillName
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="experience"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Experience:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="experience"
+                                                        defaultValue={
+                                                          selectedSkill?.experience
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Status:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="status"
+                                                        defaultValue={
+                                                          selectedSkill?.status
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <Button
+                                                type="submit"
+                                                className="w-full"
+                                              >
+                                                Save
+                                              </Button>
+                                            </form>
+                                          </Form>
+                                        ) : (
+                                          <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="name"
+                                                className="text-nowrap"
+                                              >
+                                                Skill Name:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.skillName}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="description"
+                                                className="text-nowrap"
+                                              >
+                                                Experience:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.experience}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="visibility"
+                                                className="text-nowrap"
+                                              >
+                                                Status:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.status}
+                                              </div>
                                             </div>
                                           </div>
-                                          <div className="grid grid-cols-4 items-center gap-10">
-                                            <Label
-                                              htmlFor="description"
-                                              className="text-nowrap"
-                                            >
-                                              Description:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedSkill?.experience}
-                                            </div>
-                                          </div>
-                                          <div className="grid grid-cols-4 items-center gap-10">
-                                            <Label
-                                              htmlFor="visibility"
-                                              className="text-nowrap"
-                                            >
-                                              Status:
-                                            </Label>
-                                            <div className="col-span-3">
-                                              {selectedSkill?.status}
-                                            </div>
-                                          </div>
-                                        </div>
+                                        )}
                                         <DialogFooter>
-                                          <Button>
-                                            <div className="flex items-center space-x-2">
-                                              <FilePenLine />
-                                              <Label htmlFor="edit">Edit</Label>
-                                            </div>
-                                          </Button>
+                                          {!isEditSkill && (
+                                            <Button onClick={handleEditSkill}>
+                                              <div className="flex items-center space-x-2">
+                                                <FilePenLine />
+                                                <Label htmlFor="edit">
+                                                  Edit
+                                                </Label>
+                                              </div>
+                                            </Button>
+                                          )}
                                         </DialogFooter>
                                       </DialogContent>
                                     </Dialog>
