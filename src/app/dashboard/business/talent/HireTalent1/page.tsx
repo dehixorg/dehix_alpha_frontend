@@ -70,7 +70,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 // Menu components
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
@@ -82,7 +82,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import InterviewCard from '@/components/shared/interviewCard';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -215,8 +215,8 @@ export default function Dashboard() {
         console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setSkills(transformedSkills);
@@ -225,8 +225,8 @@ export default function Dashboard() {
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
           (skill: Domain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setDomains(transformedDomain);
@@ -315,22 +315,17 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* CollapsibleSidebarMenu component */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             active="Dehix Talent"
           />
-
-          {/* Breadcrumb component */}
           <Breadcrumb
             items={[
               { label: 'Business', link: '/dashboard/business' },
               { label: 'HireTalent', link: '#' },
             ]}
           />
-
-          {/* Search and Input components */}
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -339,8 +334,6 @@ export default function Dashboard() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-
-          {/* DropdownMenu component */}
           <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
@@ -436,8 +429,10 @@ export default function Dashboard() {
                   </Form>
                 </DialogContent>
               </Dialog>
-
-              <Dialog>
+              <Dialog
+                open={isDomainDialogOpen}
+                onOpenChange={setIsDomainDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button className="w-full sm:w-auto mr-2 mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Get Talent by Domain
@@ -823,29 +818,6 @@ export default function Dashboard() {
               Talent
             </CardTitle>
             <InterviewCard {...sampleInterview} />
-          </div>
-
-          {/* DropdownMenu component */}
-          <div className="absolute right-0 px-8">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-auto px-4 gap-1 text-sm"
-                >
-                  <ListFilter className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only">Filter</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem>All</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Current</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Completed</DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </main>
       </div>
