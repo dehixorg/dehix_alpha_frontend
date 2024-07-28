@@ -7,8 +7,7 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 
-import ConsultantCard from './ConsultantCard';
-
+import ConsultantCard from '@/components/cards/ConsultantCard';
 import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
