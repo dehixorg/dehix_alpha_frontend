@@ -157,7 +157,9 @@ export default function Dashboard() {
     }
 
     if (description.length <= 4) {
-      setDescriptionError('Description should be greater than or equal to 4 characters');
+      setDescriptionError(
+        'Description should be greater than or equal to 4 characters',
+      );
       valid = false;
     } else {
       setDescriptionError('');
@@ -165,7 +167,6 @@ export default function Dashboard() {
 
     return valid;
   };
-
 
   const handleAddSkill = () => {
     if (selectedSkill && description && experience) {
@@ -322,8 +323,8 @@ export default function Dashboard() {
                       placeholder="  Years of experience"
                     />
                     {experienceError && (
-                    <p className="text-red-500">{experienceError}</p>
-                  )}
+                      <p className="text-red-500">{experienceError}</p>
+                    )}
                   </div>
                   <Button onClick={handleAddSkill} className="mt-4">
                     Add Talent
@@ -374,8 +375,8 @@ export default function Dashboard() {
                       placeholder="  Describe the talent..."
                     ></textarea>
                     {descriptionError && (
-                    <p className="text-red-500">{descriptionError}</p>
-                  )}
+                      <p className="text-red-500">{descriptionError}</p>
+                    )}
                   </div>
                   <div className="mt-2">
                     <label
@@ -393,8 +394,8 @@ export default function Dashboard() {
                       placeholder="  Years of experience"
                     />
                     {experienceError && (
-                    <p className="text-red-500">{experienceError}</p>
-                  )}
+                      <p className="text-red-500">{experienceError}</p>
+                    )}
                   </div>
                   <Button onClick={handleAddDomain} className="mt-4">
                     Add Talent

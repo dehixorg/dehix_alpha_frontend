@@ -56,11 +56,9 @@ const profileFormSchema = z.object({
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
-  perHourPrice: z
-    .number()
-    .refine((value) => value >= 0, {
-      message: 'Price must be a non-negative number.',
-    }),
+  perHourPrice: z.number().refine((value) => value >= 0, {
+    message: 'Price must be a non-negative number.',
+  }),
   workExperience: z
     .number()
     .min(0, 'Work experience must be at least 0 years')
@@ -69,7 +67,7 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export default function FreelancerRegisterForm() { 
+export default function FreelancerRegisterForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
@@ -270,11 +268,7 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
