@@ -70,13 +70,17 @@ const defaultStatus = 'Pending';
 
 const SkillSchema = z.object({
   skill: z.string().min(1, 'Skill is required'),
-  experience: z.number().min(0, 'Experience must be a non-negative number'),
+  experience: z
+  .number()
+  .min(0, 'Experience must be a non-negative number'),
   level: z.string().min(1, 'Level is required'),
 });
 
 const DomainSchema = z.object({
   domain: z.string().min(1, 'Domain is required'),
-  experience: z.number().min(0, 'Experience must be a non-negative number'),
+  experience: z
+    .number()
+    .min(0, 'Experience must be a non-negative number'),
   level: z.string().min(1, 'Level is required'),
 });
 

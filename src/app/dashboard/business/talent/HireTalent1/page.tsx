@@ -112,6 +112,8 @@ export default function Dashboard() {
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [isDomainDialogOpen, setIsDomainDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
+  const [experienceError, setExperienceError] = useState<string>('');
+  const [descriptionError, setDescriptionError] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -143,15 +145,38 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  const validateInputs = () => {
+    let valid = true;
+    const expNumber = Number(experience);
+
+    if (isNaN(expNumber) || expNumber <= 0) {
+      setExperienceError('Experience should be a non-negative number');
+      valid = false;
+    } else {
+      setExperienceError('');
+    }
+
+    if (description.length <= 4) {
+      setDescriptionError('Description should be greater than or equal to 4 characters');
+      valid = false;
+    } else {
+      setDescriptionError('');
+    }
+
+    return valid;
+  };
+
+
   const handleAddSkill = () => {
     if (selectedSkill && description && experience) {
+      if (!validateInputs()) return;
+
       const newSkillDomainData = {
         label: selectedSkill,
         experience: experience.toString(),
         description,
         status: 'Active',
       };
-
       console.log('Adding Skill:', newSkillDomainData);
 
       setSkillDomainData((prevData) => [...prevData, newSkillDomainData]);
@@ -166,6 +191,7 @@ export default function Dashboard() {
 
   const handleAddDomain = () => {
     if (selectedDomain && description && experience) {
+      if (!validateInputs()) return;
       const newSkillDomainData = {
         label: selectedDomain,
         experience: experience.toString(),
@@ -274,6 +300,11 @@ export default function Dashboard() {
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       placeholder="  Describe the talent..."
                     ></textarea>
+                    {descriptionError && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {descriptionError}
+                      </p>
+                    )}
                   </div>
                   <div className="mt-2">
                     <label
@@ -290,6 +321,9 @@ export default function Dashboard() {
                       className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       placeholder="  Years of experience"
                     />
+                    {experienceError && (
+                    <p className="text-red-500">{experienceError}</p>
+                  )}
                   </div>
                   <Button onClick={handleAddSkill} className="mt-4">
                     Add Talent
@@ -339,6 +373,9 @@ export default function Dashboard() {
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       placeholder="  Describe the talent..."
                     ></textarea>
+                    {descriptionError && (
+                    <p className="text-red-500">{descriptionError}</p>
+                  )}
                   </div>
                   <div className="mt-2">
                     <label
@@ -355,6 +392,9 @@ export default function Dashboard() {
                       className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       placeholder="  Years of experience"
                     />
+                    {experienceError && (
+                    <p className="text-red-500">{experienceError}</p>
+                  )}
                   </div>
                   <Button onClick={handleAddDomain} className="mt-4">
                     Add Talent

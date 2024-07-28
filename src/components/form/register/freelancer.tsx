@@ -58,8 +58,9 @@ const profileFormSchema = z.object({
     .min(6, { message: 'Password must be at least 6 characters.' }),
   perHourPrice: z
     .number()
-    .positive({ message: 'Price must be a positive number.' })
-    .min(0.01, { message: 'Price must be at least $0.01.' }),
+    .refine((value) => value >= 0, {
+      message: 'Price must be a non-negative number.',
+    }),
   workExperience: z
     .number()
     .min(0, 'Work experience must be at least 0 years')
@@ -68,7 +69,7 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export default function FreelancerRegisterForm() {
+export default function FreelancerRegisterForm() { 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
@@ -271,7 +272,7 @@ export default function FreelancerRegisterForm() {
           </div>
           <Button
             type="submit"
-            className="w-full bg-primary text-black"
+            className="w-full"
             disabled={isLoading}
           >
             {isLoading ? (
