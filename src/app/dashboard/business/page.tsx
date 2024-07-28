@@ -130,7 +130,7 @@ export default function Dashboard() {
               Current Projects {`(${pendingProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects ? (
+              {pendingProjects.length > 0 ? (
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
