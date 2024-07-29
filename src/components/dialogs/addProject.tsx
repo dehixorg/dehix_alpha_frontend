@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import {
@@ -28,6 +28,14 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -66,8 +74,47 @@ interface AddProjectProps {
   onFormSubmit: () => void;
 }
 
+interface Skill {
+  _id: string;
+  label: string;
+}
+
 export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const user = useSelector((state: RootState) => state.user);
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  const handleAddSkill = () => {
+    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
+      setCurrSkills([...currSkills, tmpSkill]);
+      setTmpSkill('');
+    }
+  };
+
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        console.log('Skills API Response get:', skillsResponse.data.data);
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
 
   // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
@@ -254,6 +301,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 </FormItem>
               )}
             />
+            {/*}
             <FormField
               control={form.control}
               name="techUsed"
@@ -272,7 +320,63 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
+            <FormField
+                  control={form.control}
+                  name="techUsed"
+                  render={({ field }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>Skills</FormLabel>
+                      <FormControl>
+                        <div>
+                          <div className="flex items-center mt-2">
+                            <Select
+                              onValueChange={(value) => setTmpSkill(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select skill" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skills.map((skill: any, index: number) => (
+                                  <SelectItem key={index} value={skill.label}>
+                                    {skill.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              size="icon"
+                              className="ml-2"
+                              onClick={handleAddSkill}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap mt-5">
+                            {currSkills.map((skill: any, index: number) => (
+                              <Badge
+                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                                key={index}
+                              >
+                                {skill}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(skill)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             <FormField
               control={form.control}
               name="role"
