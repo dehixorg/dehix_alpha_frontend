@@ -115,7 +115,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     fetchData();
   }, []);
 
-
   // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),

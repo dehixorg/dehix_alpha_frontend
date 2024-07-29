@@ -114,7 +114,9 @@ export function ProjectProfileDetailCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button disabled className="w-full">Bid(${rate})</Button>
+        <Button disabled className="w-full">
+          Bid(${rate})
+        </Button>
       </CardFooter>
     </Card>
   );
