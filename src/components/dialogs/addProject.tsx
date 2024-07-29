@@ -159,6 +159,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   async function onSubmit(data: ProjectFormValues) {
     try {
       // Convert comma-separated techUsed string into an array
+      console.log('Form body:', {
+        ...data,
+        role: '',
+        techUsed: currSkills,
+        projectType: '',
+      });
       const techUsedArray = data.techUsed
         .split(',')
         .map((tech) => tech.trim())
@@ -322,61 +328,66 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
               )}
             /> */}
             <FormField
-                  control={form.control}
-                  name="techUsed"
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Skills</FormLabel>
-                      <FormControl>
-                        <div>
-                          <div className="flex items-center mt-2">
-                            <Select
-                              onValueChange={(value) => setTmpSkill(value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select skill" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
-                                    {skill.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={handleAddSkill}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
+              control={form.control}
+              name="techUsed"
+              render={({ field: { onChange, value } }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Skills</FormLabel>
+                  <FormControl>
+                    <div>
+                      <div className="flex items-center mt-2">
+                        <Select
+                          onValueChange={(selectedValue) => {
+                            onChange(selectedValue);
+                            setTmpSkill(selectedValue);
+                          }}
+                          value={value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select skill" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {skills.map((skill: any, index: number) => (
+                              <SelectItem key={index} value={skill.label}>
+                                {skill.label}
+                              </SelectItem>
                             ))}
-                          </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="icon"
+                          className="ml-2"
+                          onClick={handleAddSkill}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap mt-5">
+                        {currSkills.map((skill: any, index: number) => (
+                          <Badge
+                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                            key={index}
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSkill(skill)}
+                              className="ml-2 text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="role"

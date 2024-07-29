@@ -236,7 +236,7 @@ export default function Dashboard() {
                 onOpenChange={setIsSkillDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Button className="mr-2 mt-2">
+                  <Button disabled className="mr-2 mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
                   </Button>
                 </DialogTrigger>
@@ -301,7 +301,7 @@ export default function Dashboard() {
                 onOpenChange={setIsDomainDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Button className="mt-2">
+                  <Button disabled className="mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Domain
                   </Button>
                 </DialogTrigger>
@@ -517,7 +517,7 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Talent
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
+            {/* <InterviewCard {...sampleInterview} /> */}
           </div>
         </main>
       </div>
