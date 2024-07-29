@@ -30,14 +30,29 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
-const FormSchema = z.object({
-  degree: z.string().optional(),
-  universityName: z.string().optional(),
-  fieldOfStudy: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  grade: z.string().optional(),
-});
+const FormSchema = z
+  .object({
+    degree: z.string().optional(),
+    universityName: z.string().optional(),
+    fieldOfStudy: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    grade: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        const start = new Date(data.startDate);
+        const end = new Date(data.endDate);
+        return start < end;
+      }
+      return true;
+    },
+    {
+      message: 'Start Date must be before End Date',
+      path: ['endDate'], // Show error on endDate field
+    },
+  );
 
 interface AddEducationProps {
   onFormSubmit: () => void;

@@ -30,19 +30,34 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
 // Schema for form validation using zod
-const projectFormSchema = z.object({
-  projectName: z.string().min(1, { message: 'Project name is required.' }),
-  description: z.string().min(1, { message: 'Description is required.' }),
-  githubLink: z.string().url({ message: 'Invalid URL.' }).optional(),
-  start: z.string().min(1, { message: 'Start date is required.' }),
-  end: z.string().min(1, { message: 'End date is required.' }),
-  refer: z.string().min(1, { message: 'Reference is required.' }),
-  techUsed: z.string().min(1, { message: 'Technologies used are required.' }),
-  role: z.string().min(1, { message: 'Role is required.' }),
-  projectType: z.string().optional(),
-  verificationStatus: z.string().optional(),
-  comments: z.string().optional(),
-});
+const projectFormSchema = z
+  .object({
+    projectName: z.string().min(1, { message: 'Project name is required.' }),
+    description: z.string().min(1, { message: 'Description is required.' }),
+    githubLink: z.string().url({ message: 'Invalid URL.' }).optional(),
+    start: z.string().min(1, { message: 'Start date is required.' }),
+    end: z.string().min(1, { message: 'End date is required.' }),
+    refer: z.string().min(1, { message: 'Reference is required.' }),
+    techUsed: z.string().min(1, { message: 'Technologies used are required.' }),
+    role: z.string().min(1, { message: 'Role is required.' }),
+    projectType: z.string().optional(),
+    verificationStatus: z.string().optional(),
+    comments: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start && data.end) {
+        const start = new Date(data.start);
+        const end = new Date(data.end);
+        return start < end;
+      }
+      return true;
+    },
+    {
+      message: 'Start Date must be before End Date',
+      path: ['end'],
+    },
+  );
 
 // Type for form values
 type ProjectFormValues = z.infer<typeof projectFormSchema>;

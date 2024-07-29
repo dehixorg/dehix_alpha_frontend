@@ -12,7 +12,7 @@ import {
   Lightbulb,
   LineChart,
   ListFilter,
-  Package,
+  PackageOpen,
   Plus,
   Search,
   Settings,
