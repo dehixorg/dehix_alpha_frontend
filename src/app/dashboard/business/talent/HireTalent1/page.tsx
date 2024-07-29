@@ -10,7 +10,7 @@ import {
   Lightbulb,
   LineChart,
   ListFilter,
-  Package,
+  PackageOpen,
   Plus,
   Search,
   Settings,
@@ -503,6 +503,15 @@ export default function Dashboard() {
                 </Table>
               </TabsContent>
             </Tabs>
+            <div className="text-center py-10  mt-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No data available.
+                <br /> This feature will be available soon.
+                <br />
+                Here you can get directly hired for different roles.
+              </p>
+            </div>
           </div>
           <div className="sticky top-14 hidden flex-col gap-4 md:flex">
             <CardTitle className="group flex items-center gap-2 text-2xl">
