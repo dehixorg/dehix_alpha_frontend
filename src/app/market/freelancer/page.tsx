@@ -75,7 +75,6 @@ const Market: React.FC = () => {
     skills: [],
   });
   const [jobs, setJobs] = useState<Project[]>([]);
-
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
@@ -85,6 +84,7 @@ const Market: React.FC = () => {
       [filterType]: selectedValues,
     }));
   };
+
   const constructQueryString = (filters: FilterState) => {
     const query = Object.keys(filters)
       .map((key) => {
@@ -99,6 +99,7 @@ const Market: React.FC = () => {
 
     return query;
   };
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -119,6 +120,7 @@ const Market: React.FC = () => {
     }
     fetchData();
   }, []);
+
   const fetchData = async (appliedFilters: FilterState) => {
     try {
       const queryString = constructQueryString(appliedFilters);
@@ -140,6 +142,16 @@ const Market: React.FC = () => {
     setIsClient(true);
     fetchData(filters); // Fetch all data initially
   }, [user.uid]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setShowFilters(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
@@ -251,70 +263,73 @@ const Market: React.FC = () => {
       </div>
 
       {isClient && showFilters && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 m-20">
-          <div className="bg-white p-4 rounded-lg w-full max-w-screen-lg mx-auto item-center">
-            <div className="border-b border-gray-300 pb-4">
-              <Button onClick={handleApply} className="w-[100%]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
+          <div className="bg-white rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+            <div className="overflow-y-auto p-4 flex-grow">
+              <div className="border-b border-gray-300 pb-4">
+                <MobileSkillDom
+                  label="Locations"
+                  heading="Filter by location"
+                  checkboxLabels={[
+                    'All',
+                    'Banglore',
+                    'Pune',
+                    'Noida',
+                    'Delhi',
+                    'Gurugram',
+                  ]}
+                  selectedValues={filters.location}
+                  setSelectedValues={(values) =>
+                    handleFilterChange('location', values)
+                  }
+                />
+              </div>
+
+              <div className="border-b border-gray-300 pb-4">
+                <MobileCompany
+                  heading="Filter by job type"
+                  checkboxLabels={['All', 'Full-time', 'Internship']}
+                  selectedValues={filters.jobType}
+                  setSelectedValues={(values) =>
+                    handleFilterChange('jobType', values)
+                  }
+                />
+              </div>
+
+              <div className="border-b border-gray-300 pb-4">
+                <MobileSkillDom
+                  label="Domains"
+                  heading="Filter by domain"
+                  checkboxLabels={domains}
+                  selectedValues={filters.domain}
+                  setSelectedValues={(values) =>
+                    handleFilterChange('domain', values)
+                  }
+                />
+              </div>
+
+              <div className="border-b border-gray-300 pb-4">
+                <MobileSkillDom
+                  label="Skills"
+                  heading="Filter by skills"
+                  checkboxLabels={skills}
+                  selectedValues={filters.skills}
+                  setSelectedValues={(values: any) =>
+                    handleFilterChange('skills', values)
+                  }
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-300">
+              <Button onClick={handleApply} className="w-full">
                 Apply
               </Button>
-              a
-              <MobileSkillDom
-                label="Locations"
-                heading="Filter by location"
-                checkboxLabels={[
-                  'All',
-                  'Banglore',
-                  'Pune',
-                  'Noida',
-                  'Delhi',
-                  'Gurugram',
-                ]}
-                selectedValues={filters.location}
-                setSelectedValues={(values) =>
-                  handleFilterChange('location', values)
-                }
-              />
-            </div>
-
-            <div className="border-b border-gray-300 pb-4">
-              <MobileCompany
-                heading="Filter by job type"
-                checkboxLabels={['All', 'Full-time', 'Internship']}
-                selectedValues={filters.jobType}
-                setSelectedValues={(values) =>
-                  handleFilterChange('jobType', values)
-                }
-              />
-            </div>
-
-            <div className="border-b border-gray-300 pb-4">
-              <MobileSkillDom
-                label="Domains"
-                heading="Filter by domain"
-                checkboxLabels={domains}
-                selectedValues={filters.domain}
-                setSelectedValues={(values) =>
-                  handleFilterChange('domain', values)
-                }
-              />
-            </div>
-
-            <div className="border-b border-gray-300 pb-4">
-              <MobileSkillDom
-                label="Skills"
-                heading="Filter by skills"
-                checkboxLabels={skills}
-                selectedValues={filters.skills}
-                setSelectedValues={(values: any) =>
-                  handleFilterChange('skills', values)
-                }
-              />
             </div>
           </div>
         </div>
       )}
       {isClient && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4  flex justify-center z-50">
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4 flex justify-center z-50">
           <button
             className="w-full max-w-xs p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300 ease-in-out"
             onClick={handleModalToggle}

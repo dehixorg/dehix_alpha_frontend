@@ -6,22 +6,30 @@ import React, { useEffect, useState } from 'react'; // Import 'react' first
 // eslint-disable-next-line import/order
 import {
   Boxes,
+  Eye,
+  FilePenLine,
   Home,
   Lightbulb,
   LineChart,
   ListFilter,
-  Package,
+  PackageOpen,
   Plus,
   Search,
   Settings,
+  Trash2,
   Users2,
 } from 'lucide-react';
 
 // Shared components
 // eslint-disable-next-line import/order
-import Breadcrumb from '@/components/shared/breadcrumbList';
+import { TabsContent } from '@radix-ui/react-tabs';
+import { Label } from '@radix-ui/react-label';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 // UI components
+import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -36,6 +44,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -49,18 +58,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
-// Menu components
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import InterviewCard from '@/components/shared/interviewCard';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { axiosInstance } from '@/lib/axiosinstance';
-import {
   Table,
   TableBody,
   TableCell,
@@ -68,12 +65,43 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+// Menu components
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import InterviewCard from '@/components/shared/interviewCard';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+new Date('2023-11-23T10:30:00Z');
 
 interface Skill {
   _id: string;
@@ -85,11 +113,18 @@ interface Domain {
   label: string;
 }
 
-interface SkillDomainData {
-  label: string;
+interface DomainData {
+  domainName: string;
   experience: string;
-  description: string;
   status: string;
+  visible: string;
+}
+
+interface SkillData {
+  skillName: string;
+  experience: string;
+  status: string;
+  visible: string;
 }
 
 const sampleInterview = {
@@ -100,6 +135,81 @@ const sampleInterview = {
   rating: 4.5,
   comments: 'Great communication skills and technical expertise.',
 };
+
+const domainDummyData: DomainData[] = [
+  {
+    domainName: 'Frontend Development',
+    experience: '5 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
+  {
+    domainName: 'Backend Development',
+    experience: '3 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
+];
+const skillDummyData: SkillData[] = [
+  {
+    skillName: 'JavaScript',
+    experience: '4 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
+  {
+    skillName: 'React',
+    experience: '2 years',
+    status: 'Added',
+    visible: 'Inactive',
+  },
+];
+
+const skillFormSchema = z.object({
+  skillName: z.string({
+    required_error: 'Skill must be selected',
+  }),
+  description: z.string({
+    required_error: 'Description Must be Added',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+});
+const editSkillFormSchema = z.object({
+  skillName: z.string({
+    required_error: 'Skill must be added',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+  status: z.string({
+    required_error: 'Status Must be Added',
+  }),
+});
+
+const domainFormSchema = z.object({
+  domainName: z.string({
+    required_error: 'Domain must be selected',
+  }),
+  description: z.string({
+    required_error: 'Description Must be Added',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+});
+const editDomainFormSchema = z.object({
+  domainName: z.string({
+    required_error: 'Domain must be Addde',
+  }),
+  experience: z.string({
+    required_error: 'Experience Must be Added',
+  }),
+  status: z.string({
+    required_error: 'Status Must be Added',
+  }),
+});
 
 export default function Dashboard() {
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -253,25 +363,22 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Dehix Hire Talent
-            </h2>
+            {/* Dialog component */}
             <div className="mb-4 mt-3">
-              <h2 className="text-xl font-semibold">Talent</h2>
-              <Dialog
-                open={isSkillDialogOpen}
-                onOpenChange={setIsSkillDialogOpen}
-              >
+              <h2 className="text-2xl font-semibold">Get Talent</h2>
+
+              <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="mr-2 mt-2">
-                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
+                  <Button className="w-full sm:w-auto mr-2 mt-4">
+                    <Plus className="mr-1 h-4 w-4" /> Get Talent by Skill
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Talent by Skill</DialogTitle>
+                    <DialogTitle>Get Talent by Skill</DialogTitle>
                     <DialogDescription>
-                      Select your Skill, Description, and Experience.
+                      Select your Skill, Description, and Experience. Select
+                      your Skill, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
                   <Select onValueChange={(value) => setSelectedSkill(value)}>
@@ -331,18 +438,15 @@ export default function Dashboard() {
                   </Button>
                 </DialogContent>
               </Dialog>
-              <Dialog
-                open={isDomainDialogOpen}
-                onOpenChange={setIsDomainDialogOpen}
-              >
+              <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="mt-2">
-                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Domain
+                  <Button className="w-full sm:w-auto mr-2 mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Get Talent by Domain
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Talent by Domain</DialogTitle>
+                    <DialogTitle>Get Talent by Domain</DialogTitle>
                     <DialogDescription>
                       Select your Domain, Description, and Experience.
                     </DialogDescription>
@@ -403,150 +507,495 @@ export default function Dashboard() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Tabs defaultValue="All" onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="All">All</TabsTrigger>
-                <TabsTrigger value="Skills">Skills</TabsTrigger>
-                <TabsTrigger value="Domain">Domain</TabsTrigger>
-              </TabsList>
-              <TabsContent value="All">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Activity</TableHead>
-                      <TableHead>More</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.label}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                        <TableCell>
-                          <Switch />
-                        </TableCell>
-                        <TableCell>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline">click</Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                              <div className="grid gap-4">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium leading-none">
-                                    Description
-                                  </h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-              <TabsContent value="Skills">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Activity</TableHead>
-                      <TableHead>More</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {filteredData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.label}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                        <TableCell>
-                          <Switch />
-                        </TableCell>
-                        <TableCell>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline">click</Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                              <div className="grid gap-4">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium leading-none">
-                                    Description
-                                  </h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-              <TabsContent value="Domain">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Label</TableHead>
-                      <TableHead>Experience</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Activity</TableHead>
-                      <TableHead>More</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {filteredData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.label}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                        <TableCell>
-                          <Switch />
-                        </TableCell>
-                        <TableCell>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline">click</Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80">
-                              <div className="grid gap-4">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium leading-none">
-                                    Description
-                                  </h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            </Tabs>
           </div>
-          <div className="sticky top-14 hidden flex-col gap-4 md:flex">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
+
+          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2 -mt-2">
+            <div className="">
+              <Tabs defaultValue="Domain">
+                <div className="w-fit">
+                  <TabsList className="flex items-center space-x-4">
+                    <TabsTrigger value="Domain">Domain</TabsTrigger>
+                    <TabsTrigger value="Skills">Skills</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="Domain">
+                  <div className="mt-6 w-[397px] md:w-full lg:w-full">
+                    <Card className="sm:col-span-2 flex flex-col h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-2xl mb-3">Domain</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Domain Name</TableHead>
+                              <TableHead>Experience</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Visible</TableHead>
+                              <TableHead>More</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {domainVisibility.map((item, index) => (
+                              <TableRow key={index} className="bg-muted/20">
+                                <TableCell>{item.domainName}</TableCell>
+
+                                <TableCell>{item.experience}</TableCell>
+
+                                <TableCell>{item.status}</TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Switch
+                                      id="domainStatus"
+                                      onClick={() => handleDomainToggle(index)}
+                                    />
+                                    <Label htmlFor="domainStatus">
+                                      {item.visible === 'Active'
+                                        ? 'Active'
+                                        : 'Inactive'}
+                                    </Label>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Dialog
+                                      open={isViewDomain}
+                                      onOpenChange={setIsViewDomain}
+                                    >
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className="hover:text-blue-500"
+                                          onClick={() =>
+                                            handleViewDomain(index)
+                                          }
+                                        >
+                                          <Eye />
+                                        </Button>
+                                      </DialogTrigger>
+
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            {isEditDomain
+                                              ? 'Edit Talent by Domain'
+                                              : 'Talent by Domain'}
+                                          </DialogTitle>
+                                          <DialogDescription>
+                                            {isEditDomain
+                                              ? 'Edit Talent Summary'
+                                              : 'Talent Summary'}
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        {isEditDomain ? (
+                                          <Form {...editDomainForm}>
+                                            <form
+                                              onSubmit={editDomainForm.handleSubmit(
+                                                handleSaveDomain,
+                                              )}
+                                              className="grid gap-4 py-4"
+                                            >
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="domainName"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Domain Name:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="domainName"
+                                                        defaultValue={
+                                                          selectedDomain?.domainName
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="experience"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Experience:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="experience"
+                                                        defaultValue={
+                                                          selectedDomain?.experience
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editDomainForm.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Status:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="status"
+                                                        defaultValue={
+                                                          selectedDomain?.status
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <Button
+                                                type="submit"
+                                                className="w-full"
+                                              >
+                                                Save
+                                              </Button>
+                                            </form>
+                                          </Form>
+                                        ) : (
+                                          <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="name"
+                                                className="text-nowrap"
+                                              >
+                                                Domain Name:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.domainName}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="description"
+                                                className="text-nowrap"
+                                              >
+                                                Experience:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.experience}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="visibility"
+                                                className="text-nowrap"
+                                              >
+                                                Status:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedDomain?.status}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                        <DialogFooter>
+                                          {!isEditDomain && (
+                                            <Button onClick={handleEditDomain}>
+                                              <div className="flex items-center space-x-2">
+                                                <FilePenLine />
+                                                <Label htmlFor="edit">
+                                                  Edit
+                                                </Label>
+                                              </div>
+                                            </Button>
+                                          )}
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            className="hover:text-red-500"
+                                            onClick={() =>
+                                              handleDeleteDomain(index)
+                                            }
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Delete Domain</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                      <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="Skills">
+                  <div className="mt-6 w-[397px] md:w-full lg:w-full">
+                    <Card className="sm:col-span-2 flex flex-col h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-2xl mb-3">Skills</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Skill Name</TableHead>
+                              <TableHead>Experience</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Visible</TableHead>
+                              <TableHead>More</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {skillVisibility.map((item, index) => (
+                              <TableRow key={index} className="bg-muted/25">
+                                <TableCell>{item.skillName}</TableCell>
+                                <TableCell>{item.experience}</TableCell>
+                                <TableCell>{item.status}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Switch
+                                      id="skillStatus"
+                                      onClick={() => handleSkillToggle(index)}
+                                    />
+                                    <Label htmlFor="skillStatus">
+                                      {item.visible === 'Active'
+                                        ? 'Active'
+                                        : 'Inactive'}
+                                    </Label>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center space-x-2">
+                                    <Dialog
+                                      open={isViewDomain}
+                                      onOpenChange={setIsViewDomain}
+                                    >
+                                      <DialogTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          className="hover:text-blue-500"
+                                          onClick={() => handleViewSkill(index)}
+                                        >
+                                          <Eye />
+                                        </Button>
+                                      </DialogTrigger>
+
+                                      <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                          <DialogTitle>
+                                            {isEditSkill
+                                              ? 'Edit Talent by Skill'
+                                              : 'Talent by Skill'}
+                                          </DialogTitle>
+                                          <DialogDescription>
+                                            {isEditSkill
+                                              ? 'Edit Talent Summary'
+                                              : 'Talent Summary'}
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        {isEditSkill ? (
+                                          <Form {...editSkillForm}>
+                                            <form
+                                              onSubmit={editSkillForm.handleSubmit(
+                                                handleSaveSkill,
+                                              )}
+                                              className="grid gap-4 py-4"
+                                            >
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="skillName"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Skill Name:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="domainName"
+                                                        defaultValue={
+                                                          selectedSkill?.skillName
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="experience"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Experience:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="experience"
+                                                        defaultValue={
+                                                          selectedSkill?.experience
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <FormField
+                                                control={editSkillForm.control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                  <FormItem className="grid grid-cols-3 gap-4 items-center">
+                                                    <FormLabel className="col-span-1">
+                                                      Status:
+                                                    </FormLabel>
+                                                    <FormControl className="col-span-2">
+                                                      <Input
+                                                        className="w-fit"
+                                                        id="status"
+                                                        defaultValue={
+                                                          selectedSkill?.status
+                                                        }
+                                                        {...field}
+                                                      />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                  </FormItem>
+                                                )}
+                                              />
+
+                                              <Button
+                                                type="submit"
+                                                className="w-full"
+                                              >
+                                                Save
+                                              </Button>
+                                            </form>
+                                          </Form>
+                                        ) : (
+                                          <div className="grid gap-4 py-4">
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="name"
+                                                className="text-nowrap"
+                                              >
+                                                Skill Name:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.skillName}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="description"
+                                                className="text-nowrap"
+                                              >
+                                                Experience:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.experience}
+                                              </div>
+                                            </div>
+                                            <div className="grid grid-cols-4 items-center gap-24">
+                                              <Label
+                                                htmlFor="visibility"
+                                                className="text-nowrap"
+                                              >
+                                                Status:
+                                              </Label>
+                                              <div className="col-span-3">
+                                                {selectedSkill?.status}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
+                                        <DialogFooter>
+                                          {!isEditSkill && (
+                                            <Button onClick={handleEditSkill}>
+                                              <div className="flex items-center space-x-2">
+                                                <FilePenLine />
+                                                <Label htmlFor="edit">
+                                                  Edit
+                                                </Label>
+                                              </div>
+                                            </Button>
+                                          )}
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            className="hover:text-red-500"
+                                            onClick={() =>
+                                              handleDeleteSkill(index)
+                                            }
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Delete Skill</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                      <CardFooter className=" grid gap-4 grid-cols-4"></CardFooter>
+                    </Card>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+
+          <div className="space-y-6 lg:-mt-32">
+            <CardTitle className="group flex items-center gap-2 text-2xl lg:-mt-4">
               Talent
             </CardTitle>
             <InterviewCard {...sampleInterview} />
