@@ -212,19 +212,24 @@ const editDomainFormSchema = z.object({
 });
 
 export default function Dashboard() {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [domains, setDomains] = useState<Domain[]>([]);
-  const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
-  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  const [description, setDescription] = useState<string>('');
-  const [experience, setExperience] = useState<number | string>('');
-  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
-  const [isDomainDialogOpen, setIsDomainDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('All');
-  const [experienceError, setExperienceError] = useState<string>('');
-  const [descriptionError, setDescriptionError] = useState<string>('');
+  const skillForm = useForm<z.infer<typeof skillFormSchema>>({
+    resolver: zodResolver(skillFormSchema),
+  });
+  function onSkillSubmit(values: z.infer<typeof skillFormSchema>) {
+    console.log(values);
+    skillForm.reset();
+  }
 
+  const domainForm = useForm<z.infer<typeof domainFormSchema>>({
+    resolver: zodResolver(domainFormSchema),
+  });
+  function onDomainSubmit(values: z.infer<typeof domainFormSchema>) {
+    console.log(values);
+    domainForm.reset();
+  }
+
+  const [skills, setSkills] = useState<string[]>([]);
+  const [domains, setDomains] = useState<string[]>([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -255,81 +260,104 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const validateInputs = () => {
-    let valid = true;
-    const expNumber = Number(experience);
-
-    if (isNaN(expNumber) || expNumber <= 0) {
-      setExperienceError('Experience should be a non-negative number');
-      valid = false;
-    } else {
-      setExperienceError('');
-    }
-
-    if (description.length <= 4) {
-      setDescriptionError(
-        'Description should be greater than or equal to 4 characters',
-      );
-      valid = false;
-    } else {
-      setDescriptionError('');
-    }
-
-    return valid;
-  };
-
-  const handleAddSkill = () => {
-    if (selectedSkill && description && experience) {
-      if (!validateInputs()) return;
-
-      const newSkillDomainData = {
-        label: selectedSkill,
-        experience: experience.toString(),
-        description,
-        status: 'Active',
-      };
-      console.log('Adding Skill:', newSkillDomainData);
-
-      setSkillDomainData((prevData) => [...prevData, newSkillDomainData]);
-
-      setSelectedSkill(null);
-      setDescription('');
-      setExperience('');
-
-      setIsSkillDialogOpen(false);
-    }
-  };
-
-  const handleAddDomain = () => {
-    if (selectedDomain && description && experience) {
-      if (!validateInputs()) return;
-      const newSkillDomainData = {
-        label: selectedDomain,
-        experience: experience.toString(),
-        description,
-        status: 'Active',
-      };
-
-      console.log('Adding Domain:', newSkillDomainData);
-
-      setSkillDomainData((prevData) => [...prevData, newSkillDomainData]);
-
-      setSelectedDomain(null);
-      setDescription('');
-      setExperience('');
-
-      setIsDomainDialogOpen(false);
-    }
-  };
-
-  const filteredData = skillDomainData.filter((item) => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'Skills')
-      return skills.some((skill) => skill.label === item.label);
-    if (activeTab === 'Domain')
-      return domains.some((domain) => domain.label === item.label);
-    return false;
+  const editDomainForm = useForm<z.infer<typeof editDomainFormSchema>>({
+    resolver: zodResolver(editDomainFormSchema),
   });
+  const [isViewDomain, setIsViewDomain] = useState<boolean>(false);
+  const [isEditDomain, setIsEditDomain] = useState<boolean>(false);
+  const [domainVisibility, setDomainVisibility] = useState(domainDummyData);
+  const [selectedDomain, setSelectedDomain] = useState<DomainData | null>(null);
+  const handleDomainToggle = (index: number) => {
+    console.log('Before Toggle:', domainVisibility); // Debugging line
+    setDomainVisibility((prevDomainVisibility) => {
+      const updatedDomainVisibility = prevDomainVisibility.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              visible: item.visible === 'Active' ? 'Inactive' : 'Active',
+            }
+          : item,
+      );
+      console.log('After Toggle:', updatedDomainVisibility); // Debugging line
+      return updatedDomainVisibility;
+    });
+  };
+  const handleViewDomain = (index: number) => {
+    setIsViewDomain(true);
+    setSelectedDomain(domainVisibility[index]);
+  };
+  useEffect(() => {
+    console.log(selectedDomain);
+  }, [selectedDomain]);
+  const handleEditDomain = () => {
+    setIsEditDomain(true);
+  };
+  const handleSaveDomain = (values: z.infer<typeof editDomainFormSchema>) => {
+    const updatedDomain = { ...values, visible: 'active' }; // 'visible' is set to 'active'
+    console.log(updatedDomain);
+    setSelectedDomain(updatedDomain);
+    setIsEditDomain(false);
+    setIsViewDomain(false);
+  };
+  const handleDeleteDomain = (index: number) => {
+    console.log('Before Deletion:', domainVisibility); // Debugging line
+    setDomainVisibility((prevDomainVisibility) => {
+      const updatedDomainVisibility = prevDomainVisibility.filter(
+        (_, i) => i !== index,
+      );
+      console.log('After Deletion:', updatedDomainVisibility); // Debugging line
+      return updatedDomainVisibility;
+    });
+  };
+
+  const editSkillForm = useForm<z.infer<typeof editSkillFormSchema>>({
+    resolver: zodResolver(editSkillFormSchema),
+  });
+  const [isViewSkill, setIsViewSkill] = useState<boolean>(false);
+  const [isEditSkill, setIsEditSkill] = useState<boolean>(false);
+  const [skillVisibility, setSkillVisibility] = useState(skillDummyData);
+  const [selectedSkill, setSelectedSkill] = useState<SkillData | null>(null);
+  const handleSkillToggle = (index: number) => {
+    console.log('Before Toggle:', skillVisibility); // Debugging line
+    setSkillVisibility((prevSkillVisibility) => {
+      const updatedSkillVisibility = prevSkillVisibility.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              visible: item.visible === 'Active' ? 'Inactive' : 'Active',
+            }
+          : item,
+      );
+      console.log('After Toggle:', updatedSkillVisibility); // Debugging line
+      return updatedSkillVisibility;
+    });
+  };
+  const handleViewSkill = (index: number) => {
+    setSelectedSkill(skillVisibility[index]);
+  };
+  useEffect(() => {
+    console.log(selectedSkill);
+  }, [selectedSkill]);
+  const handleEditSkill = () => {
+    setIsEditSkill(true);
+  };
+  const handleSaveSkill = (values: z.infer<typeof editSkillFormSchema>) => {
+    const updatedSkill = { ...values, visible: 'active' }; // 'visible' is set to 'active'
+    console.log(updatedSkill);
+    setSelectedSkill(updatedSkill);
+    setIsEditSkill(false);
+    setIsViewSkill(false);
+  };
+  const handleDeleteSkill = (index: number) => {
+    console.log('Before Deletion:', skillVisibility); // Debugging line
+    setSkillVisibility((prevSkillVisibility) => {
+      const updatedSkillVisibility = prevSkillVisibility.filter(
+        (_, i) => i !== index,
+      );
+      console.log('After Deletion:', updatedSkillVisibility); // Debugging line
+      return updatedSkillVisibility;
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -369,8 +397,8 @@ export default function Dashboard() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto mr-2 mt-4">
-                    <Plus className="mr-1 h-4 w-4" /> Get Talent by Skill
+                  <Button disabled className="mr-2 mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -381,67 +409,83 @@ export default function Dashboard() {
                       your Skill, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
-                  <Select onValueChange={(value) => setSelectedSkill(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a Skill" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skills.map((skill) => (
-                        <SelectItem key={skill._id} value={skill.label}>
-                          {skill.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="mt-2">
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700"
+
+                  <Form {...skillForm}>
+                    <form
+                      onSubmit={skillForm.handleSubmit(onSkillSubmit)}
+                      className="space-y-8"
                     >
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      rows={2}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)} // Changed: Set description state
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="  Describe the talent..."
-                    ></textarea>
-                    {descriptionError && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {descriptionError}
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <label
-                      htmlFor="experience"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Experience
-                    </label>
-                    <input
-                      type="number"
-                      id="experience"
-                      value={experience}
-                      onChange={(e) => setExperience(e.target.value)} // Changed: Set experience state
-                      className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="  Years of experience"
-                    />
-                    {experienceError && (
-                      <p className="text-red-500">{experienceError}</p>
-                    )}
-                  </div>
-                  <Button onClick={handleAddSkill} className="mt-4">
-                    Add Talent
-                  </Button>
+                      <FormField
+                        control={skillForm.control}
+                        name="skillName"
+                        render={({ field: { onChange, value } }) => (
+                          <FormItem>
+                            <FormLabel>Skill</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={onChange} value={value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a Skill" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {skills.map((skill: any, index: number) => (
+                                    <SelectItem key={index} value={skill.label}>
+                                      {skill.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={skillForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the talent..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={skillForm.control}
+                        name="experience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Experience</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Years of experience"
+                                {...field}
+                                type="number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit" className="w-full">
+                        Get Talent by Skill
+                      </Button>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto mr-2 mt-2">
-                    <Plus className="mr-1 h-4 w-4" /> Get Talent by Domain
+                  <Button disabled className="mt-2">
+                    <Plus className="mr-1 h-4 w-4" /> Add your Talent by Domain
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -451,59 +495,80 @@ export default function Dashboard() {
                       Select your Domain, Description, and Experience.
                     </DialogDescription>
                   </DialogHeader>
-                  <Select onValueChange={(value) => setSelectedDomain(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a Domain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {domains.map((domain) => (
-                        <SelectItem key={domain._id} value={domain.label}>
-                          {domain.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="mt-2">
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700"
+
+                  <Form {...domainForm}>
+                    <form
+                      onSubmit={domainForm.handleSubmit(onDomainSubmit)}
+                      className="space-y-8"
                     >
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      rows={2}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)} // Changed: Set description state
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="  Describe the talent..."
-                    ></textarea>
-                    {descriptionError && (
-                      <p className="text-red-500">{descriptionError}</p>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <label
-                      htmlFor="experience"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Experience
-                    </label>
-                    <input
-                      type="number"
-                      id="experience"
-                      value={experience}
-                      onChange={(e) => setExperience(e.target.value)} // Changed: Set experience state
-                      className="mt-1 block w-full h-[30px] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="  Years of experience"
-                    />
-                    {experienceError && (
-                      <p className="text-red-500">{experienceError}</p>
-                    )}
-                  </div>
-                  <Button onClick={handleAddDomain} className="mt-4">
-                    Add Talent
-                  </Button>
+                      <FormField
+                        control={domainForm.control}
+                        name="domainName"
+                        render={({ field: { onChange, value } }) => (
+                          <FormItem>
+                            <FormLabel>Domain</FormLabel>
+                            <FormControl>
+                              <Select onValueChange={onChange} value={value}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a Domain" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {domains.map((domain: any, index: number) => (
+                                    <SelectItem
+                                      key={index}
+                                      value={domain.label}
+                                    >
+                                      {domain.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={domainForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the talent..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={domainForm.control}
+                        name="experience"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Experience</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Years of experience"
+                                {...field}
+                                type="number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button type="submit" className="w-full">
+                        Get Talent By Domain
+                      </Button>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -998,7 +1063,7 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl lg:-mt-4">
               Talent
             </CardTitle>
-            <InterviewCard {...sampleInterview} />
+            {/* <InterviewCard {...sampleInterview} /> */}
           </div>
         </main>
       </div>
