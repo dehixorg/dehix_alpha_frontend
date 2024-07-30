@@ -116,7 +116,6 @@ export default function FreelancerRegisterForm() {
       projects: {},
       isFreelancer: true,
       refer: { name: 'string', contact: 'string' },
-      consultant: { status: 'notApplied' },
       pendingProject: [],
       rejectedProject: [],
       acceptedProject: [],
@@ -125,6 +124,7 @@ export default function FreelancerRegisterForm() {
       interviewsAligned: [],
       oracleStatus: 'notApplied',
       dob: '2024-07-06T20:12:22.047Z',
+      domain: [],
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
