@@ -101,11 +101,20 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...currDomains,
         {
           name: tmpDomain,
+          level: '',
+          experience: '',
+          interviewStatus: 'pending',
+          interviewInfo: '',
+          interviewerRating: 0,
         },
       ]);
       setTmpDomain('');
     }
   };
+
+  useEffect(() => {
+    console.log('domain selected', currDomains);
+  }, [currDomains]);
 
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
@@ -126,6 +135,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         console.log('API Response get:', response.data);
         setUser(response.data);
         setCurrSkills(response.data.skills);
+        setCurrDomains(response.data.domain);
 
         const skillsResponse = await axiosInstance.get('/skills/all');
         console.log('API Response get:', skillsResponse.data.data);
@@ -158,12 +168,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       console.log('API body', {
         ...data,
         skills: currSkills,
-        domains: currDomains,
+        domain: currDomains,
       });
       const response = await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
         skills: currSkills,
-        domains: currDomains,
+        domain: currDomains,
       });
       console.log('API Response:', response.data);
 
@@ -176,7 +186,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         phone: data.phone,
         role: data.role,
         skills: currSkills,
-        domains: currDomains,
+        domain: currDomains,
       });
 
       toast({
@@ -365,7 +375,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 ))}
               </div>
             </div>
-            {/* <div>
+            <div>
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select onValueChange={(value) => setTmpDomain(value)}>
@@ -407,7 +417,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   </Badge>
                 ))}
               </div>
-            </div> */}
+            </div>
           </div>
 
           <Button type="submit" className="col-span-2">
