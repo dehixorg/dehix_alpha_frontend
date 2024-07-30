@@ -100,7 +100,8 @@ export function ProjectCard({
       <CardFooter>
         <Link href={`/project/${project._id}`} className="w-full">
           <Button
-            className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`} disabled
+            className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
+            disabled
           >
             View full details
           </Button>
