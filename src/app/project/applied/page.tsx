@@ -80,6 +80,7 @@ export default function AppliedProject() {
           />
           <Breadcrumb
             items={[
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Projects',
                 link: '/project/current',

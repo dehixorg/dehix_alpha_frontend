@@ -16,6 +16,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
 import UserDropdownMenu from '@/components/dropdown/user';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -89,7 +90,7 @@ export default function Education() {
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
             />
           </div>
-          <UserDropdownMenu email={user.email} type={user.type} />
+          <DropdownProfile />
         </header>
 
         <main
