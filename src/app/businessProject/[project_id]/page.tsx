@@ -67,6 +67,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/business/${project_id}/project`);
+        console.log(response.data.data);
         setProject(response.data.data);
       } catch (error) {
         console.error('API Error:', error);
