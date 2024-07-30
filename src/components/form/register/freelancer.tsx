@@ -125,7 +125,6 @@ export default function FreelancerRegisterForm() {
       interviewsAligned: [],
       oracleStatus: 'notApplied',
       dob: '2024-07-06T20:12:22.047Z',
-      
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
