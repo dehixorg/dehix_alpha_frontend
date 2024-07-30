@@ -101,6 +101,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...currDomains,
         {
           name: tmpDomain,
+          level: '',
+          experience: '',
+          interviewStatus: 'pending',
+          interviewInfo: '',
+          interviewerRating: 0,
         },
       ]);
       setTmpDomain('');
@@ -130,7 +135,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         console.log('API Response get:', response.data);
         setUser(response.data);
         setCurrSkills(response.data.skills);
-        setCurrDomains(response.data.domains);
+        setCurrDomains(response.data.domain);
 
         const skillsResponse = await axiosInstance.get('/skills/all');
         console.log('API Response get:', skillsResponse.data.data);
