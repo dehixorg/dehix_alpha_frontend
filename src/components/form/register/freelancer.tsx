@@ -112,6 +112,7 @@ export default function FreelancerRegisterForm() {
       connects: 0,
       professionalInfo: {},
       skills: [],
+      domain: [],
       education: {},
       projects: {},
       isFreelancer: true,
@@ -124,7 +125,7 @@ export default function FreelancerRegisterForm() {
       interviewsAligned: [],
       oracleStatus: 'notApplied',
       dob: '2024-07-06T20:12:22.047Z',
-      domain: [],
+      
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
