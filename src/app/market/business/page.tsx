@@ -128,7 +128,7 @@ const Market: React.FC = () => {
       <CollapsibleSidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Dashboard"
+        active="Market"
       />
       <div className="ml-12">
         <div className="mb-6 mt-4 ">
