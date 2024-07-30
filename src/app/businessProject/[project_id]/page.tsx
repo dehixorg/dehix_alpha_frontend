@@ -88,8 +88,7 @@ export default function Dashboard() {
           <CollapsibleSidebarMenu menuItemsTop={menuItemsTop} menuItemsBottom={menuItemsBottom} active="Dashboard" />
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Project', link: '/dashboard/freelancer' },
+              { label: 'Dashboard', link: '/dashboard/business' },
               { label: project_id, link: '#' },
             ]}
           />
