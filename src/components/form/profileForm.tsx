@@ -109,7 +109,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         },
       ]);
       setTmpDomain('');
-    }    
+    }
   };
 
   useEffect(() => {
