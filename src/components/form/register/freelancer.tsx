@@ -268,7 +268,7 @@ export default function FreelancerRegisterForm() {
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
-                    <FormDescription>Select the start date</FormDescription>
+                    <FormDescription>Select the Date</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
