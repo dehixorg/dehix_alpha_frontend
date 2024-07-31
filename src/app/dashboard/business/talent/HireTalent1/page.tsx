@@ -31,14 +31,6 @@ import { z } from 'zod';
 // UI components
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Dialog,
@@ -136,34 +128,8 @@ const sampleInterview = {
   comments: 'Great communication skills and technical expertise.',
 };
 
-const domainDummyData: DomainData[] = [
-  {
-    domainName: 'Frontend Development',
-    experience: '5 years',
-    status: 'Added',
-    visible: 'Inactive',
-  },
-  {
-    domainName: 'Backend Development',
-    experience: '3 years',
-    status: 'Added',
-    visible: 'Inactive',
-  },
-];
-const skillDummyData: SkillData[] = [
-  {
-    skillName: 'JavaScript',
-    experience: '4 years',
-    status: 'Added',
-    visible: 'Inactive',
-  },
-  {
-    skillName: 'React',
-    experience: '2 years',
-    status: 'Added',
-    visible: 'Inactive',
-  },
-];
+const domainDummyData: DomainData[] = [];
+const skillDummyData: SkillData[] = [];
 
 const skillFormSchema = z.object({
   skillName: z.string({
