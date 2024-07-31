@@ -25,6 +25,7 @@ import {
   FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ const profileFormSchema = z.object({
     .number()
     .min(0, 'Work experience must be at least 0 years')
     .max(60, 'Work experience must not exceed 60 years'),
+  dob: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -91,6 +93,7 @@ export default function FreelancerRegisterForm() {
       password: '',
       perHourPrice: 0,
       workExperience: 0,
+      dob: '',
     },
     mode: 'all',
   });
@@ -124,7 +127,7 @@ export default function FreelancerRegisterForm() {
       userDataForVerification: [],
       interviewsAligned: [],
       oracleStatus: 'notApplied',
-      dob: '2024-07-06T20:12:22.047Z',
+      dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
@@ -256,8 +259,20 @@ export default function FreelancerRegisterForm() {
           </div>
           <div className="grid grid-cols-2 gap-4 mt-3">
             <div className="grid gap-2">
-              <Label htmlFor="DOB">DOB</Label>
-              <DatePicker />
+              <FormField
+                control={form.control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>DOB</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormDescription>Select the Date</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="grid gap-2">
               <TextInput
