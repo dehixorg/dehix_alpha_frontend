@@ -56,10 +56,9 @@ const profileFormSchema = z.object({
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
-  perHourPrice: z
-    .number()
-    .positive({ message: 'Price must be a positive number.' })
-    .min(0.01, { message: 'Price must be at least $0.01.' }),
+  perHourPrice: z.number().refine((value) => value >= 0, {
+    message: 'Price must be a non-negative number.',
+  }),
   workExperience: z
     .number()
     .min(0, 'Work experience must be at least 0 years')
@@ -113,11 +112,11 @@ export default function FreelancerRegisterForm() {
       connects: 0,
       professionalInfo: {},
       skills: [],
+      domain: [],
       education: {},
       projects: {},
       isFreelancer: true,
       refer: { name: 'string', contact: 'string' },
-      consultant: { status: 'notApplied' },
       pendingProject: [],
       rejectedProject: [],
       acceptedProject: [],
@@ -269,11 +268,7 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
-          <Button
-            type="submit"
-            className="w-full bg-primary text-black"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (

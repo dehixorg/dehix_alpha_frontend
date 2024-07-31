@@ -79,6 +79,7 @@ export default function RejectedProject() {
           />
           <Breadcrumb
             items={[
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Projects',
                 link: '/project/current',

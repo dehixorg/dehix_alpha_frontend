@@ -304,7 +304,7 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Card className="p-4 bg-gray-100">
+            <Card className="p-4 ">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <Card className="p-4 bg-gray-100">
+            <Card className="p-4 ">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
