@@ -4,7 +4,13 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import { CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
@@ -12,21 +18,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { menuItemsTop, menuItemsBottom } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-
-interface ProjectProfileDetailCardProps {
-  domain: string;
-  freelancersRequired: string;
-  skills: string[];
-  experience: number;
-  minConnect: number;
-  rate: number;
-  description: string;
-  email?: string;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
-  className?: string;
-}
+import ProjectSkillCard from '@/components/business/projectSkillCard';
 
 interface Project {
   _id: string;
@@ -111,6 +103,35 @@ export default function Dashboard() {
                 domains={[]}
                 skills={project.skillsRequired}
               />
+            </div>
+            <div>
+              <Card className="">
+                <CardHeader>
+                  <CardTitle>Other Profile</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="w-auto grid grid-cols-2 gap-4">
+                      {project.skillsRequired.map((skill, index) => (
+                        <ProjectSkillCard
+                          key={index}
+                          skillName={skill}
+                          description={project.description}
+                          email={project.email}
+                          status={project.status}
+                          startDate={project.createdAt}
+                          endDate={project.end}
+                          domains={[]}
+                          skills={project.skillsRequired}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  {/* <Button>Deploy</Button> */}
+                </CardFooter>
+              </Card>
             </div>
           </div>
           <div className="space-y-6">
