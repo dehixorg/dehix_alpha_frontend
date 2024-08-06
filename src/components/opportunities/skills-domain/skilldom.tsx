@@ -41,7 +41,10 @@ const SkillDom: React.FC<SkillDomProps> = ({
       if (selectedValues.includes(label)) {
         setSelectedValues(selectedValues.filter((item) => item !== label));
       } else {
-        const newSelectedValues = [...selectedValues.filter((item) => item !== 'All'), label];
+        const newSelectedValues = [
+          ...selectedValues.filter((item) => item !== 'All'),
+          label,
+        ];
         setSelectedValues(newSelectedValues);
       }
     }
