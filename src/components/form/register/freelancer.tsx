@@ -218,7 +218,7 @@ export default function FreelancerRegisterForm() {
             name="resume"
             label="Resume (URL)"
             type="url"
-            placeholder="https://www.yourresume.com"
+            placeholder="Enter your Resume Google Drive Link"
           />
           <div className="space-y-2">
             <Label>Password</Label>
