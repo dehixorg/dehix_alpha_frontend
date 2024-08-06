@@ -158,12 +158,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   async function onSubmit(data: ProjectFormValues) {
     try {
       // Convert comma-separated techUsed string into an array
-      console.log('Form body:', {
-        ...data,
-        role: '',
-        techUsed: currSkills,
-        projectType: '',
-      });
+      // console.log('Form body:', {
+      //   ...data,
+      //   role: '',
+      //   techUsed: currSkills,
+      //   projectType: '',
+      // });
       const techUsedArray = data.techUsed
         .split(',')
         .map((tech) => tech.trim())

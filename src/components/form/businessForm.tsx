@@ -89,7 +89,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      console.log('Form data:', data);
+      // console.log('Form data:', data);
       const response = await axiosInstance.put(`/business/${user_id}`, {
         ...data,
       });
@@ -154,7 +154,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                     <FormControl>
                       <Input placeholder="Enter your last name" {...field} />
                     </FormControl>
-                    <FormDescription>Enter your last name</FormDescription>
+                    <FormDescription>Enter your last name </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
