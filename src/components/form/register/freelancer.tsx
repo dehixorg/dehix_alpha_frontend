@@ -53,7 +53,11 @@ const profileFormSchema = z.object({
   githubLink: z.string().url().optional(),
   resume: z.string().url().optional(),
   linkedin: z.string().url().optional(),
-  personalWebsite: z.string().url().optional(),
+  personalWebsite: z
+  .string()
+  .url()
+  .or(z.literal(''))
+  .optional(), // Allow empty string or valid URL
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -202,7 +206,7 @@ export default function FreelancerRegisterForm() {
           <TextInput
             control={form.control}
             name="personalWebsite"
-            label="Personal Website"
+            label="Personal Website(Optional)"
             type="url"
             placeholder="https://www.yourwebsite.com"
           />
