@@ -31,10 +31,22 @@ const SkillDom: React.FC<SkillDomProps> = ({
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const handleCheckboxChange = (label: string) => {
-    if (selectedValues.includes(label)) {
-      setSelectedValues(selectedValues.filter((item) => item !== label));
+    if (label === 'All') {
+      if (selectedValues.includes('All')) {
+        setSelectedValues([]);
+      } else {
+        setSelectedValues(['All']);
+      }
     } else {
-      setSelectedValues([...selectedValues, label]);
+      if (selectedValues.includes(label)) {
+        setSelectedValues(selectedValues.filter((item) => item !== label));
+      } else {
+        const newSelectedValues = [
+          ...selectedValues.filter((item) => item !== 'All'),
+          label,
+        ];
+        setSelectedValues(newSelectedValues);
+      }
     }
   };
 

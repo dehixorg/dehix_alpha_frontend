@@ -357,10 +357,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap mt-5">
+              <div className="flex flex-wrap gap-2 mt-5">
                 {currSkills.map((skill: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
                   >
                     {skill.name}
@@ -400,10 +400,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap mt-5">
+              <div className="flex flex-wrap gap-2 mt-5">
                 {currDomains.map((domain: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
                   >
                     {domain.name}

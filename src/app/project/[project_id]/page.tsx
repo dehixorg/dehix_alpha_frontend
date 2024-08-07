@@ -88,7 +88,7 @@ export default function Dashboard() {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Project', link: '/dashboard/freelancer' },
+              { label: 'Project', link: '/market/freelancer' },
               { label: project_id, link: '#' },
             ]}
           />
