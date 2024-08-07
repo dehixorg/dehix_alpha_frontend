@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
@@ -12,7 +12,6 @@ import {
   Form,
   FormControl,
   FormDescription,
-  FormField,
   FormItem,
   FormLabel,
   FormMessage,
@@ -53,11 +52,19 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const dummySkills = [
+  { label: 'JavaScript' },
+  { label: 'React' },
+  { label: 'Node.js' },
+  { label: 'CSS' },
+  { label: 'HTML' },
+];
+
 export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
-  const [skills, setSkills] = useState<any>([]);
-  const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [skills, setSkills] = useState(dummySkills);
+  const [currSkills, setCurrSkills] = useState([]);
+  const [tmpSkill, setTmpSkill] = useState('');
   const [domains, setDomains] = useState<any>([]);
   const [currDomains, setCurrDomains] = useState<any>([]);
   const [tmpDomain, setTmpDomain] = useState<any>('');
@@ -75,23 +82,44 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
+  // eslint-disable-next-line react/prop-types
+  const FormField = ({ control, name, render }) => (
+    <Controller control={control} name={name} render={render} />
+  );
+
+  // const handleAddSkill = () => {
+  //   if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
+  //     setCurrSkills([
+  //       ...currSkills,
+  //       {
+  //         name: tmpSkill,
+  //         level: '',
+  //         experience: '',
+  //         interviewStatus: 'pending',
+  //         interviewInfo: '',
+  //         interviewerRating: 0,
+  //       },
+  //     ]);
+  //     setTmpSkill('');
+  //   }
+  // };
+
+  // const handleDeleteSkill = (skillToDelete: string) => {
+  //   setCurrSkills(
+  //     currSkills.filter((skill: any) => skill.name !== skillToDelete),
+  //   );
+  // };
+
   const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: tmpSkill,
-          level: '',
-          experience: '',
-          interviewStatus: 'pending',
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpSkill('');
+    if (tmpSkill && !currSkills.some((skill) => skill.name === tmpSkill)) {
+      setCurrSkills([...currSkills, { name: tmpSkill }]);
     }
+    setTmpSkill('');
   };
 
+  const handleDeleteSkill = (skillName) => {
+    setCurrSkills(currSkills.filter((skill) => skill.name !== skillName));
+  };
   const handleAddDomain = () => {
     if (
       tmpDomain &&
@@ -115,12 +143,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     console.log('domain selected', currDomains);
   }, [currDomains]);
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(
-      currSkills.filter((skill: any) => skill.name !== skillToDelete),
-    );
-  };
 
   const handleDeleteDomain = (domainToDelete: string) => {
     setCurrDomains(
@@ -332,6 +354,50 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           /> */}
           <Separator className="col-span-2" />
           <div className="col-span-2 grid grid-cols-2 gap-4">
+            {/*<div>*/}
+            {/*  <FormLabel>Skills</FormLabel>*/}
+            {/*  <div className="flex items-center mt-2">*/}
+            {/*    <Select onValueChange={(value) => setTmpSkill(value)}>*/}
+            {/*      <SelectTrigger>*/}
+            {/*        <SelectValue placeholder="Select skill" />*/}
+            {/*      </SelectTrigger>*/}
+            {/*      <SelectContent>*/}
+            {/*        {skills.map((skill: any, index: number) => (*/}
+            {/*          <SelectItem key={index} value={skill.label}>*/}
+            {/*            {skill.label}*/}
+            {/*          </SelectItem>*/}
+            {/*        ))}*/}
+            {/*      </SelectContent>*/}
+            {/*    </Select>*/}
+            {/*    <Button*/}
+            {/*      variant="outline"*/}
+            {/*      type="button"*/}
+            {/*      size="icon"*/}
+            {/*      className="ml-2"*/}
+            {/*      onClick={handleAddSkill}*/}
+            {/*    >*/}
+            {/*      <Plus className="h-4 w-4" />*/}
+            {/*    </Button>*/}
+            {/*  </div>*/}
+            {/*  <div className="flex flex-wrap mt-5">*/}
+            {/*    {currSkills.map((skill: any, index: number) => (*/}
+            {/*      <Badge*/}
+            {/*        className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"*/}
+            {/*        key={index}*/}
+            {/*      >*/}
+            {/*        {skill.name}*/}
+            {/*        <button*/}
+            {/*          type="button"*/}
+            {/*          onClick={() => handleDeleteSkill(skill.name)}*/}
+            {/*          className="ml-2 text-red-500 hover:text-red-700"*/}
+            {/*        >*/}
+            {/*          <X className="h-4 w-4" />*/}
+            {/*        </button>*/}
+            {/*      </Badge>*/}
+            {/*    ))}*/}
+            {/*  </div>*/}
+            {/*</div>*/}
+
             <div>
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
@@ -340,7 +406,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     <SelectValue placeholder="Select skill" />
                   </SelectTrigger>
                   <SelectContent>
-                    {skills.map((skill: any, index: number) => (
+                    {skills.map((skill, index) => (
                       <SelectItem key={index} value={skill.label}>
                         {skill.label}
                       </SelectItem>
@@ -358,10 +424,16 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </Button>
               </div>
               <div className="flex flex-wrap mt-5">
-                {currSkills.map((skill: any, index: number) => (
+                {currSkills.map((skill, index) => (
                   <Badge
                     className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
                     key={index}
+                    style={{
+                      padding: '4px 8px',
+                      margin: '4px',
+                      borderRadius: '4px',
+                      width: 'fit-content',
+                    }}
                   >
                     {skill.name}
                     <button
@@ -375,6 +447,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 ))}
               </div>
             </div>
+
             <div>
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
