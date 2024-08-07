@@ -39,9 +39,9 @@ export default function Login() {
       );
       router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
-    
-          setError(error.message);
-      
+      if (error.message == 'Firebase: Error (auth/invalid-credential).')
+        setError('Invalid Email or Password');
+      else setError(error.message);
       console.error(error.message);
     } finally {
       setIsLoading(false);
