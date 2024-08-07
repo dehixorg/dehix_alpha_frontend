@@ -39,7 +39,7 @@ export default function Login() {
       );
       router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
-      if(error.message="Firebase: Error (auth/invalid-credential).") // If invalid username occurs this will help in setting the error message as Invalid
+      if(error.message=="Firebase: Error (auth/invalid-credential).") // If invalid username occurs this will help in setting the error message as Invalid
       {
         setError("Invalid Email or Password")
       }
