@@ -138,7 +138,7 @@ export default function FreelancerRegisterForm() {
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        description: `${'Invalid Credentials' || 'Something went wrong!'}`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
