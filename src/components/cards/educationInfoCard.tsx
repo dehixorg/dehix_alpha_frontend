@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface EducationProps {
   degree?: string;
@@ -36,21 +37,21 @@ const EducationInfoCard: React.FC<EducationProps> = ({
         <CardTitle className="flex">
           {universityName || 'University Name'}
         </CardTitle>
-        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-white">
+        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium ">
           {degree || 'Degree'} in {fieldOfStudy || 'Field of Study'}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-gray-300 pt-4">Grade: {grade || 'N/A'}</p>
+        <p className=" pt-4">Grade: {grade || 'N/A'}</p>
       </CardContent>
       <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
+        <Badge className="text-sm font-semibold   px-3 py-1 rounded">
           {startDate ? formatDate(startDate) : 'Start Date N/A'}
-        </p>
+        </Badge>
         <p>-</p>
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
+        <Badge className="text-sm font-semibold   px-3 py-1 uppercase rounded">
           {endDate === 'current' ? 'Current' : formatDate(endDate)}
-        </p>
+        </Badge>
       </CardFooter>
     </Card>
   );
