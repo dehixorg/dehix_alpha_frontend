@@ -112,7 +112,9 @@ const SkillDom: React.FC<SkillDomProps> = ({
           </Button>
         )}
         {filteredSkills.length === 0 && (
-          <p className="text-sm text-gray-500 mt-2">No skills found.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            {label === 'Skills' ? 'No skills found.' : 'No domain found.'}
+          </p>
         )}
       </CardFooter>
     </Card>
