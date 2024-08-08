@@ -196,34 +196,6 @@ const Market: React.FC = () => {
           </Button>
           <div className="mb-4">
             <SkillDom
-              label="Locations"
-              heading="Filter by location"
-              checkboxLabels={[
-                'All',
-                'Banglore',
-                'Pune',
-                'Noida',
-                'Delhi',
-                'Gurugram',
-              ]}
-              selectedValues={filters.location}
-              setSelectedValues={(values) =>
-                handleFilterChange('location', values)
-              }
-            />
-          </div>
-          <div className="mb-4">
-            <CompanyCard
-              heading="Filter by job type"
-              checkboxLabels={['All', 'Full-time', 'Internship']}
-              selectedValues={filters.jobType}
-              setSelectedValues={(values) =>
-                handleFilterChange('jobType', values)
-              }
-            />
-          </div>
-          <div className="mb-4">
-            <SkillDom
               label="Domains"
               heading="Filter by domain"
               checkboxLabels={domains}
@@ -266,36 +238,6 @@ const Market: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
           <div className="bg-white rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
             <div className="overflow-y-auto p-4 flex-grow">
-              <div className="border-b border-gray-300 pb-4">
-                <MobileSkillDom
-                  label="Locations"
-                  heading="Filter by location"
-                  checkboxLabels={[
-                    'All',
-                    'Banglore',
-                    'Pune',
-                    'Noida',
-                    'Delhi',
-                    'Gurugram',
-                  ]}
-                  selectedValues={filters.location}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('location', values)
-                  }
-                />
-              </div>
-
-              <div className="border-b border-gray-300 pb-4">
-                <MobileCompany
-                  heading="Filter by job type"
-                  checkboxLabels={['All', 'Full-time', 'Internship']}
-                  selectedValues={filters.jobType}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('jobType', values)
-                  }
-                />
-              </div>
-
               <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom
                   label="Domains"
