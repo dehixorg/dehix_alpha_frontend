@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Edit, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -12,7 +12,6 @@ import {
   Form,
   FormControl,
   FormDescription,
-  FormField,
   FormItem,
   FormLabel,
   FormMessage,
@@ -55,9 +54,17 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const dummySkills = [
+  { label: 'JavaScript' },
+  { label: 'IOT (Inter Of Things )' },
+  { label: 'Node.js' },
+  { label: 'Machnine Learning' },
+  { label: 'HTML' },
+];
+
 export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
-  const [skills, setSkills] = useState<any>([]);
+  const [skills, setSkills] = useState<any>(dummySkills);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [domains, setDomains] = useState<any>([]);
@@ -77,6 +84,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
+  // eslint-disable-next-line react/prop-types
+  const FormField = ({ control, name, render }) => (
+    <Controller control={control} name={name} render={render} />
+  );
+
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
@@ -94,6 +106,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  const handleDeleteSkill = (skillName) => {
+    setCurrSkills(currSkills.filter((skill) => skill.name !== skillName));
+  };
   const handleAddDomain = () => {
     if (
       tmpDomain &&
@@ -117,12 +132,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     console.log('domain selected', currDomains);
   }, [currDomains]);
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(
-      currSkills.filter((skill: any) => skill.name !== skillToDelete),
-    );
-  };
 
   const handleDeleteDomain = (domainToDelete: string) => {
     setCurrDomains(
@@ -326,27 +335,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           />
 
-          {/*<FormField*/}
-          {/*  control={form.control}*/}
-          {/*  name="phone"*/}
-          {/*  render={() => (*/}
-          {/*    <FormItem className="relative">*/}
-          {/*      <FormLabel>Edit Resume</FormLabel>*/}
-          {/*      <FormControl>*/}
-          {/*        <div className="relative flex items-center">*/}
-          {/*          <Input placeholder="edit resume" className="pr-10" />*/}
-          {/*          <Edit*/}
-          {/*            className="absolute right-2 h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"*/}
-          {/*            onClick={() => {}}*/}
-          {/*          />*/}
-          {/*        </div>*/}
-          {/*      </FormControl>*/}
-          {/*      <FormMessage />*/}
-          {/*      <FormDescription>Non editable field</FormDescription>*/}
-          {/*    </FormItem>*/}
-          {/*  )}*/}
-          {/*/>*/}
-
           {/* <FormField
             control={form.control}
             name="dob"
@@ -429,6 +417,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Badge
                     className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
+                    style={{
+                      padding: '4px 8px',
+                      margin: '4px',
+                      borderRadius: '4px',
+                      width: 'fit-content',
+                    }}
                   >
                     {skill.name}
                     <button
@@ -467,10 +461,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-5">
+              <div className="flex flex-wrap mt-5">
                 {currDomains.map((domain: any, index: number) => (
                   <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
                     key={index}
                   >
                     {domain.name}
