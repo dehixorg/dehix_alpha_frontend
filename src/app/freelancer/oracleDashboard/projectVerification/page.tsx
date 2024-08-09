@@ -14,22 +14,22 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+// import { axiosInstance } from '@/lib/axiosinstance';
+//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  // Initialize state with education data from dummydata.json
-  const [dummyEducationData, setDummyEducationData] = useState(
-    dummyData.dashboardFreelancerOracleEducation,
+  const [dummyProjectData, setDummyProjectData] = useState(
+    dummyData.dashboardFreelancerOracleProject,
   );
 
   const [filter, setFilter] = useState<FilterOption>('all');
@@ -40,7 +40,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyEducationData.filter((data) => {
+  const filteredData = dummyProjectData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -50,42 +50,43 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const updateEducationStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyEducationData];
+  const updateProjectStatus = (index: number, newStatus: string) => {
+    const updatedData = [...dummyProjectData];
     updatedData[index].status = newStatus;
-    setDummyEducationData(updatedData); // Update state with new status
+    setDummyProjectData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyEducationData];
+    const updatedData = [...dummyProjectData];
     updatedData[index].comments = newComment;
-    setDummyEducationData(updatedData); // Update state with new comment
+    setDummyProjectData(updatedData);
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Education Verification"
+        menuItemsTop={menuItemsTop} // Assuming these are defined elsewhere
+        menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
+        active="Project Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          {/* CollapsibleSidebarMenu and Breadcrumb components */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Education Verification"
+            active="Project Verification"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Oracle Dashboard',
-                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+                link: '/freelancer/oracleDashboard/businessVerification',
               },
               {
-                label: 'Education Verification',
-                link: '/dashboard/freelancer/oracleDashboard/educationVerification',
+                label: 'Project Verification',
+                link: '#',
               },
             ]}
           />
@@ -107,10 +108,11 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Education Status</DialogTitle>
+              <DialogTitle>Filter Project Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"
@@ -143,25 +145,21 @@ export default function ProfessionalInfo() {
           </DialogContent>
         </Dialog>
 
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {/* {filteredData.map((data, index) => (
-            <EducationVerificationCard
+            <ProjectVerificationCard
               key={index}
-              type={data.type}
-              instituteName={data.instituteName}
-              location={data.location}
+              projectName={data.projectName}
+              description={data.description}
+              githubLink={data.githubLink}
               startFrom={data.startFrom}
               endTo={data.endTo}
-              grade={data.grade}
-              referencePersonName={data.referencePersonName}
-              degreeNumber={data.degreeNumber}
+              reference={data.reference}
+              techUsed={data.techUsed}
               comments={data.comments}
               status={data.status} // Pass the status to the card component
               onStatusUpdate={(newStatus) =>
-                updateEducationStatus(index, newStatus)
+                updateProjectStatus(index, newStatus)
               }
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
@@ -171,7 +169,7 @@ export default function ProfessionalInfo() {
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
-              No Education verification for you now.
+              No Project verification for you now.
             </p>
           </div>
         </main>

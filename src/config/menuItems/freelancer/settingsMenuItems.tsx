@@ -16,22 +16,22 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/settings/personal-info',
+    href: '/freelancer/settings/personal-info',
     icon: <User className="h-5 w-5" />,
     label: 'Personal Info',
   },
   {
-    href: '/settings/professional-info',
+    href: '/freelancer/settings/professional-info',
     icon: <Briefcase className="h-5 w-5" />,
     label: 'Professional Info',
   },
   {
-    href: '/settings/projects',
+    href: '/freelancer/settings/projects',
     icon: <Package className="h-5 w-5" />,
     label: 'Projects',
   },
   {
-    href: '/settings/education-info',
+    href: '/freelancer/settings/education-info',
     icon: <BookOpen className="h-5 w-5" />,
     label: 'Education',
   },

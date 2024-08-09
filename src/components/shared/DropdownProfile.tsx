@@ -64,11 +64,11 @@ export default function DropdownProfile() {
         <DropdownMenuSeparator />
         <div>
           {userType === 'freelancer' ? (
-            <Link href="/settings/personal-info">
+            <Link href="/freelancer/settings/personal-info">
               <DropdownMenuItem>Settings</DropdownMenuItem>
             </Link>
           ) : userType === 'business' ? (
-            <Link href="/settings/business-info">
+            <Link href="/business/settings/business-info">
               <DropdownMenuItem>Settings</DropdownMenuItem>
             </Link>
           ) : (

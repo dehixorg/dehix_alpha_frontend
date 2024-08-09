@@ -14,22 +14,22 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+// import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
 
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyJobData, setDummyJobData] = useState(
-    dummyData.dashboardFreelancerOracleExperience,
+  // Initialize state with education data from dummydata.json
+  const [dummyEducationData, setDummyEducationData] = useState(
+    dummyData.dashboardFreelancerOracleEducation,
   );
 
   const [filter, setFilter] = useState<FilterOption>('all');
@@ -40,7 +40,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyJobData.filter((data) => {
+  const filteredData = dummyEducationData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -50,16 +50,16 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const updateJobStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyJobData];
+  const updateEducationStatus = (index: number, newStatus: string) => {
+    const updatedData = [...dummyEducationData];
     updatedData[index].status = newStatus;
-    setDummyJobData(updatedData); // Assuming you set this in state
+    setDummyEducationData(updatedData); // Update state with new status
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyJobData];
+    const updatedData = [...dummyEducationData];
     updatedData[index].comments = newComment;
-    setDummyJobData(updatedData);
+    setDummyEducationData(updatedData); // Update state with new comment
   };
 
   return (
@@ -67,25 +67,25 @@ export default function ProfessionalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Experience Verification"
+        active="Education Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Experience Verification"
+            active="Education Verification"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Oracle Dashboard',
-                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+                link: '/freelancer/oracleDashboard/businessVerification',
               },
               {
-                label: 'Experience Verification',
-                link: '/dashboard/freelancer/oracleDashboard/workExpVerification',
+                label: 'Education Verification',
+                link: '#',
               },
             ]}
           />
@@ -107,11 +107,10 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
-
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Experience Status</DialogTitle>
+              <DialogTitle>Filter Education Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"
@@ -149,18 +148,21 @@ export default function ProfessionalInfo() {
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {/* {filteredData.map((data, index) => (
-            <WorkExpVerificationCard
+            <EducationVerificationCard
               key={index}
-              jobTitle={data.jobTitle}
-              workDescription={data.workDescription}
+              type={data.type}
+              instituteName={data.instituteName}
+              location={data.location}
               startFrom={data.startFrom}
               endTo={data.endTo}
+              grade={data.grade}
               referencePersonName={data.referencePersonName}
-              referencePersonEmail={data.referencePersonEmail}
-              githubRepoLink={data.githubRepoLink}
+              degreeNumber={data.degreeNumber}
               comments={data.comments}
               status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) => updateJobStatus(index, newStatus)}
+              onStatusUpdate={(newStatus) =>
+                updateEducationStatus(index, newStatus)
+              }
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
               }
@@ -169,7 +171,7 @@ export default function ProfessionalInfo() {
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
-              No Work Experience verification for you now.
+              No Education verification for you now.
             </p>
           </div>
         </main>

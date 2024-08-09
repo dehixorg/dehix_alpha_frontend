@@ -44,7 +44,7 @@ interface Project {
   updatedAt: Date;
 }
 
-export default function CompletedProject() {
+export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -52,8 +52,9 @@ export default function CompletedProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Completed`,
+          `/freelancer/${user.uid}/project?status=Pending`,
         ); // Fetch data from API
+        console.log(response.data.data);
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
@@ -68,24 +69,24 @@ export default function CompletedProject() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Completed Projects"
+        active="Under Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Completed Projects"
+            active="Under Verification"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Projects',
-                link: '/project/current',
+                link: '/freelancer/project/current',
               },
               {
-                label: 'Completed Projects',
+                label: 'Under Verification',
                 link: '#',
               },
             ]}

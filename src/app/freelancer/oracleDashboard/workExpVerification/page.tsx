@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
 import { Search, Filter, PackageOpen } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,21 +14,23 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
+// import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
-import dummyData from '@/dummydata.json'; // Import your JSON data here
+// import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+import dummyData from '@/dummydata.json';
 
+// Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyBusinessData, setDummyBusinessData] = useState(
-    dummyData.dashboardFreelancerOracleBusiness,
-  ); // Initialize with data from JSON
+  const [dummyJobData, setDummyJobData] = useState(
+    dummyData.dashboardFreelancerOracleExperience,
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,7 +40,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyBusinessData.filter((data) => {
+  const filteredData = dummyJobData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -48,16 +50,16 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const updateBusinessStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyBusinessData];
+  const updateJobStatus = (index: number, newStatus: string) => {
+    const updatedData = [...dummyJobData];
     updatedData[index].status = newStatus;
-    setDummyBusinessData(updatedData); // Assuming you set this in state
+    setDummyJobData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyBusinessData];
+    const updatedData = [...dummyJobData];
     updatedData[index].comments = newComment;
-    setDummyBusinessData(updatedData);
+    setDummyJobData(updatedData);
   };
 
   return (
@@ -65,25 +67,25 @@ export default function ProfessionalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Business Verification"
+        active="Experience Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Business Verification"
+            active="Experience Verification"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Oracle Dashboard',
-                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+                link: '/freelancer/oracleDashboard/businessVerification',
               },
               {
-                label: 'Business Verification',
-                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+                label: 'Experience Verification',
+                link: '#',
               },
             ]}
           />
@@ -105,10 +107,11 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Education Status</DialogTitle>
+              <DialogTitle>Filter Experience Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"
@@ -140,28 +143,24 @@ export default function ProfessionalInfo() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {/* {filteredData.map((data, index) => (
-            <BusinessVerificationCard
+            <WorkExpVerificationCard
               key={index}
-              firstName={data.firstName}
-              lastName={data.lastName}
-              email={data.email}
-              phone={data.phone}
-              companyName={data.companyName}
-              companySize={data.companySize}
-              referenceEmail={data.referenceEmail}
-              websiteLink={data.websiteLink}
-              linkedInLink={data.linkedInLink}
-              githubLink={data.githubLink}
+              jobTitle={data.jobTitle}
+              workDescription={data.workDescription}
+              startFrom={data.startFrom}
+              endTo={data.endTo}
+              referencePersonName={data.referencePersonName}
+              referencePersonEmail={data.referencePersonEmail}
+              githubRepoLink={data.githubRepoLink}
               comments={data.comments}
               status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) =>
-                updateBusinessStatus(index, newStatus)
-              }
+              onStatusUpdate={(newStatus) => updateJobStatus(index, newStatus)}
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
               }
@@ -170,7 +169,7 @@ export default function ProfessionalInfo() {
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
-              No Business verification for you now.
+              No Work Experience verification for you now.
             </p>
           </div>
         </main>

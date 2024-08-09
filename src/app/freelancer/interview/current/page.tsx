@@ -209,7 +209,7 @@ export default function CurrentPage() {
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
                 {
                   label: 'Interview',
-                  link: '/dashboard/freelancer/interview/profile',
+                  link: '/freelancer/interview/profile',
                 },
                 { label: 'Current Interviews', link: '#' },
               ]}

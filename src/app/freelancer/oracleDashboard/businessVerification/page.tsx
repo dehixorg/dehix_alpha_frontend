@@ -1,6 +1,6 @@
 'use client';
+import React, { useState } from 'react';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,23 +14,21 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
-//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import dummyData from '@/dummydata.json';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+// import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
+import dummyData from '@/dummydata.json'; // Import your JSON data here
 
-// Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyProjectData, setDummyProjectData] = useState(
-    dummyData.dashboardFreelancerOracleProject,
-  );
+  const [dummyBusinessData, setDummyBusinessData] = useState(
+    dummyData.dashboardFreelancerOracleBusiness,
+  ); // Initialize with data from JSON
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,7 +38,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyProjectData.filter((data) => {
+  const filteredData = dummyBusinessData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -50,43 +48,42 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const updateProjectStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyProjectData];
+  const updateBusinessStatus = (index: number, newStatus: string) => {
+    const updatedData = [...dummyBusinessData];
     updatedData[index].status = newStatus;
-    setDummyProjectData(updatedData); // Assuming you set this in state
+    setDummyBusinessData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyProjectData];
+    const updatedData = [...dummyBusinessData];
     updatedData[index].comments = newComment;
-    setDummyProjectData(updatedData);
+    setDummyBusinessData(updatedData);
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
-        menuItemsTop={menuItemsTop} // Assuming these are defined elsewhere
-        menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
-        active="Project Verification"
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Business Verification"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* CollapsibleSidebarMenu and Breadcrumb components */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Project Verification"
+            active="Business Verification"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Oracle Dashboard',
-                link: '/dashboard/freelancer/oracleDashboard/businessVerification',
+                link: '/freelancer/oracleDashboard/businessVerification',
               },
               {
-                label: 'Project Verification',
-                link: '/dashboard/freelancer/oracleDashboard/projectVerification',
+                label: 'Business Verification',
+                link: '#',
               },
             ]}
           />
@@ -108,11 +105,10 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
-
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Project Status</DialogTitle>
+              <DialogTitle>Filter Education Status</DialogTitle>
             </DialogHeader>
             <RadioGroup
               defaultValue="all"
@@ -144,22 +140,27 @@ export default function ProfessionalInfo() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
           {/* {filteredData.map((data, index) => (
-            <ProjectVerificationCard
+            <BusinessVerificationCard
               key={index}
-              projectName={data.projectName}
-              description={data.description}
+              firstName={data.firstName}
+              lastName={data.lastName}
+              email={data.email}
+              phone={data.phone}
+              companyName={data.companyName}
+              companySize={data.companySize}
+              referenceEmail={data.referenceEmail}
+              websiteLink={data.websiteLink}
+              linkedInLink={data.linkedInLink}
               githubLink={data.githubLink}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
-              reference={data.reference}
-              techUsed={data.techUsed}
               comments={data.comments}
               status={data.status} // Pass the status to the card component
               onStatusUpdate={(newStatus) =>
-                updateProjectStatus(index, newStatus)
+                updateBusinessStatus(index, newStatus)
               }
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
@@ -169,7 +170,7 @@ export default function ProfessionalInfo() {
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
-              No Project verification for you now.
+              No Business verification for you now.
             </p>
           </div>
         </main>
