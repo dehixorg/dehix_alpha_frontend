@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
-import {  Search } from 'lucide-react';
+import { Search } from 'lucide-react';
+
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -10,11 +11,9 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
-
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
 
 export default function ProfilePage() {
-  
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -48,7 +47,7 @@ export default function ProfilePage() {
             <DropdownProfile />
           </div>
         </header>
-        <InterviewProfile/>
+        <InterviewProfile />
       </div>
     </div>
   );

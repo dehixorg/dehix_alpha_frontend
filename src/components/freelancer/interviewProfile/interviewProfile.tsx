@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Plus, PackageOpen } from 'lucide-react';
+
 import {
   Dialog,
   DialogTrigger,
@@ -31,7 +33,6 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Plus, PackageOpen } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface Skill {
@@ -241,7 +242,9 @@ const InterviewProfile: React.FC = () => {
                     )}
                   />
                   {skillErrors.experience && (
-                    <p className="text-red-500">{skillErrors.experience.message}</p>
+                    <p className="text-red-500">
+                      {skillErrors.experience.message}
+                    </p>
                   )}
                 </div>
                 <DialogFooter>
@@ -373,7 +376,9 @@ const InterviewProfile: React.FC = () => {
                     )}
                   />
                   {domainErrors.experience && (
-                    <p className="text-red-500">{domainErrors.experience.message}</p>
+                    <p className="text-red-500">
+                      {domainErrors.experience.message}
+                    </p>
                   )}
                 </div>
                 <DialogFooter>
