@@ -44,7 +44,7 @@ interface Project {
   updatedAt: Date;
 }
 
-export default function RejectedProject() {
+export default function CurrentProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
 
@@ -52,7 +52,7 @@ export default function RejectedProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Rejected`,
+          `/freelancer/${user.uid}/project?status=Active`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
@@ -68,25 +68,25 @@ export default function RejectedProject() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Rejected Verification"
+        active="Current Projects"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Rejected Verification"
+            active="Current Projects"
           />
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               {
                 label: 'Projects',
-                link: '/project/current',
+                link: '/freelancer/project/current',
               },
               {
-                label: 'Rejected Verification',
-                link: '/#',
+                label: 'Current Projects',
+                link: '#',
               },
             ]}
           />

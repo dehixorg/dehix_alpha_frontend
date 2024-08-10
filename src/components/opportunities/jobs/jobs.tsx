@@ -103,7 +103,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
         <div className="flex mt-4 space-x-4">
           <Button>
-            <Link href={`/project/${id}`}>View</Link>
+            <Link href={`/freelancer/project/${id}`}>View</Link>
           </Button>
           <Button className="cursor-pointer text-white bg-muted hover:bg-muted">
             Not interested

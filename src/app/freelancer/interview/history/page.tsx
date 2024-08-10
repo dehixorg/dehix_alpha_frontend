@@ -53,7 +53,7 @@ export default function HistoryPage() {
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
                 {
                   label: 'Interview',
-                  link: '/dashboard/freelancer/interview/profile',
+                  link: '/freelancer/interview/profile',
                 },
                 { label: 'History Interviews', link: '#' },
               ]}
