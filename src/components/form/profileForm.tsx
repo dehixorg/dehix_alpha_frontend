@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+//import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectTrigger,
@@ -49,18 +49,29 @@ const profileFormSchema = z.object({
     message: 'Phone number must be at least 10 digits.',
   }),
   role: z.string(),
+  personalWebsite: z.string().url().optional(),
+  resume: z.string().url().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+const dummySkills = [
+  { label: 'JavaScript' },
+  { label: 'IOT (Internet of Things)' },
+  { label: 'Node.js' },
+  { label: 'Machine Learning' },
+  { label: 'HTML' },
+];
 
 export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [tmpSkill, setTmpSkill] = useState<string>('');
   const [domains, setDomains] = useState<any>([]);
   const [currDomains, setCurrDomains] = useState<any>([]);
-  const [tmpDomain, setTmpDomain] = useState<any>('');
+  const [tmpDomain, setTmpDomain] = useState<string>('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -76,7 +87,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   });
 
   const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
+    if (tmpSkill && !selectedSkills.includes(tmpSkill)) {
+      setSelectedSkills([...selectedSkills, tmpSkill]);
       setCurrSkills([
         ...currSkills,
         {
@@ -88,7 +100,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
-      setTmpSkill('');
+      setTmpSkill(''); // Clear the temporary skill input
     }
   };
 
@@ -119,6 +131,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
+    );
+    setSelectedSkills(
+      selectedSkills.filter((skill) => skill !== skillToDelete),
     );
   };
 
@@ -160,6 +175,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       email: user?.email || '',
       phone: user?.phone || '',
       role: user?.role || '',
+      personalWebsite: user?.personalWebsite || '',
+      resume: user?.resume || '',
     });
   }, [user, form]);
 
@@ -185,6 +202,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         email: data.email,
         phone: data.phone,
         role: data.role,
+        personalWebsite: data.personalWebsite,
+        resume: data.resume,
         skills: currSkills,
         domain: currDomains,
       });
@@ -280,68 +299,69 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          {/* <FormField
+          <FormField
             control={form.control}
-            name="dob"
+            name="personalWebsite"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Birth{'\t'} </FormLabel>
+                <FormLabel>Personal Website URL</FormLabel>
                 <FormControl>
-                  <DatePicker {...field} />
+                  <Input
+                    placeholder="Enter your LinkedIn URL"
+                    type="url"
+                    {...field}
+                  />
                 </FormControl>
                 <FormDescription>
-                  Your date of birth is used to calculate your age.
+                  Enter your Personal Website URL
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
-          {/* <FormField
+          />
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter the URL to your resume"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter the URL to your resume</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
             control={form.control}
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Role or Position</FormLabel>
+                <FormLabel>Role</FormLabel>
                 <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Developer">Developer</SelectItem>
-                      <SelectItem value="Designer">Designer</SelectItem>
-                      <SelectItem value="Product Manager">
-                        Product Manager
-                      </SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input placeholder="Enter your role" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Enter your current role or position
-                </FormDescription>
+                <FormDescription>Enter your role</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
-          <Separator className="col-span-2" />
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            <div>
-              <FormLabel>Skills</FormLabel>
-              <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpSkill(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select skill" />
+          />
+          <FormItem>
+            <FormLabel>Skills</FormLabel>
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2 items-center">
+                <Select value={tmpSkill} onValueChange={setTmpSkill}>
+                  <SelectTrigger className="bg-light-gray border border-gray-400 rounded-md">
+                    <SelectValue placeholder="Select a skill" />
                   </SelectTrigger>
                   <SelectContent>
-                    {skills.map((skill: any, index: number) => (
-                      <SelectItem key={index} value={skill.label}>
+                    {dummySkills.map((skill) => (
+                      <SelectItem key={skill.label} value={skill.label}>
                         {skill.label}
                       </SelectItem>
                     ))}
@@ -357,35 +377,41 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {currSkills.map((skill: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {selectedSkills.map((skill) => (
+                  <div
+                    key={skill}
+                    className="bg-dark-gray text-white px-2 py-1 rounded-lg text-sm flex items-center border border-gray-300"
+                    style={{ minWidth: '90px', minHeight: '25px' }}
                   >
-                    {skill.name}
-                    <button
+                    {skill}
+                    <Button
+                      variant="outline"
                       type="button"
-                      onClick={() => handleDeleteSkill(skill.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
+                      size="icon"
+                      className="ml-2 p-1 bg-dark-gray text-white border-none hover:bg-gray-700"
+                      onClick={() => handleDeleteSkill(skill)}
                     >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
-            <div>
-              <FormLabel>Domains</FormLabel>
-              <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpDomain(value)}>
+          </FormItem>
+
+          <FormItem>
+            <FormLabel>Domains</FormLabel>
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2 items-center">
+                <Select value={tmpDomain} onValueChange={setTmpDomain}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select domain" />
+                    <SelectValue placeholder="Select a domain" />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain: any, index: number) => (
-                      <SelectItem key={index} value={domain.label}>
-                        {domain.label}
+                    {domains.map((domain: any) => (
+                      <SelectItem key={domain.name} value={domain.name}>
+                        {domain.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -400,30 +426,33 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {currDomains.map((domain: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {currDomains.map((domain: any) => (
+                  <div
+                    key={domain.name}
+                    className="bg-gray-200 text-gray-800 px-3 py-1 rounded-lg"
+                    style={{ minWidth: '100px', minHeight: '30px' }}
                   >
                     {domain.name}
-                    <button
+                    <Button
+                      variant="outline"
                       type="button"
+                      size="icon"
+                      className="ml-2"
                       onClick={() => handleDeleteDomain(domain.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
                     >
                       <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
+                    </Button>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
-
-          <Button type="submit" className="col-span-2">
-            Update profile
-          </Button>
+          </FormItem>
         </form>
+        <Separator className="my-5" />
+        <div className="flex justify-center mt-6">
+          <Button type="submit">Update Profile</Button>
+        </div>
       </Form>
     </Card>
   );
