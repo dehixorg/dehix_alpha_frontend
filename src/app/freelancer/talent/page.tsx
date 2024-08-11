@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-import SkillDomainForm from '@/components/dash-comp/talentForm/skilldomainForm';
+import SkillDomainForm from '@/components/freelancer/talent/skilldomainForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
