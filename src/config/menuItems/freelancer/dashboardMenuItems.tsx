@@ -57,7 +57,7 @@ export const menuItemsTop: MenuItem[] = [
 
 export const menuItemsBottom: MenuItem[] = [
   {
-    href: '/settings/personal-info',
+    href: '/freelancer/settings/personal-info',
     icon: <Settings className="h-5 w-5" />,
     label: 'Settings',
   },
