@@ -8,7 +8,7 @@ interface FreelancerListProps {
 
 const FreelancerList: React.FC<FreelancerListProps> = ({ freelancers }) => {
   return (
-    <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
+    <div className="mt-4 p-4  lg:ml-10 space-y-4 w-full">
       {freelancers.map((freelancer: any, index: number) => (
         <FreelancerCard
           key={index}
