@@ -42,6 +42,4 @@ export const menuItemsTop: MenuItem[] = [
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [
-  
-];
+export const menuItemsBottom: MenuItem[] = [];
