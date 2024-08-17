@@ -16,6 +16,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
+    href: '/dashboard/freelancer',
+    icon: <HomeIcon className="h-5 w-5" />,
+    label: 'Home',
+  },
+  {
     href: '/freelancer/oracleDashboard/businessVerification',
     icon: <Briefcase className="h-5 w-5" />,
     label: 'Business Verification',
@@ -38,9 +43,5 @@ export const menuItemsTop: MenuItem[] = [
 ];
 
 export const menuItemsBottom: MenuItem[] = [
-  {
-    href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
-  },
+  
 ];

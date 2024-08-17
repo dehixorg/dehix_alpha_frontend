@@ -62,6 +62,9 @@ export default function DropdownProfile() {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <Link href="/dashboard/freelancer">
+          <DropdownMenuItem>Home</DropdownMenuItem>
+        </Link>
         <div>
           {userType === 'freelancer' ? (
             <Link href="/freelancer/settings/personal-info">
