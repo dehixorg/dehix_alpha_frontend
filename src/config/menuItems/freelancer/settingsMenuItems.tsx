@@ -16,6 +16,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
+    href: '/dashboard/freelancer',
+    icon: <HomeIcon className="h-5 w-5" />,
+    label: 'Home',
+  },
+  {
     href: '/freelancer/settings/personal-info',
     icon: <User className="h-5 w-5" />,
     label: 'Personal Info',
@@ -37,10 +42,4 @@ export const menuItemsTop: MenuItem[] = [
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [
-  {
-    href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
-  },
-];
+export const menuItemsBottom: MenuItem[] = [];

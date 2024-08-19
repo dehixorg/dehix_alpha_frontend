@@ -9,16 +9,15 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
+    href: '/dashboard/business',
+    icon: <HomeIcon className="h-5 w-5" />,
+    label: 'Home',
+  },
+  {
     href: '/settings/business-info',
     icon: <User className="h-5 w-5" />,
     label: 'Business Info',
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [
-  {
-    href: '/dashboard/business',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
-  },
-];
+export const menuItemsBottom: MenuItem[] = [];
