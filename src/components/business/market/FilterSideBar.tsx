@@ -26,35 +26,39 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   handleApply,
 }) => {
   return (
-    <div className="hidden lg:block lg:space-y-4">
-      <Button onClick={handleApply} className="w-[100%]">
-        Apply
-      </Button>
-      <div className="mb-4">
-        <CompanyCard
-          heading="Filter by experience"
-          checkboxLabels={['0-2', '3-6', '7+']}
-          selectedValues={filters.jobType}
-          setSelectedValues={(values) => handleFilterChange('jobType', values)}
-        />
-      </div>
-      <div className="mb-4">
-        <SkillDom
-          label="Domains"
-          heading="Filter by domains"
-          checkboxLabels={domains}
-          selectedValues={filters.domain}
-          setSelectedValues={(values) => handleFilterChange('domain', values)}
-        />
-      </div>
-      <div className="mb-4">
-        <SkillDom
-          label="Skills"
-          heading="Filter by skills"
-          checkboxLabels={skills}
-          selectedValues={filters.skills}
-          setSelectedValues={(values) => handleFilterChange('skills', values)}
-        />
+    <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
+      <div className="h-full p-4 flex flex-col space-y-4">
+        <Button onClick={handleApply} className="w-[90%]">
+          Apply
+        </Button>
+        <div className="mb-4">
+          <CompanyCard
+            heading="Filter by experience"
+            checkboxLabels={['0-2', '3-6', '7+']}
+            selectedValues={filters.jobType}
+            setSelectedValues={(values) =>
+              handleFilterChange('jobType', values)
+            }
+          />
+        </div>
+        <div className="mb-4">
+          <SkillDom
+            label="Domains"
+            heading="Filter by domains"
+            checkboxLabels={domains}
+            selectedValues={filters.domain}
+            setSelectedValues={(values) => handleFilterChange('domain', values)}
+          />
+        </div>
+        <div className="mb-4">
+          <SkillDom
+            label="Skills"
+            heading="Filter by skills"
+            checkboxLabels={skills}
+            selectedValues={filters.skills}
+            setSelectedValues={(values) => handleFilterChange('skills', values)}
+          />
+        </div>
       </div>
     </div>
   );

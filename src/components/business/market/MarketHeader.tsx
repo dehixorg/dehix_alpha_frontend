@@ -11,7 +11,7 @@ const MarketHeader: React.FC = () => {
       <Breadcrumb
         items={[
           { label: 'Dashboard', link: '/dashboard/business' },
-          { label: 'Freelancers Marketplace', link: '#' },
+          { label: 'Business Marketplace', link: '#' },
         ]}
       />
       <div className="relative ml-auto flex-1 md:grow-0">
