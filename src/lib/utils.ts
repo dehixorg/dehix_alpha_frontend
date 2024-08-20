@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   UserCredential,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import Cookies from 'js-cookie';
 
@@ -14,6 +15,24 @@ import { auth, googleProvider } from '@/config/firebaseConfig';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Sends a password reset email to the specified email address.
+ * @param email - The email address to which the password reset email will be sent.
+ * @returns A promise that resolves when the email is sent or rejects with an error.
+ */
+export const resetPassword = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    console.log('Password reset email sent successfully.');
+  } catch (error: any) {
+    // Handle the error here
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    console.log(errorCode, errorMessage);
+    throw new Error(errorMessage);
+  }
+};
 
 export const loginUser = async (email: string, password: string) => {
   try {
