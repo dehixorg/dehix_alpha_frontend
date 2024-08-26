@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -10,11 +11,30 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
+interface Action {
+  label: string;
+  type: string;
+  variant: string;
+}
 
-const BidItem = ({ bid, onAction }) => {
-  const [projectName, setProjectname] = useState(''); 
-  const [bidderName, setbiddername] = useState(''); 
+interface Bid {
+  _id: string;
+  bid_status: string;
+  project_id: string;
+  bidder_id: string;
+  current_price: number;
+  domain_id: string;
+}
+interface BidItemProps {
+  bid: Bid;
+  onAction: (bidId: string, actionType: string) => void;
+  actions: Action[]; // Accepting the actions prop
+}
+
+const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
+  const [projectName, setProjectname] = useState('');
+  const [bidderName, setbiddername] = useState('');
   const [buttonsVisible, setButtonsVisible] = useState(true);
   const { _id, current_price, project_id, bidder_id } = bid;
   const [statusMessage, setStatusMessage] = useState('');
@@ -22,7 +42,9 @@ const BidItem = ({ bid, onAction }) => {
   useEffect(() => {
     const fetchProjectname = async () => {
       try {
-        const response = await axiosInstance.get(`/business/${project_id}/project`);
+        const response = await axiosInstance.get(
+          `/business/${project_id}/project`,
+        );
         const name = response.data.data.projectName;
         setProjectname(name);
       } catch (error) {
@@ -47,17 +69,17 @@ const BidItem = ({ bid, onAction }) => {
     fetchbiddername();
   }, [bidder_id]);
 
-  const handleActionClick = async (actionType) => {
+  const handleActionClick = async (actionType: string) => {
     try {
       await onAction(_id, actionType);
-      if(actionType === 'Lobby') {
+      if (actionType === 'Lobby') {
         setStatusMessage('Candidate shifted to Lobby');
       } else if (actionType === 'Schedule Interview') {
         setStatusMessage('Candidate is to be interviewed');
       } else {
-        setStatusMessage('Candidate ${actionType}ed');
+        setStatusMessage(`Candidate ${actionType}ed`);
       }
-      setButtonsVisible(false); 
+      setButtonsVisible(false);
     } catch (error) {
       setStatusMessage('Error performing ${actionType} action.');
       console.error('Error updating bid status:', error);
@@ -67,7 +89,9 @@ const BidItem = ({ bid, onAction }) => {
   return (
     <Card className="p-4 mb-4 rounded-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-bold">Project: {projectName}</CardTitle>
+        <CardTitle className="text-xl font-bold">
+          Project: {projectName}
+        </CardTitle>
         <CardDescription>Current Price: ${current_price}</CardDescription>
         <CardDescription>Bidder: {bidderName}</CardDescription>
       </CardHeader>
@@ -103,7 +127,9 @@ const BidItem = ({ bid, onAction }) => {
       </CardContent>
       {statusMessage && (
         <CardFooter>
-          <p className="text-lg font-semibold text-green-400">{statusMessage}</p>
+          <p className="text-lg font-semibold text-green-400">
+            {statusMessage}
+          </p>
         </CardFooter>
       )}
     </Card>
