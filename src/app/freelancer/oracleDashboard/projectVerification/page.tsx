@@ -1,6 +1,6 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,15 +23,18 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyProjectData, setDummyProjectData] = useState(
+  const [projectData, setProjectData] = useState(
     dummyData.dashboardFreelancerOracleProject,
   );
-
+  const user=useSelector((state: RootState) => state.user)
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,7 +43,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyProjectData.filter((data) => {
+  const filteredData = projectData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -49,17 +52,30 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.status === 'pending')
     );
   });
+  
+  const fetchData=  async ()=>{
+    try {
+      const response= await axiosInstance.get(`/freelancer/${user.uid}/oracle?doc_type=project`)
+// console.log(response.data)
+setProjectData(response.data.data)
 
+    } catch (error) {
+      console.log(error,"error in getting verification data")
+    }
+      }
+ useEffect(()=> {
+    fetchData()
+      },[])
   const updateProjectStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyProjectData];
+    const updatedData = [...projectData];
     updatedData[index].status = newStatus;
-    setDummyProjectData(updatedData); // Assuming you set this in state
+    setProjectData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyProjectData];
+    const updatedData = [...projectData];
     updatedData[index].comments = newComment;
-    setDummyProjectData(updatedData);
+    setProjectData(updatedData);
   };
 
   return (
@@ -146,7 +162,7 @@ export default function ProfessionalInfo() {
         </Dialog>
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {/* {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
               projectName={data.projectName}
@@ -165,7 +181,7 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
+          ))}
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">

@@ -1,6 +1,6 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,15 +23,19 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import dummyData from '@/dummydata.json';
-
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyJobData, setDummyJobData] = useState(
+  const [JobData, setJobData] = useState(
     dummyData.dashboardFreelancerOracleExperience,
   );
 
+const user=useSelector((state: RootState) => state.user)
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,7 +44,7 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyJobData.filter((data) => {
+  const filteredData = JobData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
@@ -49,17 +53,29 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.status === 'pending')
     );
   });
+  const fetchData=  async ()=>{
+    try {
+      const response= await axiosInstance.get(`/freelancer/${user.uid}/oracle?doc_type=experience`)
+// console.log(response.data)
+setJobData(response.data.data)
 
+    } catch (error) {
+      console.log(error,"error in getting verification data")
+    }
+      }
+ useEffect(()=> {
+    fetchData()
+      },[])
   const updateJobStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyJobData];
+    const updatedData = [...JobData];
     updatedData[index].status = newStatus;
-    setDummyJobData(updatedData); // Assuming you set this in state
+    setJobData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyJobData];
+    const updatedData = [...JobData];
     updatedData[index].comments = newComment;
-    setDummyJobData(updatedData);
+    setJobData(updatedData);
   };
 
   return (
@@ -148,7 +164,7 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* {filteredData.map((data, index) => (
+           {filteredData.map((data, index) => (
             <WorkExpVerificationCard
               key={index}
               jobTitle={data.jobTitle}
@@ -165,7 +181,7 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
+          ))} 
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
