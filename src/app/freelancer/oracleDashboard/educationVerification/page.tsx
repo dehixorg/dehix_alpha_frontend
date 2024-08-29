@@ -64,7 +64,7 @@ export default function ProfessionalInfo() {
 setDummyEducationData(response.data.data)
 
     } catch (error) {
-      console.log(error,"error in getting verification")
+      console.log(error,"error in getting verification data")
     }
       }
  useEffect(()=> {
