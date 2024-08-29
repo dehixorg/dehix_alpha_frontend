@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import dummyData from '@/dummydata.json';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
@@ -43,11 +43,11 @@ interface EducationData {
 
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
-  const [dummyEducationData, setDummyEducationData] = useState<EducationData[]>([]);
-  
-  const user=useSelector((state: RootState) => state.user)
- 
-     
+  const [dummyEducationData, setDummyEducationData] = useState<EducationData[]>(
+    [],
+  );
+
+  const user = useSelector((state: RootState) => state.user);
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,19 +67,20 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const fetchData=  async ()=>{
+  const fetchData = async () => {
     try {
-      const response= await axiosInstance.get(`/freelancer/${user.uid}/oracle?doc_type=education`)
-// console.log(response.data)
-setDummyEducationData(response.data.data)
-
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=education`,
+      );
+      // console.log(response.data)
+      setDummyEducationData(response.data.data);
     } catch (error) {
-      console.log(error,"error in getting verification data")
+      console.log(error, 'error in getting verification data');
     }
-      }
- useEffect(()=> {
-    fetchData()
-      },[])
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
   const updateEducationStatus = (index: number, newStatus: string) => {
     const updatedData = [...dummyEducationData];
     updatedData[index].status = newStatus;

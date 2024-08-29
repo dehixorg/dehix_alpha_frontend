@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,6 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
@@ -44,10 +44,8 @@ interface ProjectData {
 }
 
 export default function ProfessionalInfo() {
-  const [projectData, setProjectData] = useState<ProjectData[]>(
-    []
-  );
-  const user=useSelector((state: RootState) => state.user)
+  const [projectData, setProjectData] = useState<ProjectData[]>([]);
+  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -65,20 +63,21 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.status === 'pending')
     );
   });
-  
-  const fetchData=  async ()=>{
-    try {
-      const response= await axiosInstance.get(`/freelancer/${user.uid}/oracle?doc_type=project`)
-// console.log(response.data)
-setProjectData(response.data.data)
 
+  const fetchData = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=project`,
+      );
+      // console.log(response.data)
+      setProjectData(response.data.data);
     } catch (error) {
-      console.log(error,"error in getting verification data")
+      console.log(error, 'error in getting verification data');
     }
-      }
- useEffect(()=> {
-    fetchData()
-      },[])
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
     updatedData[index].status = newStatus;

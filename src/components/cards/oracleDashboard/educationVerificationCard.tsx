@@ -206,7 +206,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={!FormSchema?true:false}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!FormSchema ? true : false}
+              >
                 Submit
               </Button>
             </form>

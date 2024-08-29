@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import dummyData from '@/dummydata.json';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
@@ -44,11 +44,9 @@ interface JobData {
 }
 
 export default function ProfessionalInfo() {
-  const [JobData, setJobData] = useState<JobData[]>(
-    []
-  );
+  const [JobData, setJobData] = useState<JobData[]>([]);
 
-const user=useSelector((state: RootState) => state.user)
+  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -66,19 +64,20 @@ const user=useSelector((state: RootState) => state.user)
       (filter === 'current' && data.status === 'pending')
     );
   });
-  const fetchData=  async ()=>{
+  const fetchData = async () => {
     try {
-      const response= await axiosInstance.get(`/freelancer/${user.uid}/oracle?doc_type=experience`)
-// console.log(response.data)
-setJobData(response.data.data)
-
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=experience`,
+      );
+      // console.log(response.data)
+      setJobData(response.data.data);
     } catch (error) {
-      console.log(error,"error in getting verification data")
+      console.log(error, 'error in getting verification data');
     }
-      }
- useEffect(()=> {
-    fetchData()
-      },[])
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
   const updateJobStatus = (index: number, newStatus: string) => {
     const updatedData = [...JobData];
     updatedData[index].status = newStatus;
@@ -177,7 +176,7 @@ setJobData(response.data.data)
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-           {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <WorkExpVerificationCard
               key={index}
               jobTitle={data.jobTitle}
@@ -194,7 +193,7 @@ setJobData(response.data.data)
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} 
+          ))}
           <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
