@@ -29,10 +29,23 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface JobData {
+  jobTitle: string;
+  workDescription: string;
+  startFrom: string;
+  endTo: string;
+  referencePersonName: string;
+  referencePersonEmail: string;
+  githubRepoLink: string;
+  comments: string;
+  status: string;
+  onStatusUpdate: (newStatus: string) => void;
+  onCommentUpdate: (newComment: string) => void;
+}
 
 export default function ProfessionalInfo() {
-  const [JobData, setJobData] = useState(
-    dummyData.dashboardFreelancerOracleExperience,
+  const [JobData, setJobData] = useState<JobData[]>(
+    []
   );
 
 const user=useSelector((state: RootState) => state.user)

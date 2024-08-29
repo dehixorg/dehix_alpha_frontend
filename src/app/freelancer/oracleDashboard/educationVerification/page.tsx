@@ -28,12 +28,22 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface EducationData {
+  type: string;
+  instituteName: string;
+  location: string;
+  startFrom: string;
+  endTo: string;
+  grade: string;
+  referencePersonName: string;
+  degreeNumber: string;
+  comments: string;
+  status: string;
+}
 
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
-  const [dummyEducationData, setDummyEducationData] = useState(
-    dummyData.dashboardFreelancerOracleEducation,
-  );
+  const [dummyEducationData, setDummyEducationData] = useState<EducationData[]>([]);
   
   const user=useSelector((state: RootState) => state.user)
  

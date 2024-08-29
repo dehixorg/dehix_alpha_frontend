@@ -29,10 +29,23 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface ProjectData {
+  projectName: string;
+  description: string;
+  githubLink: string;
+  startFrom: string;
+  endTo: string;
+  reference: string;
+  techUsed: string[];
+  comments: string;
+  status: string;
+  onStatusUpdate: (newStatus: string) => void;
+  onCommentUpdate: (newComment: string) => void;
+}
 
 export default function ProfessionalInfo() {
-  const [projectData, setProjectData] = useState(
-    dummyData.dashboardFreelancerOracleProject,
+  const [projectData, setProjectData] = useState<ProjectData[]>(
+    []
   );
   const user=useSelector((state: RootState) => state.user)
   const [filter, setFilter] = useState<FilterOption>('all');
