@@ -1,6 +1,6 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=project`,
@@ -80,10 +80,10 @@ export default function ProfessionalInfo() {
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  };
+  }, []);
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
     updatedData[index].verificationStatus = newStatus;

@@ -21,8 +21,8 @@
       "high": 5
     }
   },
-  "dashboardBusinessCompleteProject":"+10% from last month",
-  "dashboardBusinessPendingProject":"+2 new projects this week",
+  "dashboardBusinessCompleteProject": "+10% from last month",
+  "dashboardBusinessPendingProject": "+2 new projects this week",
   "dashboardtotalRevenue": {
     "heading": "Total Revenue",
     "content": "$45,231.89 +20.1% from last month"
@@ -58,13 +58,7 @@
   "marketfreelancerJob": {
     "heading": "Arya.ai Data Scientist",
     "content": "Arya is an autonomous AI operating platform for banks, insurers, and financial service providers that simplifies buildout and manages the...",
-    "skills": [
-      "Generative AI",
-      "Python",
-      "NLP",
-      "PyTorch",
-      "Transformers"
-    ],
+    "skills": ["Generative AI", "Python", "NLP", "PyTorch", "Transformers"],
     "location": "Mumbai",
     "founded": "2013",
     "employees": "10-50 employees"
@@ -91,7 +85,7 @@
       "contact": "jane.smith@example.com"
     }
   ],
-  "dashboardfreelancerhistoryUserEmail":"xyz@gmail.com",
+  "dashboardfreelancerhistoryUserEmail": "xyz@gmail.com",
   "dashboardfreelancerhistoryInterview": [
     {
       "reference": "Jane Smith",
@@ -204,12 +198,7 @@
       "startFrom": "2023-05-01",
       "endTo": "2023-10-15",
       "reference": "Mr. Alex Johnson, Senior Developer",
-      "techUsed": [
-        "Vue.js",
-        "JavaScript",
-        "Firebase",
-        "CSS"
-      ],
+      "techUsed": ["Vue.js", "JavaScript", "Firebase", "CSS"],
       "comments": "",
       "status": "pending"
     },
@@ -220,12 +209,7 @@
       "startFrom": "2022-01-01",
       "endTo": "2022-06-01",
       "reference": "Ms. Maria Gonzalez, Project Manager",
-      "techUsed": [
-        "React",
-        "Node.js",
-        "MongoDB",
-        "Sass"
-      ],
+      "techUsed": ["React", "Node.js", "MongoDB", "Sass"],
       "comments": "",
       "status": "pending"
     },
@@ -236,12 +220,7 @@
       "startFrom": "2021-02-01",
       "endTo": "2021-08-01",
       "reference": "Mr. John Smith, Lead Developer",
-      "techUsed": [
-        "Angular",
-        "TypeScript",
-        "Firebase",
-        "Bootstrap"
-      ],
+      "techUsed": ["Angular", "TypeScript", "Firebase", "Bootstrap"],
       "comments": "",
       "status": "pending"
     }
@@ -283,33 +262,33 @@
   ],
   "businessProjectDetailCard": {
     "description": "Welcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project ]. Through thisproject, we intend to [mention key objectives or outcomes]. Our team is dedicated to [highlight any unique approaches ormethodologies]. We believe this project will [state the expected impact or benefits ]. Feel free to replace the placeholders with specific details about your project. \nIf you need further customization or additional sections, let me know!  \nWelcome to our project! This initiative aims to [briefly describe the main goal or purpose of the project ]. Through this project, we intend to [mention key objectives or outcomes ]. Our team is dedicated to [highlight any unique approaches or methodologies ]. We believe this project will [state the expected impact or benefits ]. Feel free to replace the placeholders with specific details about your project. If you need further customization or additional sections, let me know! ",
-    "email":"arpit@xyz.com",
-    "status":"Current",
-    "startDate":"22/22/2222",
-    "endDate":"24/22/2222"
+    "email": "arpit@xyz.com",
+    "status": "Current",
+    "startDate": "22/22/2222",
+    "endDate": "24/22/2222"
   },
   "businessprojectCardDomains": [
-      "Frontend" ,
-      "Backend" ,
-      "Graphic Designer" ,
-      "3D artist" ,
-      "Fullstack" 
+    "Frontend",
+    "Backend",
+    "Graphic Designer",
+    "3D artist",
+    "Fullstack"
   ],
   "businessprojectCardSkills": [
-     "React" ,
-      "Mongo" ,
-      "Golang" ,
-      "Java" ,
-      "Html",
-      "Css" 
+    "React",
+    "Mongo",
+    "Golang",
+    "Java",
+    "Html",
+    "Css"
   ],
-  "businessprojectProfileCard":{
-    "heading":"Frontend Developer",
-    "description":"Your requirement is of 2 freelancers for this profile, 6 people have appplied via bid and 1 person is selected till now.",
-    "email":"arpit@xyz.com",
-    "status":"Current",
-    "startDate":"22/22/2222",
-    "endDate":"24/22/2222"
+  "businessprojectProfileCard": {
+    "heading": "Frontend Developer",
+    "description": "Your requirement is of 2 freelancers for this profile, 6 people have appplied via bid and 1 person is selected till now.",
+    "email": "arpit@xyz.com",
+    "status": "Current",
+    "startDate": "22/22/2222",
+    "endDate": "24/22/2222"
   },
   "marketFreelancerProject": {
     "project_name": "AI Development Project",
@@ -335,11 +314,7 @@
     "role": "Software Engineer",
     "projectType": "Web Development",
     "description": "This is a sample project description",
-    "skillsRequired": [
-      "JavaScript",
-      "React",
-      "Node.js"
-    ],
+    "skillsRequired": ["JavaScript", "React", "Node.js"],
     "start": "2023-02-15",
     "email": "john.doe@example.com",
     "experience": "5+ years"

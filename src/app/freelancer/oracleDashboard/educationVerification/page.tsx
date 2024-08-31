@@ -1,6 +1,6 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,6 @@ export default function ProfessionalInfo() {
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [requesterId, setRequesterId] = useState<string[]>([]);
 
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
@@ -65,7 +64,7 @@ export default function ProfessionalInfo() {
     );
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=education`,
@@ -76,16 +75,10 @@ export default function ProfessionalInfo() {
       );
       setEducationData(flattenedData);
       console.log(educationdata, 'data from backend');
-
-      // const requesterIds = response.data.data.map((elem: any) => elem.requester_id);
-      // const uniqueRequesterIds = Array.from(new Set<string>(requesterIds));
-      // setRequesterId(uniqueRequesterIds);
-      // const freelancerResponse= await axiosInstance.get(`/freelancer/${requesterId}`)
-      // console.log(freelancerResponse)
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  };
+  }, []);
 
   // Log the requesterId state after it updates
   // useEffect(() => {
@@ -94,7 +87,7 @@ export default function ProfessionalInfo() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const updateEducationStatus = (index: number, newStatus: string) => {
     const updatedData = [...educationdata];
@@ -195,7 +188,7 @@ export default function ProfessionalInfo() {
         >
           {filteredData.map((data, index) => (
             <EducationVerificationCard
-            key={index}
+              key={index}
               type="education"
               degree={data.degree}
               location={data.universityName} // Note: update as per your interface if needed
