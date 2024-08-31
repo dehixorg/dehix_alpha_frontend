@@ -22,7 +22,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import dummyData from '@/dummydata.json';
+// import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -38,8 +38,8 @@ interface ProjectData {
   refer: string;
   techUsed: string[];
   comments: string;
-  role:string;
-  projectType:string;
+  role: string;
+  projectType: string;
   verificationStatus: string;
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
@@ -61,8 +61,8 @@ export default function ProfessionalInfo() {
       return true;
     }
     return (
-      data. verificationStatus === filter ||
-      (filter === 'current' && data. verificationStatus === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'pending')
     );
   });
 
@@ -73,8 +73,8 @@ export default function ProfessionalInfo() {
       );
       // console.log(response.data)
       setProjectData(response.data.data);
-      const flattenedData=response.data.data.flatMap((entry:any) =>
-        Object.values(entry.projects)
+      const flattenedData = response.data.data.flatMap((entry: any) =>
+        Object.values(entry.projects),
       );
       setProjectData(flattenedData);
     } catch (error) {
@@ -86,7 +86,7 @@ export default function ProfessionalInfo() {
   }, []);
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
-    updatedData[index]. verificationStatus = newStatus;
+    updatedData[index].verificationStatus = newStatus;
     setProjectData(updatedData); // Assuming you set this in state
   };
 
@@ -193,7 +193,7 @@ export default function ProfessionalInfo() {
               reference={data.refer}
               techUsed={data.techUsed}
               comments={data.comments}
-              status={data.verificationStatus} 
+              status={data.verificationStatus}
               onStatusUpdate={(newStatus) =>
                 updateProjectStatus(index, newStatus)
               }
@@ -202,12 +202,14 @@ export default function ProfessionalInfo() {
               }
             />
           ))}
-         {projectData.length===0? <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Project verification for you now.
-            </p>
-          </div>:null}
+          {projectData.length === 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Project verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

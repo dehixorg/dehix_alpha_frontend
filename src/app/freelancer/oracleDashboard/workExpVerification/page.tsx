@@ -194,12 +194,14 @@ export default function ProfessionalInfo() {
               }
             />
           ))}
-          {JobData.length==0?<div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Work Experience verification for you now.
-            </p>
-          </div>:null}
+          {JobData.length == 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Work Experience verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

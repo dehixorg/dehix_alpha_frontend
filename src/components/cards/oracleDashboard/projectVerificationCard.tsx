@@ -40,8 +40,8 @@ interface ProjectProps {
   reference: string;
   techUsed: string[];
   comments: string;
-  role:string;
-  projectType:string;
+  role: string;
+  projectType: string;
   status: string | 'pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
@@ -63,9 +63,9 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   reference,
   techUsed,
   comments,
-  status, 
+  status,
   role,
-  projectType,// Get initial status from props
+  projectType, // Get initial status from props
   onStatusUpdate,
   onCommentUpdate,
 }) => {
@@ -100,7 +100,8 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
           )}
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-600">
-          {(verificationStatus === 'pending' ||verificationStatus === 'added' ) ? (
+          {verificationStatus === 'pending' ||
+          verificationStatus === 'added' ? (
             <Badge className="bg-warning-foreground text-white my-2">
               PENDING
             </Badge>
@@ -125,13 +126,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
               ))}
             </div>
           </div>
-          <div className='mt-3'><p className="text-m text-gray-600 flex items-center">
-                 Role: {role}
-                </p></div>
+          <div className="mt-3">
+            <p className="text-m text-gray-600 flex items-center">
+              Role: {role}
+            </p>
+          </div>
 
-                <div className='mt-3'><p className="text-m text-gray-600 flex items-center">
-                  Project Type:{projectType}
-                </p></div>
+          <div className="mt-3">
+            <p className="text-m text-gray-600 flex items-center">
+              Project Type:{projectType}
+            </p>
+          </div>
           <div className="mt-4">
             {/* Adding Tooltip for Reference with Email */}
             <Tooltip>
@@ -160,7 +165,8 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
             : 'Current'}
         </div>
 
-        {(verificationStatus === 'pending' ||verificationStatus === 'added' ) && (
+        {(verificationStatus === 'pending' ||
+          verificationStatus === 'added') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -213,7 +219,11 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full"  disabled={!selectedType || form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

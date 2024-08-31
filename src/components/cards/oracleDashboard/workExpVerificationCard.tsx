@@ -208,7 +208,11 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={!selectedType || form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

@@ -253,7 +253,11 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={!selectedType || form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

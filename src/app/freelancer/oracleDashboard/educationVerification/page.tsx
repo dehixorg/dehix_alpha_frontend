@@ -22,7 +22,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
-import dummyData from '@/dummydata.json';
+// import dummyData from '@/dummydata.json';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
@@ -40,14 +40,9 @@ interface EducationData {
   verificationStatus: string;
 }
 
-
-
-
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
-  const [educationdata, setEducationData] = useState<EducationData[]>(
-    [],
-  );
+  const [educationdata, setEducationData] = useState<EducationData[]>([]);
 
   const user = useSelector((state: RootState) => state.user);
 
@@ -59,7 +54,7 @@ export default function ProfessionalInfo() {
     setFilter(newFilter);
     setIsDialogOpen(false);
   };
-  
+
   const filteredData = educationdata.filter((data) => {
     if (filter === 'all') {
       return true;
@@ -69,19 +64,19 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.verificationStatus === 'pending')
     );
   });
-  
+
   const fetchData = async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=education`,
       );
       setEducationData(response.data.data);
-      const flattenedData=response.data.data.flatMap((entry:any) =>
-        Object.values(entry.education)
+      const flattenedData = response.data.data.flatMap((entry: any) =>
+        Object.values(entry.education),
       );
       setEducationData(flattenedData);
-  console.log(educationdata,"data from backend")
-    
+      console.log(educationdata, 'data from backend');
+
       // const requesterIds = response.data.data.map((elem: any) => elem.requester_id);
       // const uniqueRequesterIds = Array.from(new Set<string>(requesterIds));
       // setRequesterId(uniqueRequesterIds);
@@ -91,22 +86,22 @@ export default function ProfessionalInfo() {
       console.log(error, 'error in getting verification data');
     }
   };
-  
+
   // Log the requesterId state after it updates
   // useEffect(() => {
   //   console.log(requesterId);
   // }, [requesterId]);
-  
+
   useEffect(() => {
     fetchData();
   }, []);
-  
+
   const updateEducationStatus = (index: number, newStatus: string) => {
     const updatedData = [...educationdata];
     updatedData[index].verificationStatus = newStatus;
     setEducationData(updatedData); // Update state with new status
   };
-  
+
   const updateCommentStatus = (index: number, newComment: string) => {
     const updatedData = [...educationdata];
     updatedData[index].comments = newComment;
@@ -200,32 +195,33 @@ export default function ProfessionalInfo() {
         >
           {filteredData.map((data, index) => (
             <EducationVerificationCard
-            type="education"
-  degree={data.degree}
-  location={data.universityName} // Note: update as per your interface if needed
-  startFrom={data.startDate}
-  endTo={data.endDate}
-  grade={data.grade}
-  
-  fieldOfStudy={data.fieldOfStudy}
-  comments={data.comments}
-  status={data.verificationStatus}
-  onStatusUpdate={(newStatus) => {
-    // Handle status update
-    console.log('Status updated to:', newStatus);
-  }}
-  onCommentUpdate={(newComment) => {
-    // Handle comment update
-    console.log('Comment updated to:', newComment);
-  }}
-          />
+              type="education"
+              degree={data.degree}
+              location={data.universityName} // Note: update as per your interface if needed
+              startFrom={data.startDate}
+              endTo={data.endDate}
+              grade={data.grade}
+              fieldOfStudy={data.fieldOfStudy}
+              comments={data.comments}
+              status={data.verificationStatus}
+              onStatusUpdate={(newStatus) => {
+                // Handle status update
+                console.log('Status updated to:', newStatus);
+              }}
+              onCommentUpdate={(newComment) => {
+                // Handle comment update
+                console.log('Comment updated to:', newComment);
+              }}
+            />
           ))}
-          {educationdata.length===0?<div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Education verification for you now.
-            </p>
-          </div>:null}
+          {educationdata.length === 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Education verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

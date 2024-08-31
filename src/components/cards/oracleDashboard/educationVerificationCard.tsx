@@ -34,12 +34,12 @@ import { Textarea } from '@/components/ui/textarea';
 interface EducationProps {
   type: string;
   location: string;
-  degree:string
+  degree: string;
   startFrom: string;
   endTo: string | 'current';
   grade: string;
   comments: string;
-  fieldOfStudy:string;
+  fieldOfStudy: string;
   status: string | 'pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
@@ -93,7 +93,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardHeader>
         <CardTitle className="flex justify-between">
           <span>{type}</span>
-          {(verificationStatus === 'pending' ||verificationStatus === 'added' ) ? (
+          {verificationStatus === 'pending' ||
+          verificationStatus === 'added' ? (
             <Badge className="bg-warning-foreground text-white">PENDING</Badge>
           ) : verificationStatus === 'verified' ? (
             <Badge className="bg-success text-white">VERIFIED</Badge>
@@ -118,7 +119,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       </CardHeader>
       <CardContent>
         <div className="mt-2">
-        <p className="text-m text-gray-600 mb-2">
+          <p className="text-m text-gray-600 mb-2">
             <span className="text-gray-500 font-semibold">degree:</span>{' '}
             {degree}
           </p>
@@ -158,7 +159,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
             : 'Current'}
         </div>
 
-        {(verificationStatus === 'pending' ||verificationStatus === 'added' ) && (
+        {(verificationStatus === 'pending' ||
+          verificationStatus === 'added') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
