@@ -195,6 +195,7 @@ export default function ProfessionalInfo() {
         >
           {filteredData.map((data, index) => (
             <EducationVerificationCard
+            key={index}
               type="education"
               degree={data.degree}
               location={data.universityName} // Note: update as per your interface if needed

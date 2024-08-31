@@ -23,7 +23,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
-import dummyData from '@/dummydata.json';
+// import dummyData from '@/dummydata.json';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
