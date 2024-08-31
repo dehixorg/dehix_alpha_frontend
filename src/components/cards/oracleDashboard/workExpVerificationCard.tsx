@@ -69,7 +69,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
-
+  const selectedType = form.watch('type');
   useEffect(() => {
     // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
@@ -208,7 +208,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={!selectedType || form.formState.isSubmitting}>
                 Submit
               </Button>
             </form>

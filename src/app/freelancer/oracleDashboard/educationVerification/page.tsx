@@ -29,21 +29,23 @@ import EducationVerificationCard from '@/components/cards/oracleDashboard/educat
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface EducationData {
-  type: string;
-  instituteName: string;
-  location: string;
-  startFrom: string;
-  endTo: string;
+  _id: string;
+  degree: string;
+  universityName: string;
+  startDate: string;
+  endDate: string;
   grade: string;
-  referencePersonName: string;
-  degreeNumber: string;
+  fieldOfStudy: string;
   comments: string;
-  status: string;
+  verificationStatus: string;
 }
+
+
+
 
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
-  const [dummyEducationData, setDummyEducationData] = useState<EducationData[]>(
+  const [educationdata, setEducationData] = useState<EducationData[]>(
     [],
   );
 
@@ -51,46 +53,64 @@ export default function ProfessionalInfo() {
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [requesterId, setRequesterId] = useState<string[]>([]);
 
   const handleFilterChange = (newFilter: FilterOption) => {
     setFilter(newFilter);
     setIsDialogOpen(false);
   };
-
-  const filteredData = dummyEducationData.filter((data) => {
+  
+  const filteredData = educationdata.filter((data) => {
     if (filter === 'all') {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'pending')
     );
   });
-
+  
   const fetchData = async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=education`,
       );
-      // console.log(response.data)
-      setDummyEducationData(response.data.data);
+      setEducationData(response.data.data);
+      const flattenedData=response.data.data.flatMap((entry:any) =>
+        Object.values(entry.education)
+      );
+      setEducationData(flattenedData);
+  console.log(educationdata,"data from backend")
+    
+      // const requesterIds = response.data.data.map((elem: any) => elem.requester_id);
+      // const uniqueRequesterIds = Array.from(new Set<string>(requesterIds));
+      // setRequesterId(uniqueRequesterIds);
+      // const freelancerResponse= await axiosInstance.get(`/freelancer/${requesterId}`)
+      // console.log(freelancerResponse)
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
   };
+  
+  // Log the requesterId state after it updates
+  // useEffect(() => {
+  //   console.log(requesterId);
+  // }, [requesterId]);
+  
   useEffect(() => {
     fetchData();
   }, []);
+  
   const updateEducationStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyEducationData];
-    updatedData[index].status = newStatus;
-    setDummyEducationData(updatedData); // Update state with new status
+    const updatedData = [...educationdata];
+    updatedData[index].verificationStatus = newStatus;
+    setEducationData(updatedData); // Update state with new status
   };
-
+  
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyEducationData];
+    const updatedData = [...educationdata];
     updatedData[index].comments = newComment;
-    setDummyEducationData(updatedData); // Update state with new comment
+    setEducationData(updatedData); // Update state with new comment
   };
 
   return (
@@ -180,31 +200,32 @@ export default function ProfessionalInfo() {
         >
           {filteredData.map((data, index) => (
             <EducationVerificationCard
-              key={index}
-              type={data.type}
-              instituteName={data.instituteName}
-              location={data.location}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
-              grade={data.grade}
-              referencePersonName={data.referencePersonName}
-              degreeNumber={data.degreeNumber}
-              comments={data.comments}
-              status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) =>
-                updateEducationStatus(index, newStatus)
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(index, newComment)
-              }
-            />
+            type="education"
+  degree={data.degree}
+  location={data.universityName} // Note: update as per your interface if needed
+  startFrom={data.startDate}
+  endTo={data.endDate}
+  grade={data.grade}
+  
+  fieldOfStudy={data.fieldOfStudy}
+  comments={data.comments}
+  status={data.verificationStatus}
+  onStatusUpdate={(newStatus) => {
+    // Handle status update
+    console.log('Status updated to:', newStatus);
+  }}
+  onCommentUpdate={(newComment) => {
+    // Handle comment update
+    console.log('Comment updated to:', newComment);
+  }}
+          />
           ))}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+          {educationdata.length===0?<div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
               No Education verification for you now.
             </p>
-          </div>
+          </div>:null}
         </main>
       </div>
     </div>

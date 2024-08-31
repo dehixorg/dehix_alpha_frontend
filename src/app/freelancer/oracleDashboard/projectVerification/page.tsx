@@ -33,12 +33,14 @@ interface ProjectData {
   projectName: string;
   description: string;
   githubLink: string;
-  startFrom: string;
-  endTo: string;
-  reference: string;
+  start: string;
+  end: string;
+  refer: string;
   techUsed: string[];
   comments: string;
-  status: string;
+  role:string;
+  projectType:string;
+  verificationStatus: string;
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -59,8 +61,8 @@ export default function ProfessionalInfo() {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data. verificationStatus === filter ||
+      (filter === 'current' && data. verificationStatus === 'pending')
     );
   });
 
@@ -71,6 +73,10 @@ export default function ProfessionalInfo() {
       );
       // console.log(response.data)
       setProjectData(response.data.data);
+      const flattenedData=response.data.data.flatMap((entry:any) =>
+        Object.values(entry.projects)
+      );
+      setProjectData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
@@ -80,7 +86,7 @@ export default function ProfessionalInfo() {
   }, []);
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
-    updatedData[index].status = newStatus;
+    updatedData[index]. verificationStatus = newStatus;
     setProjectData(updatedData); // Assuming you set this in state
   };
 
@@ -180,12 +186,14 @@ export default function ProfessionalInfo() {
               projectName={data.projectName}
               description={data.description}
               githubLink={data.githubLink}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
-              reference={data.reference}
+              startFrom={data.start}
+              endTo={data.end}
+              role={data.role}
+              projectType={data.projectType}
+              reference={data.refer}
               techUsed={data.techUsed}
               comments={data.comments}
-              status={data.status} // Pass the status to the card component
+              status={data.verificationStatus} 
               onStatusUpdate={(newStatus) =>
                 updateProjectStatus(index, newStatus)
               }
@@ -194,12 +202,12 @@ export default function ProfessionalInfo() {
               }
             />
           ))}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+         {projectData.length===0? <div className="text-center w-[90vw] px-auto mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
               No Project verification for you now.
             </p>
-          </div>
+          </div>:null}
         </main>
       </div>
     </div>
