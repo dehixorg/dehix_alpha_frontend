@@ -32,13 +32,14 @@ type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
   jobTitle: string;
   workDescription: string;
-  startFrom: string;
-  endTo: string;
+  company:string;
+  workFrom: string;
+  workTo: string;
   referencePersonName: string;
-  referencePersonEmail: string;
+  referencePersonContact: string;
   githubRepoLink: string;
   comments: string;
-  status: string;
+  verificationStatus: string;
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -60,8 +61,8 @@ export default function ProfessionalInfo() {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'Pending')
     );
   });
   const fetchData = async () => {
@@ -70,7 +71,12 @@ export default function ProfessionalInfo() {
         `/freelancer/${user.uid}/oracle?doc_type=experience`,
       );
       // console.log(response.data)
+
       setJobData(response.data.data);
+      const flattenedData = response.data.data.flatMap((entry: any) =>
+        Object.values(entry.professionalInfo),
+      );
+      setJobData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
@@ -80,7 +86,7 @@ export default function ProfessionalInfo() {
   }, []);
   const updateJobStatus = (index: number, newStatus: string) => {
     const updatedData = [...JobData];
-    updatedData[index].status = newStatus;
+    updatedData[index].verificationStatus = newStatus;
     setJobData(updatedData); // Assuming you set this in state
   };
 
@@ -181,13 +187,14 @@ export default function ProfessionalInfo() {
               key={index}
               jobTitle={data.jobTitle}
               workDescription={data.workDescription}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
+              company={data.company}
+              startFrom={data.workFrom}
+              endTo={data.workTo}
               referencePersonName={data.referencePersonName}
-              referencePersonEmail={data.referencePersonEmail}
+              referencePersonContact={data.referencePersonContact}
               githubRepoLink={data.githubRepoLink}
               comments={data.comments}
-              status={data.status} // Pass the status to the card component
+              status={data.verificationStatus} // Pass the status to the card component
               onStatusUpdate={(newStatus) => updateJobStatus(index, newStatus)}
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
