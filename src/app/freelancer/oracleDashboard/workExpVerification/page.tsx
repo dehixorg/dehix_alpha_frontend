@@ -32,7 +32,7 @@ type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
   jobTitle: string;
   workDescription: string;
-  company:string;
+  company: string;
   workFrom: string;
   workTo: string;
   referencePersonName: string;

@@ -1,6 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, Github, Mail, User2Icon,Phone,Building } from 'lucide-react'; // Importing Mail icon from Lucide React
+import {
+  MessageSquareIcon,
+  Github,
+  Mail,
+  User2Icon,
+  Phone,
+  Building,
+} from 'lucide-react'; // Importing Mail icon from Lucide React
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -36,7 +43,7 @@ interface WorkExpProps {
   workDescription: string;
   startFrom: string;
   endTo: string | 'current';
-  company:string;
+  company: string;
   referencePersonName: string;
   referencePersonContact: string;
   githubRepoLink: string;
@@ -117,7 +124,12 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       <CardContent>
         <div className="mt-4">
           <div className="mt-4">
-            <p className="mt-4 mb-3 text-m text-gray-600 flex items-center"><span className='flex'><Building className='mr-2'/>{company}</span></p>
+            <p className="mt-4 mb-3 text-m text-gray-600 flex items-center">
+              <span className="flex">
+                <Building className="mr-2" />
+                {company}
+              </span>
+            </p>
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-sm text-gray-600 flex items-center">
