@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, MapPin, User } from 'lucide-react';
+import { MessageSquareIcon, MapPin } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -33,14 +33,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface EducationProps {
   type: string;
-  instituteName: string;
   location: string;
+  degree: string;
   startFrom: string;
   endTo: string | 'current';
   grade: string;
-  referencePersonName: string;
-  degreeNumber: string;
   comments: string;
+  fieldOfStudy: string;
   status: string | 'pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
@@ -55,13 +54,13 @@ const FormSchema = z.object({
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
   type,
-  instituteName,
+  degree,
   location,
   startFrom,
   endTo,
   grade,
-  referencePersonName,
-  degreeNumber,
+  // referencePersonName,
+  fieldOfStudy,
   comments,
   status, // Get initial status from props
   onStatusUpdate,
@@ -70,7 +69,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   const [verificationStatus, setVerificationStatus] = useState(status); // Use initial status
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    mode: 'onChange', // Enable validation on change
   });
+
+  // Watch the 'type' field to check if it's selected
+  const selectedType = form.watch('type');
 
   useEffect(() => {
     // Ensure verificationStatus is set after the component mounts
@@ -90,7 +93,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardHeader>
         <CardTitle className="flex justify-between">
           <span>{type}</span>
-          {verificationStatus === 'pending' ? (
+          {verificationStatus === 'pending' ||
+          verificationStatus === 'added' ? (
             <Badge className="bg-warning-foreground text-white">PENDING</Badge>
           ) : verificationStatus === 'verified' ? (
             <Badge className="bg-success text-white">VERIFIED</Badge>
@@ -99,31 +103,35 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
           )}
         </CardTitle>
         <CardDescription className="text-justify text-gray-600">
-          {instituteName}
+          {/* {instituteName} */}
           <br />
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-sm text-gray-600 flex items-center mt-3">
+              <p className="text-lg text-gray-600 flex items-center mt-3">
                 <MapPin className="mr-2" />
                 {location}
               </p>
             </TooltipTrigger>
             <TooltipContent side="bottom">Location</TooltipContent>
           </Tooltip>
-          <br />
+          {/* <br /> */}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            <span className="text-gray-500 font-semibold">Degree Number:</span>{' '}
-            {degreeNumber}
+        <div className="mt-2">
+          <p className="text-m text-gray-600 mb-2">
+            <span className="text-gray-500 font-semibold">degree:</span>{' '}
+            {degree}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-m text-gray-600 mb-2">
+            <span className="text-gray-500 font-semibold">Field Of study:</span>{' '}
+            {fieldOfStudy}
+          </p>
+          <p className="text-m text-gray-600 mb-2">
             <span className="text-gray-500 font-semibold">Grade:</span> {grade}
           </p>
 
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-sm text-gray-600 flex items-center">
@@ -133,7 +141,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
               </TooltipTrigger>
               <TooltipContent side="bottom">Reference Person</TooltipContent>
             </Tooltip>
-          </div>
+          </div> */}
 
           {comments && (
             <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
@@ -151,7 +159,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
             : 'Current'}
         </div>
 
-        {verificationStatus === 'pending' && (
+        {(verificationStatus === 'pending' ||
+          verificationStatus === 'added') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -206,7 +215,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                 )}
               />
 
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

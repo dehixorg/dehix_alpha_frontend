@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,16 +22,29 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
-import dummyData from '@/dummydata.json';
-
+// import dummyData from '@/dummydata.json';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface EducationData {
+  _id: string;
+  degree: string;
+  universityName: string;
+  startDate: string;
+  endDate: string;
+  grade: string;
+  fieldOfStudy: string;
+  comments: string;
+  verificationStatus: string;
+}
 
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
-  const [dummyEducationData, setDummyEducationData] = useState(
-    dummyData.dashboardFreelancerOracleEducation,
-  );
+  const [educationdata, setEducationData] = useState<EducationData[]>([]);
+
+  const user = useSelector((state: RootState) => state.user);
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,26 +54,51 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyEducationData.filter((data) => {
+  const filteredData = educationdata.filter((data) => {
     if (filter === 'all') {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'pending')
     );
   });
 
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=education`,
+      );
+      setEducationData(response.data.data);
+      const flattenedData = response.data.data.flatMap((entry: any) =>
+        Object.values(entry.education),
+      );
+      setEducationData(flattenedData);
+      console.log(educationdata, 'data from backend');
+    } catch (error) {
+      console.log(error, 'error in getting verification data');
+    }
+  }, []);
+
+  // Log the requesterId state after it updates
+  // useEffect(() => {
+  //   console.log(requesterId);
+  // }, [requesterId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   const updateEducationStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyEducationData];
-    updatedData[index].status = newStatus;
-    setDummyEducationData(updatedData); // Update state with new status
+    const updatedData = [...educationdata];
+    updatedData[index].verificationStatus = newStatus;
+    setEducationData(updatedData); // Update state with new status
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyEducationData];
+    const updatedData = [...educationdata];
     updatedData[index].comments = newComment;
-    setDummyEducationData(updatedData); // Update state with new comment
+    setEducationData(updatedData); // Update state with new comment
   };
 
   return (
@@ -147,33 +186,36 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <EducationVerificationCard
               key={index}
-              type={data.type}
-              instituteName={data.instituteName}
-              location={data.location}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
+              type="education"
+              degree={data.degree}
+              location={data.universityName} // Note: update as per your interface if needed
+              startFrom={data.startDate}
+              endTo={data.endDate}
               grade={data.grade}
-              referencePersonName={data.referencePersonName}
-              degreeNumber={data.degreeNumber}
+              fieldOfStudy={data.fieldOfStudy}
               comments={data.comments}
-              status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) =>
-                updateEducationStatus(index, newStatus)
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(index, newComment)
-              }
+              status={data.verificationStatus}
+              onStatusUpdate={(newStatus) => {
+                // Handle status update
+                console.log('Status updated to:', newStatus);
+              }}
+              onCommentUpdate={(newComment) => {
+                // Handle comment update
+                console.log('Comment updated to:', newComment);
+              }}
             />
-          ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Education verification for you now.
-            </p>
-          </div>
+          ))}
+          {educationdata.length === 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Education verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>
