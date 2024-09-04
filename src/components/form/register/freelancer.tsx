@@ -53,7 +53,7 @@ const profileFormSchema = z.object({
   githubLink: z.string().url().optional(),
   resume: z.string().url().optional(),
   linkedin: z.string().url().optional(),
-  personalWebsite: z.string().url().optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -138,7 +138,7 @@ export default function FreelancerRegisterForm() {
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        description: `${'Invalid Credentials ' || 'Something went wrong!'}`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
@@ -202,7 +202,7 @@ export default function FreelancerRegisterForm() {
           <TextInput
             control={form.control}
             name="personalWebsite"
-            label="Personal Website"
+            label="Personal Website(Optional)"
             type="url"
             placeholder="https://www.yourwebsite.com"
           />
@@ -218,7 +218,7 @@ export default function FreelancerRegisterForm() {
             name="resume"
             label="Resume (URL)"
             type="url"
-            placeholder="https://www.yourresume.com"
+            placeholder="Enter your Resume Google Drive Link"
           />
           <div className="space-y-2">
             <Label>Password</Label>

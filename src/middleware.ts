@@ -8,6 +8,9 @@ export async function middleware(request: NextRequest) {
   const token = cookies.token;
 
   const { pathname } = request.nextUrl;
+  if (!token) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
   if (token && userType) {
     if (
       userType === 'freelancer' &&

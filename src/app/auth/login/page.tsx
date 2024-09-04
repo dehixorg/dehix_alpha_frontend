@@ -39,7 +39,7 @@ export default function Login() {
       );
       router.replace(`/dashboard/${claims.type}`);
     } catch (error: any) {
-      setError(error.message);
+      setError('Invalid Email or Password ');
       console.error(error.message);
     } finally {
       setIsLoading(false);

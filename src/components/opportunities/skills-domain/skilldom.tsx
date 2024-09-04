@@ -31,10 +31,22 @@ const SkillDom: React.FC<SkillDomProps> = ({
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const handleCheckboxChange = (label: string) => {
-    if (selectedValues.includes(label)) {
-      setSelectedValues(selectedValues.filter((item) => item !== label));
+    if (label === 'All') {
+      if (selectedValues.includes('All')) {
+        setSelectedValues([]);
+      } else {
+        setSelectedValues(['All']);
+      }
     } else {
-      setSelectedValues([...selectedValues, label]);
+      if (selectedValues.includes(label)) {
+        setSelectedValues(selectedValues.filter((item) => item !== label));
+      } else {
+        const newSelectedValues = [
+          ...selectedValues.filter((item) => item !== 'All'),
+          label,
+        ];
+        setSelectedValues(newSelectedValues);
+      }
     }
   };
 
@@ -100,7 +112,9 @@ const SkillDom: React.FC<SkillDomProps> = ({
           </Button>
         )}
         {filteredSkills.length === 0 && (
-          <p className="text-sm text-gray-500 mt-2">No skills found.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            {label === 'Skills' ? 'No skills found.' : 'No domain found.'}
+          </p>
         )}
       </CardFooter>
     </Card>

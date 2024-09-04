@@ -83,6 +83,7 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
+  const selectedType = form.watch('type');
 
   useEffect(() => {
     // Ensure verificationStatus is set after the component mounts
@@ -252,7 +253,11 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

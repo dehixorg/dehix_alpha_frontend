@@ -24,12 +24,12 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dashboard',
   },
   {
-    href: '/market/freelancer',
+    href: '/freelancer/market',
     icon: <Store className="h-5 w-5" />,
     label: 'Market',
   },
   {
-    href: '/project/current',
+    href: '/freelancer/project/current',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
@@ -39,17 +39,17 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/dashboard/freelancer/interview/profile',
+    href: '/freelancer/interview/profile',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
   {
-    href: '/dashboard/freelancer/oracleDashboard/businessVerification',
+    href: '/freelancer/oracleDashboard/businessVerification',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'Oracle',
   },
   {
-    href: '/dashboard/freelancer/talent',
+    href: '/freelancer/talent',
     icon: <Sparkles className="h-5 w-5" />,
     label: 'Talent',
   },
@@ -57,7 +57,7 @@ export const menuItemsTop: MenuItem[] = [
 
 export const menuItemsBottom: MenuItem[] = [
   {
-    href: '/settings/personal-info',
+    href: '/freelancer/settings/personal-info',
     icon: <Settings className="h-5 w-5" />,
     label: 'Settings',
   },

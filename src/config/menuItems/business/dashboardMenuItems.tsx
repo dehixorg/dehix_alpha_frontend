@@ -14,12 +14,12 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dashboard',
   },
   {
-    href: '/market/business',
+    href: '/business/market',
     icon: <ShoppingCart className="h-5 w-5" />,
     label: 'Market',
   },
   {
-    href: '/dashboard/business/talent/HireTalent1',
+    href: '/business/talent',
     icon: <Users className="h-5 w-5" />,
     label: 'Dehix Talent',
   },
@@ -27,7 +27,7 @@ export const menuItemsTop: MenuItem[] = [
 
 export const menuItemsBottom: MenuItem[] = [
   {
-    href: '/settings/business-info',
+    href: '/business/settings/business-info',
     icon: <Settings className="h-5 w-5" />,
     label: 'Settings',
   },

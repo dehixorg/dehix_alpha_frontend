@@ -16,31 +16,30 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/project/current',
+    href: '/dashboard/freelancer',
+    icon: <HomeIcon className="h-5 w-5" />,
+    label: 'Home',
+  },
+  {
+    href: '/freelancer/project/current',
     icon: <FolderDot className="h-5 w-5" />,
     label: 'Current Projects',
   },
   {
-    href: '/project/applied',
+    href: '/freelancer/project/applied',
     icon: <Pointer className="h-5 w-5" />,
     label: 'Under Verification',
   },
   {
-    href: '/project/completed',
+    href: '/freelancer/project/completed',
     icon: <FileCheck className="h-5 w-5" />,
     label: 'Completed Projects',
   },
   {
-    href: '/project/rejected',
+    href: '/freelancer/project/rejected',
     icon: <CircleX className="h-5 w-5" />,
     label: 'Rejected Verification',
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [
-  {
-    href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
-    label: 'Home',
-  },
-];
+export const menuItemsBottom: MenuItem[] = [];

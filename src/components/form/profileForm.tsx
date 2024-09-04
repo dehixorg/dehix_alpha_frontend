@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Edit, Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -49,6 +49,8 @@ const profileFormSchema = z.object({
     message: 'Phone number must be at least 10 digits.',
   }),
   role: z.string(),
+  personalWebsite: z.string().url().optional(),
+  resume: z.string().url().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -160,6 +162,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       email: user?.email || '',
       phone: user?.phone || '',
       role: user?.role || '',
+      personalWebsite: user?.personalWebsite || '',
+      resume: user?.resume || '',
     });
   }, [user, form]);
 
@@ -185,6 +189,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         email: data.email,
         phone: data.phone,
         role: data.role,
+        personalWebsite: data.personalWebsite,
+        resume: data.resume,
         skills: currSkills,
         domain: currDomains,
       });
@@ -280,6 +286,67 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="personalWebsite"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Personal Website URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your LinkedIn URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter your Personal Website URL
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/*<FormField*/}
+          {/*  control={form.control}*/}
+          {/*  name="phone"*/}
+          {/*  render={() => (*/}
+          {/*    <FormItem className="relative">*/}
+          {/*      <FormLabel>Edit Resume</FormLabel>*/}
+          {/*      <FormControl>*/}
+          {/*        <div className="relative flex items-center">*/}
+          {/*          <Input placeholder="edit resume" className="pr-10" />*/}
+          {/*          <Edit*/}
+          {/*            className="absolute right-2 h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"*/}
+          {/*            onClick={() => {}}*/}
+          {/*          />*/}
+          {/*        </div>*/}
+          {/*      </FormControl>*/}
+          {/*      <FormMessage />*/}
+          {/*      <FormDescription>Non editable field</FormDescription>*/}
+          {/*    </FormItem>*/}
+          {/*  )}*/}
+          {/*/>*/}
+
           {/* <FormField
             control={form.control}
             name="dob"
@@ -357,10 +424,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap mt-5">
+              <div className="flex flex-wrap gap-2 mt-5">
                 {currSkills.map((skill: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
                   >
                     {skill.name}
@@ -400,10 +467,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="flex flex-wrap mt-5">
+              <div className="flex flex-wrap gap-2 mt-5">
                 {currDomains.map((domain: any, index: number) => (
                   <Badge
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300 flex items-center"
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
                   >
                     {domain.name}

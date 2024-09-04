@@ -1,6 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, Github, Mail, User2Icon } from 'lucide-react'; // Importing Mail icon from Lucide React
+import {
+  MessageSquareIcon,
+  Github,
+  Mail,
+  User2Icon,
+  Phone,
+  Building,
+} from 'lucide-react'; // Importing Mail icon from Lucide React
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -36,11 +43,12 @@ interface WorkExpProps {
   workDescription: string;
   startFrom: string;
   endTo: string | 'current';
+  company: string;
   referencePersonName: string;
-  referencePersonEmail: string;
+  referencePersonContact: string;
   githubRepoLink: string;
   comments: string;
-  status: string | 'pending'; // Add initial status prop
+  status: string | 'Pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -56,9 +64,10 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   jobTitle,
   workDescription,
   startFrom,
+  company,
   endTo,
   referencePersonName,
-  referencePersonEmail,
+  referencePersonContact,
   githubRepoLink,
   comments,
   status, // Get initial status from props
@@ -69,7 +78,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
-
+  const selectedType = form.watch('type');
   useEffect(() => {
     // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
@@ -83,7 +92,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   }
 
   return (
-    <Card className="max-w-full mx-auto md:max-w-2xl">
+    <Card className="max-w-full mx-auto md:min-w-[30vw]">
       <CardHeader>
         <CardTitle className="flex justify-between">
           <span>{jobTitle}</span>
@@ -99,9 +108,9 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           )}
         </CardTitle>
         <CardDescription className="text-justify text-gray-600">
-          {verificationStatus === 'pending' ? (
+          {verificationStatus === 'Pending' ? (
             <Badge className="bg-warning-foreground text-white my-2">
-              PENDING
+              Pending
             </Badge>
           ) : verificationStatus === 'verified' ? (
             <Badge className="bg-success text-white my-2">VERIFIED</Badge>
@@ -115,6 +124,12 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       <CardContent>
         <div className="mt-4">
           <div className="mt-4">
+            <p className="mt-4 mb-3 text-m text-gray-600 flex items-center">
+              <span className="flex">
+                <Building className="mr-2" />
+                {company}
+              </span>
+            </p>
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-sm text-gray-600 flex items-center">
@@ -129,13 +144,13 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             {/* Adding Tooltip for Reference Person Email */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <Mail className="mr-2" />
-                  {referencePersonEmail}
+                <p className="text-sm text-gray-600 flex items-center mt-2">
+                  <Phone className="mr-2" />
+                  {referencePersonContact}
                 </p>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                {referencePersonEmail}
+                {referencePersonContact}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -155,7 +170,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             : 'Current'}
         </div>
 
-        {verificationStatus === 'pending' && (
+        {verificationStatus === 'Pending' && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -208,7 +223,11 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>
