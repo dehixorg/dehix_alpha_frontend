@@ -190,6 +190,7 @@ export default function ProfessionalInfo() {
             <EducationVerificationCard
               key={index}
               type="education"
+              _id={data._id}
               degree={data.degree}
               location={data.universityName} // Note: update as per your interface if needed
               startFrom={data.startDate}
