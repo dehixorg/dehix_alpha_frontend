@@ -4,7 +4,7 @@ import { MessageSquareIcon, MapPin } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
   CardContent,
@@ -32,6 +32,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface EducationProps {
+  _id:string
   type: string;
   location: string;
   degree: string;
@@ -46,13 +47,14 @@ interface EducationProps {
 }
 
 const FormSchema = z.object({
-  type: z.enum(['verified', 'rejected'], {
+  type: z.enum(['Approved', 'Denied'], {
     required_error: 'You need to select a type.',
   }),
   comment: z.string().optional(),
 });
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
+  _id,
   type,
   degree,
   location,
@@ -80,7 +82,13 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+ async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response= await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=education`,{
+      comments:data.comment,
+      verification_status:data.type
+    })
+    console.log("Comments:", data.comment || "",{...data,
+      verification_status:data.type},_id);
     // Update status based on selection
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
@@ -96,10 +104,10 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
           {verificationStatus === 'pending' ||
           verificationStatus === 'added' ? (
             <Badge className="bg-warning-foreground text-white">PENDING</Badge>
-          ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white">VERIFIED</Badge>
+          ) : verificationStatus === 'Approved' ? (
+            <Badge className="bg-success text-white">Approved</Badge>
           ) : (
-            <Badge className="bg-red-500 text-white">REJECTED</Badge>
+            <Badge className="bg-red-500 text-white">Denied</Badge>
           )}
         </CardTitle>
         <CardDescription className="text-justify text-gray-600">
@@ -180,18 +188,18 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                       >
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="verified" />
+                            <RadioGroupItem value="Approved" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Verified
+                            Approved
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="rejected" />
+                            <RadioGroupItem value="Denied" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Rejected
+                            Denied
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>

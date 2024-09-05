@@ -30,6 +30,7 @@ import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectV
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
+  _id:string
   projectName: string;
   description: string;
   githubLink: string;
@@ -73,9 +74,10 @@ export default function ProfessionalInfo() {
       );
       // console.log(response.data)
       setProjectData(response.data.data);
-      const flattenedData = response.data.data.flatMap((entry: any) =>
+      const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
       );
+      console.log(flattenedData._id)
       setProjectData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
@@ -183,6 +185,7 @@ export default function ProfessionalInfo() {
           {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
+              _id={data._id}
               projectName={data.projectName}
               description={data.description}
               githubLink={data.githubLink}
