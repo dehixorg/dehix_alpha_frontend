@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface BusinessProps {
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -64,6 +66,7 @@ const FormSchema = z.object({
 });
 
 const BusinessVerificationCard: React.FC<BusinessProps> = ({
+  _id,
   firstName,
   lastName,
   email,
@@ -90,7 +93,17 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    // const response= await axiosInstance.patch(`/freelancer/${_id}/oracle?doc_type=business`,{
+    //   ...data,
+    //   verification_status:data.type
+    // })
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     // console.log("Comments:", data.comment || "");

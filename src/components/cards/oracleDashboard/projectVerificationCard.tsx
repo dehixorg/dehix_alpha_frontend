@@ -30,8 +30,10 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProjectProps {
+  _id: string;
   projectName: string;
   description: string;
   githubLink: string;
@@ -42,19 +44,20 @@ interface ProjectProps {
   comments: string;
   role: string;
   projectType: string;
-  status: string | 'pending'; // Add initial status prop
+  status: string | 'Pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
 const FormSchema = z.object({
-  type: z.enum(['verified', 'rejected'], {
+  type: z.enum(['Approved', 'Denied'], {
     required_error: 'You need to select a type.',
   }),
   comment: z.string().optional(),
 });
 
 const ProjectVerificationCard: React.FC<ProjectProps> = ({
+  _id,
   projectName,
   description,
   githubLink,
@@ -79,10 +82,22 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response = await axiosInstance.put(
+      `/freelancer/${_id}/oracle?doc_type=project`,
+      {
+        comments: data.comment,
+        verification_status: data.type,
+      },
+    );
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
-    // console.log("Comments:", data.comment || "");
     onCommentUpdate(data.comment || '');
   }
 
@@ -100,15 +115,20 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
           )}
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-600">
-          {verificationStatus === 'pending' ||
-          verificationStatus === 'added' ? (
+          {verificationStatus === 'Pending' ||
+          verificationStatus === 'added' ||
+          verificationStatus === 'reapplied' ? (
             <Badge className="bg-warning-foreground text-white my-2">
-              PENDING
+              {verificationStatus}
             </Badge>
-          ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white my-2">VERIFIED</Badge>
+          ) : verificationStatus === 'Approved' ||
+            verificationStatus === 'Verified' ||
+            verificationStatus === 'verified' ? (
+            <Badge className="bg-success text-white my-2">
+              {verificationStatus}
+            </Badge>
           ) : (
-            <Badge className="bg-red-500 text-white my-2">REJECTED</Badge>
+            <Badge className="bg-red-500 text-white my-2">Denied</Badge>
           )}
           <br />
           {description}
@@ -165,8 +185,9 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
             : 'Current'}
         </div>
 
-        {(verificationStatus === 'pending' ||
-          verificationStatus === 'added') && (
+        {(verificationStatus === 'Pending' ||
+          verificationStatus === 'added' ||
+          verificationStatus === 'reapplied') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -186,19 +207,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                       >
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="verified" />
+                            <RadioGroupItem value="Approved" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Verified
+                            Approved
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="rejected" />
+                            <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Rejected
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
