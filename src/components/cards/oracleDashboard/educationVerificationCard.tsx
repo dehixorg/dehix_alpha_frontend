@@ -4,6 +4,7 @@ import { MessageSquareIcon, MapPin } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
@@ -32,7 +33,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface EducationProps {
-  _id:string
+  _id: string;
   type: string;
   location: string;
   degree: string;
@@ -82,13 +83,20 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
- async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const response= await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=education`,{
-      comments:data.comment,
-      verification_status:data.type
-    })
-    console.log("Comments:", data.comment || "",{...data,
-      verification_status:data.type},_id);
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response = await axiosInstance.put(
+      `/freelancer/${_id}/oracle?doc_type=education`,
+      {
+        comments: data.comment,
+        verification_status: data.type,
+      },
+    );
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     // Update status based on selection
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
@@ -198,9 +206,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                           <FormControl>
                             <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Denied
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>

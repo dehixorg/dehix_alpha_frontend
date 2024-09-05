@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProjectProps {
-  _id:string
+  _id: string;
   projectName: string;
   description: string;
   githubLink: string;
@@ -82,14 +82,20 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
- async function onSubmit(data: z.infer<typeof FormSchema>) {
-  
-    const response= await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=project`,{
-      comments:data.comment,
-      verification_status:data.type
-    })
-    console.log("Comments:", data.comment || "",{...data,
-      verification_status:data.type},_id);
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response = await axiosInstance.put(
+      `/freelancer/${_id}/oracle?doc_type=project`,
+      {
+        comments: data.comment,
+        verification_status: data.type,
+      },
+    );
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     onCommentUpdate(data.comment || '');
@@ -110,12 +116,17 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-600">
           {verificationStatus === 'Pending' ||
-          verificationStatus === 'added' ||verificationStatus === 'reapplied' ? (
+          verificationStatus === 'added' ||
+          verificationStatus === 'reapplied' ? (
             <Badge className="bg-warning-foreground text-white my-2">
-             {verificationStatus}
+              {verificationStatus}
             </Badge>
-          ) : verificationStatus === 'Approved' ||verificationStatus === 'Verified' ||verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white my-2">{verificationStatus}</Badge>
+          ) : verificationStatus === 'Approved' ||
+            verificationStatus === 'Verified' ||
+            verificationStatus === 'verified' ? (
+            <Badge className="bg-success text-white my-2">
+              {verificationStatus}
+            </Badge>
           ) : (
             <Badge className="bg-red-500 text-white my-2">Denied</Badge>
           )}
@@ -175,7 +186,8 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
         </div>
 
         {(verificationStatus === 'Pending' ||
-          verificationStatus === 'added' ||verificationStatus === 'reapplied') && (
+          verificationStatus === 'added' ||
+          verificationStatus === 'reapplied') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -205,9 +217,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
                           <FormControl>
                             <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Denied
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>

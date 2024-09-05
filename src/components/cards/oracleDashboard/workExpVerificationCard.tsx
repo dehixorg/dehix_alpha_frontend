@@ -11,6 +11,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
@@ -39,7 +40,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface WorkExpProps {
-  _id:string;
+  _id: string;
   jobTitle: string;
   workDescription: string;
   startFrom: string;
@@ -86,13 +87,20 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
- async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const response= await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=experience`,{
-      comments:data.comment,
-      verification_status:data.type
-    })
-    console.log("Comments:", data.comment || "",{...data,
-      verification_status:data.type},_id);
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response = await axiosInstance.put(
+      `/freelancer/${_id}/oracle?doc_type=experience`,
+      {
+        comments: data.comment,
+        verification_status: data.type,
+      },
+    );
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     // console.log("Comments:", data.comment || "");
@@ -208,9 +216,7 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                           <FormControl>
                             <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Denied
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>

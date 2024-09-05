@@ -30,7 +30,7 @@ import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpV
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
-  _id:string;
+  _id: string;
   jobTitle: string;
   workDescription: string;
   company: string;
