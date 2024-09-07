@@ -11,6 +11,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface JobCardProps {
   id: string;
@@ -49,7 +52,8 @@ const JobCard: React.FC<JobCardProps> = ({
   team,
 }) => {
   const [isClient, setIsClient] = React.useState(false);
-
+  const user = useSelector((state: RootState) => state.user);
+  const [isLoading, setIsLoading] = React.useState(false);
   React.useEffect(() => {
     setIsClient(true);
   }, []);
@@ -57,8 +61,20 @@ const JobCard: React.FC<JobCardProps> = ({
   if (!isClient) {
     return null;
   }
-  const { text, className } = getStatusBadge(status);
 
+  const { text, className } = getStatusBadge(status);
+  const handleInterest= async ()=>{
+try{
+ const response = await axiosInstance.put(`/freelancer/${user.uid}/${id}/not_interested_project`)
+ console.log(response.data.message)
+}
+catch(e){
+// console.log(e,"error in not interested job api")
+}finally {
+  setIsLoading(false);
+}
+
+  }
   return (
     <Card className="w-full max-w-4xl">
       <CardHeader className="pb-3">
@@ -105,9 +121,19 @@ const JobCard: React.FC<JobCardProps> = ({
           <Button>
             <Link href={`/freelancer/project/${id}`}>View</Link>
           </Button>
-          <Button className="cursor-pointer text-white bg-muted hover:bg-muted">
-            Not interested
-          </Button>
+          <Button 
+  className="cursor-pointer text-white bg-muted hover:bg-muted" 
+  onClick={handleInterest}
+  disabled={isLoading}
+>
+  {isLoading ? (
+    <>
+      Processing
+    </>
+  ) : (
+    'Not interested'
+  )}
+</Button>
         </div>
       </CardContent>
     </Card>
