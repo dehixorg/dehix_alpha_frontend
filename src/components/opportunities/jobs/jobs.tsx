@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+
 import {
   Card,
   CardContent,
@@ -10,11 +12,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-
 
 interface JobCardProps {
   id: string;
@@ -52,11 +52,8 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   team,
 }) => {
-  
   const [isLoading, setIsLoading] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  
- 
 
   const { text, className } = getStatusBadge(status);
 
@@ -64,11 +61,10 @@ const JobCard: React.FC<JobCardProps> = ({
     setIsLoading(true);
     try {
       const response = await axiosInstance.put(
-        `/freelancer/${user.uid}/${id}/not_interested_project`
+        `/freelancer/${user.uid}/${id}/not_interested_project`,
       );
       // console.log(response.data.message);
       window.location.reload();
-
     } catch (e) {
       toast({
         title: 'failed',
@@ -125,19 +121,13 @@ const JobCard: React.FC<JobCardProps> = ({
           <Button>
             <Link href={`/freelancer/project/${id}`}>View</Link>
           </Button>
-          <Button 
-  className="cursor-pointer text-white bg-muted hover:bg-muted" 
-  onClick={handleInterest}
-  disabled={isLoading}
->
-  {isLoading ? (
-    <>
-      Processing
-    </>
-  ) : (
-    'Not interested'
-  )}
-</Button>
+          <Button
+            className="cursor-pointer text-white bg-muted hover:bg-muted"
+            onClick={handleInterest}
+            disabled={isLoading}
+          >
+            {isLoading ? <>Processing</> : 'Not interested'}
+          </Button>
         </div>
       </CardContent>
     </Card>
