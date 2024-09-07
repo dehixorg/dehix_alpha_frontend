@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
-
 import {
   Card,
   CardContent,
@@ -14,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+
 
 interface JobCardProps {
   id: string;
@@ -51,30 +52,33 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   team,
 }) => {
-  const [isClient, setIsClient] = React.useState(false);
-  const user = useSelector((state: RootState) => state.user);
+  
   const [isLoading, setIsLoading] = React.useState(false);
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
+  const user = useSelector((state: RootState) => state.user);
+  
+ 
 
   const { text, className } = getStatusBadge(status);
-  const handleInterest= async ()=>{
-try{
- const response = await axiosInstance.put(`/freelancer/${user.uid}/${id}/not_interested_project`)
- console.log(response.data.message)
-}
-catch(e){
-// console.log(e,"error in not interested job api")
-}finally {
-  setIsLoading(false);
-}
 
-  }
+  const handleInterest = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.put(
+        `/freelancer/${user.uid}/${id}/not_interested_project`
+      );
+      // console.log(response.data.message);
+      window.location.reload();
+
+    } catch (e) {
+      toast({
+        title: 'failed',
+        description: 'Something went',
+      });
+      // console.error('Error in not interested job API:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Card className="w-full max-w-4xl">
       <CardHeader className="pb-3">
