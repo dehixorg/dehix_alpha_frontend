@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
 
 import {
   Card,
@@ -11,6 +12,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
 
 interface JobCardProps {
   id: string;
@@ -48,17 +52,29 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   team,
 }) => {
-  const [isClient, setIsClient] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const user = useSelector((state: RootState) => state.user);
 
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null;
-  }
   const { text, className } = getStatusBadge(status);
 
+  const handleInterest = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.put(
+        `/freelancer/${user.uid}/${id}/not_interested_project`,
+      );
+      // console.log(response.data.message);
+      window.location.reload();
+    } catch (e) {
+      toast({
+        title: 'failed',
+        description: 'Something went',
+      });
+      // console.error('Error in not interested job API:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Card className="w-full max-w-4xl">
       <CardHeader className="pb-3">
@@ -105,8 +121,12 @@ const JobCard: React.FC<JobCardProps> = ({
           <Button>
             <Link href={`/freelancer/project/${id}`}>View</Link>
           </Button>
-          <Button className="cursor-pointer text-white bg-muted hover:bg-muted">
-            Not interested
+          <Button
+            className="cursor-pointer text-white bg-muted hover:bg-muted"
+            onClick={handleInterest}
+            disabled={isLoading}
+          >
+            {isLoading ? <>Processing</> : 'Not interested'}
           </Button>
         </div>
       </CardContent>

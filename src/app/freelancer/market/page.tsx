@@ -123,7 +123,7 @@ const Market: React.FC = () => {
     try {
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(
-        `/business/all_project?${queryString}`,
+        `/business/${user.uid}/all_project?${queryString}`,
       );
       setJobs(response.data.data);
     } catch (error) {
@@ -135,11 +135,10 @@ const Market: React.FC = () => {
     console.log('Selected Filters:', filters);
     fetchData(filters);
   };
-
   useEffect(() => {
     setIsClient(true);
     fetchData(filters); // Fetch all data initially
-  }, [user.uid]);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
