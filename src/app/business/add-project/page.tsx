@@ -8,7 +8,6 @@ import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import UserDropdownMenu from '@/components/dropdown/user';
 import {
   menuItemsBottom,
   menuItemsTop,

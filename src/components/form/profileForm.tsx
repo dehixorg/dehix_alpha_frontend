@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Edit, Plus, X } from 'lucide-react';
-
+import { Plus, X } from 'lucide-react';
 import { Card } from '../ui/card';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {

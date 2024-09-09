@@ -4,8 +4,6 @@ import { useState, useRef } from 'react';
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
-import { useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -15,7 +13,6 @@ import PhoneNumberForm from './phoneNumberChecker';
 
 import TextInput from '@/components/shared/input'; // Import the reusable TextInput component
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/shared/datePicker';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';

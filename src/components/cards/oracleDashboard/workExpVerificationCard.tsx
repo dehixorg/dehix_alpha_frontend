@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import {
   MessageSquareIcon,
   Github,
-  Mail,
   User2Icon,
   Phone,
   Building,

@@ -26,7 +26,6 @@ interface FilterState {
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<any[]>([]);
@@ -94,7 +93,6 @@ const Market: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setIsClient(true);
     fetchData(filters); // Fetch all data initially
   }, [user.uid]);
 

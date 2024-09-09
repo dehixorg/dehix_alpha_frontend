@@ -1,7 +1,6 @@
 'use client';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, use } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
@@ -104,7 +103,6 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
 
-      const updatedBid = response.data;
     } catch (error) {
       console.error('Error updating bid status:', error);
     }
