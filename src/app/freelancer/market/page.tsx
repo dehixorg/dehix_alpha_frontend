@@ -3,9 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -138,7 +136,7 @@ const Market: React.FC = () => {
   useEffect(() => {
     setIsClient(true);
     fetchData(filters); // Fetch all data initially
-  }, []);
+  }, [filters, fetchData]);
 
   useEffect(() => {
     const handleResize = () => {

@@ -45,19 +45,19 @@ interface Interview {
   contact: string;
 }
 
-const CommentSchema = z.object({
-  comment: z.string().min(1, 'Comment is required'),
-});
+// const CommentSchema = z.object({
+//   comment: z.string().min(1, 'Comment is required'),
+// });
 
-interface CommentFormData {
-  comment: string;
-}
+// interface CommentFormData {
+//   comment: string;
+// }
 
-interface InterviewCardProps {
-  index: number;
-  interview: Interview;
-  handleCommentSubmit: (index: number, comment: string) => void;
-}
+// interface InterviewCardProps {
+//   index: number;
+//   interview: Interview;
+//   handleCommentSubmit: (index: number, comment: string) => void;
+// }
 
 // const InterviewCard: React.FC<InterviewCardProps> = ({
 //   index,
@@ -165,29 +165,29 @@ export default function CurrentPage() {
     'All',
   );
 
-  const handleCommentSubmit = (index: number, comment: string) => {
-    const updatedInterviews = [...sampleInterviews];
+  // const handleCommentSubmit = (index: number, comment: string) => {
+  //   const updatedInterviews = [...sampleInterviews];
 
-    console.log('Before update:', updatedInterviews[index]);
+  //   console.log('Before update:', updatedInterviews[index]);
 
-    updatedInterviews[index] = {
-      ...updatedInterviews[index],
-      comments: comment,
-      status: 'Complete',
-    };
+  //   updatedInterviews[index] = {
+  //     ...updatedInterviews[index],
+  //     comments: comment,
+  //     status: 'Complete',
+  //   };
 
-    console.log('After update:', updatedInterviews[index]);
+  //   console.log('After update:', updatedInterviews[index]);
 
-    setSampleInterviews(updatedInterviews);
-  };
+  //   setSampleInterviews(updatedInterviews);
+  // };
 
-  const filteredInterviews = sampleInterviews.filter((interview) => {
-    if (interview.status === 'Complete') return false;
-    if (filter === 'All') return true;
-    if (filter === 'Skills' && interview.skill) return true;
-    if (filter === 'Domain' && interview.domain) return true;
-    return false;
-  });
+  // const filteredInterviews = sampleInterviews.filter((interview) => {
+  //   if (interview.status === 'Complete') return false;
+  //   if (filter === 'All') return true;
+  //   if (filter === 'Skills' && interview.skill) return true;
+  //   if (filter === 'Domain' && interview.domain) return true;
+  //   return false;
+  // });
 
   return (
     <div className="flex min-h-screen w-full">

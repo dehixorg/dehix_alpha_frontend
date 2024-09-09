@@ -4,21 +4,7 @@ import React, { useEffect, useState } from 'react'; // Import 'react' first
 
 // Lucid icons
 // eslint-disable-next-line import/order
-import {
-  Boxes,
-  Eye,
-  FilePenLine,
-  Home,
-  Lightbulb,
-  LineChart,
-  ListFilter,
-  PackageOpen,
-  Plus,
-  Search,
-  Settings,
-  Trash2,
-  Users2,
-} from 'lucide-react';
+import { Eye, FilePenLine, Plus, Search, Trash2 } from 'lucide-react';
 
 // Shared components
 // eslint-disable-next-line import/order
@@ -68,12 +54,10 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import InterviewCard from '@/components/shared/interviewCard';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
@@ -119,14 +103,14 @@ interface SkillData {
   visible: string;
 }
 
-const sampleInterview = {
-  interviewer: 'John Doe',
-  interviewee: 'Jane Smith',
-  skill: 'React Development',
-  interviewDate: new Date('2023-11-23T10:30:00Z'),
-  rating: 4.5,
-  comments: 'Great communication skills and technical expertise.',
-};
+// const sampleInterview = {
+//   interviewer: 'John Doe',
+//   interviewee: 'Jane Smith',
+//   skill: 'React Development',
+//   interviewDate: new Date('2023-11-23T10:30:00Z'),
+//   rating: 4.5,
+//   comments: 'Great communication skills and technical expertise.',
+// };
 
 const domainDummyData: DomainData[] = [];
 const skillDummyData: SkillData[] = [];

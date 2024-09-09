@@ -1,10 +1,5 @@
 'use client';
-import { 
-  createContext,
-  useContext,
-  useEffect,
-  useState 
-} from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';

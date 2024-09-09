@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -59,7 +59,7 @@ const Market: React.FC = () => {
     return query;
   };
 
-  const fetchData = async (appliedFilters: FilterState) => {
+  const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(
@@ -69,10 +69,10 @@ const Market: React.FC = () => {
     } catch (error) {
       console.error('API Error:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchInitialData() {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         const skillLabels = skillsResponse.data.data.map(
@@ -89,12 +89,12 @@ const Market: React.FC = () => {
         console.error('Error fetching data:', error);
       }
     }
-    fetchData();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
     fetchData(filters); // Fetch all data initially
-  }, [user.uid]);
+  }, [user.uid, filters, fetchData]);
 
   const handleApply = () => {
     fetchData(filters);
