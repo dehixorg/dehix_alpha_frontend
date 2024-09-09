@@ -1,5 +1,10 @@
 'use client';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  createContext,
+  useContext,
+  useEffect,
+  useState 
+} from 'react';
 import { User } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -57,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [dispatch]);
+  }, [dispatch, router]);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

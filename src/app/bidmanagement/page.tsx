@@ -1,7 +1,6 @@
 'use client';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -99,14 +98,14 @@ const BidsPage = () => {
     else if (actionType === 'Lobby') updatedStatus = 'Lobby';
 
     try {
-      const response = await axiosInstance.put(`/bid/${bidId}/status`, {
+      await axiosInstance.put(`/bid/${bidId}/status`, {
         bid_status: updatedStatus,
       });
-
     } catch (error) {
       console.error('Error updating bid status:', error);
     }
   };
+
   return (
     <div className="bids-page max-w-6xl mx-auto p-8">
       <h1 className="text-3xl font-bold  mb-8">Manage Bids</h1>
