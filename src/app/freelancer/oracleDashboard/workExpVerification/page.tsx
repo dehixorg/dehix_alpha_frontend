@@ -84,7 +84,7 @@ export default function ProfessionalInfo() {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
   const updateJobStatus = (index: number, newStatus: string) => {
     const updatedData = [...JobData];
     updatedData[index].verificationStatus = newStatus;

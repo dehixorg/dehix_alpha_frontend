@@ -28,7 +28,7 @@ type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 export default function ProfessionalInfo() {
   const [dummyBusinessData, setDummyBusinessData] = useState(
     dummyData.dashboardFreelancerOracleBusiness,
-  ); // Initialize with data from JSON
+  ); 
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

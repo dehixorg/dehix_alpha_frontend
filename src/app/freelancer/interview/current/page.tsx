@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { z } from 'zod';
+// import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
 import { Search, ListFilter, PackageOpen } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
@@ -136,30 +136,30 @@ interface Interview {
 // };
 
 export default function CurrentPage() {
-  const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: '',
-      status: 'Pending',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Chirag Vaviya',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: '',
-      status: 'Pending',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ]);
+  // const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
+  //   {
+  //     reference: 'Jane Smith',
+  //     skill: 'HTML/CSS',
+  //     interviewDate: '2023-11-23T10:30:00Z',
+  //     rating: 9,
+  //     comments: '',
+  //     status: 'Pending',
+  //     description:
+  //       'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
+  //     contact: 'jane.smith@example.com',
+  //   },
+  //   {
+  //     reference: 'Chirag Vaviya',
+  //     domain: 'DevOps',
+  //     interviewDate: '2023-11-23T10:30:00Z',
+  //     rating: 9,
+  //     comments: '',
+  //     status: 'Pending',
+  //     description:
+  //       "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
+  //     contact: 'jane.smith@example.com',
+  //   },
+  // ]);
 
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
