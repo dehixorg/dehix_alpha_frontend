@@ -19,6 +19,7 @@ export interface ProjectDetailCardProps {
   endDate: Date | null | undefined;
   domains: string[];
   skills: string[];
+ 
 }
 
 const getStatusBadge = (status: string | undefined) => {

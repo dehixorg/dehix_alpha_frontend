@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useState ,useEffect} from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,7 +9,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { axiosInstance } from '@/lib/axiosinstance';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { useParams } from 'next/navigation';
+
 interface ProjectProfileDetailCardProps {
+  exist:any;
   domain: string;
   freelancersRequired: string;
   skills: string[];
@@ -20,13 +40,15 @@ interface ProjectProfileDetailCardProps {
   status?: string; // Optional fields
   startDate?: string; // Optional fields
   endDate?: string; // Optional fields
-  className?: string; // For custom styling
+  className?: string;
+  domain_id:string 
 }
 
 type CardProps = React.ComponentProps<typeof Card> &
   ProjectProfileDetailCardProps;
 
 export function ProjectProfileDetailCard({
+  exist,
   domain,
   freelancersRequired,
   skills,
@@ -39,8 +61,34 @@ export function ProjectProfileDetailCard({
   startDate,
   endDate,
   className,
+  domain_id,
   ...props
 }: CardProps) {
+  const [amount, setAmount] = useState('');
+  const [descriptionValue, setDescription] = useState('');
+  const user = useSelector((state:RootState) => state.user);
+  const params= useParams()
+  const handleSubmit = async (e:any) => {
+    e.preventDefault();
+    
+    try {
+      const response = await axiosInstance.post(`/bid`, {
+       current_price: amount,
+       description: descriptionValue,
+       bidder_id:user.uid,
+       project_id:params.project_id,
+       domain_id:domain_id
+      });
+      console.log('Bid successful:', response.data);
+     
+    } catch (error) {
+      console.error('Error submitting bid:', error);
+      
+    }
+  };
+  useEffect(()=>{
+
+  },[])
   return (
     <Card className={cn('w-[350px]', className)} {...props}>
       <CardHeader>
@@ -114,9 +162,56 @@ export function ProjectProfileDetailCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Button disabled className="w-full">
-          Bid(${rate})
-        </Button>
+      <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Bid</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Bid</DialogTitle>
+          <DialogDescription>
+            Click on bid if you want to bid for this profile
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-center">
+                Amount
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right block">
+                Description
+              </Label>
+              <Input
+                id="description"
+                type="text"
+                value={descriptionValue}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+          <Button type="submit" disabled={exist}>
+  {!exist ? "Bid" : "Applied"}
+</Button>
+
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+
       </CardFooter>
     </Card>
   );
