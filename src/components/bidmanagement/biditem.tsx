@@ -72,16 +72,10 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
   const handleActionClick = async (actionType: string) => {
     try {
       await onAction(_id, actionType);
-      if (actionType === 'Lobby') {
-        setStatusMessage('Candidate shifted to Lobby');
-      } else if (actionType === 'Schedule Interview') {
-        setStatusMessage('Candidate is to be interviewed');
-      } else {
-        setStatusMessage(`Candidate ${actionType}ed`);
-      }
+      setStatusMessage(`Candidate ${actionType}ed`);
       setButtonsVisible(false);
     } catch (error) {
-      setStatusMessage('Error performing ${actionType} action.');
+      setStatusMessage(`Error performing ${actionType} action.`);
       console.error('Error updating bid status:', error);
     }
   };
@@ -98,30 +92,15 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
       <CardContent>
         {buttonsVisible && (
           <div className="actions mt-4">
-            <Button
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mr-2"
-              onClick={() => handleActionClick('Accept')}
-            >
-              Accept
-            </Button>
-            <Button
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mr-2"
-              onClick={() => handleActionClick('Reject')}
-            >
-              Reject
-            </Button>
-            <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2"
-              onClick={() => handleActionClick('Lobby')}
-            >
-              Lobby
-            </Button>
-            <Button
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded mr-2"
-              onClick={() => handleActionClick('Schedule Interview')}
-            >
-              Schedule Interview
-            </Button>
+            {actions.map((action) => (
+              <Button
+                key={action.type}
+                className={`bg-${action.variant}-500 hover:bg-${action.variant}-600 text-white font-bold py-2 px-4 rounded mr-2`}
+                onClick={() => handleActionClick(action.label)}
+              >
+                {action.label}
+              </Button>
+            ))}
           </div>
         )}
       </CardContent>

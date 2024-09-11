@@ -60,7 +60,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const handleInterest = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.put(
+      await axiosInstance.put(
         `/freelancer/${user.uid}/${id}/not_interested_project`,
       );
       // console.log(response.data.message);

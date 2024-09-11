@@ -33,17 +33,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
-interface Interview {
-  reference: string;
-  skill?: string;
-  domain?: string;
-  interviewDate: string;
-  rating: number;
-  comments: string;
-  status: 'Pending' | 'Complete';
-  description: string;
-  contact: string;
-}
+// interface Interview {
+//   reference: string;
+//   skill?: string;
+//   domain?: string;
+//   interviewDate: string;
+//   rating: number;
+//   comments: string;
+//   status: 'Pending' | 'Complete';
+//   description: string;
+//   contact: string;
+// }
 
 // const CommentSchema = z.object({
 //   comment: z.string().min(1, 'Comment is required'),

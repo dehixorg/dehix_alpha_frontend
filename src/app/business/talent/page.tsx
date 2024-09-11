@@ -813,8 +813,8 @@ export default function Dashboard() {
                                 <TableCell>
                                   <div className="flex items-center space-x-2">
                                     <Dialog
-                                      open={isViewDomain}
-                                      onOpenChange={setIsViewDomain}
+                                      open={isViewSkill}
+                                      onOpenChange={setIsViewSkill}
                                     >
                                       <DialogTrigger asChild>
                                         <Button

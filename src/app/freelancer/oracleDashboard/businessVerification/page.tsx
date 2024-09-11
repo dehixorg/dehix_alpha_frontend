@@ -26,9 +26,9 @@ import dummyData from '@/dummydata.json'; // Import your JSON data here
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyBusinessData, setDummyBusinessData] = useState(
+  const [dummyBusinessData] = useState(
     dummyData.dashboardFreelancerOracleBusiness,
-  ); 
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

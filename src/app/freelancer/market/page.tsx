@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -117,17 +117,20 @@ const Market: React.FC = () => {
     fetchData();
   }, []);
 
-  const fetchData = async (appliedFilters: FilterState) => {
-    try {
-      const queryString = constructQueryString(appliedFilters);
-      const response = await axiosInstance.get(
-        `/business/${user.uid}/all_project?${queryString}`,
-      );
-      setJobs(response.data.data);
-    } catch (error) {
-      console.error('API Error:', error);
-    }
-  };
+  const fetchData = useCallback(
+    async (appliedFilters: FilterState) => {
+      try {
+        const queryString = constructQueryString(appliedFilters);
+        const response = await axiosInstance.get(
+          `/business/${user.uid}/all_project?${queryString}`,
+        );
+        setJobs(response.data.data);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    },
+    [user.uid],
+  );
 
   const handleApply = () => {
     console.log('Selected Filters:', filters);
