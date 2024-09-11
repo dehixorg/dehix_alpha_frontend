@@ -109,7 +109,7 @@ export function CreateProjectBusinessForm() {
   const [tmpSkill, setTmpSkill] = useState<any>('');
 
   const [domains, setDomains] = useState<any>([]);
-  const [currDomains, setCurrDomains] = useState<any>([]);
+  const [currDomains] = useState<any>([]);
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -341,7 +341,7 @@ export function CreateProjectBusinessForm() {
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.skills`}
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>

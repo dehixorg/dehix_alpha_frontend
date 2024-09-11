@@ -6,7 +6,13 @@ import {
   signInWithPhoneNumber,
   UserCredential,
 } from 'firebase/auth';
-import React, { FormEvent, useEffect, useState, useTransition } from 'react';
+import React, {
+  FormEvent,
+  useEffect,
+  useState,
+  useTransition,
+  useCallback,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 
@@ -58,11 +64,6 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     return () => clearTimeout(timer);
   }, [resendCountdown]);
   useEffect(() => {
-    if (isModalOpen) {
-      requestOtp();
-    }
-  }, [isModalOpen, setIsModalOpen]);
-  useEffect(() => {
     const recaptchaVerifier = new RecaptchaVerifier(
       auth,
       'recaptcha-container',
@@ -78,14 +79,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     };
   }, []);
 
-  useEffect(() => {
-    const hasEnteredAllDigits = otp.length === 6;
-    if (hasEnteredAllDigits) {
-      verifyOtp();
-    }
-  }, [otp]);
-
-  const verifyOtp = async () => {
+  const verifyOtp = useCallback(async () => {
     startTransition(async () => {
       setError('');
 
@@ -105,43 +99,59 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         setError('Failed to verify OTP. Please check the OTP.');
       }
     });
-  };
+  }, [confirmationResult, otp, dispatch, router]);
 
-  const requestOtp = async (e?: FormEvent<HTMLFormElement>) => {
-    e?.preventDefault();
+  useEffect(() => {
+    const hasEnteredAllDigits = otp.length === 6;
+    if (hasEnteredAllDigits) {
+      verifyOtp();
+    }
+  }, [otp, verifyOtp]);
 
-    setResendCountdown(60);
+  const requestOtp = useCallback(
+    async (e?: FormEvent<HTMLFormElement>) => {
+      e?.preventDefault();
 
-    startTransition(async () => {
-      setError('');
+      setResendCountdown(60);
 
-      if (!recaptchaVerifier) {
-        return setError('RecaptchaVerifier is not initialized.');
-      }
+      startTransition(async () => {
+        setError('');
 
-      try {
-        const confirmationResult = await signInWithPhoneNumber(
-          auth,
-          phoneNumber,
-          recaptchaVerifier,
-        );
-
-        setConfirmationResult(confirmationResult);
-        setSuccess('OTP sent successfully.');
-      } catch (err: any) {
-        console.log(err);
-        setResendCountdown(0);
-
-        if (err.code === 'auth/invalid-phone-number') {
-          setError('Invalid phone number. Please check the number.');
-        } else if (err.code === 'auth/too-many-requests') {
-          setError('Too many requests. Please try again later.');
-        } else {
-          setError('Failed to send OTP. Please try again.');
+        if (!recaptchaVerifier) {
+          return setError('RecaptchaVerifier is not initialized.');
         }
-      }
-    });
-  };
+
+        try {
+          const confirmationResult = await signInWithPhoneNumber(
+            auth,
+            phoneNumber,
+            recaptchaVerifier,
+          );
+
+          setConfirmationResult(confirmationResult);
+          setSuccess('OTP sent successfully.');
+        } catch (err: any) {
+          console.log(err);
+          setResendCountdown(0);
+
+          if (err.code === 'auth/invalid-phone-number') {
+            setError('Invalid phone number. Please check the number.');
+          } else if (err.code === 'auth/too-many-requests') {
+            setError('Too many requests. Please try again later.');
+          } else {
+            setError('Failed to send OTP. Please try again.');
+          }
+        }
+      });
+    },
+    [recaptchaVerifier, phoneNumber],
+  );
+
+  useEffect(() => {
+    if (isModalOpen) {
+      requestOtp();
+    }
+  }, [isModalOpen, requestOtp]);
 
   const loadingIndicator = (
     <div role="status" className="flex justify-center">

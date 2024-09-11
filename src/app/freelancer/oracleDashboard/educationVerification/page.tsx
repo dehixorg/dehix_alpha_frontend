@@ -69,16 +69,17 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=education`,
       );
-      setEducationData(response.data.data);
-      const flattenedData = response.data.data.flatMap((entry: any) =>
+      const data = response.data.data;
+      setEducationData(data);
+      const flattenedData = data.flatMap((entry: any) =>
         Object.values(entry.education),
       );
       setEducationData(flattenedData);
-      console.log(educationdata, 'data from backend');
+      console.log(flattenedData, 'data from backend');
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  }, []);
+  }, [user.uid]);
 
   // Log the requesterId state after it updates
   // useEffect(() => {
@@ -89,17 +90,17 @@ export default function ProfessionalInfo() {
     fetchData();
   }, [fetchData]);
 
-  const updateEducationStatus = (index: number, newStatus: string) => {
-    const updatedData = [...educationdata];
-    updatedData[index].verificationStatus = newStatus;
-    setEducationData(updatedData); // Update state with new status
-  };
+  // const updateEducationStatus = (index: number, newStatus: string) => {
+  //   const updatedData = [...educationdata];
+  //   updatedData[index].verificationStatus = newStatus;
+  //   setEducationData(updatedData); // Update state with new status
+  // };
 
-  const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...educationdata];
-    updatedData[index].comments = newComment;
-    setEducationData(updatedData); // Update state with new comment
-  };
+  // const updateCommentStatus = (index: number, newComment: string) => {
+  //   const updatedData = [...educationdata];
+  //   updatedData[index].comments = newComment;
+  //   setEducationData(updatedData); // Update state with new comment
+  // };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

@@ -84,13 +84,10 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const response = await axiosInstance.put(
-      `/freelancer/${_id}/oracle?doc_type=education`,
-      {
-        comments: data.comment,
-        verification_status: data.type,
-      },
-    );
+    await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=education`, {
+      comments: data.comment,
+      verification_status: data.type,
+    });
     console.log(
       'Comments:',
       data.comment || '',
