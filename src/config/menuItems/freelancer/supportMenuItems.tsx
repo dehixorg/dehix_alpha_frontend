@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { HeartHandshake, Boxes, HomeIcon, User } from 'lucide-react';
+import { HeartHandshake, Boxes, HomeIcon } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';

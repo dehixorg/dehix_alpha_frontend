@@ -82,7 +82,7 @@ export default function ProfessionalInfo() {
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  }, []);
+  }, [user.uid]);
   useEffect(() => {
     fetchData();
   }, [fetchData]);

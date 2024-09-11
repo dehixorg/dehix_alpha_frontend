@@ -1,6 +1,6 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
@@ -66,13 +66,12 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.verificationStatus === 'Pending')
     );
   });
-  const fetchData = async () => {
+
+  const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=experience`,
       );
-      // console.log(response.data)
-
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
         Object.values(entry.professionalInfo),
@@ -81,10 +80,12 @@ export default function ProfessionalInfo() {
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  };
+  }, [user.uid]);
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
   const updateJobStatus = (index: number, newStatus: string) => {
     const updatedData = [...JobData];
     updatedData[index].verificationStatus = newStatus;
