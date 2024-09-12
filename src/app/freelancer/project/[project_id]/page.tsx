@@ -23,8 +23,8 @@ import { RootState } from '@/lib/store';
 
 interface Project {
   _id: string;
-  projectName: string;
-  description: string;
+  projectName: string | undefined|null;
+  description:string | undefined|null;
   companyId: string;
   email: string;
   url?: { value: string }[];
@@ -89,7 +89,11 @@ const [exist,setExist]=useState(false)
         const response = await axiosInstance.get(
           `/business/${project_id}/project`,
         );
-        setProject(response.data.data);
+        setProject(response.data.data.data);
+        if(response.data.data.message=="Already Applied"){
+          setExist(true)
+        }
+        
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -100,21 +104,16 @@ const fetchBid= async()=>{
   try {
     const response =await axiosInstance(`bid/${project_id}/project/bid`)
     setBids(response.data.data)
-    if (bids.some(bid => bid.bidder_id === user.id)) {
-      setExist(true);
-    } else {
-      setExist(false);
-    }
+    
   } catch (error) {
     console.log(error)
   }
 }
 useEffect(()=>{
 fetchBid()
+console.log("check",exist)
 },[project_id])
-  if (!project) {
-    return <div>Loading...</div>;
-  }
+ 
   console.log(project);
   
 
@@ -158,14 +157,14 @@ fetchBid()
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div>
               <ProjectDetailCard
-                projectName={project.projectName}
-                description={project.description}
-                email={project.email}
-                status={project.status}
-                startDate={project.createdAt}
-                endDate={project.end}
+                projectName={project?.projectName}
+                description={project?.description}
+                email={project?.email}
+                status={project?.status}
+                startDate={project?.createdAt}
+                endDate={project?.end}
                 domains={[]}
-                skills={project.skillsRequired}
+                skills={project?.skillsRequired}
               />
             </div>
             {/* <Separator className="my-1" />
