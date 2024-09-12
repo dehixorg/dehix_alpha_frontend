@@ -11,15 +11,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 export interface ProjectDetailCardProps {
-  projectName: string | undefined|null;
-  description:string | undefined|null;
-  email: string | undefined|null;
+  projectName: string | undefined | null;
+  description: string | undefined | null;
+  email: string | undefined | null;
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
   domains: string[];
-  skills: string[] | undefined|null;
- 
+  skills: string[] | undefined | null;
 }
 
 const getStatusBadge = (status: string | undefined) => {

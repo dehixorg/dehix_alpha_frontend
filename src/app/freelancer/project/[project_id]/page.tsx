@@ -1,9 +1,11 @@
 'use client';
-import { Search,User} from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+import { useSelector } from 'react-redux';
 
+import { Badge } from '@/components/ui/badge';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -17,14 +19,12 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 
 interface Project {
   _id: string;
-  projectName: string | undefined|null;
-  description:string | undefined|null;
+  projectName: string | undefined | null;
+  description: string | undefined | null;
   companyId: string;
   email: string;
   url?: { value: string }[];
@@ -37,7 +37,7 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  Bids?:any
+  Bids?: any;
   profiles?: {
     domain?: string;
     freelancersRequired?: string;
@@ -71,17 +71,15 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const user = useSelector((state: RootState) => state.user);
-const [bids,setBids]=useState([
-  {
-    "userName": "",
-    "current_price": "",
-    "bid_status": "",
-    "bidder_id":""
-  },
-  
-]
-)
-const [exist,setExist]=useState(false)
+  const [bids, setBids] = useState([
+    {
+      userName: '',
+      current_price: '',
+      bid_status: '',
+      bidder_id: '',
+    },
+  ]);
+  const [exist, setExist] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,35 +88,27 @@ const [exist,setExist]=useState(false)
           `/business/${project_id}/project`,
         );
         setProject(response.data.data.data);
-        if(response.data.data.message=="Already Applied"){
-          setExist(true)
+        if (response.data.data.message == 'Already Applied') {
+          setExist(true);
         }
-        
       } catch (error) {
         console.error('API Error:', error);
       }
     };
     fetchData();
   }, [project_id]);
-const fetchBid= async()=>{
-  try {
-    const response =await axiosInstance(`bid/${project_id}/project/bid`)
-    setBids(response.data.data)
-    
-  } catch (error) {
-    console.log(error)
-  }
-}
-useEffect(()=>{
-fetchBid()
-console.log("check",exist)
-},[project_id])
- 
-  console.log(project);
-  
+  const fetchBid = async () => {
+    try {
+      const response = await axiosInstance(`bid/${project_id}/project/bid`);
+      setBids(response.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchBid();
+  }, [project_id, exist]);
 
-  
-  
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -175,10 +165,10 @@ console.log("check",exist)
               <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
             </div> */}
           </div>
-          
+
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
-            Profiles
+              Profiles
             </CardTitle>
             {project?.profiles?.map((profile: any, index: number) => (
               <ProjectProfileDetailCard
@@ -191,32 +181,35 @@ console.log("check",exist)
           </div>
           <Card x-chunk="dashboard-01-chunk-5">
             <CardHeader>
-              <CardTitle>Total Bids  {bids.length} 
-              </CardTitle>
+              <CardTitle>Total Bids {bids.length}</CardTitle>
             </CardHeader>
-           { bids.map((data)=>{
-            const { text, className } = getStatusBadge(data.bid_status);
-          return  <CardContent className="grid gap-8">
-            
-              <div className="flex items-center gap-4">
-                <Avatar className="hidden h-9 w-9 sm:flex">
-                  {/* <AvatarImage src="/avatars/01.png" alt="Avatar" /> */}
-                  <AvatarFallback><User/></AvatarFallback>
-                </Avatar>
-                <div className="grid gap-1">
-                  <p className="text-sm font-medium leading-none md:ml-6">
-                    {data.userName}
-                  </p>
-                  {/* <p className="text-sm text-muted-foreground">
+            {bids.map((data) => {
+              const { text, className } = getStatusBadge(data.bid_status);
+              return (
+                <CardContent className="grid gap-8" key={data.bidder_id}>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      {/* <AvatarImage src="/avatars/01.png" alt="Avatar" /> */}
+                      <AvatarFallback>
+                        <User />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none md:ml-6">
+                        {data.userName}
+                      </p>
+                      {/* <p className="text-sm text-muted-foreground">
                     {data.bidderEmail}
                   </p> */}
-                </div>
-                <div className="ml-auto font-medium">${data.current_price}</div>
-                <Badge className={className}>{text}</Badge>
-              </div>
-              
-            </CardContent>
-           })}
+                    </div>
+                    <div className="ml-auto font-medium">
+                      ${data.current_price}
+                    </div>
+                    <Badge className={className}>{text}</Badge>
+                  </div>
+                </CardContent>
+              );
+            })}
           </Card>
         </main>
       </div>

@@ -1,5 +1,8 @@
-import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'next/navigation';
+
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,15 +20,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-import { useParams } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
-
 
 interface ProjectProfileDetailCardProps {
   exist: any;
@@ -44,7 +44,8 @@ interface ProjectProfileDetailCardProps {
   domain_id: string;
 }
 
-type CardProps = React.ComponentProps<typeof Card> & ProjectProfileDetailCardProps;
+type CardProps = React.ComponentProps<typeof Card> &
+  ProjectProfileDetailCardProps;
 
 export function ProjectProfileDetailCard({
   exist,
@@ -78,7 +79,7 @@ export function ProjectProfileDetailCard({
         description: descriptionValue,
         bidder_id: user.uid,
         project_id: params.project_id,
-        domain_id: domain_id
+        domain_id: domain_id,
       });
 
       setAmount('');
@@ -89,7 +90,6 @@ export function ProjectProfileDetailCard({
         description: 'The Bid has been successfully added.',
       });
       window.location.reload();
-
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
@@ -100,7 +100,7 @@ export function ProjectProfileDetailCard({
   };
 
   useEffect(() => {
-    console.log("checking existence", exist);
+    console.log('checking existence', exist);
   }, [exist]);
 
   return (
@@ -110,7 +110,8 @@ export function ProjectProfileDetailCard({
           {domain} ({freelancersRequired})
         </CardTitle>
         <CardDescription className="text-gray-600">
-          Requirement is of {freelancersRequired} freelancer(s) for {domain.toLowerCase()} profile.
+          Requirement is of {freelancersRequired} freelancer(s) for{' '}
+          {domain.toLowerCase()} profile.
           <br />
           {description}
         </CardDescription>
@@ -132,7 +133,9 @@ export function ProjectProfileDetailCard({
             )}
             {startDate && (
               <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Start Date - </span>
+                <span className="text-gray-700 font-semibold">
+                  Start Date -{' '}
+                </span>
                 {startDate}
               </li>
             )}
@@ -147,7 +150,9 @@ export function ProjectProfileDetailCard({
               {experience} years
             </li>
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Min Connect - </span>
+              <span className="text-gray-400 font-semibold">
+                Min Connect -{' '}
+              </span>
               {minConnect}
             </li>
           </ul>
@@ -156,7 +161,10 @@ export function ProjectProfileDetailCard({
               <span className="text-gray-700 font-semibold">Skills - </span>
               <ul className="flex flex-wrap gap-1 mt-1">
                 {skills.map((skill, index) => (
-                  <li key={index} className="bg-gray-200 rounded px-2 py-1 text-sm">
+                  <li
+                    key={index}
+                    className="bg-gray-200 rounded px-2 py-1 text-sm"
+                  >
                     {skill}
                   </li>
                 ))}
@@ -169,7 +177,7 @@ export function ProjectProfileDetailCard({
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" type="button" disabled={exist}>
-              {!exist ? "Bid" : "Applied"}
+              {!exist ? 'Bid' : 'Applied'}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -210,7 +218,7 @@ export function ProjectProfileDetailCard({
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={exist}>
-                  {!exist ? "Bid" : "Applied"}
+                  {!exist ? 'Bid' : 'Applied'}
                 </Button>
               </DialogFooter>
             </form>
