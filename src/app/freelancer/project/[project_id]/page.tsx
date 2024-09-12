@@ -136,6 +136,7 @@ export default function Dashboard() {
                 key={index}
                 className="w-full min-w-full p-4 shadow-md rounded-lg"
                 {...profile}
+                // kmxkxmikdsncdjndjdnjd
               />
             ))}
           </div>
