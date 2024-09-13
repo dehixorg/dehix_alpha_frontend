@@ -13,8 +13,8 @@ const FreelancerList: React.FC<FreelancerListProps> = ({ freelancers }) => {
         <FreelancerCard
           key={index}
           name={freelancer.firstName + ' ' + freelancer.lastName}
-         skills={freelancer.skills}
-          // domains={freelancer.domains} 
+          skills={freelancer.skills}
+          // domains={freelancer.domains}
           experience={freelancer.workExperience}
           contact={''}
           role={freelancer.role}
