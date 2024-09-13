@@ -3,7 +3,7 @@ import { Search, User } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { useSelector } from 'react-redux';
+// import { useSelector } from 'react-redux'; // not used
 
 import { Badge } from '@/components/ui/badge';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -19,7 +19,7 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
+// import { RootState } from '@/lib/store'; // not used
 
 interface Project {
   _id: string;
@@ -70,7 +70,7 @@ const getStatusBadge = (status: string | undefined) => {
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const user = useSelector((state: RootState) => state.user);
+  // const user = useSelector((state: RootState) => state.user);
   const [bids, setBids] = useState([
     {
       userName: '',
@@ -80,6 +80,34 @@ export default function Dashboard() {
     },
   ]);
   const [exist, setExist] = useState(false);
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axiosInstance.get(
+  //         `/business/${project_id}/project`,
+  //       );
+  //       setProject(response.data.data.data);
+  //       if (response.data.data.message == 'Already Applied') {
+  //         setExist(true);
+  //       }
+  //     } catch (error) {
+  //       console.error('API Error:', error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [project_id]);
+  // const fetchBid = async () => {
+  //   try {
+  //     const response = await axiosInstance(`bid/${project_id}/project/bid`);
+  //     setBids(response.data.data);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchBid();
+  // }, [project_id, exist, fetchBid]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,18 +123,21 @@ export default function Dashboard() {
         console.error('API Error:', error);
       }
     };
+
+    // Move fetchBid inside the useEffect
+    const fetchBid = async () => {
+      try {
+        const response = await axiosInstance.get(
+          `bid/${project_id}/project/bid`,
+        );
+        setBids(response.data.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     fetchData();
-  }, [project_id]);
-  const fetchBid = async () => {
-    try {
-      const response = await axiosInstance(`bid/${project_id}/project/bid`);
-      setBids(response.data.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    fetchBid();
+    fetchBid(); // Call fetchBid inside useEffect
   }, [project_id, exist]);
 
   return (
@@ -189,7 +220,8 @@ export default function Dashboard() {
                 <CardContent className="grid gap-8" key={data.bidder_id}>
                   <div className="flex items-center gap-4">
                     <Avatar className="hidden h-9 w-9 sm:flex">
-                      {/* <AvatarImage src="/avatars/01.png" alt="Avatar" /> */}
+                      <AvatarImage src="/avatars/01.png" alt="Avatar" />{' '}
+                      {/* avtarimage fix */}
                       <AvatarFallback>
                         <User />
                       </AvatarFallback>

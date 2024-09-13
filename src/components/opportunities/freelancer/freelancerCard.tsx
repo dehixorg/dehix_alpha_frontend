@@ -1,63 +1,103 @@
-// FreelancerCard.tsx
+import * as React from 'react';
+import { Avatar } from '@radix-ui/react-avatar';
 
-import React from 'react';
-
-import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface FreelancerCardProps {
   name: string;
-  skills: string[];
-  domains: string[];
+  contact: string;
+  role: string;
+  bio: string;
   experience: string;
+  company1: string;
+  company2: string;
+  rating: number;
+  sessionsCompleted: number;
+  skills: any;
 }
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
   name,
-  skills,
-  domains,
+  contact,
+  role,
+  bio,
   experience,
+  company1,
+  company2,
+  rating,
+  sessionsCompleted,
+  skills,
 }) => {
   console.log({
     name,
-    skills,
-    domains,
+    contact,
+    role,
+    bio,
     experience,
+    company1,
+    company2,
+    rating,
+    sessionsCompleted,
+    skills,
   });
+
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">{name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mt-4">
-          <div className="flex items-center">
-            <span className="font-medium text-gray-400">Experience:</span>
-            <span className="ml-1">{experience}</span>
-          </div>
-          {skills && skills.length && (
-            <div className="mt-2">
-              <p className="font-medium">Skills:</p>
-              {skills?.map((skill: any, index) => (
-                <Badge key={index} className="mr-2 mb-2 uppercase">
-                  {skill.name}
-                </Badge>
-              ))}
+    <div className="w-full mb-4 max-w-3xl ">
+      <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20">
+        <div className="flex flex-col justify-between p-4">
+          <CardHeader>
+            <div className="flex gap-4">
+              <Avatar className="rounded-full w-20 h-20 object-cover border-2 border-gray-400 mb-4" />
+              <div className="mt-2">
+                <CardTitle className="text-xl font-bold">{name}</CardTitle>
+                <p className="text-sm text-gray-400">@codeacks</p>
+                <p className="text-sm text-blue-600 font-semibold">
+                  SDE2 @ Amazon
+                </p>
+              </div>
             </div>
-          )}
-          {domains && domains.length && (
-            <div className="mt-2">
-              <p className="font-medium">Domains:</p>
-              {domains?.map((domain: any, index) => (
-                <Badge key={index} className="mr-2 mb-2 uppercase">
-                  {domain.name}
-                </Badge>
-              ))}
+          </CardHeader>
+
+          <CardContent>
+            <p className="text-sm text-gray-400">
+              SDE 2 @Amazon | Founder @codedecks🚀
+            </p>
+            <p className="text-sm">
+              <span className="font-bold">{}6+ Years of Experience </span> at{' '}
+              <span className="text-blue-600 font-semibold">{}Amazon|</span>{' '}
+              <span className="text-blue-600 font-semibold">
+                IBM Software Labs
+              </span>
+            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-yellow-900">⭐⭐⭐⭐</p>
+              <p className="px-3 py-1 text-xs text-white bg-green-600 rounded-lg font-bold shadow-md">
+                {sessionsCompleted} Sessions Completed
+              </p>
             </div>
-          )}
+
+            {skills && skills.length && (
+              <div className="mt-2">
+                <p className="font-medium"></p>
+                <div className="flex flex-wrap gap-2">
+                  {skills?.map(
+                    (skill: any, index: React.Key | null | undefined) => (
+                      <Badge
+                        key={index}
+                        className=" bg-foreground text-background border border-white rounded-xl font-bold "
+                      >
+                        {skill.name}
+                      </Badge>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
         </div>
-      </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
