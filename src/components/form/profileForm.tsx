@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Edit, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -409,7 +409,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   <SelectTrigger>
                     <SelectValue
                       placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -584,4 +583,3 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     </Card>
   );
 }
-
