@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Edit, Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 
@@ -398,20 +398,31 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           /> */}
           <Separator className="col-span-2" />
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            <div>
+          <div className="flex flex-wrap gap-6 w-full">
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpSkill(value)}>
+                <Select
+                  onValueChange={(value) => setTmpSkill(value)}
+                  value={tmpSkill || ''}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select skill" />
+                    <SelectValue
+                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {skills.map((skill: any, index: number) => (
-                      <SelectItem key={index} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
+                    {skills
+                      .filter(
+                        (skill: any) =>
+                          !currSkills.some((s: any) => s.name === skill.label),
+                      )
+                      .map((skill: any, index: number) => (
+                        <SelectItem key={index} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -419,7 +430,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   type="button"
                   size="icon"
                   className="ml-2"
-                  onClick={handleAddSkill}
+                  onClick={() => {
+                    handleAddSkill();
+                    setTmpSkill('');
+                  }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -442,19 +456,32 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 ))}
               </div>
             </div>
-            <div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpDomain(value)}>
+                <Select
+                  onValueChange={(value) => setTmpDomain(value)}
+                  value={tmpDomain || ''}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select domain" />
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain: any, index: number) => (
-                      <SelectItem key={index} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
+                    {domains
+                      .filter(
+                        (domain: any) =>
+                          !currDomains.some(
+                            (d: any) => d.name === domain.label,
+                          ),
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -462,7 +489,69 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   type="button"
                   size="icon"
                   className="ml-2"
-                  onClick={handleAddDomain}
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currDomains.map((domain: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
+                  >
+                    {domain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDomain(domain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
+              <FormLabel>Project Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => setTmpDomain(value)}
+                  value={tmpDomain || ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains
+                      .filter(
+                        (domain: any) =>
+                          !currDomains.some(
+                            (d: any) => d.name === domain.label,
+                          ),
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                  }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -495,3 +584,4 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     </Card>
   );
 }
+

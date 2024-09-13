@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 
 import {
   Card,
@@ -12,9 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { toast } from '@/components/ui/use-toast';
 
 interface JobCardProps {
   id: string;
@@ -52,35 +48,24 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   team,
 }) => {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const user = useSelector((state: RootState) => state.user);
+  const [isClient, setIsClient] = React.useState(false);
 
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
   const { text, className } = getStatusBadge(status);
 
-  const handleInterest = async () => {
-    setIsLoading(true);
-    try {
-      await axiosInstance.put(
-        `/freelancer/${user.uid}/${id}/not_interested_project`,
-      );
-      // console.log(response.data.message);
-      window.location.reload();
-    } catch (e) {
-      toast({
-        title: 'failed',
-        description: 'Something went',
-      });
-      // console.error('Error in not interested job API:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-4xl hover:border-gray-600 hover:border hover:shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+        <div className="h-[1px] bg-gray-600 mt-2 mb-4"/>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 ml-4">
         <div className="flex items-center text-gray-600">
           <MapPin className="w-4 h-4" />
           <p className="ml-2">{companyName}</p>
@@ -95,7 +80,7 @@ const JobCard: React.FC<JobCardProps> = ({
         </div>
         <div className="mt-4">
           <p className="font-medium">Skills Required:</p>
-          <div className="mt-2">
+          <div className="mt-4">
             {skillsRequired?.map((skill, index) => (
               <Badge key={index} className="mr-2 mb-2 uppercase">
                 {skill}
@@ -121,12 +106,8 @@ const JobCard: React.FC<JobCardProps> = ({
           <Button>
             <Link href={`/freelancer/project/${id}`}>View</Link>
           </Button>
-          <Button
-            className="cursor-pointer text-white bg-muted hover:bg-muted"
-            onClick={handleInterest}
-            disabled={isLoading}
-          >
-            {isLoading ? <>Processing</> : 'Not interested'}
+          <Button className="cursor-pointer text-white bg-muted hover:bg-muted">
+            Not interested
           </Button>
         </div>
       </CardContent>

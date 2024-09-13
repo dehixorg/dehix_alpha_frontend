@@ -11,14 +11,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 export interface ProjectDetailCardProps {
-  projectName: string | undefined | null;
-  description: string | undefined | null;
-  email: string | undefined | null;
+  projectName: string;
+  description: string;
+  email: string;
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
   domains: string[];
-  skills: string[] | undefined | null;
+  skills: string[];
 }
 
 const getStatusBadge = (status: string | undefined) => {
@@ -35,6 +35,7 @@ const getStatusBadge = (status: string | undefined) => {
       return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
   }
 };
+
 function ProjectDetailCard({
   projectName,
   description,
@@ -51,19 +52,25 @@ function ProjectDetailCard({
     <Card className="p-4">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+        
+     
+        <div className="h-[1px] bg-gray-600 mt-2 mb-4"></div>
       </CardHeader>
       <CardContent>
         <Badge className={className}>{text}</Badge>
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
           <div className="lg:col-span-full">
-            <p className="mb-6">{description}</p>
+            <p className="mb-6 font-sans text-gray-350">This was the project that can be the most of the used Developed a security based that will detected by ai that can be integrated as a software and used as the product informati</p>
+
+          
             <div className="flex items-center text-sm">
-              <Mail className="mr-2 h-4 w-4" />
-              <span>{email}</span>
+              <Mail className="mr-2 h-4 w-4 text-gray-500" /> 
+              <span className="text-gray-500">{email}</span>
             </div>
+
             <div className="my-4">
-              <h4 className="text-xl font-semibold">Project Domains</h4>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <h4 className="text-xl font-semibold ">Project Domains</h4>
+              <div className="flex flex-wrap gap-2 mt-2 mx-4 font-sans text-gray-350">Developed a security based that will detected by ai that can be integrated as a software and used as the product information
                 {domains.map((domain, index) => (
                   <Badge
                     key={index}
@@ -76,7 +83,7 @@ function ProjectDetailCard({
             </div>
             <div className="pt-4">
               <h4 className="text-xl font-semibold">Skills</h4>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2 mx-4">
                 {skills?.map((skill, index) => (
                   <Badge
                     key={index}
@@ -90,11 +97,12 @@ function ProjectDetailCard({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex">
+    
+      <CardFooter className="flex items-center justify-between w-full">
         <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
           {startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}
         </p>
-        <p>-</p>
+        <div className="flex-grow mx-2 h-[1px] bg-gray-400"></div>
         <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
           {endDate ? new Date(endDate).toLocaleDateString() : 'Current'}
         </p>
