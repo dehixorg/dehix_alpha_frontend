@@ -1,5 +1,3 @@
-// FreelancerCard.tsx
-
 import React from 'react';
 
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -25,7 +23,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
     experience,
   });
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-4xl ">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold">{name}</CardTitle>
       </CardHeader>
