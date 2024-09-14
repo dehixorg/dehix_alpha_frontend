@@ -17,6 +17,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   domains,
   experience,
 }) => {
+  console.log({
+    name,
+    skills,
+    domains,
+    experience,
+  });
   return (
     <div className="w-full mb-4 max-w-4xl">
       <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20">
@@ -44,7 +50,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                   {skills?.map((skill: any, index) => (
                     <Badge
                       key={index}
-                      className="bg-foreground text-background border border-white rounded-xl font-bold"
+                      className="bg-foreground text-background border border-white rounded-xl font-bold uppercase"
                     >
                       {skill.name}
                     </Badge>
@@ -52,7 +58,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                 </div>
               </div>
             )}
-
             {/* Domains Section */}
             {domains && domains.length && (
               <div className="mt-2">
@@ -61,7 +66,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                   {domains?.map((domain: any, index) => (
                     <Badge
                       key={index}
-                      className="bg-foreground text-background border border-white rounded-xl font-bold"
+                      className="bg-foreground text-background border border-white rounded-xl font-bold uppercase"
                     >
                       {domain.name}
                     </Badge>
