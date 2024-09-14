@@ -1,5 +1,6 @@
 import React from 'react';
 import { Avatar } from '@radix-ui/react-avatar';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
