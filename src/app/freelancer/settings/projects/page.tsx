@@ -73,7 +73,6 @@ export default function Projects() {
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {projects.map((project: any, index: number) => (
-            
             <ProjectCard key={index} {...project} />
           ))}
           <AddProject onFormSubmit={handleFormSubmit} />
