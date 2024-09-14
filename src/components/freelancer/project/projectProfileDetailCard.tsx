@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { useParams } from 'next/navigation';
+// import { useSelector } from 'react-redux';
+// import { useParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
+// import { axiosInstance } from '@/lib/axiosinstance';
+// import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProfileDetailCardProps {
@@ -41,7 +41,7 @@ interface ProjectProfileDetailCardProps {
   startDate?: string;
   endDate?: string;
   className?: string;
-  domain_id: string;
+  // domain_id: string;
 }
 
 type CardProps = React.ComponentProps<typeof Card> &
@@ -61,26 +61,26 @@ export function ProjectProfileDetailCard({
   startDate,
   endDate,
   className,
-  domain_id,
+  // domain_id,
   ...props
 }: CardProps) {
   const [amount, setAmount] = useState('');
   const [descriptionValue, setDescription] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
-  const params = useParams();
+  // const user = useSelector((state: RootState) => state.user);
+  // const params = useParams();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     try {
-      const response = await axiosInstance.post(`/bid`, {
-        current_price: amount,
-        description: descriptionValue,
-        bidder_id: user.uid,
-        project_id: params.project_id,
-        domain_id: domain_id,
-      });
+      // const response = await axiosInstance.post(`/bid`, {
+      //   current_price: amount,
+      //   description: descriptionValue,
+      //   bidder_id: user.uid,
+      //   project_id: params.project_id,
+      //   domain_id: domain_id,
+      // });
 
       setAmount('');
       setDescription('');
