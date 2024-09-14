@@ -48,7 +48,12 @@ const ProjectCard: React.FC<ProjectProps> = ({
           {projectName}
           {githubLink && (
             <div className="ml-auto">
-              <a href={githubLink} className="text-sm text-white underline">
+              <a
+                href={githubLink}
+                className="text-sm text-white underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Github />
               </a>
             </div>
