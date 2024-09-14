@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Github, MessageSquareIcon } from 'lucide-react';
 
@@ -41,8 +42,10 @@ const ProjectCard: React.FC<ProjectProps> = ({
   projectType,
   comments,
 }) => {
+  console.log('techUsed:', techUsed);
+
   return (
-    <Card className="w-full mx-auto md:max-w-2xl">
+    <Card className="w-full mx-auto md:max-w-2xl  ">
       <CardHeader>
         <CardTitle className="flex">
           {projectName}
@@ -76,14 +79,16 @@ const ProjectCard: React.FC<ProjectProps> = ({
         <div className="my-4">
           <p className="text-sm text-gray-600">Role: {role}</p>
         </div>
-        {techUsed.map((tech: string, index: number) => (
-          <Badge
-            className="uppercase mx-1 text-xs font-normal bg-gray-300"
-            key={index}
-          >
-            {tech}
-          </Badge>
-        ))}
+       
+    {techUsed && techUsed.length > 0 && techUsed.map((tech: string, index: number) => (
+      <Badge
+        className="uppercase mx-1 text-xs font-normal bg-gray-300"
+        key={index}
+      >
+        {tech}
+      </Badge>
+    ))}
+
       </CardContent>
       <CardFooter className="flex">
         <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
@@ -99,3 +104,5 @@ const ProjectCard: React.FC<ProjectProps> = ({
 };
 
 export default ProjectCard;
+
+

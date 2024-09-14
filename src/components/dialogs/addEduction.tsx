@@ -88,6 +88,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   }, [isDialogOpen, form]);
 
   async function onSubmit(data: any) {
+
     try {
       const formattedData = {
         ...data,

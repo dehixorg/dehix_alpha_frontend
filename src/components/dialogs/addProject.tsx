@@ -366,7 +366,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <div className="flex flex-wrap mt-5">
                         {currSkills.map((skill: any, index: number) => (
                           <Badge
-                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
                             key={index}
                           >
                             {skill}
