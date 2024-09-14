@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,17 +22,33 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import dummyData from '@/dummydata.json';
+// import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface ProjectData {
+  _id: string;
+  projectName: string;
+  description: string;
+  githubLink: string;
+  start: string;
+  end: string;
+  refer: string;
+  techUsed: string[];
+  comments: string;
+  role: string;
+  projectType: string;
+  verificationStatus: string;
+  onStatusUpdate: (newStatus: string) => void;
+  onCommentUpdate: (newComment: string) => void;
+}
 
 export default function ProfessionalInfo() {
-  const [dummyProjectData, setDummyProjectData] = useState(
-    dummyData.dashboardFreelancerOracleProject,
-  );
-
+  const [projectData, setProjectData] = useState<ProjectData[]>([]);
+  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,26 +57,45 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyProjectData.filter((data) => {
+  const filteredData = projectData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'pending')
     );
   });
 
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=project`,
+      );
+      // console.log(response.data)
+      setProjectData(response.data.data);
+      const flattenedData = await response.data.data.flatMap((entry: any) =>
+        Object.values(entry.projects),
+      );
+      console.log(flattenedData._id);
+      setProjectData(flattenedData);
+    } catch (error) {
+      console.log(error, 'error in getting verification data');
+    }
+  }, [user.uid]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   const updateProjectStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyProjectData];
-    updatedData[index].status = newStatus;
-    setDummyProjectData(updatedData); // Assuming you set this in state
+    const updatedData = [...projectData];
+    updatedData[index].verificationStatus = newStatus;
+    setProjectData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyProjectData];
+    const updatedData = [...projectData];
     updatedData[index].comments = newComment;
-    setDummyProjectData(updatedData);
+    setProjectData(updatedData);
   };
 
   return (
@@ -146,18 +182,21 @@ export default function ProfessionalInfo() {
         </Dialog>
 
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {/* {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
+              _id={data._id}
               projectName={data.projectName}
               description={data.description}
               githubLink={data.githubLink}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
-              reference={data.reference}
+              startFrom={data.start}
+              endTo={data.end}
+              role={data.role}
+              projectType={data.projectType}
+              reference={data.refer}
               techUsed={data.techUsed}
               comments={data.comments}
-              status={data.status} // Pass the status to the card component
+              status={data.verificationStatus}
               onStatusUpdate={(newStatus) =>
                 updateProjectStatus(index, newStatus)
               }
@@ -165,13 +204,15 @@ export default function ProfessionalInfo() {
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Project verification for you now.
-            </p>
-          </div>
+          ))}
+          {projectData.length === 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Project verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

@@ -26,9 +26,9 @@ import dummyData from '@/dummydata.json'; // Import your JSON data here
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyBusinessData, setDummyBusinessData] = useState(
+  const [dummyBusinessData] = useState(
     dummyData.dashboardFreelancerOracleBusiness,
-  ); // Initialize with data from JSON
+  );
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,27 +38,27 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyBusinessData.filter((data) => {
-    if (filter === 'all') {
-      return true;
-    }
-    return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
-    );
-  });
+  // const filteredData = dummyBusinessData.filter((data) => {
+  //   if (filter === 'all') {
+  //     return true;
+  //   }
+  //   return (
+  //     data.status === filter ||
+  //     (filter === 'current' && data.status === 'pending')
+  //   );
+  // });
 
-  const updateBusinessStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyBusinessData];
-    updatedData[index].status = newStatus;
-    setDummyBusinessData(updatedData); // Assuming you set this in state
-  };
+  // const updateBusinessStatus = (index: number, newStatus: string) => {
+  //   const updatedData = [...dummyBusinessData];
+  //   updatedData[index].status = newStatus;
+  //   setDummyBusinessData(updatedData); // Assuming you set this in state
+  // };
 
-  const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyBusinessData];
-    updatedData[index].comments = newComment;
-    setDummyBusinessData(updatedData);
-  };
+  // const updateCommentStatus = (index: number, newComment: string) => {
+  //   const updatedData = [...dummyBusinessData];
+  //   updatedData[index].comments = newComment;
+  //   setDummyBusinessData(updatedData);
+  // };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -167,12 +167,14 @@ export default function ProfessionalInfo() {
               }
             />
           ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Business verification for you now.
-            </p>
-          </div>
+          {dummyBusinessData.length == 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Business verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>

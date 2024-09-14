@@ -60,11 +60,12 @@ const JobCard: React.FC<JobCardProps> = ({
   const { text, className } = getStatusBadge(status);
 
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-4xl hover:border-gray-600 hover:border hover:shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+        <div className="h-[1px] bg-gray-600 mt-2 mb-4" />
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 ml-4">
         <div className="flex items-center text-gray-600">
           <MapPin className="w-4 h-4" />
           <p className="ml-2">{companyName}</p>
@@ -79,7 +80,7 @@ const JobCard: React.FC<JobCardProps> = ({
         </div>
         <div className="mt-4">
           <p className="font-medium">Skills Required:</p>
-          <div className="mt-2">
+          <div className="mt-4">
             {skillsRequired?.map((skill, index) => (
               <Badge key={index} className="mr-2 mb-2 uppercase">
                 {skill}

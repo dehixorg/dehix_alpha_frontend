@@ -1,10 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, MapPin, User } from 'lucide-react';
+import { MessageSquareIcon, MapPin } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
   CardContent,
@@ -32,36 +33,37 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface EducationProps {
+  _id: string;
   type: string;
-  instituteName: string;
   location: string;
+  degree: string;
   startFrom: string;
   endTo: string | 'current';
   grade: string;
-  referencePersonName: string;
-  degreeNumber: string;
   comments: string;
+  fieldOfStudy: string;
   status: string | 'pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
 
 const FormSchema = z.object({
-  type: z.enum(['verified', 'rejected'], {
+  type: z.enum(['Approved', 'Denied'], {
     required_error: 'You need to select a type.',
   }),
   comment: z.string().optional(),
 });
 
 const EducationVerificationCard: React.FC<EducationProps> = ({
+  _id,
   type,
-  instituteName,
+  degree,
   location,
   startFrom,
   endTo,
   grade,
-  referencePersonName,
-  degreeNumber,
+  // referencePersonName,
+  fieldOfStudy,
   comments,
   status, // Get initial status from props
   onStatusUpdate,
@@ -70,14 +72,28 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   const [verificationStatus, setVerificationStatus] = useState(status); // Use initial status
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    mode: 'onChange', // Enable validation on change
   });
+
+  // Watch the 'type' field to check if it's selected
+  const selectedType = form.watch('type');
 
   useEffect(() => {
     // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
   }, [status]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=education`, {
+      comments: data.comment,
+      verification_status: data.type,
+    });
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     // Update status based on selection
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
@@ -90,40 +106,45 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardHeader>
         <CardTitle className="flex justify-between">
           <span>{type}</span>
-          {verificationStatus === 'pending' ? (
+          {verificationStatus === 'pending' ||
+          verificationStatus === 'added' ? (
             <Badge className="bg-warning-foreground text-white">PENDING</Badge>
-          ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white">VERIFIED</Badge>
+          ) : verificationStatus === 'Approved' ? (
+            <Badge className="bg-success text-white">Approved</Badge>
           ) : (
-            <Badge className="bg-red-500 text-white">REJECTED</Badge>
+            <Badge className="bg-red-500 text-white">Denied</Badge>
           )}
         </CardTitle>
         <CardDescription className="text-justify text-gray-600">
-          {instituteName}
+          {/* {instituteName} */}
           <br />
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-sm text-gray-600 flex items-center mt-3">
+              <p className="text-lg text-gray-600 flex items-center mt-3">
                 <MapPin className="mr-2" />
                 {location}
               </p>
             </TooltipTrigger>
             <TooltipContent side="bottom">Location</TooltipContent>
           </Tooltip>
-          <br />
+          {/* <br /> */}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">
-            <span className="text-gray-500 font-semibold">Degree Number:</span>{' '}
-            {degreeNumber}
+        <div className="mt-2">
+          <p className="text-m text-gray-600 mb-2">
+            <span className="text-gray-500 font-semibold">degree:</span>{' '}
+            {degree}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-m text-gray-600 mb-2">
+            <span className="text-gray-500 font-semibold">Field Of study:</span>{' '}
+            {fieldOfStudy}
+          </p>
+          <p className="text-m text-gray-600 mb-2">
             <span className="text-gray-500 font-semibold">Grade:</span> {grade}
           </p>
 
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <Tooltip>
               <TooltipTrigger asChild>
                 <p className="text-sm text-gray-600 flex items-center">
@@ -133,7 +154,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
               </TooltipTrigger>
               <TooltipContent side="bottom">Reference Person</TooltipContent>
             </Tooltip>
-          </div>
+          </div> */}
 
           {comments && (
             <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
@@ -151,7 +172,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
             : 'Current'}
         </div>
 
-        {verificationStatus === 'pending' && (
+        {(verificationStatus === 'pending' ||
+          verificationStatus === 'added') && (
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -171,19 +193,17 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                       >
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="verified" />
+                            <RadioGroupItem value="Approved" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Verified
+                            Approved
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="rejected" />
+                            <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Rejected
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -206,7 +226,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                 )}
               />
 
-              <Button type="submit" className="w-full">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!selectedType || form.formState.isSubmitting}
+              >
                 Submit
               </Button>
             </form>

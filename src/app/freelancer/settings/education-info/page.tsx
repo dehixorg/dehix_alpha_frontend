@@ -15,7 +15,6 @@ import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
-import UserDropdownMenu from '@/components/dropdown/user';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function Education() {

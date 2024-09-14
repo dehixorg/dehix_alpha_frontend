@@ -1,14 +1,12 @@
 'use client';
 import { Search } from 'lucide-react';
-import { useSelector } from 'react-redux';
+// Removed: import { useSelector } from 'react-redux';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Input } from '@/components/ui/input';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import UserDropdownMenu from '@/components/dropdown/user';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -16,7 +14,7 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function Dashboard() {
-  const user = useSelector((state: RootState) => state.user);
+  // Removed: const user = useSelector((state: RootState) => state.user);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

@@ -49,6 +49,8 @@ const profileFormSchema = z.object({
     message: 'Phone number must be at least 10 digits.',
   }),
   role: z.string(),
+  personalWebsite: z.string().url().optional(),
+  resume: z.string().url().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -160,6 +162,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       email: user?.email || '',
       phone: user?.phone || '',
       role: user?.role || '',
+      personalWebsite: user?.personalWebsite || '',
+      resume: user?.resume || '',
     });
   }, [user, form]);
 
@@ -185,6 +189,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         email: data.email,
         phone: data.phone,
         role: data.role,
+        personalWebsite: data.personalWebsite,
+        resume: data.resume,
         skills: currSkills,
         domain: currDomains,
       });
@@ -280,6 +286,67 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="personalWebsite"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Personal Website URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your LinkedIn URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter your Personal Website URL
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/*<FormField*/}
+          {/*  control={form.control}*/}
+          {/*  name="phone"*/}
+          {/*  render={() => (*/}
+          {/*    <FormItem className="relative">*/}
+          {/*      <FormLabel>Edit Resume</FormLabel>*/}
+          {/*      <FormControl>*/}
+          {/*        <div className="relative flex items-center">*/}
+          {/*          <Input placeholder="edit resume" className="pr-10" />*/}
+          {/*          <Edit*/}
+          {/*            className="absolute right-2 h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"*/}
+          {/*            onClick={() => {}}*/}
+          {/*          />*/}
+          {/*        </div>*/}
+          {/*      </FormControl>*/}
+          {/*      <FormMessage />*/}
+          {/*      <FormDescription>Non editable field</FormDescription>*/}
+          {/*    </FormItem>*/}
+          {/*  )}*/}
+          {/*/>*/}
+
           {/* <FormField
             control={form.control}
             name="dob"
@@ -331,20 +398,30 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           /> */}
           <Separator className="col-span-2" />
-          <div className="col-span-2 grid grid-cols-2 gap-4">
-            <div>
+          <div className="flex flex-wrap gap-6 w-full">
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpSkill(value)}>
+                <Select
+                  onValueChange={(value) => setTmpSkill(value)}
+                  value={tmpSkill || ''}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select skill" />
+                    <SelectValue
+                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {skills.map((skill: any, index: number) => (
-                      <SelectItem key={index} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
+                    {skills
+                      .filter(
+                        (skill: any) =>
+                          !currSkills.some((s: any) => s.name === skill.label),
+                      )
+                      .map((skill: any, index: number) => (
+                        <SelectItem key={index} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -352,7 +429,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   type="button"
                   size="icon"
                   className="ml-2"
-                  onClick={handleAddSkill}
+                  onClick={() => {
+                    handleAddSkill();
+                    setTmpSkill('');
+                  }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -375,19 +455,32 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 ))}
               </div>
             </div>
-            <div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select onValueChange={(value) => setTmpDomain(value)}>
+                <Select
+                  onValueChange={(value) => setTmpDomain(value)}
+                  value={tmpDomain || ''}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select domain" />
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain: any, index: number) => (
-                      <SelectItem key={index} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
+                    {domains
+                      .filter(
+                        (domain: any) =>
+                          !currDomains.some(
+                            (d: any) => d.name === domain.label,
+                          ),
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Button
@@ -395,7 +488,69 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   type="button"
                   size="icon"
                   className="ml-2"
-                  onClick={handleAddDomain}
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currDomains.map((domain: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
+                  >
+                    {domain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDomain(domain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
+              <FormLabel>Project Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => setTmpDomain(value)}
+                  value={tmpDomain || ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains
+                      .filter(
+                        (domain: any) =>
+                          !currDomains.some(
+                            (d: any) => d.name === domain.label,
+                          ),
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                  }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

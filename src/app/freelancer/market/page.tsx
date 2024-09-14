@@ -1,11 +1,9 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
-import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -119,27 +117,29 @@ const Market: React.FC = () => {
     fetchData();
   }, []);
 
-  const fetchData = async (appliedFilters: FilterState) => {
-    try {
-      const queryString = constructQueryString(appliedFilters);
-      const response = await axiosInstance.get(
-        `/business/all_project?${queryString}`,
-      );
-      setJobs(response.data.data);
-    } catch (error) {
-      console.error('API Error:', error);
-    }
-  };
+  const fetchData = useCallback(
+    async (appliedFilters: FilterState) => {
+      try {
+        const queryString = constructQueryString(appliedFilters);
+        const response = await axiosInstance.get(
+          `/business/${user.uid}/all_project?${queryString}`,
+        );
+        setJobs(response.data.data);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    },
+    [user.uid],
+  );
 
   const handleApply = () => {
     console.log('Selected Filters:', filters);
     fetchData(filters);
   };
-
   useEffect(() => {
     setIsClient(true);
     fetchData(filters); // Fetch all data initially
-  }, [user.uid]);
+  }, [filters, fetchData]);
 
   useEffect(() => {
     const handleResize = () => {

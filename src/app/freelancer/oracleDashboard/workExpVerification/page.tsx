@@ -1,6 +1,7 @@
 'use client';
 import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,16 +23,32 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
-import dummyData from '@/dummydata.json';
-
+// import dummyData from '@/dummydata.json';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+interface JobData {
+  _id: string;
+  jobTitle: string;
+  workDescription: string;
+  company: string;
+  workFrom: string;
+  workTo: string;
+  referencePersonName: string;
+  referencePersonContact: string;
+  githubRepoLink: string;
+  comments: string;
+  verificationStatus: string;
+  onStatusUpdate: (newStatus: string) => void;
+  onCommentUpdate: (newComment: string) => void;
+}
 
 export default function ProfessionalInfo() {
-  const [dummyJobData, setDummyJobData] = useState(
-    dummyData.dashboardFreelancerOracleExperience,
-  );
+  const [JobData, setJobData] = useState<JobData[]>([]);
 
+  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,26 +57,45 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = dummyJobData.filter((data) => {
+  const filteredData = JobData.filter((data) => {
     if (filter === 'all') {
       return true;
     }
     return (
-      data.status === filter ||
-      (filter === 'current' && data.status === 'pending')
+      data.verificationStatus === filter ||
+      (filter === 'current' && data.verificationStatus === 'Pending')
     );
   });
 
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/oracle?doc_type=experience`,
+      );
+      setJobData(response.data.data);
+      const flattenedData = response.data.data.flatMap((entry: any) =>
+        Object.values(entry.professionalInfo),
+      );
+      setJobData(flattenedData);
+    } catch (error) {
+      console.log(error, 'error in getting verification data');
+    }
+  }, [user.uid]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   const updateJobStatus = (index: number, newStatus: string) => {
-    const updatedData = [...dummyJobData];
-    updatedData[index].status = newStatus;
-    setDummyJobData(updatedData); // Assuming you set this in state
+    const updatedData = [...JobData];
+    updatedData[index].verificationStatus = newStatus;
+    setJobData(updatedData); // Assuming you set this in state
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...dummyJobData];
+    const updatedData = [...JobData];
     updatedData[index].comments = newComment;
-    setDummyJobData(updatedData);
+    setJobData(updatedData);
   };
 
   return (
@@ -148,30 +184,34 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <WorkExpVerificationCard
               key={index}
+              _id={data._id}
               jobTitle={data.jobTitle}
               workDescription={data.workDescription}
-              startFrom={data.startFrom}
-              endTo={data.endTo}
+              company={data.company}
+              startFrom={data.workFrom}
+              endTo={data.workTo}
               referencePersonName={data.referencePersonName}
-              referencePersonEmail={data.referencePersonEmail}
+              referencePersonContact={data.referencePersonContact}
               githubRepoLink={data.githubRepoLink}
               comments={data.comments}
-              status={data.status} // Pass the status to the card component
+              status={data.verificationStatus} // Pass the status to the card component
               onStatusUpdate={(newStatus) => updateJobStatus(index, newStatus)}
               onCommentUpdate={(newComment) =>
                 updateCommentStatus(index, newComment)
               }
             />
-          ))} */}
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500">
-              No Work Experience verification for you now.
-            </p>
-          </div>
+          ))}
+          {JobData.length == 0 ? (
+            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+              <PackageOpen className="mx-auto text-gray-500" size="100" />
+              <p className="text-gray-500">
+                No Work Experience verification for you now.
+              </p>
+            </div>
+          ) : null}
         </main>
       </div>
     </div>
