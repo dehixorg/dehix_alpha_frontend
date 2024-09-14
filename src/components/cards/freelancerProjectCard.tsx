@@ -42,10 +42,9 @@ const ProjectCard: React.FC<ProjectProps> = ({
   projectType,
   comments,
 }) => {
-  console.log('techUsed:', techUsed);
 
   return (
-    <Card className="w-full mx-auto md:max-w-2xl  ">
+    <Card className="w-full mx-auto md:max-w-2xl ">
       <CardHeader>
         <CardTitle className="flex">
           {projectName}
@@ -80,13 +79,13 @@ const ProjectCard: React.FC<ProjectProps> = ({
           <p className="text-sm text-gray-600">Role: {role}</p>
         </div>
        
-    {techUsed && techUsed.length > 0 && techUsed.map((tech: string, index: number) => (
-      <Badge
-        className="uppercase mx-1 text-xs font-normal bg-gray-300"
-        key={index}
-      >
-        {tech}
-      </Badge>
+        {techUsed.map((tech: string, index: number) => (
+          <Badge
+            className="uppercase mx-1 text-xs font-normal bg-gray-300"
+            key={index}
+          >
+            {tech}
+          </Badge>
     ))}
 
       </CardContent>
@@ -102,7 +101,6 @@ const ProjectCard: React.FC<ProjectProps> = ({
     </Card>
   );
 };
-
 export default ProjectCard;
 
 
