@@ -97,7 +97,7 @@ export default function Dashboard() {
     };
     fetchData();
   }, [project_id]);
-  const fetchBid =useCallback(()=>{
+  const fetchBid = useCallback(() => {
     async () => {
       try {
         const response = await axiosInstance(`bid/${project_id}/project/bid`);
@@ -106,7 +106,7 @@ export default function Dashboard() {
         console.log(error);
       }
     };
-  },[])
+  }, []);
   useEffect(() => {
     fetchBid();
   }, [project_id, exist]);
