@@ -100,7 +100,7 @@ export default function Dashboard() {
   const fetchBid = useCallback(() => {
     async () => {
       try {
-        const response = await axiosInstance(`bid/${project_id}/project/bid`);
+        const response = await axiosInstance(`bid/${project_id}/${user.uid}/project/bid`);
         setBids(response.data.data);
       } catch (error) {
         console.log(error);
