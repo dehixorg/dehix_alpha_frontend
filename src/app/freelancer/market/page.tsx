@@ -62,8 +62,10 @@ interface Domain {
   label: string;
 }
 interface ProjectsDomain {
+  _id: string;
   label: string;
 }
+
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -76,7 +78,7 @@ const Market: React.FC = () => {
   });
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
   const handleFilterChange = (filterType: any, selectedValues: any) => {
@@ -115,13 +117,9 @@ const Market: React.FC = () => {
           (domain: Domain) => domain.label,
         );
         setDomains(domainLabels);
-
-        // Fetch projects
         const projectResponse = await axiosInstance.get('/projectDomain/all');
-        const projectLabels = projectResponse.data.data.map(
-          (project: ProjectsDomain) => project.label,
-        );
-        setProjects(projectLabels);
+        const projectData: ProjectsDomain[] = projectResponse.data.data;
+        setProjects(projectData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -231,8 +229,8 @@ const Market: React.FC = () => {
             <SkillDom
               label="Project"
               heading="Filter by projects-domains"
-              checkboxLabels={skills}
-              selectedValues={filters.skills}
+              checkboxLabels={projects.map((project) => project.label)}
+              selectedValues={filters.projects}
               setSelectedValues={(values) =>
                 handleFilterChange('projects', values)
               }
@@ -288,7 +286,7 @@ const Market: React.FC = () => {
                 <MobileSkillDom
                   label="Projects"
                   heading="Filter by project-domain"
-                  checkboxLabels={projects}
+                  checkboxLabels={projects.map((project) => project.label)}
                   selectedValues={filters.projects}
                   setSelectedValues={(values: any) =>
                     handleFilterChange('projects', values)
