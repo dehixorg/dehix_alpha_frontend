@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -20,6 +20,7 @@ import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
 
 interface FilterState {
+  projects: string[];
   jobType: string[];
   domain: string[];
   skills: string[];
@@ -60,7 +61,9 @@ interface Skill {
 interface Domain {
   label: string;
 }
-
+interface ProjectsDomain {
+  label: string;
+}
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -69,9 +72,11 @@ const Market: React.FC = () => {
     jobType: [],
     domain: [],
     skills: [],
+    projects: [],
   });
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
 
   const handleFilterChange = (filterType: any, selectedValues: any) => {
@@ -82,7 +87,7 @@ const Market: React.FC = () => {
   };
 
   const constructQueryString = (filters: FilterState) => {
-    const query = Object.keys(filters)
+    return Object.keys(filters)
       .map((key) => {
         const values = filters[key as keyof FilterState];
         if (values.length > 0) {
@@ -92,24 +97,31 @@ const Market: React.FC = () => {
       })
       .filter((part) => part !== '')
       .join('&');
-
-    return query;
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
+        // Fetch skills
         const skillsResponse = await axiosInstance.get('/skills/all');
         const skillLabels = skillsResponse.data.data.map(
           (skill: Skill) => skill.label,
         );
         setSkills(skillLabels);
 
+        // Fetch domains
         const domainsResponse = await axiosInstance.get('/domain/all');
         const domainLabels = domainsResponse.data.data.map(
           (domain: Domain) => domain.label,
         );
         setDomains(domainLabels);
+
+        // Fetch projects
+        const projectResponse = await axiosInstance.get('/projectDomain/all');
+        const projectLabels = projectResponse.data.data.map(
+          (project: ProjectsDomain) => project.label,
+        );
+        setProjects(projectLabels);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -214,6 +226,18 @@ const Market: React.FC = () => {
               }
             />
           </div>
+
+          <div className="mb-4">
+            <SkillDom
+              label="Project"
+              heading="Filter by projects-domains"
+              checkboxLabels={skills}
+              selectedValues={filters.skills}
+              setSelectedValues={(values) =>
+                handleFilterChange('projects', values)
+              }
+            />
+          </div>
         </div>
 
         <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
@@ -257,6 +281,17 @@ const Market: React.FC = () => {
                   selectedValues={filters.skills}
                   setSelectedValues={(values: any) =>
                     handleFilterChange('skills', values)
+                  }
+                />
+              </div>
+              <div className="border-b border-gray-300 pb-4">
+                <MobileSkillDom
+                  label="Projects"
+                  heading="Filter by project-domain"
+                  checkboxLabels={projects}
+                  selectedValues={filters.projects}
+                  setSelectedValues={(values: any) =>
+                    handleFilterChange('projects', values)
                   }
                 />
               </div>
