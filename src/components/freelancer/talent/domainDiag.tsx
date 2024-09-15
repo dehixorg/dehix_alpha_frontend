@@ -21,6 +21,10 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
 
 // Define the type for a domain
 interface Domain {
@@ -32,6 +36,8 @@ interface SkillDomainData {
   label: string;
   experience: string;
   monthlyPay: string;
+  activeStatus: boolean;
+  status: string;
 }
 
 // Define the props for the DomainDialog component
@@ -57,6 +63,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   domains,
   onSubmitDomain,
 }) => {
+  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
   const {
     control,
@@ -65,19 +72,49 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     reset,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
-    defaultValues: { label: '', experience: '', monthlyPay: '' },
+    defaultValues: {
+      label: '',
+      experience: '',
+      monthlyPay: '',
+      activeStatus: false,
+      status: 'pending',
+    },
   });
 
-  const onSubmit: SubmitHandler<SkillDomainData> = (data) => {
-    onSubmitDomain(data);
-    reset(); // Clear the form fields
-    setOpen(false); // Close the dialog
+  const onSubmit = async (data: SkillDomainData) => {
+    try {      
+      const response = await axiosInstance.post(`/freelancer/${user.uid}/dehix-talent`, {
+        domainName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+      });
+      
+      if (response.status === 200) {
+        console.log('API Response:', response.data);
+        onSubmitDomain(data);
+        reset();
+        setOpen(false); // Close the dialog after successful submission
+        toast({
+          title: 'Talent Added',
+          description: 'The Talent has been successfully added.',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting skill data', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add talent. Please try again.',
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} disabled>
+        <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add Domain
         </Button>
       </DialogTrigger>
