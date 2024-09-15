@@ -42,13 +42,18 @@ const ProjectCard: React.FC<ProjectProps> = ({
   comments,
 }) => {
   return (
-    <Card className="w-full mx-auto md:max-w-2xl">
+    <Card className="w-full mx-auto md:max-w-2xl ">
       <CardHeader>
         <CardTitle className="flex">
           {projectName}
           {githubLink && (
             <div className="ml-auto">
-              <a href={githubLink} className="text-sm text-white underline">
+              <a
+                href={githubLink}
+                className="text-sm text-white underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Github />
               </a>
             </div>
@@ -76,6 +81,7 @@ const ProjectCard: React.FC<ProjectProps> = ({
         <div className="my-4">
           <p className="text-sm text-gray-600">Role: {role}</p>
         </div>
+
         {techUsed.map((tech: string, index: number) => (
           <Badge
             className="uppercase mx-1 text-xs font-normal bg-gray-300"
@@ -97,5 +103,4 @@ const ProjectCard: React.FC<ProjectProps> = ({
     </Card>
   );
 };
-
 export default ProjectCard;
