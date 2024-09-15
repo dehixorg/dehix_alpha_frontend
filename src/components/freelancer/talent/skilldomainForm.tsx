@@ -1,8 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
+import { useSelector } from 'react-redux'; // To get the user data
+
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
+
 import { Card } from '@/components/ui/card';
 import {
   Table,
@@ -14,7 +17,6 @@ import {
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
-import { useSelector } from 'react-redux'; // To get the user data
 import { RootState } from '@/lib/store';
 
 interface Skill {
@@ -55,7 +57,7 @@ const SkillDomainForm: React.FC = () => {
         // Fetch the skill/domain data for the specific freelancer
         if (user?.uid) {
           const talentResponse = await axiosInstance.get(
-            `/freelancer/${user.uid}/dehix-talent`
+            `/freelancer/${user.uid}/dehix-talent`,
           );
           const talentData = talentResponse.data?.data[0]?.dehixTalent || {};
 
@@ -68,12 +70,12 @@ const SkillDomainForm: React.FC = () => {
               monthlyPay: item.monthlyPay || 'N/A',
               status: item.status,
               activeStatus: item.activeStatus,
-            })
+            }),
           );
 
           setSkillDomainData(formattedTalentData);
           setStatusVisibility(
-            formattedTalentData.map((item) => item.activeStatus)
+            formattedTalentData.map((item) => item.activeStatus),
           );
         }
       } catch (error) {
@@ -91,7 +93,7 @@ const SkillDomainForm: React.FC = () => {
   }) => {
     setSkillDomainData([
       ...skillDomainData,
-      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false } // Generate a unique ID
+      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false }, // Generate a unique ID
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -103,18 +105,22 @@ const SkillDomainForm: React.FC = () => {
   }) => {
     setSkillDomainData([
       ...skillDomainData,
-      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false } // Generate a unique ID
+      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false }, // Generate a unique ID
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
 
   // Function to handle visibility toggle and API call
-  const handleToggleVisibility = async (index: number, value: boolean, dehixTalentId: string) => {
+  const handleToggleVisibility = async (
+    index: number,
+    value: boolean,
+    dehixTalentId: string,
+  ) => {
     try {
       // Update the backend with the new visibility status
       const response = await axiosInstance.patch(
         `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
-        { activeStatus: value }
+        { activeStatus: value },
       );
 
       if (response.status === 200) {
@@ -159,10 +165,11 @@ const SkillDomainForm: React.FC = () => {
                     <TableCell>
                       <Switch
                         checked={statusVisibility[index]}
-                        onCheckedChange={(value) =>
-                          item.uid
-                            ? handleToggleVisibility(index, value, item.uid)
-                            : console.error('UID missing for item', item) // Fallback check for missing UID
+                        onCheckedChange={
+                          (value) =>
+                            item.uid
+                              ? handleToggleVisibility(index, value, item.uid)
+                              : console.error('UID missing for item', item) // Fallback check for missing UID
                         }
                       />
                     </TableCell>
@@ -172,7 +179,10 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center">
                     <div className="text-center py-10 w-[90vw] h-[30vw] mt-10">
-                      <PackageOpen className="mx-auto text-gray-500" size="100" />
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
                       <p className="text-gray-500">
                         No data available.
                         <br /> This feature will be available soon.

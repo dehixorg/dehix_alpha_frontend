@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -23,7 +24,6 @@ import {
 } from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 
 interface Skill {
@@ -77,14 +77,17 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
   const onSubmit = async (data: SkillDomainData) => {
     try {
-      const response = await axiosInstance.post(`/freelancer/${user.uid}/dehix-talent`, {
-        skillName: data.label,
-        experience: data.experience,
-        monthlyPay: data.monthlyPay,
-        activeStatus: data.show,
-        status: data.status,
-      });
-      
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/dehix-talent`,
+        {
+          skillName: data.label,
+          experience: data.experience,
+          monthlyPay: data.monthlyPay,
+          activeStatus: data.show,
+          status: data.status,
+        },
+      );
+
       if (response.status === 200) {
         console.log('API Response:', response.data);
         onSubmitSkill(data);
@@ -141,7 +144,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               )}
             />
           </div>
-          {errors.label && <p className="text-red-600">{errors.label.message}</p>}
+          {errors.label && (
+            <p className="text-red-600">{errors.label.message}</p>
+          )}
           <div className="mb-3">
             <Controller
               control={control}
@@ -156,7 +161,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               )}
             />
           </div>
-          {errors.experience && <p className="text-red-600">{errors.experience.message}</p>}
+          {errors.experience && (
+            <p className="text-red-600">{errors.experience.message}</p>
+          )}
           <Controller
             control={control}
             name="monthlyPay"
@@ -169,7 +176,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               />
             )}
           />
-          {errors.monthlyPay && <p className="text-red-600">{errors.monthlyPay.message}</p>}
+          {errors.monthlyPay && (
+            <p className="text-red-600">{errors.monthlyPay.message}</p>
+          )}
           <DialogFooter className="mt-3">
             <Button className="w-full" type="submit">
               Submit

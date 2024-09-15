@@ -74,7 +74,7 @@ export function ProjectProfileDetailCard({
     e.preventDefault();
 
     try {
-      const response = await axiosInstance.post(`/bid`, {
+      await axiosInstance.post(`/bid`, {
         current_price: amount,
         description: descriptionValue,
         bidder_id: user.uid,

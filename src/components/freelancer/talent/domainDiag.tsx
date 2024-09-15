@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -21,7 +22,6 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
@@ -82,15 +82,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   });
 
   const onSubmit = async (data: SkillDomainData) => {
-    try {      
-      const response = await axiosInstance.post(`/freelancer/${user.uid}/dehix-talent`, {
-        domainName: data.label,
-        experience: data.experience,
-        monthlyPay: data.monthlyPay,
-        activeStatus: data.activeStatus,
-        status: data.status,
-      });
-      
+    try {
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/dehix-talent`,
+        {
+          domainName: data.label,
+          experience: data.experience,
+          monthlyPay: data.monthlyPay,
+          activeStatus: data.activeStatus,
+          status: data.status,
+        },
+      );
+
       if (response.status === 200) {
         console.log('API Response:', response.data);
         onSubmitDomain(data);
