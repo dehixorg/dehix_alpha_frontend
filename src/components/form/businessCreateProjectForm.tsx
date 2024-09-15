@@ -41,6 +41,10 @@ const profileFormSchema = z.object({
       required_error: 'Please select an email to display.',
     })
     .email(),
+  //adddomain
+  projectDomain: z
+  .array(z.string()),
+    
   urls: z
     .array(
       z.object({
@@ -48,6 +52,7 @@ const profileFormSchema = z.object({
       }),
     )
     .optional(),
+
   description: z.string().max(160).min(4).optional(),
   profiles: z
     .array(
@@ -77,6 +82,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
   email: '', //default field for email
+  projectDomain: [],
   description: '',
   profiles: [
     {
@@ -100,6 +106,11 @@ interface Domain {
   _id: string;
   label: string;
 }
+//adding project domain
+interface projectDomain {
+  _id: string;
+  label: string;
+}
 
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
@@ -110,6 +121,30 @@ export function CreateProjectBusinessForm() {
 
   const [domains, setDomains] = useState<any>([]);
   const [currDomains] = useState<any>([]);
+
+  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
+  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
+  const [tmpProjectDomain, setTmpProjectDomain] = useState<any>('');
+
+  //handle projectdomain
+
+  // Function to add selected project domain
+  const handleAddProjectDomain = () => {
+    if (
+      tmpProjectDomain &&
+      !currProjectDomains.some((domain: any) => domain === tmpProjectDomain)
+    ) {
+      setCurrProjectDomains([...currProjectDomains, tmpProjectDomain]);
+      setTmpProjectDomain('');
+    }
+  };
+
+  // Function to remove a selected project domain
+  const handleDeleteProjectDomain = (domainToDelete: string) => {
+    setCurrProjectDomains(
+      currProjectDomains.filter((domain: any) => domain !== domainToDelete),
+    );
+  };
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -125,6 +160,20 @@ export function CreateProjectBusinessForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const projectDomainResponse =
+          await axiosInstance.get('/projectDomain/all');
+        console.log(
+          'projectDomain API Response get:',
+          projectDomainResponse.data.data,
+        );
+        const transformedProjectDomain = projectDomainResponse.data.data.map(
+          (skill: projectDomain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setProjectDomains(transformedProjectDomain);
+
         const domainResponse = await axiosInstance.get('/domain/all');
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
@@ -246,6 +295,68 @@ export function CreateProjectBusinessForm() {
           />
           <FormField
             control={form.control}
+            name="projectDomain"
+            render={() => (
+              <FormItem className="col-span-2">
+                <FormLabel>Project Domain</FormLabel>
+                <FormControl>
+                  <div>
+                    <div className="flex items-center mt-2">
+                      <Select
+                        onValueChange={(value) => setTmpProjectDomain(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Project Domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectDomains.map(
+                            (projectdomain: any, index: number) => (
+                              <SelectItem
+                                key={index}
+                                value={projectdomain.label}
+                              >
+                                {projectdomain.label}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="icon"
+                        className="ml-2"
+                        onClick={handleAddProjectDomain}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap mt-5">
+                      {currProjectDomains.map((domain: any, index: number) => (
+                        <Badge
+                          className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                          key={index}
+                        >
+                          {domain}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProjectDomain(domain)}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem className="col-span-2">
@@ -257,7 +368,6 @@ export function CreateProjectBusinessForm() {
               </FormItem>
             )}
           />
-
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
               <FormField
