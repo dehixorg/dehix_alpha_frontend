@@ -34,7 +34,7 @@ interface ProjectProfileDetailCardProps {
   skills: string[];
   experience: number;
   minConnect: number;
-  // rate: number;
+  rate: number;
   description: string;
   email?: string;
   status?: string;
@@ -54,7 +54,7 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  // rate,
+  rate,
   description,
   email,
   status,
