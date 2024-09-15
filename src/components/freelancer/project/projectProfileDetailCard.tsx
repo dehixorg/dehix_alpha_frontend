@@ -224,7 +224,6 @@ export function ProjectProfileDetailCard({
             </form>
           </DialogContent>
         </Dialog>
-        
       </CardFooter>
     </Card>
   );
