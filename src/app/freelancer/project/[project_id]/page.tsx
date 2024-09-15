@@ -1,7 +1,7 @@
 'use client';
 import { Search, User } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { useSelector } from 'react-redux';
 
@@ -97,14 +97,16 @@ export default function Dashboard() {
     };
     fetchData();
   }, [project_id]);
-  const fetchBid = async () => {
-    try {
-      const response = await axiosInstance(`bid/${project_id}/project/bid`);
-      setBids(response.data.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const fetchBid =useCallback(()=>{
+    async () => {
+      try {
+        const response = await axiosInstance(`bid/${project_id}/project/bid`);
+        setBids(response.data.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+  },[])
   useEffect(() => {
     fetchBid();
   }, [project_id, exist]);
