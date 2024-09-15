@@ -17,7 +17,6 @@ import { Switch } from '@/components/ui/switch';
 import { useSelector } from 'react-redux'; // To get the user data
 import { RootState } from '@/lib/store';
 
-// Define the types for skill and domain data
 interface Skill {
   label: string;
 }
@@ -27,14 +26,15 @@ interface Domain {
 }
 
 interface SkillDomainData {
+  uid: string;
   label: string;
   experience: string;
   monthlyPay: string;
   status: string;
+  activeStatus: boolean;
 }
 
 const SkillDomainForm: React.FC = () => {
-  // Use the defined types for state variables
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
@@ -55,24 +55,25 @@ const SkillDomainForm: React.FC = () => {
         // Fetch the skill/domain data for the specific freelancer
         if (user?.uid) {
           const talentResponse = await axiosInstance.get(
-            `/freelancer/${user.uid}/dehix-talent`,
+            `/freelancer/${user.uid}/dehix-talent`
           );
           const talentData = talentResponse.data?.data[0]?.dehixTalent || {};
 
           // Convert the talent object into an array
           const formattedTalentData = Object.values(talentData).map(
             (item: any) => ({
+              uid: item._id, // Ensure that the UID is present here
               label: item.skillName || item.domainName || 'N/A',
               experience: item.experience || 'N/A',
               monthlyPay: item.monthlyPay || 'N/A',
               status: item.status,
               activeStatus: item.activeStatus,
-            }),
+            })
           );
 
           setSkillDomainData(formattedTalentData);
           setStatusVisibility(
-            formattedTalentData.map((item) => item.activeStatus),
+            formattedTalentData.map((item) => item.activeStatus)
           );
         }
       } catch (error) {
@@ -88,7 +89,10 @@ const SkillDomainForm: React.FC = () => {
     experience: string;
     monthlyPay: string;
   }) => {
-    setSkillDomainData([...skillDomainData, { ...data, status: 'pending' }]);
+    setSkillDomainData([
+      ...skillDomainData,
+      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false } // Generate a unique ID
+    ]);
     setStatusVisibility([...statusVisibility, false]);
   };
 
@@ -97,8 +101,31 @@ const SkillDomainForm: React.FC = () => {
     experience: string;
     monthlyPay: string;
   }) => {
-    setSkillDomainData([...skillDomainData, { ...data, status: 'pending' }]);
+    setSkillDomainData([
+      ...skillDomainData,
+      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false } // Generate a unique ID
+    ]);
     setStatusVisibility([...statusVisibility, false]);
+  };
+
+  // Function to handle visibility toggle and API call
+  const handleToggleVisibility = async (index: number, value: boolean, dehixTalentId: string) => {
+    try {
+      // Update the backend with the new visibility status
+      const response = await axiosInstance.patch(
+        `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
+        { activeStatus: value }
+      );
+
+      if (response.status === 200) {
+        // Update the local state if the API call is successful
+        const updatedVisibility = [...statusVisibility];
+        updatedVisibility[index] = value;
+        setStatusVisibility(updatedVisibility);
+      }
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+    }
   };
 
   return (
@@ -132,11 +159,11 @@ const SkillDomainForm: React.FC = () => {
                     <TableCell>
                       <Switch
                         checked={statusVisibility[index]}
-                        onCheckedChange={(value) => {
-                          const updatedVisibility = [...statusVisibility];
-                          updatedVisibility[index] = value;
-                          setStatusVisibility(updatedVisibility);
-                        }}
+                        onCheckedChange={(value) =>
+                          item.uid
+                            ? handleToggleVisibility(index, value, item.uid)
+                            : console.error('UID missing for item', item) // Fallback check for missing UID
+                        }
                       />
                     </TableCell>
                   </TableRow>
@@ -145,10 +172,7 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableCell colSpan={5} className="text-center">
                     <div className="text-center py-10 w-[90vw] h-[30vw] mt-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
+                      <PackageOpen className="mx-auto text-gray-500" size="100" />
                       <p className="text-gray-500">
                         No data available.
                         <br /> This feature will be available soon.
