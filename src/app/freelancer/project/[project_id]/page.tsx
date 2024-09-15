@@ -58,7 +58,14 @@ export default function Dashboard() {
         const response = await axiosInstance.get(
           `/business/${project_id}/project`,
         );
-        setProject(response.data.data);
+        // Safely access nested data
+        const projectData = response?.data?.data?.data || response?.data?.data;
+
+        if (projectData) {
+          setProject(projectData);
+        } else {
+          console.error('Unexpected data structure:', response.data);
+        }
       } catch (error) {
         console.error('API Error:', error);
       }

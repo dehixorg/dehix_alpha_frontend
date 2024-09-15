@@ -22,6 +22,8 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BidsDetail from '@/components/freelancer/project/bidsDetailTable';
 
 interface Project {
   _id: string;
@@ -64,8 +66,15 @@ export default function Dashboard() {
         const response = await axiosInstance.get(
           `/business/${project_id}/project`,
         );
-        console.log(response.data.data);
-        setProject(response.data.data);
+
+        // Safely access nested data
+        const projectData = response?.data?.data?.data || response?.data?.data;
+
+        if (projectData) {
+          setProject(projectData);
+        } else {
+          console.error('Unexpected data structure:', response.data);
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -111,45 +120,60 @@ export default function Dashboard() {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div>
-              <ProjectDetailCard
-                projectName={project.projectName}
-                description={project.description}
-                email={project.email}
-                status={project.status}
-                startDate={project.createdAt}
-                endDate={project.end}
-                domains={[]}
-                skills={project.skillsRequired}
-              />
-            </div>
-            <div>
-              <Card className="">
-                <CardHeader>
-                  <CardTitle>Other Profile</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid w-full items-center gap-4">
-                    <div className="w-auto grid grid-cols-2 gap-4">
-                      {project.skillsRequired.map((skill, index) => (
-                        <ProjectSkillCard
-                          key={index}
-                          skillName={skill}
-                          description={project.description}
-                          email={project.email}
-                          status={project.status}
-                          startDate={project.createdAt}
-                          endDate={project.end}
-                          domains={[]}
-                          skills={project.skillsRequired}
-                        />
-                      ))}
+              <Tabs defaultValue="Project-Info">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
+                  <TabsTrigger value="Bids-Info">Bids-Info</TabsTrigger>
+                </TabsList>
+                <TabsContent value="Project-Info">
+                  <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+                    <div>
+                      <ProjectDetailCard
+                        projectName={project.projectName}
+                        description={project.description}
+                        email={project.email}
+                        status={project.status}
+                        startDate={project.createdAt}
+                        endDate={project.end}
+                        domains={[]}
+                        skills={project.skillsRequired}
+                      />
+                    </div>
+                    <div>
+                      <Card className="">
+                        <CardHeader>
+                          <CardTitle>Other Profile</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid w-full items-center gap-4">
+                            <div className="w-auto grid grid-cols-2 gap-4">
+                              {project.skillsRequired.map((skill, index) => (
+                                <ProjectSkillCard
+                                  key={index}
+                                  skillName={skill}
+                                  description={project.description}
+                                  email={project.email}
+                                  status={project.status}
+                                  startDate={project.createdAt}
+                                  endDate={project.end}
+                                  domains={[]}
+                                  skills={project.skillsRequired}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between">
+                          {/* <Button>Deploy</Button> */}
+                        </CardFooter>
+                      </Card>
                     </div>
                   </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  {/* <Button>Deploy</Button> */}
-                </CardFooter>
-              </Card>
+                </TabsContent>
+                <TabsContent value="Bids-Info">
+                  <BidsDetail id={project_id || ''} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
           <div className="space-y-6">
