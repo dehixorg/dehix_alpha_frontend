@@ -42,9 +42,8 @@ const profileFormSchema = z.object({
     })
     .email(),
   //adddomain
-  projectDomain: z
-  .array(z.string()),
-    
+  projectDomain: z.array(z.string()),
+
   urls: z
     .array(
       z.object({
