@@ -85,7 +85,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/business/${project_id}/project`,
+          `/business/${project_id}/${user.uid}/project`,
         );
         setProject(response.data.data.data);
         if (response.data.data.message == 'Already Applied') {
@@ -100,7 +100,7 @@ export default function Dashboard() {
   const fetchBid = useCallback(() => {
     async () => {
       try {
-        const response = await axiosInstance(`bid/${project_id}/${user.uid}/project/bid`);
+        const response = await axiosInstance(`bid/${project_id}/project/bid`);
         setBids(response.data.data);
       } catch (error) {
         console.log(error);
