@@ -227,8 +227,8 @@ export function CreateProjectBusinessForm() {
         projectType: '',
         skillsRequired: currSkills,
         domains: currDomains,
+        projectDomain:currProjectDomains,
       });
-
       const response = await axiosInstance.post(
         `/business/${user.uid}/project`,
         {
@@ -237,8 +237,10 @@ export function CreateProjectBusinessForm() {
           projectType: '',
           skillsRequired: currSkills,
           domains: currDomains,
+          projectDomain:currProjectDomains,
         },
       );
+    
       console.log('API Response:', response.data);
 
       // You can update other fields here as needed
