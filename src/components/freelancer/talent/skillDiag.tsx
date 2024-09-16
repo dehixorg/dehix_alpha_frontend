@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -21,19 +22,20 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import { RootState } from '@/lib/store';
 
-// Define the type for a skill
 interface Skill {
   label: string;
 }
 
-// Define SkillDomainData as per your form data structure
 interface SkillDomainData {
-  type: 'skill' | 'domain';
+  uid: string;
   label: string;
   experience: string;
   monthlyPay: string;
-  show: boolean;
+  activeStatus: boolean;
   status: string;
 }
 
@@ -43,7 +45,6 @@ interface SkillDialogProps {
   onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
 }
 
-// Define your schema (if needed)
 const skillSchema = z.object({
   label: z.string().nonempty('Please select a skill'),
   experience: z
@@ -57,6 +58,7 @@ const skillSchema = z.object({
 });
 
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
+  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const {
     control,
@@ -69,22 +71,52 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       label: '',
       experience: '',
       monthlyPay: '',
-      type: 'skill', // Default value for 'type' if needed
-      show: false, // Default value for 'show' if needed
-      status: 'Pending', // Default value for 'status' if needed
+      activeStatus: false,
+      status: 'pending',
     },
   });
 
-  const onSubmit = (data: SkillDomainData) => {
-    onSubmitSkill(data);
-    reset(); // Clear the form fields
-    setOpen(false); // Close the dialog
+  const onSubmit = async (data: SkillDomainData) => {
+    try {
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/dehix-talent`,
+        {
+          skillName: data.label,
+          experience: data.experience,
+          monthlyPay: data.monthlyPay,
+          activeStatus: data.activeStatus,
+          status: data.status,
+        },
+      );
+
+      if (response.status === 200) {
+        // Assuming the response contains the newly created talent data including UID
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitSkill({
+          ...data,
+          uid: newTalent._id, // Update this line to use the UID from the response
+        });
+        reset();
+        setOpen(false); // Close the dialog after successful submission
+        toast({
+          title: 'Talent Added',
+          description: 'The Talent has been successfully added.',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting skill data', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add talent. Please try again.',
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} disabled>
+        <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Skill
         </Button>
