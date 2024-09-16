@@ -106,14 +106,14 @@ const SkillDomainForm: React.FC = () => {
   const handleToggleVisibility = async (
     index: number,
     value: boolean,
-    dehixTalentId: string
+    dehixTalentId: string,
   ) => {
     try {
       const response = await axiosInstance.patch(
         `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
-        { activeStatus: value }
+        { activeStatus: value },
       );
-  
+
       if (response.status === 200) {
         const updatedVisibility = [...statusVisibility];
         updatedVisibility[index] = value;

@@ -92,9 +92,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           monthlyPay: data.monthlyPay,
           activeStatus: data.activeStatus,
           status: data.status,
-        }
+        },
       );
-  
+
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID
         const newTalent = response.data.data; // Adjust based on your response structure
@@ -118,7 +118,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
     }
   };
-  
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
