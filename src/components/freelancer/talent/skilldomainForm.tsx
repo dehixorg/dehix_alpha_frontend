@@ -86,26 +86,18 @@ const SkillDomainForm: React.FC = () => {
   }, [user?.uid]);
 
   // Handle skill/domain submission
-  const onSubmitSkill = (data: {
-    label: string;
-    experience: string;
-    monthlyPay: string;
-  }) => {
+  const onSubmitSkill = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false }, // Generate a unique ID
+      { ...data, status: 'pending', activeStatus: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
 
-  const onSubmitDomain = (data: {
-    label: string;
-    experience: string;
-    monthlyPay: string;
-  }) => {
+  const onSubmitDomain = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { uid: `${Date.now()}`, ...data, status: 'pending', activeStatus: false }, // Generate a unique ID
+      { ...data, status: 'pending', activeStatus: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -114,17 +106,15 @@ const SkillDomainForm: React.FC = () => {
   const handleToggleVisibility = async (
     index: number,
     value: boolean,
-    dehixTalentId: string,
+    dehixTalentId: string
   ) => {
     try {
-      // Update the backend with the new visibility status
       const response = await axiosInstance.patch(
         `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
-        { activeStatus: value },
+        { activeStatus: value }
       );
-
+  
       if (response.status === 200) {
-        // Update the local state if the API call is successful
         const updatedVisibility = [...statusVisibility];
         updatedVisibility[index] = value;
         setStatusVisibility(updatedVisibility);

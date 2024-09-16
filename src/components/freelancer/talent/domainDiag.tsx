@@ -33,6 +33,7 @@ interface Domain {
 
 // Define SkillDomainData based on your form data structure
 interface SkillDomainData {
+  uid: string;
   label: string;
   experience: string;
   monthlyPay: string;
@@ -91,12 +92,16 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           monthlyPay: data.monthlyPay,
           activeStatus: data.activeStatus,
           status: data.status,
-        },
+        }
       );
-
+  
       if (response.status === 200) {
-        console.log('API Response:', response.data);
-        onSubmitDomain(data);
+        // Assuming the response contains the newly created talent data including UID
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitDomain({
+          ...data,
+          uid: newTalent._id, // Update this line to use the UID from the response
+        });
         reset();
         setOpen(false); // Close the dialog after successful submission
         toast({
@@ -105,7 +110,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         });
       }
     } catch (error) {
-      console.error('Error submitting skill data', error);
+      console.error('Error submitting domain data', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -113,6 +118,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
     }
   };
+  
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -31,10 +31,11 @@ interface Skill {
 }
 
 interface SkillDomainData {
+  uid: string;
   label: string;
   experience: string;
   monthlyPay: string;
-  show: boolean;
+  activeStatus: boolean;
   status: string;
 }
 
@@ -70,7 +71,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       label: '',
       experience: '',
       monthlyPay: '',
-      show: false,
+      activeStatus: false,
       status: 'pending',
     },
   });
@@ -83,14 +84,18 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           skillName: data.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
-          activeStatus: data.show,
+          activeStatus: data.activeStatus,
           status: data.status,
-        },
+        }
       );
-
+  
       if (response.status === 200) {
-        console.log('API Response:', response.data);
-        onSubmitSkill(data);
+        // Assuming the response contains the newly created talent data including UID
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitSkill({
+          ...data,
+          uid: newTalent._id, // Update this line to use the UID from the response
+        });
         reset();
         setOpen(false); // Close the dialog after successful submission
         toast({
@@ -107,6 +112,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       });
     }
   };
+  
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
