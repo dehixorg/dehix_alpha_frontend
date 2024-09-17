@@ -29,16 +29,23 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
+// add message alert if requirement not filled!!
 const experienceFormSchema = z
   .object({
-    company: z.string().optional(),
-    jobTitle: z.string().optional(),
-    workDescription: z.string().optional(),
-    workFrom: z.string().optional(),
-    workTo: z.string().optional(),
-    referencePersonName: z.string().optional(),
-    referencePersonContact: z.string().optional(),
-    githubRepoLink: z.string().url().optional(),
+    company: z.string().min(1, { message: 'company name is required.' }),
+    jobTitle: z.string().min(1, { message: 'job Title is required.' }),
+    workDescription: z
+      .string()
+      .min(1, { message: 'Work Description is required.' }),
+    workFrom: z.string().min(1, { message: 'Work from is required.' }),
+    workTo: z.string().min(1, { message: 'work to is required.' }),
+    referencePersonName: z
+      .string()
+      .min(1, { message: ' referencePersonName is required.' }),
+    referencePersonContact: z
+      .string()
+      .min(1, { message: '  referencePersonContact is required.' }),
+    githubRepoLink: z.string().url({ message: 'Invalid URL.' }).optional(),
     comments: z.string().optional(),
   })
   .refine(
