@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.2.4",
-    "@types/node": "^20",
+    "@types/node": "^20.16.5",
     "@types/react": "^18",
     "@types/react-autosuggest": "^10.1.11",
     "@types/react-dom": "^18",

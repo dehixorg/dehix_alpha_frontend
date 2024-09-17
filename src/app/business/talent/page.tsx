@@ -347,7 +347,7 @@ export default function Dashboard() {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button disabled className="mr-2 mt-2">
+                  <Button  className="mr-2 mt-2">
                     <Plus className="mr-1 h-4 w-4" /> Add your Talent by Skill
                   </Button>
                 </DialogTrigger>
@@ -356,7 +356,7 @@ export default function Dashboard() {
                     <DialogTitle>Get Talent by Skill</DialogTitle>
                     <DialogDescription>
                       Select your Skill, Description, and Experience. Select
-                      your Skill, Description, and Experience.
+
                     </DialogDescription>
                   </DialogHeader>
 
@@ -1013,10 +1013,14 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-2xl lg:-mt-4">
               Talent
             </CardTitle>
-            {/* <InterviewCard {...sampleInterview} /> */}
           </div>
         </main>
       </div>
     </div>
   );
 }
+
+
+
+
+
