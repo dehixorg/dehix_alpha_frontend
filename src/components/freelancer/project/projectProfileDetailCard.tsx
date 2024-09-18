@@ -54,7 +54,6 @@ export function ProjectProfileDetailCard({
   skills,
   experience,
   minConnect,
-  rate,
   description,
   email,
   status,
