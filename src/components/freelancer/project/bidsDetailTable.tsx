@@ -44,7 +44,6 @@ interface BidsDetailProps {
 const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   {
     /* 
     useEffect(() => {
@@ -55,7 +54,6 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
                 setUserData({ bids });
             } catch (error) {
                 console.error("Error fetching user data:", error);
-                setError("Failed to fetch bid details.");
             } finally {
                 setLoading(false);
             }
@@ -117,7 +115,6 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
       });
     } catch (error) {
       console.error(`Error updating bid status to ${status}:`, error);
-      setError(`Failed to update bid status.`);
     }
   };
 
