@@ -9,6 +9,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
+  projectDomain: string[];
 }
 
 interface MobileFilterModalProps {
@@ -16,6 +17,7 @@ interface MobileFilterModalProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
+  projectDomain: string[];
   handleFilterChange: (filterType: string, selectedValues: string[]) => void;
   handleApply: () => void;
   handleModalToggle: () => void;
@@ -26,6 +28,7 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
   filters,
   domains,
   skills,
+  projectDomain,
   handleFilterChange,
   handleApply,
   handleModalToggle,
@@ -67,6 +70,18 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
                   selectedValues={filters.skills}
                   setSelectedValues={(values: any) =>
                     handleFilterChange('skills', values)
+                  }
+                />
+              </div>
+
+              <div className="border-b border-gray-300 pb-4">
+                <MobileSkillDom
+                  label="Project Domain"
+                  heading="Filter by Project Domain"
+                  checkboxLabels={projectDomain}
+                  selectedValues={filters.projectDomain}
+                  setSelectedValues={(values: any) =>
+                    handleFilterChange('projectDomain', values)
                   }
                 />
               </div>

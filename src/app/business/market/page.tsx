@@ -21,6 +21,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
+  projectDomain: string[];
 }
 
 const Market: React.FC = () => {
@@ -28,6 +29,7 @@ const Market: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const [projectDomain, setProjectDomain] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<any[]>([]);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -35,6 +37,7 @@ const Market: React.FC = () => {
     jobType: [],
     domain: [],
     skills: [],
+    projectDomain: [],
   });
 
   const handleFilterChange = (filterType: string, selectedValues: string[]) => {
@@ -85,6 +88,13 @@ const Market: React.FC = () => {
           (domain: any) => domain.label,
         );
         setDomains(domainLabels);
+
+        const projectDomainResponse =
+          await axiosInstance.get('/projectDomain/all');
+        const projectDomainLabels = projectDomainResponse.data.data.map(
+          (projectDomain: any) => projectDomain.label,
+        );
+        setProjectDomain(projectDomainLabels);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -123,6 +133,7 @@ const Market: React.FC = () => {
             filters={filters}
             domains={domains}
             skills={skills}
+            projectDomain={projectDomain}
             handleFilterChange={handleFilterChange}
             handleApply={handleApply}
           />
@@ -134,6 +145,7 @@ const Market: React.FC = () => {
         filters={filters}
         domains={domains}
         skills={skills}
+        projectDomain={projectDomain}
         handleFilterChange={handleFilterChange}
         handleApply={handleApply}
         handleModalToggle={handleModalToggle}
