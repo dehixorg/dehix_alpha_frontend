@@ -9,14 +9,13 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
-  projectDomain:string[];
-
+  projectDomain: string[];
 }
 interface FilterSidebarProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
-  projectDomain:string[];
+  projectDomain: string[];
   handleFilterChange: (filterType: string, selectedValues: string[]) => void;
   handleApply: () => void;
 }
@@ -69,7 +68,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             heading="Filter by Project Domains"
             checkboxLabels={projectDomain}
             selectedValues={filters.projectDomain}
-            setSelectedValues={(values) => handleFilterChange('projectDomain', values)}
+            setSelectedValues={(values) =>
+              handleFilterChange('projectDomain', values)
+            }
           />
         </div>
       </div>

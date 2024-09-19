@@ -9,7 +9,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
-  projectDomain:string[];
+  projectDomain: string[];
 }
 
 interface MobileFilterModalProps {
@@ -17,7 +17,7 @@ interface MobileFilterModalProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
-  projectDomain:string[];
+  projectDomain: string[];
   handleFilterChange: (filterType: string, selectedValues: string[]) => void;
   handleApply: () => void;
   handleModalToggle: () => void;

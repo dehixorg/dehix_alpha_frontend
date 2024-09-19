@@ -21,7 +21,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
-  projectDomain:string[];
+  projectDomain: string[];
 }
 
 const Market: React.FC = () => {
@@ -37,7 +37,7 @@ const Market: React.FC = () => {
     jobType: [],
     domain: [],
     skills: [],
-    projectDomain:[],
+    projectDomain: [],
   });
 
   const handleFilterChange = (filterType: string, selectedValues: string[]) => {
@@ -89,7 +89,8 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
 
-        const projectDomainResponse = await axiosInstance.get('/projectDomain/all');
+        const projectDomainResponse =
+          await axiosInstance.get('/projectDomain/all');
         const projectDomainLabels = projectDomainResponse.data.data.map(
           (projectDomain: any) => projectDomain.label,
         );
