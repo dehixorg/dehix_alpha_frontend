@@ -47,14 +47,17 @@ export default function Talent() {
 
         {/* Main content area */}
         <main className="flex flex-col lg:flex-row gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:gap-16">
-          
           {/* Left side: SkillDomainForm */}
-          <div className="lg:w-2/3"> {/* Takes 2/3 of the space on large screens */}
+          <div className="lg:w-2/3">
+            {' '}
+            {/* Takes 2/3 of the space on large screens */}
             <SkillDomainForm />
           </div>
-          
+
           {/* Right side: Talent */}
-          <div className="lg:w-1/3 space-y-6"> {/* Takes 1/3 of the space */}
+          <div className="lg:w-1/3 space-y-6">
+            {' '}
+            {/* Takes 1/3 of the space */}
             <Card>
               <CardTitle className="group flex items-center gap-2 text-2xl">
                 Talent

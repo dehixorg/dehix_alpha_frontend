@@ -19,10 +19,12 @@ import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 
 interface Skill {
+  _id: string;
   label: string;
 }
 
 interface Domain {
+  _id: string;
   label: string;
 }
 
@@ -30,9 +32,9 @@ interface SkillDomainData {
   uid: string;
   label: string;
   experience: string;
-  monthlyPay: string;
+  description: string;
   status: string;
-  activeStatus: boolean;
+  visible: boolean;
 }
 
 const SkillDomainForm: React.FC = () => {
@@ -55,26 +57,27 @@ const SkillDomainForm: React.FC = () => {
 
         // Fetch the skill/domain data for the specific freelancer
         if (user?.uid) {
-          const talentResponse = await axiosInstance.get(
-            `/freelancer/${user.uid}/dehix-talent`
+          const hireTalentResponse = await axiosInstance.get(
+            `/business/${user.uid}/hireDehixTalent`,
           );
-          const talentData = talentResponse.data?.data[0]?.dehixTalent || {};
+          const hireTalentData =
+            hireTalentResponse.data?.data || {};
 
           // Convert the talent object into an array
-          const formattedTalentData = Object.values(talentData).map(
+          const formattedHireTalentData = Object.values(hireTalentData).map(
             (item: any) => ({
               uid: item._id, // Ensure that the UID is present here
               label: item.skillName || item.domainName || 'N/A',
               experience: item.experience || 'N/A',
-              monthlyPay: item.monthlyPay || 'N/A',
+              description: item.description || 'N/A',
               status: item.status,
-              activeStatus: item.activeStatus,
-            })
+              visible: item.visible,
+            }),
           );
 
-          setSkillDomainData(formattedTalentData);
+          setSkillDomainData(formattedHireTalentData);
           setStatusVisibility(
-            formattedTalentData.map((item) => item.activeStatus)
+            formattedHireTalentData.map((item) => item.visible),
           );
         }
       } catch (error) {
@@ -84,11 +87,12 @@ const SkillDomainForm: React.FC = () => {
     fetchData();
   }, [user?.uid]);
 
+
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'pending', activeStatus: false },
+      { ...data, status: 'added', visible: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -96,7 +100,7 @@ const SkillDomainForm: React.FC = () => {
   const onSubmitDomain = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'pending', activeStatus: false },
+      { ...data, status: 'added', visible: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -105,12 +109,12 @@ const SkillDomainForm: React.FC = () => {
   const handleToggleVisibility = async (
     index: number,
     value: boolean,
-    dehixTalentId: string
+    hireDehixTalentId: string,
   ) => {
     try {
       const response = await axiosInstance.patch(
-        `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
-        { activeStatus: value }
+        `/business/${user.uid}/hireDehixTalent/${hireDehixTalentId}`,
+        { visible: value },
       );
 
       if (response.status === 200) {
@@ -132,13 +136,17 @@ const SkillDomainForm: React.FC = () => {
             <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
           </div>
         </div>
-        <Card className="overflow-hidden"> {/* Removed x-auto */}
-          <Table className="w-full"> {/* Full width without scroll */}
+        <Card className="overflow-hidden">
+          {' '}
+          {/* Removed x-auto */}
+          <Table className="w-full">
+            {' '}
+            {/* Full width without scroll */}
             <TableHeader>
               <TableRow>
                 <TableHead>Label</TableHead>
                 <TableHead>Experience</TableHead>
-                <TableHead>Monthly Pay</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Activity</TableHead>
               </TableRow>
@@ -148,16 +156,17 @@ const SkillDomainForm: React.FC = () => {
                 skillDomainData.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{item.label}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.monthlyPay}</TableCell>
+                    <TableCell>{item.experience} years</TableCell>
+                    <TableCell>{item.description}</TableCell>
                     <TableCell>{item.status}</TableCell>
                     <TableCell>
                       <Switch
                         checked={statusVisibility[index]}
-                        onCheckedChange={(value) =>
-                          item.uid
-                            ? handleToggleVisibility(index, value, item.uid)
-                            : console.error('UID missing for item', item) // Fallback check for missing UID
+                        onCheckedChange={
+                          (value) =>
+                            item.uid
+                              ? handleToggleVisibility(index, value, item.uid)
+                              : console.error('UID missing for item', item) // Fallback check for missing UID
                         }
                       />
                     </TableCell>
@@ -175,7 +184,8 @@ const SkillDomainForm: React.FC = () => {
                         No data available.
                         <br /> This feature will be available soon.
                         <br />
-                        Here you can get directly hired for different roles.
+                        Here you can directly hire freelancer for different
+                        roles.
                       </p>
                     </div>
                   </TableCell>
