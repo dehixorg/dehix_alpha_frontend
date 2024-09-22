@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,55 +28,35 @@ const TalentCard: React.FC = () => {
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const limit = 3; // Load 5 items per API request
+  const limit = 3 // Load 3 items per API request
+  const isRequestInProgress = useRef(false);
 
-  const fetchTalentData = async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
+  const fetchTalentData = useCallback(async () => {
+    if (isRequestInProgress.current || loading || !hasMore) return
 
     try {
+      isRequestInProgress.current = true;
+      setLoading(true);
 
-      setTimeout(async () => {
-        const response = await axiosInstance.get(`freelancer/dehixTalent?limit=${limit}&skip=${skip}`);
+      const response = await axiosInstance.get(`freelancer/dehixTalent?limit=${limit}&skip=${skip}`);
 
-        setTalents((prev) => [...prev, ...response.data.data]); // Append new data
-        setSkip((prev) => prev + limit); // Increment the skip
+      setTalents((prev) => [...prev, ...response.data.data]);
+      setSkip((prev) => prev + limit);
 
-        // Usually your response will tell you if there is no more data.
-        if (response.data.data.length < limit) {
-          setHasMore(false); // If fewer than `limit` items are returned, stop scrolling
-        }
-        if (response.status === 404) {
-          setHasMore(false);
-        }
-        
-        setLoading(false);
-      }, 800);
-
+      if (response.data.data.length < limit) {
+        setHasMore(false);
+      }
+      if (response.status === 404) {
+        setHasMore(false);
+      }
     } catch (error) {
       console.error('Error fetching talent data', error);
     } finally {
       setLoading(false);
+      isRequestInProgress.current = false;
     }
-  };
+  }, [skip, loading, hasMore]);
 
-  useEffect(() => {
-    fetchTalentData(); // Initial load
-  }, []);
-
-  // const handleScroll = () => {
-  //   if (
-  //     window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 &&
-  //     !loading
-  //   ) {
-  //     fetchTalentData(); // Load more data when the user scrolls near the bottom
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   window.addEventListener('scroll', handleScroll);
-  //   return () => window.removeEventListener('scroll', handleScroll); // Clean up the event listener on unmount
-  // }, [loading]);
 
   return (
     <div className="flex flex-wrap justify-center gap-4">
@@ -121,13 +101,13 @@ const TalentCard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        );
+        )
       })}
       <InfiniteScroll hasMore={hasMore} isLoading={loading} next={fetchTalentData} threshold={1}>
         {hasMore && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
       </InfiniteScroll>
     </div>
-  );
-};
+  )
+}
 
-export default TalentCard;
+export default TalentCard
