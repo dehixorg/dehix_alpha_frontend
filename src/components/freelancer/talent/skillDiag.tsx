@@ -27,11 +27,13 @@ import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
 
 interface Skill {
+  _id: string;
   label: string;
 }
 
 interface SkillDomainData {
   uid: string;
+  skillId: string;
   label: string;
   experience: string;
   monthlyPay: string;
@@ -46,6 +48,7 @@ interface SkillDialogProps {
 }
 
 const skillSchema = z.object({
+  skillId: z.string(),
   label: z.string().nonempty('Please select a skill'),
   experience: z
     .string()
@@ -55,6 +58,8 @@ const skillSchema = z.object({
     .string()
     .nonempty('Please enter your monthly pay')
     .regex(/^\d+$/, 'Monthly pay must be a number'),
+  activeStatus: z.boolean(),
+  status: z.string(),
 });
 
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
@@ -65,9 +70,11 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
+      skillId: '',
       label: '',
       experience: '',
       monthlyPay: '',
@@ -81,6 +88,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
         {
+          skillId: data.skillId,
           skillName: data.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
@@ -105,6 +113,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       }
     } catch (error) {
       console.error('Error submitting skill data', error);
+      reset();
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -134,7 +143,19 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               control={control}
               name="label"
               render={({ field }) => (
-                <Select {...field} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    // Find the selected skill by label
+                    const selectedDomain = skills.find(
+                      (skill) => skill.label === selectedLabel,
+                    );
+
+                    // Set label and domainId in form
+                    field.onChange(selectedLabel); // Set label
+                    setValue('skillId', selectedDomain?._id || ''); // Set domainId
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a skill" />
                   </SelectTrigger>

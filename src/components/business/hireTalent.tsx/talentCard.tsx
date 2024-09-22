@@ -1,12 +1,13 @@
-'use client'
+'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
-import { Loader2 } from 'lucide-react';
 
 interface DehixTalent {
   _id: string;
@@ -28,17 +29,19 @@ const TalentCard: React.FC = () => {
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const limit = 3 // Load 3 items per API request
+  const limit = 3; // Load 3 items per API request
   const isRequestInProgress = useRef(false);
 
   const fetchTalentData = useCallback(async () => {
-    if (isRequestInProgress.current || loading || !hasMore) return
+    if (isRequestInProgress.current || loading || !hasMore) return;
 
     try {
       isRequestInProgress.current = true;
       setLoading(true);
 
-      const response = await axiosInstance.get(`freelancer/dehixTalent?limit=${limit}&skip=${skip}`);
+      const response = await axiosInstance.get(
+        `freelancer/dehixTalent?limit=${limit}&skip=${skip}`,
+      );
 
       setTalents((prev) => [...prev, ...response.data.data]);
       setSkip((prev) => prev + limit);
@@ -57,7 +60,6 @@ const TalentCard: React.FC = () => {
     }
   }, [skip, loading, hasMore]);
 
-
   return (
     <div className="flex flex-wrap justify-center gap-4">
       {talents.map((talent) => {
@@ -66,7 +68,10 @@ const TalentCard: React.FC = () => {
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
 
         return (
-          <Card key={talentEntry._id} className="w-full sm:w-[350px] lg:w-[450px]">
+          <Card
+            key={talentEntry._id}
+            className="w-full sm:w-[350px] lg:w-[450px]"
+          >
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
                 <AvatarImage
@@ -101,13 +106,18 @@ const TalentCard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        )
+        );
       })}
-      <InfiniteScroll hasMore={hasMore} isLoading={loading} next={fetchTalentData} threshold={1}>
+      <InfiniteScroll
+        hasMore={hasMore}
+        isLoading={loading}
+        next={fetchTalentData}
+        threshold={1}
+      >
         {hasMore && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
       </InfiniteScroll>
     </div>
-  )
-}
+  );
+};
 
-export default TalentCard
+export default TalentCard;

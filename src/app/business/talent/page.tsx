@@ -10,7 +10,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import { Card, CardTitle } from '@/components/ui/card';
+import { CardTitle } from '@/components/ui/card';
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
 
@@ -62,8 +62,7 @@ export default function Talent() {
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Talent
             </CardTitle>
-
-            <div className=''>
+            <div className="">
               <TalentCard />
             </div>
           </div>

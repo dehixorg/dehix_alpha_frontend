@@ -28,12 +28,14 @@ import { toast } from '@/components/ui/use-toast';
 
 // Define the type for a domain
 interface Domain {
+  _id: string;
   label: string;
 }
 
 // Define SkillDomainData based on your form data structure
 interface SkillDomainData {
   uid: string;
+  domainId: string;
   label: string;
   experience: string;
   monthlyPay: string;
@@ -49,6 +51,7 @@ interface DomainDialogProps {
 
 // Define the schema for validation
 const domainSchema = z.object({
+  domainId: z.string(),
   label: z.string().nonempty('Please select a domain'),
   experience: z
     .string()
@@ -58,6 +61,8 @@ const domainSchema = z.object({
     .string()
     .nonempty('Please enter your monthly pay')
     .regex(/^\d+$/, 'Monthly pay must be a number'),
+  activeStatus: z.boolean(),
+  status: z.string(),
 });
 
 const DomainDialog: React.FC<DomainDialogProps> = ({
@@ -71,9 +76,11 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
+      domainId: '',
       label: '',
       experience: '',
       monthlyPay: '',
@@ -87,6 +94,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
         {
+          domainId: data.domainId,
           domainName: data.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
@@ -111,6 +119,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       }
     } catch (error) {
       console.error('Error submitting domain data', error);
+      reset();
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -139,13 +148,25 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="label"
               render={({ field }) => (
-                <Select {...field} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    // Find the selected domain by label
+                    const selectedDomain = domains.find(
+                      (domain) => domain.label === selectedLabel,
+                    );
+
+                    // Set label and domainId in form
+                    field.onChange(selectedLabel); // Set label
+                    setValue('domainId', selectedDomain?._id || ''); // Set domainId
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a domain" />
                   </SelectTrigger>
                   <SelectContent>
                     {domains.map((domain) => (
-                      <SelectItem key={domain.label} value={domain.label}>
+                      <SelectItem key={domain._id} value={domain.label}>
                         {domain.label}
                       </SelectItem>
                     ))}

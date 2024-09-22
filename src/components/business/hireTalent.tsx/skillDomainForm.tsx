@@ -60,8 +60,7 @@ const SkillDomainForm: React.FC = () => {
           const hireTalentResponse = await axiosInstance.get(
             `/business/${user.uid}/hireDehixTalent`,
           );
-          const hireTalentData =
-            hireTalentResponse.data?.data || {};
+          const hireTalentData = hireTalentResponse.data?.data || {};
 
           // Convert the talent object into an array
           const formattedHireTalentData = Object.values(hireTalentData).map(
@@ -86,7 +85,6 @@ const SkillDomainForm: React.FC = () => {
     }
     fetchData();
   }, [user?.uid]);
-
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {

@@ -49,7 +49,7 @@ interface SkillDialogProps {
 
 const skillSchema = z.object({
   label: z.string().nonempty('Please select a domain'),
-  skillId: z.string().nonempty('Domain ID is required'),  // Validation for domainId
+  skillId: z.string().nonempty('Domain ID is required'), // Validation for skillId
   experience: z
     .string()
     .nonempty('Please enter your experience')

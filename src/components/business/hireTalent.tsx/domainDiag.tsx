@@ -52,7 +52,7 @@ interface DomainDialogProps {
 // Define the schema for validation
 const domainSchema = z.object({
   label: z.string().nonempty('Please select a domain'),
-  domainId: z.string().nonempty('Domain ID is required'),  // Validation for domainId
+  domainId: z.string().nonempty('Domain ID is required'), // Validation for domainId
   experience: z
     .string()
     .nonempty('Please enter your experience')
@@ -61,7 +61,6 @@ const domainSchema = z.object({
   visible: z.boolean(),
   status: z.string(),
 });
-
 
 const DomainDialog: React.FC<DomainDialogProps> = ({
   domains,

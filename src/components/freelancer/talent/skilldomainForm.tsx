@@ -20,10 +20,12 @@ import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 
 interface Skill {
+  _id: string;
   label: string;
 }
 
 interface Domain {
+  _id: string;
   label: string;
 }
 
