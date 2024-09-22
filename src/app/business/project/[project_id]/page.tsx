@@ -23,11 +23,11 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BidsDetail from '@/components/freelancer/project/bidsDetailTable';
+import BidsDetails from '@/components/freelancer/project/bidsDetail';
 
 interface ProjectProfile {
-  selectedFreelancer?: string[];   // Added based on the response
-  totalBid?: number[];             // Added based on the response
+  selectedFreelancer?: string[]; // Added based on the response
+  totalBid?: number[]; // Added based on the response
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -35,7 +35,7 @@ interface ProjectProfile {
   minConnect?: number;
   rate?: number;
   description?: string;
-  _id?: string;                    // Added to match the response's profile structure
+  _id?: string; // Added to match the response's profile structure
 }
 
 interface Project {
@@ -44,7 +44,7 @@ interface Project {
   description: string;
   companyId: string;
   email: string;
-  url?: { value: string }[];        // Retained as optional
+  url?: { value: string }[]; // Retained as optional
   verified?: any;
   isVerified?: string;
   companyName: string;
@@ -54,9 +54,9 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  profiles?: ProjectProfile[];      // Modified to use the new ProjectProfile structure
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';  // Matches response status
-  team?: string[];                  // Retained as optional
+  profiles?: ProjectProfile[]; // Modified to use the new ProjectProfile structure
+  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected'; // Matches response status
+  team?: string[]; // Retained as optional
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -176,7 +176,7 @@ export default function Dashboard() {
                   </div>
                 </TabsContent>
                 <TabsContent value="Profiles">
-                  <BidsDetail id={project_id || ''} />
+                  <BidsDetails id={project_id || ''} />
                 </TabsContent>
               </Tabs>
             </div>

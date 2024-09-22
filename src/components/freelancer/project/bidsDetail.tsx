@@ -2,7 +2,8 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
 
-import { Card } from '@/components/ui/card';
+import BidDialog from './bidDialog';
+
 import {
   Table,
   TableHeader,
@@ -12,15 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Eye } from 'lucide-react';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Card } from '@/components/ui/card';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -44,7 +37,7 @@ interface BidDetail {
   url?: { value: string }[];
   verified?: any;
   isVerified?: string;
-  companyName: string;
+  companyName?: string;
   start?: Date;
   end?: Date | null;
   skillsRequired: string[];
@@ -62,11 +55,11 @@ interface UserData {
   data: BidDetail;
 }
 
-interface BidsDetailProps {
+interface BidsDetailsProps {
   id: string;
 }
 
-const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
+const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,8 +79,19 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
 
     if (id) {
       fetchUserData();
+    } else {
+      setLoading(false);
     }
   }, [id]);
+
+  const handleUpdateStatus = async (bidId: string, status: string) => {
+    try {
+      await axiosInstance.put(`/bid/${bidId}/status`, { status });
+      console.log(`Bid ${bidId} updated with status: ${status}`);
+    } catch (error) {
+      console.error(`Error updating bid status for ${bidId}:`, error);
+    }
+  };
 
   return (
     <div>
@@ -128,37 +132,11 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
                         <TableCell>{profile.minConnect ?? 'N/A'}</TableCell>
                         <TableCell>{profile.totalBid?.length ?? 0}</TableCell>
                         <TableCell>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Eye className="cursor-pointer text-gray-500 hover:text-blue-500" />
-                            </DialogTrigger>
-                            <DialogContent className="p-4">
-                              <DialogHeader>
-                                <DialogTitle>Bids Table</DialogTitle>
-                                <DialogDescription>
-                                  Detailed information about the Bids .
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div>
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead className="w-[100px]">Freelancer</TableHead>
-                                      <TableHead className="text-right">bids</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                  {profile.selectedFreelancer?.map((freelancer, index) => (
-                                      <TableRow key={index}>
-                                        <TableCell>{freelancer}</TableCell>
-                                        <TableCell>{profile.totalBid?.[index] ?? 'N/A'}</TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <BidDialog
+                            handleUpdateStatus={handleUpdateStatus}
+                            projectId={id} // Pass the project ID
+                            bidId={profile._id ?? ''} // Pass the profile ID
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -167,8 +145,13 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
                   <TableRow>
                     <TableCell colSpan={6} className="text-center">
                       <div className="text-center py-10 w-full mt-10">
-                        <PackageOpen className="mx-auto text-gray-500" size="100" />
-                        <p className="text-gray-500">No data available.</p>
+                        <PackageOpen
+                          className="mx-auto text-gray-500"
+                          size="100"
+                        />
+                        <p className="text-gray-500 text-lg">
+                          No bid profiles found
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -182,4 +165,4 @@ const BidsDetail: React.FC<BidsDetailProps> = ({ id }) => {
   );
 };
 
-export default BidsDetail;
+export default BidsDetails;
