@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
 
+import { toast } from '../../ui/use-toast';
+
 import {
   Dialog,
   DialogTrigger,
@@ -90,6 +92,8 @@ const InterviewProfile: React.FC = () => {
   const [skillData, setSkillData] = useState<SkillData[]>([]);
   const [domainData, setDomainData] = useState<DomainData[]>([]);
 
+  const [loading, setLoading] = useState<boolean>(false);
+
   const [openSkillDialog, setOpenSkillDialog] = useState(false);
   const [openDomainDialog, setOpenDomainDialog] = useState(false);
 
@@ -103,6 +107,11 @@ const InterviewProfile: React.FC = () => {
         setDomains(domainsResponse.data.data);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to fetch data. Please try again later.',
+        });
       }
     }
     fetchData();
@@ -127,33 +136,52 @@ const InterviewProfile: React.FC = () => {
   });
 
   const onSubmitSkill = (data: SkillFormData) => {
-    console.log('Skill data:', data);
-    setSkillData([
-      ...skillData,
-      {
-        skill: data.skill,
-        experience: data.experience,
-        level: data.level,
-        status: defaultStatus,
-      },
-    ]);
-    resetSkill();
-    setOpenSkillDialog(false);
+    setLoading(true);
+    try {
+      console.log('Skill data:', data);
+      setSkillData([
+        ...skillData,
+        {
+          skill: data.skill,
+          experience: data.experience,
+          level: data.level,
+          status: defaultStatus,
+        },
+      ]);
+      resetSkill();
+      setOpenSkillDialog(false);
+      toast({
+        title: 'Skill Added',
+        description: `${data.skill} skill added successfully.`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmitDomain = (data: DomainFormData) => {
-    console.log('Domain data:', data);
-    setDomainData([
-      ...domainData,
-      {
-        domain: data.domain,
-        experience: data.experience,
-        level: data.level,
-        status: defaultStatus,
-      },
-    ]);
-    resetDomain();
-    setOpenDomainDialog(false);
+    setLoading(true);
+    try {
+      console.log('Domain data:', data);
+
+      setDomainData([
+        ...domainData,
+        {
+          domain: data.domain,
+          experience: data.experience,
+          level: data.level,
+          status: defaultStatus,
+        },
+      ]);
+      resetDomain();
+      setOpenDomainDialog(false);
+      toast({
+        title: 'Domain Added',
+        description: `${data.domain} domain added successfully.`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -163,7 +191,7 @@ const InterviewProfile: React.FC = () => {
           <h2 className="text-xl font-semibold">Skills</h2>
           <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
             <DialogTrigger asChild>
-              <Button disabled>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" /> Add Skill
               </Button>
             </DialogTrigger>
@@ -254,7 +282,9 @@ const InterviewProfile: React.FC = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Add</Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Adding...' : 'Add'}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -297,7 +327,7 @@ const InterviewProfile: React.FC = () => {
           <h2 className="text-xl font-semibold">Domains</h2>
           <Dialog open={openDomainDialog} onOpenChange={setOpenDomainDialog}>
             <DialogTrigger asChild>
-              <Button disabled>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" /> Add Domain
               </Button>
             </DialogTrigger>
@@ -388,7 +418,10 @@ const InterviewProfile: React.FC = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Add</Button>
+                  {/* <Button type="submit">Add</Button> */}
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Adding...' : 'Add'}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>

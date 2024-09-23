@@ -42,6 +42,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function BusinessForm({ user_id }: { user_id: string }) {
+  const [loading, setLoading] = useState<boolean>(false);
   const [user, setUser] = useState<any>({});
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -88,8 +89,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
-      // console.log('Form data:', data);
       const response = await axiosInstance.put(`/business/${user_id}`, {
         ...data,
       });
@@ -108,7 +109,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         personalWebsite: data.website,
       });
 
-      // You can update other fields here as needed
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
@@ -120,6 +120,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         title: 'Error',
         description: 'Failed to update profile. Please try again later.',
       });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -300,8 +302,9 @@ export function BusinessForm({ user_id }: { user_id: string }) {
           <Button
             className="bg-gray-600 text-white hover:bg-gray-800"
             type="submit"
+            disabled={loading}
           >
-            Submit
+            {loading ? 'Loading...' : 'Submit'}
           </Button>
         </form>
       </Form>
