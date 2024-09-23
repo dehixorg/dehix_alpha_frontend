@@ -49,11 +49,11 @@ const TalentCard: React.FC = () => {
         return;
       }
 
-      if(response?.data?.data) {
+      if (response?.data?.data) {
         setTalents((prev) => [...prev, ...response.data.data]);
         setSkip((prev) => prev + limit);
-      }else {
-        throw new Error("Fail to fetch data");
+      } else {
+        throw new Error('Fail to fetch data');
       }
 
       if (response.data.data.length < limit) {

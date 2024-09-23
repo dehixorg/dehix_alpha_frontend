@@ -52,16 +52,16 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
-        if(skillsResponse?.data?.data) {
+        if (skillsResponse?.data?.data) {
           setSkills(skillsResponse.data.data);
-        }else {
-          throw new Error("Skills response is null or invalid");
+        } else {
+          throw new Error('Skills response is null or invalid');
         }
         const domainsResponse = await axiosInstance.get('/domain/all');
-        if(domainsResponse?.data?.data) {
+        if (domainsResponse?.data?.data) {
           setDomains(domainsResponse.data.data);
-        }else {
-          throw new Error("Domains response is null or invalid");
+        } else {
+          throw new Error('Domains response is null or invalid');
         }
 
         // Fetch the skill/domain data for the specific freelancer

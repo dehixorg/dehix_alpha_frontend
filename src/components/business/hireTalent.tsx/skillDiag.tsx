@@ -97,7 +97,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID
-        if(response?.data?.data) {
+        if (response?.data?.data) {
           const newTalent = response.data.data; // Adjust based on your response structure
           onSubmitSkill({
             ...data,
@@ -109,8 +109,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             title: 'Talent Added',
             description: 'The Hire Talent has been successfully added.',
           });
-        }else {
-          throw new Error("Failed to add hire talen")
+        } else {
+          throw new Error('Failed to add hire talen');
         }
       }
     } catch (error) {
