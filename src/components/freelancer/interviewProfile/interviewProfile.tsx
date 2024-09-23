@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
+import { toast } from '../../ui/use-toast';
 
 import {
   Dialog,
@@ -90,6 +91,8 @@ const InterviewProfile: React.FC = () => {
   const [skillData, setSkillData] = useState<SkillData[]>([]);
   const [domainData, setDomainData] = useState<DomainData[]>([]);
 
+  const [loading, setLoading] = useState<boolean>(false);
+
   const [openSkillDialog, setOpenSkillDialog] = useState(false);
   const [openDomainDialog, setOpenDomainDialog] = useState(false);
 
@@ -98,11 +101,16 @@ const InterviewProfile: React.FC = () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
-
+ 
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to fetch data. Please try again later.',
+        });
       }
     }
     fetchData();
@@ -127,6 +135,8 @@ const InterviewProfile: React.FC = () => {
   });
 
   const onSubmitSkill = (data: SkillFormData) => {
+    setLoading(true);
+    try{
     console.log('Skill data:', data);
     setSkillData([
       ...skillData,
@@ -139,9 +149,18 @@ const InterviewProfile: React.FC = () => {
     ]);
     resetSkill();
     setOpenSkillDialog(false);
+    toast({
+      title: 'Skill Added',
+      description: `${data.skill} skill added successfully.`,
+    });
+  } finally {
+    setLoading(false);
+  }
   };
 
   const onSubmitDomain = (data: DomainFormData) => {
+    setLoading(true);
+    try{
     console.log('Domain data:', data);
     setDomainData([
       ...domainData,
@@ -154,6 +173,13 @@ const InterviewProfile: React.FC = () => {
     ]);
     resetDomain();
     setOpenDomainDialog(false);
+    toast({
+      title: 'Domain Added',
+      description: `${data.domain} domain added successfully.`,
+    });
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -254,7 +280,9 @@ const InterviewProfile: React.FC = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Add</Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Adding...' : 'Add'}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -388,7 +416,9 @@ const InterviewProfile: React.FC = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Add</Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Adding...' : 'Add'}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
