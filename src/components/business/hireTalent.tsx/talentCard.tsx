@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
+import { toast } from '@/components/ui/use-toast';
 
 interface DehixTalent {
   _id: string;
@@ -43,17 +44,28 @@ const TalentCard: React.FC = () => {
         `freelancer/dehixTalent?limit=${limit}&skip=${skip}`,
       );
 
-      setTalents((prev) => [...prev, ...response.data.data]);
-      setSkip((prev) => prev + limit);
+      if (response.status === 404) {
+        setHasMore(false);
+        return;
+      }
+
+      if(response?.data?.data) {
+        setTalents((prev) => [...prev, ...response.data.data]);
+        setSkip((prev) => prev + limit);
+      }else {
+        throw new Error("Fail to fetch data");
+      }
 
       if (response.data.data.length < limit) {
         setHasMore(false);
       }
-      if (response.status === 404) {
-        setHasMore(false);
-      }
     } catch (error) {
       console.error('Error fetching talent data', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     } finally {
       setLoading(false);
       isRequestInProgress.current = false;

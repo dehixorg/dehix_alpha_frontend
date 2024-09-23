@@ -17,6 +17,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
+import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   _id: string;
@@ -51,9 +52,17 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
-        setSkills(skillsResponse.data.data);
+        if(skillsResponse?.data?.data) {
+          setSkills(skillsResponse.data.data);
+        }else {
+          throw new Error("Skills response is null or invalid");
+        }
         const domainsResponse = await axiosInstance.get('/domain/all');
-        setDomains(domainsResponse.data.data);
+        if(domainsResponse?.data?.data) {
+          setDomains(domainsResponse.data.data);
+        }else {
+          throw new Error("Domains response is null or invalid");
+        }
 
         // Fetch the skill/domain data for the specific freelancer
         if (user?.uid) {
@@ -81,6 +90,11 @@ const SkillDomainForm: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
       }
     }
     fetchData();
@@ -122,6 +136,11 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     }
   };
 
