@@ -192,7 +192,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
           <DialogFooter className="mt-3">
-          <Button className="w-full" type="submit" disabled={loading}>
+            <Button className="w-full" type="submit" disabled={loading}>
               {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>

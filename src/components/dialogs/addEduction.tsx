@@ -231,7 +231,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             />
 
             <DialogFooter>
-            <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading}>
                 {loading ? 'Loading...' : 'Create'}
               </Button>
             </DialogFooter>

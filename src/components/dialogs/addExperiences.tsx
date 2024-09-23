@@ -308,7 +308,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
               )}
             />
             <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Loading...' : 'Add Experience'}
               </Button>
             </DialogFooter>

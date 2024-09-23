@@ -436,7 +436,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
               )}
             />
             <DialogFooter>
-            <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading}>
                 {loading ? 'Loading...' : 'Add Project'}
               </Button>
             </DialogFooter>

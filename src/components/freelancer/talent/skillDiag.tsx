@@ -78,6 +78,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
@@ -186,7 +187,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
           <DialogFooter className="mt-3">
-             <Button className="w-full" type="submit" disabled={loading}>
+            <Button className="w-full" type="submit" disabled={loading}>
               {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>

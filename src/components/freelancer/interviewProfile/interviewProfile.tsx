@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
+
 import { toast } from '../../ui/use-toast';
 
 import {
@@ -101,7 +102,7 @@ const InterviewProfile: React.FC = () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
- 
+
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
       } catch (error) {
@@ -136,50 +137,50 @@ const InterviewProfile: React.FC = () => {
 
   const onSubmitSkill = (data: SkillFormData) => {
     setLoading(true);
-    try{
-    console.log('Skill data:', data);
-    setSkillData([
-      ...skillData,
-      {
-        skill: data.skill,
-        experience: data.experience,
-        level: data.level,
-        status: defaultStatus,
-      },
-    ]);
-    resetSkill();
-    setOpenSkillDialog(false);
-    toast({
-      title: 'Skill Added',
-      description: `${data.skill} skill added successfully.`,
-    });
-  } finally {
-    setLoading(false);
-  }
+    try {
+      console.log('Skill data:', data);
+      setSkillData([
+        ...skillData,
+        {
+          skill: data.skill,
+          experience: data.experience,
+          level: data.level,
+          status: defaultStatus,
+        },
+      ]);
+      resetSkill();
+      setOpenSkillDialog(false);
+      toast({
+        title: 'Skill Added',
+        description: `${data.skill} skill added successfully.`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmitDomain = (data: DomainFormData) => {
     setLoading(true);
-    try{
-    console.log('Domain data:', data);
-    setDomainData([
-      ...domainData,
-      {
-        domain: data.domain,
-        experience: data.experience,
-        level: data.level,
-        status: defaultStatus,
-      },
-    ]);
-    resetDomain();
-    setOpenDomainDialog(false);
-    toast({
-      title: 'Domain Added',
-      description: `${data.domain} domain added successfully.`,
-    });
-  } finally {
-    setLoading(false);
-  }
+    try {
+      console.log('Domain data:', data);
+      setDomainData([
+        ...domainData,
+        {
+          domain: data.domain,
+          experience: data.experience,
+          level: data.level,
+          status: defaultStatus,
+        },
+      ]);
+      resetDomain();
+      setOpenDomainDialog(false);
+      toast({
+        title: 'Domain Added',
+        description: `${data.domain} domain added successfully.`,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
