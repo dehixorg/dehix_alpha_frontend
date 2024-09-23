@@ -24,11 +24,13 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
+  projectDomain: string[];
 }
 
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string[];
   description: string;
   email: string;
   verified?: any;
@@ -75,6 +77,7 @@ const Market: React.FC = () => {
     domain: [],
     skills: [],
     projects: [],
+    projectDomain: [],
   });
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -227,12 +230,12 @@ const Market: React.FC = () => {
 
           <div className="mb-4">
             <SkillDom
-              label="Project"
+              label="ProjectDomain"
               heading="Filter by projects-domains"
               checkboxLabels={projects.map((project) => project.label)}
-              selectedValues={filters.projects}
+              selectedValues={filters.projectDomain}
               setSelectedValues={(values) =>
-                handleFilterChange('projects', values)
+                handleFilterChange('projectDomain', values)
               }
             />
           </div>
@@ -284,12 +287,12 @@ const Market: React.FC = () => {
               </div>
               <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom
-                  label="Projects"
+                  label="ProjectDomain"
                   heading="Filter by project-domain"
                   checkboxLabels={projects.map((project) => project.label)}
-                  selectedValues={filters.projects}
+                  selectedValues={filters.projectDomain}
                   setSelectedValues={(values: any) =>
-                    handleFilterChange('projects', values)
+                    handleFilterChange('projectDomain', values)
                   }
                 />
               </div>
