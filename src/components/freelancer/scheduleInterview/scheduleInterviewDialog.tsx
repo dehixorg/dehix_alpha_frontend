@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
 
+import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
   DialogTrigger,
@@ -26,6 +27,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { InterviewLevel } from '@/utils/freelancer/enum';
 
 interface Skill {
   label: string;
@@ -49,7 +51,6 @@ interface DomainData {
   status: string;
 }
 
-const levels = ['Mastery', 'Proficient', 'Beginner'];
 const defaultStatus = 'Pending';
 
 const SkillSchema = z.object({
@@ -89,12 +90,38 @@ const ScheduleInterviewDialog: React.FC = () => {
     async function fetchData() {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
-        setSkills(skillsResponse.data.data);
-
+        if (
+          skillsResponse?.data?.data &&
+          Array.isArray(skillsResponse.data.data)
+        ) {
+          setSkills(skillsResponse.data.data);
+        } else {
+          console.error('Invalid response format', skillsResponse);
+        }
         const domainsResponse = await axiosInstance.get('/domain/all');
-        setDomains(domainsResponse.data.data);
+        if (
+          domainsResponse?.data?.data &&
+          Array.isArray(domainsResponse.data.data)
+        ) {
+          setDomains(domainsResponse.data.data);
+        } else {
+          console.error('Invalid domains response format', domainsResponse);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+
+        let errorMessage: string =
+          'Failed to add project. Please try again later.';
+
+        if (error instanceof Error) {
+          errorMessage = `Failed to add project. Error: ${error.message}`;
+        }
+
+        toast({
+          variant: 'destructive',
+          title: 'Submission Error',
+          description: errorMessage,
+        });
       }
     }
     fetchData();
@@ -204,7 +231,7 @@ const ScheduleInterviewDialog: React.FC = () => {
                           <SelectValue placeholder="Select level" />
                         </SelectTrigger>
                         <SelectContent>
-                          {levels.map((lvl) => (
+                          {Object.values(InterviewLevel).map((lvl) => (
                             <SelectItem key={lvl} value={lvl}>
                               {lvl}
                             </SelectItem>
@@ -313,7 +340,7 @@ const ScheduleInterviewDialog: React.FC = () => {
                           <SelectValue placeholder="Select level" />
                         </SelectTrigger>
                         <SelectContent>
-                          {levels.map((lvl) => (
+                          {Object.values(InterviewLevel).map((lvl) => (
                             <SelectItem key={lvl} value={lvl}>
                               {lvl}
                             </SelectItem>
