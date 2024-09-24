@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
+import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
 
 interface DehixTalent {
   _id: string;
@@ -30,7 +31,6 @@ const TalentCard: React.FC = () => {
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const limit = 3; // Load 3 items per API request
   const isRequestInProgress = useRef(false);
 
   const fetchTalentData = useCallback(async () => {
@@ -41,23 +41,22 @@ const TalentCard: React.FC = () => {
       setLoading(true);
 
       const response = await axiosInstance.get(
-        `freelancer/dehixTalent?limit=${limit}&skip=${skip}`,
+        `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${skip}`,
       );
 
-      if (response.status === 404) {
+      if (
+        response.status === 404 ||
+        response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
+      ) {
         setHasMore(false);
         return;
       }
 
       if (response?.data?.data) {
         setTalents((prev) => [...prev, ...response.data.data]);
-        setSkip((prev) => prev + limit);
+        setSkip((prev) => prev + Dehix_Talent_Card_Pagination.BATCH);
       } else {
         throw new Error('Fail to fetch data');
-      }
-
-      if (response.data.data.length < limit) {
-        setHasMore(false);
       }
     } catch (error) {
       console.error('Error fetching talent data', error);
