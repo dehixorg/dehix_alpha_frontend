@@ -43,6 +43,14 @@ const Market: React.FC = () => {
       [filterType]: selectedValues,
     }));
   };
+  const handleReset = () => {
+    setFilters({
+      location: [],
+      jobType: [],
+      domain: [],
+      skills: [],
+    });
+  };
 
   const constructQueryString = (filters: FilterState) => {
     const query = Object.keys(filters)
@@ -125,6 +133,7 @@ const Market: React.FC = () => {
             skills={skills}
             handleFilterChange={handleFilterChange}
             handleApply={handleApply}
+            handleReset={handleReset}
           />
           <FreelancerList freelancers={freelancers} />
         </div>

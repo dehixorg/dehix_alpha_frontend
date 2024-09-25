@@ -79,6 +79,7 @@ const Market: React.FC = () => {
     projects: [],
     projectDomain: [],
   });
+
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
@@ -89,6 +90,15 @@ const Market: React.FC = () => {
       ...prevFilters,
       [filterType]: selectedValues,
     }));
+  };
+  const handleReset = () => {
+    setFilters({
+      jobType: [],
+      domain: [],
+      skills: [],
+      projects: [],
+      projectDomain: [],
+    });
   };
 
   const constructQueryString = (filters: FilterState) => {
@@ -204,6 +214,14 @@ const Market: React.FC = () => {
         <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
           <Button onClick={handleApply} className="w-[80%]">
             Apply
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className=" w-[80%] mb-4 bg-gray text-white  "
+            style={{ marginTop: '1rem' }}
+          >
+            Reset
           </Button>
           <div className="mb-4 mt-4">
             <SkillDom
