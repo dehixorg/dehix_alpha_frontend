@@ -38,8 +38,8 @@ interface SkillDomainData {
   domainId: string;
   label: string;
   experience: string;
-  monthlyPay: string;
-  activeStatus: boolean;
+  description: string;
+  visible: boolean;
   status: string;
 }
 
@@ -51,17 +51,14 @@ interface DomainDialogProps {
 
 // Define the schema for validation
 const domainSchema = z.object({
-  domainId: z.string(),
   label: z.string().nonempty('Please select a domain'),
+  domainId: z.string().nonempty('Domain ID is required'), // Validation for domainId
   experience: z
     .string()
     .nonempty('Please enter your experience')
     .regex(/^\d+$/, 'Experience must be a number'),
-  monthlyPay: z
-    .string()
-    .nonempty('Please enter your monthly pay')
-    .regex(/^\d+$/, 'Monthly pay must be a number'),
-  activeStatus: z.boolean(),
+  description: z.string().nonempty('Please enter description'),
+  visible: z.boolean(),
   status: z.string(),
 });
 
@@ -83,23 +80,24 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       domainId: '',
       label: '',
       experience: '',
-      monthlyPay: '',
-      activeStatus: false,
-      status: 'pending',
+      description: '',
+      visible: false,
+      status: 'added',
     },
   });
 
   const onSubmit = async (data: SkillDomainData) => {
     try {
       const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
+        `/business/${user.uid}/hireDehixTalent`,
         {
-          domainId: data.domainId,
+          domainId: data.domainId, // This should now be set
           domainName: data.label,
+          businessId: user.uid,
           experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
+          description: data.description,
           status: data.status,
+          visible: data.visible,
         },
       );
 
@@ -132,7 +130,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Domain
+          <Plus className="mr-2 h-4 w-4" />
+          Get Talent by Domain
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -197,18 +196,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           )}
           <Controller
             control={control}
-            name="monthlyPay"
+            name="description"
             render={({ field }) => (
               <input
-                type="number"
-                placeholder="Monthly Pay"
+                type="text"
+                placeholder="Description"
                 {...field}
                 className="border p-2 rounded mt-2 w-full"
               />
             )}
           />
-          {errors.monthlyPay && (
-            <p className="text-red-600">{errors.monthlyPay.message}</p>
+          {errors.description && (
+            <p className="text-red-600">{errors.description.message}</p>
           )}
           <DialogFooter className="mt-3">
             <Button className="w-full" type="submit">
