@@ -8,6 +8,7 @@ import {
   Store,
   TabletSmartphone,
   ShieldCheck,
+  CalendarClock,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -42,6 +43,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/interview/profile',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
+  },
+  {
+    href: '/freelancer/scheduleInterview',
+    icon: <CalendarClock className="h-5 w-5" />,
+    label: 'ScheduleInterviews',
   },
   {
     href: '/freelancer/oracleDashboard/businessVerification',
