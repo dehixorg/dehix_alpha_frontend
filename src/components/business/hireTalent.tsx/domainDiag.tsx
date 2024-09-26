@@ -125,7 +125,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         title: 'Error',
         description: 'Failed to add talent. Please try again.',
       });
-    }finally {
+    } finally {
       setLoading(false); // Ensure this runs after all logic
     }
   };
@@ -215,7 +215,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           )}
           <DialogFooter className="mt-3">
             <Button className="w-full" type="submit" disabled={loading}>
-              {loading? "Loading...": "Submit"}
+              {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>
         </form>

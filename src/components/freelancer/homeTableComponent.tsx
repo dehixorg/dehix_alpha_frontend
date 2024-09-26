@@ -104,7 +104,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                       ? new Date(project.start).toLocaleDateString()
                       : 'N/A'}
                   </TableCell>
-                
+
                   <TableCell>
                     {project.status ? (
                       <Badge
