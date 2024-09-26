@@ -50,7 +50,20 @@ interface Project {
 interface ProjectCardProps {
   projects: Project[];
 }
-
+const getStatusBadge = (status: string | undefined) => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return { text: 'ACTIVE', className: 'bg-blue-500 hover:bg-blue-600' };
+    case 'pending':
+      return { text: 'PENDING', className: 'bg-warning hover:bg-warning' };
+    case 'completed':
+      return { text: 'COMPLETED', className: 'bg-success hover:bg-success' };
+    case 'rejected':
+      return { text: 'REJECTED', className: 'bg-red-500 hover:bg-red-600' };
+    default:
+      return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
+  }
+};
 const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
   return (
     <Card>
@@ -66,8 +79,9 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                 <TableHead>Project Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Verification</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-center">Start Date</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -90,7 +104,20 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                       ? new Date(project.start).toLocaleDateString()
                       : 'N/A'}
                   </TableCell>
-                  <TableCell className="text-right">
+                
+                  <TableCell>
+                    {project.status ? (
+                      <Badge
+                        className={getStatusBadge(project.status).className}
+                      >
+                        {getStatusBadge(project.status).text}
+                      </Badge>
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
+
+                  <TableCell className="text-center">
                     <Link href={`/project/${project._id}`}>
                       <Button size="sm" variant="outline">
                         View Details

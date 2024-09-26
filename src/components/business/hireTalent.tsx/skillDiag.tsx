@@ -62,6 +62,7 @@ const skillSchema = z.object({
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
+  const[loading,setLoading]=useState(false);
   const {
     control,
     handleSubmit,
@@ -81,6 +82,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post(
         `/business/${user.uid}/hireDehixTalent`,
@@ -121,6 +123,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         title: 'Error',
         description: 'Failed to add hire talent. Please try again.',
       });
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -208,8 +212,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.description.message}</p>
           )}
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit">
-              Submit
+          <Button className="w-full" type="submit" disabled={loading}>
+              {loading? "Loading...": "Submit"}
             </Button>
           </DialogFooter>
         </form>
