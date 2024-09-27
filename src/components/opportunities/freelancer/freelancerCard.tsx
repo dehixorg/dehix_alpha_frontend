@@ -25,12 +25,12 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   });
   return (
     <div className="w-full mb-4 max-w-4xl">
-      <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20">
+      <Card className="flex justify-between mt-5 shadow-2xl shadow-gray-500/20">
         <div className="flex flex-col justify-between p-4">
           <CardHeader>
             <div className="flex gap-4">
               <Avatar className="rounded-full w-20 h-20 object-cover border-2 border-gray-400 mb-4" />
-              <div className="mt-2">
+              <div className="mt-6">
                 <CardTitle className="text-xl font-bold">{name}</CardTitle>
               </div>
             </div>

@@ -126,7 +126,7 @@ const Market: React.FC = () => {
             handleFilterChange={handleFilterChange}
             handleApply={handleApply}
           />
-          <FreelancerList freelancers={freelancers} />
+          <FreelancerList freelancers={freelancers} isLoading={freelancers.length === 0} />
         </div>
       </div>
       <MobileFilterModal

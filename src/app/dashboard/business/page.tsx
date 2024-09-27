@@ -34,35 +34,40 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton component
+import { ProjectCardSkeleton } from '@/components/skeletons/projectCardSkeleton';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
+  const [isLoading, setIsLoading] = useState(true); // State to handle loading
+
   const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
           `/business/${user.uid}/projects`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+        );
         setResponseData(response.data.data); // Store response data in state
+        setIsLoading(false); // Stop loading once data is fetched
       } catch (error) {
         console.error('API Error:', error);
+        setIsLoading(false); // Stop loading on error
       }
     };
 
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-  console.log(user);
+
   const completedProjects = responseData.filter(
     (project: any) => project.status == 'Completed',
   );
   const pendingProjects = responseData.filter(
     (project: any) => project.status !== 'Completed',
   );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -136,7 +141,12 @@ export default function Dashboard() {
               Current Projects {`(${pendingProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects.length > 0 ? (
+              {isLoading ? (
+                <>
+                  <ProjectCardSkeleton />
+                  <ProjectCardSkeleton />
+                </>
+              ) : pendingProjects.length > 0 ? (
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
@@ -145,7 +155,7 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <div className="text-center py-10 w-[100%] ">
+                <div className="text-center py-10 w-[100%]">
                   <PackageOpen className="mx-auto text-gray-500" size="100" />
                   <p className="text-gray-500">No projects available</p>
                 </div>
@@ -157,7 +167,12 @@ export default function Dashboard() {
               Completed Projects {`(${completedProjects.length})`}
             </h2>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {completedProjects.length > 0 ? (
+              {isLoading ? (
+                <>
+                  <ProjectCardSkeleton />
+                  <ProjectCardSkeleton />
+                </>
+              ) : completedProjects.length > 0 ? (
                 completedProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
@@ -166,7 +181,7 @@ export default function Dashboard() {
                   />
                 ))
               ) : (
-                <div className="text-center py-10 w-[100%] ">
+                <div className="text-center py-10 w-[100%]">
                   <PackageOpen className="mx-auto text-gray-500" size="100" />
                   <p className="text-gray-500">No projects available</p>
                 </div>
