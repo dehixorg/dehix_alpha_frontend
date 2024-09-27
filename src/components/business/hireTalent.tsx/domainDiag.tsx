@@ -68,6 +68,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
+  const [loading, setLoading] = useState(false);
   const {
     control,
     handleSubmit,
@@ -87,6 +88,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   });
 
   const onSubmit = async (data: SkillDomainData) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post(
         `/business/${user.uid}/hireDehixTalent`,
@@ -123,6 +125,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         title: 'Error',
         description: 'Failed to add talent. Please try again.',
       });
+    } finally {
+      setLoading(false); // Ensure this runs after all logic
     }
   };
 
@@ -210,8 +214,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             <p className="text-red-600">{errors.description.message}</p>
           )}
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit">
-              Submit
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>
         </form>
