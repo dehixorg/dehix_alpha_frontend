@@ -67,12 +67,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get(`/business/${id}/project`); 
+        const response = await axiosInstance.get(`/business/${id}/project`);
         if (response.data) {
-          setUserData(response.data); 
+          setUserData(response.data);
         } else {
           setError('No user data available.');
-        } 
+        }
       } catch (error) {
         setError('Error fetching user data.');
         console.error('Error fetching user data:', error);
