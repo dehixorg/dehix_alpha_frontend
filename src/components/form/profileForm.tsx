@@ -51,6 +51,9 @@ const profileFormSchema = z.object({
   role: z.string(),
   personalWebsite: z.string().url().optional(),
   resume: z.string().url().optional(),
+  description: z.string().max(500, {
+    message: 'Description cannot exceed 500 characters.',
+  })
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -200,6 +203,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       role: user?.role || '',
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
+      description: user?.description || '',
     });
   }, [user, form]);
 
@@ -214,6 +218,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...data,
         skills: currSkills,
         domain: currDomains,
+        description: data.description, 
       });
       console.log('API Response:', response.data);
 
@@ -309,6 +314,25 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+          <FormField
+  control={form.control}
+  name="description"
+  render={({ field }) => (
+    <FormItem className="col-span-2">
+      <FormLabel>Description</FormLabel>
+      <FormControl>
+        <Input
+          placeholder="Enter a brief description"
+          {...field}
+        />
+      </FormControl>
+      <FormDescription>
+        Add a short description about yourself.
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
           <FormField
             control={form.control}
             name="phone"
