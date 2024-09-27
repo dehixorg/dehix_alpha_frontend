@@ -67,8 +67,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get(`/business/${id}/project`);
-        setUserData(response.data); // Directly set the response data
+        const response = await axiosInstance.get(`/business/${id}/project`); 
+        if (response.data) {
+          setUserData(response.data); 
+        } else {
+          setError('No user data available.');
+        } 
       } catch (error) {
         setError('Error fetching user data.');
         console.error('Error fetching user data:', error);
@@ -87,7 +91,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const handleUpdateStatus = async (bidId: string, status: string) => {
     try {
       await axiosInstance.put(`/bid/${bidId}/status`, { status });
-      console.log(`Bid ${bidId} updated with status: ${status}`);
+      //console.log(`Bid ${bidId} updated with status: ${status}`);
     } catch (error) {
       console.error(`Error updating bid status for ${bidId}:`, error);
     }

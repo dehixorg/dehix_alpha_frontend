@@ -50,7 +50,11 @@ const BidDialog: React.FC<BidDialogProps> = ({
         const response = await axiosInstance.get(
           `/bid/${projectId}/${bidId}/profile/project/bid`,
         );
-        setBidDetails(response.data);
+        if (response.data) {
+          setBidDetails(response.data);
+        } else {
+          setError('No bid details available.');
+        }
       } catch (error) {
         setError('Error fetching bid details.');
         console.error('Error fetching bid details:', error);
