@@ -23,8 +23,6 @@ interface JobCardProps {
   team: string[] | undefined;
 }
 
-
-
 const JobCard: React.FC<JobCardProps> = ({
   id,
   projectName,

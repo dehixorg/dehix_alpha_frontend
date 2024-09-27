@@ -21,7 +21,6 @@ export interface ProjectSkillCardProps {
   skills: string[];
 }
 
-
 function ProjectSkillCard({
   skillName,
   description,
