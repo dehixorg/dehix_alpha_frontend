@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { Textarea } from '../ui/textarea';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -314,6 +315,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="description"
@@ -321,15 +323,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem className="col-span-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter a brief description" {...field} />
+                  <Textarea placeholder="Enter description" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Add a short description about yourself.
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="phone"
