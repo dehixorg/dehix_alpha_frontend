@@ -87,12 +87,13 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
   // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
-      const matchesSkill = skillFilter ? talent.dehixTalent.skillName === skillFilter : true;
-      const matchesDomain = domainFilter ? talent.dehixTalent.domainName === domainFilter : true;
+      const matchesSkill = skillFilter === 'all' || talent.dehixTalent.skillName === skillFilter;
+      const matchesDomain = domainFilter === 'all' || talent.dehixTalent.domainName === domainFilter;
       return matchesSkill && matchesDomain;
     });
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
+  
 
   return (
     <div className="flex flex-wrap justify-center gap-4">

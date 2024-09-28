@@ -15,7 +15,13 @@ import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainFor
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
 import { useEffect, useState } from 'react';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Skill {
   _id: string;
@@ -28,26 +34,11 @@ interface Domain {
 }
 
 export default function Talent() {
-  const [skillFilter, setSkillFilter] = useState<string | null>(null);
-  const [domainFilter, setDomainFilter] = useState<string | null>(null);
+  const [skillFilter, setSkillFilter] = useState<string>('all');
+  const [domainFilter, setDomainFilter] = useState<string>('all');
 
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [domains, setDomains] = useState<Domain[]>([]);
-
-  useEffect(() => {
-    // Fetch skills and domains to populate the dropdowns
-    async function fetchFilters() {
-      try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
-        const domainsResponse = await axiosInstance.get('/domain/all');
-        setSkills(skillsResponse.data?.data || []);
-        setDomains(domainsResponse.data?.data || []);
-      } catch (error) {
-        console.error('Error fetching filters:', error);
-      }
-    }
-    fetchFilters();
-  }, []);
+  const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
+  const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -81,44 +72,54 @@ export default function Talent() {
         </header>
 
         {/* Main content area */}
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3 overflow-hidden">
           {/* Left side: SkillDomainForm */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <SkillDomainForm />
+            <SkillDomainForm
+              setFilterSkill={setFilterSkill}
+              setFilterDomain={setFilterDomain}
+            />
           </div>
 
           {/* Right side: Talent Filter and Cards */}
           <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">Talent</CardTitle>
+            <CardTitle className="group flex items-center gap-2 text-2xl">
+              Talent
+            </CardTitle>
 
             {/* Skill and Domain Filter */}
             <div className="flex space-x-4">
-              <Select onValueChange={setSkillFilter} value={skillFilter || ''}>
-                <SelectTrigger className="w-[180px]">
-                  <span>{skillFilter || 'Select Skill'}</span>
+              <Select onValueChange={setSkillFilter} value={skillFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Skill" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>All Skills</SelectItem>
-                  {skills.map((skill) => (
-                    <SelectItem key={skill._id} value={skill.label}>{skill.label}</SelectItem>
+                  <SelectItem value="all">All Skills</SelectItem>
+                  {filterSkill?.map((skill) => (
+                    <SelectItem key={skill._id} value={skill.label}>
+                      {skill.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Select onValueChange={setDomainFilter} value={domainFilter || ''}>
-                <SelectTrigger className="w-[180px]">
-                  <span>{domainFilter || 'Select Domain'}</span>
+              <Select onValueChange={setDomainFilter} value={domainFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Domain" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>All Domains</SelectItem>
-                  {domains.map((domain) => (
-                    <SelectItem key={domain._id} value={domain.label}>{domain.label}</SelectItem>
+                  <SelectItem value="all">All Domains</SelectItem>
+                  {filterDomain?.map((domain) => (
+                    <SelectItem key={domain._id} value={domain.label}>
+                      {domain.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <TalentCard skillFilter={skillFilter} domainFilter={domainFilter} />
+            <div className="">
+              <TalentCard skillFilter={skillFilter} domainFilter={domainFilter} />
+            </div>
           </div>
         </main>
       </div>

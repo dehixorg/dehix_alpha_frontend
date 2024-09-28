@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
-import { useSelector } from 'react-redux'; // To get the user data
-
+import { useSelector } from 'react-redux';
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
-
 import { Card } from '@/components/ui/card';
 import {
   Table,
@@ -38,7 +36,15 @@ interface SkillDomainData {
   visible: boolean;
 }
 
-const SkillDomainForm: React.FC = () => {
+interface SkillDomainFormProps {
+  setFilterSkill: (skills: Skill[]) => void;
+  setFilterDomain: (domains: Domain[]) => void;
+}
+
+const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
+  setFilterSkill,
+  setFilterDomain,
+}) => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
@@ -47,58 +53,76 @@ const SkillDomainForm: React.FC = () => {
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills, domains, and user's skill/domain data on mount
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
-        if (skillsResponse?.data?.data) {
-          setSkills(skillsResponse.data.data);
-        } else {
-          throw new Error('Skills response is null or invalid');
-        }
-        const domainsResponse = await axiosInstance.get('/domain/all');
-        if (domainsResponse?.data?.data) {
-          setDomains(domainsResponse.data.data);
-        } else {
-          throw new Error('Domains response is null or invalid');
-        }
-
-        // Fetch the skill/domain data for the specific freelancer
-        if (user?.uid) {
-          const hireTalentResponse = await axiosInstance.get(
-            `/business/${user.uid}/hireDehixTalent`,
-          );
-          const hireTalentData = hireTalentResponse.data?.data || {};
-
-          // Convert the talent object into an array
-          const formattedHireTalentData = Object.values(hireTalentData).map(
-            (item: any) => ({
-              uid: item._id, // Ensure that the UID is present here
-              label: item.skillName || item.domainName || 'N/A',
-              experience: item.experience || 'N/A',
-              description: item.description || 'N/A',
-              status: item.status,
-              visible: item.visible,
-            }),
-          );
-
-          setSkillDomainData(formattedHireTalentData);
-          setStatusVisibility(
-            formattedHireTalentData.map((item) => item.visible),
-          );
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+  // Fetch skills, domains, and user's skill/domain data
+  const fetchData = async () => {
+    try {
+      const skillsResponse = await axiosInstance.get('/skills/all');
+      if (skillsResponse?.data?.data) {
+        setSkills(skillsResponse.data.data);
+      } else {
+        throw new Error('Skills response is null or invalid');
       }
+      const domainsResponse = await axiosInstance.get('/domain/all');
+      if (domainsResponse?.data?.data) {
+        setDomains(domainsResponse.data.data);
+      } else {
+        throw new Error('Domains response is null or invalid');
+      }
+
+      // Fetch the skill/domain data for the specific freelancer
+      if (user?.uid) {
+        const hireTalentResponse = await axiosInstance.get(
+          `/business/${user.uid}/hireDehixTalent`,
+        );
+        const hireTalentData = hireTalentResponse.data?.data || {};
+
+        const fetchedFilterSkills = hireTalentData
+          .filter((item: any) => item.skillName && item.visible)
+          .map((item: any) => ({
+            _id: item.skillId,
+            label: item.skillName,
+          }));
+
+        const fetchedFilterDomains = hireTalentData
+          .filter((item: any) => item.domainName && item.visible)
+          .map((item: any) => ({
+            _id: item.domainId,
+            label: item.domainName,
+          }));
+
+        // Send the filtered skills and domains back to the parent
+        setFilterSkill(fetchedFilterSkills);
+        setFilterDomain(fetchedFilterDomains);
+
+        // Convert the talent object into an array
+        const formattedHireTalentData = Object.values(hireTalentData).map(
+          (item: any) => ({
+            uid: item._id,
+            label: item.skillName || item.domainName || 'N/A',
+            experience: item.experience || 'N/A',
+            description: item.description || 'N/A',
+            status: item.status,
+            visible: item.visible,
+          }),
+        );
+
+        setSkillDomainData(formattedHireTalentData);
+        setStatusVisibility(formattedHireTalentData.map((item) => item.visible));
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     }
+  };
+
+  // Fetch data on mount
+  useEffect(() => {
     fetchData();
-  }, [user?.uid]);
+  }, [user?.uid, setFilterSkill, setFilterDomain]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -133,6 +157,9 @@ const SkillDomainForm: React.FC = () => {
         const updatedVisibility = [...statusVisibility];
         updatedVisibility[index] = value;
         setStatusVisibility(updatedVisibility);
+
+        // Callback to refetch data after visibility update
+        await fetchData();
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
