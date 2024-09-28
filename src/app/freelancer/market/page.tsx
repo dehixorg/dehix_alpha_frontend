@@ -211,7 +211,6 @@ const Market: React.FC = () => {
         </header>
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">
-            {' '}
             Freelancer Marketplace Overview
           </h1>
           <p className="text-gray-400 mt-2">

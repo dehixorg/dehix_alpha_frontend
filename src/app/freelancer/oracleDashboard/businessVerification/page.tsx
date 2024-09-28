@@ -110,7 +110,6 @@ export default function ProfessionalInfo() {
             Business Verification Dashboard
           </h1>
           <p className="text-gray-400 mt-2">
-            {' '}
             Monitor the status of your Business verifications.
           </p>
         </div>

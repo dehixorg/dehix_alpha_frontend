@@ -148,7 +148,6 @@ export default function ProfessionalInfo() {
             Experience Verification Dashboard
           </h1>
           <p className="text-gray-400 mt-2">
-            {' '}
             Stay updated on your work experience verification status. Check back
             regularly for any new updates or requirements.
           </p>

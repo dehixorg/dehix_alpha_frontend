@@ -164,11 +164,7 @@ const SkillDomainForm: React.FC = () => {
             </div>
           </div>
           <Card className="overflow-hidden">
-            {' '}
-            {/* Removed x-auto */}
             <Table className="w-full">
-              {' '}
-              {/* Full width without scroll */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Label</TableHead>
