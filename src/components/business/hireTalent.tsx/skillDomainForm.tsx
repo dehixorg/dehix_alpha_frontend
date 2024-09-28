@@ -145,72 +145,83 @@ const SkillDomainForm: React.FC = () => {
   };
 
   return (
-    <div className="">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex space-x-4">
-            <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
-            <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+    <div>
+      <div className="mb-8 ">
+        <h1 className="text-3xl font-bold"> Business Marketplace Overview</h1>
+        <p className="text-gray-400 mt-2">
+          Help us understand the skills and domain you are looking for in
+          potential hires.Enter the required experience and a short description
+          to refine your talent search.
+        </p>
+      </div>
+
+      <div className="">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex space-x-4">
+              <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
+              <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+            </div>
           </div>
-        </div>
-        <Card className="overflow-hidden">
-          {' '}
-          {/* Removed x-auto */}
-          <Table className="w-full">
+          <Card className="overflow-hidden">
             {' '}
-            {/* Full width without scroll */}
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Activity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {skillDomainData.length > 0 ? (
-                skillDomainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.label}</TableCell>
-                    <TableCell>{item.experience} years</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={statusVisibility[index]}
-                        onCheckedChange={
-                          (value) =>
-                            item.uid
-                              ? handleToggleVisibility(index, value, item.uid)
-                              : console.error('UID missing for item', item) // Fallback check for missing UID
-                        }
-                      />
+            {/* Removed x-auto */}
+            <Table className="w-full">
+              {' '}
+              {/* Full width without scroll */}
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Activity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {skillDomainData.length > 0 ? (
+                  skillDomainData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.label}</TableCell>
+                      <TableCell>{item.experience} years</TableCell>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={statusVisibility[index]}
+                          onCheckedChange={
+                            (value) =>
+                              item.uid
+                                ? handleToggleVisibility(index, value, item.uid)
+                                : console.error('UID missing for item', item) // Fallback check for missing UID
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      <div className="text-center py-10 w-full mt-10">
+                        <PackageOpen
+                          className="mx-auto text-gray-500"
+                          size="100"
+                        />
+                        <p className="text-gray-500">
+                          No data available.
+                          <br /> This feature will be available soon.
+                          <br />
+                          Here you can directly hire freelancer for different
+                          roles.
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    <div className="text-center py-10 w-full mt-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">
-                        No data available.
-                        <br /> This feature will be available soon.
-                        <br />
-                        Here you can directly hire freelancer for different
-                        roles.
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </div>
       </div>
     </div>
   );

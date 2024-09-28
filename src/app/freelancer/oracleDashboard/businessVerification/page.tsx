@@ -105,6 +105,15 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">
+            Business Verification Dashboard
+          </h1>
+          <p className="text-gray-400 mt-2">
+            {' '}
+            Monitor the status of your Business verifications.
+          </p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
