@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { Textarea } from '../ui/textarea';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,9 @@ const profileFormSchema = z.object({
   role: z.string(),
   personalWebsite: z.string().url().optional(),
   resume: z.string().url().optional(),
+  description: z.string().max(500, {
+    message: 'Description cannot exceed 500 characters.',
+  }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -200,6 +204,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       role: user?.role || '',
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
+      description: user?.description || '',
     });
   }, [user, form]);
 
@@ -214,6 +219,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...data,
         skills: currSkills,
         domain: currDomains,
+        description: data.description,
       });
       console.log('API Response:', response.data);
 
@@ -309,6 +315,21 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter description" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="phone"
