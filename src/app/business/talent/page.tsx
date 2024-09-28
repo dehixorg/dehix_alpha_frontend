@@ -13,8 +13,42 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
+import { useEffect, useState } from 'react';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+
+interface Skill {
+  _id: string;
+  label: string;
+}
+
+interface Domain {
+  _id: string;
+  label: string;
+}
 
 export default function Talent() {
+  const [skillFilter, setSkillFilter] = useState<string | null>(null);
+  const [domainFilter, setDomainFilter] = useState<string | null>(null);
+
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
+
+  useEffect(() => {
+    // Fetch skills and domains to populate the dropdowns
+    async function fetchFilters() {
+      try {
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        setSkills(skillsResponse.data?.data || []);
+        setDomains(domainsResponse.data?.data || []);
+      } catch (error) {
+        console.error('Error fetching filters:', error);
+      }
+    }
+    fetchFilters();
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -50,21 +84,41 @@ export default function Talent() {
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           {/* Left side: SkillDomainForm */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            {' '}
-            {/* Takes 2/3 of the space on large screens */}
             <SkillDomainForm />
           </div>
 
-          {/* Right side: Talent */}
+          {/* Right side: Talent Filter and Cards */}
           <div className="space-y-6">
-            {' '}
-            {/* Takes 1/3 of the space */}
-            <CardTitle className="group flex items-center gap-2 text-2xl">
-              Talent
-            </CardTitle>
-            <div className="">
-              <TalentCard />
+            <CardTitle className="group flex items-center gap-2 text-2xl">Talent</CardTitle>
+
+            {/* Skill and Domain Filter */}
+            <div className="flex space-x-4">
+              <Select onValueChange={setSkillFilter} value={skillFilter || ''}>
+                <SelectTrigger className="w-[180px]">
+                  <span>{skillFilter || 'Select Skill'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>All Skills</SelectItem>
+                  {skills.map((skill) => (
+                    <SelectItem key={skill._id} value={skill.label}>{skill.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select onValueChange={setDomainFilter} value={domainFilter || ''}>
+                <SelectTrigger className="w-[180px]">
+                  <span>{domainFilter || 'Select Domain'}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>All Domains</SelectItem>
+                  {domains.map((domain) => (
+                    <SelectItem key={domain._id} value={domain.label}>{domain.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            <TalentCard skillFilter={skillFilter} domainFilter={domainFilter} />
           </div>
         </main>
       </div>
