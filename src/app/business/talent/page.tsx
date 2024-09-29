@@ -117,7 +117,7 @@ export default function Talent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="">
+            <div className="h-[73vh] overflow-y-auto">
               <TalentCard skillFilter={skillFilter} domainFilter={domainFilter} />
             </div>
           </div>

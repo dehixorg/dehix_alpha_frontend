@@ -87,14 +87,30 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
   // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
-      const matchesSkill = skillFilter === 'all' || talent.dehixTalent.skillName === skillFilter;
-      const matchesDomain = domainFilter === 'all' || talent.dehixTalent.domainName === domainFilter;
-      return matchesSkill && matchesDomain;
+      // console.log(skillFilter, domainFilter);
+      // console.log(talent);
+      // const matchesSkill = skillFilter === 'all' || talent.dehixTalent.skillName === skillFilter;
+      // const matchesDomain = domainFilter === 'all' || talent.dehixTalent.domainName === domainFilter;
+      // console.log("match skill", matchesSkill);
+      // console.log("match domain", matchesDomain);
+      // console.log("end");
+      // return matchesSkill && matchesDomain;
+
+      if(skillFilter == 'all' && domainFilter == 'all') {
+        return true;
+      }else if (skillFilter == 'all' && domainFilter == talent.dehixTalent.domainName) {
+        return true;
+      }else if(skillFilter == talent.dehixTalent.skillName && domainFilter == 'all'){
+        return true;
+      }else if(skillFilter == talent.dehixTalent.skillName || domainFilter == talent.dehixTalent.domainName) {
+        return true;
+      }else{
+        return false;
+      }
     });
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
   
-
   return (
     <div className="flex flex-wrap justify-center gap-4">
       {filteredTalents.map((talent) => {
