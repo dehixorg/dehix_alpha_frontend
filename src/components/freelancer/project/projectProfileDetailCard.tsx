@@ -28,7 +28,7 @@ import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProfileDetailCardProps {
-  _id:string;
+  _id: string;
   exist: any;
   domain: string;
   freelancersRequired: string;
@@ -81,7 +81,7 @@ export function ProjectProfileDetailCard({
         bidder_id: user.uid,
         project_id: params.project_id,
         domain_id: domain_id,
-        profile_id:_id
+        profile_id: _id,
       });
 
       setAmount('');
