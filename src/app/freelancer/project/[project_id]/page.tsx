@@ -34,6 +34,7 @@ interface Project {
   role?: string;
   projectType?: string;
   profiles?: {
+    _id?:string;
     domain?: string;
     freelancersRequired?: string;
     skills?: string[];

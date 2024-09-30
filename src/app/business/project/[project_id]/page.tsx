@@ -147,7 +147,7 @@ export default function Dashboard() {
                     <div>
                       <Card className="">
                         <CardHeader>
-                          <CardTitle>Other Profile</CardTitle>
+                          <CardTitle> Profile</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="grid w-full items-center gap-4">
