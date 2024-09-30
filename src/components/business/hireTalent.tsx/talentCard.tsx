@@ -59,7 +59,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setLoading(true);
 
         const response = await axiosInstance.get(
-          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`
+          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
         if (
@@ -72,7 +72,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
         if (response?.data?.data) {
           setTalents((prev) =>
-            reset ? response.data.data : [...prev, ...response.data.data]
+            reset ? response.data.data : [...prev, ...response.data.data],
           );
           setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
         } else {
@@ -90,7 +90,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = false;
       }
     },
-    [skip, loading, hasMore]
+    [skip, loading, hasMore],
   );
 
   // Reload cards when filter changes
