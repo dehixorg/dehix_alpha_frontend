@@ -104,7 +104,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     if (profileId) {
       fetchBid(profileId);
     }
-  }, [profileId]);
+  }, [profileId, fetchBid]);
 
   return (
     <div className="max-w-5xl mx-auto p-4">
