@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
+
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
+
 import { Card } from '@/components/ui/card';
 import {
   Table,
@@ -54,7 +56,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   const user = useSelector((state: RootState) => state.user);
 
   // Fetch skills, domains, and user's skill/domain data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const skillsResponse = await axiosInstance.get('/skills/all');
       if (skillsResponse?.data?.data) {
@@ -107,7 +109,9 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         );
 
         setSkillDomainData(formattedHireTalentData);
-        setStatusVisibility(formattedHireTalentData.map((item) => item.visible));
+        setStatusVisibility(
+          formattedHireTalentData.map((item) => item.visible),
+        );
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -117,12 +121,12 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         description: 'Something went wrong. Please try again.',
       });
     }
-  };
+  }, [user?.uid, setFilterSkill, setFilterDomain]);
 
   // Fetch data on mount
   useEffect(() => {
     fetchData();
-  }, [user?.uid, setFilterSkill, setFilterDomain]);
+  }, [fetchData]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -180,12 +184,8 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
             <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
           </div>
         </div>
-        <Card className="overflow-hidden">
-          {' '}
-          {/* Removed x-auto */}
+        <Card className="h-[81vh] overflow-auto no-scrollbar">
           <Table className="w-full">
-            {' '}
-            {/* Full width without scroll */}
             <TableHeader>
               <TableRow>
                 <TableHead>Label</TableHead>

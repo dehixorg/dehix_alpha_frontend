@@ -26,22 +26,15 @@ interface Talent {
   dehixTalent: DehixTalent;
 }
 
-interface Skill {
-  _id: string;
-  label: string;
-}
-
-interface Domain {
-  _id: string;
-  label: string;
-}
-
 interface TalentCardProps {
   skillFilter: string | null;
   domainFilter: string | null;
 }
 
-const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) => {
+const TalentCard: React.FC<TalentCardProps> = ({
+  skillFilter,
+  domainFilter,
+}) => {
   const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const [skip, setSkip] = useState(0);
@@ -57,10 +50,13 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
       setLoading(true);
 
       const response = await axiosInstance.get(
-        `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${skip}`
+        `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${skip}`,
       );
 
-      if (response.status === 404 || response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
+      if (
+        response.status === 404 ||
+        response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
+      ) {
         setHasMore(false);
         return;
       }
@@ -96,21 +92,30 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
       // console.log("end");
       // return matchesSkill && matchesDomain;
 
-      if(skillFilter == 'all' && domainFilter == 'all') {
+      if (skillFilter == 'all' && domainFilter == 'all') {
         return true;
-      }else if (skillFilter == 'all' && domainFilter == talent.dehixTalent.domainName) {
+      } else if (
+        skillFilter == 'all' &&
+        domainFilter == talent.dehixTalent.domainName
+      ) {
         return true;
-      }else if(skillFilter == talent.dehixTalent.skillName && domainFilter == 'all'){
+      } else if (
+        skillFilter == talent.dehixTalent.skillName &&
+        domainFilter == 'all'
+      ) {
         return true;
-      }else if(skillFilter == talent.dehixTalent.skillName || domainFilter == talent.dehixTalent.domainName) {
+      } else if (
+        skillFilter == talent.dehixTalent.skillName ||
+        domainFilter == talent.dehixTalent.domainName
+      ) {
         return true;
-      }else{
+      } else {
         return false;
       }
     });
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
-  
+
   return (
     <div className="flex flex-wrap justify-center gap-4">
       {filteredTalents.map((talent) => {
@@ -119,10 +124,16 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
 
         return (
-          <Card key={talentEntry._id} className="w-full sm:w-[350px] lg:w-[450px]">
+          <Card
+            key={talentEntry._id}
+            className="w-full sm:w-[350px] lg:w-[450px]"
+          >
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage src="/placeholder.svg?height=80&width=80" alt="Profile picture" />
+                <AvatarImage
+                  src="/placeholder.svg?height=80&width=80"
+                  alt="Profile picture"
+                />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
@@ -153,7 +164,12 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) =>
           </Card>
         );
       })}
-      <InfiniteScroll hasMore={hasMore} isLoading={loading} next={fetchTalentData} threshold={1}>
+      <InfiniteScroll
+        hasMore={hasMore}
+        isLoading={loading}
+        next={fetchTalentData}
+        threshold={1}
+      >
         {hasMore && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
       </InfiniteScroll>
     </div>

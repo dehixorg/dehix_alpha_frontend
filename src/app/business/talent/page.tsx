@@ -1,5 +1,6 @@
 'use client';
 import { Search } from 'lucide-react';
+import { useState } from 'react';
 
 import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -13,8 +14,6 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import SkillDomainForm from '@/components/business/hireTalent.tsx/skillDomainForm';
 import TalentCard from '@/components/business/hireTalent.tsx/talentCard';
-import { useEffect, useState } from 'react';
-import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Select,
   SelectContent,
@@ -41,7 +40,7 @@ export default function Talent() {
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40 overflow-auto">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -72,7 +71,7 @@ export default function Talent() {
         </header>
 
         {/* Main content area */}
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3 overflow-hidden">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           {/* Left side: SkillDomainForm */}
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <SkillDomainForm
@@ -117,8 +116,11 @@ export default function Talent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="h-[73vh] overflow-y-auto">
-              <TalentCard skillFilter={skillFilter} domainFilter={domainFilter} />
+            <div className="h-[73vh] overflow-y-scroll no-scrollbar">
+              <TalentCard
+                skillFilter={skillFilter}
+                domainFilter={domainFilter}
+              />
             </div>
           </div>
         </main>
