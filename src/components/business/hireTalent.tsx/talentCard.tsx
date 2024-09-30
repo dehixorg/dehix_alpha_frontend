@@ -42,56 +42,65 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
 
-  const fetchTalentData = useCallback(async () => {
-    if (isRequestInProgress.current || loading || !hasMore) return;
+  // Function to reset state when filters change
+  const resetAndFetchData = useCallback(() => {
+    setTalents([]);
+    setSkip(0);
+    setHasMore(true);
+    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+  }, [skillFilter, domainFilter]);
 
-    try {
-      isRequestInProgress.current = true;
-      setLoading(true);
+  const fetchTalentData = useCallback(
+    async (newSkip = skip, reset = false) => {
+      if (isRequestInProgress.current || loading || !hasMore) return;
 
-      const response = await axiosInstance.get(
-        `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${skip}`,
-      );
+      try {
+        isRequestInProgress.current = true;
+        setLoading(true);
 
-      if (
-        response.status === 404 ||
-        response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
-      ) {
-        setHasMore(false);
-        return;
+        const response = await axiosInstance.get(
+          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`
+        );
+
+        if (
+          response.status === 404 ||
+          response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
+        ) {
+          setHasMore(false);
+          return;
+        }
+
+        if (response?.data?.data) {
+          setTalents((prev) =>
+            reset ? response.data.data : [...prev, ...response.data.data]
+          );
+          setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
+        } else {
+          throw new Error('Fail to fetch data');
+        }
+      } catch (error) {
+        console.error('Error fetching talent data', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      } finally {
+        setLoading(false);
+        isRequestInProgress.current = false;
       }
+    },
+    [skip, loading, hasMore]
+  );
 
-      if (response?.data?.data) {
-        setTalents((prev) => [...prev, ...response.data.data]);
-        setSkip((prev) => prev + Dehix_Talent_Card_Pagination.BATCH);
-      } else {
-        throw new Error('Fail to fetch data');
-      }
-    } catch (error) {
-      console.error('Error fetching talent data', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
-    } finally {
-      setLoading(false);
-      isRequestInProgress.current = false;
-    }
-  }, [skip, loading, hasMore]);
+  // Reload cards when filter changes
+  useEffect(() => {
+    resetAndFetchData();
+  }, [skillFilter, domainFilter, resetAndFetchData]);
 
   // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
-      // console.log(skillFilter, domainFilter);
-      // console.log(talent);
-      // const matchesSkill = skillFilter === 'all' || talent.dehixTalent.skillName === skillFilter;
-      // const matchesDomain = domainFilter === 'all' || talent.dehixTalent.domainName === domainFilter;
-      // console.log("match skill", matchesSkill);
-      // console.log("match domain", matchesDomain);
-      // console.log("end");
-      // return matchesSkill && matchesDomain;
-
       if (skillFilter == 'all' && domainFilter == 'all') {
         return true;
       } else if (

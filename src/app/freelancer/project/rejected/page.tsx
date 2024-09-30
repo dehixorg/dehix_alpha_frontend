@@ -100,6 +100,13 @@ export default function RejectedProject() {
           </div>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">Rejected Projects</h1>
+          <p className="text-gray-400 mt-2">
+            Explore and Review projects that were not selected and gain insights
+            for future submissions.
+          </p>
+        </div>
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
