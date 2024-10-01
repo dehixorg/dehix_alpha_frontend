@@ -6,8 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, PackageOpen } from 'lucide-react';
 
-import { toast } from '../../ui/use-toast';
-
+import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
   DialogTrigger,
@@ -18,14 +17,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -36,6 +27,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { InterviewLevel } from '@/utils/freelancer/enum';
 
 interface Skill {
   label: string;
@@ -59,7 +51,6 @@ interface DomainData {
   status: string;
 }
 
-const levels = ['Mastery', 'Proficient', 'Beginner'];
 const defaultStatus = 'Pending';
 
 const SkillSchema = z.object({
@@ -86,13 +77,11 @@ interface DomainFormData {
   level: string;
 }
 
-const InterviewProfile: React.FC = () => {
+const ScheduleInterviewDialog: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillData, setSkillData] = useState<SkillData[]>([]);
   const [domainData, setDomainData] = useState<DomainData[]>([]);
-
-  const [loading, setLoading] = useState<boolean>(false);
 
   const [openSkillDialog, setOpenSkillDialog] = useState(false);
   const [openDomainDialog, setOpenDomainDialog] = useState(false);
@@ -101,16 +90,37 @@ const InterviewProfile: React.FC = () => {
     async function fetchData() {
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
-        setSkills(skillsResponse.data.data);
-
+        if (
+          skillsResponse?.data?.data &&
+          Array.isArray(skillsResponse.data.data)
+        ) {
+          setSkills(skillsResponse.data.data);
+        } else {
+          console.error('Invalid response format', skillsResponse);
+        }
         const domainsResponse = await axiosInstance.get('/domain/all');
-        setDomains(domainsResponse.data.data);
+        if (
+          domainsResponse?.data?.data &&
+          Array.isArray(domainsResponse.data.data)
+        ) {
+          setDomains(domainsResponse.data.data);
+        } else {
+          console.error('Invalid domains response format', domainsResponse);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+
+        let errorMessage: string =
+          'Failed to add project. Please try again later.';
+
+        if (error instanceof Error) {
+          errorMessage = `Failed to add project. Error: ${error.message}`;
+        }
+
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch data. Please try again later.',
+          title: 'Submission Error',
+          description: errorMessage,
         });
       }
     }
@@ -136,60 +146,42 @@ const InterviewProfile: React.FC = () => {
   });
 
   const onSubmitSkill = (data: SkillFormData) => {
-    setLoading(true);
-    try {
-      console.log('Skill data:', data);
-      setSkillData([
-        ...skillData,
-        {
-          skill: data.skill,
-          experience: data.experience,
-          level: data.level,
-          status: defaultStatus,
-        },
-      ]);
-      resetSkill();
-      setOpenSkillDialog(false);
-      toast({
-        title: 'Skill Added',
-        description: `${data.skill} skill added successfully.`,
-      });
-    } finally {
-      setLoading(false);
-    }
+    console.log('Skill data:', data);
+    setSkillData([
+      ...skillData,
+      {
+        skill: data.skill,
+        experience: data.experience,
+        level: data.level,
+        status: defaultStatus,
+      },
+    ]);
+    resetSkill();
+    setOpenSkillDialog(false);
   };
 
   const onSubmitDomain = (data: DomainFormData) => {
-    setLoading(true);
-    try {
-      console.log('Domain data:', data);
-      setDomainData([
-        ...domainData,
-        {
-          domain: data.domain,
-          experience: data.experience,
-          level: data.level,
-          status: defaultStatus,
-        },
-      ]);
-      resetDomain();
-      setOpenDomainDialog(false);
-      toast({
-        title: 'Domain Added',
-        description: `${data.domain} domain added successfully.`,
-      });
-    } finally {
-      setLoading(false);
-    }
+    console.log('Domain data:', data);
+    setDomainData([
+      ...domainData,
+      {
+        domain: data.domain,
+        experience: data.experience,
+        level: data.level,
+        status: defaultStatus,
+      },
+    ]);
+    resetDomain();
+    setOpenDomainDialog(false);
   };
 
   return (
     <div className="p-6">
       <div className="mb-8 ml-5">
-        <h1 className="text-3xl font-bold">Interview Profile</h1>
+        <h1 className="text-3xl font-bold">Schedule an Interview</h1>
         <p className="text-gray-400 mt-2">
-          Manage and track your skills and domains. Add new skills or domains
-          and provide your experience levels.
+          Add your relevant skills and domains to help us schedule the right
+          interview for you.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
@@ -198,7 +190,7 @@ const InterviewProfile: React.FC = () => {
             <h2 className="text-xl font-semibold">Skills</h2>
             <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
               <DialogTrigger asChild>
-                <Button disabled>
+                <Button>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -247,7 +239,7 @@ const InterviewProfile: React.FC = () => {
                             <SelectValue placeholder="Select level" />
                           </SelectTrigger>
                           <SelectContent>
-                            {levels.map((lvl) => (
+                            {Object.values(InterviewLevel).map((lvl) => (
                               <SelectItem key={lvl} value={lvl}>
                                 {lvl}
                               </SelectItem>
@@ -291,43 +283,16 @@ const InterviewProfile: React.FC = () => {
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
+                    <Button type="submit">Add</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
           <Card className="p-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Skill</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {skillData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.skill}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
             <div className="text-center py-10 w-[100%] mt-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
+              <p className="text-gray-500">No data available</p>
             </div>
           </Card>
         </div>
@@ -336,7 +301,7 @@ const InterviewProfile: React.FC = () => {
             <h2 className="text-xl font-semibold">Domains</h2>
             <Dialog open={openDomainDialog} onOpenChange={setOpenDomainDialog}>
               <DialogTrigger asChild>
-                <Button disabled>
+                <Button>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
@@ -387,7 +352,7 @@ const InterviewProfile: React.FC = () => {
                             <SelectValue placeholder="Select level" />
                           </SelectTrigger>
                           <SelectContent>
-                            {levels.map((lvl) => (
+                            {Object.values(InterviewLevel).map((lvl) => (
                               <SelectItem key={lvl} value={lvl}>
                                 {lvl}
                               </SelectItem>
@@ -431,43 +396,16 @@ const InterviewProfile: React.FC = () => {
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
+                    <Button type="submit">Add</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
           <Card className="p-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {domainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.domain}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
             <div className="text-center py-10 w-[100%] mt-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
+              <p className="text-gray-500">No data available</p>
             </div>
           </Card>
         </div>
@@ -476,4 +414,4 @@ const InterviewProfile: React.FC = () => {
   );
 };
 
-export default InterviewProfile;
+export default ScheduleInterviewDialog;

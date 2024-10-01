@@ -14,14 +14,16 @@ export async function middleware(request: NextRequest) {
   if (token && userType) {
     if (
       userType === 'freelancer' &&
-      pathname.startsWith('/dashboard/business')
+      (pathname.startsWith('/dashboard/business') ||
+        pathname.startsWith('/business'))
     ) {
       return NextResponse.redirect(
         new URL('/dashboard/freelancer', request.url),
       );
     } else if (
       userType === 'business' &&
-      pathname.startsWith('/dashboard/freelancer')
+      (pathname.startsWith('/dashboard/freelancer') ||
+        pathname.startsWith('/freelancer'))
     ) {
       return NextResponse.redirect(new URL('/dashboard/business', request.url));
     }
@@ -30,6 +32,8 @@ export async function middleware(request: NextRequest) {
       '/dashboard',
       '/dashboard/business',
       '/dashboard/freelancer',
+      '/business',
+      '/freelancer',
     ];
     if (protectedRoutes.some((route) => pathname.startsWith(route))) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -39,5 +43,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/protected/:path*'],
+  matcher: [
+    '/dashboard/:path*',
+    '/protected/:path*',
+    '/business/:path*',
+    '/freelancer/:path*',
+  ],
 };

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { Textarea } from '../ui/textarea';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,9 @@ const profileFormSchema = z.object({
   role: z.string(),
   personalWebsite: z.string().url().optional(),
   resume: z.string().url().optional(),
+  description: z.string().max(500, {
+    message: 'Description cannot exceed 500 characters.',
+  }),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -63,6 +67,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [domains, setDomains] = useState<any>([]);
   const [currDomains, setCurrDomains] = useState<any>([]);
   const [tmpDomain, setTmpDomain] = useState<any>('');
+  const [projectDomains, setProjectDomains] = useState<any>([]);
+  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -113,6 +120,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       setTmpDomain('');
     }
   };
+  const handleAddprojectDomain = () => {
+    if (
+      tmpProjectDomains &&
+      !currProjectDomains.some(
+        (projectDomains: any) => projectDomains.name === projectDomains,
+      )
+    ) {
+      setCurrProjectDomains([
+        ...currProjectDomains,
+        {
+          name: tmpProjectDomains,
+          level: '',
+          experience: '',
+          interviewStatus: 'pending',
+          interviewInfo: '',
+          interviewerRating: 0,
+        },
+      ]);
+      setTmpProjectDomains('');
+    }
+  };
 
   useEffect(() => {
     console.log('domain selected', currDomains);
@@ -127,6 +155,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleDeleteDomain = (domainToDelete: string) => {
     setCurrDomains(
       currDomains.filter((domain: any) => domain.name !== domainToDelete),
+    );
+  };
+  const handleDeleteProjDomain = (projectDomainToDelete: string) => {
+    setCurrDomains(
+      currProjectDomains.filter(
+        (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
+      ),
     );
   };
 
@@ -146,6 +181,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         const domainsResponse = await axiosInstance.get('/domain/all');
         console.log('API Response get:', domainsResponse.data.data);
         setDomains(domainsResponse.data.data);
+
+        const projectDomainResponse =
+          await axiosInstance.get('/projectDomain/all');
+        console.log('API Response get:', projectDomainResponse.data.data);
+        setProjectDomains(projectDomainResponse.data.data);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -164,6 +204,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       role: user?.role || '',
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
+      description: user?.description || '',
     });
   }, [user, form]);
 
@@ -178,6 +219,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...data,
         skills: currSkills,
         domain: currDomains,
+        description: data.description,
       });
       console.log('API Response:', response.data);
 
@@ -193,6 +235,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         resume: data.resume,
         skills: currSkills,
         domain: currDomains,
+        projectDomains: currProjectDomains,
       });
 
       toast({
@@ -272,6 +315,21 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Enter description" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="phone"
@@ -519,25 +577,29 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
-                  onValueChange={(value) => setTmpDomain(value)}
-                  value={tmpDomain || ''}
+                  onValueChange={(value) => setTmpProjectDomains(value)}
+                  value={tmpProjectDomains || ''}
                 >
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                      placeholder={
+                        tmpProjectDomains
+                          ? tmpProjectDomains
+                          : 'Select project domain'
+                      }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains
+                    {projectDomains
                       .filter(
-                        (domain: any) =>
-                          !currDomains.some(
-                            (d: any) => d.name === domain.label,
+                        (projectDomains: any) =>
+                          !currProjectDomains.some(
+                            (d: any) => d.name === projectDomains.label,
                           ),
                       )
-                      .map((domain: any, index: number) => (
-                        <SelectItem key={index} value={domain.label}>
-                          {domain.label}
+                      .map((projectDomains: any, index: number) => (
+                        <SelectItem key={index} value={projectDomains.label}>
+                          {projectDomains.label}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -548,29 +610,33 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   size="icon"
                   className="ml-2"
                   onClick={() => {
-                    handleAddDomain();
-                    setTmpDomain('');
+                    handleAddprojectDomain();
+                    setTmpProjectDomains('');
                   }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-5">
-                {currDomains.map((domain: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
-                  >
-                    {domain.name}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDomain(domain.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
+                {currProjectDomains.map(
+                  (projectDomains: any, index: number) => (
+                    <Badge
+                      className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                      key={index}
                     >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
-                ))}
+                      {projectDomains.name}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteProjDomain(projectDomains.name)
+                        }
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </Badge>
+                  ),
+                )}
               </div>
             </div>
           </div>

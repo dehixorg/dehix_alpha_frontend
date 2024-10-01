@@ -131,86 +131,96 @@ const SkillDomainForm: React.FC = () => {
   };
 
   return (
-    <div className="px-4">
-      <div className="mb-8 mt-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex space-x-4">
-            <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
-            <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+    <div className="">
+      <div className="mb-8 ml-5">
+        <h1 className="text-3xl font-bold">Dehix Talent Table</h1>
+        <p className="text-gray-400 mt-2">
+          Here you can Add relevant skills and domains to get directly hired
+          from dehix talent.
+        </p>
+      </div>
+      <div className="px-4">
+        <div className="mb-8 mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex space-x-4">
+              <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
+              <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+            </div>
           </div>
-        </div>
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Label</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Monthly Pay</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Activity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                // Render skeleton loader if data is still being fetched
-                Array.from({ length: 10 }).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Skeleton className="h-6 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-24" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-10" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : skillDomainData.length > 0 ? (
-                skillDomainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.label}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.monthlyPay}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={statusVisibility[index]}
-                        onCheckedChange={value =>
-                          item.uid
-                            ? handleToggleVisibility(index, value, item.uid)
-                            : console.error('UID missing for item', item) // Fallback check for missing UID
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
+          <Card>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    <div className="text-center py-10 w-[90vw] h-[30vw] mt-10">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">
-                        No data available.
-                        <br />
-                        Here you can get directly hired for different roles.
-                      </p>
-                    </div>
-                  </TableCell>
+                  <TableHead>Label</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Monthly Pay</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Activity</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Card>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  // Render skeleton loader if data is still being fetched
+                  Array.from({ length: 2 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-16" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-16" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-10" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : skillDomainData.length > 0 ? (
+                  skillDomainData.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.label}</TableCell>
+                      <TableCell>{item.experience}</TableCell>
+                      <TableCell>{item.monthlyPay}</TableCell>
+                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={statusVisibility[index]}
+                          onCheckedChange={
+                            (value) =>
+                              item.uid
+                                ? handleToggleVisibility(index, value, item.uid)
+                                : console.error('UID missing for item', item) // Fallback check for missing UID
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      <div className="text-center py-10 w-[90vw] h-[30vw] mt-10">
+                        <PackageOpen
+                          className="mx-auto text-gray-500"
+                          size="100"
+                        />
+                        <p className="text-gray-500">
+                          No data available.
+                          <br />
+                          Here you can get directly hired for different roles.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </div>
       </div>
     </div>
   );

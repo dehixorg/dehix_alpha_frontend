@@ -43,6 +43,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function BusinessForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
+  const [loading, setLoading] = useState<boolean>(false);
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -88,6 +89,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
       // console.log('Form data:', data);
       const response = await axiosInstance.put(`/business/${user_id}`, {
@@ -296,12 +298,12 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               )}
             />
           </div>
-
           <Button
             className="bg-gray-600 text-white hover:bg-gray-800"
             type="submit"
+            disabled={loading}
           >
-            Submit
+            {loading ? 'Loading...' : 'Submit'}
           </Button>
         </form>
       </Form>

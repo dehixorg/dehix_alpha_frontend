@@ -3,6 +3,7 @@ import React from 'react';
 import { PackageOpen } from 'lucide-react';
 import Link from 'next/link';
 
+import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Card,
   CardHeader,
@@ -66,8 +67,9 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                 <TableHead>Project Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Verification</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-center">Start Date</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -90,7 +92,20 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects }) => {
                       ? new Date(project.start).toLocaleDateString()
                       : 'N/A'}
                   </TableCell>
-                  <TableCell className="text-right">
+
+                  <TableCell>
+                    {project.status ? (
+                      <Badge
+                        className={getStatusBadge(project.status).className}
+                      >
+                        {getStatusBadge(project.status).text}
+                      </Badge>
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
+
+                  <TableCell className="text-center">
                     <Link href={`/project/${project._id}`}>
                       <Button size="sm" variant="outline">
                         View Details

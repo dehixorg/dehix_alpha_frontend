@@ -105,7 +105,7 @@ interface Domain {
   _id: string;
   label: string;
 }
-//adding project domain
+
 interface projectDomain {
   _id: string;
   label: string;
@@ -123,22 +123,20 @@ export function CreateProjectBusinessForm() {
 
   const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
-  const [tmpProjectDomain, setTmpProjectDomain] = useState<any>('');
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
 
-  //handle projectdomain
+  const [loading, setLoading] = useState(false);
 
-  // Function to add selected project domain
   const handleAddProjectDomain = () => {
     if (
-      tmpProjectDomain &&
-      !currProjectDomains.some((domain: any) => domain === tmpProjectDomain)
+      tmpProjectDomains &&
+      !currProjectDomains.some((domain: any) => domain === tmpProjectDomains)
     ) {
-      setCurrProjectDomains([...currProjectDomains, tmpProjectDomain]);
-      setTmpProjectDomain('');
+      setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
+      setTmpProjectDomains('');
     }
   };
 
-  // Function to remove a selected project domain
   const handleDeleteProjectDomain = (domainToDelete: string) => {
     setCurrProjectDomains(
       currProjectDomains.filter((domain: any) => domain !== domainToDelete),
@@ -220,6 +218,7 @@ export function CreateProjectBusinessForm() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
       console.log('Form body:', {
         ...data,
@@ -241,7 +240,6 @@ export function CreateProjectBusinessForm() {
       );
       console.log('API Response:', response.data);
 
-      // You can update other fields here as needed
       toast({
         title: 'Project Added',
         description: 'Your project has been successfully added.',
@@ -302,22 +300,34 @@ export function CreateProjectBusinessForm() {
                   <div>
                     <div className="flex items-center mt-2">
                       <Select
-                        onValueChange={(value) => setTmpProjectDomain(value)}
+                        onValueChange={(value) => setTmpProjectDomains(value)}
+                        value={tmpProjectDomains || ''}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Project Domain" />
+                          <SelectValue
+                            placeholder={
+                              tmpProjectDomains
+                                ? tmpProjectDomains
+                                : 'Select project domain'
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          {projectDomains.map(
-                            (projectdomain: any, index: number) => (
+                          {projectDomains
+                            .filter(
+                              (projectDomains: any) =>
+                                !currProjectDomains.some(
+                                  (d: any) => d.name === projectDomains.label,
+                                ),
+                            )
+                            .map((projectDomains: any, index: number) => (
                               <SelectItem
                                 key={index}
-                                value={projectdomain.label}
+                                value={projectDomains.label}
                               >
-                                {projectdomain.label}
+                                {projectDomains.label}
                               </SelectItem>
-                            ),
-                          )}
+                            ))}
                         </SelectContent>
                       </Select>
                       <Button
@@ -590,9 +600,12 @@ export function CreateProjectBusinessForm() {
               Add Profile
             </Button>
           </div>
-
-          <Button type="submit" className="lg:col-span-2 xl:col-span-2">
-            Create Project
+          <Button
+            type="submit"
+            className="lg:col-span-2 xl:col-span-2"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Create Project'}
           </Button>
         </form>
       </Form>

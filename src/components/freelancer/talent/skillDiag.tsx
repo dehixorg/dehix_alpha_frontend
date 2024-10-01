@@ -65,6 +65,7 @@ const skillSchema = z.object({
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const {
     control,
     handleSubmit,
@@ -84,6 +85,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   });
 
   const onSubmit = async (data: SkillDomainData) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
@@ -206,8 +208,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit">
-              Submit
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>
         </form>

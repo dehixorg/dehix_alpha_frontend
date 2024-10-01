@@ -71,6 +71,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   onFormSubmit,
 }) => {
   const user = useSelector((state: RootState) => state.user);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
     defaultValues: {
@@ -106,6 +107,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   }, [isDialogOpen, form]);
 
   async function onSubmit(data: ExperienceFormValues) {
+    setIsSubmitting(true);
     try {
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/experience`,
@@ -140,6 +142,8 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         title: 'Error',
         description: 'Failed to add experience. Please try again later.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -304,7 +308,9 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Experience</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Loading...' : 'Add Experience'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

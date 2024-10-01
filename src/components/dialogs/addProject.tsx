@@ -84,6 +84,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -156,6 +157,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
   // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
+    setLoading(true);
     try {
       // Convert comma-separated techUsed string into an array
       // console.log('Form body:', {
@@ -434,7 +436,9 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Add Project</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Loading...' : 'Add Project'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
