@@ -165,7 +165,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 <div className="flex justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">Monthly Pay</span>
-                    <Badge>{talentEntry.monthlyPay} USD</Badge>
+                    <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
                 </div>
               </div>
