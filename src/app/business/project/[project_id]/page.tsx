@@ -23,7 +23,20 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BidsDetail from '@/components/freelancer/project/bidsDetailTable';
+import BidsDetails from '@/components/freelancer/project/bidsDetail';
+
+interface ProjectProfile {
+  selectedFreelancer?: string[]; // Added based on the response
+  totalBid?: number[]; // Added based on the response
+  domain?: string;
+  freelancersRequired?: string;
+  skills?: string[];
+  experience?: number;
+  minConnect?: number;
+  rate?: number;
+  description?: string;
+  _id?: string; // Added to match the response's profile structure
+}
 
 interface Project {
   _id: string;
@@ -31,7 +44,7 @@ interface Project {
   description: string;
   companyId: string;
   email: string;
-  url?: { value: string }[];
+  url?: { value: string }[]; // Retained as optional
   verified?: any;
   isVerified?: string;
   companyName: string;
@@ -41,17 +54,9 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  profiles?: {
-    domain?: string;
-    freelancersRequired?: string;
-    skills?: string[];
-    experience?: number;
-    minConnect?: number;
-    rate?: number;
-    description?: string;
-  }[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
-  team?: string[];
+  profiles?: ProjectProfile[]; // Modified to use the new ProjectProfile structure
+  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected'; // Matches response status
+  team?: string[]; // Retained as optional
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -123,7 +128,7 @@ export default function Dashboard() {
               <Tabs defaultValue="Project-Info">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
-                  <TabsTrigger value="Bids-Info">Bids-Info</TabsTrigger>
+                  <TabsTrigger value="Profiles">Profiles</TabsTrigger>
                 </TabsList>
                 <TabsContent value="Project-Info">
                   <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -170,8 +175,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </TabsContent>
-                <TabsContent value="Bids-Info">
-                  <BidsDetail id={project_id || ''} />
+                <TabsContent value="Profiles">
+                  <BidsDetails id={project_id || ''} />
                 </TabsContent>
               </Tabs>
             </div>

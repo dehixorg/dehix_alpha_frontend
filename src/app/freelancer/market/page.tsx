@@ -218,6 +218,16 @@ const Market: React.FC = () => {
           </div>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">
+            Freelancer Marketplace Overview
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Discover and manage your freelance opportunities, connect with
+            potential projects, and filter by skills, domains and project domian
+            to enhance your portfolio.
+          </p>
+        </div>
       </div>
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
         <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
