@@ -1,9 +1,8 @@
 'use client';
 import * as React from 'react';
-import { Search } from 'lucide-react';
 
+import { Search } from '@/components/search';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -21,8 +20,8 @@ export default function ProfilePage() {
         menuItemsBottom={menuItemsBottom}
         active="ScheduleInterviews"
       />
-      <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:py-0 sm:gap-8 sm:pl-14 w-full">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 py-8 gap-4 sm:border-0 sm:px-6">
           <div className="flex items-center gap-4">
             <CollapsibleSidebarMenu
               menuItemsTop={menuItemsTop}
@@ -37,15 +36,10 @@ export default function ProfilePage() {
               className="hidden sm:flex-1 sm:flex sm:items-center"
             />
           </div>
-          <div className="relative flex items-center gap-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            />
-            <DropdownProfile />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
+          <DropdownProfile />
         </header>
         <ScheduleInterviewDialog />
       </div>
