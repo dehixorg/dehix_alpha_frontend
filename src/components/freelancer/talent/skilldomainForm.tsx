@@ -159,8 +159,8 @@ const SkillDomainForm: React.FC = () => {
                   skillDomainData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
-                      <TableCell>{item.experience}</TableCell>
-                      <TableCell>{item.monthlyPay}</TableCell>
+                      <TableCell>{item.experience}Years</TableCell>
+                      <TableCell>${item.monthlyPay}</TableCell>
                       <TableCell>{item.status}</TableCell>
                       <TableCell>
                         <Switch

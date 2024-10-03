@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,54 +26,108 @@ interface Talent {
   dehixTalent: DehixTalent;
 }
 
-const TalentCard: React.FC = () => {
+interface TalentCardProps {
+  skillFilter: string | null;
+  domainFilter: string | null;
+}
+
+const TalentCard: React.FC<TalentCardProps> = ({
+  skillFilter,
+  domainFilter,
+}) => {
+  const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const [skip, setSkip] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
 
-  const fetchTalentData = useCallback(async () => {
-    if (isRequestInProgress.current || loading || !hasMore) return;
+  // Function to reset state when filters change
+  const resetAndFetchData = useCallback(() => {
+    setTalents([]);
+    setSkip(0);
+    setHasMore(true);
+    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+  }, [skillFilter, domainFilter]);
 
-    try {
-      isRequestInProgress.current = true;
-      setLoading(true);
+  const fetchTalentData = useCallback(
+    async (newSkip = skip, reset = false) => {
+      if (isRequestInProgress.current || loading || !hasMore) return;
 
-      const response = await axiosInstance.get(
-        `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${skip}`,
-      );
+      try {
+        isRequestInProgress.current = true;
+        setLoading(true);
 
-      if (
-        response.status === 404 ||
-        response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
+        const response = await axiosInstance.get(
+          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
+        );
+
+        if (
+          response.status === 404 ||
+          response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
+        ) {
+          setHasMore(false);
+          return;
+        }
+
+        if (response?.data?.data) {
+          setTalents((prev) =>
+            reset ? response.data.data : [...prev, ...response.data.data],
+          );
+          setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
+        } else {
+          throw new Error('Fail to fetch data');
+        }
+      } catch (error) {
+        console.error('Error fetching talent data', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      } finally {
+        setLoading(false);
+        isRequestInProgress.current = false;
+      }
+    },
+    [skip, loading, hasMore],
+  );
+
+  // Reload cards when filter changes
+  useEffect(() => {
+    resetAndFetchData();
+  }, [skillFilter, domainFilter, resetAndFetchData]);
+
+  // Apply the filters to the talents
+  useEffect(() => {
+    const filtered = talents.filter((talent) => {
+      if (skillFilter == 'all' && domainFilter == 'all') {
+        return true;
+      } else if (
+        skillFilter == 'all' &&
+        domainFilter == talent.dehixTalent.domainName
       ) {
-        setHasMore(false);
-        return;
-      }
-
-      if (response?.data?.data) {
-        setTalents((prev) => [...prev, ...response.data.data]);
-        setSkip((prev) => prev + Dehix_Talent_Card_Pagination.BATCH);
+        return true;
+      } else if (
+        skillFilter == talent.dehixTalent.skillName &&
+        domainFilter == 'all'
+      ) {
+        return true;
+      } else if (
+        skillFilter == talent.dehixTalent.skillName ||
+        domainFilter == talent.dehixTalent.domainName
+      ) {
+        return true;
       } else {
-        throw new Error('Fail to fetch data');
+        return false;
       }
-    } catch (error) {
-      console.error('Error fetching talent data', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
-    } finally {
-      setLoading(false);
-      isRequestInProgress.current = false;
-    }
-  }, [skip, loading, hasMore]);
+    });
+    setFilteredTalents(filtered);
+  }, [skillFilter, domainFilter, talents]);
 
   return (
     <div className="flex flex-wrap justify-center gap-4">
-      {talents.map((talent) => {
+      {filteredTalents.map((talent) => {
         const talentEntry = talent.dehixTalent;
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
@@ -111,7 +165,7 @@ const TalentCard: React.FC = () => {
                 <div className="flex justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">Monthly Pay</span>
-                    <Badge>{talentEntry.monthlyPay} USD</Badge>
+                    <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
                 </div>
               </div>
