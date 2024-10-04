@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProfileCard from '@/components/opportunities/jobs/profileCard';
+import { getStatusBadge } from '@/utils/statusBadge';
 
 interface Profile {
   domain?: string;
@@ -21,7 +22,6 @@ interface Profile {
   minConnect?: number;
   rate?: number;
 }
-import { getStatusBadge } from '@/utils/statusBadge';
 interface JobCardProps {
   id: string;
   projectName: string;
@@ -54,6 +54,7 @@ const JobCard: React.FC<JobCardProps> = ({
   if (!isClient) {
     return null;
   }
+
   const { text, className } = getStatusBadge(status);
 
   return (
@@ -62,8 +63,6 @@ const JobCard: React.FC<JobCardProps> = ({
         <CardTitle className="text-2xl font-bold text-gray-300">
           {projectName}
         </CardTitle>
-
-        {/* <div className=" h-[1px] bg-gray-300 mt-4 mb-4" /> */}
       </CardHeader>
 
       <CardContent className="ml-4 space-y-4">
@@ -72,26 +71,29 @@ const JobCard: React.FC<JobCardProps> = ({
           <div className="flex flex-col">
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4" />
-              <p className="ml-2 mr-2">{companyName}</p>
-              <Badge className={className}>{text}</Badge>
+              <p className="ml-2 mr-2"> {companyName} </p>
+              <Badge className={className}> {text} </Badge>
             </div>
 
             <div className="flex items-center text-gray-600">
               <Mail className="h-4 w-4" />
-              <p className="ml-2 text-sm">{email}</p>
+              <p className="ml-2 text-sm"> {email} </p>
             </div>
 
+            {/* Change the structure to avoid nested <p> tags */}
             <CardDescription>
-              <p className="text-gray-600 mt-3 text-justify">{description}</p>
+              <span className="text-gray-600 mt-3 text-justify">
+                {description}
+              </span>
             </CardDescription>
           </div>
 
           {/* Right section */}
           <div className="flex flex-col items-end space-y-4">
             <div>
-              <p className="font-medium text-gray-700">Skills Required:</p>
+              <p className="font-medium text-gray-700"> Skills Required: </p>
               <div className="mt-2 flex flex-wrap">
-                {skillsRequired?.map((skill: any, index: number) => (
+                {skillsRequired?.map((skill: string, index: number) => (
                   <Badge
                     key={index}
                     className="mr-2 mb-2 uppercase bg-gray-100 text-gray-700 px-3 py-1 rounded"
@@ -104,9 +106,9 @@ const JobCard: React.FC<JobCardProps> = ({
 
             {team && team.length > 0 && (
               <div>
-                <p className="font-medium text-gray-700">Team Members:</p>
+                <p className="font-medium text-gray-700"> Team Members: </p>
                 <div className="mt-2 flex flex-wrap">
-                  {team.map((member: any, index: number) => (
+                  {team.map((member: string, index: number) => (
                     <Badge
                       key={index}
                       className="mr-2 mb-2 uppercase bg-gray-100 text-gray-700 px-3 py-1 rounded"
@@ -120,7 +122,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
             <div className="flex space-x-4">
               <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                <Link href={`/freelancer/project/${id}`}>View</Link>
+                <Link href={`/freelancer/project/${id}`}> View </Link>
               </Button>
               <Button className="bg-gray-500 text-white hover:bg-gray-600">
                 Not Interested
@@ -134,7 +136,7 @@ const JobCard: React.FC<JobCardProps> = ({
           <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
           {profiles && profiles.length > 0 && (
             <div className="space-y-4">
-              {profiles.map((profile: any, index: number) => (
+              {profiles.map((profile: Profile, index: number) => (
                 <ProfileCard key={index} profile={profile} projectId={id} />
               ))}
             </div>
