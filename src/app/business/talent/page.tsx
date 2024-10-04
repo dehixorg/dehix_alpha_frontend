@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+
 import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -19,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 interface Skill {
   _id: string;
   label: string;
