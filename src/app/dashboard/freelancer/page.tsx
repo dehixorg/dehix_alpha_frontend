@@ -140,15 +140,27 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={loading ? '...' : projects.filter((p) => p.status === 'Active').length}
+                value={
+                  loading
+                    ? '...'
+                    : projects.filter((p) => p.status === 'Active').length
+                }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo={loading ? 'Loading...' : 'Earning stats will be here'}
+                additionalInfo={
+                  loading ? 'Loading...' : 'Earning stats will be here'
+                }
               />
               <StatCard
                 title="Pending Projects"
-                value={loading ? '...' : projects.filter((p) => p.status === 'Pending').length}
+                value={
+                  loading
+                    ? '...'
+                    : projects.filter((p) => p.status === 'Pending').length
+                }
                 icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo={loading ? 'Loading...' : 'Project stats will be here'}
+                additionalInfo={
+                  loading ? 'Loading...' : 'Project stats will be here'
+                }
               />
             </div>
             <div className="overflow-x-auto">
@@ -162,16 +174,28 @@ export default function Dashboard() {
                   </TabsList>
                 </div>
                 <TabsContent value="active">
-                  <ProjectTableCard projects={projects.filter((p) => p.status === 'Active')} loading={loading} />
+                  <ProjectTableCard
+                    projects={projects.filter((p) => p.status === 'Active')}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value="pending">
-                  <ProjectTableCard projects={projects.filter((p) => p.status === 'Pending')} loading={loading} />
+                  <ProjectTableCard
+                    projects={projects.filter((p) => p.status === 'Pending')}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value="completed">
-                  <ProjectTableCard projects={projects.filter((p) => p.status === 'Completed')} loading={loading} />
+                  <ProjectTableCard
+                    projects={projects.filter((p) => p.status === 'Completed')}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value="rejected">
-                  <ProjectTableCard projects={projects.filter((p) => p.status === 'Rejected')} loading={loading} />
+                  <ProjectTableCard
+                    projects={projects.filter((p) => p.status === 'Rejected')}
+                    loading={loading}
+                  />
                 </TabsContent>
               </Tabs>
             </div>

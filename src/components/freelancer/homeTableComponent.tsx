@@ -54,7 +54,10 @@ interface ProjectCardProps {
   loading: boolean; // Add loading state
 }
 
-const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects, loading }) => {
+const ProjectTableCard: React.FC<ProjectCardProps> = ({
+  projects,
+  loading,
+}) => {
   return (
     <Card>
       <CardHeader className="px-7">
@@ -74,78 +77,78 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({ projects, loading }) => 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading
-              ? // Show skeleton rows when loading is true
-                [...Array(3)].map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Skeleton className="h-4 w-32" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Skeleton className="h-8 w-24" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              : projects.length > 0
-              ? projects.map((project) => (
-                  <TableRow key={project._id}>
-                    <TableCell>
-                      <div className="font-medium">{project.projectName}</div>
-                    </TableCell>
-                    <TableCell>{project.projectType}</TableCell>
-                    <TableCell>
+            {loading ? (
+              // Show skeleton rows when loading is true
+              [...Array(3)].map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-32" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-20" />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Skeleton className="h-8 w-24" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : projects.length > 0 ? (
+              projects.map((project) => (
+                <TableRow key={project._id}>
+                  <TableCell>
+                    <div className="font-medium">{project.projectName}</div>
+                  </TableCell>
+                  <TableCell>{project.projectType}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className="text-xs"
+                      variant={project.verified ? 'secondary' : 'outline'}
+                    >
+                      {project.verified ? 'Verified' : 'Not Verified'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {project.start
+                      ? new Date(project.start).toLocaleDateString()
+                      : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    {project.status ? (
                       <Badge
-                        className="text-xs"
-                        variant={project.verified ? 'secondary' : 'outline'}
+                        className={getStatusBadge(project.status).className}
                       >
-                        {project.verified ? 'Verified' : 'Not Verified'}
+                        {getStatusBadge(project.status).text}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {project.start
-                        ? new Date(project.start).toLocaleDateString()
-                        : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {project.status ? (
-                        <Badge
-                          className={getStatusBadge(project.status).className}
-                        >
-                          {getStatusBadge(project.status).text}
-                        </Badge>
-                      ) : (
-                        'N/A'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Link href={`/project/${project._id}`}>
-                        <Button size="sm" variant="outline">
-                          View Details
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))
-              : (
-                <tr>
-                  <td colSpan={6} className="text-center py-10">
-                    <PackageOpen className="mx-auto text-gray-500" size="100" />
-                    <p className="text-gray-500">No projects available</p>
-                  </td>
-                </tr>
-              )}
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Link href={`/project/${project._id}`}>
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-10">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No projects available</p>
+                </td>
+              </tr>
+            )}
           </TableBody>
         </Table>
       </CardContent>
