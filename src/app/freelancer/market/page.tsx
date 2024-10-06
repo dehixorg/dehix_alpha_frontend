@@ -49,6 +49,15 @@ interface Project {
     accepted?: string[];
     status?: string;
   }[];
+  profiles?: {
+    domain?: string;
+    freelancersRequired?: string;
+    skills?: string[];
+    experience?: number;
+    minConnect?: number;
+    rate?: number;
+    description?: string;
+  }[];
   status?: string;
   team?: string[];
   createdAt: Date;
@@ -275,6 +284,7 @@ const Market: React.FC = () => {
               skillsRequired={job.skillsRequired}
               status={job.status}
               team={job.team}
+              profiles={job.profiles || []}
             />
           ))}
         </div>
