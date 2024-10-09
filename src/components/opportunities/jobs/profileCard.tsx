@@ -163,7 +163,7 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
             </span>
           ) : (
             profile.description
-          )} 
+          )}
         </div>
       )}
     </div>

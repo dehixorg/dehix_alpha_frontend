@@ -119,7 +119,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <CollapsibleSidebarMenu 
+      <CollapsibleSidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
