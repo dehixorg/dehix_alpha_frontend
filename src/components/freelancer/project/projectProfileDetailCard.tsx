@@ -28,6 +28,7 @@ import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProfileDetailCardProps {
+  _id: string;
   exist: any;
   domain: string;
   freelancersRequired: string;
@@ -48,6 +49,7 @@ type CardProps = React.ComponentProps<typeof Card> &
   ProjectProfileDetailCardProps;
 
 export function ProjectProfileDetailCard({
+  _id,
   exist,
   domain,
   freelancersRequired,
@@ -79,6 +81,7 @@ export function ProjectProfileDetailCard({
         bidder_id: user.uid,
         project_id: params.project_id,
         domain_id: domain_id,
+        profile_id: _id,
       });
 
       setAmount('');

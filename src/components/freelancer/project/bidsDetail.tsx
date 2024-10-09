@@ -2,18 +2,14 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
 
-import BidDialog from './bidDialog';
-
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
-import { axiosInstance } from '@/lib/axiosinstance';
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -26,33 +22,22 @@ interface ProjectProfile {
   rate?: number;
   description?: string;
   _id?: string;
+  bids?: BidDetail[];
+  profiles?: any;
 }
 
 interface BidDetail {
   _id: string;
-  projectName: string;
+  userName: string;
   description: string;
-  companyId: string;
-  email: string;
-  url?: { value: string }[];
-  verified?: any;
-  isVerified?: string;
-  companyName?: string;
-  start?: Date;
-  end?: Date | null;
-  skillsRequired: string[];
-  experience?: string;
-  role?: string;
-  projectType?: string;
-  profiles?: ProjectProfile[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
-  team?: string[];
+  current_price: string;
+  bid_status: 'Accepted' | 'Pending' | 'Completed' | 'Rejected';
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 interface UserData {
-  data: BidDetail;
+  data: ProjectProfile;
 }
 
 interface BidsDetailsProps {
@@ -63,19 +48,19 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | undefined>(undefined);
+  const [bids, setBids] = useState<BidDetail[]>([]);
+  const [loadingBids, setLoadingBids] = useState<{ [key: string]: boolean }>(
+    {},
+  );
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await axiosInstance.get(`/business/${id}/project`);
-        if (response.data) {
-          setUserData(response.data);
-        } else {
-          setError('No user data available.');
-        }
+        setUserData(response.data);
       } catch (error) {
         setError('Error fetching user data.');
-        console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
@@ -83,87 +68,176 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
     if (id) {
       fetchUserData();
-    } else {
-      setLoading(false);
     }
   }, [id]);
 
   const handleUpdateStatus = async (bidId: string, status: string) => {
     try {
+      setLoadingBids((prev) => ({ ...prev, [bidId]: true }));
       await axiosInstance.put(`/bid/${bidId}/status`, { status });
-      //console.log(`Bid ${bidId} updated with status: ${status}`);
+
+      setBids((prev: any) =>
+        prev.map((bid: any) =>
+          bid._id === bidId ? { ...bid, bid_status: status } : bid,
+        ),
+      );
     } catch (error) {
       console.error(`Error updating bid status for ${bidId}:`, error);
+      setError('Failed to update bid status.');
+    } finally {
+      setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
     }
   };
 
+  const fetchBid = async (profileId: string) => {
+    try {
+      const response = await axiosInstance.get(
+        `/bid/${id}/${profileId}/profile/project/bid`,
+      );
+      setBids(response.data?.data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (profileId) {
+      fetchBid(profileId);
+    }
+  }, [profileId, fetchBid]);
+
   return (
-    <div>
+    <div className="max-w-5xl mx-auto p-4">
       <div className="mb-8 mt-4">
-        <Card>
-          <div className="lg:overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Min Connect</TableHead>
-                  <TableHead>Total Bid</TableHead>
-                  <TableHead>More</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      <p>Loading...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : error ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      <p>{error}</p>
-                    </TableCell>
-                  </TableRow>
-                ) : userData?.data.profiles?.length ? (
-                  <>
-                    {userData.data.profiles.map((profile) => (
-                      <TableRow key={profile._id}>
-                        <TableCell>{profile.domain ?? 'N/A'}</TableCell>
-                        <TableCell>{profile.rate ?? 'N/A'}</TableCell>
-                        <TableCell>{profile.experience ?? 'N/A'}</TableCell>
-                        <TableCell>{profile.minConnect ?? 'N/A'}</TableCell>
-                        <TableCell>{profile.totalBid?.length ?? 0}</TableCell>
-                        <TableCell>
-                          <BidDialog
-                            handleUpdateStatus={handleUpdateStatus}
-                            projectId={id} // Pass the project ID
-                            bidId={profile._id ?? ''} // Pass the profile ID
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center">
-                      <div className="text-center py-10 w-full mt-10">
-                        <PackageOpen
-                          className="mx-auto text-gray-500"
-                          size="100"
-                        />
-                        <p className="text-gray-500 text-lg">
-                          No bid profiles found
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+        {loading ? (
+          <div className="text-center py-10">
+            <p>Loading...</p>
           </div>
-        </Card>
+        ) : error ? (
+          <div className="text-center py-10">
+            <p>{error}</p>
+          </div>
+        ) : userData?.data?.profiles?.length ? (
+          <Accordion type="single" collapsible>
+            {userData.data.profiles.map((profile: any) => (
+              <AccordionItem
+                key={profile._id}
+                value={profile._id || ''}
+                onClick={() => setProfileId(profile._id)}
+              >
+                <AccordionTrigger>
+                  <div className="flex justify-between items-center w-full">
+                    <h3 className="text-lg font-semibold">
+                      {profile.domain ?? 'N/A'}
+                    </h3>
+                    <span className="text-gray-500">
+                      Rate: {profile.rate ?? 'N/A'}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="p-4 flex flex-col space-y-2">
+                    <p>
+                      <strong>Experience:</strong> {profile.experience ?? 'N/A'}
+                    </p>
+                    <p>
+                      <strong>Min Connect:</strong>{' '}
+                      {profile.minConnect ?? 'N/A'}
+                    </p>
+                    <p>
+                      <strong>Total Bids:</strong> {bids.length}
+                    </p>
+                  </div>
+
+                  <Accordion type="single" collapsible>
+                    {['Pending', 'Accepted', 'Rejected', 'Lobby'].map(
+                      (status) => (
+                        <AccordionItem key={status} value={`${status}-bids`}>
+                          <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {bids
+                                .filter((bid) => bid.bid_status === status)
+                                .map((bid) => (
+                                  <Card
+                                    key={bid._id}
+                                    className="border border-gray-800 rounded-lg p-6 bg-black text-white shadow-lg transition-transform transform hover:scale-105"
+                                  >
+                                    <h3 className="font-semibold text-xl mb-2">
+                                      {bid.userName}
+                                    </h3>
+                                    <p className="text-gray-400 mb-4">
+                                      {bid.description}
+                                    </p>
+                                    <div className="flex flex-col mb-4">
+                                      <span className="text-sm text-gray-400">
+                                        Current Price: ${bid.current_price}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2">
+                                      {(status === 'Pending' ||
+                                        status === 'Lobby') && (
+                                        <>
+                                          <button
+                                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
+                                            onClick={() =>
+                                              handleUpdateStatus(
+                                                bid._id,
+                                                'Accepted',
+                                              )
+                                            }
+                                            disabled={loadingBids[bid._id]}
+                                          >
+                                            {loadingBids[bid._id]
+                                              ? 'Loading...'
+                                              : 'Accept'}
+                                          </button>
+                                          <button
+                                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
+                                            onClick={() =>
+                                              handleUpdateStatus(
+                                                bid._id,
+                                                'Rejected',
+                                              )
+                                            }
+                                            disabled={loadingBids[bid._id]}
+                                          >
+                                            {loadingBids[bid._id]
+                                              ? 'Loading...'
+                                              : 'Reject'}
+                                          </button>
+                                          <button
+                                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto"
+                                            onClick={() =>
+                                              console.log(
+                                                `Viewing details for ${bid.userName}`,
+                                              )
+                                            }
+                                          >
+                                            Interview
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </Card>
+                                ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ),
+                    )}
+                  </Accordion>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <div className="text-center py-10 w-full mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500 text-lg">No bid profiles found</p>
+          </div>
+        )}
       </div>
     </div>
   );
