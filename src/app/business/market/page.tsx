@@ -113,13 +113,13 @@ const Market: React.FC = () => {
   };
 
   return (
-    <section className="p-3 relative">
+    <section className="p-3 relative sm:pl-6">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <CollapsibleSidebarMenu
+      <CollapsibleSidebarMenu 
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"

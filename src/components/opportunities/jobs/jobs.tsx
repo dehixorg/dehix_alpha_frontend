@@ -22,6 +22,7 @@ interface Profile {
   minConnect?: number;
   rate?: number;
 }
+
 interface JobCardProps {
   id: string;
   projectName: string;
@@ -58,7 +59,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const { text, className } = getStatusBadge(status);
 
   return (
-    <Card className="w-full max-w-4xl hover:border-gray-600 hover:shadow-lg transition-shadow border border-gray-300 rounded-lg">
+    <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow  rounded-lg ">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold text-gray-300">
           {projectName}
@@ -66,9 +67,9 @@ const JobCard: React.FC<JobCardProps> = ({
       </CardHeader>
 
       <CardContent className="ml-4 space-y-4">
-        <div className="flex justify-between">
+        <div className="flex flex-col lg:flex-row justify-between">
           {/* Left section */}
-          <div className="flex flex-col">
+          <div className="flex flex-col items-start lg:items-start">
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>
@@ -80,7 +81,6 @@ const JobCard: React.FC<JobCardProps> = ({
               <p className="ml-2 text-sm"> {email} </p>
             </div>
 
-            {/* Change the structure to avoid nested <p> tags */}
             <CardDescription>
               <span className="text-gray-600 mt-3 text-justify">
                 {description}
@@ -89,10 +89,10 @@ const JobCard: React.FC<JobCardProps> = ({
           </div>
 
           {/* Right section */}
-          <div className="flex flex-col items-end space-y-4">
+          <div className="flex flex-col items-start lg:items-end lg:self-start space-y-0 -mt-2">
             <div>
-              <p className="font-medium text-gray-700"> Skills Required: </p>
-              <div className="mt-2 flex flex-wrap">
+              {/* <p className="flex lg:justify-end font-medium text-gray-700"> Skills Required: </p> */}
+              <div className="mt-2 flex flex-wrap lg:justify-end">
                 {skillsRequired?.map((skill: string, index: number) => (
                   <Badge
                     key={index}
@@ -106,8 +106,8 @@ const JobCard: React.FC<JobCardProps> = ({
 
             {team && team.length > 0 && (
               <div>
-                <p className="font-medium text-gray-700"> Team Members: </p>
-                <div className="mt-2 flex flex-wrap">
+                {/* <p className=" flex lg:justify-end font-medium text-gray-700"> Team Members: </p> */}
+                <div className="mt-2 flex flex-wrap lg:justify-end">
                   {team.map((member: string, index: number) => (
                     <Badge
                       key={index}
@@ -132,7 +132,7 @@ const JobCard: React.FC<JobCardProps> = ({
         </div>
 
         {/* New Profile Section */}
-        <div className="mt-10 hover:bg-muted hover:bg-opacity-10">
+        <div className="mt-10 hover:bg-opacity-10">
           <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
           {profiles && profiles.length > 0 && (
             <div className="space-y-4">
