@@ -131,7 +131,8 @@ export default function FreelancerRegisterForm() {
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Something went wrong!';
+      const errorMessage =
+        error.response?.data?.message || 'Something went wrong!';
       console.error('API Error:', error);
       toast({
         variant: 'destructive',

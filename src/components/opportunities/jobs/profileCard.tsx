@@ -34,7 +34,8 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const [exist, setExist] = React.useState(false);
+  const [exist] = React.useState(false);
+  // use setExist in useState if needed
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
