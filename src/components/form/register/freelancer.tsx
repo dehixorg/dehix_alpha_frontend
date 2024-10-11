@@ -131,11 +131,13 @@ export default function FreelancerRegisterForm() {
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || 'Something went wrong!';
       console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `${'Invalid Credentials ' || 'Something went wrong!'}`,
+        description: errorMessage,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {

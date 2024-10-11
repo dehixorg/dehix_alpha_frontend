@@ -229,7 +229,7 @@ export function CreateProjectBusinessForm() {
       });
 
       const response = await axiosInstance.post(
-        `/business/${user.uid}/project`,
+        `/project/${user.uid}/project`,
         {
           ...data,
           role: '',
