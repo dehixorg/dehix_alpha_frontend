@@ -1,5 +1,5 @@
 'use client';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -52,6 +52,7 @@ interface Project {
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,15 +70,27 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('API Error:', error);
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     };
     fetchData();
   }, [project_id]);
 
-  if (!project) {
-    return <div>Loading...</div>;
+  if (loading) {
+    // Show loader while data is fetching
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="my-4 h-8 w-8 animate-spin" />
+      </div>
+    );
   }
-  console.log(project);
+
+  if (!project) {
+    // Handle case where project data is not available
+    return <div>Project data not found.</div>;
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -126,13 +139,6 @@ export default function Dashboard() {
                 skills={project.skillsRequired}
               />
             </div>
-            {/* <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Profiles
-            </h2>
-            <div className="flex flex-col gap-4 sm:flex-row sm:gap-4 sm:overflow-x-scroll sm:no-scrollbar pb-8">
-              <ProjectProfileDetailCard className="w-full min-w-full p-4 shadow-md rounded-lg" />
-            </div> */}
           </div>
 
           <div className="space-y-6">
