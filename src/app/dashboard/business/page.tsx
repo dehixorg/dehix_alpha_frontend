@@ -39,7 +39,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/business/${user.uid}/projects`,
+          `/project/${user.uid}/projects`,
         ); // Example API endpoint, replace with your actual endpoint
         console.log('API Response:', response.data.data);
         setResponseData(response.data.data); // Store response data in state

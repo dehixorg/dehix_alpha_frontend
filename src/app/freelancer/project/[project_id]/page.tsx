@@ -57,7 +57,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/business/${project_id}/project`,
+          `/project/${project_id}/project`,
         );
         // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;

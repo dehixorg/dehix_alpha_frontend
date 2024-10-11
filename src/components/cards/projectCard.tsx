@@ -98,7 +98,7 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Link href={`/business/project/${project._id}`} className="w-full">
+        <Link href={`/project/project/${project._id}`} className="w-full">
           <Button
             className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
           >
