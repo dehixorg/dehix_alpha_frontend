@@ -6,7 +6,6 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 
 const FileUpload = () => {
-  // Allowed file types in an array
   const allowedResumeFormats = ['application/pdf'];
   const allowedImageFormats = [
     'image/png',
@@ -16,14 +15,24 @@ const FileUpload = () => {
     'image/svg+xml',
   ];
 
+  const maxImageSize = 1 * 1024 * 1024; // 1MB in bytes
+  const maxResumeSize = 5* 1024 * 1024; // 5MB in bytes
+
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  //   const [uploadSuccess, setUploadSuccess] = useState<boolean | null>(null);
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedResumeFormats.includes(file.type)) {
-      setSelectedResume(file);
+      if (file.size <= maxResumeSize) {
+        setSelectedResume(file);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: `Resume size should not exceed 5MB.`,
+        });
+      }
     } else {
       toast({
         variant: 'destructive',
@@ -36,7 +45,15 @@ const FileUpload = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedImageFormats.includes(file.type)) {
-      setSelectedImage(file);
+      if (file.size <= maxImageSize) {
+        setSelectedImage(file);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: `Image size should not exceed 1MB.`,
+        });
+      }
     } else {
       toast({
         variant: 'destructive',
@@ -63,20 +80,17 @@ const FileUpload = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await fetch('/api/upload', {
-        // Replace this with your API endpoint
+      const response = await fetch('/api/upload', {    //change kr denge according to api endpoint
         method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
-        // setUploadSuccess(true);
         toast({
           title: 'Success',
           description: 'Files uploaded successfully!',
         });
       } else {
-        // setUploadSuccess(false);
         toast({
           variant: 'destructive',
           title: 'Upload failed',
@@ -85,12 +99,10 @@ const FileUpload = () => {
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      //   setUploadSuccess(false);
       toast({
         variant: 'destructive',
         title: 'Network error',
-        description:
-          'Error connecting to the server. Please check your network.',
+        description: 'Error connecting to the server. Please check your network.',
       });
     }
   };
@@ -104,7 +116,7 @@ const FileUpload = () => {
             type="file"
             accept={allowedResumeFormats.join(',')}
             onChange={handleResumeChange}
-            className="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
+            className="mt-1 block w-full px-3 py-2"
           />
         </div>
 
@@ -114,7 +126,7 @@ const FileUpload = () => {
             type="file"
             accept={allowedImageFormats.join(',')}
             onChange={handleImageChange}
-            className="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
+            className="mt-1 block w-full px-3 py-2"
           />
         </div>
 
