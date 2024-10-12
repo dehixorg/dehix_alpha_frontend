@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast'; 
+import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 
 const FileUpload = () => {
   // Allowed file types in an array
   const allowedResumeFormats = ['application/pdf'];
-  const allowedImageFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/svg+xml'];
+  const allowedImageFormats = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/gif',
+    'image/svg+xml',
+  ];
 
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<boolean | null>(null);
+  //   const [uploadSuccess, setUploadSuccess] = useState<boolean | null>(null);
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,19 +63,20 @@ const FileUpload = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await fetch('/api/upload', { // Replace this with your API endpoint
+      const response = await fetch('/api/upload', {
+        // Replace this with your API endpoint
         method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
-        setUploadSuccess(true);
+        // setUploadSuccess(true);
         toast({
           title: 'Success',
           description: 'Files uploaded successfully!',
         });
       } else {
-        setUploadSuccess(false);
+        // setUploadSuccess(false);
         toast({
           variant: 'destructive',
           title: 'Upload failed',
@@ -77,11 +85,12 @@ const FileUpload = () => {
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      setUploadSuccess(false);
+      //   setUploadSuccess(false);
       toast({
         variant: 'destructive',
         title: 'Network error',
-        description: 'Error connecting to the server. Please check your network.',
+        description:
+          'Error connecting to the server. Please check your network.',
       });
     }
   };
@@ -108,7 +117,7 @@ const FileUpload = () => {
             className="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
           />
         </div>
-        
+
         <Button className="w-full">Upload Files</Button>
       </form>
     </div>
