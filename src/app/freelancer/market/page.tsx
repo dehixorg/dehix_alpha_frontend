@@ -283,7 +283,6 @@ const Market: React.FC = () => {
               email={job.email}
               skillsRequired={job.skillsRequired}
               status={job.status}
-              team={job.team}
               profiles={job.profiles || []}
             />
           ))}
