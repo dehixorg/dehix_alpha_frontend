@@ -16,7 +16,7 @@ const FileUpload = () => {
   ];
 
   const maxImageSize = 1 * 1024 * 1024; // 1MB in bytes
-  const maxResumeSize = 5* 1024 * 1024; // 5MB in bytes
+  const maxResumeSize = 5 * 1024 * 1024; // 5MB in bytes
 
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -80,7 +80,8 @@ const FileUpload = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await fetch('/api/upload', {    //change kr denge according to api endpoint
+      const response = await fetch('/api/upload', {
+        //change kr denge according to api endpoint
         method: 'POST',
         body: formData,
       });
@@ -102,7 +103,8 @@ const FileUpload = () => {
       toast({
         variant: 'destructive',
         title: 'Network error',
-        description: 'Error connecting to the server. Please check your network.',
+        description:
+          'Error connecting to the server. Please check your network.',
       });
     }
   };
