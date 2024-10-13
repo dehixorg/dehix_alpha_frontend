@@ -153,7 +153,7 @@ const Market: React.FC = () => {
       try {
         const queryString = constructQueryString(appliedFilters);
         const response = await axiosInstance.get(
-          `/business/${user.uid}/all_project?${queryString}`,
+          `/project/${user.uid}/all_project?${queryString}`,
         );
         setJobs(response.data.data);
       } catch (error) {
@@ -187,7 +187,7 @@ const Market: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col sm:pl-6">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -283,7 +283,6 @@ const Market: React.FC = () => {
               email={job.email}
               skillsRequired={job.skillsRequired}
               status={job.status}
-              team={job.team}
               profiles={job.profiles || []}
             />
           ))}

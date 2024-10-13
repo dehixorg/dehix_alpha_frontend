@@ -34,7 +34,8 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const [exist, setExist] = React.useState(false);
+  const [exist] = React.useState(false);
+  // use setExist in useState if needed
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,11 +69,11 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
   const toggleShowMore = () => setShowMore(!showMore);
 
   return (
-    <div className="w-full max-w-5xl p-4 ">
-      <div className="flex justify-between items-start">
+    <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 hover:bg-muted rounded">
+      <div className="flex flex-col sm:flex-row justify-between items-start">
         {/* Left: Domain and Freelancers Required in the same line */}
         <div className="space-y-2">
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap">
             <p className="font-medium text-lg text-foreground mr-2">
               {profile.domain}
             </p>
@@ -80,7 +81,7 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
               {profile.freelancersRequired}
             </p>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap">
             <p className="text-gray-600 text-sm mr-2">
               {profile.experience} years
             </p>
@@ -89,11 +90,11 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
         </div>
 
         {/* Right: Bid Button */}
-        <div className="self-center">
+        <div className="mt-4 sm:mt-0">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-[100px] h-[40px]   "
+                className="w-[100px] h-[40px] "
                 variant="outline"
                 type="button"
                 disabled={exist}

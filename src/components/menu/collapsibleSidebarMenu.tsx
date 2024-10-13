@@ -53,26 +53,32 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
             </Link>
           ))}
         </nav>
-        <div className="pt-5 mx-auto">
-          <ThemeToggle />
-        </div>
+
         <nav className="grid gap-6 text-lg font-medium">
           {menuItemsBottom.map((item, index) => (
-            <Link
-              key={index}
-              href={item.href}
-              onClick={() => setActive(item.label)}
-              className={`flex items-center gap-4 px-2.5 ${
-                item.label === 'Dehix'
-                  ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
-                  : item.label === active
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {item.icon}
-              {item.label !== 'Dehix' && item.label}
-            </Link>
+            <React.Fragment key={index}>
+              {/* Check if the current item is "Settings" and add ThemeToggle above it */}
+              {item.label === 'Settings' && (
+                <div className="flex items-center px-2.5 text-muted-foreground hover:text-foreground mb-1">
+                  <ThemeToggle />
+                </div>
+              )}
+
+              <Link
+                href={item.href}
+                onClick={() => setActive(item.label)}
+                className={`flex items-center gap-4 px-2.5 ${
+                  item.label === 'Dehix'
+                    ? 'group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base'
+                    : item.label === active
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {item.icon}
+                {item.label !== 'Dehix' && item.label}
+              </Link>
+            </React.Fragment>
           ))}
         </nav>
       </SheetContent>

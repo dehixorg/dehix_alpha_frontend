@@ -69,7 +69,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/business/${project_id}/project`,
+          `/project/${project_id}/project`,
         );
 
         // Safely access nested data
@@ -147,7 +147,7 @@ export default function Dashboard() {
                     <div>
                       <Card className="">
                         <CardHeader>
-                          <CardTitle>Other Profile</CardTitle>
+                          <CardTitle> Profile</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="grid w-full items-center gap-4">

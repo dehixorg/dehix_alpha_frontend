@@ -22,6 +22,7 @@ interface Profile {
   minConnect?: number;
   rate?: number;
 }
+
 interface JobCardProps {
   id: string;
   projectName: string;
@@ -30,7 +31,6 @@ interface JobCardProps {
   email: string;
   skillsRequired: string[];
   status: string | undefined;
-  team: string[] | undefined;
   profiles: Profile[];
 }
 
@@ -42,10 +42,11 @@ const JobCard: React.FC<JobCardProps> = ({
   email,
   skillsRequired,
   status,
-  team,
   profiles,
 }) => {
   const [isClient, setIsClient] = React.useState(false);
+  const [showAllSkills, setShowAllSkills] = React.useState(false);
+  const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
 
   React.useEffect(() => {
     setIsClient(true);
@@ -57,82 +58,104 @@ const JobCard: React.FC<JobCardProps> = ({
 
   const { text, className } = getStatusBadge(status);
 
+  const remainingSkillsCount = skillsRequired.length - 2;
+  const charLimit = 150;
+  const isDescriptionLong = description.length > charLimit;
+
   return (
-    <Card className="w-full max-w-4xl hover:border-gray-600 hover:shadow-lg transition-shadow border border-gray-300 rounded-lg">
+    <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold text-gray-300">
-          {projectName}
+        <CardTitle className=" text-2xl font-bold text-foreground">
+          <div className="flex items-center text-gray-600 gap-2">
+            {projectName}
+            <Badge className={className}> {text} </Badge>
+          </div>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="ml-4 space-y-4">
-        <div className="flex justify-between">
+        <div className="flex flex-col lg:flex-row justify-between">
           {/* Left section */}
-          <div className="flex flex-col">
+          <div className="flex flex-col items-start lg:items-start">
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>
-              <Badge className={className}> {text} </Badge>
             </div>
-
             <div className="flex items-center text-gray-600">
               <Mail className="h-4 w-4" />
               <p className="ml-2 text-sm"> {email} </p>
             </div>
+            {/* Description */}
+            <div className="mt-5 flex flex-wrap">
+              <CardDescription>
+                <span className="text-gray-400 text-justify">
+                  {showFullDescription
+                    ? description
+                    : description.slice(0, charLimit) +
+                      (isDescriptionLong ? '...' : '')}
 
-            {/* Change the structure to avoid nested <p> tags */}
-            <CardDescription>
-              <span className="text-gray-600 mt-3 text-justify">
-                {description}
-              </span>
-            </CardDescription>
-          </div>
-
-          {/* Right section */}
-          <div className="flex flex-col items-end space-y-4">
-            <div>
-              <p className="font-medium text-gray-700"> Skills Required: </p>
-              <div className="mt-2 flex flex-wrap">
-                {skillsRequired?.map((skill: string, index: number) => (
+                  {isDescriptionLong && (
+                    <button
+                      onClick={() =>
+                        setShowFullDescription(!showFullDescription)
+                      }
+                      className="text-gray-400 ml-1 cursor-pointer"
+                    >
+                      {showFullDescription ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </span>
+              </CardDescription>
+            </div>
+            {/* Skills Section */}
+            <div className="mt-4 flex flex-wrap lg:justify-start">
+              {skillsRequired
+                .slice(0, 2)
+                .map((skill: string, index: number) => (
                   <Badge
                     key={index}
-                    className="mr-2 mb-2 uppercase bg-gray-100 text-gray-700 px-3 py-1 rounded"
+                    className="mr-2 mb-2 uppercase bg-foreground text-background px-3 py-1 rounded-full"
                   >
                     {skill}
                   </Badge>
                 ))}
-              </div>
+
+              {remainingSkillsCount > 0 && !showAllSkills && (
+                <span
+                  onClick={() => setShowAllSkills(true)}
+                  className="ml-2 text-gray-200 cursor-pointer"
+                >
+                  +{remainingSkillsCount} more
+                </span>
+              )}
+
+              {showAllSkills &&
+                skillsRequired.slice(2).map((skill: string, index: number) => (
+                  <Badge
+                    key={index + 2}
+                    className="mr-2 mb-2 uppercase bg-foreground text-background px-3 py-1 rounded-full"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
             </div>
+          </div>
 
-            {team && team.length > 0 && (
-              <div>
-                <p className="font-medium text-gray-700"> Team Members: </p>
-                <div className="mt-2 flex flex-wrap">
-                  {team.map((member: string, index: number) => (
-                    <Badge
-                      key={index}
-                      className="mr-2 mb-2 uppercase bg-gray-100 text-gray-700 px-3 py-1 rounded"
-                    >
-                      {member}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex space-x-4">
+          {/* Action Buttons */}
+          <div className="flex space-x-4 mt-4 lg:mt-0">
+            <Link href={`/freelancer/project/${id}`} passHref>
               <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                <Link href={`/freelancer/project/${id}`}> View </Link>
+                View
               </Button>
-              <Button className="bg-gray-500 text-white hover:bg-gray-600">
-                Not Interested
-              </Button>
-            </div>
+            </Link>
+            <Button className="bg-gray-500 text-white hover:bg-gray-600">
+              Not Interested
+            </Button>
           </div>
         </div>
 
-        {/* New Profile Section */}
-        <div className="mt-10 hover:bg-muted hover:bg-opacity-10">
+        {/* Profiles Section */}
+        <div className="mt-4 hover:bg-opacity-10">
           <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
           {profiles && profiles.length > 0 && (
             <div className="space-y-4">

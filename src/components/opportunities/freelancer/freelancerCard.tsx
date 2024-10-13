@@ -85,8 +85,8 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   }
 
   return (
-    <div className="w-full mb-4 max-w-4xl">
-      <Card className="flex justify-between mt-5 shadow-lg shadow-gray-500/20">
+    <div className=" sm:mx-10 mb-3 max-w-3xl">
+      <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20 mt-2 ">
         <div className="flex flex-col justify-between p-4">
           <CardHeader>
             <div className="flex gap-4">
