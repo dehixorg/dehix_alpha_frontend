@@ -32,31 +32,33 @@ import dummyData from '@/dummydata.json';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
+  const [loading, setLoading] = useState(true); // Loading state
   const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
           `/business/${user.uid}/projects`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+        );
         setResponseData(response.data.data); // Store response data in state
+        setLoading(false); // Set loading to false after data is fetched
       } catch (error) {
         console.error('API Error:', error);
+        setLoading(false); // Set loading to false in case of an error
       }
     };
 
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-  console.log(user);
+
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status === 'Completed',
   );
   const pendingProjects = responseData.filter(
     (project: any) => project.status !== 'Completed',
   );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -66,7 +68,6 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-background px-4  sm:border-0 sm:px-6">
-          {/* side bar need to make component */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -81,15 +82,13 @@ export default function Dashboard() {
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
-
-          {/* profile dropdown need to create separeant component */}
           <DropdownProfile />
         </header>
+
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              {/* Create project card */}
-              <Card className="sm:col-span-2" x-chunk="dashboard-05-chunk-0">
+              <Card className="sm:col-span-2">
                 <CardHeader className="pb-3">
                   <CardTitle>Your Projects</CardTitle>
                   <CardDescription className="max-w-lg text-balance leading-relaxed">
@@ -118,17 +117,29 @@ export default function Dashboard() {
                 additionalInfo={'Pending project stats will be here'}
               />
             </div>
+
             <Separator className="my-1" />
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Current Projects {`(${pendingProjects.length})`}
             </h2>
+
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects.length > 0 ? (
+              {loading ? (
+                // Show loading skeletons while data is being fetched
+                Array.from({ length: 3 }).map((_, index) => (
+                  <ProjectCard
+                    key={index}
+                    className="min-w-[45%]"
+                    isLoading={true} // Loading state is true here
+                  />
+                ))
+              ) : pendingProjects.length > 0 ? (
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
                     className="min-w-[45%]"
                     project={project}
+                    isLoading={false} // Loading state is false after data is loaded
                   />
                 ))
               ) : (
@@ -143,6 +154,7 @@ export default function Dashboard() {
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Completed Projects {`(${completedProjects.length})`}
             </h2>
+
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
               {completedProjects.length > 0 ? (
                 completedProjects.map((project: any, index: number) => (
@@ -150,6 +162,7 @@ export default function Dashboard() {
                     key={index}
                     className="min-w-[45%]"
                     project={project}
+                    isLoading={false}
                   />
                 ))
               ) : (
@@ -160,13 +173,13 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
             </CardTitle>
 
             {dummyData?.freelancersampleInterview ? (
-              // just reverse the condition while integrating the api
               <div className="text-center py-10">
                 <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
                 <p className="text-gray-500">No interviews scheduled</p>
