@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar } from '@radix-ui/react-avatar';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton'; // Import the Skeleton component
 
 interface FreelancerCardProps {
   name: string;
@@ -17,15 +18,75 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   domains,
   experience,
 }) => {
-  console.log({
-    name,
-    skills,
-    domains,
-    experience,
-  });
+  const [loading, setLoading] = useState(true);
+
+  // Simulate a loading effect
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 2000); // Mock 2 seconds loading
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full mb-4 max-w-4xl">
+        <Card className="flex justify-between mt-5  shadow-lg shadow-gray-500/20">
+          <div className="flex flex-col justify-between p-4">
+            <CardHeader>
+              <div className="flex gap-4">
+                <Skeleton className="rounded-full w-20 h-20" />
+                <div className="mt-2">
+                  <Skeleton className="w-32 h-8" />
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <p className="font-medium">Experience:</p>
+              <Skeleton className="w-16 h-6 " />
+             </div>
+             
+              <div className="mt-2">
+                <p className="font-medium">Skills:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                </div>
+              </div>
+
+              <div className="mt-2">
+                <p className="font-medium">Domains:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                  <Skeleton className="w-16 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full mb-4 max-w-4xl">
-      <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20">
+      <Card className="flex justify-between mt-5 shadow-lg shadow-gray-500/20">
         <div className="flex flex-col justify-between p-4">
           <CardHeader>
             <div className="flex gap-4">
