@@ -7,6 +7,7 @@ import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
 
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 import {
   Table,
   TableHeader,
@@ -43,6 +44,7 @@ const SkillDomainForm: React.FC = () => {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
@@ -51,6 +53,7 @@ const SkillDomainForm: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true); // Set loading to true at the start of data fetching
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
         const domainsResponse = await axiosInstance.get('/domain/all');
@@ -82,6 +85,8 @@ const SkillDomainForm: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     }
     fetchData();
@@ -155,21 +160,43 @@ const SkillDomainForm: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {skillDomainData.length > 0 ? (
+                {loading ? (
+                  // Skeleton loading content
+                  <>
+                    {[...Array(5)].map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Skeleton className="h-6 w-24" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-12" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-16" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-10" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                ) : skillDomainData.length > 0 ? (
                   skillDomainData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
-                      <TableCell>{item.experience}Years</TableCell>
+                      <TableCell>{item.experience} Years</TableCell>
                       <TableCell>${item.monthlyPay}</TableCell>
                       <TableCell>{item.status}</TableCell>
                       <TableCell>
                         <Switch
                           checked={statusVisibility[index]}
-                          onCheckedChange={
-                            (value) =>
-                              item.uid
-                                ? handleToggleVisibility(index, value, item.uid)
-                                : console.error('UID missing for item', item) // Fallback check for missing UID
+                          onCheckedChange={(value) =>
+                            item.uid
+                              ? handleToggleVisibility(index, value, item.uid)
+                              : console.error('UID missing for item', item)
                           }
                         />
                       </TableCell>

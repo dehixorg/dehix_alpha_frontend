@@ -1,3 +1,5 @@
+// /pages/freelancer/project/CurrentProject.tsx
+
 'use client';
 import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -30,33 +32,27 @@ interface Project {
   experience?: string;
   role: string;
   projectType: string;
-  totalNeedOfFreelancer?: {
-    category?: string;
-    needOfFreelancer?: number;
-    appliedCandidates?: string[];
-    rejected?: string[];
-    accepted?: string[];
-    status?: string;
-  }[];
   status?: string;
-  team?: string[];
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export default function CurrentProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Set loading to true before fetching data
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Active`,
-        ); // Fetch data from API
-        setProjects(response.data.data); // Store all projects initially
+          `/freelancer/${user.uid}/project?status=Active`
+        );
+        setProjects(response.data.data); // Store all projects
       } catch (error) {
         console.error('API Error:', error);
+      } finally {
+        setLoading(false); // Set loading to false after data is fetched
       }
     };
 
@@ -71,7 +67,7 @@ export default function CurrentProject() {
         active="Current Projects"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -102,20 +98,23 @@ export default function CurrentProject() {
             Browse and manage your active freelance projects
           </p>
         </div>
+
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {projects.length === 0 ? (
-            <div className="col-span-full text-center mt-20 w-full">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">No projects available</p>
-            </div>
-          ) : (
-            projects.map((project, index: number) => (
-              <ProjectCard key={index} project={project} />
-            ))
-          )}
+          {loading
+            ? Array(6).fill(null).map((_, index) => <ProjectCard key={index} isLoading={true} />)
+            : projects.length === 0 ? (
+                <div className="col-span-full text-center mt-20 w-full">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No projects available</p>
+                </div>
+              ) : (
+                projects.map((project) => (
+                  <ProjectCard key={project._id} project={project} isLoading={false} />
+                ))
+              )}
         </main>
       </div>
     </div>

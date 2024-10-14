@@ -47,17 +47,20 @@ interface Project {
 export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Pending`,
+          `/freelancer/${user.uid}/project?status=Pending`
         ); // Fetch data from API
         console.log(response.data.data);
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false); // Set loading to false when data fetching is done
       }
     };
 
@@ -107,14 +110,18 @@ export default function AppliedProject() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {projects.length === 0 ? (
+          {isLoading ? (
+            Array.from({ length: 1 }).map((_, index) => ( // Render skeletons while loading
+              <ProjectCard key={index} isLoading={true} />
+            ))
+          ) : projects.length === 0 ? (
             <div className="col-span-full text-center mt-20 w-full">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
               <p className="text-gray-500">No projects available</p>
             </div>
           ) : (
             projects.map((project, index: number) => (
-              <ProjectCard key={index} project={project} />
+              <ProjectCard key={index} project={project} isLoading={false} />
             ))
           )}
         </main>
