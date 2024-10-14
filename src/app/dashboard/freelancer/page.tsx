@@ -65,7 +65,7 @@ export default function Dashboard() {
   // Get query string parameters (for example, auth response)
   useEffect(() => {
     const query = Object.fromEntries(searchParams.entries());
-    
+
     // Check if the 'code' parameter exists
     if (query.code) {
       console.log('Query params:', query); // Log query string parameters
@@ -97,7 +97,7 @@ export default function Dashboard() {
         },
         {
           params: { code }, // Pass the code as a query parameter
-        }
+        },
       );
 
       // If the API responds with a meeting link, redirect to it
