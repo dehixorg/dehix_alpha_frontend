@@ -2,6 +2,7 @@
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation'; // Updated import for useRouter and useSearchParams
 
 import { Search } from '@/components/search';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -26,6 +27,7 @@ import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+import { Button } from '@/components/ui/button';
 
 interface Project {
   _id: string;
@@ -52,16 +54,76 @@ interface Project {
   status?: string;
   team?: string[];
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const interviewData = {
-  ...dummyData.freelancersampleInterview,
-  interviewDate: new Date(dummyData.freelancersampleInterview.interviewDate),
-};
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true); // Loading state
+  const router = useRouter(); // Use the updated useRouter from next/navigation
+  const searchParams = useSearchParams(); // Use useSearchParams to access query parameters
+
+  // Get query string parameters (for example, auth response)
+  useEffect(() => {
+    const query = Object.fromEntries(searchParams.entries());
+    
+    // Check if the 'code' parameter exists
+    if (query.code) {
+      console.log('Query params:', query); // Log query string parameters
+      handleCreateMeet();
+    } else {
+      // If no 'code' query parameter, trigger the auth flow
+      handleAuth();
+    }
+  }, [searchParams]);
+
+  // Function to handle Create Meet button press
+  const handleCreateMeet = async () => {
+    try {
+      // Extract 'code' from query parameters
+      const query = Object.fromEntries(searchParams.entries());
+      const code = query.code;
+
+      // Ensure the code exists
+      if (!code) {
+        console.error('Error: Missing code query parameter');
+        return;
+      }
+
+      // Call your Fastify API to create a meeting
+      const response = await axiosInstance.post(
+        '/meeting/create-meeting',
+        {
+          attendees: ['akhilcodebugged@gmail.com'], // Replace with actual attendees
+        },
+        {
+          params: { code }, // Pass the code as a query parameter
+        }
+      );
+
+      // If the API responds with a meeting link, redirect to it
+      const { meetLink } = response.data;
+      if (meetLink) {
+        router.push(meetLink);
+      }
+    } catch (error) {
+      console.error('Error creating Google Calendar meeting:', error);
+    }
+  };
+
+  // Function to handle Create Meet button press
+  const handleAuth = async () => {
+    try {
+      const response = await axiosInstance.get('/meeting/auth-url', {
+        params: { redirectUri: window.location.href }, // Pass current URL as redirectUri
+      });
+      const authUrl = response.data.url;
+      if (authUrl) {
+        router.push(authUrl); // Use router.push for navigation instead of window.location.href
+      }
+    } catch (error) {
+      console.error('Error fetching Google Auth URL:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -196,6 +258,9 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
+              <Button className="mt-3" onClick={handleAuth}>
+                Create Meet
+              </Button>
             </div>
           </div>
         </main>
