@@ -113,8 +113,9 @@ export default function Dashboard() {
   // Function to handle Create Meet button press
   const handleAuth = async () => {
     try {
+      const baseUrl = window.location.origin + window.location.pathname;
       const response = await axiosInstance.get('/meeting/auth-url', {
-        params: { redirectUri: window.location.href }, // Pass current URL as redirectUri
+        params: { redirectUri: baseUrl }, // Pass current URL as redirectUri
       });
       const authUrl = response.data.url;
       if (authUrl) {
