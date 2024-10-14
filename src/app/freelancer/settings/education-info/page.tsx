@@ -1,9 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import { Input } from '@/components/ui/input';
+import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
@@ -15,7 +14,6 @@ import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
-import UserDropdownMenu from '@/components/dropdown/user';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
 export default function Education() {
@@ -69,8 +67,8 @@ export default function Education() {
         menuItemsBottom={menuItemsBottom}
         active="Education"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -83,12 +81,7 @@ export default function Education() {
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <DropdownProfile />
         </header>

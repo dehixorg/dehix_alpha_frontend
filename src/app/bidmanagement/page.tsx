@@ -1,7 +1,6 @@
 'use client';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, use } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
@@ -53,7 +52,7 @@ const BidsPage = () => {
     const fetchProjectIds = async () => {
       try {
         const response = await axiosInstance.get(
-          `/business/${user.uid}/projects?status=Pending`,
+          `/project/${user.uid}/projects?status=Pending`,
         );
 
         const ids = response.data.data.map((project: Project) => project._id);
@@ -100,15 +99,14 @@ const BidsPage = () => {
     else if (actionType === 'Lobby') updatedStatus = 'Lobby';
 
     try {
-      const response = await axiosInstance.put(`/bid/${bidId}/status`, {
+      await axiosInstance.put(`/bid/${bidId}/status`, {
         bid_status: updatedStatus,
       });
-
-      const updatedBid = response.data;
     } catch (error) {
       console.error('Error updating bid status:', error);
     }
   };
+
   return (
     <div className="bids-page max-w-6xl mx-auto p-8">
       <h1 className="text-3xl font-bold  mb-8">Manage Bids</h1>

@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [dispatch]);
+  }, [dispatch, router]);
 
   return (
     <AuthContext.Provider value={{ user, loading }}>

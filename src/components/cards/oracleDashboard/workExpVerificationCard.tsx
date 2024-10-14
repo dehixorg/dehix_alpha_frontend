@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import {
   MessageSquareIcon,
   Github,
-  Mail,
   User2Icon,
   Phone,
   Building,
@@ -12,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { axiosInstance } from '@/lib/axiosinstance';
 import {
   Card,
   CardContent,
@@ -39,6 +39,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 interface WorkExpProps {
+  _id: string;
   jobTitle: string;
   workDescription: string;
   startFrom: string;
@@ -54,13 +55,14 @@ interface WorkExpProps {
 }
 
 const FormSchema = z.object({
-  type: z.enum(['verified', 'rejected'], {
+  type: z.enum(['Approved', 'Denied'], {
     required_error: 'You need to select a type.',
   }),
   comment: z.string().optional(),
 });
 
 const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
+  _id,
   jobTitle,
   workDescription,
   startFrom,
@@ -84,7 +86,17 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
     setVerificationStatus(status);
   }, [status]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=experience`, {
+      comments: data.comment,
+      verification_status: data.type,
+    });
+    console.log(
+      'Comments:',
+      data.comment || '',
+      { ...data, verification_status: data.type },
+      _id,
+    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     // console.log("Comments:", data.comment || "");
@@ -112,10 +124,10 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
             <Badge className="bg-warning-foreground text-white my-2">
               Pending
             </Badge>
-          ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-success text-white my-2">VERIFIED</Badge>
+          ) : verificationStatus === 'Approved' ? (
+            <Badge className="bg-success text-white my-2">Approved</Badge>
           ) : (
-            <Badge className="bg-red-500 text-white my-2">REJECTED</Badge>
+            <Badge className="bg-red-500 text-white my-2">Denied</Badge>
           )}
           <br />
           {workDescription}
@@ -190,19 +202,17 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
                       >
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="verified" />
+                            <RadioGroupItem value="Approved" />
                           </FormControl>
                           <FormLabel className="font-normal">
-                            Verified
+                            Approved
                           </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
-                            <RadioGroupItem value="rejected" />
+                            <RadioGroupItem value="Denied" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Rejected
-                          </FormLabel>
+                          <FormLabel className="font-normal">Denied</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>

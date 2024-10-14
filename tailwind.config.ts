@@ -53,16 +53,16 @@ const config = {
           foreground: 'hsl(var(--card-foreground))',
         },
         success: {
-          DEFAULT: 'hsl(120, 50%, 60%)', // Adjust hue, saturation, and lightness as needed
-          foreground: 'hsl(120, 50%, 30%)', // Muted foreground color
+          DEFAULT: 'hsl(120, 50%, 60%)',
+          foreground: 'hsl(120, 50%, 30%)',
         },
         warning: {
-          DEFAULT: 'hsl(40, 100%, 60%)', // Adjust hue, saturation, and lightness as needed
-          foreground: 'hsl(40, 100%, 30%)', // Muted foreground color
+          DEFAULT: 'hsl(40, 100%, 60%)',
+          foreground: 'hsl(40, 100%, 30%)',
         },
         error: {
-          DEFAULT: 'hsl(0, 80%, 60%)', // Adjust hue, saturation, and lightness as needed
-          foreground: 'hsl(0, 80%, 30%)', // Muted foreground color
+          DEFAULT: 'hsl(0, 80%, 60%)',
+          foreground: 'hsl(0, 80%, 30%)',
         },
       },
       borderRadius: {
@@ -72,12 +72,20 @@ const config = {
       },
       keyframes: {
         'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
         },
         'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
         },
       },
       animation: {

@@ -1,10 +1,10 @@
 'use client';
-import { Search, Filter, PackageOpen } from 'lucide-react';
+import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
+import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectV
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
+  _id: string;
   projectName: string;
   description: string;
   githubLink: string;
@@ -73,14 +74,15 @@ export default function ProfessionalInfo() {
       );
       // console.log(response.data)
       setProjectData(response.data.data);
-      const flattenedData = response.data.data.flatMap((entry: any) =>
+      const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
       );
+      console.log(flattenedData._id);
       setProjectData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  }, []);
+  }, [user.uid]);
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -103,8 +105,8 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
         active="Project Verification"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           {/* CollapsibleSidebarMenu and Breadcrumb components */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
@@ -125,13 +127,9 @@ export default function ProfessionalInfo() {
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
+
           <Button
             variant="outline"
             size="icon"
@@ -142,6 +140,12 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">Project Verification Dashboard</h1>
+          <p className="text-gray-400 mt-2">
+            Monitor the status of your project verifications.
+          </p>
+        </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
@@ -183,6 +187,7 @@ export default function ProfessionalInfo() {
           {filteredData.map((data, index) => (
             <ProjectVerificationCard
               key={index}
+              _id={data._id}
               projectName={data.projectName}
               description={data.description}
               githubLink={data.githubLink}

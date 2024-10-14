@@ -11,6 +11,17 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import ProfileCard from '@/components/opportunities/jobs/profileCard';
+import { getStatusBadge } from '@/utils/statusBadge';
+
+interface Profile {
+  domain?: string;
+  freelancersRequired?: string;
+  skills?: string[];
+  experience?: number;
+  minConnect?: number;
+  rate?: number;
+}
 
 interface JobCardProps {
   id: string;
@@ -20,23 +31,8 @@ interface JobCardProps {
   email: string;
   skillsRequired: string[];
   status: string | undefined;
-  team: string[] | undefined;
+  profiles: Profile[];
 }
-
-const getStatusBadge = (status: string | undefined) => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-      return { text: 'ACTIVE', className: 'bg-blue-500 hover:bg-blue-600' };
-    case 'pending':
-      return { text: 'PENDING', className: 'bg-warning hover:bg-warning' };
-    case 'completed':
-      return { text: 'COMPLETED', className: 'bg-success hover:bg-success' };
-    case 'rejected':
-      return { text: 'REJECTED', className: 'bg-red-500 hover:bg-red-600' };
-    default:
-      return { text: 'UNKNOWN', className: 'bg-gray-500 hover:bg-gray-600' };
-  }
-};
 
 const JobCard: React.FC<JobCardProps> = ({
   id,
@@ -46,9 +42,11 @@ const JobCard: React.FC<JobCardProps> = ({
   email,
   skillsRequired,
   status,
-  team,
+  profiles,
 }) => {
   const [isClient, setIsClient] = React.useState(false);
+  const [showAllSkills, setShowAllSkills] = React.useState(false);
+  const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
 
   React.useEffect(() => {
     setIsClient(true);
@@ -57,57 +55,115 @@ const JobCard: React.FC<JobCardProps> = ({
   if (!isClient) {
     return null;
   }
+
   const { text, className } = getStatusBadge(status);
 
-  return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center text-gray-600">
-          <MapPin className="w-4 h-4" />
-          <p className="ml-2">{companyName}</p>
-        </div>
-        <Badge className={className}>{text}</Badge>
-        <CardDescription>
-          <p className="text-gray-600">{description}</p>
-        </CardDescription>
-        <div className="flex items-center text-gray-600">
-          <Mail className="h-4 w-4 text-gray-600" />
-          <p className="ml-2 text-sm">{email}</p>
-        </div>
-        <div className="mt-4">
-          <p className="font-medium">Skills Required:</p>
-          <div className="mt-2">
-            {skillsRequired?.map((skill, index) => (
-              <Badge key={index} className="mr-2 mb-2 uppercase">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
+  const remainingSkillsCount = skillsRequired.length - 2;
+  const charLimit = 150;
+  const isDescriptionLong = description.length > charLimit;
 
-        {team && team?.length > 0 && (
-          <div className="mt-4">
-            <p className="font-medium">Team:</p>
-            <div className="mt-2">
-              {team?.map((member, index) => (
-                <Badge variant="outline" key={index} className="mr-2 mb-2">
-                  {member}
-                </Badge>
-              ))}
+  return (
+    <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
+      <CardHeader className="pb-3">
+        <CardTitle className=" text-2xl font-bold text-foreground">
+          <div className="flex items-center text-gray-600 gap-2">
+            {projectName}
+            <Badge className={className}> {text} </Badge>
+          </div>
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="ml-4 space-y-4">
+        <div className="flex flex-col lg:flex-row justify-between">
+          {/* Left section */}
+          <div className="flex flex-col items-start lg:items-start">
+            <div className="flex items-center text-gray-600">
+              <MapPin className="w-4 h-4" />
+              <p className="ml-2 mr-2"> {companyName} </p>
+            </div>
+            <div className="flex items-center text-gray-600">
+              <Mail className="h-4 w-4" />
+              <p className="ml-2 text-sm"> {email} </p>
+            </div>
+            {/* Description */}
+            <div className="mt-5 flex flex-wrap">
+              <CardDescription>
+                <span className="text-gray-400 text-justify">
+                  {showFullDescription
+                    ? description
+                    : description.slice(0, charLimit) +
+                      (isDescriptionLong ? '...' : '')}
+
+                  {isDescriptionLong && (
+                    <button
+                      onClick={() =>
+                        setShowFullDescription(!showFullDescription)
+                      }
+                      className="text-gray-400 ml-1 cursor-pointer"
+                    >
+                      {showFullDescription ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </span>
+              </CardDescription>
+            </div>
+            {/* Skills Section */}
+            <div className="mt-4 flex flex-wrap lg:justify-start">
+              {skillsRequired
+                .slice(0, 2)
+                .map((skill: string, index: number) => (
+                  <Badge
+                    key={index}
+                    className="mr-2 mb-2 uppercase bg-foreground text-background px-3 py-1 rounded-full"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+
+              {remainingSkillsCount > 0 && !showAllSkills && (
+                <span
+                  onClick={() => setShowAllSkills(true)}
+                  className="ml-2 text-gray-200 cursor-pointer"
+                >
+                  +{remainingSkillsCount} more
+                </span>
+              )}
+
+              {showAllSkills &&
+                skillsRequired.slice(2).map((skill: string, index: number) => (
+                  <Badge
+                    key={index + 2}
+                    className="mr-2 mb-2 uppercase bg-foreground text-background px-3 py-1 rounded-full"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
             </div>
           </div>
-        )}
 
-        <div className="flex mt-4 space-x-4">
-          <Button>
-            <Link href={`/freelancer/project/${id}`}>View</Link>
-          </Button>
-          <Button className="cursor-pointer text-white bg-muted hover:bg-muted">
-            Not interested
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex space-x-4 mt-4 lg:mt-0">
+            <Link href={`/freelancer/project/${id}`} passHref>
+              <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                View
+              </Button>
+            </Link>
+            <Button className="bg-gray-500 text-white hover:bg-gray-600">
+              Not Interested
+            </Button>
+          </div>
+        </div>
+
+        {/* Profiles Section */}
+        <div className="mt-4 hover:bg-opacity-10">
+          <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
+          {profiles && profiles.length > 0 && (
+            <div className="space-y-4">
+              {profiles.map((profile: Profile, index: number) => (
+                <ProfileCard key={index} profile={profile} projectId={id} />
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

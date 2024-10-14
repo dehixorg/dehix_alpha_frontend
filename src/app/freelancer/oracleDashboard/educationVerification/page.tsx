@@ -1,10 +1,10 @@
 'use client';
-import { Search, Filter, PackageOpen } from 'lucide-react';
+import { Filter, PackageOpen } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -69,16 +69,17 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=education`,
       );
-      setEducationData(response.data.data);
-      const flattenedData = response.data.data.flatMap((entry: any) =>
+      const data = response.data.data;
+      setEducationData(data);
+      const flattenedData = data.flatMap((entry: any) =>
         Object.values(entry.education),
       );
       setEducationData(flattenedData);
-      console.log(educationdata, 'data from backend');
+      console.log(flattenedData, 'data from backend');
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  }, []);
+  }, [user.uid]);
 
   // Log the requesterId state after it updates
   // useEffect(() => {
@@ -89,17 +90,17 @@ export default function ProfessionalInfo() {
     fetchData();
   }, [fetchData]);
 
-  const updateEducationStatus = (index: number, newStatus: string) => {
-    const updatedData = [...educationdata];
-    updatedData[index].verificationStatus = newStatus;
-    setEducationData(updatedData); // Update state with new status
-  };
+  // const updateEducationStatus = (index: number, newStatus: string) => {
+  //   const updatedData = [...educationdata];
+  //   updatedData[index].verificationStatus = newStatus;
+  //   setEducationData(updatedData); // Update state with new status
+  // };
 
-  const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...educationdata];
-    updatedData[index].comments = newComment;
-    setEducationData(updatedData); // Update state with new comment
-  };
+  // const updateCommentStatus = (index: number, newComment: string) => {
+  //   const updatedData = [...educationdata];
+  //   updatedData[index].comments = newComment;
+  //   setEducationData(updatedData); // Update state with new comment
+  // };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -108,8 +109,8 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="Education Verification"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -129,13 +130,9 @@ export default function ProfessionalInfo() {
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
+
           <Button
             variant="outline"
             size="icon"
@@ -146,6 +143,15 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">
+            Education Verification Dashboard
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Monitor the status of your Education verifications.
+          </p>
+        </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -190,6 +196,7 @@ export default function ProfessionalInfo() {
             <EducationVerificationCard
               key={index}
               type="education"
+              _id={data._id}
               degree={data.degree}
               location={data.universityName} // Note: update as per your interface if needed
               startFrom={data.startDate}

@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -21,19 +22,22 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import { RootState } from '@/lib/store';
 
-// Define the type for a skill
 interface Skill {
+  _id: string;
   label: string;
 }
 
-// Define SkillDomainData as per your form data structure
 interface SkillDomainData {
-  type: 'skill' | 'domain';
+  uid: string;
+  skillId: string;
   label: string;
   experience: string;
   monthlyPay: string;
-  show: boolean;
+  activeStatus: boolean;
   status: string;
 }
 
@@ -43,8 +47,8 @@ interface SkillDialogProps {
   onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
 }
 
-// Define your schema (if needed)
 const skillSchema = z.object({
+  skillId: z.string(),
   label: z.string().nonempty('Please select a skill'),
   experience: z
     .string()
@@ -54,37 +58,76 @@ const skillSchema = z.object({
     .string()
     .nonempty('Please enter your monthly pay')
     .regex(/^\d+$/, 'Monthly pay must be a number'),
+  activeStatus: z.boolean(),
+  status: z.string(),
 });
 
 const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
+  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
+      skillId: '',
       label: '',
       experience: '',
       monthlyPay: '',
-      type: 'skill', // Default value for 'type' if needed
-      show: false, // Default value for 'show' if needed
-      status: 'Pending', // Default value for 'status' if needed
+      activeStatus: false,
+      status: 'pending',
     },
   });
 
-  const onSubmit = (data: SkillDomainData) => {
-    onSubmitSkill(data);
-    reset(); // Clear the form fields
-    setOpen(false); // Close the dialog
+  const onSubmit = async (data: SkillDomainData) => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/dehix-talent`,
+        {
+          skillId: data.skillId,
+          skillName: data.label,
+          experience: data.experience,
+          monthlyPay: data.monthlyPay,
+          activeStatus: data.activeStatus,
+          status: data.status,
+        },
+      );
+
+      if (response.status === 200) {
+        // Assuming the response contains the newly created talent data including UID
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitSkill({
+          ...data,
+          uid: newTalent._id, // Update this line to use the UID from the response
+        });
+        reset();
+        setOpen(false); // Close the dialog after successful submission
+        toast({
+          title: 'Talent Added',
+          description: 'The Talent has been successfully added.',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting skill data', error);
+      reset();
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add talent. Please try again.',
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)} disabled>
+        <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Skill
         </Button>
@@ -102,7 +145,19 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               control={control}
               name="label"
               render={({ field }) => (
-                <Select {...field} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(selectedLabel) => {
+                    // Find the selected skill by label
+                    const selectedDomain = skills.find(
+                      (skill) => skill.label === selectedLabel,
+                    );
+
+                    // Set label and domainId in form
+                    field.onChange(selectedLabel); // Set label
+                    setValue('skillId', selectedDomain?._id || ''); // Set domainId
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a skill" />
                   </SelectTrigger>
@@ -153,8 +208,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit">
-              Submit
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>
         </form>

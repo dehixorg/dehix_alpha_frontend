@@ -41,6 +41,9 @@ const profileFormSchema = z.object({
       required_error: 'Please select an email to display.',
     })
     .email(),
+  //adddomain
+  projectDomain: z.array(z.string()),
+
   urls: z
     .array(
       z.object({
@@ -48,6 +51,7 @@ const profileFormSchema = z.object({
       }),
     )
     .optional(),
+
   description: z.string().max(160).min(4).optional(),
   profiles: z
     .array(
@@ -77,6 +81,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
   email: '', //default field for email
+  projectDomain: [],
   description: '',
   profiles: [
     {
@@ -101,6 +106,11 @@ interface Domain {
   label: string;
 }
 
+interface projectDomain {
+  _id: string;
+  label: string;
+}
+
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
 
@@ -109,7 +119,29 @@ export function CreateProjectBusinessForm() {
   const [tmpSkill, setTmpSkill] = useState<any>('');
 
   const [domains, setDomains] = useState<any>([]);
-  const [currDomains, setCurrDomains] = useState<any>([]);
+  const [currDomains] = useState<any>([]);
+
+  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
+  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+
+  const [loading, setLoading] = useState(false);
+
+  const handleAddProjectDomain = () => {
+    if (
+      tmpProjectDomains &&
+      !currProjectDomains.some((domain: any) => domain === tmpProjectDomains)
+    ) {
+      setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
+      setTmpProjectDomains('');
+    }
+  };
+
+  const handleDeleteProjectDomain = (domainToDelete: string) => {
+    setCurrProjectDomains(
+      currProjectDomains.filter((domain: any) => domain !== domainToDelete),
+    );
+  };
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -125,6 +157,20 @@ export function CreateProjectBusinessForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const projectDomainResponse =
+          await axiosInstance.get('/projectDomain/all');
+        console.log(
+          'projectDomain API Response get:',
+          projectDomainResponse.data.data,
+        );
+        const transformedProjectDomain = projectDomainResponse.data.data.map(
+          (skill: projectDomain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setProjectDomains(transformedProjectDomain);
+
         const domainResponse = await axiosInstance.get('/domain/all');
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
@@ -172,6 +218,7 @@ export function CreateProjectBusinessForm() {
   });
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
       console.log('Form body:', {
         ...data,
@@ -182,7 +229,7 @@ export function CreateProjectBusinessForm() {
       });
 
       const response = await axiosInstance.post(
-        `/business/${user.uid}/project`,
+        `/project/${user.uid}/project`,
         {
           ...data,
           role: '',
@@ -193,7 +240,6 @@ export function CreateProjectBusinessForm() {
       );
       console.log('API Response:', response.data);
 
-      // You can update other fields here as needed
       toast({
         title: 'Project Added',
         description: 'Your project has been successfully added.',
@@ -246,6 +292,80 @@ export function CreateProjectBusinessForm() {
           />
           <FormField
             control={form.control}
+            name="projectDomain"
+            render={() => (
+              <FormItem className="col-span-2">
+                <FormLabel>Project Domain</FormLabel>
+                <FormControl>
+                  <div>
+                    <div className="flex items-center mt-2">
+                      <Select
+                        onValueChange={(value) => setTmpProjectDomains(value)}
+                        value={tmpProjectDomains || ''}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              tmpProjectDomains
+                                ? tmpProjectDomains
+                                : 'Select project domain'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projectDomains
+                            .filter(
+                              (projectDomains: any) =>
+                                !currProjectDomains.some(
+                                  (d: any) => d.name === projectDomains.label,
+                                ),
+                            )
+                            .map((projectDomains: any, index: number) => (
+                              <SelectItem
+                                key={index}
+                                value={projectDomains.label}
+                              >
+                                {projectDomains.label}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="icon"
+                        className="ml-2"
+                        onClick={handleAddProjectDomain}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap mt-5">
+                      {currProjectDomains.map((domain: any, index: number) => (
+                        <Badge
+                          className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                          key={index}
+                        >
+                          {domain}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProjectDomain(domain)}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem className="col-span-2">
@@ -257,7 +377,6 @@ export function CreateProjectBusinessForm() {
               </FormItem>
             )}
           />
-
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
               <FormField
@@ -341,7 +460,7 @@ export function CreateProjectBusinessForm() {
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.skills`}
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
@@ -481,9 +600,12 @@ export function CreateProjectBusinessForm() {
               Add Profile
             </Button>
           </div>
-
-          <Button type="submit" className="lg:col-span-2 xl:col-span-2">
-            Create Project
+          <Button
+            type="submit"
+            className="lg:col-span-2 xl:col-span-2"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Create Project'}
           </Button>
         </form>
       </Form>

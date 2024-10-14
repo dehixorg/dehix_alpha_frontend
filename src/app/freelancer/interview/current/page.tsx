@@ -1,10 +1,11 @@
 'use client';
 import React from 'react';
-import { z } from 'zod';
+// import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
-import { Search, ListFilter, PackageOpen } from 'lucide-react';
-// import { zodResolver } from '@hookform/resolvers/zod';
+import { ListFilter, PackageOpen } from 'lucide-react';
 
+// import { zodResolver } from '@hookform/resolvers/zod';
+import { Search } from '@/components/search';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -28,36 +29,35 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
-import { Input } from '@/components/ui/input';
 // import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
-interface Interview {
-  reference: string;
-  skill?: string;
-  domain?: string;
-  interviewDate: string;
-  rating: number;
-  comments: string;
-  status: 'Pending' | 'Complete';
-  description: string;
-  contact: string;
-}
+// interface Interview {
+//   reference: string;
+//   skill?: string;
+//   domain?: string;
+//   interviewDate: string;
+//   rating: number;
+//   comments: string;
+//   status: 'Pending' | 'Complete';
+//   description: string;
+//   contact: string;
+// }
 
-const CommentSchema = z.object({
-  comment: z.string().min(1, 'Comment is required'),
-});
+// const CommentSchema = z.object({
+//   comment: z.string().min(1, 'Comment is required'),
+// });
 
-interface CommentFormData {
-  comment: string;
-}
+// interface CommentFormData {
+//   comment: string;
+// }
 
-interface InterviewCardProps {
-  index: number;
-  interview: Interview;
-  handleCommentSubmit: (index: number, comment: string) => void;
-}
+// interface InterviewCardProps {
+//   index: number;
+//   interview: Interview;
+//   handleCommentSubmit: (index: number, comment: string) => void;
+// }
 
 // const InterviewCard: React.FC<InterviewCardProps> = ({
 //   index,
@@ -136,58 +136,58 @@ interface InterviewCardProps {
 // };
 
 export default function CurrentPage() {
-  const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
-    {
-      reference: 'Jane Smith',
-      skill: 'HTML/CSS',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: '',
-      status: 'Pending',
-      description:
-        'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-      contact: 'jane.smith@example.com',
-    },
-    {
-      reference: 'Chirag Vaviya',
-      domain: 'DevOps',
-      interviewDate: '2023-11-23T10:30:00Z',
-      rating: 9,
-      comments: '',
-      status: 'Pending',
-      description:
-        "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-      contact: 'jane.smith@example.com',
-    },
-  ]);
+  // const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
+  //   {
+  //     reference: 'Jane Smith',
+  //     skill: 'HTML/CSS',
+  //     interviewDate: '2023-11-23T10:30:00Z',
+  //     rating: 9,
+  //     comments: '',
+  //     status: 'Pending',
+  //     description:
+  //       'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
+  //     contact: 'jane.smith@example.com',
+  //   },
+  //   {
+  //     reference: 'Chirag Vaviya',
+  //     domain: 'DevOps',
+  //     interviewDate: '2023-11-23T10:30:00Z',
+  //     rating: 9,
+  //     comments: '',
+  //     status: 'Pending',
+  //     description:
+  //       "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
+  //     contact: 'jane.smith@example.com',
+  //   },
+  // ]);
 
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
 
-  const handleCommentSubmit = (index: number, comment: string) => {
-    const updatedInterviews = [...sampleInterviews];
+  // const handleCommentSubmit = (index: number, comment: string) => {
+  //   const updatedInterviews = [...sampleInterviews];
 
-    console.log('Before update:', updatedInterviews[index]);
+  //   console.log('Before update:', updatedInterviews[index]);
 
-    updatedInterviews[index] = {
-      ...updatedInterviews[index],
-      comments: comment,
-      status: 'Complete',
-    };
+  //   updatedInterviews[index] = {
+  //     ...updatedInterviews[index],
+  //     comments: comment,
+  //     status: 'Complete',
+  //   };
 
-    console.log('After update:', updatedInterviews[index]);
+  //   console.log('After update:', updatedInterviews[index]);
 
-    setSampleInterviews(updatedInterviews);
-  };
+  //   setSampleInterviews(updatedInterviews);
+  // };
 
-  const filteredInterviews = sampleInterviews.filter((interview) => {
-    if (interview.status === 'Complete') return false;
-    if (filter === 'All') return true;
-    if (filter === 'Skills' && interview.skill) return true;
-    if (filter === 'Domain' && interview.domain) return true;
-    return false;
-  });
+  // const filteredInterviews = sampleInterviews.filter((interview) => {
+  //   if (interview.status === 'Complete') return false;
+  //   if (filter === 'All') return true;
+  //   if (filter === 'Skills' && interview.skill) return true;
+  //   if (filter === 'Domain' && interview.domain) return true;
+  //   return false;
+  // });
 
   return (
     <div className="flex min-h-screen w-full">
@@ -196,8 +196,8 @@ export default function CurrentPage() {
         menuItemsBottom={menuItemsBottom}
         active="Current"
       />
-      <div className="flex flex-col sm:py-2 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 w-full">
+        <header className="sticky top-0 z-30 gap-3  flex items-center justify-between border-b bg-background px-4 py-4 sm:border-0  sm:px-6">
           <div className="flex items-center ml-2 gap-4">
             <CollapsibleSidebarMenu
               menuItemsTop={menuItemsTop}
@@ -215,15 +215,10 @@ export default function CurrentPage() {
               ]}
             />
           </div>
-          <div className="relative flex items-center gap-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            />
-            <DropdownProfile />
+          <div className="relative ml-auto flex-1 md:grow-0">
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
+          <DropdownProfile />
         </header>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>

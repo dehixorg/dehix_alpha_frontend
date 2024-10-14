@@ -1,10 +1,10 @@
 'use client';
-import { Search, Filter, PackageOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Filter, PackageOpen } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
+import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpV
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
+  _id: string;
   jobTitle: string;
   workDescription: string;
   company: string;
@@ -65,13 +66,12 @@ export default function ProfessionalInfo() {
       (filter === 'current' && data.verificationStatus === 'Pending')
     );
   });
-  const fetchData = async () => {
+
+  const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=experience`,
       );
-      // console.log(response.data)
-
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
         Object.values(entry.professionalInfo),
@@ -80,10 +80,12 @@ export default function ProfessionalInfo() {
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }
-  };
+  }, [user.uid]);
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
   const updateJobStatus = (index: number, newStatus: string) => {
     const updatedData = [...JobData];
     updatedData[index].verificationStatus = newStatus;
@@ -103,8 +105,8 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="Experience Verification"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -124,12 +126,7 @@ export default function ProfessionalInfo() {
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
+            <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <Button
             variant="outline"
@@ -141,6 +138,15 @@ export default function ProfessionalInfo() {
           </Button>
           <DropdownProfile />
         </header>
+        <div className="mb-8 ml-10">
+          <h1 className="text-3xl font-bold">
+            Experience Verification Dashboard
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Stay updated on your work experience verification status. Check back
+            regularly for any new updates or requirements.
+          </p>
+        </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
@@ -185,6 +191,7 @@ export default function ProfessionalInfo() {
           {filteredData.map((data, index) => (
             <WorkExpVerificationCard
               key={index}
+              _id={data._id}
               jobTitle={data.jobTitle}
               workDescription={data.workDescription}
               company={data.company}

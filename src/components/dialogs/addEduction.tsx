@@ -73,7 +73,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-
+  const [loading, setLoading] = useState<boolean>(false);
   useEffect(() => {
     if (isDialogOpen) {
       form.reset({
@@ -88,6 +88,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   }, [isDialogOpen, form]);
 
   async function onSubmit(data: any) {
+    setLoading(true);
     try {
       const formattedData = {
         ...data,
@@ -230,7 +231,9 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
             />
 
             <DialogFooter>
-              <Button type="submit">Create</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Loading...' : 'Create'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
