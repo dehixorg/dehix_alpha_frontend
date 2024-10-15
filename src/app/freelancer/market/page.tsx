@@ -152,7 +152,7 @@ const Market: React.FC = () => {
     async (appliedFilters: FilterState) => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user.uid}`);
-        const userData = userResponse.data.data;
+        const userData = userResponse.data;
         const queryString = constructQueryString(appliedFilters);
         const response = await axiosInstance.get(
           `/project/${user.uid}/all_project?${queryString}`,
@@ -192,6 +192,10 @@ const Market: React.FC = () => {
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
+  };
+
+  const handleRemoveJob = (id: string) => {
+    setJobs((prevJobs) => prevJobs.filter((job) => job._id !== id));
   };
 
   return (
@@ -292,6 +296,7 @@ const Market: React.FC = () => {
               skillsRequired={job.skillsRequired}
               status={job.status}
               profiles={job.profiles || []}
+              onRemove={handleRemoveJob}
             />
           ))}
         </div>
