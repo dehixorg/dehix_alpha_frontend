@@ -646,6 +646,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </Button>
         </form>
       </Form>
+      {/* <ProfilePictureUpload user_id={user.id}/>
+      <ResumeUpload user_id={user.id}/> */}
     </Card>
   );
 }
