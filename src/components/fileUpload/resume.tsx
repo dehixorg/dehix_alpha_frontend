@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { axiosInstance } from '@/lib/axiosinstance';// Adjust the import path based on your project structure
+
+import { axiosInstance } from '@/lib/axiosinstance';
 
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
@@ -52,7 +53,7 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
     formData.append('resume', selectedResume);
 
     try {
-      // Step 1: POST request to upload resume to S3 and get file URL
+
       const postResponse = await axiosInstance.post('/register/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -60,12 +61,9 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
       });
 
 
-      const { Location } = postResponse.data; // Assuming the S3 URL is returned here
+      const { Location } = postResponse.data;
 
-      // Step 2: PUT request to update freelancer's resume field
-    //   const putResponse = await axiosInstance.put(/freelancer/${freelancerId}, {
-    //     ProfilePicture: Location, // Update resume field with the S3 file location
-    //   });
+
       const putResponse = await axiosInstance.put('/freelancer/${user_id}', {
         ProfilePicture: Location, 
       });

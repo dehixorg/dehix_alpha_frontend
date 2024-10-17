@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
-import FileUpload from '@/components/fileUpload/resume';
+
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 
@@ -29,8 +29,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import ProfilePictureUpload from '../fileUpload/profilePicture';
-import ResumeUpload from '@/components/fileUpload/resume';
+
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -648,8 +647,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </Button>
         </form>
       </Form>
-      <ProfilePictureUpload user_id={user.id}/>
-      <ResumeUpload user_id={user.id}/>
+      {/* <ProfilePictureUpload user_id={user.id}/>
+      <ResumeUpload user_id={user.id}/> */}
     </Card>
   );
 }
