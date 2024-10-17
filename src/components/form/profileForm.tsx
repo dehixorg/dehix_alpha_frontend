@@ -30,7 +30,6 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 
-
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
     message: 'First Name must be at least 2 characters.',

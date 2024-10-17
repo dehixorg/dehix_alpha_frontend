@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const allowedResumeFormats = ['application/pdf', 'image/png'];
@@ -53,19 +53,20 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
     formData.append('resume', selectedResume);
 
     try {
-
-      const postResponse = await axiosInstance.post('/register/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const postResponse = await axiosInstance.post(
+        '/register/upload-image',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      });
-
+      );
 
       const { Location } = postResponse.data;
 
-
       const putResponse = await axiosInstance.put('/freelancer/${user_id}', {
-        ProfilePicture: Location, 
+        ProfilePicture: Location,
       });
       console.log('API Response:', putResponse.data);
 
@@ -93,7 +94,10 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
 
   return (
     <div className="upload-form max-w-md mx-auto p-6 rounded shadow-md">
-      <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 flex flex-col items-center"
+      >
         {selectedResume && (
           <div className="mt-4 flex items-center justify-center w-full">
             {selectedResume.type === 'image/png' ? (

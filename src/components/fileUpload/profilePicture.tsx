@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 
 const allowedImageFormats = [
   'image/png',
@@ -15,15 +15,16 @@ const allowedImageFormats = [
 
 const maxImageSize = 1 * 1024 * 1024;
 
-const ProfilePictureUpload  = ({ user_id }: { user_id: string }) => {
-  const [selectedProfilePicture, setSelectedProfilePicture] = useState<File | null>(null);
+const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
+  const [selectedProfilePicture, setSelectedProfilePicture] =
+    useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedImageFormats.includes(file.type)) {
       if (file.size <= maxImageSize) {
         setSelectedProfilePicture(file);
-        setPreviewUrl(URL.createObjectURL(file)); 
+        setPreviewUrl(URL.createObjectURL(file));
       } else {
         toast({
           variant: 'destructive',
@@ -55,13 +56,15 @@ const ProfilePictureUpload  = ({ user_id }: { user_id: string }) => {
     formData.append('profilePicture', selectedProfilePicture);
 
     try {
-
-      const postResponse = await axiosInstance.post('/register/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const postResponse = await axiosInstance.post(
+        '/register/upload-image',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      });
-    
+      );
 
       const { Location } = postResponse.data;
       const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
@@ -99,7 +102,7 @@ const ProfilePictureUpload  = ({ user_id }: { user_id: string }) => {
           type="file"
           accept={allowedImageFormats.join(',')}
           onChange={handleImageChange}
-          className="hidden" 
+          className="hidden"
           id="file-input"
         />
 
