@@ -162,7 +162,7 @@ const Market: React.FC = () => {
         const notInterestedProjects = userData.notInterestedProject || [];
 
         const filteredJobs = response.data.data.filter(
-          (job: Project) => !notInterestedProjects.includes(job._id)
+          (job: Project) => !notInterestedProjects.includes(job._id),
         );
         setJobs(filteredJobs);
       } catch (error) {

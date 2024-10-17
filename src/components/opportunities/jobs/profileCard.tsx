@@ -31,13 +31,15 @@ interface ProfileProps {
   bidExist: boolean;
 }
 
-const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId, bidExist }) => {
+const ProfileCard: React.FC<ProfileProps> = ({
+  profile,
+  projectId,
+  bidExist,
+}) => {
   const [amount, setAmount] = React.useState('');
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const [exist] = React.useState(false);
-  // use setExist in useState if needed
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {

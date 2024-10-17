@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
+
 import {
   Card,
   CardContent,
@@ -13,7 +15,6 @@ import { Badge } from '@/components/ui/badge';
 import ProfileCard from '@/components/opportunities/jobs/profileCard';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 
 interface Profile {
@@ -82,7 +83,9 @@ const JobCard: React.FC<JobCardProps> = ({
   const isDescriptionLong = description.length > charLimit;
 
   const notIntrestedProject = async (_id: string) => {
-    await axiosInstance.put(`/freelancer/${user.uid}/${_id}/not_interested_project`);
+    await axiosInstance.put(
+      `/freelancer/${user.uid}/${_id}/not_interested_project`,
+    );
     onRemove(_id);
   };
 
@@ -172,7 +175,10 @@ const JobCard: React.FC<JobCardProps> = ({
                 View
               </Button>
             </Link>
-            <Button className="bg-gray-500 text-white hover:bg-gray-600" onClick={() => notIntrestedProject(id)}>
+            <Button
+              className="bg-gray-500 text-white hover:bg-gray-600"
+              onClick={() => notIntrestedProject(id)}
+            >
               Not Interested
             </Button>
           </div>

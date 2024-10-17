@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 
@@ -70,7 +70,6 @@ export function ProjectProfileDetailCard({
   const params = useParams();
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
   const [bid, setBid] = useState(false);
-
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
