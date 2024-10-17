@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
-
 import {
   Card,
   CardContent,
@@ -18,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 
 interface Profile {
+  _id?: string;
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -53,10 +53,23 @@ const JobCard: React.FC<JobCardProps> = ({
   const [isClient, setIsClient] = React.useState(false);
   const [showAllSkills, setShowAllSkills] = React.useState(false);
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
+  const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
 
   React.useEffect(() => {
     setIsClient(true);
+    fetchBidData(); // Fetch data on mount
   }, []);
+
+  // Fetch bid data from the API
+  const fetchBidData = React.useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
+      const profileIds = response.data.data.map((bid: any) => bid.profile_id); // Extract profile_ids
+      setBidProfiles(profileIds);
+    } catch (error) {
+      console.error('API Error:', error);
+    }
+  }, [user.uid]);
 
   if (!isClient) {
     return null;
@@ -71,7 +84,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const notIntrestedProject = async (_id: string) => {
     await axiosInstance.put(`/freelancer/${user.uid}/${_id}/not_interested_project`);
     onRemove(_id);
-  }
+  };
 
   return (
     <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
@@ -171,7 +184,12 @@ const JobCard: React.FC<JobCardProps> = ({
           {profiles && profiles.length > 0 && (
             <div className="space-y-4">
               {profiles.map((profile: Profile, index: number) => (
-                <ProfileCard key={index} profile={profile} projectId={id} />
+                <ProfileCard
+                  key={index}
+                  profile={profile}
+                  projectId={id}
+                  bidExist={bidProfiles.includes(profile._id || '')} // Pass status based on match
+                />
               ))}
             </div>
           )}

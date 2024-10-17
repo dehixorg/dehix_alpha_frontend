@@ -50,6 +50,7 @@ interface Project {
     status?: string;
   }[];
   profiles?: {
+    _id?: string;
     domain?: string;
     freelancersRequired?: string;
     skills?: string[];
