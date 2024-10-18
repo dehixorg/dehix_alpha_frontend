@@ -212,11 +212,11 @@ const Market: React.FC = () => {
           </div>
           <DropdownProfile />
         </header>
-        <div className="mb-8 ml-10">
+        <div className="mb-8 ml-8">
           <h1 className="text-3xl font-bold">
-            Freelancer Marketplace Overview
+            Freelancer Marketplace 
           </h1>
-          <p className="text-gray-400 mt-2">
+          <p className="text-gray-400 mt-2 ">
             Discover and manage your freelance opportunities, connect with
             potential projects, and filter by skills, domains and project domian
             to enhance your portfolio.
