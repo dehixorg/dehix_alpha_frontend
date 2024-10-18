@@ -221,11 +221,12 @@ export default function CurrentPage() {
           <DropdownProfile />
         </header>
         <div className="mb-8  ml-10">
-        <h1 className="text-3xl font-bold">Current Interviews</h1>
-        <p className="text-gray-400 mt-2">
-        View and manage your current interviews, and update skills for better matches.
-        </p>
-      </div>
+          <h1 className="text-3xl font-bold">Current Interviews</h1>
+          <p className="text-gray-400 mt-2">
+            View and manage your current interviews, and update skills for
+            better matches.
+          </p>
+        </div>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

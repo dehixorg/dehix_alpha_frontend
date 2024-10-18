@@ -176,7 +176,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   };
 
   return (
-    <div className='ml-4'>
+    <div className="ml-4">
       <div className="mb-8 ">
         <h1 className="text-3xl font-bold"> Hire Talent </h1>
         <p className="text-gray-400 mt-2">

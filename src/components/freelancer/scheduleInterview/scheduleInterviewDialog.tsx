@@ -277,13 +277,16 @@ const ScheduleInterviewDialog: React.FC = () => {
                     )}
                   </div>
                   <DialogFooter>
-                    <Button className='mt-3'
+                    <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenSkillDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button className='mt-3' type="submit">Add</Button>
+                    <Button className="mt-3" type="submit">
+                      Add
+                    </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -390,13 +393,16 @@ const ScheduleInterviewDialog: React.FC = () => {
                     )}
                   </div>
                   <DialogFooter>
-                    <Button  className='mt-3'
+                    <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenDomainDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button  className='mt-3' type="submit">Add</Button>
+                    <Button className="mt-3" type="submit">
+                      Add
+                    </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
