@@ -2,7 +2,6 @@
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 
 import { Search } from '@/components/search';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -26,7 +25,6 @@ import {
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton';
-import dummyData from '@/dummydata.json';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
 
@@ -61,64 +59,6 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Fetch query string parameters
-  useEffect(() => {
-    const query = Object.fromEntries(searchParams.entries());
-
-    if (query.code) {
-      console.log('Query params:', query);
-      handleCreateMeet();
-    } else {
-      handleAuth();
-    }
-  }, [searchParams]);
-
-  const handleCreateMeet = async () => {
-    try {
-      const query = Object.fromEntries(searchParams.entries());
-      const code = query.code;
-
-      if (!code) {
-        console.error('Error: Missing code query parameter');
-        return;
-      }
-
-      const response = await axiosInstance.post(
-        '/meeting/create-meeting',
-        {
-          attendees: ['akhilcodebugged@gmail.com'], // Replace with actual attendees
-        },
-        {
-          params: { code },
-        },
-      );
-
-      const { meetLink } = response.data;
-      if (meetLink) {
-        router.push(meetLink);
-      }
-    } catch (error) {
-      console.error('Error creating Google Calendar meeting:', error);
-    }
-  };
-
-  const handleAuth = async () => {
-    try {
-      const baseUrl = window.location.origin + window.location.pathname;
-      const response = await axiosInstance.get('/meeting/auth-url', {
-        params: { redirectUri: baseUrl },
-      });
-      const authUrl = response.data.url;
-      if (authUrl) {
-        router.push(authUrl);
-      }
-    } catch (error) {
-      console.error('Error fetching Google Auth URL:', error);
-    }
-  };
 
   useEffect(() => {
     const fetchData = async () => {

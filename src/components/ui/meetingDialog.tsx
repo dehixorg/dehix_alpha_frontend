@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import dayjs from "dayjs";
-import { Plus } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import dayjs from 'dayjs';
+import { Plus } from 'lucide-react';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface MeetingDialogProps {
   isOpen: boolean;
@@ -21,35 +23,83 @@ interface MeetingDialogProps {
 }
 
 export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
-  const [summary, setSummary] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDateTime, setStartDateTime] = useState<string>(dayjs().add(1, "day").format('YYYY-MM-DD'));
-  const [endDateTime, setEndDateTime] = useState<string>(dayjs().add(1, "day").add(1, "hour").format('YYYY-MM-DD'));
-  const [attendees, setAttendees] = useState<string[]>([""]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [summary, setSummary] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDateTime, setStartDateTime] = useState<string>(
+    dayjs().add(1, 'day').format('YYYY-MM-DD'),
+  );
+  const [endDateTime, setEndDateTime] = useState<string>(
+    dayjs().add(1, 'day').add(1, 'hour').format('YYYY-MM-DD'),
+  );
+  const [attendees, setAttendees] = useState<string[]>(['']);
+
+
+  const handleRequest = (meetingData: object) => {
+    const query = Object.fromEntries(searchParams.entries());
+
+    console.log('Query params:', query);
+    if (query.code) {
+      handleCreateMeet(meetingData, query.code);
+    } else {
+      handleAuth();
+    }
+  }
+
+  const handleCreateMeet = (meetingData: object, code: string) =>{
+    const response = axiosInstance.post(
+      `/meeting`,
+      meetingData,
+      {
+        params: {
+          code: code, // Add the query string here
+        },
+      }
+    );
+    console.log("CODE:", code)
+  }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
 
     const meetingData = {
       summary,
       description,
       start: {
         dateTime: dayjs(startDateTime).toISOString(),
-        timeZone: "Asia/Kolkata",
+        timeZone: 'Asia/Kolkata',
       },
       end: {
         dateTime: dayjs(endDateTime).toISOString(),
-        timeZone: "Asia/Kolkata",
+        timeZone: 'Asia/Kolkata',
       },
       attendees,
     };
 
-    console.log("Meeting Details:", meetingData);
-    onClose();
+    console.log('Meeting Details:', meetingData);
+    handleRequest(meetingData);
+    // onClose();
+  };
+
+  const handleAuth = async () => {
+    try {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const response = await axiosInstance.get('/meeting/auth-url', {
+        params: { redirectUri: baseUrl },
+      });
+      const authUrl = response.data.url;
+      if (authUrl) {
+        router.push(authUrl);
+      }
+    } catch (error) {
+      console.error('Error fetching Google Auth URL:', error);
+    }
   };
 
   const addAttendee = () => {
-    setAttendees([...attendees, ""]);
+    setAttendees([...attendees, '']);
   };
 
   const handleAttendeeChange = (index: number, value: string) => {
@@ -131,13 +181,13 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             <Input
               type="time"
               className="col-span-3"
-              value={dayjs(startDateTime).format("HH:mm")}
+              value={dayjs(startDateTime).format('HH:mm')}
               onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(":").map(Number);
+                const [hours, minutes] = e.target.value.split(':').map(Number);
                 const updatedStartDateTime = dayjs(startDateTime)
-                  .set("hour", hours)
-                  .set("minute", minutes)
-                  .format("YYYY-MM-DDTHH:mm");
+                  .set('hour', hours)
+                  .set('minute', minutes)
+                  .format('YYYY-MM-DDTHH:mm');
                 setStartDateTime(updatedStartDateTime);
               }}
               required
@@ -150,48 +200,50 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
             <Input
               type="time"
               className="col-span-3"
-              value={dayjs(startDateTime).format("HH:mm")}
+              value={dayjs(startDateTime).format('HH:mm')}
               onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(":").map(Number);
+                const [hours, minutes] = e.target.value.split(':').map(Number);
                 const updatedStartDateTime = dayjs(startDateTime)
-                  .set("hour", hours)
-                  .set("minute", minutes)
-                  .format("YYYY-MM-DDTHH:mm");
+                  .set('hour', hours)
+                  .set('minute', minutes)
+                  .format('YYYY-MM-DDTHH:mm');
                 setStartDateTime(updatedStartDateTime);
               }}
               required
             />
           </div>
 
-         {/* Attendees Section */}
-<div className="grid grid-cols-4 items-start gap-3">
-  <Label htmlFor="attendees" className="text-right">
-    Attendees
-  </Label>
-  <div className="col-span-3 space-y-2">
-    {attendees.map((attendee, index) => (
-      <div className="flex items-center" key={index}>
-        <Input
-          value={attendee}
-          onChange={(e) => handleAttendeeChange(index, e.target.value)}
-          placeholder="Enter attendee email"
-          className="flex-grow"
-          required
-        />
-        {/* Show the + button only for the last attendee field */}
-        {index === attendees.length - 1 && (
-          <Button
-            type="button"
-            onClick={addAttendee}
-            className="ml-2 flex-shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    ))}
-  </div>
-</div>
+          {/* Attendees Section */}
+          <div className="grid grid-cols-4 items-start gap-3">
+            <Label htmlFor="attendees" className="text-right">
+              Attendees
+            </Label>
+            <div className="col-span-3 space-y-2">
+              {attendees.map((attendee, index) => (
+                <div className="flex items-center" key={index}>
+                  <Input
+                    value={attendee}
+                    onChange={(e) =>
+                      handleAttendeeChange(index, e.target.value)
+                    }
+                    placeholder="Enter attendee email"
+                    className="flex-grow"
+                    required
+                  />
+                  {/* Show the + button only for the last attendee field */}
+                  {index === attendees.length - 1 && (
+                    <Button
+                      type="button"
+                      onClick={addAttendee}
+                      className="ml-2 flex-shrink-0"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
           <DialogFooter className="flex justify-center">
             <Button type="submit">Create Meeting</Button>
