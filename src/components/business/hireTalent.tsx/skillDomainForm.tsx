@@ -176,9 +176,9 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   };
 
   return (
-    <div>
+    <div className="ml-4">
       <div className="mb-8 ">
-        <h1 className="text-3xl font-bold"> Business Marketplace Overview</h1>
+        <h1 className="text-3xl font-bold"> Hire Talent </h1>
         <p className="text-gray-400 mt-2">
           Help us understand the skills and domain you are looking for in
           potential hires.Enter the required experience and a short description

@@ -198,7 +198,7 @@ const InterviewProfile: React.FC = () => {
             <h2 className="text-xl font-semibold">Skills</h2>
             <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
               <DialogTrigger asChild>
-                <Button disabled>
+                <Button>
                   <Plus className="mr-2 h-4 w-4" /> Add Skill
                 </Button>
               </DialogTrigger>
@@ -286,12 +286,13 @@ const InterviewProfile: React.FC = () => {
                   </div>
                   <DialogFooter>
                     <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenSkillDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
+                    <Button className="mt-3" type="submit" disabled={loading}>
                       {loading ? 'Adding...' : 'Add'}
                     </Button>
                   </DialogFooter>
@@ -336,7 +337,7 @@ const InterviewProfile: React.FC = () => {
             <h2 className="text-xl font-semibold">Domains</h2>
             <Dialog open={openDomainDialog} onOpenChange={setOpenDomainDialog}>
               <DialogTrigger asChild>
-                <Button disabled>
+                <Button>
                   <Plus className="mr-2 h-4 w-4" /> Add Domain
                 </Button>
               </DialogTrigger>
@@ -426,12 +427,13 @@ const InterviewProfile: React.FC = () => {
                   </div>
                   <DialogFooter>
                     <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenDomainDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={loading}>
+                    <Button className="mt-3" type="submit" disabled={loading}>
                       {loading ? 'Adding...' : 'Add'}
                     </Button>
                   </DialogFooter>

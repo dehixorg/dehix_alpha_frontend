@@ -25,8 +25,8 @@ const MarketHeader: React.FC = () => {
         </div>
         <DropdownProfile />
       </header>
-      <div className="mb-8 ml-10 mt-4">
-        <h1 className="text-3xl font-bold"> Buisness Marketplace Overview</h1>
+      <div className="mb-8 ml-6 mt-8">
+        <h1 className="text-3xl font-bold"> Business Marketplace </h1>
         <p className="text-gray-400 mt-2">
           Discover a curated selection of business opportunities designed to
           connect freelancers with potential clients and projects.

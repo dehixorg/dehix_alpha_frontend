@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import ResumeUpload from '@/components/fileUpload/resume';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
@@ -64,6 +65,13 @@ export default function HistoryPage() {
           </div>
           <DropdownProfile />
         </header>
+        <div className="mb-8 mt-2 ml-10">
+          <h1 className="text-3xl font-bold">History Interviews</h1>
+          <p className="text-gray-400 mt-2">
+            Review your past interviews and reflect on your progress and
+            experiences.
+          </p>
+        </div>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -81,6 +89,7 @@ export default function HistoryPage() {
               >
                 All
               </DropdownMenuCheckboxItem>
+
               <DropdownMenuCheckboxItem
                 checked={filter === 'Skills'}
                 onSelect={() => setFilter('Skills')}
