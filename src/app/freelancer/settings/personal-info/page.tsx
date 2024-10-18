@@ -1,6 +1,6 @@
 'use client';
 import { useSelector } from 'react-redux';
-
+import ResumeUpload from '@/components/fileUpload/resume';
 import { Search } from '@/components/search';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -45,6 +45,7 @@ export default function PersonalInfo() {
           <ProfileForm user_id={user.uid} />
         </main>
       </div>
+      {/* <ResumeUpload user_id={user.id}/> */}
     </div>
   );
 }

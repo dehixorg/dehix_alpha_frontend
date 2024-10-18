@@ -68,8 +68,7 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
       const putResponse = await axiosInstance.put('/freelancer/${user_id}', {
         ProfilePicture: Location,
       });
-      console.log('API Response:', putResponse.data);
-
+   
       if (putResponse.status === 200) {
         toast({
           title: 'Success',

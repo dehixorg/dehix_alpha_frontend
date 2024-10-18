@@ -71,7 +71,7 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
         ProfilePicture: Location,
       });
 
-      console.log('API Response:', putResponse.data);
+   
 
       if (putResponse.status === 200) {
         toast({
@@ -86,7 +86,6 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
         });
       }
     } catch (error) {
-      console.error('Error:', error);
       toast({
         variant: 'destructive',
         title: 'Upload failed',
