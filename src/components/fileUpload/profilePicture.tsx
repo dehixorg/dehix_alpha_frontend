@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -70,8 +70,6 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
       const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
         ProfilePicture: Location,
       });
-
-   
 
       if (putResponse.status === 200) {
         toast({
