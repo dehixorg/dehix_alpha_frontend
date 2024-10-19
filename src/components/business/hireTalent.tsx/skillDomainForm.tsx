@@ -113,13 +113,17 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           formattedHireTalentData.map((item) => item.visible),
         );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      if (error.response && error.response.status === 404) {
+        // No action needed for 404 errors
+      }else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      }
     }
   }, [user?.uid, setFilterSkill, setFilterDomain]);
 

@@ -62,10 +62,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
-        if (
-          response.status === 404 ||
-          response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
-        ) {
+        if ( response.data.data.length < Dehix_Talent_Card_Pagination.BATCH ) {
           setHasMore(false);
           return;
         }
@@ -78,13 +75,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
         } else {
           throw new Error('Fail to fetch data');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching talent data', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        if(error.response && error.response.status === 404) {
+          setHasMore(false);
+        }else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong. Please try again.',
+          });
+        }
       } finally {
         setLoading(false);
         isRequestInProgress.current = false;
