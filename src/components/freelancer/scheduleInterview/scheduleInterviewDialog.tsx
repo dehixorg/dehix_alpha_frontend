@@ -178,7 +178,7 @@ const ScheduleInterviewDialog: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-8 ml-5">
-        <h1 className="text-3xl font-bold">Schedule an Interview</h1>
+        <h1 className="text-3xl font-bold">Schedule Interview</h1>
         <p className="text-gray-400 mt-2">
           Add your relevant skills and domains to help us schedule the right
           interview for you.
@@ -278,12 +278,15 @@ const ScheduleInterviewDialog: React.FC = () => {
                   </div>
                   <DialogFooter>
                     <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenSkillDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button type="submit">Add</Button>
+                    <Button className="mt-3" type="submit">
+                      Add
+                    </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
@@ -391,12 +394,15 @@ const ScheduleInterviewDialog: React.FC = () => {
                   </div>
                   <DialogFooter>
                     <Button
+                      className="mt-3"
                       variant="ghost"
                       onClick={() => setOpenDomainDialog(false)}
                     >
                       Cancel
                     </Button>
-                    <Button type="submit">Add</Button>
+                    <Button className="mt-3" type="submit">
+                      Add
+                    </Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
