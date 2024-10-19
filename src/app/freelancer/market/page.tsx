@@ -152,16 +152,18 @@ const Market: React.FC = () => {
   const fetchData = useCallback(
     async (appliedFilters: FilterState) => {
       try {
-        const userResponse = await axiosInstance.get(`/freelancer/${user.uid}`);
-        const userData = userResponse.data;
+        const freelancerDetails = await axiosInstance.get(
+          `/freelancer/${user.uid}`,
+        );
         const queryString = constructQueryString(appliedFilters);
-        const response = await axiosInstance.get(
+        const allJobs = await axiosInstance.get(
           `/project/${user.uid}/all_project?${queryString}`,
         );
 
-        const notInterestedProjects = userData.notInterestedProject || [];
+        const notInterestedProjects =
+          freelancerDetails.data.notInterestedProject || [];
 
-        const filteredJobs = response.data.data.filter(
+        const filteredJobs = allJobs.data.data.filter(
           (job: Project) => !notInterestedProjects.includes(job._id),
         );
         setJobs(filteredJobs);
