@@ -61,7 +61,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
       });
-      // window.location.reload();
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({

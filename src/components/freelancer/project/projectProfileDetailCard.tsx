@@ -69,7 +69,7 @@ export function ProjectProfileDetailCard({
   const [dialogOpen, setDialogOpen] = useState(false);
   const params = useParams();
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
-  const [bid, setBid] = useState(false);
+  const [exist, setExist] = useState(false);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -115,7 +115,7 @@ export function ProjectProfileDetailCard({
   }, [user.uid]);
 
   useEffect(() => {
-    setBid(bidProfiles.includes(_id));
+    setExist(bidProfiles.includes(_id));
   }, [bidProfiles, _id]);
 
   return (
@@ -191,8 +191,8 @@ export function ProjectProfileDetailCard({
       <CardFooter>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" type="button" disabled={bid}>
-              {!bid ? 'Bid' : 'Applied'}
+            <Button variant="outline" type="button" disabled={exist}>
+              {!exist ? 'Bid' : 'Applied'}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -232,8 +232,8 @@ export function ProjectProfileDetailCard({
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={bid}>
-                  {!bid ? 'Bid' : 'Applied'}
+                <Button type="submit" disabled={exist}>
+                  {!exist ? 'Bid' : 'Applied'}
                 </Button>
               </DialogFooter>
             </form>
