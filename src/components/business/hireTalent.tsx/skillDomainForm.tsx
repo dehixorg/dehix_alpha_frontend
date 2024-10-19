@@ -117,7 +117,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       console.error('Error fetching data:', error);
       if (error.response && error.response.status === 404) {
         // No action needed for 404 errors
-      }else {
+      } else {
         toast({
           variant: 'destructive',
           title: 'Error',
