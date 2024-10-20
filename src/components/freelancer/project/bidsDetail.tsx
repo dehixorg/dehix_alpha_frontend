@@ -71,6 +71,13 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   }, [id]);
 
+   // Fetch bids only when profileId changes
+   useEffect(() => {
+    if (profileId) {
+      fetchBid(profileId);
+    }
+  }, [profileId]);
+
   const handleUpdateStatus = async (bidId: string, status: string) => {
     try {
       setLoadingBids((prev) => ({ ...prev, [bidId]: true }));
@@ -99,12 +106,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       console.error(e);
     }
   };
-
-  useEffect(() => {
-    if (profileId) {
-      fetchBid(profileId);
-    }
-  }, [profileId, fetchBid]);
 
   return (
     <div className="max-w-5xl mx-auto p-4">

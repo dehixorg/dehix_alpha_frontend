@@ -41,6 +41,7 @@ interface ProjectProfile {
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string;
   description: string;
   companyId: string;
   email: string;
