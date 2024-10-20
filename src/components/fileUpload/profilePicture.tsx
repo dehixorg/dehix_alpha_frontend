@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-
+import React, { useState, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Plus } from 'lucide-react';
 
 const allowedImageFormats = [
   'image/png',
@@ -18,7 +18,9 @@ const maxImageSize = 1 * 1024 * 1024;
 const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>('/user.png');
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Create a ref for the file input
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedImageFormats.includes(file.type)) {
@@ -93,14 +95,14 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto p-6 rounded shadow-md">
+    <div className="upload-form max-w-md mx-auto  rounded shadow-md ">
       <form onSubmit={handleSubmit} className="space-y-6">
         <input
           type="file"
           accept={allowedImageFormats.join(',')}
           onChange={handleImageChange}
-          className="hidden"
-          id="file-input"
+          className="hidden "
+          ref={fileInputRef}
         />
 
         <div className="relative flex flex-col items-center">
@@ -109,35 +111,28 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
               <img
                 src={previewUrl}
                 alt="Avatar Preview"
-                className="w-20 h-20 rounded-full object-cover"
+                className="w-28 h-28 rounded-full object-cover  border-2 border-black-300 "
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
-                <Avatar className="w-30 h-30" />
+              <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
+                <Avatar className="w-28 h-28" />
               </div>
             )}
-            <div className="absolute bottom-0 right-0 bg-white p-1 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 text-gray-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </div>
+            <Button
+              variant="outline"
+              type="button"
+              size="icon"
+              className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-black border border-black-300 flex items-center justify-center shadow-md"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Plus className="h-4 w-4 text-gray-400" />
+            </Button>
           </label>
         </div>
 
-        <Button type="submit" className="w-full">
+        {/* <Button type="submit" className="w-full">
           Upload Profile Picture
-        </Button>
+        </Button> */}
       </form>
     </div>
   );
