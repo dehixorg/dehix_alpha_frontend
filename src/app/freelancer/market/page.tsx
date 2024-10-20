@@ -50,6 +50,7 @@ interface Project {
     status?: string;
   }[];
   profiles?: {
+    _id?: string;
     domain?: string;
     freelancersRequired?: string;
     skills?: string[];
@@ -151,11 +152,21 @@ const Market: React.FC = () => {
   const fetchData = useCallback(
     async (appliedFilters: FilterState) => {
       try {
+        const freelancerDetails = await axiosInstance.get(
+          `/freelancer/${user.uid}`,
+        );
         const queryString = constructQueryString(appliedFilters);
-        const response = await axiosInstance.get(
+        const allJobs = await axiosInstance.get(
           `/project/${user.uid}/all_project?${queryString}`,
         );
-        setJobs(response.data.data);
+
+        const notInterestedProjects =
+          freelancerDetails.data.notInterestedProject || [];
+
+        const filteredJobs = allJobs.data.data.filter(
+          (job: Project) => !notInterestedProjects.includes(job._id),
+        );
+        setJobs(filteredJobs);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -184,6 +195,10 @@ const Market: React.FC = () => {
 
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
+  };
+
+  const handleRemoveJob = (id: string) => {
+    setJobs((prevJobs) => prevJobs.filter((job) => job._id !== id));
   };
 
   return (
@@ -282,6 +297,7 @@ const Market: React.FC = () => {
               skillsRequired={job.skillsRequired}
               status={job.status}
               profiles={job.profiles || []}
+              onRemove={handleRemoveJob}
             />
           ))}
         </div>
