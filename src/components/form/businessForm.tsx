@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { Card } from '../ui/card';
 import { toast } from '../ui/use-toast';
+import ProfilePictureUpload from '../fileUpload/profilePicture';
 
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -12,13 +13,12 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
+  // FormDescription,
   FormField,
   FormItem,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import ProfilePictureUpload from '../fileUpload/profilePicture';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {

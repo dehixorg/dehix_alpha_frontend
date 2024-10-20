@@ -13,7 +13,6 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
-
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
 
@@ -43,7 +42,7 @@ export default function PersonalInfo() {
           <DropdownProfile />
         </header>
         <main className="grid flex-1 items-start  sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} /> 
+          <ProfileForm user_id={user.uid} />
         </main>
       </div>
     </div>

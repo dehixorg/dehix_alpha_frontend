@@ -3,8 +3,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
+import ProfilePictureUpload from '../fileUpload/profilePicture';
+import ResumeUpload from '../fileUpload/resume';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -28,8 +31,6 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import ProfilePictureUpload from '../fileUpload/profilePicture';
-import ResumeUpload from '../fileUpload/resume';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -675,21 +676,21 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <Separator className="col-span-2 mt-0" />
-            <FormField
-              control={form.control}
-              name="resume"
-              render={({ field }) => (
-                <FormItem className="flex flex-col items-start ">
-                  <FormLabel className="ml-2">Upload Resume</FormLabel>
-                  <div className="w-full sm:w-auto sm:mr-26">
-                    <ResumeUpload user_id={user.id} />
-                  </div>
-                  <FormDescription className="ml-2">
-                    Upload your resume
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem className="flex flex-col items-start ">
+                <FormLabel className="ml-2">Upload Resume</FormLabel>
+                <div className="w-full sm:w-auto sm:mr-26">
+                  <ResumeUpload user_id={user.id} />
+                </div>
+                <FormDescription className="ml-2">
+                  Upload your resume
+                </FormDescription>
+              </FormItem>
+            )}
+          />
           <Separator className="col-span-2 mt-0" />
           <Button type="submit" className="col-span-2">
             Update profile
