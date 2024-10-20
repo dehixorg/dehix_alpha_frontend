@@ -71,8 +71,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   }, [id]);
 
-   // Fetch bids only when profileId changes
-   useEffect(() => {
+  useEffect(() => {
     if (profileId) {
       fetchBid(profileId);
     }

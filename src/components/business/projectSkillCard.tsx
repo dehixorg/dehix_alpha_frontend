@@ -11,18 +11,18 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
 export interface ProjectSkillCardProps {
-  skillName: string;
-  description: string;
+  domainName: string | undefined;
+  description: string | undefined;
   email: string;
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
   domains: string[];
-  skills: string[];
+  skills: string[] | undefined;
 }
 
 function ProjectSkillCard({
-  skillName,
+  domainName,
   description,
   email,
   status,
@@ -36,7 +36,7 @@ function ProjectSkillCard({
   return (
     <Card className="p-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">{skillName}</CardTitle>
+        <CardTitle className="text-2xl font-bold">{domainName}</CardTitle>
       </CardHeader>
       <CardContent>
         <Badge className={className}>{text}</Badge>
