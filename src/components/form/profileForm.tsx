@@ -6,6 +6,8 @@ import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
+import ProfilePictureUpload from '../fileUpload/profilePicture';
+import ResumeUpload from '../fileUpload/resume';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -255,9 +257,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   return (
     <Card className="p-10">
       <Form {...form}>
+        <ProfilePictureUpload user_id={user.id} />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-10 grid-cols-2"
+          className="grid gap-10 grid-cols-2 mt-4"
         >
           <FormField
             control={form.control}
@@ -268,7 +271,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormControl>
                   <Input placeholder="Enter your first name" {...field} />
                 </FormControl>
-                <FormDescription>Enter your first name</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -282,7 +284,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormControl>
                   <Input placeholder="Enter your last name" {...field} />
                 </FormControl>
-                <FormDescription>Enter your last name</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -296,7 +297,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormControl>
                   <Input placeholder="Enter your username" {...field} />
                 </FormControl>
-                <FormDescription>Enter your username</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -308,7 +308,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your email" {...field} disabled />
+                  <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormDescription>Non editable field</FormDescription>
                 <FormMessage />
@@ -337,7 +337,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} disabled />
+                  <Input placeholder="+91" {...field} />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>Non editable field</FormDescription>
@@ -383,6 +383,41 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+          {/* <Separator className="col-span-2 mt-0" /> */}
+          {/* <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+          {/* <FormField
+  control={form.control}
+  name="resume"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel style={{ marginLeft: '0px' }}>Resume</FormLabel> 
+      <FormControl>
+        <div style={{ marginLeft: '0px' }}>
+          <ResumeUpload user_id={user.id} />
+        </div>
+      </FormControl>
+      <FormDescription>Upload your resume</FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/> */}
 
           {/*<FormField*/}
           {/*  control={form.control}*/}
@@ -640,14 +675,28 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </div>
             </div>
           </div>
-
+          <Separator className="col-span-2 mt-0" />
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem className="flex flex-col items-start ">
+                <FormLabel className="ml-2">Upload Resume</FormLabel>
+                <div className="w-full sm:w-auto sm:mr-26">
+                  <ResumeUpload user_id={user.id} />
+                </div>
+                <FormDescription className="ml-2">
+                  Upload your resume
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+          <Separator className="col-span-2 mt-0" />
           <Button type="submit" className="col-span-2">
             Update profile
           </Button>
         </form>
       </Form>
-      {/* <ProfilePictureUpload user_id={user.id}/>
-      <ResumeUpload user_id={user.id}/> */}
     </Card>
   );
 }
