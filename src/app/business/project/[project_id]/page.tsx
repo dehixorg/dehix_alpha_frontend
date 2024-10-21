@@ -41,6 +41,7 @@ interface ProjectProfile {
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string;
   description: string;
   companyId: string;
   email: string;
@@ -152,17 +153,17 @@ export default function Dashboard() {
                         <CardContent>
                           <div className="grid w-full items-center gap-4">
                             <div className="w-auto grid grid-cols-2 gap-4">
-                              {project.skillsRequired.map((skill, index) => (
+                              {project.profiles?.map((profile, index) => (
                                 <ProjectSkillCard
                                   key={index}
-                                  skillName={skill}
-                                  description={project.description}
+                                  domainName={profile.domain}
+                                  description={profile.description}
                                   email={project.email}
                                   status={project.status}
                                   startDate={project.createdAt}
                                   endDate={project.end}
                                   domains={[]}
-                                  skills={project.skillsRequired}
+                                  skills={profile.skills}
                                 />
                               ))}
                             </div>
