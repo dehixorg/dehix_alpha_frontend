@@ -72,7 +72,7 @@ export default function Dashboard() {
       handleCreateMeet();
     } else {
       // If no 'code' query parameter, trigger the auth flow
-      handleAuth();
+      // handleAuth();
     }
   }, [searchParams]);
 
@@ -259,7 +259,7 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" onClick={handleAuth} disabled>
+              <Button className="mt-3" disabled>
                 Create Meet
               </Button>
             </div>
