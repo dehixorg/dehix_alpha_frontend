@@ -257,7 +257,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   return (
     <Card className="p-10">
       <Form {...form}>
-        <ProfilePictureUpload user_id={user.id} profile={user.profilePicture} />
+        <ProfilePictureUpload
+          user_id={user._id}
+          profile={user.profilePicture}
+        />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="grid gap-10 grid-cols-2 mt-4"

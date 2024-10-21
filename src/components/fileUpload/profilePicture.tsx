@@ -25,7 +25,7 @@ const ProfilePictureUpload = ({
 }) => {
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>('/user.png');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile);
   const [isUploading, setIsUploading] = useState<boolean>(false); // For disabling the button
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
