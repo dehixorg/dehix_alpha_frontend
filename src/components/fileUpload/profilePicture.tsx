@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
+import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -13,14 +14,20 @@ const allowedImageFormats = [
   'image/gif',
   'image/svg+xml',
 ];
+const maxImageSize = 1 * 1024 * 1024; // 1MB
 
-const maxImageSize = 1 * 1024 * 1024;
-
-const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
+const ProfilePictureUpload = ({
+  user_id,
+  profile,
+}: {
+  user_id: string;
+  profile: string;
+}) => {
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>('/user.png');
-  const fileInputRef = useRef<HTMLInputElement | null>(null); // Create a ref for the file input
+  const [isUploading, setIsUploading] = useState<boolean>(false); // For disabling the button
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -28,6 +35,7 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
       if (file.size <= maxImageSize) {
         setSelectedProfilePicture(file);
         setPreviewUrl(URL.createObjectURL(file));
+        console.log('Image selected:', file);
       } else {
         toast({
           variant: 'destructive',
@@ -55,10 +63,14 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
       });
       return;
     }
+
+    setIsUploading(true); // Disable the upload button and show loader
+
     const formData = new FormData();
     formData.append('profilePicture', selectedProfilePicture);
 
     try {
+      console.log('Uploading image...');
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
@@ -68,11 +80,13 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
           },
         },
       );
+      console.log('Image upload response:', postResponse.data);
 
-      const { Location } = postResponse.data;
+      const { Location } = postResponse.data.data;
       const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
-        ProfilePicture: Location,
+        profilePicture: Location,
       });
+      console.log('Profile picture update response:', putResponse.data);
 
       if (putResponse.status === 200) {
         toast({
@@ -80,43 +94,50 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
           description: 'Profile picture uploaded successfully!',
         });
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Update failed',
-          description: 'Failed to update profile picture. Please try again.',
-        });
+        throw new Error('Failed to update profile picture');
       }
     } catch (error) {
+      console.error('Error during upload:', error);
       toast({
         variant: 'destructive',
         title: 'Upload failed',
         description: 'Image upload failed. Please try again.',
       });
+    } finally {
+      setIsUploading(false); // Re-enable the upload button
     }
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto  rounded shadow-md ">
+    <div className="upload-form max-w-md mx-auto rounded shadow-md">
       <form onSubmit={handleSubmit} className="space-y-6">
         <input
           type="file"
           accept={allowedImageFormats.join(',')}
           onChange={handleImageChange}
-          className="hidden "
+          className="hidden"
           ref={fileInputRef}
         />
 
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <img
+              <Image
+                width={28}
+                height={28}
                 src={previewUrl}
                 alt="Avatar Preview"
-                className="w-28 h-28 rounded-full object-cover  border-2 border-black-300 "
+                className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
               />
             ) : (
               <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
-                <Avatar className="w-28 h-28" />
+                <Image
+                  width={28}
+                  height={28}
+                  src={profile}
+                  alt="Avatar Preview"
+                  className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
+                />
               </div>
             )}
             <Button
@@ -131,9 +152,20 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
           </label>
         </div>
 
-        {/* <Button type="submit" className="w-full">
-          Upload Profile Picture
-        </Button> */}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={!selectedProfilePicture || isUploading}
+        >
+          {isUploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Please wait
+            </>
+          ) : (
+            'Upload Profile Picture'
+          )}
+        </Button>
       </form>
     </div>
   );
