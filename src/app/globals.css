@@ -63,13 +63,23 @@
 }
 
 @layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-      display: none;
+  /* Transparent scrollbar for Chrome, Safari, and Opera */
+  .transparent-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Adjust width as needed */
   }
- /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
+
+  .transparent-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Make the scrollbar thumb transparent */
+  }
+
+  .transparent-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent; /* Make the scrollbar track transparent */
+  }
+
+  /* Transparent scrollbar for Firefox */
+  .transparent-scrollbar {
+    scrollbar-width: thin; /* Makes scrollbar thin */
+    scrollbar-color: transparent transparent; /* Makes both thumb and track transparent */
+  }
 }
-}
+
