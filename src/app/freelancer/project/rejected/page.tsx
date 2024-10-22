@@ -30,23 +30,14 @@ interface Project {
   experience?: string;
   role: string;
   projectType: string;
-  totalNeedOfFreelancer?: {
-    category?: string;
-    needOfFreelancer?: number;
-    appliedCandidates?: string[];
-    rejected?: string[];
-    accepted?: string[];
-    status?: string;
-  }[];
   status?: string;
-  team?: string[];
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export default function RejectedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Initialize loading state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,6 +48,8 @@ export default function RejectedProject() {
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false); // Set loading to false when data is fetched
       }
     };
 
@@ -71,7 +64,7 @@ export default function RejectedProject() {
         active="Rejected Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -106,14 +99,18 @@ export default function RejectedProject() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {projects.length === 0 ? (
+          {isLoading ? ( // Check if loading
+            Array.from({ length: 1 }).map((_, index) => ( // Show three skeletons for loading
+              <ProjectCard key={index} isLoading={true} />
+            ))
+          ) : projects.length === 0 ? (
             <div className="col-span-full text-center mt-20 w-full">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
               <p className="text-gray-500">No projects available</p>
             </div>
           ) : (
             projects.map((project, index: number) => (
-              <ProjectCard key={index} project={project} />
+              <ProjectCard key={index} project={project} isLoading={false} />
             ))
           )}
         </main>
