@@ -129,6 +129,7 @@ export default function Dashboard() {
                     key={index}
                     className="min-w-[45%]"
                     project={project}
+                    isLoading={false} // or true, depending on your loading state
                   />
                 ))
               ) : (
@@ -150,6 +151,7 @@ export default function Dashboard() {
                     key={index}
                     className="min-w-[45%]"
                     project={project}
+                    isLoading={false} // or true, depending on your loading state
                   />
                 ))
               ) : (
