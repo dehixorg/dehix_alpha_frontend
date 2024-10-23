@@ -25,7 +25,7 @@ const ProfilePictureUpload = ({
 }) => {
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(profile);
+  const [previewUrl, setPreviewUrl] = useState<string | null>('/user.png');
   const [isUploading, setIsUploading] = useState<boolean>(false); // For disabling the button
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -35,7 +35,6 @@ const ProfilePictureUpload = ({
       if (file.size <= maxImageSize) {
         setSelectedProfilePicture(file);
         setPreviewUrl(URL.createObjectURL(file));
-        console.log('Image selected:', file);
       } else {
         toast({
           variant: 'destructive',
@@ -80,14 +79,15 @@ const ProfilePictureUpload = ({
           },
         },
       );
-      console.log('Image upload response:', postResponse.data);
+      
 
       const { Location } = postResponse.data.data;
       const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
         profilePicture: Location,
       });
-      console.log('Profile picture update response:', putResponse.data);
 
+
+      
       if (putResponse.status === 200) {
         toast({
           title: 'Success',
@@ -122,7 +122,7 @@ const ProfilePictureUpload = ({
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <Image
+              <img
                 width={28}
                 height={28}
                 src={previewUrl}

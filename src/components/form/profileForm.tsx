@@ -171,22 +171,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user_id}`);
-        console.log('API Response get:', response.data);
         setUser(response.data);
         setCurrSkills(response.data.skills);
         setCurrDomains(response.data.domain);
 
         const skillsResponse = await axiosInstance.get('/skills/all');
-        console.log('API Response get:', skillsResponse.data.data);
         setSkills(skillsResponse.data.data);
 
         const domainsResponse = await axiosInstance.get('/domain/all');
-        console.log('API Response get:', domainsResponse.data.data);
         setDomains(domainsResponse.data.data);
 
         const projectDomainResponse =
           await axiosInstance.get('/projectDomain/all');
-        console.log('API Response get:', projectDomainResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
       } catch (error) {
         console.error('API Error:', error);
@@ -223,7 +219,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         domain: currDomains,
         description: data.description,
       });
-      console.log('API Response:', response.data);
+      
 
       setUser({
         ...user,
@@ -405,94 +401,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           /> */}
-          {/* <FormField
-  control={form.control}
-  name="resume"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel style={{ marginLeft: '0px' }}>Resume</FormLabel> 
-      <FormControl>
-        <div style={{ marginLeft: '0px' }}>
-          <ResumeUpload user_id={user.id} />
-        </div>
-      </FormControl>
-      <FormDescription>Upload your resume</FormDescription>
-      <FormMessage />
-    </FormItem>
-  )}
-/> */}
 
-          {/*<FormField*/}
-          {/*  control={form.control}*/}
-          {/*  name="phone"*/}
-          {/*  render={() => (*/}
-          {/*    <FormItem className="relative">*/}
-          {/*      <FormLabel>Edit Resume</FormLabel>*/}
-          {/*      <FormControl>*/}
-          {/*        <div className="relative flex items-center">*/}
-          {/*          <Input placeholder="edit resume" className="pr-10" />*/}
-          {/*          <Edit*/}
-          {/*            className="absolute right-2 h-5 w-5 cursor-pointer text-gray-500 hover:text-gray-700"*/}
-          {/*            onClick={() => {}}*/}
-          {/*          />*/}
-          {/*        </div>*/}
-          {/*      </FormControl>*/}
-          {/*      <FormMessage />*/}
-          {/*      <FormDescription>Non editable field</FormDescription>*/}
-          {/*    </FormItem>*/}
-          {/*  )}*/}
-          {/*/>*/}
-
-          {/* <FormField
-            control={form.control}
-            name="dob"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth{'\t'} </FormLabel>
-                <FormControl>
-                  <DatePicker {...field} />
-                </FormControl>
-                <FormDescription>
-                  Your date of birth is used to calculate your age.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
-          {/* <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Role or Position</FormLabel>
-                <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Developer">Developer</SelectItem>
-                      <SelectItem value="Designer">Designer</SelectItem>
-                      <SelectItem value="Product Manager">
-                        Product Manager
-                      </SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormDescription>
-                  Enter your current role or position
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
           <Separator className="col-span-2" />
           <div className="flex flex-wrap gap-6 w-full">
             <div className="flex-1 min-w-[150px] max-w-[300px]">
