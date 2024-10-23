@@ -1,6 +1,12 @@
 'use client';
-import { Search } from '@/components/search';
 import React, { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useParams } from 'next/navigation'; // Import to handle dynamic route params
+import { Linkedin, Github, Globe } from 'lucide-react';
+
+import { Search } from '@/components/search';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -9,27 +15,23 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { useParams } from 'next/navigation'; // Import to handle dynamic route params
-import { Linkedin, Github, Globe } from "lucide-react";
+
 interface UserProfile {
-    firstName: string;
-    lastName: string;
-    userName: string;
-    email: string;
-    dob: string;
-    linkedin: string;
-    github: string;
-    personalWebsite: string;
-    connects: string;
-    workExperience: string;
-  }
+  firstName: string;
+  lastName: string;
+  userName: string;
+  email: string;
+  dob: string;
+  linkedin: string;
+  github: string;
+  personalWebsite: string;
+  connects: string;
+  workExperience: string;
+}
 const profileFormSchema = z.object({
   // Your schema fields here
 });
@@ -37,7 +39,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerProfile() {
-  const { freelancer_id } = useParams(); 
+  const { freelancer_id } = useParams();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -47,7 +49,7 @@ export default function FreelancerProfile() {
         try {
           setLoading(true);
           const response = await axiosInstance.get(
-            `/freelancer/${freelancer_id}/details`
+            `/freelancer/${freelancer_id}/details`,
           );
           if (response.status === 200) {
             setUser(response.data);
@@ -125,7 +127,7 @@ export default function FreelancerProfile() {
             <Card className="p-14 flex items-center rounded-lg">
               <Avatar className="w-24 h-24 rounded-full mr-6">
                 <AvatarImage
-                  src={user?.avatar || "/placeholder.svg?height=80&width=80"} // Use user's avatar or placeholder
+                  src={user?.avatar || '/placeholder.svg?height=80&width=80'} // Use user's avatar or placeholder
                   alt="Profile picture"
                 />
                 <AvatarFallback>JD</AvatarFallback>
@@ -146,10 +148,19 @@ export default function FreelancerProfile() {
                 <h3 className="text-xl font-semibold">Professional Info</h3>
                 <p>Job Title: {user?.professionalInfo?.jobTitle || 'N/A'}</p>
                 <p>Company: {user?.professionalInfo?.company || 'N/A'}</p>
-                <p>Description: {user?.professionalInfo?.workDescription || 'N/A'}</p>
                 <p>
-                  Duration: {new Date(user?.professionalInfo?.workFrom).toLocaleDateString()} 
-                  - {new Date(user?.professionalInfo?.workTo).toLocaleDateString()}
+                  Description:{' '}
+                  {user?.professionalInfo?.workDescription || 'N/A'}
+                </p>
+                <p>
+                  Duration:{' '}
+                  {new Date(
+                    user?.professionalInfo?.workFrom,
+                  ).toLocaleDateString()}
+                  -{' '}
+                  {new Date(
+                    user?.professionalInfo?.workTo,
+                  ).toLocaleDateString()}
                 </p>
                 <p>GitHub: {user?.professionalInfo?.githubRepoLink || 'N/A'}</p>
               </Card>
@@ -159,7 +170,9 @@ export default function FreelancerProfile() {
                 <h3 className="text-xl font-semibold">Skills</h3>
                 {user?.skills.length > 0 ? (
                   user.skills.map((skill: any) => (
-                    <p key={skill._id}>{skill.name} - Level: {skill.level}</p>
+                    <p key={skill._id}>
+                      {skill.name} - Level: {skill.level}
+                    </p>
                   ))
                 ) : (
                   <p>No skills added.</p>
@@ -173,8 +186,9 @@ export default function FreelancerProfile() {
                 <p>University: {user?.education?.universityName || 'N/A'}</p>
                 <p>Field of Study: {user?.education?.fieldOfStudy || 'N/A'}</p>
                 <p>
-                  Duration: {new Date(user?.education?.startDate).toLocaleDateString()} 
-                  - {new Date(user?.education?.endDate).toLocaleDateString()}
+                  Duration:{' '}
+                  {new Date(user?.education?.startDate).toLocaleDateString()}-{' '}
+                  {new Date(user?.education?.endDate).toLocaleDateString()}
                 </p>
                 <p>Grade: {user?.education?.grade || 'N/A'}</p>
               </Card>
@@ -190,7 +204,7 @@ export default function FreelancerProfile() {
                       <p>Role: {project.role}</p>
                       <p>Tech Used: {project.techUsed.join(', ')}</p>
                       <p>
-                        Duration: {new Date(project.start).toLocaleDateString()} 
+                        Duration: {new Date(project.start).toLocaleDateString()}
                         - {new Date(project.end).toLocaleDateString()}
                       </p>
                       <p>GitHub: {project.githubLink || 'N/A'}</p>

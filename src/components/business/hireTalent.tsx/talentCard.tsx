@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,6 @@ import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
 import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 interface DehixTalent {
   _id: string;
@@ -175,10 +175,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   {/* <button>
                     <Link href="/business/freelancerProfile">view</Link>
                   </button> */}
-                  <Button className='w-full'><Link href={`/business/freelancerProfile/${talentEntry._id}`}>
-                    <button>View</button>
-                  </Link></Button>
-                     
+                  <Button className="w-full">
+                    <Link
+                      href={`/business/freelancerProfile/${talentEntry._id}`}
+                    >
+                      <button>View</button>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </CardContent>
