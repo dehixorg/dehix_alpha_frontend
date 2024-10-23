@@ -10,6 +10,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
 import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface DehixTalent {
   _id: string;
@@ -168,6 +170,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+                </div>
+                <div>
+                  {/* <button>
+                    <Link href="/business/freelancerProfile">view</Link>
+                  </button> */}
+                  <Button className='w-full'><Link href={`/business/freelancerProfile/${talentEntry._id}`}>
+                    <button>View</button>
+                  </Link></Button>
+                     
                 </div>
               </div>
             </CardContent>
