@@ -30,7 +30,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   return (
     <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
       <div className="h-full p-4 flex flex-col space-y-4 ">
-        <Button onClick={handleApply} className="w-[90%]">
+        <Button onClick={handleApply} className="w-full">
           Apply
         </Button>
         <Button

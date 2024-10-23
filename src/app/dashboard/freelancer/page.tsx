@@ -72,7 +72,7 @@ export default function Dashboard() {
       handleCreateMeet();
     } else {
       // If no 'code' query parameter, trigger the auth flow
-      handleAuth();
+      // handleAuth();
     }
   }, [searchParams]);
 
@@ -111,20 +111,20 @@ export default function Dashboard() {
   };
 
   // Function to handle Create Meet button press
-  const handleAuth = async () => {
-    try {
-      const baseUrl = window.location.origin + window.location.pathname;
-      const response = await axiosInstance.get('/meeting/auth-url', {
-        params: { redirectUri: baseUrl }, // Pass current URL as redirectUri
-      });
-      const authUrl = response.data.url;
-      if (authUrl) {
-        router.push(authUrl); // Use router.push for navigation instead of window.location.href
-      }
-    } catch (error) {
-      console.error('Error fetching Google Auth URL:', error);
-    }
-  };
+  // const handleAuth = async () => {
+  //   try {
+  //     const baseUrl = window.location.origin + window.location.pathname;
+  //     const response = await axiosInstance.get('/meeting/auth-url', {
+  //       params: { redirectUri: baseUrl }, // Pass current URL as redirectUri
+  //     });
+  //     const authUrl = response.data.url;
+  //     if (authUrl) {
+  //       router.push(authUrl); // Use router.push for navigation instead of window.location.href
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching Google Auth URL:', error);
+  //   }
+  // };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -259,7 +259,7 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" onClick={handleAuth} disabled>
+              <Button className="mt-3" disabled>
                 Create Meet
               </Button>
             </div>

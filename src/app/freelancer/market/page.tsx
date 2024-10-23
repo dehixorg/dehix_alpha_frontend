@@ -237,19 +237,19 @@ const Market: React.FC = () => {
         </div>
       </div>
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
-        <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
-          <Button onClick={handleApply} className="w-[80%]">
+        <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
+          <Button onClick={handleApply} className="w-full">
             Apply
           </Button>
           <Button
             variant="outline"
             onClick={handleReset}
-            className=" w-[80%] mb-4 bg-gray text-white  "
+            className="w-full mb-4 bg-gray text-white"
             style={{ marginTop: '1rem' }}
           >
             Reset
           </Button>
-          <div className="mb-4 mt-4">
+          <div className="my-4">
             <SkillDom
               label="Domains"
               heading="Filter by domain"
