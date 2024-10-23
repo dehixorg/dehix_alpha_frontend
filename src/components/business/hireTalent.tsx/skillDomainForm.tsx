@@ -64,7 +64,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       } else {
         throw new Error('Skills response is null or invalid');
       }
-      const domainsResponse = await axiosInstance.get('/domain/all');
+      const domainsResponse = await axiosInstance.get('/domain/all/admin');
       if (domainsResponse?.data?.data) {
         setDomains(domainsResponse.data.data);
       } else {
