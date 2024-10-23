@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 
-
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
 

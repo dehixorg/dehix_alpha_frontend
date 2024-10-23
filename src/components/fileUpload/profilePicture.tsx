@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 const allowedImageFormats = [
   'image/png',
   'image/jpeg',
@@ -106,7 +106,7 @@ const ProfilePictureUpload = ({ user_id }: { user_id: string }) => {
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <img
+              <Image
                 src={previewUrl}
                 alt="Avatar Preview"
                 className="w-20 h-20 rounded-full object-cover"
