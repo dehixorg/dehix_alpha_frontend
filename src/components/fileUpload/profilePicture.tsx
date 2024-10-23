@@ -79,15 +79,12 @@ const ProfilePictureUpload = ({
           },
         },
       );
-      
 
       const { Location } = postResponse.data.data;
       const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
         profilePicture: Location,
       });
 
-
-      
       if (putResponse.status === 200) {
         toast({
           title: 'Success',

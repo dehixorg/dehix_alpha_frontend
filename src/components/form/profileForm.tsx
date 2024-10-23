@@ -219,7 +219,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         domain: currDomains,
         description: data.description,
       });
-      
 
       setUser({
         ...user,
