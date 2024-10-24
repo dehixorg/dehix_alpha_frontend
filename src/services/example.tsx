@@ -1,71 +1,71 @@
 // USE these example api as refrence for creating different resource api helper service
 // eslint-disable-next-line prettier/prettier
 
-import { Api_Methods } from "@/utils/common/enum"; // Importing Api_Methods
+import { apiService } from './apiService';
 
-import { apiService } from "./apiService";
+import { Api_Methods } from '@/utils/common/enum'; // Importing Api_Methods
 
 export const apiHelperService = {
   getAllFreelancers: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/freelancer/allfreelancer",
+      endpoint: '/freelancer/allfreelancer',
       params,
     });
   },
   getAllAdmin: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/admin/all",
+      endpoint: '/admin/all',
       params,
     });
   },
   getAllProject: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/business/all_projects",
+      endpoint: '/business/all_projects',
       params,
     });
   },
   getAllFaq: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/faq/all",
+      endpoint: '/faq/all',
       params,
     });
   },
   getAllNotification: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/notification/all_notification",
+      endpoint: '/notification/all_notification',
       params,
     });
   },
   getAllDomain: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/domain/all",
+      endpoint: '/domain/all',
       params,
     });
   },
   getAllBusiness: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/business/all",
+      endpoint: '/business/all',
       params,
     });
   },
   getAllBid: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/bid/all",
+      endpoint: '/bid/all',
       params,
     });
   },
   getDomainList: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/domain/all",
+      endpoint: '/domain/all',
       params,
     });
   },
@@ -91,21 +91,21 @@ export const apiHelperService = {
   createFaq: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: "/faq/createfaq",
+      endpoint: '/faq/createfaq',
       body,
     });
   },
   createAdmin: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: "/admin/create",
+      endpoint: '/admin/create',
       body,
     });
   },
   createDomain: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: "/domain/createdomain",
+      endpoint: '/domain/createdomain',
       body,
     });
   },
@@ -154,7 +154,7 @@ export const apiHelperService = {
   getCategories: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: "/categories",
+      endpoint: '/categories',
       params,
     });
   },
