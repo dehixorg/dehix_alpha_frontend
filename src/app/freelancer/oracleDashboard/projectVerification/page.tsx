@@ -76,10 +76,9 @@ export default function ProfessionalInfo() {
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
-      )
+      );
       setProjectData(flattenedData);
-    } catch (error) {
-    }
+    } catch (error) {}
   }, [user.uid]);
   useEffect(() => {
     fetchData();

@@ -88,7 +88,6 @@ const BidsPage = () => {
     fetchBidsForProjects();
   }, [projectIds]);
 
-
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;
     if (actionType === 'Accept') updatedStatus = 'Accepted';

@@ -142,8 +142,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  useEffect(() => {
-  }, [currDomains]);
+  useEffect(() => {}, [currDomains]);
 
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(

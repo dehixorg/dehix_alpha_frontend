@@ -39,7 +39,7 @@ export default function Dashboard() {
       try {
         const response = await axiosInstance.get(
           `/project/${user.uid}/projects`,
-        ); 
+        );
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
