@@ -136,7 +136,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         // Set user's current selections
         setUserSkills(userResponse.data.skills || []);
         setUserDomains(userResponse.data.domain || []);
-        setUserProjectDomains(userResponse.data.projectDomains || []);
+        setUserProjectDomains(userResponse.data.projectDomain || []);
 
         form.reset({
           firstName: userResponse.data.firstName || '',
