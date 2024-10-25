@@ -24,7 +24,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import dummyData from '@/dummydata.json';
+// import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
 import { Button } from '@/components/ui/button';
