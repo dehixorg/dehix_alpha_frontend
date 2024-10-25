@@ -134,7 +134,7 @@ const Market: React.FC = () => {
         setSkills(skillLabels);
 
         // Fetch domains
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain/all/admin');
         const domainLabels = domainsResponse.data.data.map(
           (domain: Domain) => domain.label,
         );

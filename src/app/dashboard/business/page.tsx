@@ -33,15 +33,13 @@ export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
   const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
           `/project/${user.uid}/projects`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+        ); 
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
@@ -50,7 +48,6 @@ export default function Dashboard() {
 
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-  console.log(user);
   const completedProjects = responseData.filter(
     (project: any) => project.status == 'Completed',
   );

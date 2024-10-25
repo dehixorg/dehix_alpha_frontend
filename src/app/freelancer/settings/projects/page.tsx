@@ -28,7 +28,6 @@ export default function Projects() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response get:', response.data?.projects);
         setProjects(Object.values(response.data?.projects)); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);

@@ -44,7 +44,6 @@ interface Bid {
 
 const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
-  console.log(user.uid);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
 
@@ -89,7 +88,6 @@ const BidsPage = () => {
     fetchBidsForProjects();
   }, [projectIds]);
 
-  console.log(bidsArray);
 
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;
