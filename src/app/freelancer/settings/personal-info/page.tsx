@@ -45,6 +45,7 @@ export default function PersonalInfo() {
           <ProfileForm user_id={user.uid} />
         </main>
       </div>
+      {/* <ResumeUpload user_id={user.id}/> */}
     </div>
   );
 }

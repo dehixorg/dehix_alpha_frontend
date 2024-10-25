@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import Header from '@/components/header/header';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
@@ -33,6 +34,15 @@ export default function HistoryPage() {
   //   return false;
   // });
 
+  const breadcrumbItems = [
+    { label: 'Freelancer', link: '/dashboard/freelancer' },
+    {
+      label: 'Interview',
+      link: '/freelancer/interview/profile',
+    },
+    { label: 'History Interviews', link: '#' },
+  ];
+
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -40,30 +50,20 @@ export default function HistoryPage() {
         menuItemsBottom={menuItemsBottom}
         active="History"
       />
-      <div className="flex flex-col sm:py-2 sm:gap-4 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6 gap-3">
-          <div className="flex items-center ml-2 gap-4">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="History"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                {
-                  label: 'Interview',
-                  link: '/freelancer/interview/profile',
-                },
-                { label: 'History Interviews', link: '#' },
-              ]}
-            />
-          </div>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 w-full">
+        <Header
+          breadcrumbItems={breadcrumbItems}
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="History"
+        />
+        <div className="ml-10">
+          <h1 className="text-3xl font-bold">History Interviews</h1>
+          <p className="text-gray-400 mt-2">
+            Review your past interviews and reflect on your progress and
+            experiences.
+          </p>
+        </div>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -81,6 +81,7 @@ export default function HistoryPage() {
               >
                 All
               </DropdownMenuCheckboxItem>
+
               <DropdownMenuCheckboxItem
                 checked={filter === 'Skills'}
                 onSelect={() => setFilter('Skills')}

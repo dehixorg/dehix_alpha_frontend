@@ -5,7 +5,6 @@ import React from 'react';
 import { ListFilter, PackageOpen } from 'lucide-react';
 
 // import { zodResolver } from '@hookform/resolvers/zod';
-import { Search } from '@/components/search';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -14,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Header from '@/components/header/header';
 // import {
 //   Card,
 //   CardContent,
@@ -22,8 +22,6 @@ import {
 //   CardDescription,
 //   CardFooter,
 // } from '@/components/ui/card';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -189,6 +187,15 @@ export default function CurrentPage() {
   //   return false;
   // });
 
+  const breadcrumbItems = [
+    { label: 'Freelancer', link: '/dashboard/freelancer' },
+    {
+      label: 'Interview',
+      link: '/freelancer/interview/profile',
+    },
+    { label: 'Current Interviews', link: '#' },
+  ];
+
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -197,29 +204,19 @@ export default function CurrentPage() {
         active="Current"
       />
       <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 gap-3  flex items-center justify-between border-b bg-background px-4 py-4 sm:border-0  sm:px-6">
-          <div className="flex items-center ml-2 gap-4">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="Current"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                {
-                  label: 'Interview',
-                  link: '/freelancer/interview/profile',
-                },
-                { label: 'Current Interviews', link: '#' },
-              ]}
-            />
-          </div>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          breadcrumbItems={breadcrumbItems}
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Current"
+        />
+        <div className="ml-10">
+          <h1 className="text-3xl font-bold">Current Interviews</h1>
+          <p className="text-gray-400 mt-2">
+            View and manage your current interviews, and update skills for
+            better matches.
+          </p>
+        </div>
         <div className="flex flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-col xl:flex-col pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

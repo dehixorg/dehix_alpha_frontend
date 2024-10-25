@@ -602,7 +602,7 @@ export function CreateProjectBusinessForm() {
           </div>
           <Button
             type="submit"
-            className="lg:col-span-2 xl:col-span-2"
+            className="lg:col-span-2 xl:col-span-2 mt-4"
             disabled={loading}
           >
             {loading ? 'Loading...' : 'Create Project'}

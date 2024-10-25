@@ -18,6 +18,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
 
 interface Skill {
   _id: string;
@@ -126,10 +127,21 @@ const SkillDomainForm: React.FC = () => {
     }
   };
 
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500 text-white';
+      case 'pending':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-8 ml-5">
-        <h1 className="text-3xl font-bold">Dehix Talent Table</h1>
+    <div className="p-6 mt-2">
+      <div className="mb-8 mt-1 ml-2">
+        <h1 className="text-3xl font-bold">Dehix Talent </h1>
         <p className="text-gray-400 mt-2">
           Here you can Add relevant skills and domains to get directly hired
           from dehix talent.
@@ -161,7 +173,13 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience}Years</TableCell>
                       <TableCell>${item.monthlyPay}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(item.status)}>
+                          {item.status.replace(/\b\w/g, (char) =>
+                            char.toUpperCase(),
+                          )}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Switch
                           checked={statusVisibility[index]}

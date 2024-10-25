@@ -50,6 +50,7 @@ interface Project {
     status?: string;
   }[];
   profiles?: {
+    _id?: string;
     domain?: string;
     freelancersRequired?: string;
     skills?: string[];
@@ -151,11 +152,21 @@ const Market: React.FC = () => {
   const fetchData = useCallback(
     async (appliedFilters: FilterState) => {
       try {
+        const freelancerDetails = await axiosInstance.get(
+          `/freelancer/${user.uid}`,
+        );
         const queryString = constructQueryString(appliedFilters);
-        const response = await axiosInstance.get(
+        const allJobs = await axiosInstance.get(
           `/project/${user.uid}/all_project?${queryString}`,
         );
-        setJobs(response.data.data);
+
+        const notInterestedProjects =
+          freelancerDetails.data.notInterestedProject || [];
+
+        const filteredJobs = allJobs.data.data.filter(
+          (job: Project) => !notInterestedProjects.includes(job._id),
+        );
+        setJobs(filteredJobs);
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -186,6 +197,10 @@ const Market: React.FC = () => {
     setShowFilters(!showFilters);
   };
 
+  const handleRemoveJob = (id: string) => {
+    setJobs((prevJobs) => prevJobs.filter((job) => job._id !== id));
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col sm:pl-6">
       <SidebarMenu
@@ -212,11 +227,9 @@ const Market: React.FC = () => {
           </div>
           <DropdownProfile />
         </header>
-        <div className="mb-8 ml-10">
-          <h1 className="text-3xl font-bold">
-            Freelancer Marketplace Overview
-          </h1>
-          <p className="text-gray-400 mt-2">
+        <div className="mb-8 ml-8">
+          <h1 className="text-3xl font-bold">Freelancer Marketplace</h1>
+          <p className="text-gray-400 mt-2 ">
             Discover and manage your freelance opportunities, connect with
             potential projects, and filter by skills, domains and project domian
             to enhance your portfolio.
@@ -224,19 +237,19 @@ const Market: React.FC = () => {
         </div>
       </div>
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
-        <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
-          <Button onClick={handleApply} className="w-[80%]">
+        <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
+          <Button onClick={handleApply} className="w-full">
             Apply
           </Button>
           <Button
             variant="outline"
             onClick={handleReset}
-            className=" w-[80%] mb-4 bg-gray text-white  "
+            className="w-full mb-4 bg-gray text-white"
             style={{ marginTop: '1rem' }}
           >
             Reset
           </Button>
-          <div className="mb-4 mt-4">
+          <div className="my-4">
             <SkillDom
               label="Domains"
               heading="Filter by domain"
@@ -284,6 +297,7 @@ const Market: React.FC = () => {
               skillsRequired={job.skillsRequired}
               status={job.status}
               profiles={job.profiles || []}
+              onRemove={handleRemoveJob}
             />
           ))}
         </div>
