@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import Image from 'next/image';
+
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
 
