@@ -72,13 +72,14 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/freelancer/${user.uid}/oracle?doc_type=project`,
       );
-      // console.log(response.data)
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
       );
       setProjectData(flattenedData);
-    } catch (error) {}
+    } catch (error) {
+      ('');
+    }
   }, [user.uid]);
   useEffect(() => {
     fetchData();
