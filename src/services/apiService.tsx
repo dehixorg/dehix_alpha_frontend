@@ -1,7 +1,7 @@
 // apiService.tsx
-import { Api_Methods } from "../utils/common/enum"; // Importing Api_Methods
+import { Api_Methods } from '../utils/common/enum'; // Importing Api_Methods
 
-import { axiosInstance } from "@/lib/axiosinstance";
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ApiRequest {
   method: Api_Methods; // Use the Api_Methods enum directly

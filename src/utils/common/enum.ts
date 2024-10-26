@@ -4,12 +4,11 @@
 // if (!user.firstName) {
 //     errors.push(Admin_Schema_Prompt_Messages.FIRST_NAME_REQUIRED);
 // }
-  
-  export enum Api_Methods {
-    GET = "GET",
-    POST = "POST",
-    PUT = "PUT",
-    DELETE = "DELETE",
-    PATCH = "PATCH",
-  }
-  
+
+export enum Api_Methods {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  PATCH = 'PATCH',
+}
