@@ -2,7 +2,6 @@
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation'; // Updated import for useRouter and useSearchParams
 
 import { Search } from '@/components/search';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -24,10 +23,10 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import dummyData from '@/dummydata.json';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
 
 interface Project {
   _id: string;
@@ -58,73 +57,8 @@ interface Project {
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true); // Loading state
-  const router = useRouter(); // Use the updated useRouter from next/navigation
-  const searchParams = useSearchParams(); // Use useSearchParams to access query parameters
-
-  // Get query string parameters (for example, auth response)
-  useEffect(() => {
-    const query = Object.fromEntries(searchParams.entries());
-
-    // Check if the 'code' parameter exists
-    if (query.code) {
-      console.log('Query params:', query); // Log query string parameters
-      handleCreateMeet();
-    } else {
-      // If no 'code' query parameter, trigger the auth flow
-      // handleAuth();
-    }
-  }, [searchParams]);
-
-  // Function to handle Create Meet button press
-  const handleCreateMeet = async () => {
-    try {
-      // Extract 'code' from query parameters
-      const query = Object.fromEntries(searchParams.entries());
-      const code = query.code;
-
-      // Ensure the code exists
-      if (!code) {
-        console.error('Error: Missing code query parameter');
-        return;
-      }
-
-      // Call your Fastify API to create a meeting
-      const response = await axiosInstance.post(
-        '/meeting/create-meeting',
-        {
-          attendees: ['akhilcodebugged@gmail.com'], // Replace with actual attendees
-        },
-        {
-          params: { code }, // Pass the code as a query parameter
-        },
-      );
-
-      // If the API responds with a meeting link, redirect to it
-      const { meetLink } = response.data;
-      if (meetLink) {
-        router.push(meetLink);
-      }
-    } catch (error) {
-      console.error('Error creating Google Calendar meeting:', error);
-    }
-  };
-
-  // Function to handle Create Meet button press
-  // const handleAuth = async () => {
-  //   try {
-  //     const baseUrl = window.location.origin + window.location.pathname;
-  //     const response = await axiosInstance.get('/meeting/auth-url', {
-  //       params: { redirectUri: baseUrl }, // Pass current URL as redirectUri
-  //     });
-  //     const authUrl = response.data.url;
-  //     if (authUrl) {
-  //       router.push(authUrl); // Use router.push for navigation instead of window.location.href
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching Google Auth URL:', error);
-  //   }
-  // };
+  const [loading, setLoading] = useState(true);
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,16 +66,20 @@ export default function Dashboard() {
         const response = await axiosInstance.get(
           `/freelancer/${user.uid}/project`,
         );
-        setProjects(response.data.data); // Store projects data
+        setProjects(response.data.data);
       } catch (error) {
         console.error('API Error:', error);
       } finally {
-        setLoading(false); // Set loading to false when data is fetched
+        setLoading(false);
       }
     };
 
-    fetchData(); // Fetch data on component mount
+    fetchData();
   }, [user.uid]);
+
+  const handleCreateMeetClick = () => {
+    setShowMeetingDialog(true); // Open meeting dialog
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -157,7 +95,6 @@ export default function Dashboard() {
             menuItemsBottom={menuItemsBottom}
             active="Dashboard"
           />
-
           <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
@@ -166,6 +103,7 @@ export default function Dashboard() {
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+            {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
               <Card className="sm:col-span-2 flex flex-col h-full">
                 <CardHeader className="pb-3">
@@ -215,6 +153,8 @@ export default function Dashboard() {
                 }
               />
             </div>
+
+            {/* Tabs for project filtering */}
             <div className="overflow-x-auto">
               <Tabs defaultValue="active">
                 <div className="flex items-center">
@@ -252,6 +192,8 @@ export default function Dashboard() {
               </Tabs>
             </div>
           </div>
+
+          {/* Create Meet Section */}
           <div className="space-y-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Interviews
@@ -259,13 +201,19 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" disabled>
+              <Button className="mt-3" onClick={handleCreateMeetClick} disabled>
                 Create Meet
               </Button>
             </div>
           </div>
         </main>
       </div>
+
+      {/* MeetingDialog Modal */}
+      <MeetingDialog
+        isOpen={showMeetingDialog}
+        onClose={() => setShowMeetingDialog(false)}
+      />
     </div>
   );
 }

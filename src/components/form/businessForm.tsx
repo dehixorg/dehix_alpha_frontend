@@ -298,12 +298,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               )}
             />
           </div>
-          <Button
-            className="bg-gray-600 text-white hover:bg-gray-800"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Submit'}
+          <Button className="w-full" type="submit" disabled={loading}>
+            {loading ? 'Loading...' : 'Save changes'}
           </Button>
         </form>
       </Form>
