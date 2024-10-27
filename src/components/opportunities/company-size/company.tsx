@@ -25,7 +25,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
   };
 
   return (
-    <Card className="w-[250px]">
+    <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">{heading}</CardTitle>
       </CardHeader>

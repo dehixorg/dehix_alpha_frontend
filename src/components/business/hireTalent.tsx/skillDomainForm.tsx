@@ -231,23 +231,21 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      <div className="text-center py-10 w-full mt-10">
-                        <PackageOpen
-                          className="mx-auto text-gray-500"
-                          size="100"
-                        />
-                        <p className="text-gray-500">
-                          No data available.
-                          <br /> This feature will be available soon.
-                          <br />
-                          Here you can directly hire freelancer for different
-                          roles.
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <tr>
+                    <td colSpan={5} className="text-center py-10">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
+                      <p className="text-gray-500">
+                        No data available.
+                        <br /> This feature will be available soon.
+                        <br />
+                        Here you can directly hire freelancer for different
+                        roles.
+                      </p>
+                    </td>
+                  </tr>
                 )}
               </TableBody>
             </Table>

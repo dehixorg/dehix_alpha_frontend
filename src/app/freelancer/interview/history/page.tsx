@@ -20,9 +20,28 @@ import {
 import { Button } from '@/components/ui/button';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import Header from '@/components/header/header';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
+
+  // const filteredInterviews = sampleInterviews.filter((interview) => {
+  //   if (filter === 'All') return interview.status === 'Completed';
+  //   if (filter === 'Skills' && interview.skill)
+  //     return interview.status === 'Completed';
+  //   if (filter === 'Domain' && interview.domain)
+  //     return interview.status === 'Completed';
+  //   return false;
+  // });
+
+  const breadcrumbItems = [
+    { label: 'Freelancer', link: '/dashboard/freelancer' },
+    {
+      label: 'Interview',
+      link: '/freelancer/interview/profile',
+    },
+    { label: 'History Interviews', link: '#' },
+  ];
 
   return (
     <div className="flex min-h-screen w-full">
@@ -31,31 +50,14 @@ export default function HistoryPage() {
         menuItemsBottom={menuItemsBottom}
         active="History"
       />
-      <div className="flex flex-col sm:py-2 sm:gap-4 sm:pl-14 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6 gap-3">
-          <div className="flex items-center ml-2 gap-4">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="History"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                {
-                  label: 'Interview',
-                  link: '/freelancer/interview/profile',
-                },
-                { label: 'History Interviews', link: '#' },
-              ]}
-            />
-          </div>
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
-        <div className="mb-8 mt-2 ml-10">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 w-full">
+        <Header
+          breadcrumbItems={breadcrumbItems}
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="History"
+        />
+        <div className="ml-10">
           <h1 className="text-3xl font-bold">History Interviews</h1>
           <p className="text-gray-400 mt-2">
             Review your past interviews and reflect on your progress and
