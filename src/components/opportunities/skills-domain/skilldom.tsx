@@ -58,7 +58,7 @@ const SkillDom: React.FC<SkillDomProps> = ({
   const hiddenSkills = filteredSkills.slice(3);
 
   return (
-    <Card className="w-[250px]">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-lg">{heading}</CardTitle>
       </CardHeader>
