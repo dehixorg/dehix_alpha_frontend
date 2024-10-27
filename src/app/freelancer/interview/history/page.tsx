@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { ListFilter, PackageOpen } from 'lucide-react';
 
-import { Search } from '@/components/search';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -18,8 +17,8 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+// import Breadcrumb from '@/components/shared/breadcrumbList';
+// import DropdownProfile from '@/components/shared/DropdownProfile';
 import Header from '@/components/header/header';
 
 export default function HistoryPage() {
