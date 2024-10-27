@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
+// import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const allowedImageFormats = [
