@@ -70,7 +70,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/oracle?doc_type=project`,
+        `/verification/${user.uid}/oracle?doc_type=project`,
       );
       // console.log(response.data)
       setProjectData(response.data.data);

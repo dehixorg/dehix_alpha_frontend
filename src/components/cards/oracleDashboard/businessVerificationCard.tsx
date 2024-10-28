@@ -93,7 +93,7 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // const response= await axiosInstance.patch(`/freelancer/${_id}/oracle?doc_type=business`,{
+    // const response= await axiosInstance.patch(`/verification/${_id}/oracle?doc_type=business`,{
     //   ...data,
     //   verification_status:data.type
     // })

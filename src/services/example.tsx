@@ -16,7 +16,7 @@ export const apiHelperService = {
   getAllAdmin: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/admin/all',
+      endpoint: '/admin',
       params,
     });
   },
@@ -30,7 +30,7 @@ export const apiHelperService = {
   getAllFaq: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/faq/all',
+      endpoint: '/faq',
       params,
     });
   },
@@ -51,14 +51,14 @@ export const apiHelperService = {
   getAllBusiness: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/business/all',
+      endpoint: '/business',
       params,
     });
   },
   getAllBid: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/bid/all',
+      endpoint: '/bid',
       params,
     });
   },
@@ -98,14 +98,14 @@ export const apiHelperService = {
   createAdmin: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/admin/create',
+      endpoint: '/admin',
       body,
     });
   },
   createDomain: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/domain/createdomain',
+      endpoint: '/domain',
       body,
     });
   },
