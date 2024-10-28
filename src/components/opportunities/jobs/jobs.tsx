@@ -96,7 +96,9 @@ const JobCard: React.FC<JobCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className=" text-2xl font-bold text-foreground">
           <div className="flex items-center text-gray-600 gap-2">
-            {projectName}
+            <Link href={`/freelancer/market/${companyId}`} passHref>
+              {projectName}
+            </Link>
             <Badge className={className}> {text} </Badge>
           </div>
         </CardTitle>
@@ -106,12 +108,10 @@ const JobCard: React.FC<JobCardProps> = ({
         <div className="flex flex-col lg:flex-row justify-between">
           {/* Left section */}
           <div className="flex flex-col items-start lg:items-start">
-            <Link href={`/freelancer/market/${companyId}`} passHref>
-              <div className="flex items-center text-gray-600">
-                <Building2 className="w-4 h-4" />
-                <p className="ml-2 mr-2"> {companyId} </p>
-              </div>
-            </Link>
+            <div className="flex items-center text-gray-600">
+              <Building2 className="w-4 h-4" />
+              <p className="ml-2 mr-2"> {companyName} </p>
+            </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>
