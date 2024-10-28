@@ -31,7 +31,6 @@ const BusinessProfile: React.FC = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const { business_id } = useParams<{ business_id: string }>();
   useEffect(() => {
-    console.log('Business ID:', business_id);
     if (business_id) {
       const fetchData = async () => {
         try {
@@ -112,12 +111,6 @@ const BusinessProfile: React.FC = () => {
         <h3 className="text-lg font-bold">Stats</h3>
         <p className="text-sm">Connects: {profileData.connects}</p>
         <p className="text-sm">Projects: {profileData.ProjectList.length}</p>
-        <p className="text-sm">
-          Applied Candidates: {profileData.Appliedcandidates.length}
-        </p>
-        <p className="text-sm">
-          Freelancers Hired: {profileData.hirefreelancer.length}
-        </p>
       </CardContent>
     </Card>
   );
