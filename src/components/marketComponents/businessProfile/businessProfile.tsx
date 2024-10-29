@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Mail, Phone, Linkedin, Earth } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ProfileData {
@@ -67,50 +69,70 @@ const BusinessProfile: React.FC = () => {
           <p className="text-sm">{`${profileData.firstName} ${profileData.lastName}`}</p>
         </div>
       </CardHeader>
-
-      {/* Contact Information */}
-      <CardContent className="space-y-8">
-        <div className="flex justify-between space-x-12">
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-lg font-bold">Contact Information</h3>
-            <p className="text-sm">
-              Email:{' '}
-              <a href={`mailto:${profileData.email}`} className="text-blue-600">
-                {profileData.email}
-              </a>
-            </p>
-            <p className="text-sm">Phone: {profileData.phone}</p>
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-lg font-bold">Company Information</h3>
-            <p className="text-sm">Company Size: {profileData.companySize}</p>
-          </div>
+      <CardContent className="flex justify-around items-center pb-4 mb-4">
+        <div className="text-center">
+          <p className="text-xl font-semibold">{profileData.connects}</p>
+          <p className="text-xs ">Connects</p>
         </div>
-
-        {/* Links Section */}
-        <div className="space-y-2">
-          <h3 className="text-lg font-bold">Links</h3>
-          <p className="text-sm">
-            LinkedIn:{' '}
-            <a href={profileData.linkedin} className="text-blue-600">
-              {profileData.linkedin}
-            </a>
+        <Separator orientation="vertical" className="h-6 bg-gray-400" />
+        <div className="text-center">
+          <p className="text-xl font-semibold">
+            {profileData.ProjectList.length}
           </p>
-          <p className="text-sm">
-            Website:{' '}
-            <a href={profileData.personalWebsite} className="text-blue-600">
-              {profileData.personalWebsite}
-            </a>
-          </p>
+          <p className="text-xs ">Projects</p>
+        </div>
+        <Separator orientation="vertical" className="h-6 bg-gray-400" />
+        <div className="text-center">
+          <p className="text-xl font-semibold">{profileData.companySize}</p>
+          <p className="text-xs ">Company Size</p>
         </div>
       </CardContent>
 
-      {/* Stats Section */}
-      <CardContent className="space-y-2">
-        <h3 className="text-lg font-bold">Stats</h3>
-        <p className="text-sm">Connects: {profileData.connects}</p>
-        <p className="text-sm">Projects: {profileData.ProjectList.length}</p>
+      {/* Contact Information */}
+      <CardContent className="space-y-8">
+        <div className="flex flex-col space-y-2">
+          <h3 className="text-lg font-bold">Contact Information</h3>
+          <p className="text-sm">
+            <div className="flex items-center">
+              <Mail className="mr-1 h-5" /> Email:{' '}
+              <a
+                href={`mailto:${profileData.email}`}
+                className="text-blue-600 ml-1"
+              >
+                {profileData.email}
+              </a>
+            </div>
+          </p>
+
+          <p className="text-sm">
+            <div className="flex items-center">
+              <Phone className="mr-1 h-5" />
+              Phone: {profileData.phone}
+            </div>
+          </p>
+
+          <p className="text-sm">
+            <div className="flex items-center">
+              <Linkedin className="mr-1 h-5" />
+              LinkedIn:{' '}
+              <a href={profileData.linkedin} className="text-blue-600 ml-1">
+                {profileData.linkedin}
+              </a>
+            </div>
+          </p>
+          <p className="text-sm">
+            <div className="flex items-center">
+              <Earth className="mr-1 h-5" />
+              Website:{' '}
+              <a
+                href={profileData.personalWebsite}
+                className="text-blue-600 ml-1"
+              >
+                {profileData.personalWebsite}
+              </a>
+            </div>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
