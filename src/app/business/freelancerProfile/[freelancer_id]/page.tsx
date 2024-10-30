@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface UserProfile {
   firstName: string;
@@ -65,8 +66,10 @@ interface UserProfile {
 const formatDate = (date: string) => new Date(date).toLocaleDateString();
 
 export default function FreelancerProfile() {
-  const { freelancer_id } = useParams();
+  // const { freelancer_id } = useParams();
+  const { freelancer_id } = useParams<{ freelancer_id: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (freelancer_id) {
@@ -85,6 +88,8 @@ export default function FreelancerProfile() {
             title: 'Error',
             description: 'Failed to fetch freelancer details.',
           });
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -122,19 +127,31 @@ export default function FreelancerProfile() {
         <main className="flex flex-col items-center p-4 sm:px-6 sm:py-0 mb-10">
           <Card className="w-full max-w-4xl bg-black text-white p-4 shadow-md">
             <Card className="p-14 flex items-center rounded-lg">
-              <Avatar className="w-24 h-24 rounded-full mr-6">
-                <AvatarImage
-                  src={user?.avatar || '/placeholder.svg?height=80&width=80'}
-                  alt="Profile picture"
-                />
-                <AvatarFallback>{`${user?.firstName?.[0] || 'J'}${user?.lastName?.[0] || 'D'}`}</AvatarFallback>
-              </Avatar>
+              {loading ? (
+                <Skeleton className="w-24 h-24 rounded-full mr-6" />
+              ) : (
+                <Avatar className="w-24 h-24 rounded-full mr-6">
+                  <AvatarImage
+                    src={user?.avatar || '/placeholder.svg?height=80&width=80'}
+                    alt="Null"
+                  />
+                  <AvatarFallback>{`${user?.firstName?.[0] || 'J'}${user?.lastName?.[0] || 'D'}`}</AvatarFallback>
+                </Avatar>
+              )}
               <div>
                 <h2 className="text-2xl font-bold">
-                  {user?.firstName} {user?.lastName}
+                  {loading ? (
+                    <Skeleton className="h-6 w-48" />
+                  ) : (
+                    `${user?.firstName} ${user?.lastName}`
+                  )}
                 </h2>
                 <p className="text-lg">
-                  {user?.description || 'No description provided.'}
+                  {loading ? (
+                    <Skeleton className="h-4 w-64 mt-2" />
+                  ) : (
+                    user?.description || 'No description provided.'
+                  )}
                 </p>
               </div>
             </Card>
@@ -146,20 +163,33 @@ export default function FreelancerProfile() {
                   <CardTitle>Professional Info</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>Job Title: {user?.professionalInfo?.jobTitle || 'N/A'}</p>
-                  <p>Company: {user?.professionalInfo?.company || 'N/A'}</p>
-                  <p>
-                    Description:{' '}
-                    {user?.professionalInfo?.workDescription || 'N/A'}
-                  </p>
-                  <p>
-                    Duration:{' '}
-                    {formatDate(user?.professionalInfo?.workFrom || '')} -{' '}
-                    {formatDate(user?.professionalInfo?.workTo || '')}
-                  </p>
-                  <p>
-                    GitHub: {user?.professionalInfo?.githubRepoLink || 'N/A'}
-                  </p>
+                  {loading ? (
+                    <>
+                      <Skeleton className="h-4 w-32 mb-2" />
+                      <Skeleton className="h-4 w-48 mb-2" />
+                      <Skeleton className="h-4 w-32 mb-2" />
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        Job Title: {user?.professionalInfo?.jobTitle || 'N/A'}
+                      </p>
+                      <p>Company: {user?.professionalInfo?.company || 'N/A'}</p>
+                      <p>
+                        Description:{' '}
+                        {user?.professionalInfo?.workDescription || 'N/A'}
+                      </p>
+                      <p>
+                        Duration:{' '}
+                        {formatDate(user?.professionalInfo?.workFrom || '')} -{' '}
+                        {formatDate(user?.professionalInfo?.workTo || '')}
+                      </p>
+                      <p>
+                        GitHub:{' '}
+                        {user?.professionalInfo?.githubRepoLink || 'N/A'}
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -169,7 +199,9 @@ export default function FreelancerProfile() {
                   <CardTitle>Skills</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {user?.skills && user.skills.length > 0 ? (
+                  {loading ? (
+                    <Skeleton className="h-4 w-48" />
+                  ) : user?.skills && user.skills.length > 0 ? (
                     user.skills.map((skill) => (
                       <p key={skill._id}>
                         {skill.name} - Level: {skill.level}
@@ -187,16 +219,24 @@ export default function FreelancerProfile() {
                   <CardTitle>Education</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>Degree: {user?.education?.degree || 'N/A'}</p>
-                  <p>University: {user?.education?.universityName || 'N/A'}</p>
-                  <p>
-                    Field of Study: {user?.education?.fieldOfStudy || 'N/A'}
-                  </p>
-                  <p>
-                    Duration: {formatDate(user?.education?.startDate || '')} -{' '}
-                    {formatDate(user?.education?.endDate || '')}
-                  </p>
-                  <p>Grade: {user?.education?.grade || 'N/A'}</p>
+                  {loading ? (
+                    <Skeleton className="h-4 w-32" />
+                  ) : (
+                    <>
+                      <p>Degree: {user?.education?.degree || 'N/A'}</p>
+                      <p>
+                        University: {user?.education?.universityName || 'N/A'}
+                      </p>
+                      <p>
+                        Field of Study: {user?.education?.fieldOfStudy || 'N/A'}
+                      </p>
+                      <p>
+                        Duration: {formatDate(user?.education?.startDate || '')}{' '}
+                        - {formatDate(user?.education?.endDate || '')}
+                      </p>
+                      <p>Grade: {user?.education?.grade || 'N/A'}</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -206,7 +246,10 @@ export default function FreelancerProfile() {
                   <CardTitle>Projects</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {user?.projects && Object.keys(user.projects).length > 0 ? (
+                  {loading ? (
+                    <Skeleton className="h-4 w-48" />
+                  ) : user?.projects &&
+                    Object.keys(user.projects).length > 0 ? (
                     Object.values(user.projects).map((project) => (
                       <div key={project._id}>
                         <h4>{project.projectName}</h4>
@@ -214,11 +257,10 @@ export default function FreelancerProfile() {
                         <p>Role: {project.role}</p>
                         <p>Tech Used: {project.techUsed.join(', ')}</p>
                         <p>
-                          Duration: {formatDate(project.start || '')} -{' '}
-                          {formatDate(project.end || '')}
+                          Duration: {formatDate(project.start)} -{' '}
+                          {formatDate(project.end)}
                         </p>
-                        <p>GitHub: {project.githubLink || 'N/A'}</p>
-                        <hr className="my-2" />
+                        <p>GitHub: {project.githubLink}</p>
                       </div>
                     ))
                   ) : (
