@@ -17,7 +17,7 @@ export interface ProjectDetailCardProps {
   status: string | undefined;
   startDate: Date | null | undefined;
   endDate: Date | null | undefined;
-  domains: string[];
+  projectDomain: string[];
   skills: string[];
 }
 
@@ -28,7 +28,7 @@ function ProjectDetailCard({
   status,
   startDate,
   endDate,
-  domains,
+  projectDomain,
   skills,
 }: ProjectDetailCardProps) {
   const { text, className } = getStatusBadge(status);
@@ -36,38 +36,42 @@ function ProjectDetailCard({
   return (
     <Card className="p-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+        <div className="flex justify-between">
+          <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
+          <div>
+            <Badge className={className}>{text}</Badge>
+          </div>
+        </div>
         <div className="h-[1px] bg-gray-600 mt-2 mb-4"></div>
       </CardHeader>
 
       <CardContent>
-        <Badge className={className}>{text}</Badge>
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
           <div className="lg:col-span-full">
-            <p className="mb-6 mx-4">{description}</p>
-
             <div className="flex items-center text-sm bg-gray-900 text-white p-2 w-full sm:w-1/2 rounded">
               <Mail className="mr-2 h-4 w-4 text-white" />
               <span>{email}</span>
             </div>
 
-            <div className="my-4">
-              <h4 className="text-xl font-semibold">Project Domains</h4>
+            <p className="my-2">{description}</p>
+
+            <div className="my-2">
+              <h4 className="text-xl font-semibold">Project Domains: </h4>
               <div className="flex flex-wrap gap-2 mt-2 mx-4">
-                {domains.map((domain, index) => (
+                {projectDomain.map((projectDomain, index) => (
                   <Badge
                     key={index}
                     className="uppercase mx-1 text-xs font-normal bg-gray-300"
                   >
-                    {domain}
+                    {projectDomain}
                   </Badge>
                 ))}
               </div>
             </div>
 
-            <div className="pt-4">
-              <h4 className="text-xl font-semibold">Skills</h4>
-              <div className="flex flex-wrap gap-1 mt-2 mx-4">
+            <div className="flex justify-start items-center">
+              <h4 className="text-xl font-semibold">Skills: </h4>
+              <div className="flex flex-wrap gap-1 my-2 ml-1">
                 {skills?.map((skill, index) => (
                   <Badge
                     key={index}

@@ -122,10 +122,10 @@ export function ProjectProfileDetailCard({
     <Card className={cn('w-[350px]', className)} {...props}>
       <CardHeader>
         <CardTitle>
-          {domain} ({freelancersRequired})
+          {domain}
         </CardTitle>
         <CardDescription className="text-gray-600">
-          Requirement is of {freelancersRequired} freelancer(s) for{' '}
+          Requirement of {freelancersRequired} freelancers for{' '}
           {domain.toLowerCase()} profile.
           <br />
           {description}

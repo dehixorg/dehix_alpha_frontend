@@ -41,7 +41,7 @@ interface ProjectProfile {
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
@@ -141,7 +141,7 @@ export default function Dashboard() {
                         status={project.status}
                         startDate={project.createdAt}
                         endDate={project.end}
-                        domains={[]}
+                        projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
                       />
                     </div>

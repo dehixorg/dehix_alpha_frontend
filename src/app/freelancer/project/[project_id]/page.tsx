@@ -29,6 +29,7 @@ interface Project {
   companyName: string;
   start?: Date;
   end?: Date | null;
+  projectDomain: string[];
   skillsRequired: string[];
   experience?: string;
   role?: string;
@@ -135,7 +136,7 @@ export default function Dashboard() {
                 status={project.status}
                 startDate={project.createdAt}
                 endDate={project.end}
-                domains={[]}
+                projectDomain={project.projectDomain}
                 skills={project.skillsRequired}
               />
             </div>
