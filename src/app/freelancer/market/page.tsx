@@ -28,6 +28,7 @@ interface FilterState {
 
 interface Project {
   _id: string;
+  companyId: string;
   projectName: string;
   projectDomain: string[];
   description: string;
@@ -292,6 +293,7 @@ const Market: React.FC = () => {
             <JobCard
               key={index}
               id={job._id}
+              companyId={job.companyId}
               projectName={job.projectName}
               description={job.description}
               companyName={job.companyName}
