@@ -58,7 +58,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   // Fetch skills, domains, and user's skill/domain data
   const fetchData = useCallback(async () => {
     try {
-      const skillsResponse = await axiosInstance.get('/skills/all');
+      const skillsResponse = await axiosInstance.get('/skills');
       if (skillsResponse?.data?.data) {
         setSkills(skillsResponse.data.data);
       } else {
@@ -74,7 +74,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
-          `/business/${user.uid}/hireDehixTalent`,
+          `/business/${user.uid}/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 
@@ -157,7 +157,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   ) => {
     try {
       const response = await axiosInstance.patch(
-        `/business/${user.uid}/hireDehixTalent/${hireDehixTalentId}`,
+        `/business/${user.uid}/hire-dehixtalent/${hireDehixTalentId}`,
         { visible: value },
       );
 

@@ -28,6 +28,7 @@ interface FilterState {
 
 interface Project {
   _id: string;
+  companyId: string;
   projectName: string;
   projectDomain: string[];
   description: string;
@@ -127,7 +128,7 @@ const Market: React.FC = () => {
     async function fetchData() {
       try {
         // Fetch skills
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         const skillLabels = skillsResponse.data.data.map(
           (skill: Skill) => skill.label,
         );
@@ -139,7 +140,7 @@ const Market: React.FC = () => {
           (domain: Domain) => domain.label,
         );
         setDomains(domainLabels);
-        const projectResponse = await axiosInstance.get('/projectDomain/all');
+        const projectResponse = await axiosInstance.get('/projectdomain');
         const projectData: ProjectsDomain[] = projectResponse.data.data;
         setProjects(projectData);
       } catch (error) {
@@ -292,6 +293,7 @@ const Market: React.FC = () => {
             <JobCard
               key={index}
               id={job._id}
+              companyId={job.companyId}
               projectName={job.projectName}
               description={job.description}
               companyName={job.companyName}

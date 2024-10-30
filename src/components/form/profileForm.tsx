@@ -123,10 +123,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain/all');
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
         // Set options for dropdowns
         setSkillsOptions(skillsResponse.data.data);

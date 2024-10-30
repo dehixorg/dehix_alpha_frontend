@@ -59,7 +59,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setLoading(true);
 
         const response = await axiosInstance.get(
-          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
+          `freelancer/dehixtalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
         if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {

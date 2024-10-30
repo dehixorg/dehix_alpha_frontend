@@ -9,7 +9,7 @@ export const apiHelperService = {
   getAllFreelancers: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/freelancer/allfreelancer',
+      endpoint: '/freelancer',
       params,
     });
   },
@@ -37,7 +37,7 @@ export const apiHelperService = {
   getAllNotification: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/notification/all_notification',
+      endpoint: '/notification',
       params,
     });
   },
@@ -91,7 +91,7 @@ export const apiHelperService = {
   createFaq: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/faq/createfaq',
+      endpoint: '/faq',
       body,
     });
   },

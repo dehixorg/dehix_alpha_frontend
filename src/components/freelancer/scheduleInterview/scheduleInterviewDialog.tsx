@@ -89,7 +89,7 @@ const ScheduleInterviewDialog: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         if (
           skillsResponse?.data?.data &&
           Array.isArray(skillsResponse.data.data)

@@ -52,7 +52,7 @@ const SkillDomainForm: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
