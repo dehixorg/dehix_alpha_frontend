@@ -34,14 +34,13 @@ import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
-    message: 'First Name must be at least 2 characters.',
+    message: 'Project Name must be at least 2 characters.',
   }),
   email: z
     .string({
-      required_error: 'Please select an email to display.',
+      required_error: 'Please provide an email.',
     })
     .email(),
-  //adddomain
   projectDomain: z.array(z.string()),
 
   urls: z
@@ -52,25 +51,26 @@ const profileFormSchema = z.object({
     )
     .optional(),
 
-  description: z.string().max(160).min(4).optional(),
+  description: z.string().max(250).min(4).optional(),
+
   profiles: z
     .array(
       z.object({
         domain: z.string(),
-        freelancersRequired: z // condition for freelancer
+        freelancersRequired: z
           .string()
           .refine((val) => parseInt(val, 10) > 0, {
-            message: 'Number of freelancers required should be greater than 0.',
+            message: 'Number of freelancers required must be greater than 0.',
           }),
         skills: z.array(z.string()),
         experience: z.string(),
         minConnect: z.string(),
-        rate: z //condition for rate
+        rate: z
           .string()
           .refine((val) => parseFloat(val) >= 0, {
-            message: 'Per hour rate should not be less than 0.',
+            message: 'Rate per hour must be non-negative.',
           }),
-        description: z.string().max(160).min(4),
+        description: z.string().max(250).min(4),
       }),
     )
     .optional(),
@@ -80,7 +80,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
-  email: '', //default field for email
+  email: '',
   projectDomain: [],
   description: '',
   profiles: [
@@ -114,23 +114,22 @@ interface projectDomain {
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
 
-  const [skills, setSkills] = useState<any>([]);
-  const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [currSkills, setCurrSkills] = useState<string[]>([]);
+  const [tmpSkill, setTmpSkill] = useState<string>('');
 
-  const [domains, setDomains] = useState<any>([]);
-  const [currDomains] = useState<any>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
 
-  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
-  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [projectDomains, setProjectDomains] = useState<projectDomain[]>([]);
+  const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
 
   const handleAddProjectDomain = () => {
     if (
       tmpProjectDomains &&
-      !currProjectDomains.some((domain: any) => domain === tmpProjectDomains)
+      !currProjectDomains.includes(tmpProjectDomains)
     ) {
       setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
       setTmpProjectDomains('');
@@ -139,61 +138,44 @@ export function CreateProjectBusinessForm() {
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
     setCurrProjectDomains(
-      currProjectDomains.filter((domain: any) => domain !== domainToDelete),
+      currProjectDomains.filter((domain) => domain !== domainToDelete),
     );
   };
 
   const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
+    if (tmpSkill && !currSkills.includes(tmpSkill)) {
       setCurrSkills([...currSkills, tmpSkill]);
       setTmpSkill('');
     }
   };
 
   const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+    setCurrSkills(currSkills.filter((skill) => skill !== skillToDelete));
   };
 
-  useEffect(() => {
+   // Fetch data from APIs
+   useEffect(() => {
     const fetchData = async () => {
       try {
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
-        console.log(
-          'projectDomain API Response get:',
-          projectDomainResponse.data.data,
-        );
-        const transformedProjectDomain = projectDomainResponse.data.data.map(
-          (skill: projectDomain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setProjectDomains(transformedProjectDomain);
+        const [projectDomainResponse, domainResponse, skillsResponse] = await Promise.all([
+          axiosInstance.get('/projectDomain/all'),
+          axiosInstance.get('/domain/all'),
+          axiosInstance.get('/skills/all'),
+        ]);
 
-        const domainResponse = await axiosInstance.get('/domain/all');
-        console.log('Domain API Response get:', domainResponse.data.data);
-        const transformedDomain = domainResponse.data.data.map(
-          (skill: Domain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setDomains(transformedDomain);
-
-        const skillsResponse = await axiosInstance.get('/skills/all');
-        console.log('Skills API Response get:', skillsResponse.data.data);
-        const transformedSkills = skillsResponse.data.data.map(
-          (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setSkills(transformedSkills);
+        setDomains(domainResponse.data.data.map((domain: any) => ({ value: domain.label, label: domain.label })));
+        setSkills(skillsResponse.data.data.map((skill: any) => ({ value: skill.label, label: skill.label })));
+        setProjectDomains(projectDomainResponse.data.data.map((projectDoamin: any) => ({ value: projectDoamin.label, label: projectDoamin.label })));
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load data. Please try again later.',
+        });
       }
     };
+
     fetchData();
   }, []);
 
@@ -220,39 +202,31 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      console.log('Form body:', {
-        ...data,
-        role: '',
-        projectType: '',
-        skillsRequired: currSkills,
-        domains: currDomains,
-      });
-
       const response = await axiosInstance.post(
         `/project/${user.uid}/project`,
         {
           ...data,
+          companyId: user.uid,
           role: '',
           projectType: '',
+          projectDomain: currProjectDomains,
           skillsRequired: currSkills,
-          domains: currDomains,
         },
       );
-      console.log('API Response:', response.data);
-
       toast({
         title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
     } catch (error) {
-      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to add project. Please try again later.',
       });
+    } finally {
+      setLoading(false);
+      form.reset(defaultValues);
     }
-    form.reset(defaultValues); //add reset after form is submit
   }
 
   return (
