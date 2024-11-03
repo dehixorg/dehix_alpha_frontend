@@ -38,23 +38,31 @@ const profileFormSchema = z.object({
   }),
   email: z.string().email({ message: 'Please provide a valid email.' }),
   projectDomain: z.array(z.string()),
-  urls: z.array(z.object({ value: z.string().url({ message: 'Please enter a valid URL.' }) })).optional(),
+  urls: z
+    .array(
+      z.object({
+        value: z.string().url({ message: 'Please enter a valid URL.' }),
+      }),
+    )
+    .optional(),
   description: z.string().max(250).min(4).optional(),
-  profiles: z.array(
-    z.object({
-      domain: z.string(),
-      freelancersRequired: z.string().refine((val) => parseInt(val, 10) > 0, {
-        message: 'Number of freelancers required must be greater than 0.',
+  profiles: z
+    .array(
+      z.object({
+        domain: z.string(),
+        freelancersRequired: z.string().refine((val) => parseInt(val, 10) > 0, {
+          message: 'Number of freelancers required must be greater than 0.',
+        }),
+        skills: z.array(z.string()),
+        experience: z.string(),
+        minConnect: z.string(),
+        rate: z.string().refine((val) => parseFloat(val) >= 0, {
+          message: 'Rate per hour must be non-negative.',
+        }),
+        description: z.string().max(250).min(4),
       }),
-      skills: z.array(z.string()),
-      experience: z.string(),
-      minConnect: z.string(),
-      rate: z.string().refine((val) => parseFloat(val) >= 0, {
-        message: 'Rate per hour must be non-negative.',
-      }),
-      description: z.string().max(250).min(4),
-    }),
-  ).optional(),
+    )
+    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -108,10 +116,7 @@ export function CreateProjectBusinessForm() {
   const [loading, setLoading] = useState(false);
 
   const handleAddProjectDomain = () => {
-    if (
-      tmpProjectDomains &&
-      !currProjectDomains.includes(tmpProjectDomains)
-    ) {
+    if (tmpProjectDomains && !currProjectDomains.includes(tmpProjectDomains)) {
       setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
       setTmpProjectDomains('');
     }
@@ -134,19 +139,35 @@ export function CreateProjectBusinessForm() {
     setCurrSkills(currSkills.filter((skill) => skill !== skillToDelete));
   };
 
-   // Fetch data from APIs
-   useEffect(() => {
+  // Fetch data from APIs
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        const [projectDomainResponse, domainResponse, skillsResponse] = await Promise.all([
-          axiosInstance.get('/projectDomain/all'),
-          axiosInstance.get('/domain/all'),
-          axiosInstance.get('/skills/all'),
-        ]);
+        const [projectDomainResponse, domainResponse, skillsResponse] =
+          await Promise.all([
+            axiosInstance.get('/projectDomain/all'),
+            axiosInstance.get('/domain/all'),
+            axiosInstance.get('/skills/all'),
+          ]);
 
-        setDomains(domainResponse.data.data.map((domain: any) => ({ value: domain.label, label: domain.label })));
-        setSkills(skillsResponse.data.data.map((skill: any) => ({ value: skill.label, label: skill.label })));
-        setProjectDomains(projectDomainResponse.data.data.map((projectDoamin: any) => ({ value: projectDoamin.label, label: projectDoamin.label })));
+        setDomains(
+          domainResponse.data.data.map((domain: any) => ({
+            value: domain.label,
+            label: domain.label,
+          })),
+        );
+        setSkills(
+          skillsResponse.data.data.map((skill: any) => ({
+            value: skill.label,
+            label: skill.label,
+          })),
+        );
+        setProjectDomains(
+          projectDomainResponse.data.data.map((projectDoamin: any) => ({
+            value: projectDoamin.label,
+            label: projectDoamin.label,
+          })),
+        );
       } catch (error) {
         console.error('API Error:', error);
         toast({
@@ -180,9 +201,34 @@ export function CreateProjectBusinessForm() {
     control: form.control,
   });
 
+  // A function to add skills to a specific profile
+  const handleAddSkillToProfile = (profileIndex: any, skill: any) => {
+    const currentSkills = form.getValues(`profiles.${profileIndex}.skills`);
+    if (!currentSkills.includes(skill)) {
+      form.setValue(`profiles.${profileIndex}.skills`, [
+        ...currentSkills,
+        skill,
+      ]);
+    }
+    if (!currSkills.includes(tmpSkill)) {
+      setCurrSkills([...currSkills, skill]);
+    }
+  };
+
+  // A function to remove skills from a specific profile
+  const handleRemoveSkillFromProfile = (profileIndex: any, skill: any) => {
+    const updatedSkills = form
+      .getValues(`profiles.${profileIndex}.skills`)
+      .filter((s) => s !== skill);
+    form.setValue(`profiles.${profileIndex}.skills`, updatedSkills);
+
+    setCurrSkills(currSkills.filter((skill) => skill !== skill));
+  };
+
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
+      console.log(currSkills);
       const response = await axiosInstance.post(
         `/project/${user.uid}/project`,
         {
@@ -422,14 +468,19 @@ export function CreateProjectBusinessForm() {
                         <div>
                           <div className="flex items-center mt-2">
                             <Select
-                              onValueChange={(value) => setTmpSkill(value)}
+                              onValueChange={(value) =>
+                                handleAddSkillToProfile(index, value)
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select skill" />
                               </SelectTrigger>
                               <SelectContent>
-                                {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
+                                {skills.map((skill) => (
+                                  <SelectItem
+                                    key={skill._id}
+                                    value={skill.label}
+                                  >
                                     {skill.label}
                                   </SelectItem>
                                 ))}
@@ -440,27 +491,30 @@ export function CreateProjectBusinessForm() {
                               type="button"
                               size="icon"
                               className="ml-2"
-                              onClick={handleAddSkill}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
                           </div>
                           <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
+                            {form
+                              .getValues(`profiles.${index}.skills`)
+                              .map((skill, skillIndex) => (
+                                <Badge
+                                  key={skillIndex}
+                                  className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {skill}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveSkillFromProfile(index, skill)
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ))}
                           </div>
                         </div>
                       </FormControl>
