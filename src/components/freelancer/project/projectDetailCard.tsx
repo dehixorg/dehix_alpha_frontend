@@ -55,9 +55,9 @@ function ProjectDetailCard({
 
             <p className="my-2">{description}</p>
 
-            <div className="my-2">
+            <div className="flex justify-start items-center mb-2">
               <h4 className="text-xl font-semibold">Project Domains: </h4>
-              <div className="flex flex-wrap gap-2 mt-2 mx-4">
+              <div className="flex flex-wrap gap-1 my-2 ml-1">
                 {projectDomain.map((projectDomain, index) => (
                   <Badge
                     key={index}

@@ -105,7 +105,6 @@ export function CreateProjectBusinessForm() {
 
   const [skills, setSkills] = useState<Skill[]>([]);
   const [currSkills, setCurrSkills] = useState<string[]>([]);
-  const [tmpSkill, setTmpSkill] = useState<string>('');
 
   const [domains, setDomains] = useState<Domain[]>([]);
 
@@ -126,17 +125,6 @@ export function CreateProjectBusinessForm() {
     setCurrProjectDomains(
       currProjectDomains.filter((domain) => domain !== domainToDelete),
     );
-  };
-
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.includes(tmpSkill)) {
-      setCurrSkills([...currSkills, tmpSkill]);
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill) => skill !== skillToDelete));
   };
 
   // Fetch data from APIs
@@ -210,7 +198,7 @@ export function CreateProjectBusinessForm() {
         skill,
       ]);
     }
-    if (!currSkills.includes(tmpSkill)) {
+    if (!currSkills.includes(skill)) {
       setCurrSkills([...currSkills, skill]);
     }
   };
@@ -228,7 +216,6 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      console.log(currSkills);
       const response = await axiosInstance.post(
         `/project/${user.uid}/project`,
         {
@@ -486,14 +473,14 @@ export function CreateProjectBusinessForm() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button
+                            {/* <Button
                               variant="outline"
                               type="button"
                               size="icon"
                               className="ml-2"
                             >
                               <Plus className="h-4 w-4" />
-                            </Button>
+                            </Button> */}
                           </div>
                           <div className="flex flex-wrap mt-5">
                             {form

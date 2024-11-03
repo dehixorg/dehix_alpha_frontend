@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface ProjectProfileDetailCardProps {
   _id: string;
@@ -124,7 +125,7 @@ export function ProjectProfileDetailCard({
         <CardTitle>
           {domain}
         </CardTitle>
-        <CardDescription className="text-gray-600">
+        <CardDescription className="text-gray-300">
           Requirement of {freelancersRequired} freelancers for{' '}
           {domain.toLowerCase()} profile.
           <br />
@@ -134,56 +135,30 @@ export function ProjectProfileDetailCard({
       <CardContent className="grid gap-4">
         <div>
           <ul className="flex flex-wrap gap-2">
-            {email && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Email - </span>
-                {email}
-              </li>
-            )}
-            {status && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Status - </span>
-                {status}
-              </li>
-            )}
-            {startDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">
-                  Start Date -{' '}
-                </span>
-                {startDate}
-              </li>
-            )}
-            {endDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-400 font-semibold">End Date - </span>
-                {endDate}
-              </li>
-            )}
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Experience - </span>
+              <span className="text-gray-400 font-semibold">Experience: </span>
               {experience} years
             </li>
             <li className="min-w-[45%]">
               <span className="text-gray-400 font-semibold">
-                Min Connect -{' '}
+                Min Connect: {' '}
               </span>
               {minConnect}
             </li>
           </ul>
           {skills.length > 0 && (
-            <div className="mt-2">
-              <span className="text-gray-700 font-semibold">Skills - </span>
-              <ul className="flex flex-wrap gap-1 mt-1">
-                {skills.map((skill, index) => (
-                  <li
+            <div className="flex justify-start items-center mt-2">
+              <h4 className="text-gray-400 font-semibold">Skills:  </h4>
+              <div className="flex flex-wrap gap-1 my-2 ml-1">
+                {skills?.map((skill, index) => (
+                  <Badge
                     key={index}
-                    className="bg-gray-200 rounded px-2 py-1 text-sm"
+                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
                   >
                     {skill}
-                  </li>
+                  </Badge>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
