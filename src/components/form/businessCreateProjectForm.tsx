@@ -36,44 +36,25 @@ const profileFormSchema = z.object({
   projectName: z.string().min(2, {
     message: 'Project Name must be at least 2 characters.',
   }),
-  email: z
-    .string({
-      required_error: 'Please provide an email.',
-    })
-    .email(),
+  email: z.string().email({ message: 'Please provide a valid email.' }),
   projectDomain: z.array(z.string()),
-
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: 'Please enter a valid URL.' }),
-      }),
-    )
-    .optional(),
-
+  urls: z.array(z.object({ value: z.string().url({ message: 'Please enter a valid URL.' }) })).optional(),
   description: z.string().max(250).min(4).optional(),
-
-  profiles: z
-    .array(
-      z.object({
-        domain: z.string(),
-        freelancersRequired: z
-          .string()
-          .refine((val) => parseInt(val, 10) > 0, {
-            message: 'Number of freelancers required must be greater than 0.',
-          }),
-        skills: z.array(z.string()),
-        experience: z.string(),
-        minConnect: z.string(),
-        rate: z
-          .string()
-          .refine((val) => parseFloat(val) >= 0, {
-            message: 'Rate per hour must be non-negative.',
-          }),
-        description: z.string().max(250).min(4),
+  profiles: z.array(
+    z.object({
+      domain: z.string(),
+      freelancersRequired: z.string().refine((val) => parseInt(val, 10) > 0, {
+        message: 'Number of freelancers required must be greater than 0.',
       }),
-    )
-    .optional(),
+      skills: z.array(z.string()),
+      experience: z.string(),
+      minConnect: z.string(),
+      rate: z.string().refine((val) => parseFloat(val) >= 0, {
+        message: 'Rate per hour must be non-negative.',
+      }),
+      description: z.string().max(250).min(4),
+    }),
+  ).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
