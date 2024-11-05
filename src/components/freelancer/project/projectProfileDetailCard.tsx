@@ -56,10 +56,6 @@ export function ProjectProfileDetailCard({
   experience,
   minConnect,
   description,
-  email,
-  status,
-  startDate,
-  endDate,
   className,
   domain_id,
   ...props
@@ -122,9 +118,7 @@ export function ProjectProfileDetailCard({
   return (
     <Card className={cn('w-[350px]', className)} {...props}>
       <CardHeader>
-        <CardTitle>
-          {domain}
-        </CardTitle>
+        <CardTitle>{domain}</CardTitle>
         <CardDescription className="text-gray-300">
           Requirement of {freelancersRequired} freelancers for{' '}
           {domain.toLowerCase()} profile.
@@ -140,15 +134,13 @@ export function ProjectProfileDetailCard({
               {experience} years
             </li>
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">
-                Min Connect: {' '}
-              </span>
+              <span className="text-gray-400 font-semibold">Min Connect: </span>
               {minConnect}
             </li>
           </ul>
           {skills.length > 0 && (
             <div className="flex justify-start items-center mt-2">
-              <h4 className="text-gray-400 font-semibold">Skills:  </h4>
+              <h4 className="text-gray-400 font-semibold">Skills: </h4>
               <div className="flex flex-wrap gap-1 my-2 ml-1">
                 {skills?.map((skill, index) => (
                   <Badge

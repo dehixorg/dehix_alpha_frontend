@@ -57,25 +57,51 @@ interface Project {
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeProjects, setActiveProjects] = useState<Project[]>([]);
+  const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
+  const [currentTab, setCurrentTab] = useState('Active');
+  const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const fetchData = async (status: string) => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=${status}`,
+      );
+      setProjects(response.data.data);
+    } catch (error) {
+      console.error('API Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }; // Fetch data when selectedStatus changes
+
+  const fetchProjectStats = async () => {
+    setLoadingStats(true);
+    try {
+      const activeCountResponse = await axiosInstance.get(`/freelancer/${user.uid}/project?status=Active`);
+      const pendingCountResponse = await axiosInstance.get(`/freelancer/${user.uid}/project?status=Pending`);
+
+      setActiveProjects(activeCountResponse.data.data);
+      setPendingProjects(pendingCountResponse.data.data);
+    } catch (error) {
+      console.error('API Error for project stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project`,
-        );
-        setProjects(response.data.data);
-      } catch (error) {
-        console.error('API Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchProjectStats();
+    fetchData(currentTab);
+  }, [user.uid, currentTab]);
 
-    fetchData();
-  }, [user.uid]);
+  const handleTabChange = (status: string) => {
+    setCurrentTab(status);
+    fetchData(status);
+  };
 
   const handleCreateMeetClick = () => {
     setShowMeetingDialog(true); // Open meeting dialog
@@ -131,63 +157,51 @@ export default function Dashboard() {
               <StatCard
                 title="Active Projects"
                 value={
-                  loading
+                  loadingStats
                     ? '...'
-                    : projects.filter((p) => p.status === 'Active').length
+                    : activeProjects.length
                 }
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo={
-                  loading ? 'Loading...' : 'Earning stats will be here'
+                  loadingStats ? 'Loading...' : 'Earning stats will be here'
                 }
               />
               <StatCard
                 title="Pending Projects"
                 value={
-                  loading
+                  loadingStats
                     ? '...'
-                    : projects.filter((p) => p.status === 'Pending').length
+                    : pendingProjects.length
                 }
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo={
-                  loading ? 'Loading...' : 'Project stats will be here'
+                  loadingStats ? 'Loading...' : 'Project stats will be here'
                 }
               />
             </div>
 
             {/* Tabs for project filtering */}
             <div className="overflow-x-auto">
-              <Tabs defaultValue="active">
+              <Tabs value={currentTab} onValueChange={handleTabChange}>
                 <div className="flex items-center">
                   <TabsList>
-                    <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                    <TabsTrigger value="Active">Active</TabsTrigger>
+                    <TabsTrigger value="Pending">Pending</TabsTrigger>
+                    <TabsTrigger value="Completed">Completed</TabsTrigger>
+                    <TabsTrigger value="Rejected">Rejected</TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value="active">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Active')}
-                    loading={loading}
-                  />
+                <TabsContent value="Active">
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="pending">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Pending')}
-                    loading={loading}
-                  />
+                <TabsContent value="Pending">
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="completed">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Completed')}
-                    loading={loading}
-                  />
+                <TabsContent value="Completed">
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="rejected">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Rejected')}
-                    loading={loading}
-                  />
+                <TabsContent value="Rejected">
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
               </Tabs>
             </div>
