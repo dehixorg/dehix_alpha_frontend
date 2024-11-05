@@ -68,9 +68,8 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Project Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Verification</TableHead>
+              <TableHead className="text-start">Project Name</TableHead>
+              <TableHead className="text-center">Verification</TableHead>
               <TableHead className="text-center">Start Date</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Actions</TableHead>
@@ -84,16 +83,16 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   <TableCell>
                     <Skeleton className="h-4 w-32" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                   <TableCell className="text-center">
@@ -107,8 +106,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   <TableCell>
                     <div className="font-medium">{project.projectName}</div>
                   </TableCell>
-                  <TableCell>{project.projectType}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge
                       className="text-xs"
                       variant={project.verified ? 'secondary' : 'outline'}
@@ -116,12 +114,12 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                       {project.verified ? 'Verified' : 'Not Verified'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {project.start
                       ? new Date(project.start).toLocaleDateString()
                       : 'N/A'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {project.status ? (
                       <Badge
                         className={getStatusBadge(project.status).className}
@@ -133,7 +131,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Link href={`/project/${project._id}`}>
+                    <Link href={`/freelancer/project/${project._id}`}>
                       <Button size="sm" variant="outline">
                         View Details
                       </Button>

@@ -43,12 +43,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const isRequestInProgress = useRef(false);
 
   // Function to reset state when filters change
+  /* eslint-disable react-hooks/exhaustive-deps */
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     setSkip(0);
     setHasMore(true);
     fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
   }, [skillFilter, domainFilter]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const fetchTalentData = useCallback(
     async (newSkip = skip, reset = false) => {

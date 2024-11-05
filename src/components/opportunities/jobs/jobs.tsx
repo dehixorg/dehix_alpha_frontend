@@ -56,10 +56,12 @@ const JobCard: React.FC<JobCardProps> = ({
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   React.useEffect(() => {
     setIsClient(true);
     fetchBidData(); // Fetch data on mount
   }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Fetch bid data from the API
   const fetchBidData = React.useCallback(async () => {

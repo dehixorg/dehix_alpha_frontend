@@ -81,8 +81,12 @@ export default function Dashboard() {
   const fetchProjectStats = async () => {
     setLoadingStats(true);
     try {
-      const activeCountResponse = await axiosInstance.get(`/freelancer/${user.uid}/project?status=Active`);
-      const pendingCountResponse = await axiosInstance.get(`/freelancer/${user.uid}/project?status=Pending`);
+      const activeCountResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=Active`,
+      );
+      const pendingCountResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=Pending`,
+      );
 
       setActiveProjects(activeCountResponse.data.data);
       setPendingProjects(pendingCountResponse.data.data);
@@ -93,10 +97,12 @@ export default function Dashboard() {
     }
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     fetchProjectStats();
     fetchData(currentTab);
   }, [user.uid, currentTab]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const handleTabChange = (status: string) => {
     setCurrentTab(status);
@@ -156,11 +162,7 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={
-                  loadingStats
-                    ? '...'
-                    : activeProjects.length
-                }
+                value={loadingStats ? '...' : activeProjects.length}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo={
                   loadingStats ? 'Loading...' : 'Earning stats will be here'
@@ -168,11 +170,7 @@ export default function Dashboard() {
               />
               <StatCard
                 title="Pending Projects"
-                value={
-                  loadingStats
-                    ? '...'
-                    : pendingProjects.length
-                }
+                value={loadingStats ? '...' : pendingProjects.length}
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo={
                   loadingStats ? 'Loading...' : 'Project stats will be here'

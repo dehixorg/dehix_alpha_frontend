@@ -71,11 +71,13 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   }, [id]);
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (profileId) {
       fetchBid(profileId);
     }
   }, [profileId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const handleUpdateStatus = async (bidId: string, status: string) => {
     try {
