@@ -28,6 +28,7 @@ interface FilterState {
 
 interface Project {
   _id: string;
+  companyId: string;
   projectName: string;
   projectDomain: string[];
   description: string;
@@ -238,50 +239,52 @@ const Market: React.FC = () => {
       </div>
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
         <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
-          <Button onClick={handleApply} className="w-full">
-            Apply
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleReset}
-            className="w-full mb-4 bg-gray text-white"
-            style={{ marginTop: '1rem' }}
-          >
-            Reset
-          </Button>
-          <div className="my-4">
-            <SkillDom
-              label="Domains"
-              heading="Filter by domain"
-              checkboxLabels={domains}
-              selectedValues={filters.domain}
-              setSelectedValues={(values) =>
-                handleFilterChange('domain', values)
-              }
-            />
-          </div>
-          <div className="mb-4">
-            <SkillDom
-              label="Skills"
-              heading="Filter by skills"
-              checkboxLabels={skills}
-              selectedValues={filters.skills}
-              setSelectedValues={(values) =>
-                handleFilterChange('skills', values)
-              }
-            />
-          </div>
+          <div className="h-full px-4 flex flex-col space-y-4 ">
+            <Button onClick={handleApply} className="w-full">
+              Apply
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="w-full mb-4 bg-gray text-white"
+              style={{ marginTop: '1rem' }}
+            >
+              Reset
+            </Button>
+            <div className="my-4">
+              <SkillDom
+                label="Domains"
+                heading="Filter by domain"
+                checkboxLabels={domains}
+                selectedValues={filters.domain}
+                setSelectedValues={(values) =>
+                  handleFilterChange('domain', values)
+                }
+              />
+            </div>
+            <div className="mb-4">
+              <SkillDom
+                label="Skills"
+                heading="Filter by skills"
+                checkboxLabels={skills}
+                selectedValues={filters.skills}
+                setSelectedValues={(values) =>
+                  handleFilterChange('skills', values)
+                }
+              />
+            </div>
 
-          <div className="mb-4">
-            <SkillDom
-              label="ProjectDomain"
-              heading="Filter by projects-domains"
-              checkboxLabels={projects.map((project) => project.label)}
-              selectedValues={filters.projectDomain}
-              setSelectedValues={(values) =>
-                handleFilterChange('projectDomain', values)
-              }
-            />
+            <div className="mb-4">
+              <SkillDom
+                label="ProjectDomain"
+                heading="Filter by projects-domains"
+                checkboxLabels={projects.map((project) => project.label)}
+                selectedValues={filters.projectDomain}
+                setSelectedValues={(values) =>
+                  handleFilterChange('projectDomain', values)
+                }
+              />
+            </div>
           </div>
         </div>
 
@@ -290,6 +293,7 @@ const Market: React.FC = () => {
             <JobCard
               key={index}
               id={job._id}
+              companyId={job.companyId}
               projectName={job.projectName}
               description={job.description}
               companyName={job.companyName}

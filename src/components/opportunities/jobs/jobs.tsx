@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -29,6 +29,7 @@ interface Profile {
 
 interface JobCardProps {
   id: string;
+  companyId: string;
   projectName: string;
   description: string;
   companyName: string;
@@ -41,6 +42,7 @@ interface JobCardProps {
 
 const JobCard: React.FC<JobCardProps> = ({
   id,
+  companyId,
   projectName,
   description,
   companyName,
@@ -94,7 +96,9 @@ const JobCard: React.FC<JobCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className=" text-2xl font-bold text-foreground">
           <div className="flex items-center text-gray-600 gap-2">
-            {projectName}
+            <Link href={`/freelancer/market/${companyId}`} passHref>
+              {projectName}
+            </Link>
             <Badge className={className}> {text} </Badge>
           </div>
         </CardTitle>
@@ -104,6 +108,10 @@ const JobCard: React.FC<JobCardProps> = ({
         <div className="flex flex-col lg:flex-row justify-between">
           {/* Left section */}
           <div className="flex flex-col items-start lg:items-start">
+            <div className="flex items-center text-gray-600">
+              <Building2 className="w-4 h-4" />
+              <p className="ml-2 mr-2"> {companyName} </p>
+            </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>

@@ -1,39 +1,35 @@
 'use client';
-import { useSelector } from 'react-redux';
-
 import { Search } from '@/components/search';
-import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
+import BusinessProfile from '@/components/marketComponents/businessProfile/businessProfile';
 
-export default function PersonalInfo() {
-  const user = useSelector((state: RootState) => state.user);
-
+export default function Talent() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col ">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Personal Info"
+        active="Market"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
-            active="Personal Info"
+            active="Market"
           />
+
           <Breadcrumb
             items={[
-              { label: 'Settings', link: '#' },
-              { label: 'Personal Info', link: '#' },
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
+              { label: 'Freelancer Market', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -41,8 +37,8 @@ export default function PersonalInfo() {
           </div>
           <DropdownProfile />
         </header>
-        <main className="grid flex-1 items-start  sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} />
+        <main className="">
+          <BusinessProfile />
         </main>
       </div>
     </div>

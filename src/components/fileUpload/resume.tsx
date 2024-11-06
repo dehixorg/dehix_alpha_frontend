@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
@@ -92,13 +92,13 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto p-6 rounded shadow-md">
+    <div className="upload-form max-w-md mx-auto  rounded shadow-md">
       <form
         onSubmit={handleSubmit}
         className="space-y-6 flex flex-col items-center"
       >
         {selectedResume && (
-          <div className="mt-4 flex items-center justify-center w-full">
+          <div className=" flex items-center justify-center w-full">
             {selectedResume.type === 'image/png' ? (
               <img
                 src={previewUrl!}
@@ -110,7 +110,7 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
                 <Image
                   src="/path-to-your-pdf-icon.svg"
                   alt="PDF Icon"
-                  className="w-8 h-8 mr-2"
+                  className="w-8 h-8 "
                 />
                 <span className="text-gray-700">{selectedResume.name}</span>
               </div>
@@ -122,13 +122,13 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
           type="file"
           accept={allowedResumeFormats.join(',')}
           onChange={handleResumeChange}
-          className="border border-gray-300 rounded p-2 w-full"
+          className="border-2 border-black-400 rounded gap-3 p-2 w-full"
           id="resume-input"
         />
 
-        <Button type="submit" className="w-full">
+        {/* <Button type="submit" className="w-full">
           Upload Resume
-        </Button>
+        </Button> */}
       </form>
     </div>
   );
