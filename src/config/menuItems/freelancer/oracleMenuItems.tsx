@@ -5,7 +5,7 @@ import {
   HomeIcon,
   Package,
   User,
-  Settings
+  Settings,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';

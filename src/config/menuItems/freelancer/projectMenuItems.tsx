@@ -5,7 +5,7 @@ import {
   Pointer,
   FolderDot,
   CircleX,
-  Settings
+  Settings,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
