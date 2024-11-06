@@ -1,4 +1,4 @@
-import { Boxes, Home, ListVideo, Users2, History } from 'lucide-react';
+import { Boxes, Home, ListVideo, Users2, History,Settings } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
@@ -30,4 +30,10 @@ export const menuItemsTop: MenuItem[] = [
   },
 ];
 
-export const menuItemsBottom: MenuItem[] = [];
+export const menuItemsBottom: MenuItem[] = [
+  {
+    href: '/freelancer/settings/personal-info',
+    icon: <Settings className="h-5 w-5" />,
+    label: 'Settings',
+  },
+];
