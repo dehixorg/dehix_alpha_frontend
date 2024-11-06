@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
 import Image from 'next/image';
