@@ -2,6 +2,7 @@
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import Joyride, { Step } from 'react-joyride';
 
 import { Search } from '@/components/search';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -54,11 +55,35 @@ interface Project {
   team?: string[];
 }
 
+const onboardingSteps: Step[] = [
+  {
+    target: '.earning', // Target sidebar menu
+    content: 'This is your total earning card.',
+    placement: 'bottom',
+  },
+  {
+    target: '.active-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.pending-project', // Target the "Active Projects" card
+    content: 'Here you can see your pending project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.create-meet-btn', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'top',
+  },
+];
+
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
+  const [runOnboarding, setRunOnboarding] = useState(false); // Onboarding state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,7 +100,21 @@ export default function Dashboard() {
     };
 
     fetchData();
+
+    // Check if the user has already completed the onboarding
+    const hasCompletedOnboarding = localStorage.getItem('completedOnboarding');
+    if (!hasCompletedOnboarding) {
+      setRunOnboarding(true); // Start the onboarding tour
+    }
   }, [user.uid]);
+
+  const handleOnboardingComplete = (data: any) => {
+    const { status } = data;
+    if (status === 'finished' || status === 'skipped') {
+      localStorage.setItem('completedOnboarding', 'true');
+      setRunOnboarding(false); // End the onboarding
+    }
+  };
 
   const handleCreateMeetClick = () => {
     setShowMeetingDialog(true); // Open meeting dialog
@@ -105,53 +144,56 @@ export default function Dashboard() {
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card className="sm:col-span-2 flex flex-col h-full">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">
-                    {loading ? <Skeleton className="h-10 w-20" /> : '0'}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className="grid gap-4 grid-cols-4">
-                  <div className="col-span-3">
-                    <CardTitle>Total Earnings</CardTitle>
-                    <CardDescription className="max-w-lg text-balance leading-relaxed">
-                      {loading ? (
-                        <Skeleton className="h-5 w-40" />
-                      ) : (
-                        'Your total earnings from projects.'
-                      )}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                </CardFooter>
-              </Card>
-
-              <StatCard
-                title="Active Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Active').length
-                }
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo={
-                  loading ? 'Loading...' : 'Earning stats will be here'
-                }
-              />
-              <StatCard
-                title="Pending Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Pending').length
-                }
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo={
-                  loading ? 'Loading...' : 'Project stats will be here'
-                }
-              />
+                <Card className="sm:col-span-2 flex flex-col h-full earning">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-4xl mb-3">
+                      {loading ? <Skeleton className="h-10 w-20" /> : '0'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardFooter className="grid gap-4 grid-cols-4">
+                    <div className="col-span-3">
+                      <CardTitle>Total Earnings</CardTitle>
+                      <CardDescription className="max-w-lg text-balance leading-relaxed">
+                        {loading ? (
+                          <Skeleton className="h-5 w-40" />
+                        ) : (
+                          'Your total earnings from projects.'
+                        )}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-end justify-end">
+                      <ChevronRight className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  </CardFooter>
+                </Card>
+              <div className="active-project">
+                <StatCard
+                  title="Active Projects"
+                  value={
+                    loading
+                      ? '...'
+                      : projects.filter((p) => p.status === 'Active').length
+                  }
+                  icon={<CheckCircle className="h-6 w-6 text-success" />}
+                  additionalInfo={
+                    loading ? 'Loading...' : 'Earning stats will be here'
+                  }
+                />
+              </div>
+              <div className="pending-project">
+                <StatCard
+                  title="Pending Projects"
+                  value={
+                    loading
+                      ? '...'
+                      : projects.filter((p) => p.status === 'Pending').length
+                  }
+                  icon={<Clock className="h-6 w-6 text-warning" />}
+                  additionalInfo={
+                    loading ? 'Loading...' : 'Project stats will be here'
+                  }
+                />
+              </div>
             </div>
 
             {/* Tabs for project filtering */}
@@ -201,7 +243,11 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" onClick={handleCreateMeetClick} disabled>
+              <Button
+                className="mt-3 create-meet-btn"
+                onClick={handleCreateMeetClick}
+                disabled
+              >
                 Create Meet
               </Button>
             </div>
@@ -213,6 +259,15 @@ export default function Dashboard() {
       <MeetingDialog
         isOpen={showMeetingDialog}
         onClose={() => setShowMeetingDialog(false)}
+      />
+
+      {/* Joyride Onboarding Tour */}
+      <Joyride
+        steps={onboardingSteps}
+        run={runOnboarding}
+        continuous
+        showSkipButton
+        callback={handleOnboardingComplete}
       />
     </div>
   );
