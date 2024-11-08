@@ -188,6 +188,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                 <input
                   type="number"
                   placeholder="Experience (years)"
+                  min={0}
+                  max={50}
                   {...field}
                   className="border p-2 rounded mt-2 w-full"
                 />
@@ -204,6 +206,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               <input
                 type="number"
                 placeholder="Monthly Pay"
+                min={0}
                 {...field}
                 className="border p-2 rounded mt-2 w-full"
               />
