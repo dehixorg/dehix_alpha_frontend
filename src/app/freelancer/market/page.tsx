@@ -203,7 +203,7 @@ const Market: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col sm:pl-6">
+    <div className="flex min-h-screen w-full flex-col sm:pl-6 pb-10">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
