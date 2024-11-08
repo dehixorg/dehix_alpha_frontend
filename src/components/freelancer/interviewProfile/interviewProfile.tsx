@@ -36,6 +36,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Skill {
   label: string;
@@ -99,6 +100,7 @@ const InterviewProfile: React.FC = () => {
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true); // Set loading to true when fetching data
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
@@ -112,6 +114,8 @@ const InterviewProfile: React.FC = () => {
           title: 'Error',
           description: 'Failed to fetch data. Please try again later.',
         });
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
     }
     fetchData();
@@ -311,14 +315,31 @@ const InterviewProfile: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {skillData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.skill}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                  </TableRow>
-                ))}
+                {loading
+                  ? [...Array(5)].map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Skeleton className="w-28 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-10 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-16 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-16 h-5" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : skillData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.skill}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.level}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                      </TableRow>
+                    ))}
               </TableBody>
             </Table>
             <div className="text-center py-10 w-[100%] mt-10">
@@ -332,6 +353,7 @@ const InterviewProfile: React.FC = () => {
             </div>
           </Card>
         </div>
+
         <div className="mb-8 w-full sm:w-1/2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Domains</h2>
@@ -452,14 +474,31 @@ const InterviewProfile: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {domainData.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.domain}</TableCell>
-                    <TableCell>{item.experience}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.status}</TableCell>
-                  </TableRow>
-                ))}
+                {loading
+                  ? [...Array(5)].map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Skeleton className="w-28 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-10 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-16 h-5" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="w-16 h-5" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : domainData.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{item.domain}</TableCell>
+                        <TableCell>{item.experience}</TableCell>
+                        <TableCell>{item.level}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                      </TableRow>
+                    ))}
               </TableBody>
             </Table>
             <div className="text-center py-10 w-[100%] mt-10">
