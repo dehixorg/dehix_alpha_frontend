@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 // import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
 
@@ -106,8 +106,8 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
                 className="max-w-full h-32 object-cover border rounded"
               />
             ) : (
-              <div className="flex items-center border rounded   justify-center">
-                <img
+              <div className="flex items-center border rounded p-2 w-full justify-center">
+                <Image
                   src="/path-to-your-pdf-icon.svg"
                   alt="PDF Icon"
                   className="w-8 h-8 "

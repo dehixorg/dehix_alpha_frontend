@@ -10,15 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
-// import Breadcrumb from '@/components/shared/breadcrumbList';
-// import DropdownProfile from '@/components/shared/DropdownProfile';
 import Header from '@/components/header/header';
 
 export default function HistoryPage() {

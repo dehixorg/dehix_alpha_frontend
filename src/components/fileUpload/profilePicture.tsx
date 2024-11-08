@@ -6,7 +6,6 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 // import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
-
 const allowedImageFormats = [
   'image/png',
   'image/jpeg',

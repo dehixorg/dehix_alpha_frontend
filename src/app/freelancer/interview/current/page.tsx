@@ -29,7 +29,7 @@ import {
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 // import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+// import DropdownProfile from '@/components/shared/DropdownProfile';
 
 // interface Interview {
 //   reference: string;
