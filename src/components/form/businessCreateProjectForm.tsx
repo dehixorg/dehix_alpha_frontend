@@ -137,25 +137,30 @@ export function CreateProjectBusinessForm() {
             axiosInstance.get('/domain/all'),
             axiosInstance.get('/skills/all'),
           ]);
-
-        setDomains(
-          domainResponse.data.data.map((domain: any) => ({
-            value: domain.label,
-            label: domain.label,
-          })),
-        );
-        setSkills(
-          skillsResponse.data.data.map((skill: any) => ({
-            value: skill.label,
-            label: skill.label,
-          })),
-        );
-        setProjectDomains(
-          projectDomainResponse.data.data.map((projectDoamin: any) => ({
-            value: projectDoamin.label,
-            label: projectDoamin.label,
-          })),
-        );
+        if(domainResponse.data.data && domainResponse.data.data.label) {
+          setDomains(
+            domainResponse.data.data.map((domain: any) => ({
+              value: domain.label,
+              label: domain.label,
+            })),
+          );
+        }
+        if(skillsResponse.data.data && skillsResponse.data.data.label) {
+          setSkills(
+            skillsResponse.data.data.map((skill: any) => ({
+              value: skill.label,
+              label: skill.label,
+            })),
+          );
+        }
+        if(projectDomainResponse.data.data && projectDomainResponse.data.data.label) {
+          setProjectDomains(
+            projectDomainResponse.data.data.map((projectDoamin: any) => ({
+              value: projectDoamin.label,
+              label: projectDoamin.label,
+            })),
+          );
+        }
       } catch (error) {
         console.error('API Error:', error);
         toast({
@@ -216,7 +221,7 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      await axiosInstance.post(`/project/${user.uid}/project`, {
+      const response = await axiosInstance.post(`/project/${user.uid}/project`, {
         ...data,
         companyId: user.uid,
         role: '',
@@ -224,10 +229,12 @@ export function CreateProjectBusinessForm() {
         projectDomain: currProjectDomains,
         skillsRequired: currSkills,
       });
-      toast({
-        title: 'Project Added',
-        description: 'Your project has been successfully added.',
-      });
+      if(response.status === 201) {
+        toast({
+          title: 'Project Added',
+          description: 'Your project has been successfully added.',
+        });
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
