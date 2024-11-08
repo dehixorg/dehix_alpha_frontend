@@ -127,7 +127,11 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   return (
     <Card className="p-10">
       <Form {...form}>
-        <ProfilePictureUpload user_id={user._id} profile={''} />
+        <ProfilePictureUpload
+          user_id={user._id}
+          profile={user.profilePic}
+          entityType="business"
+        />
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">

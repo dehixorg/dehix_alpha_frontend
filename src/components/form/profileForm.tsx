@@ -255,6 +255,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         <ProfilePictureUpload
           user_id={user._id}
           profile={user.profilePicture}
+          entityType="freelancer"
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
