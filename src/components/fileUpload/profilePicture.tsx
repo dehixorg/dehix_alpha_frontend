@@ -89,16 +89,9 @@ const ProfilePictureUpload = ({
           ? `/freelancer/${user_id}`
           : `/business/${user_id}`;
 
-      // If entityType is 'business', use 'profilePic' instead of 'profilePicture'
-      const updatePayload =
-        entityType === 'business'
-          ? { profilePic: Location } // For business, use 'profilePic'
-          : { profilePicture: Location }; // For freelancer, use 'profilePicture'
-
-      const putResponse = await axiosInstance.put(
-        updateEndpoint,
-        updatePayload,
-      );
+      const putResponse = await axiosInstance.put(updateEndpoint, {
+        profilePic: Location,
+      });
 
       if (putResponse.status === 200) {
         toast({

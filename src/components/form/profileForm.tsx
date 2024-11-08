@@ -254,7 +254,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       <Form {...form}>
         <ProfilePictureUpload
           user_id={user._id}
-          profile={user.profilePicture}
+          profile={user.profilePic}
           entityType="freelancer"
         />
         <form
