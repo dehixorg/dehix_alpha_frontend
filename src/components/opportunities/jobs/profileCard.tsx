@@ -125,6 +125,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
                       onChange={(e) => setAmount(e.target.value)}
                       className="col-span-3"
                       required
+                      min={1}
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">

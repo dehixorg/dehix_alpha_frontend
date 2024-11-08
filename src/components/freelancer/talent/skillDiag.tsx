@@ -183,6 +183,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 <input
                   type="number"
                   placeholder="Experience (years)"
+                  min={0}
+                  max={50}
                   {...field}
                   className="border p-2 rounded mt-2 w-full"
                 />
@@ -199,6 +201,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               <input
                 type="number"
                 placeholder="Monthly Pay"
+                min={0}
                 {...field}
                 className="border p-2 rounded mt-2 w-full"
               />
