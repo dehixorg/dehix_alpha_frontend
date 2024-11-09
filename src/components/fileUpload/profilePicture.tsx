@@ -4,6 +4,7 @@ import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
+import Image from 'next/image';
 
 const allowedImageFormats = [
   'image/png',
@@ -126,7 +127,7 @@ const ProfilePictureUpload = ({
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <img
+              <Image
                 width={28}
                 height={28}
                 src={previewUrl}
@@ -135,7 +136,7 @@ const ProfilePictureUpload = ({
               />
             ) : (
               <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
-                <img
+                <Image
                   width={28}
                   height={28}
                   src={profile}

@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import Image from 'next/image';
 
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
@@ -104,7 +105,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
       <div className="space-y-6 flex flex-col items-center">
         <div className="flex items-center justify-center w-full">
           {previewUrl ? (
-            <img
+            <Image
               src={previewUrl}
               width={160} // Updated width and height for clearer preview size
               height={128}
@@ -113,7 +114,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
             />
           ) : (
             <div className="flex items-center border rounded p-2 w-full justify-center">
-              <img
+              <Image
                 src={url}
                 alt="PDF Icon"
                 width={160} // Updated width and height for clearer preview size
