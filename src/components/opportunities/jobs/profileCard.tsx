@@ -39,6 +39,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [amount, setAmount] = React.useState('');
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // New state to track bid submission
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
@@ -57,6 +58,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       setAmount('');
       setDescription('');
       setDialogOpen(false);
+      setIsBidSubmitted(true); // Mark bid as submitted
       toast({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
@@ -69,6 +71,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       });
     }
   };
+
   const toggleShowMore = () => setShowMore(!showMore);
 
   return (
@@ -100,9 +103,9 @@ const ProfileCard: React.FC<ProfileProps> = ({
                 className="w-[100px] h-[40px] "
                 variant="outline"
                 type="button"
-                disabled={bidExist}
+                disabled={bidExist || isBidSubmitted} // Disable if bid exists or already submitted
               >
-                {!bidExist ? 'Bid' : 'Applied'}
+                {isBidSubmitted ? 'Added' : !bidExist ? 'Bid' : 'Applied'}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -143,8 +146,8 @@ const ProfileCard: React.FC<ProfileProps> = ({
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={bidExist}>
-                    {!bidExist ? 'Bid' : 'Applied'}
+                  <Button type="submit" disabled={bidExist || isBidSubmitted}>
+                    {isBidSubmitted ? 'Added' : 'Bid'}
                   </Button>
                 </div>
               </form>
