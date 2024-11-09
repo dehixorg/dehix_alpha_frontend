@@ -133,9 +133,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => setOpen(true)} className='w-full sm:w-auto'>
           <Plus className="mr-2 h-4 w-4" />
-          Get Talent by Domain
+          Add Domain
         </Button>
       </DialogTrigger>
       <DialogContent>

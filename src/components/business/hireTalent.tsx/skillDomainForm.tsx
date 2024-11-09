@@ -200,7 +200,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           </div>
           <Card className="h-[65.4vh] overflow-auto no-scrollbar">
             <Table className="w-full">
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10">
                 <TableRow>
                   <TableHead>Label</TableHead>
                   <TableHead>Experience</TableHead>
