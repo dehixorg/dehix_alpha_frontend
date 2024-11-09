@@ -18,6 +18,7 @@ import { RootState } from '@/lib/store';
 
 interface ProfileProps {
   profile: {
+    _id?: string;
     domain?: string;
     freelancersRequired?: string;
     skills?: string[];
@@ -27,15 +28,18 @@ interface ProfileProps {
     description?: string;
   };
   projectId: string;
+  bidExist: boolean;
 }
 
-const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
+const ProfileCard: React.FC<ProfileProps> = ({
+  profile,
+  projectId,
+  bidExist,
+}) => {
   const [amount, setAmount] = React.useState('');
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const [exist] = React.useState(false);
-  // use setExist in useState if needed
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +50,7 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
         current_price: amount,
         description: descriptionValue,
         bidder_id: user.uid,
+        profile_id: profile._id,
         project_id: projectId, // Use the current project's ID
       });
 
@@ -56,7 +61,6 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
       });
-      window.location.reload();
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
@@ -65,7 +69,6 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
       });
     }
   };
-
   const toggleShowMore = () => setShowMore(!showMore);
 
   return (
@@ -97,9 +100,9 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
                 className="w-[100px] h-[40px] "
                 variant="outline"
                 type="button"
-                disabled={exist}
+                disabled={bidExist}
               >
-                {!exist ? 'Bid' : 'Applied'}
+                {!bidExist ? 'Bid' : 'Applied'}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -122,6 +125,7 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
                       onChange={(e) => setAmount(e.target.value)}
                       className="col-span-3"
                       required
+                      min={1}
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -139,8 +143,8 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={exist}>
-                    {!exist ? 'Bid' : 'Applied'}
+                  <Button type="submit" disabled={bidExist}>
+                    {!bidExist ? 'Bid' : 'Applied'}
                   </Button>
                 </div>
               </form>
@@ -153,15 +157,15 @@ const ProfileCard: React.FC<ProfileProps> = ({ profile, projectId }) => {
       {profile.description && (
         <div className="mt-4 text-gray-400">
           <strong></strong>{' '}
-          {profile.description.length > 100 ? (
-            <span>
+          {profile.description.length > 50 ? (
+            <p className="break-words">
               {showMore
                 ? profile.description
-                : `${profile.description.slice(0, 100)}...`}
+                : `${profile.description.slice(0, 50)}...`}
               <button onClick={toggleShowMore} className="text-blue-500 ml-2">
                 {showMore ? 'Show Less' : 'Show More'}
               </button>
-            </span>
+            </p>
           ) : (
             profile.description
           )}

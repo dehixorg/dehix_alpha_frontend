@@ -1,5 +1,7 @@
 import React from 'react';
 
+import DateRange from './dateRange';
+
 import {
   Card,
   CardContent,
@@ -8,7 +10,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 interface EducationProps {
   degree?: string;
@@ -27,10 +28,6 @@ const EducationInfoCard: React.FC<EducationProps> = ({
   endDate,
   grade,
 }) => {
-  const formatDate = (date: Date | undefined) => {
-    return date ? new Date(date).toLocaleDateString() : 'N/A';
-  };
-
   return (
     <Card className="w-full mx-auto md:max-w-2xl">
       <CardHeader>
@@ -45,13 +42,7 @@ const EducationInfoCard: React.FC<EducationProps> = ({
         <p className=" pt-4">Grade: {grade || 'N/A'}</p>
       </CardContent>
       <CardFooter className="flex">
-        <Badge className="text-sm font-semibold   px-3 py-1 rounded">
-          {startDate ? formatDate(startDate) : 'Start Date N/A'}
-        </Badge>
-        <p>-</p>
-        <Badge className="text-sm font-semibold   px-3 py-1 uppercase rounded">
-          {endDate === 'current' ? 'Current' : formatDate(endDate)}
-        </Badge>
+        <DateRange startDate={startDate} endDate={endDate} />
       </CardFooter>
     </Card>
   );

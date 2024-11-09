@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
 import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
+import { Button } from '@/components/ui/button';
 
 interface DehixTalent {
   _id: string;
@@ -62,10 +64,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
-        if (
-          response.status === 404 ||
-          response.data.data.length < Dehix_Talent_Card_Pagination.BATCH
-        ) {
+        if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
           return;
         }
@@ -78,13 +77,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
         } else {
           throw new Error('Fail to fetch data');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching talent data', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
+        if (error.response && error.response.status === 404) {
+          setHasMore(false);
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong. Please try again.',
+          });
+        }
       } finally {
         setLoading(false);
         isRequestInProgress.current = false;
@@ -167,6 +170,18 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+                </div>
+                <div>
+                  {/* <button>
+                    <Link href="/business/freelancerProfile">view</Link>
+                  </button> */}
+                  <Button className="w-full">
+                    <Link
+                      href={`/business/freelancerProfile/${talentEntry._id}`}
+                    >
+                      <button>View</button>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </CardContent>

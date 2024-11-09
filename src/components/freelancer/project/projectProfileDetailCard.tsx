@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 
@@ -29,7 +29,6 @@ import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProfileDetailCardProps {
   _id: string;
-  exist: any;
   domain: string;
   freelancersRequired: string;
   skills: string[];
@@ -50,7 +49,6 @@ type CardProps = React.ComponentProps<typeof Card> &
 
 export function ProjectProfileDetailCard({
   _id,
-  exist,
   domain,
   freelancersRequired,
   skills,
@@ -65,11 +63,13 @@ export function ProjectProfileDetailCard({
   domain_id,
   ...props
 }: CardProps) {
+  const user = useSelector((state: RootState) => state.user);
   const [amount, setAmount] = useState('');
   const [descriptionValue, setDescription] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
   const params = useParams();
+  const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
+  const [exist, setExist] = useState(false);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -91,7 +91,7 @@ export function ProjectProfileDetailCard({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
       });
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
@@ -102,8 +102,21 @@ export function ProjectProfileDetailCard({
   };
 
   useEffect(() => {
-    console.log('checking existence', exist);
-  }, [exist]);
+    async function fetchData() {
+      try {
+        const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
+        const profileIds = response.data.data.map((bid: any) => bid.profile_id); // Extract profile_ids
+        setBidProfiles(profileIds);
+      } catch (error) {
+        console.error('API Error:', error);
+      }
+    }
+    fetchData();
+  }, [user.uid]);
+
+  useEffect(() => {
+    setExist(bidProfiles.includes(_id));
+  }, [bidProfiles, _id]);
 
   return (
     <Card className={cn('w-[350px]', className)} {...props}>
@@ -115,7 +128,7 @@ export function ProjectProfileDetailCard({
           Requirement is of {freelancersRequired} freelancer(s) for{' '}
           {domain.toLowerCase()} profile.
           <br />
-          {description}
+          <p className="break-words text-white">{description}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -123,44 +136,42 @@ export function ProjectProfileDetailCard({
           <ul className="flex flex-wrap gap-2">
             {email && (
               <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Email - </span>
+                <span className="text-gray-700 font-semibold">Email: </span>
                 {email}
               </li>
             )}
             {status && (
               <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Status - </span>
+                <span className="text-gray-700 font-semibold">Status: </span>
                 {status}
               </li>
             )}
             {startDate && (
               <li className="min-w-[45%]">
                 <span className="text-gray-700 font-semibold">
-                  Start Date -{' '}
+                  Start Date:{' '}
                 </span>
                 {startDate}
               </li>
             )}
             {endDate && (
               <li className="min-w-[45%]">
-                <span className="text-gray-400 font-semibold">End Date - </span>
+                <span className="text-gray-400 font-semibold">End Date: </span>
                 {endDate}
               </li>
             )}
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Experience - </span>
+              <span className="text-gray-400 font-semibold">Experience: </span>
               {experience} years
             </li>
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">
-                Min Connect -{' '}
-              </span>
+              <span className="text-gray-400 font-semibold">Min Connect: </span>
               {minConnect}
             </li>
           </ul>
           {skills.length > 0 && (
             <div className="mt-2">
-              <span className="text-gray-700 font-semibold">Skills - </span>
+              <span className="text-gray-700 font-semibold">Skills: </span>
               <ul className="flex flex-wrap gap-1 mt-1">
                 {skills.map((skill, index) => (
                   <li

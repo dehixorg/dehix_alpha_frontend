@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
-import { useSelector } from 'react-redux'; // To get the user data
+import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
@@ -18,6 +18,8 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Skill {
   _id: string;
@@ -43,30 +45,28 @@ const SkillDomainForm: React.FC = () => {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills, domains, and user's skill/domain data on mount
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
 
-        // Fetch the skill/domain data for the specific freelancer
         if (user?.uid) {
           const talentResponse = await axiosInstance.get(
             `/freelancer/${user.uid}/dehix-talent`,
           );
           const talentData = talentResponse.data?.data[0]?.dehixTalent || {};
 
-          // Convert the talent object into an array
           const formattedTalentData = Object.values(talentData).map(
             (item: any) => ({
-              uid: item._id, // Ensure that the UID is present here
+              uid: item._id,
               label: item.skillName || item.domainName || 'N/A',
               experience: item.experience || 'N/A',
               monthlyPay: item.monthlyPay || 'N/A',
@@ -82,12 +82,13 @@ const SkillDomainForm: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
     }
     fetchData();
   }, [user?.uid]);
 
-  // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
@@ -104,7 +105,6 @@ const SkillDomainForm: React.FC = () => {
     setStatusVisibility([...statusVisibility, false]);
   };
 
-  // Function to handle visibility toggle and API call
   const handleToggleVisibility = async (
     index: number,
     value: boolean,
@@ -126,10 +126,21 @@ const SkillDomainForm: React.FC = () => {
     }
   };
 
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500 text-white';
+      case 'pending':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-8 ml-5">
-        <h1 className="text-3xl font-bold">Dehix Talent Table</h1>
+    <div className="p-6 mt-2">
+      <div className="mb-8 mt-1 ml-2">
+        <h1 className="text-3xl font-bold">Dehix Talent</h1>
         <p className="text-gray-400 mt-2">
           Here you can Add relevant skills and domains to get directly hired
           from dehix talent.
@@ -155,21 +166,44 @@ const SkillDomainForm: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {skillDomainData.length > 0 ? (
+                {loading ? (
+                  Array.from({ length: 9 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-16" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-12" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-20" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-12 rounded-xl" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : skillDomainData.length > 0 ? (
                   skillDomainData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
-                      <TableCell>{item.experience}Years</TableCell>
+                      <TableCell>{item.experience} Years</TableCell>
                       <TableCell>${item.monthlyPay}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(item.status)}>
+                          {item.status.toUpperCase()}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Switch
                           checked={statusVisibility[index]}
-                          onCheckedChange={
-                            (value) =>
-                              item.uid
-                                ? handleToggleVisibility(index, value, item.uid)
-                                : console.error('UID missing for item', item) // Fallback check for missing UID
+                          onCheckedChange={(value) =>
+                            item.uid
+                              ? handleToggleVisibility(index, value, item.uid)
+                              : console.error('UID missing for item', item)
                           }
                         />
                       </TableCell>
