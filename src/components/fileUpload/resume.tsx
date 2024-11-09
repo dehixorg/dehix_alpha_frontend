@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 
+import { Button } from '../ui/button';
+
 import { toast } from '@/components/ui/use-toast';
-// import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
+
 const allowedResumeFormats = ['application/pdf', 'image/png'];
 const maxResumeSize = 2 * 1024 * 1024; // 2MB in bytes
 
-const ResumeUpload = ({ user_id }: { user_id: string }) => {
+interface ResumeUploadProps {
+  user_id: string;
+  url: string;
+}
+
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(url); // Initialize previewUrl with the URL from props
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedResumeFormats.includes(file.type)) {
       if (file.size <= maxResumeSize) {
         setSelectedResume(file);
-        if (file.type === 'image/png') {
-          setPreviewUrl(URL.createObjectURL(file));
-        } else {
-          setPreviewUrl(null);
-        }
+        setPreviewUrl(
+          file.type === 'image/png' ? URL.createObjectURL(file) : null,
+        );
       } else {
         toast({
           variant: 'destructive',
@@ -32,14 +38,12 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
       toast({
         variant: 'destructive',
         title: 'Invalid file type',
-        description: `Please upload a valid resume file. Allowed formats: ${allowedResumeFormats.join(', ')}`,
+        description: `Allowed formats: ${allowedResumeFormats.join(', ')}`,
       });
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleUploadClick = async () => {
     if (!selectedResume) {
       toast({
         variant: 'destructive',
@@ -53,23 +57,27 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
     formData.append('resume', selectedResume);
 
     try {
+      setIsUploading(true);
+
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         },
       );
+      const { Location } = postResponse.data.data;
 
-      const { Location } = postResponse.data;
-
-      const putResponse = await axiosInstance.put('/freelancer/${user_id}', {
-        ProfilePicture: Location,
+      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
+        resume: Location,
       });
 
       if (putResponse.status === 200) {
+        setPreviewUrl(
+          selectedResume.type === 'image/png'
+            ? URL.createObjectURL(selectedResume)
+            : Location,
+        ); // Update previewUrl based on file type
         toast({
           title: 'Success',
           description: 'Resume uploaded successfully!',
@@ -82,54 +90,58 @@ const ResumeUpload = ({ user_id }: { user_id: string }) => {
         });
       }
     } catch (error) {
-      console.error('Error:', error);
       toast({
         variant: 'destructive',
         title: 'Upload failed',
         description: 'File upload failed. Please try again.',
       });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto  rounded shadow-md">
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 flex flex-col items-center"
-      >
-        {selectedResume && (
-          <div className=" flex items-center justify-center w-full">
-            {selectedResume.type === 'image/png' ? (
-              <img
-                src={previewUrl!}
-                alt="Resume Preview"
-                className="max-w-full h-32 object-cover border rounded"
+    <div className="upload-form max-w-md mx-auto rounded shadow-md p-4">
+      <div className="space-y-6 flex flex-col items-center">
+        <div className="flex items-center justify-center w-full">
+          {previewUrl ? (
+            <Image
+              src={previewUrl}
+              width={160} // Updated width and height for clearer preview size
+              height={128}
+              alt="Resume Preview"
+              className="w-40 h-32 object-cover border rounded"
+            />
+          ) : (
+            <div className="flex items-center border rounded p-2 w-full justify-center">
+              <Image
+                src={url}
+                alt="PDF Icon"
+                width={160} // Updated width and height for clearer preview size
+                height={128}
+                className="w-8 h-8"
               />
-            ) : (
-              <div className="flex items-center border rounded p-2 w-full justify-center">
-                <Image
-                  src="/path-to-your-pdf-icon.svg"
-                  alt="PDF Icon"
-                  className="w-8 h-8 "
-                />
-                <span className="text-gray-700">{selectedResume.name}</span>
-              </div>
-            )}
-          </div>
-        )}
+              <span className="text-gray-700 ml-2">{selectedResume?.name}</span>
+            </div>
+          )}
+        </div>
 
         <input
           type="file"
           accept={allowedResumeFormats.join(',')}
           onChange={handleResumeChange}
-          className="border-2 border-black-400 rounded gap-3 p-2 w-full"
+          className="border-2 border-gray-400 rounded p-2 w-full"
           id="resume-input"
         />
 
-        {/* <Button type="submit" className="w-full">
-          Upload Resume
-        </Button> */}
-      </form>
+        <Button
+          onClick={handleUploadClick}
+          className="w-full"
+          disabled={!selectedResume || isUploading}
+        >
+          {isUploading ? 'Uploading...' : 'Upload Resume'}
+        </Button>
+      </div>
     </div>
   );
 };

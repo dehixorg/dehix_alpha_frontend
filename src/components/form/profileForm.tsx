@@ -595,11 +595,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload user_id={user.id} />
+                  <ResumeUpload user_id={user._id} url={user.resume} />
                 </div>
-                <FormDescription className="ml-2">
-                  Upload your resume
-                </FormDescription>
               </FormItem>
             )}
           />

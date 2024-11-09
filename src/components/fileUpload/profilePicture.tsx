@@ -127,7 +127,7 @@ const ProfilePictureUpload = ({
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <img
+              <Image
                 width={28}
                 height={28}
                 src={previewUrl}
