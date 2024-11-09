@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
+import Image from 'next/image';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import Image from 'next/image';
 
 const allowedImageFormats = [
   'image/png',
