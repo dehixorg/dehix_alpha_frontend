@@ -1,10 +1,8 @@
-// ProfileComponent.tsx
-
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, PackageOpen } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { toast } from '../../ui/use-toast';
 
@@ -37,6 +35,7 @@ import {
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 interface Skill {
   label: string;
@@ -47,17 +46,17 @@ interface Domain {
 }
 
 interface SkillData {
-  skill: string;
+  name: string;
   experience: number;
   level: string;
-  status: string;
+  interviewStatus: string;
 }
 
 interface DomainData {
-  domain: string;
+  name: string;
   experience: number;
   level: string;
-  status: string;
+  interviewStatus: string;
 }
 
 const levels = ['Mastery', 'Proficient', 'Beginner'];
@@ -93,7 +92,9 @@ interface DomainFormData {
   level: string;
 }
 
-const InterviewProfile: React.FC = () => {
+const InterviewProfile: React.FC<{ freelancerId: string }> = ({
+  freelancerId,
+}) => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillData, setSkillData] = useState<SkillData[]>([]);
@@ -113,6 +114,17 @@ const InterviewProfile: React.FC = () => {
 
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
+
+        // Fetch freelancer-specific skill and domain data
+        const freelancerSkillsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/skill`,
+        );
+        setSkillData(freelancerSkillsResponse.data.data[0].skills);
+
+        const freelancerDomainsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/domain`,
+        );
+        setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -125,12 +137,12 @@ const InterviewProfile: React.FC = () => {
       }
     }
     fetchData();
-  }, []);
+  }, [freelancerId]);
 
   const {
     handleSubmit: handleSubmitSkill,
     formState: { errors: skillErrors },
-    control: controlSkill,
+    control: controlSkill, // Control for skills form
     reset: resetSkill,
   } = useForm<SkillFormData>({
     resolver: zodResolver(SkillSchema),
@@ -139,11 +151,22 @@ const InterviewProfile: React.FC = () => {
   const {
     handleSubmit: handleSubmitDomain,
     formState: { errors: domainErrors },
-    control: controlDomain,
+    control: controlDomain, // Control for domain form
     reset: resetDomain,
   } = useForm<DomainFormData>({
     resolver: zodResolver(DomainSchema),
   });
+
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500 text-white';
+      case 'pending':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
 
   const onSubmitSkill = (data: SkillFormData) => {
     setLoading(true);
@@ -152,10 +175,10 @@ const InterviewProfile: React.FC = () => {
       setSkillData([
         ...skillData,
         {
-          skill: data.skill,
+          name: data.skill,
           experience: data.experience,
           level: data.level,
-          status: defaultStatus,
+          interviewStatus: defaultStatus,
         },
       ]);
       resetSkill();
@@ -176,10 +199,10 @@ const InterviewProfile: React.FC = () => {
       setDomainData([
         ...domainData,
         {
-          domain: data.domain,
+          name: data.domain,
           experience: data.experience,
           level: data.level,
-          status: defaultStatus,
+          interviewStatus: defaultStatus,
         },
       ]);
       resetDomain();
@@ -222,7 +245,7 @@ const InterviewProfile: React.FC = () => {
                 <form onSubmit={handleSubmitSkill(onSubmitSkill)}>
                   <Controller
                     name="skill"
-                    control={controlSkill}
+                    control={controlSkill} // Correctly use `control` for `skill`
                     render={({ field }) => (
                       <Select
                         {...field}
@@ -247,7 +270,7 @@ const InterviewProfile: React.FC = () => {
                   <div className="mt-2">
                     <Controller
                       name="level"
-                      control={controlSkill}
+                      control={controlSkill} // Correctly use `control` for `level`
                       render={({ field }) => (
                         <Select
                           {...field}
@@ -275,16 +298,12 @@ const InterviewProfile: React.FC = () => {
                   <div className="mt-2">
                     <Controller
                       name="experience"
-                      control={controlSkill}
+                      control={controlSkill} // Correctly use `control` for `experience`
                       render={({ field }) => (
                         <Input
                           {...field}
                           type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
+                          placeholder="Experience"
                         />
                       )}
                     />
@@ -295,68 +314,62 @@ const InterviewProfile: React.FC = () => {
                     )}
                   </div>
                   <DialogFooter>
-                    <Button
-                      className="mt-3"
-                      variant="ghost"
-                      onClick={() => setOpenSkillDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button className="mt-3" type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
+                    <Button type="submit">Add Skill</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
-          <Card className="p-4">
+          <Card>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Skill</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading
-                  ? [...Array(5)].map((_, index) => (
+                  ? [...Array(4)].map((_, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <Skeleton className="w-28 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-10 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-16 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-16 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                       </TableRow>
                     ))
                   : skillData.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell>{item.skill}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
+                        {/* Ensure you're rendering specific fields from the object */}
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={getBadgeColor(item.interviewStatus)}
+                          >
+                            {item.interviewStatus.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {typeof item.experience === 'number' &&
+                          !isNaN(item.experience)
+                            ? `${item.experience} years`
+                            : null}
+                        </TableCell>
                         <TableCell>{item.level}</TableCell>
-                        <TableCell>{item.status}</TableCell>
                       </TableRow>
                     ))}
               </TableBody>
             </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
-            </div>
           </Card>
         </div>
 
@@ -379,7 +392,7 @@ const InterviewProfile: React.FC = () => {
                 <form onSubmit={handleSubmitDomain(onSubmitDomain)}>
                   <Controller
                     name="domain"
-                    control={controlDomain}
+                    control={controlDomain} // Correctly use `control` for `domain`
                     render={({ field }) => (
                       <Select
                         {...field}
@@ -406,7 +419,7 @@ const InterviewProfile: React.FC = () => {
                   <div className="mt-2">
                     <Controller
                       name="level"
-                      control={controlDomain}
+                      control={controlDomain} // Correctly use `control` for `level`
                       render={({ field }) => (
                         <Select
                           {...field}
@@ -434,16 +447,12 @@ const InterviewProfile: React.FC = () => {
                   <div className="mt-2">
                     <Controller
                       name="experience"
-                      control={controlDomain}
+                      control={controlDomain} // Correctly use `control` for `experience`
                       render={({ field }) => (
                         <Input
                           {...field}
                           type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
+                          placeholder="Experience"
                         />
                       )}
                     />
@@ -454,68 +463,63 @@ const InterviewProfile: React.FC = () => {
                     )}
                   </div>
                   <DialogFooter>
-                    <Button
-                      className="mt-3"
-                      variant="ghost"
-                      onClick={() => setOpenDomainDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button className="mt-3" type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
+                    <Button type="submit">Add Domain</Button>
                   </DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
-          <Card className="p-4">
+
+          <Card>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Domain</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Experience</TableHead>
                   <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading
-                  ? [...Array(5)].map((_, index) => (
+                  ? [...Array(4)].map((_, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          <Skeleton className="w-28 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-10 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-16 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                         <TableCell>
-                          <Skeleton className="w-16 h-5" />
+                          <Skeleton className="h-6 w-full" />
                         </TableCell>
                       </TableRow>
                     ))
                   : domainData.map((item, index) => (
                       <TableRow key={index}>
-                        <TableCell>{item.domain}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
+                        {/* Ensure you're rendering specific fields from the object */}
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={getBadgeColor(item.interviewStatus)}
+                          >
+                            {item.interviewStatus.toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {typeof item.experience === 'number' &&
+                          !isNaN(item.experience)
+                            ? `${item.experience} years`
+                            : null}{' '}
+                        </TableCell>
                         <TableCell>{item.level}</TableCell>
-                        <TableCell>{item.status}</TableCell>
                       </TableRow>
                     ))}
               </TableBody>
             </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
-            </div>
           </Card>
         </div>
       </div>
