@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 
 import { Button } from '../ui/button';
 
@@ -105,7 +104,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
       <div className="space-y-6 flex flex-col items-center">
         <div className="flex items-center justify-center w-full">
           {previewUrl ? (
-            <Image
+            <img
               src={previewUrl}
               width={160} // Updated width and height for clearer preview size
               height={128}
@@ -114,7 +113,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
             />
           ) : (
             <div className="flex items-center border rounded p-2 w-full justify-center">
-              <Image
+              <img
                 src={url}
                 alt="PDF Icon"
                 width={160} // Updated width and height for clearer preview size

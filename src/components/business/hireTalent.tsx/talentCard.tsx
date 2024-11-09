@@ -148,15 +148,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
           >
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage
-                  src={talent.profilePic}
-                  alt="Profile picture"
-                />
+                <AvatarImage src={talent.profilePic} alt="Profile picture" />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">{talent.userName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {talent.userName}
+                </p>
               </div>
             </CardHeader>
             <CardContent>
