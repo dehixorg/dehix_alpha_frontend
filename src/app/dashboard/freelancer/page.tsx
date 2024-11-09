@@ -27,6 +27,7 @@ import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
+import { ProjectStatus } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
@@ -183,22 +184,22 @@ export default function Dashboard() {
               <Tabs value={currentTab} onValueChange={handleTabChange}>
                 <div className="flex items-center">
                   <TabsList>
-                    <TabsTrigger value="Active">Active</TabsTrigger>
-                    <TabsTrigger value="Pending">Pending</TabsTrigger>
-                    <TabsTrigger value="Completed">Completed</TabsTrigger>
-                    <TabsTrigger value="Rejected">Rejected</TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Active}>Active</TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Pending}>Pending</TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Completed}>Completed</TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Rejected}>Rejected</TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value="Active">
+                <TabsContent value={ProjectStatus.Active}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="Pending">
+                <TabsContent value={ProjectStatus.Pending}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="Completed">
+                <TabsContent value={ProjectStatus.Completed}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="Rejected">
+                <TabsContent value={ProjectStatus.Rejected}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
               </Tabs>

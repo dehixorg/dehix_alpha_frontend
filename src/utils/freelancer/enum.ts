@@ -3,3 +3,10 @@ export enum InterviewLevel {
   Proficient = 'Proficient',
   Beginner = 'Beginner',
 }
+
+export enum ProjectStatus {
+  Active = 'Active',
+  Pending = 'Pending',
+  Rejected = 'Rejected',
+  Completed = 'Compeleted',
+}

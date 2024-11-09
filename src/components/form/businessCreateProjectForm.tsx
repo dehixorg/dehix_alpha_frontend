@@ -31,6 +31,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
+import { error } from 'console';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -137,27 +138,27 @@ export function CreateProjectBusinessForm() {
             axiosInstance.get('/domain/all'),
             axiosInstance.get('/skills/all'),
           ]);
-        if(domainResponse.data.data && domainResponse.data.data.label) {
+        if(domainResponse?.data && domainResponse?.data?.data) {
           setDomains(
-            domainResponse.data.data.map((domain: any) => ({
-              value: domain.label,
-              label: domain.label,
+            domainResponse?.data?.data.map((domain: any) => ({
+              value: domain?.label,
+              label: domain?.label,
             })),
           );
         }
-        if(skillsResponse.data.data && skillsResponse.data.data.label) {
+        if(skillsResponse?.data && skillsResponse?.data?.data) {
           setSkills(
-            skillsResponse.data.data.map((skill: any) => ({
-              value: skill.label,
-              label: skill.label,
+            skillsResponse?.data?.data.map((skill: any) => ({
+              value: skill?.label,
+              label: skill?.label,
             })),
           );
         }
-        if(projectDomainResponse.data.data && projectDomainResponse.data.data.label) {
+        if(projectDomainResponse?.data && projectDomainResponse?.data?.data) {
           setProjectDomains(
-            projectDomainResponse.data.data.map((projectDoamin: any) => ({
-              value: projectDoamin.label,
-              label: projectDoamin.label,
+            projectDomainResponse?.data?.data.map((projectDoamin: any) => ({
+              value: projectDoamin?.label,
+              label: projectDoamin?.label,
             })),
           );
         }
@@ -229,11 +230,13 @@ export function CreateProjectBusinessForm() {
         projectDomain: currProjectDomains,
         skillsRequired: currSkills,
       });
-      if(response.status === 201) {
+      if(response.status === 200) {
         toast({
           title: 'Project Added',
           description: 'Your project has been successfully added.',
         });
+      } else {
+        throw new Error('Failed to add project');
       }
     } catch (error) {
       toast({
