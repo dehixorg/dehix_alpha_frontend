@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit, Edit2 } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 
 import { toast } from '../../ui/use-toast';
 
@@ -33,10 +33,11 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
+import DomainDialog from '@/components/dialogs/domainDialog';
+import SkillDialog from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -78,19 +79,25 @@ const defaultStatus = 'Pending';
 
 const SkillSchema = z.object({
   skill: z.string().min(1, 'Skill is required'),
-  experience: z
-    .number()
-    .min(0, 'Experience must be a non-negative number')
-    .max(50, "Experience can't exceed 50"),
+  experience: z.preprocess(
+    (val) => parseFloat(val as string),
+    z
+      .number()
+      .min(0, 'Experience must be a non-negative number')
+      .max(50, "Experience can't exceed 50"),
+  ),
   level: z.string().min(1, 'Level is required'),
 });
 
 const DomainSchema = z.object({
   domain: z.string().min(1, 'Domain is required'),
-  experience: z
-    .number()
-    .min(0, 'Experience must be a non-negative number')
-    .max(50, "Experience can't exceeds 50"),
+  experience: z.preprocess(
+    (val) => parseFloat(val as string),
+    z
+      .number()
+      .min(0, 'Experience must be a non-negative number')
+      .max(50, "Experience can't exceed 50"),
+  ),
   level: z.string().min(1, 'Level is required'),
 });
 
@@ -172,21 +179,37 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     }
   };
 
-  const onSubmitSkill = (data: SkillFormData) => {
+  const onSubmitSkill = async (data: SkillFormData) => {
     setLoading(true);
     try {
       if (editingSkill) {
-        // Update existing skill
-        const updatedSkills = skillData.map((item) =>
-          item._id === editingSkill._id
-            ? { ...item, ...data, interviewStatus: defaultStatus }
-            : item,
+        // Update existing skill using API
+        const updatedSkill = {
+          ...editingSkill,
+          ...data,
+          interviewStatus: defaultStatus,
+        };
+
+        const response = await axiosInstance.put(
+          `/freelancer/${freelancerId}/skill`,
+          updatedSkill,
         );
-        setSkillData(updatedSkills);
-        toast({
-          title: 'Skill Updated',
-          description: `${data.name} skill updated successfully.`,
-        });
+
+        if (response.status === 200) {
+          // After a successful response (status 200), update local state
+          const updatedSkills = skillData.map((item) =>
+            item._id === editingSkill._id ? { ...item, ...updatedSkill } : item,
+          );
+          setSkillData(updatedSkills);
+
+          toast({
+            title: 'Skill Updated',
+            description: `${data.name} skill updated successfully.`,
+          });
+        } else {
+          // Handle non-200 responses (optional)
+          throw new Error('Failed to update skill');
+        }
       } else {
         // Add new skill
         setSkillData([
@@ -210,21 +233,38 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     }
   };
 
-  const onSubmitDomain = (data: DomainFormData) => {
+  const onSubmitDomain = async (data: DomainFormData) => {
     setLoading(true);
     try {
       if (editingDomain) {
-        // Update existing domain
-        const updatedDomains = domainData.map((item) =>
-          item._id === editingDomain._id
-            ? { ...item, ...data, interviewStatus: defaultStatus }
-            : item,
+        // Update existing domain using API
+        const updatedDomain = {
+          ...editingDomain,
+          ...data,
+        };
+
+        const response = await axiosInstance.put(
+          `/freelancer/${freelancerId}/domain`,
+          updatedDomain,
         );
-        setDomainData(updatedDomains);
-        toast({
-          title: 'Domain Updated',
-          description: `${data.name} domain updated successfully.`,
-        });
+
+        if (response.status === 200) {
+          // After a successful response (status 200), update local state
+          const updatedDomains = domainData.map((item) =>
+            item._id === editingDomain._id
+              ? { ...item, ...updatedDomain }
+              : item,
+          );
+          setDomainData(updatedDomains);
+
+          toast({
+            title: 'Domain Updated',
+            description: `${data.name} domain updated successfully.`,
+          });
+        } else {
+          // Handle non-200 responses (optional)
+          throw new Error('Failed to update domain');
+        }
       } else {
         // Add new domain
         setDomainData([
@@ -272,94 +312,23 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         <div className="mb-8 w-full sm:w-1/2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Skills</h2>
-            <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Skill
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingSkill ? 'Edit Skill' : 'Add Skill'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingSkill
-                      ? 'Update your skill information.'
-                      : 'Select a skill and provide your experience and level.'}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmitSkill(onSubmitSkill)}>
-                  <div className="space-y-4">
-                    <div>
-                      <Controller
-                        control={controlSkill}
-                        name="name"
-                        render={({ field }) => (
-                          <Select {...field}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select a skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skills.map((skill, idx) => (
-                                <SelectItem key={idx} value={skill.label}>
-                                  {skill.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <Controller
-                        control={controlSkill}
-                        name="experience"
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            placeholder="Years of experience"
-                          />
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <Controller
-                        control={controlSkill}
-                        name="level"
-                        render={({ field }) => (
-                          <Select {...field}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {levels.map((level) => (
-                                <SelectItem key={level} value={level}>
-                                  {level}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full sm:w-auto"
-                    >
-                      {editingSkill ? 'Update' : 'Add'} Skill
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => {
+                setEditingSkill(null);
+                setOpenSkillDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Skill
+            </Button>
+            <SkillDialog
+              open={openSkillDialog}
+              onClose={() => setOpenSkillDialog(false)}
+              onSubmit={onSubmitSkill}
+              skillOptions={skills}
+              levels={levels}
+              defaultValues={editingSkill || undefined}
+              loading={loading}
+            />
           </div>
           <Table>
             <TableHeader>
@@ -393,7 +362,11 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                     <TableRow key={skill._id}>
                       <TableCell>{skill.name}</TableCell>
                       <TableCell>{skill.level}</TableCell>
-                      <TableCell>{skill.experience} years</TableCell>
+                      <TableCell>
+                        {skill.experience.length > 0
+                          ? skill.experience + 'years'
+                          : ''}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(skill.interviewStatus)}>
                           {skill.interviewStatus.toUpperCase()}
@@ -415,94 +388,23 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         <div className="mb-8 w-full sm:w-1/2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Domains</h2>
-            <Dialog open={openDomainDialog} onOpenChange={setOpenDomainDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Domain
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingDomain ? 'Edit Domain' : 'Add Domain'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingDomain
-                      ? 'Update your domain information.'
-                      : 'Select a domain and provide your experience and level.'}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleSubmitDomain(onSubmitDomain)}>
-                  <div className="space-y-4">
-                    <div>
-                      <Controller
-                        control={controlDomain}
-                        name="name"
-                        render={({ field }) => (
-                          <Select {...field}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select a domain" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {domains.map((domain, idx) => (
-                                <SelectItem key={idx} value={domain.label}>
-                                  {domain.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <Controller
-                        control={controlDomain}
-                        name="experience"
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            placeholder="Years of experience"
-                          />
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <Controller
-                        control={controlDomain}
-                        name="level"
-                        render={({ field }) => (
-                          <Select {...field}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {levels.map((level) => (
-                                <SelectItem key={level} value={level}>
-                                  {level}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full sm:w-auto"
-                    >
-                      {editingDomain ? 'Update' : 'Add'} Domain
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => {
+                setEditingDomain(null);
+                setOpenDomainDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Domain
+            </Button>
+            <DomainDialog
+              open={openDomainDialog}
+              onClose={() => setOpenDomainDialog(false)}
+              onSubmit={onSubmitDomain}
+              domainOptions={domains}
+              levels={levels}
+              defaultValues={editingDomain || undefined}
+              loading={loading}
+            />
           </div>
           <Table>
             <TableHeader>
@@ -536,7 +438,11 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                     <TableRow key={domain._id}>
                       <TableCell>{domain.name}</TableCell>
                       <TableCell>{domain.level}</TableCell>
-                      <TableCell>{domain.experience} years</TableCell>
+                      <TableCell>
+                        {domain.experience.length > 0
+                          ? domain.experience + 'years'
+                          : ''}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           className={getBadgeColor(domain.interviewStatus)}
