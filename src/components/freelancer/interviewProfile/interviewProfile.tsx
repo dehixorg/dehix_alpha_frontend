@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import { SkillDialog } from '@/components/dialogs/skillDialog';
+// import { SkillDialog } from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -293,7 +293,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             >
               <Plus className="mr-2 h-4 w-4" /> Add Skill
             </Button>
-            <SkillDialog
+            {/* <SkillDialog
               open={openSkillDialog}
               onClose={() => setOpenSkillDialog(false)}
               onSubmit={onSubmitSkill}
@@ -301,7 +301,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               levels={levels}
               defaultValues={editingSkill || undefined}
               loading={loading}
-            />
+            /> */}
           </div>
           <Table>
             <TableHeader>
