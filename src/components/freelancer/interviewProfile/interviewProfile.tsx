@@ -1,22 +1,11 @@
-// ProfileComponent.tsx
-
 import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, PackageOpen } from 'lucide-react';
+import { Plus, Edit2 } from 'lucide-react';
 
 import { toast } from '../../ui/use-toast';
 
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -26,17 +15,12 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { ButtonIcon } from '@/components/shared/buttonIcon';
+import DomainDialog from '@/components/dialogs/domainDialog';
+// import { SkillDialog } from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -45,19 +29,32 @@ interface Skill {
 interface Domain {
   label: string;
 }
+interface SkillFormData {
+  name: string;
+  experience: string;
+  level: string;
+}
+
+interface DomainFormData {
+  name: string;
+  experience: string;
+  level: string;
+}
 
 interface SkillData {
-  skill: string;
-  experience: number;
+  _id?: string;
+  name: string;
+  experience: string;
   level: string;
-  status: string;
+  interviewStatus: string;
 }
 
 interface DomainData {
-  domain: string;
-  experience: number;
+  _id?: string;
+  name: string;
+  experience: string;
   level: string;
-  status: string;
+  interviewStatus: string;
 }
 
 const levels = ['Mastery', 'Proficient', 'Beginner'];
@@ -65,35 +62,31 @@ const defaultStatus = 'Pending';
 
 const SkillSchema = z.object({
   skill: z.string().min(1, 'Skill is required'),
-  experience: z
-    .number()
-    .min(0, 'Experience must be a non-negative number')
-    .max(50, "Experience can't exceed 50"),
+  experience: z.preprocess(
+    (val) => parseFloat(val as string),
+    z
+      .number()
+      .min(0, 'Experience must be a non-negative number')
+      .max(50, "Experience can't exceed 50"),
+  ),
   level: z.string().min(1, 'Level is required'),
 });
 
 const DomainSchema = z.object({
   domain: z.string().min(1, 'Domain is required'),
-  experience: z
-    .number()
-    .min(0, 'Experience must be a non-negative number')
-    .max(50, "Experience can't exceeds 50"),
+  experience: z.preprocess(
+    (val) => parseFloat(val as string),
+    z
+      .number()
+      .min(0, 'Experience must be a non-negative number')
+      .max(50, "Experience can't exceed 50"),
+  ),
   level: z.string().min(1, 'Level is required'),
 });
 
-interface SkillFormData {
-  skill: string;
-  experience: number;
-  level: string;
-}
-
-interface DomainFormData {
-  domain: string;
-  experience: number;
-  level: string;
-}
-
-const InterviewProfile: React.FC = () => {
+const InterviewProfile: React.FC<{ freelancerId: string }> = ({
+  freelancerId,
+}) => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillData, setSkillData] = useState<SkillData[]>([]);
@@ -104,15 +97,28 @@ const InterviewProfile: React.FC = () => {
   const [openSkillDialog, setOpenSkillDialog] = useState(false);
   const [openDomainDialog, setOpenDomainDialog] = useState(false);
 
+  const [editingSkill, setEditingSkill] = useState<SkillData | null>(null);
+  const [editingDomain, setEditingDomain] = useState<DomainData | null>(null);
+
   useEffect(() => {
     async function fetchData() {
-      setLoading(true); // Set loading to true when fetching data
+      setLoading(true);
       try {
         const skillsResponse = await axiosInstance.get('/skills/all');
         setSkills(skillsResponse.data.data);
 
         const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
+
+        const freelancerSkillsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/skill`,
+        );
+        setSkillData(freelancerSkillsResponse.data.data[0].skills);
+
+        const freelancerDomainsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/domain`,
+        );
+        setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -121,76 +127,148 @@ const InterviewProfile: React.FC = () => {
           description: 'Failed to fetch data. Please try again later.',
         });
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [freelancerId]);
 
-  const {
-    handleSubmit: handleSubmitSkill,
-    formState: { errors: skillErrors },
-    control: controlSkill,
-    reset: resetSkill,
-  } = useForm<SkillFormData>({
+  const { reset: resetSkill } = useForm<SkillFormData>({
     resolver: zodResolver(SkillSchema),
   });
 
-  const {
-    handleSubmit: handleSubmitDomain,
-    formState: { errors: domainErrors },
-    control: controlDomain,
-    reset: resetDomain,
-  } = useForm<DomainFormData>({
+  const { reset: resetDomain } = useForm<DomainFormData>({
     resolver: zodResolver(DomainSchema),
   });
 
-  const onSubmitSkill = (data: SkillFormData) => {
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-500 text-white';
+      case 'pending':
+        return 'bg-yellow-500 text-black';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
+  const onSubmitSkill = async (data: SkillFormData) => {
     setLoading(true);
     try {
-      console.log('Skill data:', data);
-      setSkillData([
-        ...skillData,
-        {
-          skill: data.skill,
-          experience: data.experience,
-          level: data.level,
-          status: defaultStatus,
-        },
-      ]);
+      if (editingSkill) {
+        // Update existing skill using API
+        const updatedSkill = {
+          ...editingSkill,
+          ...data,
+          interviewStatus: defaultStatus,
+        };
+
+        const response = await axiosInstance.put(
+          `/freelancer/${freelancerId}/skill`,
+          updatedSkill,
+        );
+
+        if (response.status === 200) {
+          // After a successful response (status 200), update local state
+          const updatedSkills = skillData.map((item) =>
+            item._id === editingSkill._id ? { ...item, ...updatedSkill } : item,
+          );
+          setSkillData(updatedSkills);
+
+          toast({
+            title: 'Skill Updated',
+            description: `${data.name} skill updated successfully.`,
+          });
+        } else {
+          // Handle non-200 responses (optional)
+          throw new Error('Failed to update skill');
+        }
+      } else {
+        // Add new skill
+        setSkillData([
+          ...skillData,
+          {
+            name: data.name,
+            experience: data.experience,
+            level: data.level,
+            interviewStatus: defaultStatus,
+          },
+        ]);
+        toast({
+          title: 'Skill Added',
+          description: `${data.name} skill added successfully.`,
+        });
+      }
       resetSkill();
       setOpenSkillDialog(false);
-      toast({
-        title: 'Skill Added',
-        description: `${data.skill} skill added successfully.`,
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  const onSubmitDomain = (data: DomainFormData) => {
+  const onSubmitDomain = async (data: DomainFormData) => {
     setLoading(true);
     try {
-      console.log('Domain data:', data);
-      setDomainData([
-        ...domainData,
-        {
-          domain: data.domain,
-          experience: data.experience,
-          level: data.level,
-          status: defaultStatus,
-        },
-      ]);
+      if (editingDomain) {
+        // Update existing domain using API
+        const updatedDomain = {
+          ...editingDomain,
+          ...data,
+        };
+
+        const response = await axiosInstance.put(
+          `/freelancer/${freelancerId}/domain`,
+          updatedDomain,
+        );
+
+        if (response.status === 200) {
+          // After a successful response (status 200), update local state
+          const updatedDomains = domainData.map((item) =>
+            item._id === editingDomain._id
+              ? { ...item, ...updatedDomain }
+              : item,
+          );
+          setDomainData(updatedDomains);
+
+          toast({
+            title: 'Domain Updated',
+            description: `${data.name} domain updated successfully.`,
+          });
+        } else {
+          // Handle non-200 responses (optional)
+          throw new Error('Failed to update domain');
+        }
+      } else {
+        // Add new domain
+        setDomainData([
+          ...domainData,
+          {
+            name: data.name,
+            experience: data.experience,
+            level: data.level,
+            interviewStatus: defaultStatus,
+          },
+        ]);
+        toast({
+          title: 'Domain Added',
+          description: `${data.name} domain added successfully.`,
+        });
+      }
       resetDomain();
       setOpenDomainDialog(false);
-      toast({
-        title: 'Domain Added',
-        description: `${data.domain} domain added successfully.`,
-      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditSkill = (skill: SkillData) => {
+    setEditingSkill(skill);
+    setOpenSkillDialog(true);
+  };
+
+  const handleEditDomain = (domain: DomainData) => {
+    setEditingDomain(domain);
+    setOpenDomainDialog(true);
   };
 
   return (
@@ -203,320 +281,158 @@ const InterviewProfile: React.FC = () => {
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
+        {/* Skills Table */}
         <div className="mb-8 w-full sm:w-1/2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Skills</h2>
-            <Dialog open={openSkillDialog} onOpenChange={setOpenSkillDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Skill
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Skill</DialogTitle>
-                  <DialogDescription>
-                    Select a skill, level, and enter your experience.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmitSkill(onSubmitSkill)}>
-                  <Controller
-                    name="skill"
-                    control={controlSkill}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        onValueChange={(value) => field.onChange(value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a skill" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {skills.map((skill) => (
-                            <SelectItem key={skill.label} value={skill.label}>
-                              {skill.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {skillErrors.skill && (
-                    <p className="text-red-500">{skillErrors.skill.message}</p>
-                  )}
-                  <div className="mt-2">
-                    <Controller
-                      name="level"
-                      control={controlSkill}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          onValueChange={(value) => field.onChange(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {levels.map((lvl) => (
-                              <SelectItem key={lvl} value={lvl}>
-                                {lvl}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {skillErrors.level && (
-                      <p className="text-red-500">
-                        {skillErrors.level.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <Controller
-                      name="experience"
-                      control={controlSkill}
-                      render={({ field }) => (
-                        <Input
-                          {...field}
-                          type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
-                        />
-                      )}
-                    />
-                    {skillErrors.experience && (
-                      <p className="text-red-500">
-                        {skillErrors.experience.message}
-                      </p>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      className="mt-3"
-                      variant="ghost"
-                      onClick={() => setOpenSkillDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button className="mt-3" type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => {
+                setEditingSkill(null);
+                setOpenSkillDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Skill
+            </Button>
+            {/* <SkillDialog
+              open={openSkillDialog}
+              onClose={() => setOpenSkillDialog(false)}
+              onSubmit={onSubmitSkill}
+              skillOptions={skills}
+              levels={levels}
+              defaultValues={editingSkill || undefined}
+              loading={loading}
+            /> */}
           </div>
-          <Card className="p-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Skill</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading
-                  ? [...Array(5)].map((_, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Skeleton className="w-28 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-10 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-16 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-16 h-5" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  : skillData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.skill}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
-                        <TableCell>{item.level}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                      </TableRow>
-                    ))}
-              </TableBody>
-            </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
-            </div>
-          </Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Skill</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading
+                ? [...Array(4)].map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : skillData.map((skill) => (
+                    <TableRow key={skill._id}>
+                      <TableCell>{skill.name}</TableCell>
+                      <TableCell>{skill.level}</TableCell>
+                      <TableCell>
+                        {skill.experience.length > 0
+                          ? skill.experience + 'years'
+                          : ''}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(skill.interviewStatus)}>
+                          {skill.interviewStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ButtonIcon
+                          icon={<Edit2 className="w-4 h-4" />}
+                          onClick={() => handleEditSkill(skill)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
         </div>
 
+        {/* Domain Table */}
         <div className="mb-8 w-full sm:w-1/2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Domains</h2>
-            <Dialog open={openDomainDialog} onOpenChange={setOpenDomainDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add Domain
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Domain</DialogTitle>
-                  <DialogDescription>
-                    Select a domain, level, and enter your experience.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmitDomain(onSubmitDomain)}>
-                  <Controller
-                    name="domain"
-                    control={controlDomain}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        onValueChange={(value) => field.onChange(value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a domain" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {domains.map((domain) => (
-                            <SelectItem key={domain.label} value={domain.label}>
-                              {domain.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {domainErrors.domain && (
-                    <p className="text-red-500">
-                      {domainErrors.domain.message}
-                    </p>
-                  )}
-                  <div className="mt-2">
-                    <Controller
-                      name="level"
-                      control={controlDomain}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          onValueChange={(value) => field.onChange(value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select level" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {levels.map((lvl) => (
-                              <SelectItem key={lvl} value={lvl}>
-                                {lvl}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {domainErrors.level && (
-                      <p className="text-red-500">
-                        {domainErrors.level.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <Controller
-                      name="experience"
-                      control={controlDomain}
-                      render={({ field }) => (
-                        <Input
-                          {...field}
-                          type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
-                        />
-                      )}
-                    />
-                    {domainErrors.experience && (
-                      <p className="text-red-500">
-                        {domainErrors.experience.message}
-                      </p>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      className="mt-3"
-                      variant="ghost"
-                      onClick={() => setOpenDomainDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button className="mt-3" type="submit" disabled={loading}>
-                      {loading ? 'Adding...' : 'Add'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => {
+                setEditingDomain(null);
+                setOpenDomainDialog(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Domain
+            </Button>
+            <DomainDialog
+              open={openDomainDialog}
+              onClose={() => setOpenDomainDialog(false)}
+              onSubmit={onSubmitDomain}
+              domainOptions={domains}
+              levels={levels}
+              defaultValues={editingDomain || undefined}
+              loading={loading}
+            />
           </div>
-          <Card className="p-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading
-                  ? [...Array(5)].map((_, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Skeleton className="w-28 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-10 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-16 h-5" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="w-16 h-5" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  : domainData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{item.domain}</TableCell>
-                        <TableCell>{item.experience}</TableCell>
-                        <TableCell>{item.level}</TableCell>
-                        <TableCell>{item.status}</TableCell>
-                      </TableRow>
-                    ))}
-              </TableBody>
-            </Table>
-            <div className="text-center py-10 w-[100%] mt-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No data available
-                <br /> You can earn reward and help community by being
-                interviewer.
-                <br />
-              </p>
-            </div>
-          </Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Domain</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Experience</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading
+                ? [...Array(4)].map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : domainData.map((domain) => (
+                    <TableRow key={domain._id}>
+                      <TableCell>{domain.name}</TableCell>
+                      <TableCell>{domain.level}</TableCell>
+                      <TableCell>
+                        {domain.experience.length > 0
+                          ? domain.experience + 'years'
+                          : ''}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={getBadgeColor(domain.interviewStatus)}
+                        >
+                          {domain.interviewStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ButtonIcon
+                          icon={<Edit2 className="w-4 h-4" />}
+                          onClick={() => handleEditDomain(domain)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

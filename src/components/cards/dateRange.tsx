@@ -1,27 +1,37 @@
 import React from 'react';
 
+import { Badge } from '../ui/badge'; // Adjust the import path as needed
+
 interface DateRangeProps {
-  startDate: Date | null | undefined;
-  endDate: Date | null | undefined;
+  startDate: Date | string | null | undefined; // Allow string or Date types
+  endDate: Date | string | null | undefined; // Allow string or Date types, "current" included
 }
 
 const DateRange: React.FC<DateRangeProps> = ({ startDate, endDate }) => {
+  // Format startDate, handle both Date and string
   const formattedStartDate = startDate
-    ? new Date(startDate).toLocaleDateString()
-    : 'N/A';
-  const formattedEndDate = endDate
-    ? new Date(endDate).toLocaleDateString()
-    : 'Current';
+    ? typeof startDate === 'string'
+      ? new Date(startDate).toLocaleDateString() // If it's a string, convert to Date first
+      : new Date(startDate).toLocaleDateString() // If it's a Date object, use it directly
+    : 'Start Date N/A'; // If no date is provided, show this fallback
+
+  // Format endDate, handle both Date and string, and "current" string value
+  const formattedEndDate =
+    endDate === 'current' || !endDate
+      ? 'Current'
+      : typeof endDate === 'string'
+        ? new Date(endDate).toLocaleDateString() // If it's a string, convert to Date first
+        : new Date(endDate).toLocaleDateString(); // If it's a Date object, use it directly
 
   return (
-    <div className="flex items-center space-x-2">
-      <p className="text-sm font-semibold dark:text-black dark:bg-white bg-black text-white px-3 py-1 rounded">
+    <div className="flex items-center">
+      <Badge className="text-sm font-semibold px-3 py-1 uppercase rounded">
         {formattedStartDate}
-      </p>
+      </Badge>
       <p>-</p>
-      <p className="text-sm font-semibold dark:text-black dark:bg-white bg-black text-white px-3 py-1 uppercase rounded">
+      <Badge className="text-sm font-semibold px-3 py-1 uppercase rounded">
         {formattedEndDate}
-      </p>
+      </Badge>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import { Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
@@ -12,8 +13,10 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
+import { RootState } from '@/lib/store';
 
 export default function ProfilePage() {
+  const user = useSelector((state: RootState) => state.user);
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -47,7 +50,7 @@ export default function ProfilePage() {
             <DropdownProfile />
           </div>
         </header>
-        <InterviewProfile />
+        <InterviewProfile freelancerId={user?.uid} />
       </div>
     </div>
   );
