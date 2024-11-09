@@ -24,7 +24,10 @@ interface DehixTalent {
 }
 
 interface Talent {
+  freelancer_id: string;
   Name: string;
+  userName: string;
+  profilePic: string;
   dehixTalent: DehixTalent;
 }
 
@@ -66,6 +69,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
         if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
+          setTalents((prev) =>
+            reset ? response.data.data : [...prev, ...response.data.data],
+          );
           return;
         }
 
@@ -143,14 +149,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
                 <AvatarImage
-                  src="/placeholder.svg?height=80&width=80"
+                  src={talent.profilePic}
                   alt="Profile picture"
                 />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">{value}</p>
+                <p className="text-sm text-muted-foreground">{talent.userName}</p>
               </div>
             </CardHeader>
             <CardContent>
