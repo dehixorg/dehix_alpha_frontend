@@ -50,7 +50,7 @@ export default function ProfilePage() {
             <DropdownProfile />
           </div>
         </header>
-        <InterviewProfile freelancerId={user.uid} />
+        <InterviewProfile freelancerId={user?.uid} />
       </div>
     </div>
   );

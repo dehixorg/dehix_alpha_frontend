@@ -92,7 +92,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="name"
               render={({ field }) => (
-                <Select {...field}>
+                <Select {...field} defaultValue={defaultValues?.name}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a domain" />
                   </SelectTrigger>

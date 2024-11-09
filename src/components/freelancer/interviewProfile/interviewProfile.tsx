@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Edit2 } from 'lucide-react';
 
 import { toast } from '../../ui/use-toast';
 
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -24,20 +15,12 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  Select,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-  SelectContent,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
-import SkillDialog from '@/components/dialogs/skillDialog';
+import { SkillDialog } from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -150,21 +133,11 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     fetchData();
   }, [freelancerId]);
 
-  const {
-    handleSubmit: handleSubmitSkill,
-    formState: { errors: skillErrors },
-    control: controlSkill,
-    reset: resetSkill,
-  } = useForm<SkillFormData>({
+  const { reset: resetSkill } = useForm<SkillFormData>({
     resolver: zodResolver(SkillSchema),
   });
 
-  const {
-    handleSubmit: handleSubmitDomain,
-    formState: { errors: domainErrors },
-    control: controlDomain,
-    reset: resetDomain,
-  } = useForm<DomainFormData>({
+  const { reset: resetDomain } = useForm<DomainFormData>({
     resolver: zodResolver(DomainSchema),
   });
 
