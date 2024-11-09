@@ -31,7 +31,6 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
-import { error } from 'console';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -138,7 +137,7 @@ export function CreateProjectBusinessForm() {
             axiosInstance.get('/domain/all'),
             axiosInstance.get('/skills/all'),
           ]);
-        if(domainResponse?.data && domainResponse?.data?.data) {
+        if (domainResponse?.data && domainResponse?.data?.data) {
           setDomains(
             domainResponse?.data?.data.map((domain: any) => ({
               value: domain?.label,
@@ -146,7 +145,7 @@ export function CreateProjectBusinessForm() {
             })),
           );
         }
-        if(skillsResponse?.data && skillsResponse?.data?.data) {
+        if (skillsResponse?.data && skillsResponse?.data?.data) {
           setSkills(
             skillsResponse?.data?.data.map((skill: any) => ({
               value: skill?.label,
@@ -154,7 +153,7 @@ export function CreateProjectBusinessForm() {
             })),
           );
         }
-        if(projectDomainResponse?.data && projectDomainResponse?.data?.data) {
+        if (projectDomainResponse?.data && projectDomainResponse?.data?.data) {
           setProjectDomains(
             projectDomainResponse?.data?.data.map((projectDoamin: any) => ({
               value: projectDoamin?.label,
@@ -222,15 +221,18 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(`/project/${user.uid}/project`, {
-        ...data,
-        companyId: user.uid,
-        role: '',
-        projectType: '',
-        projectDomain: currProjectDomains,
-        skillsRequired: currSkills,
-      });
-      if(response.status === 200) {
+      const response = await axiosInstance.post(
+        `/project/${user.uid}/project`,
+        {
+          ...data,
+          companyId: user.uid,
+          role: '',
+          projectType: '',
+          projectDomain: currProjectDomains,
+          skillsRequired: currSkills,
+        },
+      );
+      if (response.status === 200) {
         toast({
           title: 'Project Added',
           description: 'Your project has been successfully added.',

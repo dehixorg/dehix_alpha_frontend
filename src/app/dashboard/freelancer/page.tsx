@@ -184,10 +184,18 @@ export default function Dashboard() {
               <Tabs value={currentTab} onValueChange={handleTabChange}>
                 <div className="flex items-center">
                   <TabsList>
-                    <TabsTrigger value={ProjectStatus.Active}>Active</TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Pending}>Pending</TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Completed}>Completed</TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Rejected}>Rejected</TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Active}>
+                      Active
+                    </TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Pending}>
+                      Pending
+                    </TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Completed}>
+                      Completed
+                    </TabsTrigger>
+                    <TabsTrigger value={ProjectStatus.Rejected}>
+                      Rejected
+                    </TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value={ProjectStatus.Active}>
