@@ -25,9 +25,9 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
         <div className="flex flex-col justify-between p-4">
           <CardHeader>
             <div className="flex gap-4">
-              <Avatar className="rounded-full w-20 h-20 object-cover border-2 border-gray-400 mb-4">
+              <Avatar className="rounded-full w-20 h-20 overflow-hidden border-2 border-gray-400 mb-4">
                 <AvatarImage
-                  className="rounded-full"
+                  className="w-full h-full object-cover"
                   src={profile}
                   alt="Profile Picture"
                 />
@@ -41,7 +41,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
           <CardContent>
             <p className="text-sm">
               <span className="font-medium text-gray-400">Experience:</span>
-              <span className="font-bold"> {experience}</span>
+              <span className="font-bold"> {experience} years</span>
             </p>
             {/* Skills Section */}
             {skills && skills.length > 0 && (

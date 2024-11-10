@@ -64,8 +64,8 @@ export default function Talent() {
           <DropdownProfile />
         </header>
 
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+        <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3 lg:items-start xl:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
             <SkillDomainForm
               setFilterSkill={setFilterSkill}
               setFilterDomain={setFilterDomain}
@@ -73,7 +73,7 @@ export default function Talent() {
           </div>
 
           {/* Right side: Talent Filter and Cards */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:mt-0 mt-6">
             <CardTitle className="group flex items-center gap-2 text-2xl">
               Talent
             </CardTitle>
@@ -108,7 +108,7 @@ export default function Talent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="h-[73vh] overflow-y-scroll no-scrollbar">
+            <div className="lg:h-[73vh] h-[59vh] rounded-lg overflow-y-scroll no-scrollbar">
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
