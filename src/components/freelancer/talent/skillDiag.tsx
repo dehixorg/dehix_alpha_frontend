@@ -122,6 +122,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         description: 'Failed to add talent. Please try again.',
       });
     }
+    finally {
+      setLoading(false); // Ensures the button returns to its default state
+    }
   };
 
   return (
