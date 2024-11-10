@@ -127,6 +127,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         title: 'Error',
         description: 'Failed to add talent. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
