@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import Cookies from 'js-cookie';
 
+import TicketForm from './supportTicketFofm';
+
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import {
   Card,
@@ -74,7 +76,15 @@ const HomePage = () => {
           </div>
         </header>
 
-        <div className=" ">
+        {/* Add TicketForm Section Here */}
+        <div className="ml-2">
+          <div className="mb-8 ">
+            <h2 className="sm:text-3xl">Submit a Support Ticket</h2>
+            <TicketForm /> {/* Render the TicketForm component here */}
+          </div>
+        </div>
+
+        <div className="ml-4">
           <section id="About" className="px-4 py-20 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className=" sm:text-3xl">About Our Freelancing Platform</h2>
@@ -225,6 +235,7 @@ const HomePage = () => {
               </div>
             </div>
           </section>
+
           <section className="px-4 pt-20 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className=" sm:text-3xl">FAQs</h2>
