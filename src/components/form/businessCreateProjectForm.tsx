@@ -227,16 +227,13 @@ export function CreateProjectBusinessForm() {
         domains: currDomains,
       });
 
-      const response = await axiosInstance.post(
-        `/project/${user.uid}`,
-        {
-          ...data,
-          role: '',
-          projectType: '',
-          skillsRequired: currSkills,
-          domains: currDomains,
-        },
-      );
+      const response = await axiosInstance.post(`/project/${user.uid}`, {
+        ...data,
+        role: '',
+        projectType: '',
+        skillsRequired: currSkills,
+        domains: currDomains,
+      });
       console.log('API Response:', response.data);
 
       toast({

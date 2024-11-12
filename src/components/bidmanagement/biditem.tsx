@@ -42,9 +42,7 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
   useEffect(() => {
     const fetchProjectname = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/${project_id}`,
-        );
+        const response = await axiosInstance.get(`/project/${project_id}`);
         const name = response.data.data.projectName;
         setProjectname(name);
       } catch (error) {
