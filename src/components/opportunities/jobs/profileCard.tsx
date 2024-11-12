@@ -125,6 +125,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
                       onChange={(e) => setAmount(e.target.value)}
                       className="col-span-3"
                       required
+                      min={1}
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -156,15 +157,15 @@ const ProfileCard: React.FC<ProfileProps> = ({
       {profile.description && (
         <div className="mt-4 text-gray-400">
           <strong></strong>{' '}
-          {profile.description.length > 100 ? (
-            <span>
+          {profile.description.length > 50 ? (
+            <p className="break-words">
               {showMore
                 ? profile.description
-                : `${profile.description.slice(0, 100)}...`}
+                : `${profile.description.slice(0, 50)}...`}
               <button onClick={toggleShowMore} className="text-blue-500 ml-2">
                 {showMore ? 'Show Less' : 'Show More'}
               </button>
-            </span>
+            </p>
           ) : (
             profile.description
           )}

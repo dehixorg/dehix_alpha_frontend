@@ -264,6 +264,8 @@ const ScheduleInterviewDialog: React.FC = () => {
                           type="number"
                           placeholder="Experience (years)"
                           className="w-full"
+                          min={0}
+                          max={50}
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value, 10))
                           }
@@ -380,6 +382,8 @@ const ScheduleInterviewDialog: React.FC = () => {
                           type="number"
                           placeholder="Experience (years)"
                           className="w-full"
+                          min={0}
+                          max={50}
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value, 10))
                           }

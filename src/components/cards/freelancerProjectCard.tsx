@@ -1,6 +1,8 @@
 import React from 'react';
 import { Github, MessageSquareIcon } from 'lucide-react';
 
+import DateRange from './dateRange';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -92,13 +94,7 @@ const ProjectCard: React.FC<ProjectProps> = ({
         ))}
       </CardContent>
       <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-          {new Date(start).toLocaleDateString()}
-        </p>
-        <p>-</p>
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
-          {end !== 'current' ? new Date(end).toLocaleDateString() : 'Current'}
-        </p>
+        <DateRange startDate={start} endDate={end} />
       </CardFooter>
     </Card>
   );

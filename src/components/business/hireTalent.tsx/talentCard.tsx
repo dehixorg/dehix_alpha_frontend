@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
 import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
+import { Button } from '@/components/ui/button';
 
 interface DehixTalent {
   _id: string;
@@ -22,7 +24,10 @@ interface DehixTalent {
 }
 
 interface Talent {
+  freelancer_id: string;
   Name: string;
+  userName: string;
+  profilePic: string;
   dehixTalent: DehixTalent;
 }
 
@@ -64,6 +69,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
         if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
+          setTalents((prev) =>
+            reset ? response.data.data : [...prev, ...response.data.data],
+          );
           return;
         }
 
@@ -140,15 +148,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
           >
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage
-                  src="/placeholder.svg?height=80&width=80"
-                  alt="Profile picture"
-                />
+                <AvatarImage src={talent.profilePic} alt="Profile picture" />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">{value}</p>
+                <p className="text-sm text-muted-foreground">
+                  {talent.userName}
+                </p>
               </div>
             </CardHeader>
             <CardContent>
@@ -168,6 +175,18 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+                </div>
+                <div>
+                  {/* <button>
+                    <Link href="/business/freelancerProfile">view</Link>
+                  </button> */}
+                  <Button className="w-full">
+                    <Link
+                      href={`/business/freelancerProfile/${talentEntry._id}`}
+                    >
+                      <button>View</button>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </CardContent>

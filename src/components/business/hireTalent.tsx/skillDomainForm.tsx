@@ -112,6 +112,46 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(
           formattedHireTalentData.map((item) => item.visible),
         );
+
+        const filterSkills = hireTalentData
+          .filter((item: any) => item.skillName)
+          .map((item: any) => ({
+            _id: item.skillId,
+            label: item.skillName,
+          }));
+
+        const filterDomains = hireTalentData
+          .filter((item: any) => item.domainName)
+          .map((item: any) => ({
+            _id: item.domainId,
+            label: item.domainName,
+          }));
+
+        // fetch skills and domains data
+        const skillsResponse = await axiosInstance.get('/skills/all');
+        if (skillsResponse?.data?.data) {
+          const uniqueSkills = skillsResponse.data.data.filter(
+            (skill: any) =>
+              !filterSkills.some(
+                (filterSkill: any) => filterSkill._id === skill._id,
+              ),
+          );
+          setSkills(uniqueSkills);
+        } else {
+          throw new Error('Skills response is null or invalid');
+        }
+        const domainsResponse = await axiosInstance.get('/domain/all');
+        if (domainsResponse?.data?.data) {
+          const uniqueDomain = domainsResponse.data.data.filter(
+            (domain: any) =>
+              !filterDomains.some(
+                (filterDomain: any) => filterDomain._id === domain._id,
+              ),
+          );
+          setDomains(uniqueDomain);
+        } else {
+          throw new Error('Domains response is null or invalid');
+        }
       }
     } catch (error: any) {
       console.error('Error fetching data:', error);
@@ -200,7 +240,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           </div>
           <Card className="h-[65.4vh] overflow-auto no-scrollbar">
             <Table className="w-full">
-              <TableHeader>
+              <TableHeader className="sticky top-0 z-10">
                 <TableRow>
                   <TableHead>Label</TableHead>
                   <TableHead>Experience</TableHead>
