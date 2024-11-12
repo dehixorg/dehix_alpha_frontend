@@ -32,8 +32,6 @@ import dummyData from '@/dummydata.json';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-  const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,10 +45,9 @@ export default function Dashboard() {
         console.error('API Error:', error);
       }
     };
-
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-  console.log(user);
+
   const completedProjects = responseData.filter(
     (project: any) => project.status == 'Completed',
   );
@@ -172,14 +169,15 @@ export default function Dashboard() {
                 <p className="text-gray-500">No interviews scheduled</p>
               </div>
             ) : (
-              <InterviewCard
-                interviewer={sampleInterviewData.interviewer}
-                interviewee={sampleInterviewData.interviewee}
-                skill={sampleInterviewData.skill}
-                interviewDate={new Date(sampleInterviewData.interviewDate)}
-                rating={sampleInterviewData.rating}
-                comments={sampleInterviewData.comments}
-              />
+              <></>
+              // <InterviewCard
+              //   interviewer={sampleInterviewData.interviewer}
+              //   interviewee={sampleInterviewData.interviewee}
+              //   skill={sampleInterviewData.skill}
+              //   interviewDate={new Date(sampleInterviewData.interviewDate)}
+              //   rating={sampleInterviewData.rating}
+              //   comments={sampleInterviewData.comments}
+              // />
             )}
           </div>
         </main>

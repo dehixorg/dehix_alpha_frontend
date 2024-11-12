@@ -13,6 +13,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
 // Dummy data
 const dummyData = {
@@ -133,16 +134,6 @@ const DisplayInfo: React.FC<DisplayInfoProps> = ({ title, data }) => (
 
 const FreelancerInfo: React.FC = () => {
   // Function to get the badge color based on status
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case 'Verified':
-        return 'bg-green-500 text-white';
-      case 'Pending':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

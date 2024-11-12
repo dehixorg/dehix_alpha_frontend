@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
 interface Skill {
   _id: string;
@@ -123,17 +124,6 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
-    }
-  };
-
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500 text-white';
-      case 'pending':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
     }
   };
 

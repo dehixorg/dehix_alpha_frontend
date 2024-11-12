@@ -18,6 +18,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
 interface Skill {
   _id: string;
@@ -55,8 +57,32 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills, domains, and user's skill/domain data
-  const fetchData = useCallback(async () => {
+  // Fetch skills and domains once on component mount
+  useEffect(() => {
+    const fetchSkillsAndDomains = async () => {
+      try {
+        const [skillsResponse, domainsResponse] = await Promise.all([
+          axiosInstance.get('/skills/all'),
+          axiosInstance.get('/domain/all'),
+        ]);
+
+        setSkills(skillsResponse.data?.data || []);
+        setDomains(domainsResponse.data?.data || []);
+      } catch (error) {
+        console.error('Error fetching skills and domains:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load skills and domains. Please try again.',
+        });
+      }
+    };
+
+    fetchSkillsAndDomains();
+  }, []); // Empty dependency array ensures this runs only once
+
+  // Fetch user's skill/domain data
+  const fetchUserData = useCallback(async () => {
     try {
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
@@ -64,6 +90,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 
+        // Filter and map user data
         const fetchedFilterSkills = hireTalentData
           .filter((item: any) => item.skillName && item.visible)
           .map((item: any) => ({
@@ -98,65 +125,21 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(
           formattedHireTalentData.map((item) => item.visible),
         );
-
-        const filterSkills = hireTalentData
-          .filter((item: any) => item.skillName)
-          .map((item: any) => ({
-            _id: item.skillId,
-            label: item.skillName,
-          }));
-
-        const filterDomains = hireTalentData
-          .filter((item: any) => item.domainName)
-          .map((item: any) => ({
-            _id: item.domainId,
-            label: item.domainName,
-          }));
-
-        // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills/all');
-        if (skillsResponse?.data?.data) {
-          const uniqueSkills = skillsResponse.data.data.filter(
-            (skill: any) =>
-              !filterSkills.some(
-                (filterSkill: any) => filterSkill._id === skill._id,
-              ),
-          );
-          setSkills(uniqueSkills);
-        } else {
-          throw new Error('Skills response is null or invalid');
-        }
-        const domainsResponse = await axiosInstance.get('/domain/all');
-        if (domainsResponse?.data?.data) {
-          const uniqueDomain = domainsResponse.data.data.filter(
-            (domain: any) =>
-              !filterDomains.some(
-                (filterDomain: any) => filterDomain._id === domain._id,
-              ),
-          );
-          setDomains(uniqueDomain);
-        } else {
-          throw new Error('Domains response is null or invalid');
-        }
       }
     } catch (error: any) {
-      console.error('Error fetching data:', error);
-      if (error.response && error.response.status === 404) {
-        // No action needed for 404 errors
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
-      }
+      console.error('Error fetching user data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     }
   }, [user?.uid, setFilterSkill, setFilterDomain]);
 
-  // Fetch data on mount
+  // Fetch user data on mount
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -193,7 +176,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(updatedVisibility);
 
         // Callback to refetch data after visibility update
-        await fetchData();
+        await fetchUserData();
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
@@ -242,7 +225,11 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience} years</TableCell>
                       <TableCell>{item.description}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(item.status)}>
+                          {item.status.toUpperCase()}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Switch
                           checked={statusVisibility[index]}
