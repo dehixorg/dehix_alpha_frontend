@@ -107,7 +107,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
 
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
         const freelancerSkillsResponse = await axiosInstance.get(

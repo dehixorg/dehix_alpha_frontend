@@ -64,7 +64,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       } else {
         throw new Error('Skills response is null or invalid');
       }
-      const domainsResponse = await axiosInstance.get('/domain/all');
+      const domainsResponse = await axiosInstance.get('/domain');
       if (domainsResponse?.data?.data) {
         setDomains(domainsResponse.data.data);
       } else {
@@ -128,7 +128,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           }));
 
         // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         if (skillsResponse?.data?.data) {
           const uniqueSkills = skillsResponse.data.data.filter(
             (skill: any) =>
@@ -140,7 +140,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         } else {
           throw new Error('Skills response is null or invalid');
         }
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         if (domainsResponse?.data?.data) {
           const uniqueDomain = domainsResponse.data.data.filter(
             (domain: any) =>

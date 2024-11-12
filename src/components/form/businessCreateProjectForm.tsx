@@ -170,7 +170,7 @@ export function CreateProjectBusinessForm() {
         );
         setProjectDomains(transformedProjectDomain);
 
-        const domainResponse = await axiosInstance.get('/domain/all');
+        const domainResponse = await axiosInstance.get('/domain');
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
           (skill: Domain) => ({
@@ -228,7 +228,7 @@ export function CreateProjectBusinessForm() {
       });
 
       const response = await axiosInstance.post(
-        `/project/${user.uid}/project`,
+        `/project/${user.uid}`,
         {
           ...data,
           role: '',

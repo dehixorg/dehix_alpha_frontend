@@ -135,7 +135,7 @@ const Market: React.FC = () => {
         setSkills(skillLabels);
 
         // Fetch domains
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         const domainLabels = domainsResponse.data.data.map(
           (domain: Domain) => domain.label,
         );
@@ -158,7 +158,7 @@ const Market: React.FC = () => {
         );
         const queryString = constructQueryString(appliedFilters);
         const allJobs = await axiosInstance.get(
-          `/project/${user.uid}/all_project?${queryString}`,
+          `/project/freelancer/${user.uid}/?${queryString}`,
         );
 
         const notInterestedProjects =

@@ -55,7 +55,7 @@ const SkillDomainForm: React.FC = () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
         if (user?.uid) {

@@ -23,7 +23,7 @@ export const apiHelperService = {
   getAllProject: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/business/all_projects',
+      endpoint: '/project',
       params,
     });
   },
@@ -44,7 +44,7 @@ export const apiHelperService = {
   getAllDomain: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/domain/all',
+      endpoint: '/domain',
       params,
     });
   },
@@ -65,7 +65,7 @@ export const apiHelperService = {
   getDomainList: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/domain/all',
+      endpoint: '/domain',
       params,
     });
   },

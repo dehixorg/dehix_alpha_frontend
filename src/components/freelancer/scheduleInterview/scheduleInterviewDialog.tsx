@@ -98,7 +98,7 @@ const ScheduleInterviewDialog: React.FC = () => {
         } else {
           console.error('Invalid response format', skillsResponse);
         }
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         if (
           domainsResponse?.data?.data &&
           Array.isArray(domainsResponse.data.data)
