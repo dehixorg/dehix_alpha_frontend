@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 // import { SkillDialog } from '@/components/dialogs/skillDialog';
 
 interface Skill {
@@ -140,17 +141,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const { reset: resetDomain } = useForm<DomainFormData>({
     resolver: zodResolver(DomainSchema),
   });
-
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500 text-white';
-      case 'pending':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
 
   const onSubmitSkill = async (data: SkillFormData) => {
     setLoading(true);
