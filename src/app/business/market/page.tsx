@@ -21,6 +21,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
+  experience: string[];
 }
 
 const Market: React.FC = () => {
@@ -33,22 +34,45 @@ const Market: React.FC = () => {
   const [filters, setFilters] = useState<FilterState>({
     location: [],
     jobType: [],
+    experience: [],
     domain: [],
     skills: [],
   });
 
   const handleFilterChange = (filterType: string, selectedValues: string[]) => {
+    let transformedValues: string[] = selectedValues;
+
+    if (filterType === 'experience') {
+      transformedValues = selectedValues.flatMap((value) => {
+        // Check for experience ranges like "0-2", "3-6", "7+" and split them
+        if (value.includes('-')) {
+          const [start, end] = value.split('-').map(Number);
+          return Array.from({ length: end - start + 1 }, (_, i) =>
+            (start + i).toString(),
+          ); // Convert numbers to strings
+        }
+        // Handle "7+" range separately
+        if (value === '7+') {
+          return ['7', '8', '9', '10']; // Return as strings
+        }
+        return [value]; // Return the string itself if it's a single value
+      });
+    }
+
+    // Apply the transformation (or no transformation for other filter types)
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [filterType]: selectedValues,
+      [filterType]: transformedValues,
     }));
   };
+
   const handleReset = () => {
     setFilters({
       location: [],
       jobType: [],
       domain: [],
       skills: [],
+      experience: [],
     });
   };
 

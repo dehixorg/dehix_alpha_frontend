@@ -246,7 +246,7 @@ const Market: React.FC = () => {
             <Button
               variant="outline"
               onClick={handleReset}
-              className="w-full mb-4 bg-gray text-white"
+              className="w-full mb-4 bg-gray dark:text-white"
               style={{ marginTop: '1rem' }}
             >
               Reset

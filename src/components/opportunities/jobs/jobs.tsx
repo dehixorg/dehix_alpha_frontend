@@ -98,7 +98,7 @@ const JobCard: React.FC<JobCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold text-foreground">
           <div className="flex items-center justify-between text-gray-600 gap-2">
-            <div className="flex items-center text-white">
+            <div className="flex items-center dark:text-white">
               <Link href={`/freelancer/market/${companyId}`} passHref>
                 <span>{projectName}</span>
               </Link>
@@ -110,7 +110,7 @@ const JobCard: React.FC<JobCardProps> = ({
             <div className="flex space-x-4">
               {/* View Button */}
               <Link href={`/freelancer/project/${id}`} passHref>
-                <Button variant="outline" className="text-white">
+                <Button variant="outline" className="dark:text-white">
                   <Eye className="w-5 h-5" /> {/* Eye icon for "View" */}
                   <span>&nbsp;View</span>
                 </Button>
@@ -118,7 +118,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
               {/* Not Interested Button */}
               <Button
-                className="bg-muted hover:bg-secondary-grey-100 text-white"
+                className="dark:bg-muted hover:bg-secondary-grey-100 text-white"
                 onClick={() => notInterestedProject(id)}
               >
                 <XCircle className="w-5 h-5" />

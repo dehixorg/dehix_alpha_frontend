@@ -2,6 +2,8 @@
 import * as React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface CompanyCardProps {
   heading: string;
@@ -33,13 +35,12 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
         <div className="items-center p-2">
           {checkboxLabels.map((label) => (
             <div key={label} className="flex items-center mb-1">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selectedValues.includes(label)}
-                onChange={() => handleCheckboxChange(label)}
+                onCheckedChange={() => handleCheckboxChange(label)}
                 className="mr-2"
               />
-              <label className="text-sm">{label}</label>
+              <Label className="text-sm">{label}</Label>
             </div>
           ))}
         </div>

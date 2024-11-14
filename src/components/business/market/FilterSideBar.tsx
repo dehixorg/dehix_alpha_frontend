@@ -37,7 +37,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={handleReset}
           variant="outline"
           style={{ marginTop: '1rem' }}
-          className=" w-full text-white "
+          className="w-full dark:text-white "
         >
           Reset
         </Button>
@@ -47,7 +47,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             checkboxLabels={['0-2', '3-6', '7+']}
             selectedValues={filters.jobType}
             setSelectedValues={(values) =>
-              handleFilterChange('jobType', values)
+              handleFilterChange('experience', values)
             }
           />
         </div>
