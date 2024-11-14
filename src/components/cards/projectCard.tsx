@@ -42,11 +42,13 @@ interface ProjectType {
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
   project: ProjectType;
+  type: string;
 };
 
 export function ProjectCard({
   className,
   project,
+  type = 'business',
   ...props
 }: ProjectCardProps) {
   return (
@@ -102,7 +104,7 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Link href={`/business/project/${project._id}`} className="w-full">
+        <Link href={`/${type}/project/${project._id}`} className="w-full">
           <Button
             className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
           >
