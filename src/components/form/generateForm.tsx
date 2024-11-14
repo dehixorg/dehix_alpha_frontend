@@ -36,7 +36,6 @@ const swaggerTypes = [
   { label: 'Object', value: 'object' },
   { label: 'Array', value: 'array' },
   { label: 'NULL', value: 'null' },
-  // Add more types if needed
 ];
 
 // Define the Zod schema with Typescript types
@@ -54,6 +53,15 @@ const schemaFormSchema = z.object({
             name: z.string().nonempty('Nested name is required'),
             type: z.string().nonempty('Nested type is required'),
             required: z.boolean().optional(),
+            properties: z
+              .array(
+                z.object({
+                  name: z.string().nonempty('Nested nested name is required'),
+                  type: z.string().nonempty('Nested nested type is required'),
+                  required: z.boolean().optional(),
+                }),
+              )
+              .optional(), // recursive support for more nesting
           }),
         )
         .optional(),
@@ -80,22 +88,40 @@ export default function CreateSchemaForm() {
     name: 'properties',
   });
 
-  // Function to handle nested properties
-  const addNestedProperty = (index: number) => {
+  // Function to handle adding a nested property (inside a nested property)
+  const addNestedProperty = (index: number, nestedIndex?: number) => {
     const newProperties = getValues('properties');
-    newProperties[index].properties = newProperties[index].properties || [];
-    newProperties[index].properties.push({
+    const targetProperty =
+      nestedIndex === undefined
+        ? newProperties[index]
+        : newProperties[index].properties![nestedIndex];
+
+    targetProperty.properties = targetProperty.properties || [];
+    targetProperty.properties.push({
       name: '',
       type: '',
       required: false,
+      properties: [], // Recursively add the properties field for further nesting
     });
+
     setValue('properties', newProperties);
   };
 
-  // Function to remove nested property
-  const removeNestedProperty = (index: number, nestedIndex: number) => {
+  // Function to remove a nested property
+  const removeNestedProperty = (
+    index: number,
+    nestedIndex: number,
+    nestedNestedIndex?: number,
+  ) => {
     const newProperties = getValues('properties');
-    newProperties[index].properties?.splice(nestedIndex, 1);
+    if (nestedNestedIndex === undefined) {
+      newProperties[index].properties?.splice(nestedIndex, 1);
+    } else {
+      newProperties[index].properties![nestedIndex].properties?.splice(
+        nestedNestedIndex,
+        1,
+      );
+    }
     setValue('properties', newProperties);
   };
 
@@ -124,10 +150,10 @@ export default function CreateSchemaForm() {
       if (prop.required) {
         schema.body.required.push(prop.name);
       }
-      // Handling nested properties
+      // Handling nested properties recursively
       if (prop.properties && prop.properties.length > 0) {
         schema.body.properties[prop.name].properties = {};
-        prop.properties.forEach((nestedProp) => {
+        prop.properties.forEach((nestedProp, nestedIndex) => {
           schema.body.properties[prop.name].properties[nestedProp.name] = {
             type: nestedProp.type,
           };
@@ -136,6 +162,32 @@ export default function CreateSchemaForm() {
               schema.body.properties[prop.name].required = [];
             }
             schema.body.properties[prop.name].required.push(nestedProp.name);
+          }
+          // Recursively handle deeper nested properties
+          if (nestedProp.properties && nestedProp.properties.length > 0) {
+            schema.body.properties[prop.name].properties[
+              nestedProp.name
+            ].properties = {};
+            nestedProp.properties.forEach((nestedNestedProp) => {
+              schema.body.properties[prop.name].properties[
+                nestedProp.name
+              ].properties[nestedNestedProp.name] = {
+                type: nestedNestedProp.type,
+              };
+              if (nestedNestedProp.required) {
+                if (
+                  !schema.body.properties[prop.name].properties[nestedProp.name]
+                    .required
+                ) {
+                  schema.body.properties[prop.name].properties[
+                    nestedProp.name
+                  ].required = [];
+                }
+                schema.body.properties[prop.name].properties[
+                  nestedProp.name
+                ].required.push(nestedNestedProp.name);
+              }
+            });
           }
         });
       }
@@ -233,7 +285,7 @@ export default function CreateSchemaForm() {
                       <FormControl>
                         <Select
                           {...field}
-                          onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
+                          onValueChange={(value) => field.onChange(value)}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select a type" />
@@ -262,7 +314,7 @@ export default function CreateSchemaForm() {
                         control={control}
                         render={({ field }) => (
                           <Switch
-                            checked={field.value ?? false} // Ensure it's set to false if undefined
+                            checked={field.value ?? false}
                             onCheckedChange={(value) => field.onChange(value)}
                           />
                         )}
@@ -272,7 +324,7 @@ export default function CreateSchemaForm() {
                   </FormItem>
                 </div>
 
-                {/* Add Nested Property button only for 'object' or 'array' types */}
+                {/* Add Nested Property button inside properties */}
                 {(getValues(`properties.${index}.type`) === 'object' ||
                   getValues(`properties.${index}.type`) === 'array') && (
                   <div className="col-span-2">
@@ -285,6 +337,7 @@ export default function CreateSchemaForm() {
                   </div>
                 )}
 
+                {/* Nested Properties */}
                 {field.properties?.map((nested, nestedIndex) => (
                   <Card key={nestedIndex} className="mt-2 col-span-2 gap-4">
                     <CardHeader className="flex flex-row">
@@ -319,7 +372,7 @@ export default function CreateSchemaForm() {
                             <FormControl>
                               <Select
                                 {...field}
-                                onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
+                                onValueChange={(value) => field.onChange(value)}
                               >
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select a type" />
@@ -351,7 +404,7 @@ export default function CreateSchemaForm() {
                               control={control}
                               render={({ field }) => (
                                 <Switch
-                                  checked={field.value ?? false} // Ensure it's set to false if undefined
+                                  checked={field.value ?? false}
                                   onCheckedChange={(value) =>
                                     field.onChange(value)
                                   }
@@ -362,6 +415,121 @@ export default function CreateSchemaForm() {
                           <FormMessage />
                         </FormItem>
                       </div>
+
+                      {/* Add Nested Nested Property button inside nested properties */}
+                      {(nested.type === 'object' ||
+                        nested.type === 'array') && (
+                        <div className="col-span-2">
+                          <Button
+                            type="button"
+                            onClick={() =>
+                              addNestedProperty(index, nestedIndex)
+                            }
+                          >
+                            Add Nested Nested Property
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Nested Nested Properties */}
+                      {nested.properties?.map(
+                        (nestedNested, nestedNestedIndex) => (
+                          <Card
+                            key={nestedNestedIndex}
+                            className="mt-2 col-span-2 gap-4"
+                          >
+                            <CardHeader className="flex flex-row">
+                              Nested Nested Property
+                              <ButtonIcon
+                                className="bg-red ml-auto"
+                                icon={<X className="h-4 w-4" />}
+                                onClick={() =>
+                                  removeNestedProperty(
+                                    index,
+                                    nestedIndex,
+                                    nestedNestedIndex,
+                                  )
+                                }
+                              />
+                            </CardHeader>
+                            <CardContent className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={control}
+                                name={`properties.${index}.properties.${nestedIndex}.properties.${nestedNestedIndex}.name`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Nested Nested Name</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Nested Nested Name"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={control}
+                                name={`properties.${index}.properties.${nestedIndex}.properties.${nestedNestedIndex}.type`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Type</FormLabel>
+                                    <FormControl>
+                                      <Select
+                                        {...field}
+                                        onValueChange={(value) =>
+                                          field.onChange(value)
+                                        }
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select a type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {swaggerTypes.map((type) => (
+                                            <SelectItem
+                                              key={type.value}
+                                              value={type.value}
+                                            >
+                                              {type.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <div className="col-span-2 flex items-center">
+                                <FormItem>
+                                  <FormLabel className="mr-2">
+                                    Required
+                                  </FormLabel>
+                                  <br />
+                                  <FormControl>
+                                    <Controller
+                                      name={`properties.${index}.properties.${nestedIndex}.properties.${nestedNestedIndex}.required`}
+                                      control={control}
+                                      render={({ field }) => (
+                                        <Switch
+                                          checked={field.value ?? false}
+                                          onCheckedChange={(value) =>
+                                            field.onChange(value)
+                                          }
+                                        />
+                                      )}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ),
+                      )}
                     </CardContent>
                   </Card>
                 ))}
