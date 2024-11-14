@@ -181,7 +181,9 @@ const SkillDomainForm: React.FC = () => {
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience} Years</TableCell>
-                      <TableCell className="text-center">${item.monthlyPay}</TableCell>
+                      <TableCell className="text-center">
+                        ${item.monthlyPay}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(item.status)}>
                           {item.status.toUpperCase()}
