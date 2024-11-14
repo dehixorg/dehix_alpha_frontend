@@ -52,7 +52,7 @@ export default function DropdownProfile() {
           className="overflow-hidden rounded-full"
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.profilePic} alt="@shadcn" />
+            <AvatarImage src={user.photoURL} alt="@shadcn" />
             <AvatarFallback>
               <UserIcon size={16} />
             </AvatarFallback>

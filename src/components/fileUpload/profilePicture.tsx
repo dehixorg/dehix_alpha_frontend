@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
 import Image from 'next/image';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { setUser } from '@/lib/userSlice';
+import { RootState } from '@/lib/store';
 
 const allowedImageFormats = [
   'image/png',
@@ -24,6 +27,8 @@ const ProfilePictureUpload = ({
   profile: string;
   entityType: 'freelancer' | 'business'; // Specify possible values for entityType
 }) => {
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(profile);
@@ -83,6 +88,7 @@ const ProfilePictureUpload = ({
 
       const { Location } = postResponse.data.data;
 
+      dispatch(setUser({ ...user, photoURL: Location }));
       // Adjust the endpoint and payload field based on entityType
       const updateEndpoint =
         entityType === 'freelancer'
