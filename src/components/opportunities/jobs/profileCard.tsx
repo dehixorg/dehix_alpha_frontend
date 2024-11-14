@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfileProps {
   profile: {
@@ -79,19 +80,16 @@ const ProfileCard: React.FC<ProfileProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start">
         {/* Left: Domain and Freelancers Required in the same line */}
         <div className="space-y-2">
+          <p className="font-medium text-lg text-foreground mr-2">
+            {profile.domain}
+          </p>
+          <Badge variant="secondary">
+            {profile.freelancersRequired} Positions
+          </Badge>
+          <Badge className="text-xs ml-2">{profile.experience} Years</Badge>
           <div className="flex items-center flex-wrap">
-            <p className="font-medium text-lg text-foreground mr-2">
-              {profile.domain}
-            </p>
-            <p className="font-medium text-lg text-foreground mr-2">
-              {profile.freelancersRequired}
-            </p>
-          </div>
-          <div className="flex items-center flex-wrap">
-            <p className="text-gray-600 text-sm mr-2">
-              {profile.experience} years
-            </p>
-            <p className="text-gray-600 text-sm mr-2">{profile.minConnect}</p>
+            Connects required:
+            <p className="text-gray-400 text-md ml-2">{profile.minConnect}</p>
           </div>
         </div>
 
@@ -100,8 +98,8 @@ const ProfileCard: React.FC<ProfileProps> = ({
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-[100px] h-[40px] "
-                variant="outline"
+                size="sm"
+                className="px-5"
                 type="button"
                 disabled={bidExist || isBidSubmitted} // Disable if bid exists or already submitted
               >
