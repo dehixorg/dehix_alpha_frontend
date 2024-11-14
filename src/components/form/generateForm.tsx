@@ -67,6 +67,39 @@ const schemaFormSchema = z.object({
         .optional(),
     }),
   ),
+  responses: z.object({
+    200: z.object({
+      type: z.string().min(1),
+      properties: z.record(
+        z.string(),
+        z.object({
+          type: z.string(),
+          enum: z.array(z.string()).optional(),
+          format: z.string().optional(),
+        }),
+      ),
+    }),
+    401: z.object({
+      type: z.string().min(1),
+      properties: z.object({
+        message: z.string(),
+        code: z.string(),
+      }),
+    }),
+    403: z.object({
+      type: z.string().min(1),
+      properties: z.object({
+        message: z.string(),
+        code: z.string(),
+      }),
+    }),
+    500: z.object({
+      type: z.string().min(1),
+      properties: z.object({
+        message: z.string(),
+      }),
+    }),
+  }),
 });
 
 type SchemaFormValues = z.infer<typeof schemaFormSchema>;
@@ -78,6 +111,12 @@ export default function CreateSchemaForm() {
       description: '',
       tags: [],
       properties: [{ name: '', type: '', required: false, properties: [] }],
+      responses: {
+        200: { type: 'object', properties: {} },
+        401: { type: 'object', properties: { message: '', code: '' } },
+        403: { type: 'object', properties: { message: '', code: '' } },
+        500: { type: 'object', properties: { message: '' } },
+      },
     },
   });
 
@@ -135,6 +174,7 @@ export default function CreateSchemaForm() {
         properties: Record<string, any>;
         required: string[];
       };
+      responses: Record<string, any>;
     } = {
       description: data.description,
       tags: data.tags || [],
@@ -142,6 +182,12 @@ export default function CreateSchemaForm() {
         type: 'object',
         properties: {},
         required: [],
+      },
+      responses: {
+        200: { type: 'object', properties: {} },
+        401: { type: 'object', properties: { message: '', code: '' } },
+        403: { type: 'object', properties: { message: '', code: '' } },
+        500: { type: 'object', properties: { message: '' } },
       },
     };
 
@@ -193,6 +239,25 @@ export default function CreateSchemaForm() {
       }
     });
 
+    // Generate responses structure
+    const generateResponseSchema = (responses: any) => {
+      Object.keys(responses).forEach((statusCode) => {
+        const response = responses[statusCode];
+        if (response.properties) {
+          Object.keys(response.properties).forEach((property) => {
+            if (response.properties[property].enum) {
+              response.properties[property].enum = Array.from(
+                new Set(response.properties[property].enum),
+              );
+            }
+          });
+        }
+      });
+      return responses;
+    };
+
+    schema.responses = generateResponseSchema(data.responses);
+
     return schema;
   };
 
@@ -203,7 +268,6 @@ export default function CreateSchemaForm() {
 
     // Save file
     const blob = new Blob([schemaString], { type: 'application/json' });
-    // saveAs(blob, 'schema.json');
 
     // Copy to clipboard
     navigator.clipboard.writeText(schemaString).then(() => {
@@ -212,9 +276,9 @@ export default function CreateSchemaForm() {
   };
 
   return (
-    <Card className="p-5 mt-4 w-full">
-      <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 text-left">
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 text-left">
+        <Card className="p-5 mt-4 w-full">
           <FormField
             control={control}
             name="description"
@@ -248,7 +312,7 @@ export default function CreateSchemaForm() {
             <FormMessage />
           </FormItem>
           {fields.map((field, index) => (
-            <Card key={field.id} className="mb-4 relative">
+            <Card key={field.id} className="my-4 relative">
               {/* Remove Button */}
               <CardHeader className="flex flex-row">
                 Body
@@ -544,10 +608,65 @@ export default function CreateSchemaForm() {
           >
             Add Property
           </Button>
-          <br />
+
+          <Card className="my-4 relative">
+            {/* Remove Button */}
+            <CardHeader className="flex flex-row">Responses</CardHeader>
+            <CardContent>
+              {/* Responses section */}
+              {['200', '401', '403', '500'].map((status) => (
+                <div className="grid grid-cols-2 gap-4 pb-2" key={status}>
+                  <FormField
+                    control={control}
+                    name={`responses.${status}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            {...field}
+                            onValueChange={(value) => field.onChange(value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {swaggerTypes.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={control}
+                    name={`responses.${status}.properties.message`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{`${status} Response Message`}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder={`Enter ${status} response message`}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* Additional response fields if necessary */}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
           <Button type="submit">Generate Schema</Button>
-        </form>
-      </Form>
-    </Card>
+        </Card>
+      </form>
+    </Form>
   );
 }
