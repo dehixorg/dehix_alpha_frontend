@@ -5,9 +5,11 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { saveAs } from 'file-saver';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { X } from 'lucide-react';
 
-import { Card } from '../ui/card';
+import { Card, CardContent, CardHeader } from '../ui/card';
 import { Switch } from '../ui/switch';
+import { ButtonIcon } from '../shared/buttonIcon';
 
 import {
   Form,
@@ -90,6 +92,13 @@ export default function CreateSchemaForm() {
     setValue('properties', newProperties);
   };
 
+  // Function to remove nested property
+  const removeNestedProperty = (index: number, nestedIndex: number) => {
+    const newProperties = getValues('properties');
+    newProperties[index].properties?.splice(nestedIndex, 1);
+    setValue('properties', newProperties);
+  };
+
   // Generate schema structure
   const generateSchema = (data: SchemaFormValues) => {
     const schema: {
@@ -123,7 +132,10 @@ export default function CreateSchemaForm() {
             type: nestedProp.type,
           };
           if (nestedProp.required) {
-            schema.body.required.push(nestedProp.name);
+            if (!schema.body.properties[prop.name].required) {
+              schema.body.properties[prop.name].required = [];
+            }
+            schema.body.properties[prop.name].required.push(nestedProp.name);
           }
         });
       }
@@ -164,7 +176,6 @@ export default function CreateSchemaForm() {
               </FormItem>
             )}
           />
-
           <FormItem>
             <FormLabel>Tags</FormLabel>
             <Controller
@@ -184,159 +195,179 @@ export default function CreateSchemaForm() {
             />
             <FormMessage />
           </FormItem>
-
-          <h3>Properties</h3>
           {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="border p-4 mb-4 grid grid-cols-2 gap-4"
-            >
-              <FormField
-                control={control}
-                name={`properties.${index}.name`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter property name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={control}
-                name={`properties.${index}.type`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <FormControl>
-                      <Select
-                        {...field}
-                        onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {swaggerTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="col-span-2 flex items-center">
-                <FormItem>
-                  <FormLabel className="mr-2">Required</FormLabel>
-                  <br />
-                  <FormControl>
-                    <Controller
-                      name={`properties.${index}.required`}
-                      control={control}
-                      render={({ field }) => (
-                        <Switch
-                          checked={field.value ?? false} // Ensure it's set to false if undefined
-                          onCheckedChange={(value) => field.onChange(value)}
-                        />
-                      )}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              </div>
-
-              {/* Add Nested Property button only for 'object' or 'array' types */}
-              {(getValues(`properties.${index}.type`) === 'object' ||
-                getValues(`properties.${index}.type`) === 'array') && (
-                <div className="col-span-2">
-                  <Button
-                    type="button"
-                    onClick={() => addNestedProperty(index)}
-                  >
-                    Add Nested Property
-                  </Button>
-                </div>
-              )}
-
-              {field.properties?.map((nested, nestedIndex) => (
-                <Card
-                  key={nestedIndex}
-                  className="border p-2 mt-2 grid grid-cols-2 col-span-2 gap-4"
-                >
-                  <FormField
-                    control={control}
-                    name={`properties.${index}.properties.${nestedIndex}.name`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nested Property Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Nested name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`properties.${index}.properties.${nestedIndex}.type`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <FormControl>
-                          <Select
-                            {...field}
-                            onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {swaggerTypes.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="col-span-2 flex items-center">
+            <Card key={field.id} className="mb-4 relative">
+              {/* Remove Button */}
+              <CardHeader className="flex flex-row">
+                Body
+                <ButtonIcon
+                  className="bg-red ml-auto"
+                  icon={<X className="h-4 w-4" />}
+                  onClick={() => {
+                    // Remove the property along with its nested properties
+                    remove(index);
+                  }}
+                />
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={control}
+                  name={`properties.${index}.name`}
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="mr-2">Required</FormLabel>
-                      <br />
+                      <FormLabel>Property Name</FormLabel>
                       <FormControl>
-                        <Controller
-                          name={`properties.${index}.properties.${nestedIndex}.required`}
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value ?? false} // Ensure it's set to false if undefined
-                              onCheckedChange={(value) => field.onChange(value)}
-                            />
-                          )}
-                        />
+                        <Input {...field} placeholder="Enter property name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ))}
+                  )}
+                />
 
+                <FormField
+                  control={control}
+                  name={`properties.${index}.type`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <FormControl>
+                        <Select
+                          {...field}
+                          onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {swaggerTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="col-span-2 flex items-center">
+                  <FormItem>
+                    <FormLabel className="mr-2">Required</FormLabel>
+                    <br />
+                    <FormControl>
+                      <Controller
+                        name={`properties.${index}.required`}
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value ?? false} // Ensure it's set to false if undefined
+                            onCheckedChange={(value) => field.onChange(value)}
+                          />
+                        )}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </div>
+
+                {/* Add Nested Property button only for 'object' or 'array' types */}
+                {(getValues(`properties.${index}.type`) === 'object' ||
+                  getValues(`properties.${index}.type`) === 'array') && (
+                  <div className="col-span-2">
+                    <Button
+                      type="button"
+                      onClick={() => addNestedProperty(index)}
+                    >
+                      Add Nested Property
+                    </Button>
+                  </div>
+                )}
+
+                {field.properties?.map((nested, nestedIndex) => (
+                  <Card key={nestedIndex} className="mt-2 col-span-2 gap-4">
+                    <CardHeader className="flex flex-row">
+                      Nested Property
+                      <ButtonIcon
+                        className="bg-red ml-auto"
+                        icon={<X className="h-4 w-4" />}
+                        onClick={() => removeNestedProperty(index, nestedIndex)}
+                      />
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={control}
+                        name={`properties.${index}.properties.${nestedIndex}.name`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Property Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Nested name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name={`properties.${index}.properties.${nestedIndex}.type`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Type</FormLabel>
+                            <FormControl>
+                              <Select
+                                {...field}
+                                onValueChange={(value) => field.onChange(value)} // Ensure form state is updated on value change
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {swaggerTypes.map((type) => (
+                                    <SelectItem
+                                      key={type.value}
+                                      value={type.value}
+                                    >
+                                      {type.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="col-span-2 flex items-center">
+                        <FormItem>
+                          <FormLabel className="mr-2">Required</FormLabel>
+                          <br />
+                          <FormControl>
+                            <Controller
+                              name={`properties.${index}.properties.${nestedIndex}.required`}
+                              control={control}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value ?? false} // Ensure it's set to false if undefined
+                                  onCheckedChange={(value) =>
+                                    field.onChange(value)
+                                  }
+                                />
+                              )}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
           <Button
             type="button"
             onClick={() =>
