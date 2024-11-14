@@ -39,11 +39,21 @@ const Market: React.FC = () => {
     skills: [],
   });
 
-  const handleFilterChange = (filterType: string, selectedValues: string[]) => {
-    let transformedValues: string[] = selectedValues;
+  const handleFilterChange = (
+    filterType: string,
+    selectedValues: string | string[],
+  ) => {
+    let transformedValues: string | string[] = selectedValues;
 
     if (filterType === 'experience') {
-      transformedValues = selectedValues.flatMap((value) => {
+      console.log('TEST:', selectedValues);
+
+      // Ensure selectedValues is always an array
+      const values = Array.isArray(selectedValues)
+        ? selectedValues
+        : [selectedValues];
+
+      transformedValues = values.flatMap((value) => {
         // Check for experience ranges like "0-2", "3-6", "7+" and split them
         if (value.includes('-')) {
           const [start, end] = value.split('-').map(Number);

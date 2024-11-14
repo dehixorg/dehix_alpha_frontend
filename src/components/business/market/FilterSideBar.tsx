@@ -9,6 +9,7 @@ interface FilterState {
   jobType: string[];
   domain: string[];
   skills: string[];
+  experience: string[];
 }
 interface FilterSidebarProps {
   filters: FilterState;
@@ -44,11 +45,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <div className="mb-4">
           <CompanyCard
             heading="Filter by Experience"
-            checkboxLabels={['0-2', '3-6', '7+']}
-            selectedValues={filters.jobType}
-            setSelectedValues={(values) =>
-              handleFilterChange('experience', values)
-            }
+            setLimits={(values) => handleFilterChange('experience', values)}
           />
         </div>
         <div className="mb-4">
