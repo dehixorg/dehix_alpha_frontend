@@ -43,7 +43,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </Button>
         <div className="mb-4">
           <CompanyCard
-            heading="Filter by experience"
+            heading="Filter by Experience"
             checkboxLabels={['0-2', '3-6', '7+']}
             selectedValues={filters.jobType}
             setSelectedValues={(values) =>
@@ -54,7 +54,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <div className="mb-4">
           <SkillDom
             label="Domains"
-            heading="Filter by domains"
+            heading="Filter by Domains"
             checkboxLabels={domains}
             selectedValues={filters.domain}
             setSelectedValues={(values) => handleFilterChange('domain', values)}
@@ -63,7 +63,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <div className="mb-4">
           <SkillDom
             label="Skills"
-            heading="Filter by skills"
+            heading="Filter by Skills"
             checkboxLabels={skills}
             selectedValues={filters.skills}
             setSelectedValues={(values) => handleFilterChange('skills', values)}

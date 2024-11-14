@@ -2,6 +2,9 @@
 import * as React from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface FilterProps {
   label: string;
@@ -40,35 +43,36 @@ const Filter: React.FC<FilterProps> = ({
       <CardContent>
         <h1 className="mt-2">{heading}</h1>
         <div className="items-center p-2">
-          <input
-            type="text"
+          <Input
             placeholder={`Search ${label}`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full mb-2 px-2 py-1 border rounded-sm"
+            className="mb-2"
           />
           {visibleSkills.map((label) => (
-            <div key={label} className="flex items-center mb-1">
-              <input
-                type="checkbox"
+            <div key={label} className="flex items-center space-x-2 mb-1">
+              <Checkbox
+                id={label}
                 checked={selectedValues.includes(label)}
-                onChange={() => handleCheckboxChange(label)}
-                className="mr-2"
+                onCheckedChange={() => handleCheckboxChange(label)}
               />
-              <label className="text-sm">{label}</label>
+              <Label htmlFor={label} className="text-sm">
+                {label}
+              </Label>
             </div>
           ))}
 
           {showMore &&
             hiddenSkills.map((label) => (
-              <div key={label} className="flex items-center mb-1">
-                <input
-                  type="checkbox"
+              <div key={label} className="flex items-center space-x-2 mb-1">
+                <Checkbox
+                  id={label}
                   checked={selectedValues.includes(label)}
-                  onChange={() => handleCheckboxChange(label)}
-                  className="mr-2"
+                  onCheckedChange={() => handleCheckboxChange(label)}
                 />
-                <label className="text-sm">{label}</label>
+                <Label htmlFor={label} className="text-sm">
+                  {label}
+                </Label>
               </div>
             ))}
           {filteredSkills.length > 3 && (

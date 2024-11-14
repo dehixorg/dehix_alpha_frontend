@@ -132,7 +132,7 @@ const SkillDomainForm: React.FC = () => {
       <div className="mb-8 mt-1 ml-2">
         <h1 className="text-3xl font-bold">Dehix Talent</h1>
         <p className="text-gray-400 mt-2">
-          Here you can Add relevant skills and domains to get directly hired
+          Here you can add relevant skills and domains to get directly hired
           from dehix talent.
         </p>
       </div>
@@ -150,9 +150,9 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableHead>Label</TableHead>
                   <TableHead>Experience</TableHead>
-                  <TableHead>Monthly Pay</TableHead>
+                  <TableHead className="text-center">Monthly Pay</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Activity</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,8 +165,8 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell>
                         <Skeleton className="h-6 w-16" />
                       </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-12" />
+                      <TableCell className="text-center">
+                        <Skeleton className="mx-auto h-6 w-12" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-20" />
@@ -181,7 +181,7 @@ const SkillDomainForm: React.FC = () => {
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience} Years</TableCell>
-                      <TableCell>${item.monthlyPay}</TableCell>
+                      <TableCell className="text-center">${item.monthlyPay}</TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(item.status)}>
                           {item.status.toUpperCase()}

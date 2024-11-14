@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import {
   Dialog,
@@ -76,14 +77,14 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const toggleShowMore = () => setShowMore(!showMore);
 
   return (
-    <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 hover:bg-muted rounded">
+    <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 rounded bg-secondary">
       <div className="flex flex-col sm:flex-row justify-between items-start">
         {/* Left: Domain and Freelancers Required in the same line */}
         <div className="space-y-2">
           <p className="font-medium text-lg text-foreground mr-2">
             {profile.domain}
           </p>
-          <Badge variant="secondary">
+          <Badge className="bg-blue-400">
             {profile.freelancersRequired} Positions
           </Badge>
           <Badge className="text-xs ml-2">{profile.experience} Years</Badge>
@@ -163,9 +164,19 @@ const ProfileCard: React.FC<ProfileProps> = ({
               {showMore
                 ? profile.description
                 : `${profile.description.slice(0, 50)}...`}
-              <button onClick={toggleShowMore} className="text-blue-500 ml-2">
-                {showMore ? 'Show Less' : 'Show More'}
-              </button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex bg-black hover:bg-black items-center text-sm cursor-pointer ml-auto px-4"
+                onClick={toggleShowMore}
+              >
+                {showMore ? 'Less' : 'More'}
+                {showMore ? (
+                  <ChevronUp className="ml-1 h-4 w-4" />
+                ) : (
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                )}
+              </Button>
             </p>
           ) : (
             profile.description
