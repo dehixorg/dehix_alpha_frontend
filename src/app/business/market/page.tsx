@@ -104,9 +104,7 @@ const Market: React.FC = () => {
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
       const queryString = constructQueryString(appliedFilters);
-      const response = await axiosInstance.get(
-        `/freelancer/allfreelancer?${queryString}`,
-      );
+      const response = await axiosInstance.get(`/freelancer?${queryString}`);
       setFreelancers(response.data.data);
     } catch (error) {
       console.error('API Error:', error);
@@ -116,13 +114,13 @@ const Market: React.FC = () => {
   useEffect(() => {
     async function fetchInitialData() {
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         const skillLabels = skillsResponse.data.data.map(
           (skill: any) => skill.label,
         );
         setSkills(skillLabels);
 
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         const domainLabels = domainsResponse.data.data.map(
           (domain: any) => domain.label,
         );

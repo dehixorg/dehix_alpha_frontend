@@ -76,7 +76,7 @@ export default function FreelancerProfile() {
       const fetchFreelancerDetails = async () => {
         try {
           const response = await axiosInstance.get(
-            `/freelancer/${freelancer_id}/details`,
+            `/freelancer/${freelancer_id}/profile-info`,
           );
           if (response.status === 200) {
             setUser(response.data);

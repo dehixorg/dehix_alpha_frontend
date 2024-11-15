@@ -128,19 +128,19 @@ const Market: React.FC = () => {
     async function fetchData() {
       try {
         // Fetch skills
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         const skillLabels = skillsResponse.data.data.map(
           (skill: Skill) => skill.label,
         );
         setSkills(skillLabels);
 
         // Fetch domains
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         const domainLabels = domainsResponse.data.data.map(
           (domain: Domain) => domain.label,
         );
         setDomains(domainLabels);
-        const projectResponse = await axiosInstance.get('/projectDomain/all');
+        const projectResponse = await axiosInstance.get('/projectdomain');
         const projectData: ProjectsDomain[] = projectResponse.data.data;
         setProjects(projectData);
       } catch (error) {
@@ -158,7 +158,7 @@ const Market: React.FC = () => {
         );
         const queryString = constructQueryString(appliedFilters);
         const allJobs = await axiosInstance.get(
-          `/project/${user.uid}/all_project?${queryString}`,
+          `/project/freelancer/${user.uid}/?${queryString}`,
         );
 
         const notInterestedProjects =

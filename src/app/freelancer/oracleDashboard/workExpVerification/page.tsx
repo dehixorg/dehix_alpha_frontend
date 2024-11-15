@@ -70,7 +70,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/oracle?doc_type=experience`,
+        `/verification/${user.uid}/oracle?doc_type=experience`,
       );
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
