@@ -1,8 +1,8 @@
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
-import MobileCompany from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
+import CompanyCard from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 
 interface FilterState {
   location: string[];
@@ -16,7 +16,10 @@ interface MobileFilterModalProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
-  handleFilterChange: (filterType: string, selectedValues: string[]) => void;
+  handleFilterChange: (
+    filterType: string,
+    selectedValues: string | string[],
+  ) => void;
   handleApply: () => void;
   handleModalToggle: () => void;
 }
@@ -34,15 +37,13 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
     <>
       {showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
-          <div className="bg-white rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+          <div className="bg-black rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
             <div className="overflow-y-auto p-4 flex-grow">
               <div className="border-b border-gray-300 pb-4 ">
-                <MobileCompany
-                  heading="Filter by experience"
-                  checkboxLabels={['0-2', '3-6', '7+']}
-                  selectedValues={filters.jobType}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('jobType', values)
+                <CompanyCard
+                  heading="Filter by Experience"
+                  setLimits={(values) =>
+                    handleFilterChange('experience', values)
                   }
                 />
               </div>

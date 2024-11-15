@@ -1,5 +1,11 @@
 'use client';
 import * as React from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface MobileSkillDomProps {
   label: string;
@@ -36,46 +42,54 @@ const MobileSkillDom: React.FC<MobileSkillDomProps> = ({
 
   return (
     <div>
-      <h1 className="mt-2 text-black">{heading}</h1>
+      <h1 className="mt-2 text-white">{heading}</h1>
       <div className="items-center p-2">
-        <input
-          type="text"
+        <Input
           placeholder={`Search ${label}`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full mb-2 px-2 py-1 border rounded-sm bg-gray-200"
+          className="mb-2 bg-secondary border-black"
         />
         {visibleSkills.map((label) => (
-          <div key={label} className="flex items-center mb-1">
-            <input
-              type="checkbox"
+          <div key={label} className="flex items-center space-x-2 mb-1">
+            <Checkbox
+              id={label}
               checked={selectedValues.includes(label)}
-              onChange={() => handleCheckboxChange(label)}
-              className="mr-2"
+              onCheckedChange={() => handleCheckboxChange(label)}
             />
-            <label className="text-sm text-black">{label}</label>
+            <Label htmlFor={label} className="text-sm">
+              {label}
+            </Label>
           </div>
         ))}
         {showMore &&
           hiddenSkills.map((label) => (
-            <div key={label} className="flex items-center mb-1">
-              <input
-                type="checkbox"
+            <div key={label} className="flex items-center space-x-2 mb-1">
+              <Checkbox
+                id={label}
                 checked={selectedValues.includes(label)}
-                onChange={() => handleCheckboxChange(label)}
-                className="mr-2"
+                onCheckedChange={() => handleCheckboxChange(label)}
               />
-              <label className="text-sm text-black">{label}</label>
+              <Label htmlFor={label} className="text-sm">
+                {label}
+              </Label>
             </div>
           ))}
         {filteredSkills.length > 3 && (
           <div className="flex items-center mb-1">
-            <button
-              className="text-sm text-blue-500 cursor-pointer"
+            <Button
+              size="sm"
+              variant="ghost"
+              className="flex items-center text-sm cursor-pointer ml-auto"
               onClick={() => setShowMore(!showMore)}
             >
-              {showMore ? 'Less Options' : 'More Options'}
-            </button>
+              {showMore ? 'Less' : 'More'}
+              {showMore ? (
+                <ChevronUp className="ml-1 h-4 w-4" />
+              ) : (
+                <ChevronDown className="ml-1 h-4 w-4" />
+              )}
+            </Button>
           </div>
         )}
 
