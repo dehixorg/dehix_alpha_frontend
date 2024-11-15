@@ -215,7 +215,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                   <TableHead>Experience</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Activity</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
