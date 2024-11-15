@@ -15,7 +15,10 @@ interface FilterSidebarProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
-  handleFilterChange: (filterType: string, selectedValues: string[]) => void;
+  handleFilterChange: (
+    filterType: string,
+    selectedValues: string | string[],
+  ) => void;
   handleApply: () => void;
   handleReset: () => void;
 }

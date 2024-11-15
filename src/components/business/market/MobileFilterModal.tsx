@@ -16,7 +16,10 @@ interface MobileFilterModalProps {
   filters: FilterState;
   domains: string[];
   skills: string[];
-  handleFilterChange: (filterType: string, selectedValues: string[]) => void;
+  handleFilterChange: (
+    filterType: string,
+    selectedValues: string | string[],
+  ) => void;
   handleApply: () => void;
   handleModalToggle: () => void;
 }
