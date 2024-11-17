@@ -128,39 +128,11 @@ export function ProjectProfileDetailCard({
       <CardContent className="grid gap-4">
         <div>
           <ul className="flex flex-wrap gap-2">
-            {email && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Email - </span>
-                {email}
-              </li>
-            )}
-            {status && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">Status - </span>
-                {status}
-              </li>
-            )}
-            {startDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-700 font-semibold">
-                  Start Date -{' '}
-                </span>
-                {startDate}
-              </li>
-            )}
-            {endDate && (
-              <li className="min-w-[45%]">
-                <span className="text-gray-400 font-semibold">End Date - </span>
-                {endDate}
-              </li>
-            )}
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Experience: </span>
               <span className="text-gray-400 font-semibold">Experience: </span>
               {experience} years
             </li>
             <li className="min-w-[45%]">
-              <span className="text-gray-400 font-semibold">Min Connect: </span>
               <span className="text-gray-400 font-semibold">Min Connect: </span>
               {minConnect}
             </li>

@@ -51,12 +51,10 @@ function ProjectDetailCard({
           <div className="lg:col-span-full">
             <p className="mb-6 mx-4 w-full break-words">{description}</p>
 
-            <Badge className="uppercase flex font-semibold items-center text-sm bg-gray-300 px-2 rounded inline-flex">
+            <Badge className="uppercase flex font-semibold items-center text-sm bg-gray-300 px-2 rounded">
               <Mail className="mr-2 h-4 w-4" />
               <span>{email}</span>
             </Badge>
-
-            <p className="my-2">{description}</p>
 
             <div className="flex justify-start items-center mb-2">
               <h4 className="text-xl font-semibold">Project Domains: </h4>
