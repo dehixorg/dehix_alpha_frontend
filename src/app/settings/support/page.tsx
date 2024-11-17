@@ -1,21 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Pencil, Code, Type } from 'lucide-react';
-import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import Cookies from 'js-cookie';
 
-import TicketForm from './supportTicketFofm';
+import TicketForm from './supportTicketForm';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -79,163 +69,11 @@ const HomePage = () => {
         {/* Add TicketForm Section Here */}
         <div className="ml-2">
           <div className="mb-8 ">
-            <h2 className="sm:text-3xl">Submit a Support Ticket</h2>
             <TicketForm /> {/* Render the TicketForm component here */}
           </div>
         </div>
 
         <div className="ml-4">
-          <section id="About" className="px-4 py-20 md:px-6">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className=" sm:text-3xl">About Our Freelancing Platform</h2>
-              <p className="mt-4  md:text-xl">
-                Our platform connects you with talented freelancers from around
-                the world, empowering you to bring your projects to life.
-                We&apos;re dedicated to providing a seamless experience and
-                helping you find the perfect fit for your needs.
-              </p>
-              <div className="grid gap-6 mt-10 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="h-[350px] ">
-                  <CardHeader>
-                    <Pencil className="h-8 w-8" />
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="mt-6">Content Creation</CardTitle>
-                    <CardDescription className="mt-2 ">
-                      Bring your ideas to life with our talented content
-                      creators.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                <Card className="h-[350px] ">
-                  <CardHeader>
-                    <Code className="h-8 w-8" />
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="">Web Development</CardTitle>
-                    <CardDescription className="mt-2">
-                      Elevate your online presence with our expert web
-                      developers.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                <Card className="h-[350px] ">
-                  <CardHeader>
-                    <Type className="h-8 w-8" />
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="mt-4">Graphic Design</CardTitle>
-                    <CardDescription className="mt-2 ">
-                      Bring your brand to life with our talented graphic
-                      designers.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-          <section className="px-4 py-20 md:px-6">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className=" sm:text-3xl">What Our Clients Say</h2>
-              <div className="grid gap-6 mt-10 sm:grid-cols-2">
-                <Card className=" p-6 text-left">
-                  <CardContent>
-                    <blockquote className="text-lg font-medium ">
-                      &ldquo;The freelancers on this platform are truly
-                      exceptional. They delivered high-quality work that
-                      exceeded my expectations.&rdquo;
-                    </blockquote>
-                  </CardContent>
-                  <CardFooter className="mt-4">
-                    <div>
-                      <p className="font-bold">John Doe</p>
-                      <p className="font-bold">CEO, Acme Inc.</p>
-                    </div>
-                  </CardFooter>
-                </Card>
-                <Card className=" p-6 text-left">
-                  <CardContent>
-                    <blockquote className="text-lg font-medium ">
-                      &ldquo;I&apos;ve been using this freelancing platform for
-                      years, and it&apos;s been a game-changer for my business.
-                      Highly recommended!&rdquo;
-                    </blockquote>
-                  </CardContent>
-                  <CardFooter className="mt-4">
-                    <div>
-                      <p className="font-bold">Jane Smith</p>
-                      <p className="font-bold">Founder, XYZ Company</p>
-                    </div>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
-          </section>
-          <section className="px-4 py-20 md:px-6">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className=" sm:text-3xl">Our Portfolio</h2>
-              <div className="grid gap-6 mt-10 sm:grid-cols-2 lg:grid-cols-3">
-                <Card className="overflow-hidden border-none">
-                  <Image
-                    alt="Portfolio Item 1"
-                    className="object-cover w-full h-auto"
-                    height={300}
-                    src="/placeholder.svg"
-                    style={{
-                      aspectRatio: '400/300',
-                      objectFit: 'cover',
-                    }}
-                    width={400}
-                  />
-                  <CardContent className=" p-4">
-                    <CardTitle>Project Title 1</CardTitle>
-                    <CardDescription className="mt-2 text-white">
-                      A brief description of the project.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                <Card className="overflow-hidden border-none">
-                  <Image
-                    alt="Portfolio Item 1"
-                    className="object-cover w-full h-auto"
-                    height={300}
-                    src="/placeholder.svg"
-                    style={{
-                      aspectRatio: '400/300',
-                      objectFit: 'cover',
-                    }}
-                    width={400}
-                  />
-                  <CardContent className=" p-4">
-                    <CardTitle>Project Title 2</CardTitle>
-                    <CardDescription className="mt-2 text-white">
-                      A brief description of the project.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-                <Card className="overflow-hidden border-none">
-                  <Image
-                    alt="Portfolio Item 1"
-                    className="object-cover w-full h-auto"
-                    height={300}
-                    src="/placeholder.svg"
-                    style={{
-                      aspectRatio: '400/300',
-                      objectFit: 'cover',
-                    }}
-                    width={400}
-                  />
-                  <CardContent className=" p-4">
-                    <CardTitle>Project Title 3</CardTitle>
-                    <CardDescription className="mt-2 text-white">
-                      A brief description of the project.
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-
           <section className="px-4 pt-20 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className=" sm:text-3xl">FAQs</h2>

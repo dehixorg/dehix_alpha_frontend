@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { CopyIcon } from 'lucide-react';
 
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -22,6 +23,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/app/AuthContext';
 
 const allowedFileFormats = [
   'image/png',
@@ -42,10 +44,11 @@ interface Ticket {
 }
 
 const TicketForm = () => {
+  const { user } = useAuth();
   const [subject, setSubject] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
-  const [customerID, setCustomerID] = useState<string>(''); // generate customer Id accordinly ......?????
+  const [customerID, setCustomerID] = useState<string>(user?.uid || ''); // generate customer Id accordinly ......?????
   const [customerType, setCustomerType] = useState<string>('business');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -124,6 +127,7 @@ const TicketForm = () => {
         return;
       }
     }
+
     const ticketData = {
       customerID,
       customerType,
@@ -151,19 +155,18 @@ const TicketForm = () => {
       });
     }
   };
-  const resetForm = () => {
-    setSubject('');
-    setDescription('');
-    setCustomerID('');
-    setCustomerType('business');
-    // setFile(null);
-  };
 
   const openEditDialog = (ticket: Ticket) => {
     setEditingTicketId(ticket._id);
     setSubject(ticket.subject);
     setDescription(ticket.description);
     setIsEditDialogOpen(true);
+  };
+  const resetForm = () => {
+    setSubject('');
+    setDescription('');
+    setCustomerType('business');
+    setFile(null);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -241,9 +244,27 @@ const TicketForm = () => {
     setIsDetailDialogOpen(true); // Open the details dialog
   };
 
+  const handleCopyId = (id: string) => {
+    navigator.clipboard
+      .writeText(id)
+      .then(() => {
+        toast({
+          title: 'ID Copied',
+          description: `Ticket ID ${id} has been copied to your clipboard.`,
+        });
+      })
+      .catch(() => {
+        toast({
+          variant: 'destructive',
+          title: 'Copy Failed',
+          description: 'Failed to copy the Ticket ID.',
+        });
+      });
+  };
   return (
     <div className="max-w-7xl mx-auto bg-background p-6 rounded shadow-md">
       {/* Create Ticket Button */}
+      <h1 className=" mt-3 sm:text-3xl">Submit a Support Ticket</h1>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <Button onClick={() => setIsDialogOpen(true)} className="mt-8">
@@ -256,13 +277,6 @@ const TicketForm = () => {
             Fill out the form to submit a support ticket.
           </DialogDescription>
           <form onSubmit={handleSubmit} className="space-y-4 flex flex-col">
-            <Input
-              id="customerID"
-              placeholder="Customer ID"
-              value={customerID}
-              onChange={(e) => setCustomerID(e.target.value)}
-              required
-            />
             <Input
               id="subject"
               placeholder="Subject"
@@ -324,50 +338,64 @@ const TicketForm = () => {
         <DialogContent>
           <DialogTitle>Ticket Details</DialogTitle>
           <DialogDescription>
-            View the full details of the ticket.
+            View and edit the details of the ticket.
           </DialogDescription>
-          {ticketDetails && (
-            <>
-              <div>Subject: {ticketDetails.subject}</div>
-              <div>Customer ID: {ticketDetails.customerID}</div>
-              <div>Status: {ticketDetails.status}</div>
-              <div>Customer Type: {ticketDetails.customerType}</div>
-              <div>Description: {ticketDetails.description}</div>
-              <div>
-                Files Attached:{' '}
-                {ticketDetails.filesAttached ? (
-                  allowedFileFormats.includes(
-                    ticketDetails.filesAttached.split('.').pop() || '',
+
+          <Card className="p-6 space-y-4 rounded-md shadow-md">
+            {/* Ticket Subject */}
+            <div className="space-y-2">
+              <p className="text-lg font-semibold">
+                <strong>Subject: </strong>
+                {ticketDetails?.subject}
+              </p>
+            </div>
+
+            {/* Ticket Description */}
+            <div className="space-y-2">
+              <p className="text-sm">
+                <strong>Description: </strong>
+                {ticketDetails?.description}
+              </p>
+            </div>
+            {/* Ticket Status */}
+            <div className="space-y-2">
+              <p className="text-sm">
+                <strong>Status: </strong>
+                {ticketDetails?.status}
+              </p>
+            </div>
+
+            {/* Ticket Files */}
+            {ticketDetails?.filesAttached && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  <strong>Attached File:</strong>
+                </p>
+                <div className="flex flex-col items-start space-y-2">
+                  {ticketDetails.filesAttached.match(
+                    /\.(jpeg|jpg|gif|png)$/,
                   ) ? (
-                    <div className="flex flex-col items-center">
-                      <Image
-                        src={ticketDetails.filesAttached}
-                        alt="Attached file"
-                        width={300} // Set the width based on your design
-                        height={300} // Set the height based on your design
-                        className="object-contain mb-4"
-                      />
-                      <span className="text-gray-500 text-sm">
-                        {ticketDetails.filesAttached.split('/').pop()}
-                      </span>
-                    </div>
+                    <Image
+                      src={ticketDetails.filesAttached}
+                      alt="Attached file"
+                      width={200}
+                      height={200}
+                      className="object-cover rounded-md shadow-md"
+                    />
                   ) : (
                     <a
                       href={ticketDetails.filesAttached}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 underline"
+                      className="text-blue-600 underline"
                     >
-                      {ticketDetails.filesAttached.split('/').pop()}
+                      View/Download File
                     </a>
-                  )
-                ) : (
-                  'None'
-                )}
+                  )}
+                </div>
               </div>
-            </>
-          )}
-          <Button onClick={() => setIsDetailDialogOpen(false)}>Close</Button>
+            )}
+          </Card>
         </DialogContent>
       </Dialog>
 
@@ -377,6 +405,7 @@ const TicketForm = () => {
           <Table className="w-full">
             <TableHeader>
               <TableRow>
+                <TableHead className="flexitems-center">ID</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>File Attached</TableHead>
@@ -387,8 +416,26 @@ const TicketForm = () => {
               {tickets.length > 0 ? (
                 tickets.map((ticket) => (
                   <TableRow key={ticket._id}>
+                    {/* Ticket ID and Copy Button */}
+                    <TableCell>
+                      <div className="flexitems-center space-x-2">
+                        <span>{ticket._id}</span>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleCopyId(ticket._id)}
+                          size="icon"
+                          className="p-1 "
+                        >
+                          <CopyIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+
+                    {/* Ticket Subject */}
                     <TableCell>{ticket.subject}</TableCell>
+                    {/* Ticket Status */}
                     <TableCell>{ticket.status}</TableCell>
+                    {/* Ticket File */}
                     <TableCell>
                       {ticket.filesAttached ? (
                         allowedFileFormats.includes(
@@ -415,6 +462,8 @@ const TicketForm = () => {
                         'None'
                       )}
                     </TableCell>
+
+                    {/* Actions */}
                     <TableCell>
                       <div className="flex flex-row">
                         <Button onClick={() => openEditDialog(ticket)}>
@@ -432,7 +481,7 @@ const TicketForm = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10">
+                  <TableCell colSpan={5} className="text-center py-10">
                     No tickets available.
                   </TableCell>
                 </TableRow>
