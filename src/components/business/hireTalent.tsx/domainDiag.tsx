@@ -91,7 +91,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.post(
-        `/business/${user.uid}/hireDehixTalent`,
+        `/business/${user.uid}/hire-dehixtalent`,
         {
           domainId: data.domainId, // This should now be set
           domainName: data.label,
@@ -133,9 +133,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={() => setOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
-          Get Talent by Domain
+          Add Domain
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -189,6 +189,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                 <input
                   type="number"
                   placeholder="Experience (years)"
+                  min={0}
+                  max={50}
                   {...field}
                   className="border p-2 rounded mt-2 w-full"
                 />

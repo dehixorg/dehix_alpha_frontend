@@ -42,11 +42,13 @@ interface ProjectType {
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
   project: ProjectType;
+  type?: string;
 };
 
 export function ProjectCard({
   className,
   project,
+  type = 'business',
   ...props
 }: ProjectCardProps) {
   return (
@@ -70,9 +72,13 @@ export function ProjectCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
-        <div className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0">
-          <span className="flex h-2 w-2 translate-y-1 rounded-full" />
-          <p className="text-sm text-muted-foreground">{project.description}</p>
+        <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
+          <span className="flex h-2 w-2 rounded-full" />
+          <p className="text-sm text-muted-foreground">
+            {project.description.length > 40
+              ? `${project.description.slice(0, 40)}...`
+              : project.description}
+          </p>
         </div>
         <div>
           <p>
@@ -98,7 +104,7 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Link href={`/business/project/${project._id}`} className="w-full">
+        <Link href={`/${type}/project/${project._id}`} className="w-full">
           <Button
             className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
           >

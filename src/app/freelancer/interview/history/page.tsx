@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { ListFilter, PackageOpen } from 'lucide-react';
 
-import { Search } from '@/components/search';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -11,15 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import Header from '@/components/header/header';
 
 export default function HistoryPage() {
@@ -96,49 +92,6 @@ export default function HistoryPage() {
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredInterviews.map((interview, index) => (
-              <Card key={index} className="max-w-full mx-auto md:max-w-lg">
-                <CardHeader>
-                  <CardTitle className="flex text-2xl">
-                    {interview.reference}
-                  </CardTitle>
-                  <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
-                    {interview.skill || interview.domain}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Badge
-                    className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${interview.status === 'Pending' ? 'warning' : 'success'} text-xs`}
-                  >
-                    {interview.status.toUpperCase()}
-                  </Badge>
-                  <p className="text-gray-300 pt-4 text-sm">
-                    {interview.description}
-                  </p>
-
-                  <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-                    <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-                    {interview.comments}
-                  </p>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600">
-                      Reference: {interview.reference}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Contact: {interview.contact}
-                    </p>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex">
-                  <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-                    {new Date(interview.interviewDate).toLocaleDateString()}
-                  </p>
-                </CardFooter>
-              </Card>
-            ))}
-          </div> */}
           <div className="text-center py-10 w-[90vw] mt-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">No Inverview Scheduled for you.</p>

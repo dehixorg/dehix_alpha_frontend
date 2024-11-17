@@ -7,6 +7,7 @@ import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,13 +21,11 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
       const userCredential: UserCredential = await loginUser(email, pass);
@@ -38,8 +37,16 @@ export default function Login() {
         }),
       );
       router.replace(`/dashboard/${claims.type}`);
+      toast({
+        title: 'Login Successful',
+        description: 'You have successfully logged in.',
+      }); // Success toast
     } catch (error: any) {
-      setError('Invalid Email or Password ');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Invalid Email or Password. Please try again.',
+      }); // Error toast
       console.error(error.message);
     } finally {
       setIsLoading(false);
@@ -49,21 +56,28 @@ export default function Login() {
   const handleGoogle = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
       const userCredential: UserCredential = await loginGoogleUser();
       const { user, claims } = await getUserData(userCredential);
-
       dispatch(setUser({ ...user, type: claims.type }));
       router.replace(`/dashboard/${claims.type}`);
+      toast({
+        title: 'Login Successful',
+        description: 'You have successfully logged in with Google.',
+      }); // Success toast
     } catch (error: any) {
-      setError(error.message);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to login with Google. Please try again.',
+      }); // Error toast
       console.error(error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -81,7 +95,6 @@ export default function Login() {
               Enter your email below to login to your account
             </p>
           </div>
-          {error && <p className="text-red-500">{error}</p>}
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="grid gap-2">

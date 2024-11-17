@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail } from 'lucide-react';
 
+import DateRange from '@/components/cards/dateRange';
 import {
   Card,
   CardContent,
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
+
 export interface ProjectSkillCardProps {
   domainName: string | undefined;
   description: string | undefined;
@@ -42,48 +44,52 @@ function ProjectSkillCard({
         <Badge className={className}>{text}</Badge>
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
           <div className="lg:col-span-full">
-            <p className="mb-6">{description}</p>
+            <p className="mb-6 break-words">
+              {description
+                ? description.length > 50
+                  ? `${description.slice(0, 50)}...`
+                  : description
+                : 'No description available'}
+            </p>
             <div className="flex items-center text-sm">
               <Mail className="mr-2 h-4 w-4" />
               <span>{email}</span>
             </div>
-            <div className="my-4">
-              <h4 className="text-xl font-semibold">Project Domains</h4>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {domains.map((domain, index) => (
-                  <Badge
-                    key={index}
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
-                  >
-                    {domain}
-                  </Badge>
-                ))}
+            {domains.length > 0 && (
+              <div className="my-4">
+                <h4 className="text-xl font-semibold">Project Domains</h4>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {domains.map((domain, index) => (
+                    <Badge
+                      key={index}
+                      className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    >
+                      {domain}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="pt-4">
-              <h4 className="text-xl font-semibold">Skills</h4>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {skills?.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
-                  >
-                    {skill}
-                  </Badge>
-                ))}
+            )}
+            {skills && skills.length > 0 && (
+              <div className="pt-4">
+                <h4 className="text-xl font-semibold">Skills</h4>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {skills?.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      className="uppercase mx-1 text-xs font-normal bg-gray-300"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-          {startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}
-        </p>
-        <p>-</p>
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
-          {endDate ? new Date(endDate).toLocaleDateString() : 'Current'}
-        </p>
+        <DateRange startDate={startDate} endDate={endDate} />
       </CardFooter>
     </Card>
   );

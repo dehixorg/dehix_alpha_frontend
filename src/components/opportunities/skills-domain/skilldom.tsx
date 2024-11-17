@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface SkillDomProps {
   label: string;
@@ -71,27 +73,29 @@ const SkillDom: React.FC<SkillDomProps> = ({
           className="w-full mb-2"
         />
         {visibleSkills.map((label) => (
-          <div key={label} className="flex items-center mb-1">
-            <input
-              type="checkbox"
+          <div key={label} className="flex items-center space-x-2 mb-1">
+            <Checkbox
+              id={label}
               checked={selectedValues.includes(label)}
-              onChange={() => handleCheckboxChange(label)}
-              className="mr-2"
+              onCheckedChange={() => handleCheckboxChange(label)}
             />
-            <label className="text-sm">{label}</label>
+            <Label htmlFor={label} className="text-sm">
+              {label}
+            </Label>
           </div>
         ))}
 
         {showMore &&
           hiddenSkills.map((label) => (
-            <div key={label} className="flex items-center mb-1">
-              <input
-                type="checkbox"
+            <div key={label} className="flex items-center space-x-2 mb-1">
+              <Checkbox
+                id={label}
                 checked={selectedValues.includes(label)}
-                onChange={() => handleCheckboxChange(label)}
-                className="mr-2"
+                onCheckedChange={() => handleCheckboxChange(label)}
               />
-              <label className="text-sm">{label}</label>
+              <Label htmlFor={label} className="text-sm">
+                {label}
+              </Label>
             </div>
           ))}
       </CardContent>

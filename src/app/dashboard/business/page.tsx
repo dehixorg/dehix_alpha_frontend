@@ -32,14 +32,12 @@ import dummyData from '@/dummydata.json';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-  const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects`,
+          `/project/business/${user.uid}`,
         ); // Example API endpoint, replace with your actual endpoint
         console.log('API Response:', response.data.data);
         setResponseData(response.data.data); // Store response data in state
@@ -47,10 +45,9 @@ export default function Dashboard() {
         console.error('API Error:', error);
       }
     };
-
     fetchData(); // Call fetch data function on component mount
   }, [user.uid]);
-  console.log(user);
+
   const completedProjects = responseData.filter(
     (project: any) => project.status == 'Completed',
   );
@@ -172,14 +169,15 @@ export default function Dashboard() {
                 <p className="text-gray-500">No interviews scheduled</p>
               </div>
             ) : (
-              <InterviewCard
-                interviewer={sampleInterviewData.interviewer}
-                interviewee={sampleInterviewData.interviewee}
-                skill={sampleInterviewData.skill}
-                interviewDate={new Date(sampleInterviewData.interviewDate)}
-                rating={sampleInterviewData.rating}
-                comments={sampleInterviewData.comments}
-              />
+              <></>
+              // <InterviewCard
+              //   interviewer={sampleInterviewData.interviewer}
+              //   interviewee={sampleInterviewData.interviewee}
+              //   skill={sampleInterviewData.skill}
+              //   interviewDate={new Date(sampleInterviewData.interviewDate)}
+              //   rating={sampleInterviewData.rating}
+              //   comments={sampleInterviewData.comments}
+              // />
             )}
           </div>
         </main>

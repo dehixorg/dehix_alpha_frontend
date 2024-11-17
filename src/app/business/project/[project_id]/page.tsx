@@ -69,9 +69,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/${project_id}/project`,
-        );
+        const response = await axiosInstance.get(`/project/${project_id}`);
 
         // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;
@@ -129,7 +127,7 @@ export default function Dashboard() {
               <Tabs defaultValue="Project-Info">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
-                  <TabsTrigger value="Profiles">Profiles</TabsTrigger>
+                  <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
                 </TabsList>
                 <TabsContent value="Project-Info">
                   <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
@@ -146,33 +144,28 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <Card className="">
-                        <CardHeader>
-                          <CardTitle> Profile</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid w-full items-center gap-4">
-                            <div className="w-auto grid grid-cols-2 gap-4">
-                              {project.profiles?.map((profile, index) => (
-                                <ProjectSkillCard
-                                  key={index}
-                                  domainName={profile.domain}
-                                  description={profile.description}
-                                  email={project.email}
-                                  status={project.status}
-                                  startDate={project.createdAt}
-                                  endDate={project.end}
-                                  domains={[]}
-                                  skills={profile.skills}
-                                />
-                              ))}
-                            </div>
+                      <CardHeader className="pl-0">
+                        <CardTitle>Profiles</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pl-0">
+                        <div className="grid w-full items-center gap-4">
+                          <div className="w-auto grid grid-cols-2 gap-4">
+                            {project.profiles?.map((profile, index) => (
+                              <ProjectSkillCard
+                                key={index}
+                                domainName={profile.domain}
+                                description={profile.description}
+                                email={project.email}
+                                status={project.status}
+                                startDate={project.createdAt}
+                                endDate={project.end}
+                                domains={[]}
+                                skills={profile.skills}
+                              />
+                            ))}
                           </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                          {/* <Button>Deploy</Button> */}
-                        </CardFooter>
-                      </Card>
+                        </div>
+                      </CardContent>
                     </div>
                   </div>
                 </TabsContent>

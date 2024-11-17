@@ -83,7 +83,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=project`, {
+    await axiosInstance.put(`/verification/${_id}/oracle?doc_type=project`, {
       comments: data.comment,
       verification_status: data.type,
     });

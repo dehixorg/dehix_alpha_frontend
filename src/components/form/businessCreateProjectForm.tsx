@@ -133,9 +133,9 @@ export function CreateProjectBusinessForm() {
       try {
         const [projectDomainResponse, domainResponse, skillsResponse] =
           await Promise.all([
-            axiosInstance.get('/projectDomain/all'),
-            axiosInstance.get('/domain/all'),
-            axiosInstance.get('/skills/all'),
+            axiosInstance.get('/projectdomain'),
+            axiosInstance.get('/domain'),
+            axiosInstance.get('/skills'),
           ]);
         if (domainResponse?.data && domainResponse?.data?.data) {
           setDomains(
@@ -222,7 +222,7 @@ export function CreateProjectBusinessForm() {
     setLoading(true);
     try {
       const response = await axiosInstance.post(
-        `/project/${user.uid}/project`,
+        `/project/${user.uid}`,
         {
           ...data,
           companyId: user.uid,

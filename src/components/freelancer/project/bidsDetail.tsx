@@ -57,7 +57,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get(`/project/${id}/project`);
+        const response = await axiosInstance.get(`/project/${id}`);
         setUserData(response.data);
       } catch (error) {
         setError('Error fetching user data.');
@@ -100,7 +100,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const fetchBid = async (profileId: string) => {
     try {
       const response = await axiosInstance.get(
-        `/bid/${id}/${profileId}/profile/project/bid`,
+        `/bid/project/${id}/profile/${profileId}/bid`,
       );
       setBids(response.data?.data || []);
     } catch (e) {

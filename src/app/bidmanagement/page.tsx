@@ -52,7 +52,7 @@ const BidsPage = () => {
     const fetchProjectIds = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects?status=Pending`,
+          `/project/business/${user.uid}/?status=Pending`,
         );
 
         const ids = response.data.data.map((project: Project) => project._id);

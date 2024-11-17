@@ -1,6 +1,8 @@
 import React from 'react';
 import { Github, MessageSquareIcon } from 'lucide-react';
 
+import DateRange from './dateRange';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -78,15 +80,7 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
         </div>
       </CardContent>
       <CardFooter className="flex">
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-          {new Date(workFrom).toLocaleDateString()}
-        </p>
-        <p>-</p>
-        <p className="text-sm font-semibold text-black bg-white px-3 py-1 uppercase rounded">
-          {workTo !== 'current'
-            ? new Date(workTo).toLocaleDateString()
-            : 'Current'}
-        </p>
+        <DateRange startDate={workFrom} endDate={workTo} />
       </CardFooter>
     </Card>
   );

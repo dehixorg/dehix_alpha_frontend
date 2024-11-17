@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
+import DateRange from '@/components/cards/dateRange';
 export interface ProjectDetailCardProps {
   projectName: string;
   description: string;
@@ -48,10 +49,12 @@ function ProjectDetailCard({
       <CardContent>
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
           <div className="lg:col-span-full">
-            <div className="flex items-center text-sm bg-gray-900 text-white p-2 w-full sm:w-1/2 rounded">
-              <Mail className="mr-2 h-4 w-4 text-white" />
+            <p className="mb-6 mx-4 w-full break-words">{description}</p>
+
+            <Badge className="uppercase flex font-semibold items-center text-sm bg-gray-300 px-2 rounded inline-flex">
+              <Mail className="mr-2 h-4 w-4" />
               <span>{email}</span>
-            </div>
+            </Badge>
 
             <p className="my-2">{description}</p>
 
@@ -87,13 +90,7 @@ function ProjectDetailCard({
       </CardContent>
 
       <CardFooter className="flex items-center">
-        <p className="text-sm font-semibold text-white px-3 py-1 rounded">
-          {startDate ? new Date(startDate).toLocaleDateString() : 'N/A'}
-        </p>
-        <span className="mx-2 text-gray-500">-</span>
-        <p className="text-sm font-semibold text-white px-3 py-1 uppercase rounded">
-          {endDate ? new Date(endDate).toLocaleDateString() : 'Current'}
-        </p>
+        <DateRange startDate={startDate} endDate={endDate} />
       </CardFooter>
     </Card>
   );
