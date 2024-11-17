@@ -5,9 +5,7 @@ import { useEffect, useState } from 'react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
-  Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';

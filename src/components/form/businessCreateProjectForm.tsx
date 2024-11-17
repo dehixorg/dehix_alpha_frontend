@@ -221,17 +221,14 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/project/${user.uid}`,
-        {
-          ...data,
-          companyId: user.uid,
-          role: '',
-          projectType: '',
-          projectDomain: currProjectDomains,
-          skillsRequired: currSkills,
-        },
-      );
+      const response = await axiosInstance.post(`/project/${user.uid}`, {
+        ...data,
+        companyId: user.uid,
+        role: '',
+        projectType: '',
+        projectDomain: currProjectDomains,
+        skillsRequired: currSkills,
+      });
       if (response.status === 200) {
         toast({
           title: 'Project Added',
