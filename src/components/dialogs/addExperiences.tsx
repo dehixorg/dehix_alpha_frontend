@@ -89,6 +89,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (isDialogOpen) {
@@ -213,7 +214,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 <FormItem>
                   <FormLabel>Work From</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date"  max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the start date</FormDescription>
                   <FormMessage />
@@ -227,7 +228,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 <FormItem>
                   <FormLabel>Work To</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the end date</FormDescription>
                   <FormMessage />
