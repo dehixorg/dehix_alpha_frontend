@@ -89,7 +89,7 @@ const ScheduleInterviewDialog: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         if (
           skillsResponse?.data?.data &&
           Array.isArray(skillsResponse.data.data)
@@ -98,7 +98,7 @@ const ScheduleInterviewDialog: React.FC = () => {
         } else {
           console.error('Invalid response format', skillsResponse);
         }
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         if (
           domainsResponse?.data?.data &&
           Array.isArray(domainsResponse.data.data)
@@ -264,6 +264,8 @@ const ScheduleInterviewDialog: React.FC = () => {
                           type="number"
                           placeholder="Experience (years)"
                           className="w-full"
+                          min={0}
+                          max={50}
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value, 10))
                           }
@@ -380,6 +382,8 @@ const ScheduleInterviewDialog: React.FC = () => {
                           type="number"
                           placeholder="Experience (years)"
                           className="w-full"
+                          min={0}
+                          max={50}
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value, 10))
                           }

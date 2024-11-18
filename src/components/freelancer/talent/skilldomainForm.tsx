@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
 interface Skill {
   _id: string;
@@ -53,9 +54,9 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
         if (user?.uid) {
@@ -126,23 +127,12 @@ const SkillDomainForm: React.FC = () => {
     }
   };
 
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500 text-white';
-      case 'pending':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
   return (
     <div className="p-6 mt-2">
       <div className="mb-8 mt-1 ml-2">
-        <h1 className="text-3xl font-bold">Dehix Talent </h1>
+        <h1 className="text-3xl font-bold">Dehix Talent</h1>
         <p className="text-gray-400 mt-2">
-          Here you can Add relevant skills and domains to get directly hired
+          Here you can add relevant skills and domains to get directly hired
           from dehix talent.
         </p>
       </div>
@@ -160,9 +150,9 @@ const SkillDomainForm: React.FC = () => {
                 <TableRow>
                   <TableHead>Label</TableHead>
                   <TableHead>Experience</TableHead>
-                  <TableHead>Monthly Pay</TableHead>
+                  <TableHead className="text-center">Monthly Pay</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Activity</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -175,8 +165,8 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell>
                         <Skeleton className="h-6 w-16" />
                       </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-12" />
+                      <TableCell className="text-center">
+                        <Skeleton className="mx-auto h-6 w-12" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-20" />
@@ -191,12 +181,12 @@ const SkillDomainForm: React.FC = () => {
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience} Years</TableCell>
-                      <TableCell>${item.monthlyPay}</TableCell>
+                      <TableCell className="text-center">
+                        ${item.monthlyPay}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(item.status)}>
-                          {item.status.replace(/\b\w/g, (char) =>
-                            char.toUpperCase(),
-                          )}
+                          {item.status.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>

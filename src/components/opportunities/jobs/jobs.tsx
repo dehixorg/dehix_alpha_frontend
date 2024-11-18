@@ -1,15 +1,17 @@
 import * as React from 'react';
-import { Mail, MapPin, Building2 } from 'lucide-react';
+import {
+  Mail,
+  MapPin,
+  Building2,
+  Eye,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProfileCard from '@/components/opportunities/jobs/profileCard';
@@ -81,10 +83,10 @@ const JobCard: React.FC<JobCardProps> = ({
   const { text, className } = getStatusBadge(status);
 
   const remainingSkillsCount = skillsRequired.length - 2;
-  const charLimit = 150;
+  const charLimit = 60;
   const isDescriptionLong = description.length > charLimit;
 
-  const notIntrestedProject = async (_id: string) => {
+  const notInterestedProject = async (_id: string) => {
     await axiosInstance.put(
       `/freelancer/${user.uid}/${_id}/not_interested_project`,
     );
@@ -94,54 +96,78 @@ const JobCard: React.FC<JobCardProps> = ({
   return (
     <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
       <CardHeader className="pb-3">
-        <CardTitle className=" text-2xl font-bold text-foreground">
-          <div className="flex items-center text-gray-600 gap-2">
-            <Link href={`/freelancer/market/${companyId}`} passHref>
-              {projectName}
-            </Link>
-            <Badge className={className}> {text} </Badge>
+        <CardTitle className="text-2xl font-bold text-foreground">
+          <div className="flex items-center justify-between text-gray-600 gap-2">
+            <div className="flex items-center dark:text-white">
+              <Link href={`/freelancer/market/${companyId}`} passHref>
+                <span>{projectName}</span>
+              </Link>
+              &nbsp;
+              <Badge className={className}> {text} </Badge>
+            </div>
+
+            {/* Action Buttons in Header */}
+            <div className="flex space-x-4">
+              {/* View Button */}
+              <Link href={`/freelancer/project/${id}`} passHref>
+                <Button variant="outline" className="dark:text-white">
+                  <Eye className="w-5 h-5" /> {/* Eye icon for "View" */}
+                  <span>&nbsp;View</span>
+                </Button>
+              </Link>
+
+              {/* Not Interested Button */}
+              <Button
+                className="dark:bg-muted hover:bg-secondary-grey-100 text-white"
+                onClick={() => notInterestedProject(id)}
+              >
+                <XCircle className="w-5 h-5" />
+                {/* XCircle icon for "Not Interested" */}
+                <span>&nbsp;Not Interested</span>
+              </Button>
+            </div>
           </div>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="ml-4 space-y-4">
-        <div className="flex flex-col lg:flex-row justify-between">
+      <CardContent className="space-y-4">
+        <div className="gap-6">
           {/* Left section */}
-          <div className="flex flex-col items-start lg:items-start">
-            <div className="flex items-center text-gray-600">
+          <div className="space-y-4">
+            <div className="flex items-center text-gray-500">
               <Building2 className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>
             </div>
-            <div className="flex items-center text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <p className="ml-2 mr-2"> {companyName} </p>
-            </div>
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-500">
               <Mail className="h-4 w-4" />
-              <p className="ml-2 text-sm"> {email} </p>
+              <p className="ml-2"> {email} </p>
             </div>
-            {/* Description */}
-            <div className="mt-5 flex flex-wrap">
-              <CardDescription>
-                <span className="text-gray-400 text-justify">
-                  {showFullDescription
-                    ? description
-                    : description.slice(0, charLimit) +
-                      (isDescriptionLong ? '...' : '')}
 
-                  {isDescriptionLong && (
-                    <button
-                      onClick={() =>
-                        setShowFullDescription(!showFullDescription)
-                      }
-                      className="text-gray-400 ml-1 cursor-pointer"
-                    >
-                      {showFullDescription ? 'Show less' : 'Show more'}
-                    </button>
+            {/* Description */}
+            <div className="flex items-start gap-1">
+              <p className="text-gray-400 break-words mt-2">
+                {showFullDescription
+                  ? description
+                  : description.slice(0, charLimit) +
+                    (isDescriptionLong ? '...' : '')}
+              </p>
+              {isDescriptionLong && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="flex items-center text-sm cursor-pointer ml-auto px-4"
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                >
+                  {showFullDescription ? 'Less' : 'More'}
+                  {showFullDescription ? (
+                    <ChevronUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="ml-1 h-4 w-4" />
                   )}
-                </span>
-              </CardDescription>
+                </Button>
+              )}
             </div>
+
             {/* Skills Section */}
             <div className="mt-4 flex flex-wrap lg:justify-start">
               {skillsRequired
@@ -174,21 +200,6 @@ const JobCard: React.FC<JobCardProps> = ({
                   </Badge>
                 ))}
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex space-x-4 mt-4 lg:mt-0">
-            <Link href={`/freelancer/project/${id}`} passHref>
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                View
-              </Button>
-            </Link>
-            <Button
-              className="bg-gray-500 text-white hover:bg-gray-600"
-              onClick={() => notIntrestedProject(id)}
-            >
-              Not Interested
-            </Button>
           </div>
         </div>
 

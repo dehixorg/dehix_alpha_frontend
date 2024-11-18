@@ -1,11 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
 import Image from 'next/image';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-// import { Avatar } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { setUser } from '@/lib/userSlice';
+import { RootState } from '@/lib/store';
+
 const allowedImageFormats = [
   'image/png',
   'image/jpeg',
@@ -18,13 +21,17 @@ const maxImageSize = 1 * 1024 * 1024; // 1MB
 const ProfilePictureUpload = ({
   user_id,
   profile,
+  entityType, // Add entityType prop
 }: {
   user_id: string;
   profile: string;
+  entityType: 'freelancer' | 'business'; // Specify possible values for entityType
 }) => {
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [selectedProfilePicture, setSelectedProfilePicture] =
     useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>('/user.png');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(profile);
   const [isUploading, setIsUploading] = useState<boolean>(false); // For disabling the button
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -80,8 +87,16 @@ const ProfilePictureUpload = ({
       );
 
       const { Location } = postResponse.data.data;
-      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
-        profilePicture: Location,
+
+      dispatch(setUser({ ...user, photoURL: Location }));
+      // Adjust the endpoint and payload field based on entityType
+      const updateEndpoint =
+        entityType === 'freelancer'
+          ? `/freelancer/${user_id}`
+          : `/business/${user_id}`;
+
+      const putResponse = await axiosInstance.put(updateEndpoint, {
+        profilePic: Location,
       });
 
       if (putResponse.status === 200) {
@@ -118,7 +133,7 @@ const ProfilePictureUpload = ({
         <div className="relative flex flex-col items-center">
           <label htmlFor="file-input" className="cursor-pointer relative">
             {previewUrl ? (
-              <img
+              <Image
                 width={28}
                 height={28}
                 src={previewUrl}

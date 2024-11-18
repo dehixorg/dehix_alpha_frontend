@@ -88,14 +88,14 @@ export default function ConsultancyPage() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects`,
+          `/project/business/${user.uid}`,
         );
         setResponseData(response.data.data);
 
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
 
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
       } catch (error) {
         console.error('API Error:', error);

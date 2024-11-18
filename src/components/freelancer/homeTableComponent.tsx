@@ -69,7 +69,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead>Project Name</TableHead>
-              <TableHead>Type</TableHead>
               <TableHead>Verification</TableHead>
               <TableHead className="text-center">Start Date</TableHead>
               <TableHead className="text-center">Status</TableHead>
@@ -133,7 +132,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Link href={`/project/${project._id}`}>
+                    <Link href={`/freelancer/project/${project._id}`}>
                       <Button size="sm" variant="outline">
                         View Details
                       </Button>

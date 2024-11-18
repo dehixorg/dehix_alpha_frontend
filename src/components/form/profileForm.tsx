@@ -170,20 +170,31 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user_id}`);
-        setUser(response.data);
-        setCurrSkills(response.data.skills);
-        setCurrDomains(response.data.domain);
+        const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+        const skillsResponse = await axiosInstance.get('/skills');
+        const domainsResponse = await axiosInstance.get('/domain');
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        // Set options for dropdowns
         setSkills(skillsResponse.data.data);
-
-        const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
-
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
         setProjectDomains(projectDomainResponse.data.data);
+
+        setCurrSkills(userResponse.data.skills);
+        setCurrDomains(userResponse.data.domain);
+        setCurrProjectDomains(userResponse.data.projectDomain);
+
+        form.reset({
+          firstName: userResponse.data.firstName || '',
+          lastName: userResponse.data.lastName || '',
+          username: userResponse.data.userName || '',
+          email: userResponse.data.email || '',
+          phone: userResponse.data.phone || '',
+          role: userResponse.data.role || '',
+          personalWebsite: userResponse.data.personalWebsite || '',
+          resume: userResponse.data.resume || '',
+          description: userResponse.data.description || '',
+        });
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -254,7 +265,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       <Form {...form}>
         <ProfilePictureUpload
           user_id={user._id}
-          profile={user.profilePicture}
+          profile={user.profilePic}
+          entityType="freelancer"
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -594,11 +606,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload user_id={user.id} />
+                  <ResumeUpload user_id={user._id} url={user.resume} />
                 </div>
-                <FormDescription className="ml-2">
-                  Upload your resume
-                </FormDescription>
               </FormItem>
             )}
           />

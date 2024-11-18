@@ -128,19 +128,19 @@ const Market: React.FC = () => {
     async function fetchData() {
       try {
         // Fetch skills
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         const skillLabels = skillsResponse.data.data.map(
           (skill: Skill) => skill.label,
         );
         setSkills(skillLabels);
 
         // Fetch domains
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         const domainLabels = domainsResponse.data.data.map(
           (domain: Domain) => domain.label,
         );
         setDomains(domainLabels);
-        const projectResponse = await axiosInstance.get('/projectDomain/all');
+        const projectResponse = await axiosInstance.get('/projectdomain');
         const projectData: ProjectsDomain[] = projectResponse.data.data;
         setProjects(projectData);
       } catch (error) {
@@ -158,7 +158,7 @@ const Market: React.FC = () => {
         );
         const queryString = constructQueryString(appliedFilters);
         const allJobs = await axiosInstance.get(
-          `/project/${user.uid}/all_project?${queryString}`,
+          `/project/freelancer/${user.uid}/?${queryString}`,
         );
 
         const notInterestedProjects =
@@ -203,7 +203,7 @@ const Market: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col sm:pl-6">
+    <div className="flex min-h-screen w-full flex-col sm:pl-6 pb-10">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -246,26 +246,28 @@ const Market: React.FC = () => {
             <Button
               variant="outline"
               onClick={handleReset}
-              className="w-full mb-4 bg-gray text-white"
+              className="w-full mb-4 bg-gray dark:text-white"
               style={{ marginTop: '1rem' }}
             >
               Reset
             </Button>
+
             <div className="my-4">
               <SkillDom
-                label="Domains"
-                heading="Filter by domain"
-                checkboxLabels={domains}
-                selectedValues={filters.domain}
+                label="ProjectDomain"
+                heading="Filter by Project Domains"
+                checkboxLabels={projects.map((project) => project.label)}
+                selectedValues={filters.projectDomain}
                 setSelectedValues={(values) =>
-                  handleFilterChange('domain', values)
+                  handleFilterChange('projectDomain', values)
                 }
               />
             </div>
+
             <div className="mb-4">
               <SkillDom
                 label="Skills"
-                heading="Filter by skills"
+                heading="Filter by Skills"
                 checkboxLabels={skills}
                 selectedValues={filters.skills}
                 setSelectedValues={(values) =>
@@ -276,12 +278,12 @@ const Market: React.FC = () => {
 
             <div className="mb-4">
               <SkillDom
-                label="ProjectDomain"
-                heading="Filter by projects-domains"
-                checkboxLabels={projects.map((project) => project.label)}
-                selectedValues={filters.projectDomain}
+                label="Domains"
+                heading="Filter by Domains"
+                checkboxLabels={domains}
+                selectedValues={filters.domain}
                 setSelectedValues={(values) =>
-                  handleFilterChange('projectDomain', values)
+                  handleFilterChange('domain', values)
                 }
               />
             </div>
@@ -309,7 +311,7 @@ const Market: React.FC = () => {
 
       {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
-          <div className="bg-white rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+          <div className="bg-secondary rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
             <div className="overflow-y-auto p-4 flex-grow">
               <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom

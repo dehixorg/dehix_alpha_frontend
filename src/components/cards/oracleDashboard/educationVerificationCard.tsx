@@ -84,7 +84,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await axiosInstance.put(`/freelancer/${_id}/oracle?doc_type=education`, {
+    await axiosInstance.put(`/verification/${_id}/oracle?doc_type=education`, {
       comments: data.comment,
       verification_status: data.type,
     });
