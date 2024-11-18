@@ -57,24 +57,34 @@ interface Project {
 
 const onboardingSteps: Step[] = [
   {
-    target: '.earning', // Target sidebar menu
-    content: 'This is your total earning card.',
-    placement: 'bottom',
-  },
-  {
-    target: '.active-project', // Target search bar
+    target: '.Dashboard', // Target search bar
     content: 'Here you can see your active project stats.',
-    placement: 'bottom',
+    placement: 'right',
   },
   {
-    target: '.pending-project', // Target the "Active Projects" card
+    target: '.Market', // Target the "Active Projects" card
     content: 'Here you can see your pending project stats.',
-    placement: 'bottom',
+    placement: 'right',
   },
   {
-    target: '.create-meet-btn', // Target the "Create Meet" button
+    target: '.Projects', // Target the "Create Meet" button
     content: 'You can schedule an interview here.',
-    placement: 'top',
+    placement: 'right',
+  },
+  {
+    target: '.Analytics', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Interviews', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.ScheduleInterviews', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
   },
 ];
 
