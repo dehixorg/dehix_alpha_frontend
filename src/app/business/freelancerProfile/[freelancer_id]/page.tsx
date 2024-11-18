@@ -21,6 +21,7 @@ interface UserProfile {
   firstName: string;
   lastName: string;
   userName: string;
+  profilepic?: string;
   email: string;
   dob: string;
   linkedin?: string;
@@ -29,7 +30,6 @@ interface UserProfile {
   connects?: string;
   workExperience?: string;
   description?: string;
-  avatar?: string;
   professionalInfo?: {
     jobTitle?: string;
     company?: string;
@@ -132,7 +132,9 @@ export default function FreelancerProfile() {
               ) : (
                 <Avatar className="w-24 h-24 rounded-full mr-6">
                   <AvatarImage
-                    src={user?.avatar || '/placeholder.svg?height=80&width=80'}
+                    src={
+                      user?.profilepic || '/placeholder.svg?height=80&width=80'
+                    }
                     alt="Null"
                   />
                   <AvatarFallback>{`${user?.firstName?.[0] || 'J'}${user?.lastName?.[0] || 'D'}`}</AvatarFallback>
