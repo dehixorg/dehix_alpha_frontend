@@ -180,6 +180,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
+        setCurrSkills(userResponse.data.skills);
+        setCurrDomains(userResponse.data.domain);
+        setCurrProjectDomains(userResponse.data.projectDomain);
+
         form.reset({
           firstName: userResponse.data.firstName || '',
           lastName: userResponse.data.lastName || '',
