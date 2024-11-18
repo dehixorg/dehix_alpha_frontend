@@ -214,7 +214,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 <FormItem>
                   <FormLabel>Work From</FormLabel>
                   <FormControl>
-                    <Input type="date"  max={currentDate} {...field} />
+                    <Input type="date" max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the start date</FormDescription>
                   <FormMessage />
