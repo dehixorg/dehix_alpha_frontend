@@ -74,6 +74,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     if (isDialogOpen) {
       form.reset({
@@ -119,6 +121,8 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         title: 'Error',
         description: 'Failed to add education. Please try again later.',
       });
+    } finally {
+      setLoading(false); // Reset loading state after submission completes
     }
   }
 
@@ -192,7 +196,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the start date</FormDescription>
                   <FormMessage />
