@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
-// import { SkillDialog } from '@/components/dialogs/skillDialog';
+import SkillDialog from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -32,7 +32,7 @@ interface Domain {
 }
 interface SkillFormData {
   name: string;
-  experience: string;
+  experience: number;
   level: string;
 }
 
@@ -45,7 +45,7 @@ interface DomainFormData {
 interface SkillData {
   _id?: string;
   name: string;
-  experience: string;
+  experience: number;
   level: string;
   interviewStatus: string;
 }
@@ -283,7 +283,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             >
               <Plus className="mr-2 h-4 w-4" /> Add Skill
             </Button>
-            {/* <SkillDialog
+            <SkillDialog
               open={openSkillDialog}
               onClose={() => setOpenSkillDialog(false)}
               onSubmit={onSubmitSkill}
@@ -291,7 +291,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               levels={levels}
               defaultValues={editingSkill || undefined}
               loading={loading}
-            /> */}
+            />
           </div>
           <Table>
             <TableHeader>
@@ -326,7 +326,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>{skill.name}</TableCell>
                       <TableCell>{skill.level}</TableCell>
                       <TableCell>
-                        {skill.experience.length > 0
+                        {skill.experience > 0
                           ? skill.experience + 'years'
                           : ''}
                       </TableCell>

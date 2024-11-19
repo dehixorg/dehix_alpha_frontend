@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+// SkillDialog.tsx
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -7,20 +8,11 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogFooter,
+  DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectTrigger,
@@ -28,36 +20,38 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
-// Validation schema using Zod
-const SkillSchema = z.object({
-  name: z.string().min(1, 'Skill is required'),
-  experience: z.preprocess(
-    (val) => {
-      const parsed = parseFloat(val as string);
-      return isNaN(parsed) ? 0 : parsed; // Ensure invalid input is converted to 0
-    },
-    z
-      .number()
-      .min(0, 'Experience must be a non-negative number')
-      .max(50, "Experience can't exceed 50"),
-  ),
-  level: z.string().min(1, 'Level is required'),
-});
-
-type SkillFormData = z.infer<typeof SkillSchema>;
+interface SkillFormData {
+  name: string;
+  experience: number;
+  level: string;
+}
 
 interface SkillDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: SkillFormData) => void;
+  onSubmit: (data: SkillFormData) => Promise<void>;
   skillOptions: Array<{ label: string }>;
   levels: string[];
   defaultValues?: SkillFormData;
   loading: boolean;
 }
 
-export const SkillDialog: React.FC<SkillDialogProps> = ({
+const SkillSchema = z.object({
+  name: z.string().min(1, 'Skill is required'),
+  experience: z
+    .preprocess(
+      (val) => parseFloat(val as string),
+      z
+        .number()
+        .min(0, 'Experience must be a non-negative number')
+        .max(50, "Experience can't exceed 50")
+    ),
+  level: z.string().min(1, 'Level is required'),
+});
+
+const SkillDialog: React.FC<SkillDialogProps> = ({
   open,
   onClose,
   onSubmit,
@@ -66,25 +60,20 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
   defaultValues,
   loading,
 }) => {
-  // Initialize the form with react-hook-form and Zod resolver for validation
-  const form = useForm<SkillFormData>({
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<SkillFormData>({
     resolver: zodResolver(SkillSchema),
-    defaultValues: defaultValues || { name: '', experience: 0, level: '' },
-    mode: 'all',
+    defaultValues,
   });
 
-  // Reset form values if defaultValues change or when dialog is opened
-  useEffect(() => {
-    if (defaultValues) {
-      form.reset(defaultValues);
-    }
-  }, [defaultValues, form]);
-
-  // Handle form submission
   const handleFormSubmit = (data: SkillFormData) => {
-    onSubmit(data); // Submit data to parent
-    form.reset(); // Reset form fields after submission
-    onClose(); // Close the dialog
+    onSubmit(data);
+    reset();
+    onClose();
   };
 
   return (
@@ -95,107 +84,91 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
             {defaultValues ? 'Edit Skill' : 'Add Skill'}
           </DialogTitle>
           <DialogDescription>
-            Select a skill, enter your experience, and choose the level.
+            Select a skill and provide your experience and level.
           </DialogDescription>
         </DialogHeader>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleFormSubmit)}
-            className="space-y-6 mt-4"
-          >
-            {/* Skill Selection and Experience */}
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label>Skill</Label>
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Select {...field}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select a skill" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {skillOptions.map((skill, idx) => (
-                              <SelectItem key={idx} value={skill.label}>
-                                {skill.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
+          <div className="space-y-4">
+            {/* Name Field */}
+            <Controller
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a skill" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {skillOptions.map((skill, idx) => (
+                        <SelectItem key={idx} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.name && (
+                    <p className="text-red-500 text-sm">{errors.name.message}</p>
                   )}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Experience</Label>
-                <FormField
-                  control={form.control}
-                  name="experience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          min="0"
-                          step="1"
-                          placeholder="Years of experience"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                </>
+              )}
+            />
+
+            {/* Experience Field */}
+            <Controller
+              control={control}
+              name="experience"
+              render={({ field }) => (
+                <>
+                  <Input
+                    {...field}
+                    placeholder="Years of experience"
+                    type="number"
+                    min="0"
+                  />
+                  {errors.experience && (
+                    <p className="text-red-500 text-sm">
+                      {errors.experience.message}
+                    </p>
                   )}
-                />
-              </div>
-            </div>
+                </>
+              )}
+            />
 
-            {/* Level Selection */}
-            <div className="space-y-2">
-              <Label>Level</Label>
-              <FormField
-                control={form.control}
-                name="level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Select {...field}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {levels.map((level, idx) => (
-                            <SelectItem key={idx} value={level}>
-                              {level}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Submit Button */}
-            <DialogFooter>
-              <Button className="w-full" type="submit" disabled={loading}>
-                {loading
-                  ? 'Loading...'
-                  : defaultValues
-                    ? 'Update Skill'
-                    : 'Add Skill'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            {/* Level Field */}
+            <Controller
+              control={control}
+              name="level"
+              render={({ field }) => (
+                <>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {levels.map((level, idx) => (
+                        <SelectItem key={idx} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.level && (
+                    <p className="text-red-500 text-sm">{errors.level.message}</p>
+                  )}
+                </>
+              )}
+            />
+          </div>
+          <DialogFooter>
+            <Button className="mt-3" type="submit" disabled={loading}>
+              {defaultValues ? 'Update' : 'Add'} Skill
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default SkillDialog;
