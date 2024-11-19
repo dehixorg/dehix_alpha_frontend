@@ -326,9 +326,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>{skill.name}</TableCell>
                       <TableCell>{skill.level}</TableCell>
                       <TableCell>
-                        {skill.experience > 0
-                          ? skill.experience + 'years'
-                          : ''}
+                        {skill.experience > 0 ? skill.experience + 'years' : ''}
                       </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(skill.interviewStatus)}>

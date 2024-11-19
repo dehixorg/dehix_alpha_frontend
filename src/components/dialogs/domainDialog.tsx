@@ -40,14 +40,13 @@ interface DomainDialogProps {
 
 const DomainSchema = z.object({
   name: z.string().min(1, 'Domain is required'),
-  experience: z
-    .preprocess(
-      (val) => parseFloat(val as string),
-      z
-        .number()
-        .min(0, 'Experience must be a non-negative number')
-        .max(50, "Experience can't exceed 50")
-    ),
+  experience: z.preprocess(
+    (val) => parseFloat(val as string),
+    z
+      .number()
+      .min(0, 'Experience must be a non-negative number')
+      .max(50, "Experience can't exceed 50"),
+  ),
   level: z.string().min(1, 'Level is required'),
 });
 
@@ -108,7 +107,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     </SelectContent>
                   </Select>
                   {errors.name && (
-                    <p className="text-red-500 text-sm">{errors.name.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.name.message}
+                    </p>
                   )}
                 </>
               )}
@@ -154,7 +155,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     </SelectContent>
                   </Select>
                   {errors.level && (
-                    <p className="text-red-500 text-sm">{errors.level.message}</p>
+                    <p className="text-red-500 text-sm">
+                      {errors.level.message}
+                    </p>
                   )}
                 </>
               )}
