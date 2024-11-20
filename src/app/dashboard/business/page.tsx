@@ -20,7 +20,6 @@ import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
-import InterviewCard from '@/components/shared/interviewCard';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
