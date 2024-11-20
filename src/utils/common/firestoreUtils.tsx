@@ -7,6 +7,9 @@ import {
   setDoc,
   FirestoreError,
   addDoc,
+  orderBy,
+  QuerySnapshot,
+  query,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
@@ -39,14 +42,23 @@ export function subscribeToFirestoreDoc(
  */
 export function subscribeToFirestoreCollection(
   collectionPath: string,
-  callback: (data: DocumentData[]) => void,
+  callback: (data: { id: string; [key: string]: any }[]) => void,
 ) {
+  // Create a collection reference
   const collectionRef = collection(db, collectionPath);
-  return onSnapshot(collectionRef, (snapshot) => {
+
+  // Create a query that orders the documents by the timestamp field in ascending order
+  const orderedQuery = query(collectionRef, orderBy('timestamp', 'asc'));
+
+  // Subscribe to the query with onSnapshot
+  return onSnapshot(orderedQuery, (snapshot: QuerySnapshot<DocumentData>) => {
+    // Map the snapshot to an array of document data with their ID
     const data = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    // Pass the ordered data to the callback function
     callback(data);
   });
 }

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Send } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { DocumentData } from 'firebase/firestore';
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import {
   addDataToFirestore,
   subscribeToFirestoreDoc,
+  subscribeToFirestoreCollection,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
@@ -28,23 +30,20 @@ type User = {
 type Message = {
   role: 'user' | 'agent';
   content: string;
+  timestamp: string;
 };
 
 interface CardsChatProps {
-  initialMessages?: Message[];
   conversationId: string;
 }
 
-export function CardsChat({
-  initialMessages = [],
-  conversationId,
-}: CardsChatProps) {
+export function CardsChat({ conversationId }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = React.useState<User>({
     userName: '',
     email: '',
     avatar: '',
   });
-  const [messages, setMessages] = React.useState<Message[]>(initialMessages);
+  const [messages, setMessages] = React.useState<DocumentData[]>([]);
   const [input, setInput] = React.useState('');
   const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
@@ -52,16 +51,15 @@ export function CardsChat({
   async function sendMessage(
     conversationId: string,
     message: Message,
-    setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+    setMessages: React.Dispatch<React.SetStateAction<DocumentData[]>>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
     try {
       const datentime = new Date().toISOString();
-      const dateOnly = datentime.split('T')[0]; // Extract the date portion (YYYY-MM-DD)
 
       // Add the message to Firestore
       const messageId = await addDataToFirestore(
-        `conversations/${conversationId}/${dateOnly}`, // Firestore sub-collection path with date
+        `conversations/${conversationId}/messages`, // Updated to sub-collection messages
         {
           ...message,
           timestamp: datentime, // Include a timestamp
@@ -70,9 +68,6 @@ export function CardsChat({
 
       if (messageId) {
         console.log('Message sent with ID:', messageId);
-
-        // Optimistically update the local state
-        setMessages((prevMessages) => [...prevMessages, message]);
         setInput('');
       } else {
         console.error('Failed to send message');
@@ -83,10 +78,11 @@ export function CardsChat({
   }
 
   React.useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    let unsubscribeConversation: (() => void) | undefined;
+    let unsubscribeMessages: (() => void) | undefined;
 
     const fetchData = async () => {
-      unsubscribe = subscribeToFirestoreDoc(
+      unsubscribeConversation = subscribeToFirestoreDoc(
         'conversations',
         conversationId,
         async (data) => {
@@ -111,15 +107,22 @@ export function CardsChat({
           }
         },
       );
+
+      // Subscribe to messages sub-collection
+      unsubscribeMessages = subscribeToFirestoreCollection(
+        `conversations/${conversationId}/messages`, // Sub-collection for messages
+        (messagesData) => {
+          setMessages(messagesData); // Update messages state with fetched messages
+        },
+      );
     };
 
     fetchData();
 
-    // Cleanup subscription on component unmount
+    // Cleanup subscriptions on component unmount
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      if (unsubscribeConversation) unsubscribeConversation();
+      if (unsubscribeMessages) unsubscribeMessages();
     };
   }, [conversationId, user.uid]);
 
@@ -168,6 +171,7 @@ export function CardsChat({
               const newMessage: Message = {
                 role: 'user',
                 content: input,
+                timestamp: new Date().toISOString(),
               };
 
               // Use the sendMessage function
