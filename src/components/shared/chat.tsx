@@ -2,7 +2,14 @@ import * as React from 'react';
 import { Send, LoaderCircle } from 'lucide-react'; // Import LoaderCircle for the spinner
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'; // Import Tooltip components
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -177,19 +184,36 @@ export function CardsChat({ conversationId }: CardsChatProps) {
           <CardContent>
             {/* Show loading spinner while fetching data */}
             <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
-                    message.senderId === user.uid
-                      ? 'ml-auto bg-primary text-primary-foreground'
-                      : 'bg-muted',
-                  )}
-                >
-                  {message.content}
-                </div>
-              ))}
+              {messages.map((message, index) => {
+                const readableTimestamp =
+                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      'flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
+                      message.senderId === user.uid
+                        ? 'ml-auto bg-primary text-primary-foreground'
+                        : 'bg-muted',
+                    )}
+                  >
+                    {/* Tooltip for human-readable timestamp */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center break-words whitespace-normal">
+                            {message.content}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" sideOffset={10}>
+                          <p>{readableTimestamp}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
           <CardFooter>
