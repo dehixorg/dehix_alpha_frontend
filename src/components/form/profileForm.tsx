@@ -160,7 +160,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
   const handleDeleteProjDomain = (projectDomainToDelete: string) => {
-    setCurrDomains(
+    setCurrProjectDomains(
       currProjectDomains.filter(
         (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
       ),
