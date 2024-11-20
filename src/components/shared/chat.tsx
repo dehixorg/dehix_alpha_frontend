@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Check, Plus, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,32 +11,16 @@ import {
   CardFooter,
   CardHeader,
 } from '@/components/ui/card';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  addDataToFirestore,
+  subscribeToFirestoreDoc,
+} from '@/utils/common/firestoreUtils';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
 
 type User = {
-  name: string;
+  userName: string;
   email: string;
   avatar: string;
 };
@@ -46,21 +31,97 @@ type Message = {
 };
 
 interface CardsChatProps {
-  primaryUser: User;
   initialMessages?: Message[];
-  users: User[];
+  conversationId: string;
 }
 
 export function CardsChat({
-  primaryUser,
   initialMessages = [],
-  users,
+  conversationId,
 }: CardsChatProps) {
-  const [open, setOpen] = React.useState(false);
-  const [selectedUsers, setSelectedUsers] = React.useState<User[]>([]);
+  const [primaryUser, setPrimaryUser] = React.useState<User>({
+    userName: '',
+    email: '',
+    avatar: '',
+  });
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [input, setInput] = React.useState('');
   const inputLength = input.trim().length;
+  const user = useSelector((state: RootState) => state.user);
+
+  async function sendMessage(
+    conversationId: string,
+    message: Message,
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+    setInput: React.Dispatch<React.SetStateAction<string>>,
+  ) {
+    try {
+      const datentime = new Date().toISOString();
+      const dateOnly = datentime.split('T')[0]; // Extract the date portion (YYYY-MM-DD)
+
+      // Add the message to Firestore
+      const messageId = await addDataToFirestore(
+        `conversations/${conversationId}/${dateOnly}`, // Firestore sub-collection path with date
+        {
+          ...message,
+          timestamp: datentime, // Include a timestamp
+        },
+      );
+
+      if (messageId) {
+        console.log('Message sent with ID:', messageId);
+
+        // Optimistically update the local state
+        setMessages((prevMessages) => [...prevMessages, message]);
+        setInput('');
+      } else {
+        console.error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  }
+
+  React.useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
+    const fetchData = async () => {
+      unsubscribe = subscribeToFirestoreDoc(
+        'conversations',
+        conversationId,
+        async (data) => {
+          if (data) {
+            // Identify the primary UID (the other participant)
+            const primaryUid = data.participants.find(
+              (participant: string) => participant !== user.uid,
+            );
+
+            if (primaryUid) {
+              try {
+                const response = await axiosInstance.get(
+                  `/freelancer/${primaryUid}`,
+                );
+                setPrimaryUser(response.data);
+                console.log('Conversation data:', data);
+                console.log('Primary User:', response.data);
+              } catch (error) {
+                console.error('Error fetching primary user:', error);
+              }
+            }
+          }
+        },
+      );
+    };
+
+    fetchData();
+
+    // Cleanup subscription on component unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [conversationId, user.uid]);
 
   return (
     <>
@@ -69,33 +130,17 @@ export function CardsChat({
           <div className="flex items-center space-x-4">
             <Avatar>
               <AvatarImage src={primaryUser.avatar} alt="Image" />
-              <AvatarFallback>{primaryUser.name[0]}</AvatarFallback>
+              <AvatarFallback>{primaryUser.userName}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-sm font-medium leading-none">
-                {primaryUser.name}
+                {primaryUser.userName}
               </p>
               <p className="text-sm text-muted-foreground">
                 {primaryUser.email}
               </p>
             </div>
           </div>
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="ml-auto rounded-full"
-                  onClick={() => setOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">New message</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent sideOffset={10}>New message</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -119,14 +164,14 @@ export function CardsChat({
             onSubmit={(event) => {
               event.preventDefault();
               if (inputLength === 0) return;
-              setMessages([
-                ...messages,
-                {
-                  role: 'user',
-                  content: input,
-                },
-              ]);
-              setInput('');
+
+              const newMessage: Message = {
+                role: 'user',
+                content: input,
+              };
+
+              // Use the sendMessage function
+              sendMessage(conversationId, newMessage, setMessages, setInput);
             }}
             className="flex w-full items-center space-x-2"
           >
@@ -145,89 +190,6 @@ export function CardsChat({
           </form>
         </CardFooter>
       </Card>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-0 p-0 outline-none">
-          <DialogHeader className="px-4 pb-4 pt-5">
-            <DialogTitle>New message</DialogTitle>
-            <DialogDescription>
-              Invite a user to this thread. This will create a new group
-              message.
-            </DialogDescription>
-          </DialogHeader>
-          <Command className="overflow-hidden rounded-t-none border-t">
-            <CommandInput placeholder="Search user..." />
-            <CommandList>
-              <CommandEmpty>No users found.</CommandEmpty>
-              <CommandGroup className="p-2">
-                {users.map((user) => (
-                  <CommandItem
-                    key={user.email}
-                    className="flex items-center px-2"
-                    onSelect={() => {
-                      if (selectedUsers.includes(user)) {
-                        return setSelectedUsers(
-                          selectedUsers.filter(
-                            (selectedUser) => selectedUser !== user,
-                          ),
-                        );
-                      }
-
-                      return setSelectedUsers(
-                        [...users].filter((u) =>
-                          [...selectedUsers, user].includes(u),
-                        ),
-                      );
-                    }}
-                  >
-                    <Avatar>
-                      <AvatarImage src={user.avatar} alt="Image" />
-                      <AvatarFallback>{user.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="ml-2">
-                      <p className="text-sm font-medium leading-none">
-                        {user.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                    {selectedUsers.includes(user) ? (
-                      <Check className="ml-auto flex h-5 w-5 text-primary" />
-                    ) : null}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-          <DialogFooter className="flex items-center border-t p-4 sm:justify-between">
-            {selectedUsers.length > 0 ? (
-              <div className="flex -space-x-2 overflow-hidden">
-                {selectedUsers.map((user) => (
-                  <Avatar
-                    key={user.email}
-                    className="inline-block border-2 border-background"
-                  >
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>{user.name[0]}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Select users to add to this thread.
-              </p>
-            )}
-            <Button
-              disabled={selectedUsers.length < 2}
-              onClick={() => {
-                setOpen(false);
-              }}
-            >
-              Continue
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

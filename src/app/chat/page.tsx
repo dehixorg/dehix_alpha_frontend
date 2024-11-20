@@ -15,18 +15,10 @@ const users = [
   },
 ];
 
-const initialMessages = [
-  { role: 'agent', content: 'Hi, how can I help you today?' },
-  { role: 'user', content: "I'm having trouble with my account." },
-];
 const HomePage = () => {
   return (
     <>
-      <CardsChat
-        primaryUser={primaryUser}
-        initialMessages={initialMessages}
-        users={users}
-      />
+      <CardsChat initialMessages={[]} conversationId="1" />
     </>
   );
 };
