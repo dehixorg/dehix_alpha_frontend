@@ -44,49 +44,51 @@ export default function DropdownProfile() {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="overflow-hidden rounded-full"
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL} alt="@shadcn" />
-            <AvatarFallback>
-              <UserIcon size={16} />
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <Link href="/dashboard/freelancer">
-          <DropdownMenuItem>Home</DropdownMenuItem>
-        </Link>
-        <div>
-          {userType === 'freelancer' ? (
-            <Link href="/freelancer/settings/personal-info">
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-            </Link>
-          ) : userType === 'business' ? (
-            <Link href="/business/settings/business-info">
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-            </Link>
-          ) : (
-            <p>Loading...</p>
-          )}
-        </div>
-        <Link href="/settings/support">
-          <DropdownMenuItem>Support</DropdownMenuItem>
-        </Link>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut size={18} className="mr-2" />
-          Logout
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="Dropdown">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="overflow-hidden rounded-full"
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.photoURL} alt="@shadcn" />
+              <AvatarFallback>
+                <UserIcon size={16} />
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <Link href="/dashboard/freelancer">
+            <DropdownMenuItem>Home</DropdownMenuItem>
+          </Link>
+          <div>
+            {userType === 'freelancer' ? (
+              <Link href="/freelancer/settings/personal-info">
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+              </Link>
+            ) : userType === 'business' ? (
+              <Link href="/business/settings/business-info">
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+              </Link>
+            ) : (
+              <p>Loading...</p>
+            )}
+          </div>
+          <Link href="/settings/support">
+            <DropdownMenuItem>Support</DropdownMenuItem>
+          </Link>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut size={18} className="mr-2" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

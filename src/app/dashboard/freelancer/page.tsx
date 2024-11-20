@@ -62,6 +62,26 @@ const onboardingSteps: Step[] = [
     placement: 'right',
   },
   {
+    target: '.earning', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.active-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.pending-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.Dropdown', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
     target: '.Market', // Target the "Active Projects" card
     content: 'Here you can see your pending project stats.',
     placement: 'right',
@@ -85,6 +105,21 @@ const onboardingSteps: Step[] = [
     target: '.ScheduleInterviews', // Target the "Create Meet" button
     content: 'You can schedule an interview here.',
     placement: 'right',
+  },
+  {
+    target: '.Oracle', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Talent', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Settings', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'top',
   },
 ];
 
@@ -154,28 +189,28 @@ export default function Dashboard() {
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-                <Card className="sm:col-span-2 flex flex-col h-full earning">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-4xl mb-3">
-                      {loading ? <Skeleton className="h-10 w-20" /> : '0'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardFooter className="grid gap-4 grid-cols-4">
-                    <div className="col-span-3">
-                      <CardTitle>Total Earnings</CardTitle>
-                      <CardDescription className="max-w-lg text-balance leading-relaxed">
-                        {loading ? (
-                          <Skeleton className="h-5 w-40" />
-                        ) : (
-                          'Your total earnings from projects.'
-                        )}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-end justify-end">
-                      <ChevronRight className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                  </CardFooter>
-                </Card>
+              <Card className="sm:col-span-2 flex flex-col h-full earning">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-4xl mb-3">
+                    {loading ? <Skeleton className="h-10 w-20" /> : '0'}
+                  </CardTitle>
+                </CardHeader>
+                <CardFooter className="grid gap-4 grid-cols-4">
+                  <div className="col-span-3">
+                    <CardTitle>Total Earnings</CardTitle>
+                    <CardDescription className="max-w-lg text-balance leading-relaxed">
+                      {loading ? (
+                        <Skeleton className="h-5 w-40" />
+                      ) : (
+                        'Your total earnings from projects.'
+                      )}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-end justify-end">
+                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                </CardFooter>
+              </Card>
               <div className="active-project">
                 <StatCard
                   title="Active Projects"
@@ -278,6 +313,17 @@ export default function Dashboard() {
         continuous
         showSkipButton
         callback={handleOnboardingComplete}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            arrowColor: '#5d615e',
+            backgroundColor: '#141414',
+            overlayColor: 'rgba(0, 0, 0, 0.9)', // Adjust opacity here
+            primaryColor: '#000',
+            textColor: '#fafcfb',
+            zIndex: 1000,
+          },
+        }}
       />
     </div>
   );
