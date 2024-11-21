@@ -58,12 +58,12 @@ interface Project {
 const onboardingSteps: Step[] = [
   {
     target: '.Dashboard', // Target search bar
-    content: 'Here you can see your active project stats.',
+    content: 'It is your main dashboard, Here you can see your activities.',
     placement: 'right',
   },
   {
     target: '.earning', // Target search bar
-    content: 'Here you can see your active project stats.',
+    content: 'Here you can see your Total earning.',
     placement: 'bottom',
   },
   {
@@ -73,52 +73,52 @@ const onboardingSteps: Step[] = [
   },
   {
     target: '.pending-project', // Target search bar
-    content: 'Here you can see your active project stats.',
+    content: 'Here you can see your pending project stats.',
     placement: 'bottom',
   },
   {
     target: '.Dropdown', // Target search bar
-    content: 'Here you can see your active project stats.',
+    content: 'Here you can log-out your profile and go to support.',
     placement: 'bottom',
   },
   {
     target: '.Market', // Target the "Active Projects" card
-    content: 'Here you can see your pending project stats.',
+    content: 'This is your market place, Where you can see job posting.',
     placement: 'right',
   },
   {
     target: '.Projects', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can see your active, pending, compeleted and rejected projects.',
     placement: 'right',
   },
   {
     target: '.Analytics', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can analyse your overall performace.',
     placement: 'right',
   },
   {
     target: '.Interviews', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can manage and track your skills and domains.',
     placement: 'right',
   },
   {
     target: '.ScheduleInterviews', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can add your relevant skills and domains to help us schedule the right interview for you.',
     placement: 'right',
   },
   {
     target: '.Oracle', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can verify others skills, experience, education and business.',
     placement: 'right',
   },
   {
     target: '.Talent', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can add your skills and domains to get hire directly from Dehix Talent.',
     placement: 'right',
   },
   {
     target: '.Settings', // Target the "Create Meet" button
-    content: 'You can schedule an interview here.',
+    content: 'Here you can manage your profile.',
     placement: 'top',
   },
 ];

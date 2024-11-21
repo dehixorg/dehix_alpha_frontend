@@ -9,6 +9,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import { Button } from '@/components/ui/button';
 
 export default function Talent() {
   return (
@@ -31,7 +32,10 @@ export default function Talent() {
               { label: 'Dehix Talent', link: '#' },
             ]}
           />
-          <div className="relative ml-auto flex-1 md:grow-0">
+          <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
+            <Button className="w-auto">Page Tour</Button>
+          </div>
+          <div className="relative flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <DropdownProfile />

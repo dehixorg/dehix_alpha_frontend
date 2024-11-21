@@ -11,6 +11,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
+import { Button } from '@/components/ui/button';
 
 export default function ProfilePage() {
   return (
@@ -36,7 +37,10 @@ export default function ProfilePage() {
               className="hidden sm:flex-1 sm:flex sm:items-center"
             />
           </div>
-          <div className="relative ml-auto flex-1 md:grow-0">
+          <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
+            <Button className="w-auto">Page Tour</Button>
+          </div>
+          <div className="relative flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <DropdownProfile />

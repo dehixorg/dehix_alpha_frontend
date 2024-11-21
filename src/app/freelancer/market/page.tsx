@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
+import Joyride, { Step } from 'react-joyride';
 
 interface FilterState {
   projects: string[];
@@ -78,6 +79,74 @@ interface ProjectsDomain {
   label: string;
 }
 
+const onboardingSteps: Step[] = [
+  {
+    target: '.Dashboard', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'right',
+  },
+  {
+    target: '.earning', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.active-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.pending-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.Dropdown', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.Market', // Target the "Active Projects" card
+    content: 'Here you can see your pending project stats.',
+    placement: 'right',
+  },
+  {
+    target: '.Projects', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Analytics', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Interviews', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.ScheduleInterviews', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Oracle', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Talent', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'right',
+  },
+  {
+    target: '.Settings', // Target the "Create Meet" button
+    content: 'You can schedule an interview here.',
+    placement: 'top',
+  },
+];
+
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -94,6 +163,7 @@ const Market: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const [pageTour, setPageTour] = useState(false);
 
   const handleFilterChange = (filterType: any, selectedValues: any) => {
     setFilters((prevFilters) => ({
@@ -202,6 +272,13 @@ const Market: React.FC = () => {
     setJobs((prevJobs) => prevJobs.filter((job) => job._id !== id));
   };
 
+  const handlePageTourComplete = (data: any) => {
+    const { status } = data;
+    if (status === 'finished' || status === 'skipped') {
+      setPageTour(false); // End the onboarding
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col sm:pl-6 pb-10">
       <SidebarMenu
@@ -223,7 +300,10 @@ const Market: React.FC = () => {
               { label: 'Freelancer Market', link: '#' },
             ]}
           />
-          <div className="relative ml-auto flex-1 md:grow-0">
+          <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
+            <Button className="w-auto" onClick={()=>{setPageTour(true)}}>Page Tour</Button>
+          </div>
+          <div className="relative flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <DropdownProfile />
@@ -366,6 +446,24 @@ const Market: React.FC = () => {
           </button>
         </div>
       )}
+      <Joyride
+        steps={onboardingSteps}
+        run={pageTour}
+        continuous
+        showSkipButton
+        callback={handlePageTourComplete}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            arrowColor: '#5d615e',
+            backgroundColor: '#141414',
+            overlayColor: 'rgba(0, 0, 0, 0.9)', // Adjust opacity here
+            primaryColor: '#000',
+            textColor: '#fafcfb',
+            zIndex: 1000,
+          },
+        }}
+      />
     </div>
   );
 };
