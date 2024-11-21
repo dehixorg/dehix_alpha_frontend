@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import Joyride, { Step } from 'react-joyride';
 
 import { Search } from '@/components/search';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
@@ -17,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
-import Joyride, { Step } from 'react-joyride';
 
 interface FilterState {
   projects: string[];
@@ -301,7 +301,14 @@ const Market: React.FC = () => {
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
-            <Button className="w-auto" onClick={()=>{setPageTour(true)}}>Page Tour</Button>
+            <Button
+              className="w-auto"
+              onClick={() => {
+                setPageTour(true);
+              }}
+            >
+              Page Tour
+            </Button>
           </div>
           <div className="relative flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />

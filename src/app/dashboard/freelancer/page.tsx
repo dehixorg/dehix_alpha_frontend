@@ -55,6 +55,53 @@ interface Project {
   team?: string[];
 }
 
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  email: string;
+  dob: string;
+  linkedin?: string;
+  github?: string;
+  personalWebsite?: string;
+  connects?: string;
+  workExperience?: string;
+  description?: string;
+  avatar?: string;
+  professionalInfo?: {
+    jobTitle?: string;
+    company?: string;
+    workDescription?: string;
+    workFrom?: string;
+    workTo?: string;
+    githubRepoLink?: string;
+  };
+  skills?: { _id: string; name: string; level: string }[];
+  education?: {
+    degree?: string;
+    universityName?: string;
+    fieldOfStudy?: string;
+    startDate?: string;
+    endDate?: string;
+    grade?: string;
+  };
+  projects?: {
+    [key: string]: {
+      _id: string;
+      projectName: string;
+      description: string;
+      role: string;
+      techUsed: string[];
+      start: string;
+      end: string;
+      githubLink?: string;
+    };
+  };
+  linkedIn?: string;
+  website?: string;
+  onboardingStatus?: boolean;
+}
+
 const onboardingSteps: Step[] = [
   {
     target: '.Dashboard', // Target search bar
@@ -88,7 +135,8 @@ const onboardingSteps: Step[] = [
   },
   {
     target: '.Projects', // Target the "Create Meet" button
-    content: 'Here you can see your active, pending, compeleted and rejected projects.',
+    content:
+      'Here you can see your active, pending, compeleted and rejected projects.',
     placement: 'right',
   },
   {
@@ -103,17 +151,20 @@ const onboardingSteps: Step[] = [
   },
   {
     target: '.ScheduleInterviews', // Target the "Create Meet" button
-    content: 'Here you can add your relevant skills and domains to help us schedule the right interview for you.',
+    content:
+      'Here you can add your relevant skills and domains to help us schedule the right interview for you.',
     placement: 'right',
   },
   {
     target: '.Oracle', // Target the "Create Meet" button
-    content: 'Here you can verify others skills, experience, education and business.',
+    content:
+      'Here you can verify others skills, experience, education and business.',
     placement: 'right',
   },
   {
     target: '.Talent', // Target the "Create Meet" button
-    content: 'Here you can add your skills and domains to get hire directly from Dehix Talent.',
+    content:
+      'Here you can add your skills and domains to get hire directly from Dehix Talent.',
     placement: 'right',
   },
   {
@@ -126,6 +177,7 @@ const onboardingSteps: Step[] = [
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [runOnboarding, setRunOnboarding] = useState(false); // Onboarding state
@@ -133,10 +185,18 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
+        const projectData = await axiosInstance.get(
           `/freelancer/${user.uid}/project`,
         );
-        setProjects(response.data.data);
+        if (projectData.status === 200 && projectData.data.data) {
+          setProjects(projectData?.data?.data);
+        }
+        const profileInfo = await axiosInstance.get(
+          `/freelancer/${user.uid}/profile-info`,
+        );
+        if (profileInfo.status === 200 && profileInfo.data) {
+          setUserData(profileInfo?.data);
+        }
       } catch (error) {
         console.error('API Error:', error);
       } finally {
@@ -145,18 +205,19 @@ export default function Dashboard() {
     };
 
     fetchData();
-
-    // Check if the user has already completed the onboarding
-    const hasCompletedOnboarding = localStorage.getItem('completedOnboarding');
-    if (!hasCompletedOnboarding) {
-      setRunOnboarding(true); // Start the onboarding tour
-    }
   }, [user.uid]);
+
+  useEffect(() => {
+    // Check onboarding status only after userData is updated
+    if (userData?.onboardingStatus === false) {
+      setRunOnboarding(true); // Start the onboarding tour
+      console.log(`onboardingStatus: ${userData.onboardingStatus}`);
+    }
+  }, [userData]);
 
   const handleOnboardingComplete = (data: any) => {
     const { status } = data;
     if (status === 'finished' || status === 'skipped') {
-      localStorage.setItem('completedOnboarding', 'true');
       setRunOnboarding(false); // End the onboarding
     }
   };

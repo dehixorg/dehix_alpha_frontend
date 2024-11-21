@@ -26,18 +26,18 @@ export default function ProfilePage() {
         active="Profile"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="Profile"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                { label: 'Interview Profile', link: '#' },
-              ]}
-            />
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
+          <CollapsibleSidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Profile"
+          />
+          <Breadcrumb
+            items={[
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
+              { label: 'Interview Profile', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
             <Button className="w-auto">Page Tour</Button>
           </div>
