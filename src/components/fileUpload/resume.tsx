@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-
 import { Button } from '../ui/button';
-
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -18,16 +16,16 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(url);
   const [isUploading, setIsUploading] = useState(false);
-  const [isUploaded, setIsUploaded] = useState(false); // Track if the resume has been uploaded
+  const [isUploaded, setIsUploaded] = useState(false);  // Track if the resume has been uploaded
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && allowedResumeFormats.includes(file.type)) {
       if (file.size <= maxResumeSize) {
         setSelectedResume(file);
-        setIsUploaded(false); // Reset upload state when selecting a new file
+        setIsUploaded(false);  // Reset upload state when selecting a new file
         setPreviewUrl(
-          file.type === 'image/png' ? URL.createObjectURL(file) : null,
+          file.type === 'image/png' ? URL.createObjectURL(file) : null
         );
       } else {
         toast({
@@ -64,7 +62,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
       const { Location } = postResponse.data.data;
 
@@ -73,8 +71,10 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
       });
 
       if (putResponse.status === 200) {
-        setPreviewUrl(selectedResume.type === 'image/png' ? Location : null);
-        setIsUploaded(true); // Set uploaded state to true
+        setPreviewUrl(
+          selectedResume.type === 'image/png' ? Location : null
+        );
+        setIsUploaded(true);  // Set uploaded state to true
         toast({
           title: 'Success',
           description: 'Resume uploaded successfully!',
@@ -119,7 +119,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
           ) : (
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md w-full p-6">
               <Image
-                src="/upload-file.png" // Image path inside the public folder
+                src="/upload-file.png"  // Image path inside the public folder
                 alt="Upload Placeholder"
                 width={64}
                 height={64}
