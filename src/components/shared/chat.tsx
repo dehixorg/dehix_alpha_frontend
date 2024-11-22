@@ -160,11 +160,11 @@ export function CardsChat({ conversationId }: CardsChatProps) {
   return (
     <>
       {loading ? (
-        <div className="flex justify-center items-center p-5">
+        <div className="flex justify-center items-center p-5 col-span-2">
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card>
+        <Card className="col-span-2">
           <CardHeader className="flex flex-row items-center">
             <div className="flex items-center space-x-4">
               <Avatar>

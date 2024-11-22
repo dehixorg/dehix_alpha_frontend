@@ -1,4 +1,11 @@
-import { Boxes, Home, Settings, ShoppingCart, Users } from 'lucide-react';
+import {
+  Boxes,
+  Home,
+  MessageSquare,
+  Settings,
+  ShoppingCart,
+  Users,
+} from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
@@ -22,6 +29,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/business/talent',
     icon: <Users className="h-5 w-5" />,
     label: 'Dehix Talent',
+  },
+  {
+    href: '/chat',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'chats',
   },
 ];
 
