@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { DocumentData } from 'firebase/firestore';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -89,10 +89,10 @@ const HomePage = () => {
           </header>
           <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             {loading ? (
-              <div className="flex justify-center items-center p-5">
+              <div className="col-span-3 flex justify-center items-center p-5">
                 <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
               </div>
-            ) : (
+            ) : conversations.length > 0 ? (
               <>
                 <ChatList
                   conversations={conversations}
@@ -101,6 +101,14 @@ const HomePage = () => {
                 />
                 <CardsChat conversation={activeConversation} />
               </>
+            ) : (
+              <div className="col-span-3 flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
+                <MessageSquare className="w-10 h-10 mb-2" />
+                <p className="text-lg font-medium">No conversations found</p>
+                <p className="text-sm">
+                  Start a new chat or wait for others to connect!
+                </p>
+              </div>
             )}
           </main>
         </div>

@@ -132,6 +132,11 @@ export function CardsChat({ conversation }: CardsChatProps) {
     };
   }, [conversation, user.uid]);
 
+  // Return early if the conversation is undefined or null
+  if (!conversation) {
+    return null; // Don't display anything
+  }
+
   return (
     <>
       {loading ? (

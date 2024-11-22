@@ -25,7 +25,7 @@ export function ChatList({
   setConversation,
 }: ChatListProps) {
   return (
-    <Card className="h-full">
+    <Card>
       {conversations.length > 0 ? (
         <Table>
           <TableBody>
