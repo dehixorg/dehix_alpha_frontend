@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { DocumentData } from 'firebase/firestore';
 import { LoaderCircle } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -15,6 +16,7 @@ import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Search } from '@/components/search';
 import { ChatList } from '@/components/shared/chatList';
 import { subscribeToFirestoreCollection } from '@/utils/common/firestoreUtils';
+import { RootState } from '@/lib/store';
 
 // Define the Conversation interface to match the expected shape
 interface Conversation extends DocumentData {
@@ -24,6 +26,7 @@ interface Conversation extends DocumentData {
 }
 
 const HomePage = () => {
+  const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation>(
     conversations[0],
@@ -38,7 +41,11 @@ const HomePage = () => {
       unsubscribe = await subscribeToFirestoreCollection(
         'conversations',
         (data) => {
-          setConversations(data as Conversation[]);
+          // Explicitly cast data as Conversation[]
+          const filteredConversations = (data as Conversation[]).filter(
+            (conversation) => conversation.participants.includes(user.uid),
+          );
+          setConversations(filteredConversations);
           setLoading(false);
         },
       );
@@ -50,7 +57,7 @@ const HomePage = () => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [user.uid]);
 
   useEffect(() => {
     if (!activeConversation && conversations.length > 0) {
