@@ -33,7 +33,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/chat',
     icon: <MessageSquare className="h-5 w-5" />,
-    label: 'chats',
+    label: 'Chats',
   },
 ];
 

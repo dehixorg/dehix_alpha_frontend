@@ -25,7 +25,9 @@ interface Conversation extends DocumentData {
 
 const HomePage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<string>('');
+  const [activeConversation, setActiveConversation] = useState<Conversation>(
+    conversations[0],
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,9 +42,6 @@ const HomePage = () => {
           setLoading(false);
         },
       );
-      if (activeConversation !== '' && conversations) {
-        setActiveConversation(conversations[0]?.id);
-      }
     };
 
     fetchConversations();
@@ -53,20 +52,26 @@ const HomePage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!activeConversation && conversations.length > 0) {
+      setActiveConversation(conversations[0]);
+    }
+  }, [conversations, activeConversation]);
+
   return (
     <>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <SidebarMenu
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          active=""
+          active="Chats"
         />
         <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <CollapsibleSidebarMenu
               menuItemsTop={menuItemsTop}
               menuItemsBottom={menuItemsBottom}
-              active=""
+              active="Chats"
             />
             <Breadcrumb items={[{ label: 'Chats', link: '/chat' }]} />
 
@@ -87,7 +92,7 @@ const HomePage = () => {
                   active={activeConversation}
                   setConversation={setActiveConversation}
                 />
-                <CardsChat conversationId={activeConversation} />
+                <CardsChat conversation={activeConversation} />
               </>
             )}
           </main>

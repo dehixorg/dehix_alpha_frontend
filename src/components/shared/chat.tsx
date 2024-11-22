@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 
+import { Conversation } from './chatList';
+
 import {
   TooltipProvider,
   Tooltip,
@@ -22,7 +24,6 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   addDataToFirestore,
-  subscribeToFirestoreDoc,
   subscribeToFirestoreCollection,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -41,10 +42,10 @@ type Message = {
 };
 
 interface CardsChatProps {
-  conversationId: string;
+  conversation: Conversation;
 }
 
-export function CardsChat({ conversationId }: CardsChatProps) {
+export function CardsChat({ conversation }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = React.useState<User>({
     userName: '',
     email: '',
@@ -59,7 +60,7 @@ export function CardsChat({ conversationId }: CardsChatProps) {
 
   // Function to send a message
   async function sendMessage(
-    conversationId: string,
+    conversation: Conversation,
     message: Message,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
@@ -69,7 +70,7 @@ export function CardsChat({ conversationId }: CardsChatProps) {
 
       // Add the message to Firestore
       const messageId = await addDataToFirestore(
-        `conversations/${conversationId}/messages`, // Updated to sub-collection messages
+        `conversations/${conversation?.id}/messages`, // Updated to sub-collection messages
         {
           ...message,
           timestamp: datentime, // Include a timestamp
@@ -91,71 +92,45 @@ export function CardsChat({ conversationId }: CardsChatProps) {
   }
 
   React.useEffect(() => {
-    let unsubscribeConversation: (() => void) | undefined;
+    const fetchPrimaryUser = async () => {
+      const primaryUid = conversation.participants.find(
+        (participant: string) => participant !== user.uid,
+      );
+
+      if (primaryUid) {
+        try {
+          const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
+          setPrimaryUser(response.data);
+          console.log('Conversation data:', conversation);
+          console.log('Primary User:', response.data);
+        } catch (error) {
+          console.error('Error fetching primary user:', error);
+        }
+      }
+    };
     let unsubscribeMessages: (() => void) | undefined;
 
-    const fetchData = async () => {
-      setLoading(true); // Set loading to true when fetching data
-
-      let conversationLoaded = false;
-      let messagesLoaded = false;
-
-      // Subscribe to conversation data
-      unsubscribeConversation = subscribeToFirestoreDoc(
-        'conversations',
-        conversationId,
-        async (data) => {
-          if (data) {
-            // Identify the primary UID (the other participant)
-            const primaryUid = data.participants.find(
-              (participant: string) => participant !== user.uid,
-            );
-
-            if (primaryUid) {
-              try {
-                const response = await axiosInstance.get(
-                  `/freelancer/${primaryUid}`,
-                );
-                setPrimaryUser(response.data);
-                console.log('Conversation data:', data);
-                console.log('Primary User:', response.data);
-              } catch (error) {
-                console.error('Error fetching primary user:', error);
-              }
-            }
-          }
-          conversationLoaded = true; // Mark conversation data as loaded
-
-          // If both data sources are loaded, set loading to false
-          if (conversationLoaded && messagesLoaded) {
-            setLoading(false);
-          }
-        },
-      );
-
-      // Subscribe to messages sub-collection
+    const fetchMessages = async () => {
+      setLoading(true); // Set loading to true when fetching messages
       unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversationId}/messages`, // Sub-collection for messages
+        `conversations/${conversation.id}/messages`, // Sub-collection for messages
         (messagesData) => {
           setMessages(messagesData); // Update messages state with fetched messages
-          messagesLoaded = true; // Mark messages data as loaded
-
-          // If both data sources are loaded, set loading to false
-          if (conversationLoaded && messagesLoaded) {
-            setLoading(false);
-          }
+          setLoading(false); // Set loading to false after messages are loaded
         },
       );
     };
 
-    fetchData();
+    if (conversation) {
+      fetchPrimaryUser();
+      fetchMessages();
+    }
 
-    // Cleanup subscriptions on component unmount
+    // Cleanup subscription on component unmount
     return () => {
-      if (unsubscribeConversation) unsubscribeConversation();
       if (unsubscribeMessages) unsubscribeMessages();
     };
-  }, [conversationId, user.uid]);
+  }, [conversation, user.uid]);
 
   return (
     <>
@@ -181,9 +156,9 @@ export function CardsChat({ conversationId }: CardsChatProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 overflow-y-auto mb-5">
             {/* Show loading spinner while fetching data */}
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-screen">
               {messages.map((message, index) => {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
@@ -229,7 +204,7 @@ export function CardsChat({ conversationId }: CardsChatProps) {
                 };
 
                 // Use the sendMessage function
-                sendMessage(conversationId, newMessage, setInput);
+                sendMessage(conversation, newMessage, setInput);
               }}
               className="flex w-full items-center space-x-2"
             >

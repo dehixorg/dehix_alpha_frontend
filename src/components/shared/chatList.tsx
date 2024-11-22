@@ -5,7 +5,7 @@ import { DocumentData } from 'firebase/firestore';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 
-interface Conversation extends DocumentData {
+export interface Conversation extends DocumentData {
   id: string;
   participants: string[];
   project_name?: string;
@@ -14,8 +14,8 @@ interface Conversation extends DocumentData {
 
 interface ChatListProps {
   conversations: Conversation[];
-  active: string;
-  setConversation: (activeConversation: string) => void;
+  active: Conversation;
+  setConversation: (activeConversation: Conversation) => void;
 }
 
 export function ChatList({
@@ -36,11 +36,11 @@ export function ChatList({
               <TableRow
                 key={conversation.id}
                 className={
-                  active === conversation.id
+                  active?.id === conversation.id
                     ? 'bg-muted'
                     : 'cursor-pointer hover:bg-muted'
                 }
-                onClick={() => setConversation(conversation.id)}
+                onClick={() => setConversation(conversation)}
               >
                 <TableCell>
                   {conversation.project_name}
