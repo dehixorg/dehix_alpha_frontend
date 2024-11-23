@@ -166,7 +166,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
               ) : bids && bids.length > 0 ? (
                 <div className="mt-4 space-y-3">
                   <h3 className="font-medium text-lg">{bids.length} Bids</h3>
-                  <div className="space-y-3 max-h-20 overflow-y-auto">
+                  <div className="space-y-3">
                     {' '}
                     {/* Scrollable Container */}
                     {bids.map((bid, index) => (
