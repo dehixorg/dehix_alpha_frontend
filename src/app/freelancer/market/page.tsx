@@ -158,7 +158,7 @@ const Market: React.FC = () => {
         );
         const queryString = constructQueryString(appliedFilters);
         const allJobs = await axiosInstance.get(
-          `/project/freelancer/${user.uid}/?${queryString}`,
+          `/project/freelancer/${user.uid}?${queryString}`,
         );
 
         const notInterestedProjects =

@@ -33,6 +33,13 @@ interface ProfileProps {
   bidExist: boolean;
 }
 
+interface Bid {
+  _id: string;
+  current_price: number;
+  description: string;
+  userName: string;
+}
+
 const ProfileCard: React.FC<ProfileProps> = ({
   profile,
   projectId,
@@ -42,11 +49,24 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // New state to track bid submission
+  const [bids, setBids] = React.useState<Bid[]>([]);
+  const [loadingBids, setLoadingBids] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+
+    const minBid = profile.minConnect || 0;
+    if ( parseInt(amount) < minBid) {
+      toast({
+        title: 'Invalid Bid',
+        description: `Bid amount must be at least $${minBid}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       await axiosInstance.post(`/bid`, {
@@ -73,6 +93,32 @@ const ProfileCard: React.FC<ProfileProps> = ({
       });
     }
   };
+
+  const fetchBids = async () => {
+    setLoadingBids(true);
+    try {
+      console.log(`Fetching bids for projectId=${projectId} and profileId=${profile._id}`);
+      const response = await axiosInstance.get(
+        `/bid/project/${projectId}/profile/${profile._id}/bid`
+      );
+  
+      const bidsData = response?.data?.data || [];
+      setBids(bidsData);
+    } catch (error) {
+      console.error('Error fetching bids:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load bids. Please try again.',
+      });
+    } finally {
+      setLoadingBids(false);
+    }
+  };
+  React.useEffect(() => {
+    if (dialogOpen) {
+      fetchBids();
+    }
+  }, [dialogOpen, profile._id]);
 
   const toggleShowMore = () => setShowMore(!showMore);
 
@@ -114,6 +160,51 @@ const ProfileCard: React.FC<ProfileProps> = ({
                   Click on bid if you want to bid for this profile.
                 </DialogDescription>
               </DialogHeader>
+              {loadingBids ? (
+                <p className="text-gray-500">Loading previous bids...</p>
+              ) : bids && bids.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  <h3 className="font-medium text-lg">{bids.length} Bids</h3>
+                  <div className="space-y-3">
+                    {bids.map((bid, index) => (
+                      <React.Fragment key={bid._id}>
+                        <div className="flex items-center justify-between p-2 text-sm">
+                          {/* Left: Avatar and Bid Content */}
+                          <div className="flex items-start space-x-3">
+                            {/* User Avatar Placeholder */}
+                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs">
+                              {bid.userName ? bid.userName[0].toUpperCase() : '?'}
+                            </div>
+
+                            {/* Bid Content */}
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium">{bid.userName}</p>
+                                <p className="text-xs text-gray-500">just now</p>
+                              </div>
+
+                              <p className="text-gray-700">{bid.description}</p>
+                            </div>
+                          </div>
+
+                          {/* Right: Amount */}
+                          <div className="text-green-600 font-semibold text-sm">
+                            ${bid.current_price}
+                          </div>
+                        </div>
+
+                        {/* Add a separator line between bids, but not after the last item */}
+                        {index < bids.length - 1 && (
+                          <div className="h-px bg-gray-300 mx-2"></div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500">No previous bids found.</p>
+              )}
+
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
