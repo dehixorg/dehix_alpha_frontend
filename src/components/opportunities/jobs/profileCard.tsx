@@ -38,6 +38,7 @@ interface Bid {
   current_price: number;
   description: string;
   userName: string;
+  createdAt: Date;
 }
 
 const ProfileCard: React.FC<ProfileProps> = ({
@@ -53,6 +54,39 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [loadingBids, setLoadingBids] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
+
+  const formatTimeAgo = (createdAt: string | Date): string => {
+    if (!createdAt) {
+      return "unknown time";
+    }
+  
+    const now = new Date();
+    const then = new Date(createdAt);
+    
+    if (isNaN(then.getTime())) {
+      return "unknown time";
+    }
+  
+    const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+  
+    if (diffInSeconds < 60) {
+      return "just now";
+    }
+  
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+    }
+  
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+    }
+  
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+  };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,45 +201,43 @@ const ProfileCard: React.FC<ProfileProps> = ({
                 <div className="mt-4 space-y-3">
                   <h3 className="font-medium text-lg">{bids.length} Bids</h3>
                   <div className="space-y-3">
-                    {' '}
                     {/* Scrollable Container */}
-                    {bids.map((bid, index) => (
-                      <React.Fragment key={bid._id}>
-                        <div className="flex items-center justify-between p-2 text-sm">
-                          {/* Left: Avatar and Bid Content */}
-                          <div className="flex items-start space-x-3">
-                            {/* User Avatar Placeholder */}
-                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs">
-                              {bid.userName
-                                ? bid.userName[0].toUpperCase()
-                                : '?'}
-                            </div>
-
-                            {/* Bid Content */}
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <p className="font-medium">{bid.userName}</p>
-                                <p className="text-xs text-gray-500">
-                                  just now
-                                </p>
+                    {bids.map((bid, index) => {
+                      const timeAgo = formatTimeAgo(bid.createdAt);
+                      return (
+                        <React.Fragment key={bid._id}>
+                          <div className="flex items-center justify-between p-2 text-sm">
+                            {/* Left: Avatar and Bid Content */}
+                            <div className="flex items-start space-x-3">
+                              {/* User Avatar Placeholder */}
+                              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs">
+                                {bid.userName ? bid.userName[0].toUpperCase() : "?"}
                               </div>
 
-                              <p className="text-gray-700">{bid.description}</p>
+                              {/* Bid Content */}
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <p className="font-medium">{bid.userName}</p>
+                                  <p className="text-xs text-gray-500">{timeAgo}</p>
+                                </div>
+
+                                <p className="text-gray-700">{bid.description}</p>
+                              </div>
+                            </div>
+
+                            {/* Right: Amount */}
+                            <div className="text-green-600 font-semibold text-sm">
+                              ${bid.current_price}
                             </div>
                           </div>
 
-                          {/* Right: Amount */}
-                          <div className="text-green-600 font-semibold text-sm">
-                            ${bid.current_price}
-                          </div>
-                        </div>
-
-                        {/* Add a separator line between bids, but not after the last item */}
-                        {index < bids.length - 1 && (
-                          <div className="h-px bg-gray-300 mx-2"></div>
-                        )}
-                      </React.Fragment>
-                    ))}
+                          {/* Add a separator line between bids, but not after the last item */}
+                          {index < bids.length - 1 && (
+                            <div className="h-px bg-gray-300 mx-2"></div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
