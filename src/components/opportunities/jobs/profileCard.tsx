@@ -57,36 +57,35 @@ const ProfileCard: React.FC<ProfileProps> = ({
 
   const formatTimeAgo = (createdAt: string | Date): string => {
     if (!createdAt) {
-      return "unknown time";
+      return 'unknown time';
     }
-  
+
     const now = new Date();
     const then = new Date(createdAt);
-    
+
     if (isNaN(then.getTime())) {
-      return "unknown time";
+      return 'unknown time';
     }
-  
+
     const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
-  
+
     if (diffInSeconds < 60) {
-      return "just now";
+      return 'just now';
     }
-  
+
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
-      return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
     }
-  
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-      return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
     }
-  
+
     const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
   };
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,17 +210,23 @@ const ProfileCard: React.FC<ProfileProps> = ({
                             <div className="flex items-start space-x-3">
                               {/* User Avatar Placeholder */}
                               <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs">
-                                {bid.userName ? bid.userName[0].toUpperCase() : "?"}
+                                {bid.userName
+                                  ? bid.userName[0].toUpperCase()
+                                  : '?'}
                               </div>
 
                               {/* Bid Content */}
                               <div>
                                 <div className="flex items-center space-x-2">
                                   <p className="font-medium">{bid.userName}</p>
-                                  <p className="text-xs text-gray-500">{timeAgo}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {timeAgo}
+                                  </p>
                                 </div>
 
-                                <p className="text-gray-700">{bid.description}</p>
+                                <p className="text-gray-700">
+                                  {bid.description}
+                                </p>
                               </div>
                             </div>
 
