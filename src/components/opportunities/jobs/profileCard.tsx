@@ -57,9 +57,8 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-
     const minBid = profile.minConnect || 0;
-    if ( parseInt(amount) < minBid) {
+    if (parseInt(amount) < minBid) {
       toast({
         title: 'Invalid Bid',
         description: `Bid amount must be at least $${minBid}.`,
@@ -97,11 +96,13 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const fetchBids = async () => {
     setLoadingBids(true);
     try {
-      console.log(`Fetching bids for projectId=${projectId} and profileId=${profile._id}`);
-      const response = await axiosInstance.get(
-        `/bid/project/${projectId}/profile/${profile._id}/bid`
+      console.log(
+        `Fetching bids for projectId=${projectId} and profileId=${profile._id}`,
       );
-  
+      const response = await axiosInstance.get(
+        `/bid/project/${projectId}/profile/${profile._id}/bid`,
+      );
+
       const bidsData = response?.data?.data || [];
       setBids(bidsData);
     } catch (error) {
@@ -165,7 +166,9 @@ const ProfileCard: React.FC<ProfileProps> = ({
               ) : bids && bids.length > 0 ? (
                 <div className="mt-4 space-y-3">
                   <h3 className="font-medium text-lg">{bids.length} Bids</h3>
-                  <div className="space-y-3">
+                  <div className="space-y-3 max-h-20 overflow-y-auto">
+                    {' '}
+                    {/* Scrollable Container */}
                     {bids.map((bid, index) => (
                       <React.Fragment key={bid._id}>
                         <div className="flex items-center justify-between p-2 text-sm">
@@ -173,14 +176,18 @@ const ProfileCard: React.FC<ProfileProps> = ({
                           <div className="flex items-start space-x-3">
                             {/* User Avatar Placeholder */}
                             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs">
-                              {bid.userName ? bid.userName[0].toUpperCase() : '?'}
+                              {bid.userName
+                                ? bid.userName[0].toUpperCase()
+                                : '?'}
                             </div>
 
                             {/* Bid Content */}
                             <div>
                               <div className="flex items-center space-x-2">
                                 <p className="font-medium">{bid.userName}</p>
-                                <p className="text-xs text-gray-500">just now</p>
+                                <p className="text-xs text-gray-500">
+                                  just now
+                                </p>
                               </div>
 
                               <p className="text-gray-700">{bid.description}</p>
@@ -204,7 +211,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
               ) : (
                 <p className="text-gray-500">No previous bids found.</p>
               )}
-
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
