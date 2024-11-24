@@ -79,8 +79,8 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Project Name</TableHead>
-              <TableHead>Verification</TableHead>
+              <TableHead className="text-start">Project Name</TableHead>
+              <TableHead className="text-center">Verification</TableHead>
               <TableHead className="text-center">Start Date</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Actions</TableHead>
@@ -94,16 +94,16 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   <TableCell>
                     <Skeleton className="h-4 w-32" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                   <TableCell className="text-center">
@@ -117,8 +117,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   <TableCell>
                     <div className="font-medium">{project.projectName}</div>
                   </TableCell>
-                  <TableCell>{project.projectType}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Badge
                       className="text-xs"
                       variant={project.verified ? 'secondary' : 'outline'}
