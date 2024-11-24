@@ -20,6 +20,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
@@ -42,6 +43,13 @@ interface Project {
     minConnect?: number;
     rate?: number;
     description?: string;
+    domain_id: string;
+    selectedFreelancer?: string[];
+    freelancers?: {
+      freelancerId: string;
+      bidId: string;
+    };
+    totalBid?: string[];
   }[];
   status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
   team?: string[];
@@ -133,7 +141,7 @@ export default function Dashboard() {
                 status={project.status}
                 startDate={project.createdAt}
                 endDate={project.end}
-                domains={[]}
+                projectDomain={project.projectDomain}
                 skills={project.skillsRequired}
               />
             </div>

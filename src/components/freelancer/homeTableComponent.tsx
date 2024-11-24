@@ -26,26 +26,37 @@ import { Skeleton } from '@/components/ui/skeleton'; // Import the Skeleton comp
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string[];
   description: string;
+  companyId: string;
   email: string;
+  url?: { value: string }[];
   verified?: any;
   isVerified?: string;
   companyName: string;
   start?: Date;
-  end?: Date;
+  end?: Date | null;
   skillsRequired: string[];
   experience?: string;
-  role: string;
-  projectType: string;
-  totalNeedOfFreelancer?: {
-    category?: string;
-    needOfFreelancer?: number;
-    appliedCandidates?: string[];
-    rejected?: string[];
-    accepted?: string[];
-    status?: string;
+  role?: string;
+  projectType?: string;
+  profiles?: {
+    domain?: string;
+    freelancersRequired?: string;
+    skills?: string[];
+    experience?: number;
+    minConnect?: number;
+    rate?: number;
+    description?: string;
+    domain_id: string;
+    selectedFreelancer?: string[];
+    freelancers?: {
+      freelancerId: string;
+      bidId: string;
+    };
+    totalBid?: string[];
   }[];
-  status?: string;
+  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
   team?: string[];
 }
 
@@ -115,12 +126,12 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                       {project.verified ? 'Verified' : 'Not Verified'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {project.start
                       ? new Date(project.start).toLocaleDateString()
                       : 'N/A'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {project.status ? (
                       <Badge
                         className={getStatusBadge(project.status).className}

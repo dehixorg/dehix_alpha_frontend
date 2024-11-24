@@ -20,8 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
 
 interface ProjectProfile {
-  selectedFreelancer?: string[]; // Added based on the response
-  totalBid?: number[]; // Added based on the response
+  _id?: string;
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -29,17 +28,23 @@ interface ProjectProfile {
   minConnect?: number;
   rate?: number;
   description?: string;
-  _id?: string; // Added to match the response's profile structure
+  domain_id: string;
+  selectedFreelancer?: string[];
+  freelancers?: {
+    freelancerId: string;
+    bidId: string;
+  };
+  totalBid?: string[];
 }
 
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
-  url?: { value: string }[]; // Retained as optional
+  url?: { value: string }[];
   verified?: any;
   isVerified?: string;
   companyName: string;
@@ -49,9 +54,9 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  profiles?: ProjectProfile[]; // Modified to use the new ProjectProfile structure
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected'; // Matches response status
-  team?: string[]; // Retained as optional
+  profiles?: ProjectProfile[];
+  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
+  team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -133,7 +138,7 @@ export default function Dashboard() {
                         status={project.status}
                         startDate={project.createdAt}
                         endDate={project.end}
-                        domains={[]}
+                        projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
                       />
                     </div>
