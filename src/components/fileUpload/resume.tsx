@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Image as ImageIcon, UploadCloud } from 'lucide-react'; // Import necessary icons
+
 import { Button } from '../ui/button';
+
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -136,7 +138,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
   return (
     <div className="upload-form max-w-md mx-auto rounded shadow-md p-4">
       <div className="space-y-6 flex flex-col items-center">
-        
         {/* Drag-and-Drop and Click-to-Upload Area */}
         <div
           className="flex flex-col items-center justify-center border-dashed border-2 border-gray-400 rounded-lg p-6 w-full cursor-pointer"
@@ -150,9 +151,11 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
           </p>
           <div className="flex items-center mt-2">
             <ImageIcon className="text-gray-500 w-5 h-5 mr-1" />
-            <span className="text-gray-600 text-sm">Supported formats: PDF, DOCX, PPT</span>
+            <span className="text-gray-600 text-sm">
+              Supported formats: PDF, DOCX, PPT
+            </span>
           </div>
-          
+
           {/* Hidden file input for click-to-upload */}
           <input
             type="file"
