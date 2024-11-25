@@ -202,7 +202,11 @@ export function CreateProjectBusinessForm() {
     mode: 'onChange',
   });
 
-  const { fields: urlFields, append: appendUrl, remove: removeUrl } = useFieldArray({
+  const {
+    fields: urlFields,
+    append: appendUrl,
+    remove: removeUrl,
+  } = useFieldArray({
     name: 'urls',
     control: form.control,
   });
@@ -384,7 +388,9 @@ export function CreateProjectBusinessForm() {
                   name={`urls.${index}.value`}
                   render={({ field }) => (
                     <FormItem className="relative w-full">
-                      <FormLabel className={cn(index !== 0 && 'sr-only')}>URLs</FormLabel>
+                      <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                        URLs
+                      </FormLabel>
                       <FormDescription className={cn(index !== 0 && 'sr-only')}>
                         Enter URL of your account
                       </FormDescription>
@@ -415,18 +421,19 @@ export function CreateProjectBusinessForm() {
               onClick={() => {
                 // Force validation of current URL fields
                 const isValid = urlFields.every((_, index) =>
-                  form.getValues(`urls.${index}.value`).trim()
+                  form.getValues(`urls.${index}.value`).trim(),
                 );
-            
+
                 if (!isValid) {
                   toast({
                     variant: 'destructive',
                     title: 'Error',
-                    description: 'Please fill all URL fields before adding a new one.',
+                    description:
+                      'Please fill all URL fields before adding a new one.',
                   });
                   return;
                 }
-            
+
                 appendUrl({ value: '' }); // Add a new field only if validation passes
               }}
             >
