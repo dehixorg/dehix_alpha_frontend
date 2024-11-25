@@ -190,7 +190,7 @@ export default function Dashboard() {
                         className="w-full sm:w-[50%] md:w-[30%] lg:w-[15%]"
                         onClick={handleCompleteProject}
                       >
-                        Update Status
+                        Mark as Completed
                       </Button>
                     </div>
                   </div>
