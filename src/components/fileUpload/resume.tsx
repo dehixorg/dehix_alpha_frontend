@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image as ImageIcon, UploadCloud, FileText } from 'lucide-react'; 
+import { Image as ImageIcon, UploadCloud, FileText } from 'lucide-react';
 
 import { Button } from '../ui/button';
+
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const allowedResumeFormats = [
   'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-  'application/vnd.ms-powerpoint', 
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
 ];
-const maxResumeSize = 5 * 1024 * 1024; 
+const maxResumeSize = 5 * 1024 * 1024;
 
 interface ResumeUploadProps {
   user_id: string;
