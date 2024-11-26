@@ -12,3 +12,10 @@ export enum Api_Methods {
   DELETE = 'DELETE',
   PATCH = 'PATCH',
 }
+
+export const BID_STATUS={
+  PENDING: 'Pending',
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+  LOBBY: 'Lobby'
+}

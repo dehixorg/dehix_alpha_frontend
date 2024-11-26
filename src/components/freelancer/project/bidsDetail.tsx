@@ -11,6 +11,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
+import { BID_STATUS } from '@/utils/common/enum';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -151,18 +152,18 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   </div>
 
                   <Accordion type="single" collapsible>
-                    {['Pending', 'Accepted', 'Rejected', 'Lobby'].map(
+                    {Object.values(BID_STATUS).map(
                       (status) => (
                         <AccordionItem key={status} value={`${status}-bids`}>
                           <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
                           <AccordionContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
                               {bids
                                 .filter((bid) => bid.bid_status === status)
                                 .map((bid) => (
                                   <Card
                                     key={bid._id}
-                                    className="border border-gray-800 rounded-lg p-6 bg-black text-white shadow-lg transition-transform transform hover:scale-105"
+                                    className="border border-gray-800 rounded-lg p-6 bg-black text-white shadow-lg transition-transform transform"
                                   >
                                     <h3 className="font-semibold text-xl mb-2">
                                       {bid.userName}
@@ -181,11 +182,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                         status === 'Lobby') && (
                                         <>
                                           <Button
-                                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
+                                            className="px-4 py-2 rounded-lg w-full h-10 md:w-auto lg:w-80"
                                             onClick={() =>
                                               handleUpdateStatus(
                                                 bid._id,
-                                                'Accepted',
+                                                BID_STATUS.ACCEPTED.toUpperCase(),
                                               )
                                             }
                                             disabled={loadingBids[bid._id]}
@@ -195,11 +196,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                               : 'Accept'}
                                           </Button>
                                           <Button
-                                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
+                                            className="px-4 py-2 rounded-lg w-full h-10 md:w-auto lg:w-80"
                                             onClick={() =>
                                               handleUpdateStatus(
                                                 bid._id,
-                                                'Rejected',
+                                                BID_STATUS.REJECTED.toUpperCase(),
                                               )
                                             }
                                             disabled={loadingBids[bid._id]}
@@ -209,14 +210,16 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                               : 'Reject'}
                                           </Button>
                                           <Button
-                                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto"
+                                            className="px-4 py-2 rounded-lg w-full h-10 md:w-auto lg:w-80"
                                             onClick={() =>
                                               console.log(
                                                 `Viewing details for ${bid.userName}`,
                                               )
                                             }
                                           >
-                                            Interview
+                                          {loadingBids[bid._id]
+                                              ? 'Loading...'
+                                              : 'Interview'}
                                           </Button>
                                         </>
                                       )}
