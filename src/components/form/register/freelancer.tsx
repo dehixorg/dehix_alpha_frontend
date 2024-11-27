@@ -136,7 +136,10 @@ export default function FreelancerRegisterForm() {
         : '';
       // Make the POST request, adding referralCode in the query string
       // The rest of the data is sent in the body (formData)
-      await axiosInstance.post(`/register/freelancer${referralCodeQuery}`, formData);
+      await axiosInstance.post(
+        `/register/freelancer${referralCodeQuery}`,
+        formData,
+      );
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
@@ -292,10 +295,10 @@ export default function FreelancerRegisterForm() {
             </div>
           </div>
           <TextInput
-              control={form.control}
-              name="referralCode"
-              label="Do you have a referral code? (Optional)"
-              placeholder="Enter referral code"
+            control={form.control}
+            name="referralCode"
+            label="Do you have a referral code? (Optional)"
+            placeholder="Enter referral code"
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (

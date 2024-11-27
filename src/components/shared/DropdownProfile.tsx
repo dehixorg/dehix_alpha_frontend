@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { UserIcon, LogOut, Copy, Check, Share2 } from "lucide-react"; // Import Share2 icon
-import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Cookies from "js-cookie";
+import React, { useEffect, useState } from 'react';
+import { UserIcon, LogOut, Copy, Check, Share2 } from 'lucide-react'; // Import Share2 icon
+import { useSelector, useDispatch } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Cookies from 'js-cookie';
 
 import {
   DropdownMenu,
@@ -12,19 +12,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { RootState } from "@/lib/store";
-import { clearUser } from "@/lib/userSlice";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { RootState } from '@/lib/store';
+import { clearUser } from '@/lib/userSlice';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { axiosInstance } from "@/lib/axiosinstance";
+} from '@/components/ui/dialog';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 export default function DropdownProfile() {
   const user = useSelector((state: RootState) => state.user);
@@ -32,7 +32,7 @@ export default function DropdownProfile() {
   const router = useRouter();
 
   const [userType, setUserType] = useState<string | null>(null); // Added userType state
-  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralCode, setReferralCode] = useState<string>('');
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
@@ -54,12 +54,12 @@ export default function DropdownProfile() {
       setLoading(true);
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user?.uid}/profile-info`
+          `/freelancer/${user?.uid}/profile-info`,
         );
-        const fetchCode = response.data?.referral?.referralCode || "";
+        const fetchCode = response.data?.referral?.referralCode || '';
         setReferralCode(fetchCode);
       } catch (error) {
-        console.error("API Error:", error);
+        console.error('API Error:', error);
       } finally {
         setLoading(false);
       }
@@ -68,16 +68,16 @@ export default function DropdownProfile() {
     if (user?.uid) {
       fetchData();
     } else {
-      console.warn("User ID is not available. Skipping API call.");
+      console.warn('User ID is not available. Skipping API call.');
       setLoading(false);
     }
   }, [user?.uid]);
 
   const handleLogout = () => {
     dispatch(clearUser());
-    Cookies.remove("userType");
-    Cookies.remove("token");
-    router.replace("/auth/login");
+    Cookies.remove('userType');
+    Cookies.remove('token');
+    router.replace('/auth/login');
   };
 
   const handleReferralClick = () => {
@@ -106,7 +106,7 @@ export default function DropdownProfile() {
   // Generate referral link
   const referralLink = referralCode
     ? `${process.env.NEXT_PUBLIC__LOCAL_BASE_URL}auth/sign-up/freelancer?referralCode=${referralCode}`
-    : "";
+    : '';
 
   // Handle Copy to Clipboard
   const handleCopy = (text: string) => {
@@ -118,8 +118,8 @@ export default function DropdownProfile() {
         }, 2000);
       },
       (err) => {
-        console.error("Failed to copy text: ", err);
-      }
+        console.error('Failed to copy text: ', err);
+      },
     );
   };
 
@@ -147,11 +147,11 @@ export default function DropdownProfile() {
             <DropdownMenuItem>Home</DropdownMenuItem>
           </Link>
           <div>
-            {userType === "freelancer" ? (
+            {userType === 'freelancer' ? (
               <Link href="/freelancer/settings/personal-info">
                 <DropdownMenuItem>Settings</DropdownMenuItem>
               </Link>
-            ) : userType === "business" ? (
+            ) : userType === 'business' ? (
               <Link href="/business/settings/business-info">
                 <DropdownMenuItem>Settings</DropdownMenuItem>
               </Link>
@@ -173,85 +173,85 @@ export default function DropdownProfile() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-        {/* Referral Popup */}
-        <Dialog open={isReferralOpen} onOpenChange={setIsReferralOpen}>
-          <DialogContent className="max-w-2xl w-full px-4 sm:px-6 md:px-8 py-6 rounded-lg">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl font-bold">
-                Your Referral Information
-              </DialogTitle>
-              <DialogDescription className="text-sm sm:text-base text-gray-500">
-                Share this link and code with your friends to invite them:
-              </DialogDescription>
-            </DialogHeader>
+      {/* Referral Popup */}
+      <Dialog open={isReferralOpen} onOpenChange={setIsReferralOpen}>
+        <DialogContent className="max-w-2xl w-full px-4 sm:px-6 md:px-8 py-6 rounded-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl font-bold">
+              Your Referral Information
+            </DialogTitle>
+            <DialogDescription className="text-sm sm:text-base text-gray-500">
+              Share this link and code with your friends to invite them:
+            </DialogDescription>
+          </DialogHeader>
 
-            {loading ? (
-              <p className="text-center text-gray-600 text-sm sm:text-base">
-                Loading referral information...
-              </p>
-            ) : referralCode ? (
-              <>
-                {/* Referral Link Section */}
-                <div className="mt-4">
-                  <p className="text-sm sm:text-base font-medium text-gray-300">
-                    Referral Link:
-                  </p>
-                  <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                    <a
-                      href={referralLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white flex-1 max-w-full break-words sm:truncate"
-                      title={referralLink} // Tooltip for the full link
-                    >
-                      {referralLink}
-                    </a>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleShare(referralLink)} // Share Button
-                      className="ml-2 sm:ml-4"
-                    >
-                      <Share2 size={16} className="text-white" />
-                    </Button>
-                  </div>
+          {loading ? (
+            <p className="text-center text-gray-600 text-sm sm:text-base">
+              Loading referral information...
+            </p>
+          ) : referralCode ? (
+            <>
+              {/* Referral Link Section */}
+              <div className="mt-4">
+                <p className="text-sm sm:text-base font-medium text-gray-300">
+                  Referral Link:
+                </p>
+                <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <a
+                    href={referralLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white flex-1 max-w-full break-words sm:truncate"
+                    title={referralLink} // Tooltip for the full link
+                  >
+                    {referralLink}
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleShare(referralLink)} // Share Button
+                    className="ml-2 sm:ml-4"
+                  >
+                    <Share2 size={16} className="text-white" />
+                  </Button>
                 </div>
+              </div>
 
-                {/* Referral Code Section */}
-                <div className="mt-4">
-                  <p className="text-sm sm:text-base font-medium text-gray-300">
-                    Referral Code:
-                  </p>
-                  <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                    <span className="text-white font-medium flex-1 truncate">
-                      {referralCode}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleCopy(referralCode)}
-                      className="ml-2 sm:ml-4"
-                    >
-                      {copied === referralCode ? (
-                        <Check size={16} className="text-green-500" />
-                      ) : (
-                        <Copy size={16} className="text-white" />
-                      )}
-                    </Button>
-                  </div>
+              {/* Referral Code Section */}
+              <div className="mt-4">
+                <p className="text-sm sm:text-base font-medium text-gray-300">
+                  Referral Code:
+                </p>
+                <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <span className="text-white font-medium flex-1 truncate">
+                    {referralCode}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleCopy(referralCode)}
+                    className="ml-2 sm:ml-4"
+                  >
+                    {copied === referralCode ? (
+                      <Check size={16} className="text-green-500" />
+                    ) : (
+                      <Copy size={16} className="text-white" />
+                    )}
+                  </Button>
                 </div>
-              </>
-            ) : (
-              <p className="text-center text-gray-600 text-sm sm:text-base">
-                No referral code is available for this user.
-              </p>
-            )}
+              </div>
+            </>
+          ) : (
+            <p className="text-center text-gray-600 text-sm sm:text-base">
+              No referral code is available for this user.
+            </p>
+          )}
 
-            <div className="flex justify-end mt-6">
-              <Button onClick={() => setIsReferralOpen(false)}>Close</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          <div className="flex justify-end mt-6">
+            <Button onClick={() => setIsReferralOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
