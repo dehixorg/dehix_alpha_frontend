@@ -17,7 +17,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
-import { readableTimeFormat } from '@/utils/timeUtils'
+import { readableTimeFormat } from '@/utils/timeUtils';
 interface ProfileProps {
   profile: {
     _id?: string;
@@ -100,7 +100,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       const response = await axiosInstance.get(
         `/bid/project/${projectId}/profile/${profile._id}/bid`,
       );
-      console.log("fsdfsdfsfsdfs",profile._id);
+      console.log('fsdfsdfsfsdfs', profile._id);
       const bidsData = response?.data?.data || [];
       setBids(bidsData);
     } catch (error) {
