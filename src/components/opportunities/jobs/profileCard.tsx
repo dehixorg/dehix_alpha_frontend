@@ -17,6 +17,7 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
+import { readableTimeFormat } from '@/utils/timeUtils';
 
 interface ProfileProps {
   profile: {
@@ -54,38 +55,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [loadingBids, setLoadingBids] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
-
-  const formatTimeAgo = (createdAt: string | Date): string => {
-    if (!createdAt) {
-      return 'unknown time';
-    }
-
-    const now = new Date();
-    const then = new Date(createdAt);
-
-    if (isNaN(then.getTime())) {
-      return 'unknown time';
-    }
-
-    const diffInSeconds = Math.floor((now.getTime() - then.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-      return 'just now';
-    }
-
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    }
-
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    }
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,9 +98,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const fetchBids = async () => {
     setLoadingBids(true);
     try {
-      console.log(
-        `Fetching bids for projectId=${projectId} and profileId=${profile._id}`,
-      );
       const response = await axiosInstance.get(
         `/bid/project/${projectId}/profile/${profile._id}/bid`,
       );
@@ -202,7 +168,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
                   <div className="space-y-3">
                     {/* Scrollable Container */}
                     {bids.map((bid, index) => {
-                      const timeAgo = formatTimeAgo(bid.createdAt);
+                      const relativeTime = readableTimeFormat(bid.createdAt);
                       return (
                         <React.Fragment key={bid._id}>
                           <div className="flex items-center justify-between p-2 text-sm">
@@ -220,7 +186,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
                                 <div className="flex items-center space-x-2">
                                   <p className="font-medium">{bid.userName}</p>
                                   <p className="text-xs text-gray-500">
-                                    {timeAgo}
+                                    {relativeTime}
                                   </p>
                                 </div>
 
