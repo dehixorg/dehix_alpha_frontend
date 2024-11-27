@@ -247,6 +247,8 @@ export function CreateProjectBusinessForm() {
         title: 'Error',
         description: 'Failed to add project. Please try again later.',
       });
+    } finally {
+      setLoading(false);
     }
     form.reset(defaultValues); //add reset after form is submit
   }
@@ -446,6 +448,7 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter number"
+                          min={1}
                           {...field}
                         />
                       </FormControl>
@@ -516,7 +519,13 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter experience" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter experience"
+                          min={0}
+                          max={60}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -545,6 +554,8 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter rate"
+                          min={0}
+                          max={200}
                           {...field}
                         />
                       </FormControl>

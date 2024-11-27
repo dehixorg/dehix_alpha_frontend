@@ -160,7 +160,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
   const handleDeleteProjDomain = (projectDomainToDelete: string) => {
-    setCurrDomains(
+    setCurrProjectDomains(
       currProjectDomains.filter(
         (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
       ),
@@ -224,7 +224,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: currSkills,
         domain: currDomains,
       });
-      const response = await axiosInstance.put(`/freelancer/${user_id}`, {
+      await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
         skills: currSkills,
         domain: currDomains,
