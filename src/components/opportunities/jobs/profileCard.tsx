@@ -101,7 +101,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       const response = await axiosInstance.get(
         `/bid/project/${projectId}/profile/${profile._id}/bid`,
       );
-
+      console.log('fsdfsdfsfsdfs', profile._id);
       const bidsData = response?.data?.data || [];
       setBids(bidsData);
     } catch (error) {
