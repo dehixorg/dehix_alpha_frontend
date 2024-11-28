@@ -1,4 +1,5 @@
 'use client';
+
 import { Search, CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,9 +19,12 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
+import { Button } from '@/components/ui/button';
 
 interface ProjectProfile {
   _id?: string;
+  selectedFreelancer?: string[];
+  totalBid?: number[];
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -35,6 +39,7 @@ interface ProjectProfile {
     bidId: string;
   };
   totalBid?: string[];
+  _id?: string;
 }
 
 interface Project {
@@ -69,8 +74,6 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/project/${project_id}`);
-
-        // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;
 
         if (projectData) {
@@ -84,6 +87,32 @@ export default function Dashboard() {
     };
     fetchData();
   }, [project_id]);
+
+  const handleCompleteProject = async () => {
+    if (!project_id) return;
+
+    try {
+      const response = await axiosInstance.put(`/project/${project_id}`, {
+        status: 'Completed',
+      });
+
+      if (response?.status === 200) {
+        setProject((prev) => {
+          if (prev) {
+            return { ...prev, status: 'Completed' };
+          }
+          return prev;
+        });
+        alert('Project marked as completed!');
+      } else {
+        console.error('Unexpected response:', response);
+        alert('Failed to mark project as completed.');
+      }
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      alert('An error occurred while updating the project status.');
+    }
+  };
 
   if (!project) {
     return <div>Loading...</div>;
@@ -165,6 +194,12 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </CardContent>
+                      <Button
+                        className="w-full sm:w-[50%] md:w-[30%] lg:w-[15%]"
+                        onClick={handleCompleteProject}
+                      >
+                        Mark as Completed
+                      </Button>
                     </div>
                   </div>
                 </TabsContent>
