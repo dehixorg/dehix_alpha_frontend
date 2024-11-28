@@ -22,6 +22,7 @@ import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { Button } from '@/components/ui/button';
 
 interface ProjectProfile {
+  _id?: string;
   selectedFreelancer?: string[];
   totalBid?: number[];
   domain?: string;
@@ -31,13 +32,17 @@ interface ProjectProfile {
   minConnect?: number;
   rate?: number;
   description?: string;
-  _id?: string;
+  domain_id: string;
+  freelancers?: {
+    freelancerId: string;
+    bidId: string;
+  };
 }
 
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
@@ -159,7 +164,7 @@ export default function Dashboard() {
                         status={project.status}
                         startDate={project.createdAt}
                         endDate={project.end}
-                        domains={[]}
+                        projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
                       />
                     </div>
