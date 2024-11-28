@@ -178,13 +178,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </div>
                 </div>
                 <div>
-                  <Button className="w-full">
-                    <Link
-                      href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                    >
-                      <button>View</button>
-                    </Link>
-                  </Button>
+                  <Link
+                    href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                    passHref
+                  >
+                    <Button className="w-full">View</Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
