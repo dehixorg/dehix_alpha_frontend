@@ -94,9 +94,12 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
+                  {/* Wrap the Button with the Link component to make it clickable */}
+                  <Link href="/business/add-project" passHref>
+                    <Button className="w-full"> {/* Ensure the Button takes up full width */}
+                      Create New Project
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
 
