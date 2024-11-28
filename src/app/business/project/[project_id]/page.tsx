@@ -33,13 +33,10 @@ interface ProjectProfile {
   rate?: number;
   description?: string;
   domain_id: string;
-  selectedFreelancer?: string[];
   freelancers?: {
     freelancerId: string;
     bidId: string;
   };
-  totalBid?: string[];
-  _id?: string;
 }
 
 interface Project {
