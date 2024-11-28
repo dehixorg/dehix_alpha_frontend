@@ -15,6 +15,7 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import { Button } from '@/components/ui/button';
 
 interface Project {
   _id: string;
@@ -90,7 +91,10 @@ export default function CurrentProject() {
               },
             ]}
           />
-          <div className="relative ml-auto flex-1 md:grow-0">
+          <div className="relative ml-auto flex-1 md:grow-0 hidden md:block">
+            <Button className="w-auto">Page Tour</Button>
+          </div>
+          <div className="relative flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
           <DropdownProfile />

@@ -2,6 +2,7 @@
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import Joyride, { Step } from 'react-joyride';
 
 import { Search } from '@/components/search';
 import Breadcrumb from '@/components/shared/breadcrumbList';
@@ -54,19 +55,148 @@ interface Project {
   team?: string[];
 }
 
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  email: string;
+  dob: string;
+  linkedin?: string;
+  github?: string;
+  personalWebsite?: string;
+  connects?: string;
+  workExperience?: string;
+  description?: string;
+  avatar?: string;
+  professionalInfo?: {
+    jobTitle?: string;
+    company?: string;
+    workDescription?: string;
+    workFrom?: string;
+    workTo?: string;
+    githubRepoLink?: string;
+  };
+  skills?: { _id: string; name: string; level: string }[];
+  education?: {
+    degree?: string;
+    universityName?: string;
+    fieldOfStudy?: string;
+    startDate?: string;
+    endDate?: string;
+    grade?: string;
+  };
+  projects?: {
+    [key: string]: {
+      _id: string;
+      projectName: string;
+      description: string;
+      role: string;
+      techUsed: string[];
+      start: string;
+      end: string;
+      githubLink?: string;
+    };
+  };
+  linkedIn?: string;
+  website?: string;
+  onboardingStatus?: boolean;
+}
+
+const onboardingSteps: Step[] = [
+  {
+    target: '.Dashboard', // Target search bar
+    content: 'It is your main dashboard, Here you can see your activities.',
+    placement: 'right',
+  },
+  {
+    target: '.earning', // Target search bar
+    content: 'Here you can see your Total earning.',
+    placement: 'bottom',
+  },
+  {
+    target: '.active-project', // Target search bar
+    content: 'Here you can see your active project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.pending-project', // Target search bar
+    content: 'Here you can see your pending project stats.',
+    placement: 'bottom',
+  },
+  {
+    target: '.Dropdown', // Target search bar
+    content: 'Here you can log-out your profile and go to support.',
+    placement: 'bottom',
+  },
+  {
+    target: '.Market', // Target the "Active Projects" card
+    content: 'This is your market place, Where you can see job posting.',
+    placement: 'right',
+  },
+  {
+    target: '.Projects', // Target the "Create Meet" button
+    content:
+      'Here you can see your active, pending, compeleted and rejected projects.',
+    placement: 'right',
+  },
+  {
+    target: '.Analytics', // Target the "Create Meet" button
+    content: 'Here you can analyse your overall performace.',
+    placement: 'right',
+  },
+  {
+    target: '.Interviews', // Target the "Create Meet" button
+    content: 'Here you can manage and track your skills and domains.',
+    placement: 'right',
+  },
+  {
+    target: '.ScheduleInterviews', // Target the "Create Meet" button
+    content:
+      'Here you can add your relevant skills and domains to help us schedule the right interview for you.',
+    placement: 'right',
+  },
+  {
+    target: '.Oracle', // Target the "Create Meet" button
+    content:
+      'Here you can verify others skills, experience, education and business.',
+    placement: 'right',
+  },
+  {
+    target: '.Talent', // Target the "Create Meet" button
+    content:
+      'Here you can add your skills and domains to get hire directly from Dehix Talent.',
+    placement: 'right',
+  },
+  {
+    target: '.Settings', // Target the "Create Meet" button
+    content: 'Here you can manage your profile.',
+    placement: 'top',
+  },
+];
+
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
+  const [runOnboarding, setRunOnboarding] = useState(false); // Onboarding state
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
+        const projectData = await axiosInstance.get(
           `/freelancer/${user.uid}/project`,
         );
-        setProjects(response.data.data);
+        if (projectData.status === 200 && projectData.data.data) {
+          setProjects(projectData?.data?.data);
+        }
+        const profileInfo = await axiosInstance.get(
+          `/freelancer/${user.uid}/profile-info`,
+        );
+        if (profileInfo.status === 200 && profileInfo.data) {
+          setUserData(profileInfo?.data);
+        }
       } catch (error) {
         console.error('API Error:', error);
       } finally {
@@ -76,6 +206,21 @@ export default function Dashboard() {
 
     fetchData();
   }, [user.uid]);
+
+  useEffect(() => {
+    // Check onboarding status only after userData is updated
+    if (userData?.onboardingStatus === false) {
+      setRunOnboarding(true); // Start the onboarding tour
+      console.log(`onboardingStatus: ${userData.onboardingStatus}`);
+    }
+  }, [userData]);
+
+  const handleOnboardingComplete = (data: any) => {
+    const { status } = data;
+    if (status === 'finished' || status === 'skipped') {
+      setRunOnboarding(false); // End the onboarding
+    }
+  };
 
   const handleCreateMeetClick = () => {
     setShowMeetingDialog(true); // Open meeting dialog
@@ -105,7 +250,7 @@ export default function Dashboard() {
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card className="sm:col-span-2 flex flex-col h-full">
+              <Card className="sm:col-span-2 flex flex-col h-full earning">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-4xl mb-3">
                     {loading ? <Skeleton className="h-10 w-20" /> : '0'}
@@ -127,31 +272,34 @@ export default function Dashboard() {
                   </div>
                 </CardFooter>
               </Card>
-
-              <StatCard
-                title="Active Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Active').length
-                }
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo={
-                  loading ? 'Loading...' : 'Earning stats will be here'
-                }
-              />
-              <StatCard
-                title="Pending Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Pending').length
-                }
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo={
-                  loading ? 'Loading...' : 'Project stats will be here'
-                }
-              />
+              <div className="active-project">
+                <StatCard
+                  title="Active Projects"
+                  value={
+                    loading
+                      ? '...'
+                      : projects.filter((p) => p.status === 'Active').length
+                  }
+                  icon={<CheckCircle className="h-6 w-6 text-success" />}
+                  additionalInfo={
+                    loading ? 'Loading...' : 'Earning stats will be here'
+                  }
+                />
+              </div>
+              <div className="pending-project">
+                <StatCard
+                  title="Pending Projects"
+                  value={
+                    loading
+                      ? '...'
+                      : projects.filter((p) => p.status === 'Pending').length
+                  }
+                  icon={<Clock className="h-6 w-6 text-warning" />}
+                  additionalInfo={
+                    loading ? 'Loading...' : 'Project stats will be here'
+                  }
+                />
+              </div>
             </div>
 
             {/* Tabs for project filtering */}
@@ -201,7 +349,11 @@ export default function Dashboard() {
             <div className="text-center py-10">
               <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
               <p className="text-gray-500">No interviews scheduled</p>
-              <Button className="mt-3" onClick={handleCreateMeetClick} disabled>
+              <Button
+                className="mt-3 create-meet-btn"
+                onClick={handleCreateMeetClick}
+                disabled
+              >
                 Create Meet
               </Button>
             </div>
@@ -213,6 +365,26 @@ export default function Dashboard() {
       <MeetingDialog
         isOpen={showMeetingDialog}
         onClose={() => setShowMeetingDialog(false)}
+      />
+
+      {/* Joyride Onboarding Tour */}
+      <Joyride
+        steps={onboardingSteps}
+        run={runOnboarding}
+        continuous
+        showSkipButton
+        callback={handleOnboardingComplete}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            arrowColor: '#5d615e',
+            backgroundColor: '#141414',
+            overlayColor: 'rgba(0, 0, 0, 0.9)', // Adjust opacity here
+            primaryColor: '#000',
+            textColor: '#fafcfb',
+            zIndex: 1000,
+          },
+        }}
       />
     </div>
   );
