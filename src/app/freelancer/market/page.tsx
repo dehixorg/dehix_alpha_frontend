@@ -157,17 +157,20 @@ const Market: React.FC = () => {
           `/freelancer/${user.uid}`,
         );
         const queryString = constructQueryString(appliedFilters);
-        const allJobs = await axiosInstance.get(
-          `/project/freelancer/${user.uid}/?${queryString}`,
+        const getJobs = await axiosInstance.get(
+          `/project/freelancer/${user.uid}?${queryString}`,
         );
 
-        const notInterestedProjects =
-          freelancerDetails.data.notInterestedProject || [];
+        const jobs = getJobs?.data?.data;
 
-        const filteredJobs = allJobs.data.data.filter(
-          (job: Project) => !notInterestedProjects.includes(job._id),
-        );
-        setJobs(filteredJobs);
+        if (freelancerDetails?.data && jobs) {
+          const notInterestedProjects =
+            freelancerDetails.data.notInterestedProject || [];
+          const filteredJobs = jobs.filter(
+            (job: Project) => !notInterestedProjects.includes(job._id),
+          );
+          setJobs(filteredJobs);
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
