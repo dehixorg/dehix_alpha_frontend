@@ -27,7 +27,7 @@ import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
-import { ProjectStatus } from '@/utils/freelancer/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
@@ -63,7 +63,7 @@ interface Project {
     };
     totalBid?: string[];
   }[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
+  status?: StatusEnum;
   team?: string[];
 }
 
@@ -73,7 +73,7 @@ export default function Dashboard() {
   const [activeProjects, setActiveProjects] = useState<Project[]>([]);
   const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
-  const [currentTab, setCurrentTab] = useState('Active');
+  const [currentTab, setCurrentTab] = useState('ACTIVE');
   const [loading, setLoading] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -97,10 +97,10 @@ export default function Dashboard() {
     setLoadingStats(true);
     try {
       const activeCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=Active`,
+        `/freelancer/${user.uid}/project?status=ACTIVE`,
       );
       const pendingCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=Pending`,
+        `/freelancer/${user.uid}/project?status=PENDING`,
       );
 
       if (
@@ -204,33 +204,34 @@ export default function Dashboard() {
 
             {/* Tabs for project filtering */}
             <div className="overflow-x-auto">
-              <Tabs value={currentTab} onValueChange={handleTabChange}>
+              <Tabs
+                value={currentTab}
+                onValueChange={(status) => handleTabChange(status)}
+              >
                 <div className="flex items-center">
                   <TabsList>
-                    <TabsTrigger value={ProjectStatus.Active}>
-                      Active
-                    </TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Pending}>
+                    <TabsTrigger value={StatusEnum.ACTIVE}>Active</TabsTrigger>
+                    <TabsTrigger value={StatusEnum.PENDING}>
                       Pending
                     </TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Completed}>
+                    <TabsTrigger value={StatusEnum.COMPLETED}>
                       Completed
                     </TabsTrigger>
-                    <TabsTrigger value={ProjectStatus.Rejected}>
+                    <TabsTrigger value={StatusEnum.REJECTED}>
                       Rejected
                     </TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value={ProjectStatus.Active}>
+                <TabsContent value={StatusEnum.ACTIVE}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value={ProjectStatus.Pending}>
+                <TabsContent value={StatusEnum.PENDING}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value={ProjectStatus.Completed}>
+                <TabsContent value={StatusEnum.COMPLETED}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value={ProjectStatus.Rejected}>
+                <TabsContent value={StatusEnum.REJECTED}>
                   <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
               </Tabs>
