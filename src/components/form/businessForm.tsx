@@ -121,7 +121,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         title: 'Error',
         description: 'Failed to update profile. Please try again later.',
       });
-    }finally {
+    } finally {
       setLoading(false); // Always reset loading state
     }
   }
