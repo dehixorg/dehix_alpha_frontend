@@ -43,7 +43,7 @@ interface ProjectType {
 }
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
-  cardClassName: string;
+  cardClassName?: string;
   project: ProjectType;
   type?: string;
 };

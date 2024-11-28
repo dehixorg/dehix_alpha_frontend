@@ -399,7 +399,7 @@ export default function ConsultancyPage() {
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
@@ -423,7 +423,7 @@ export default function ConsultancyPage() {
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
