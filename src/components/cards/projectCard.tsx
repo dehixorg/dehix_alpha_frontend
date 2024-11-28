@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getStatusBadge } from '@/utils/statusBadge';
 
 interface ProjectType {
   _id: string;
@@ -41,20 +43,25 @@ interface ProjectType {
 }
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
+  cardClassName: string;
   project: ProjectType;
   type?: string;
 };
 
 export function ProjectCard({
-  className,
+  cardClassName,
   project,
   type = 'business',
   ...props
 }: ProjectCardProps) {
+  const { text, className } = getStatusBadge(project.status);
   return (
-    <Card className={cn('flex flex-col', className)} {...props}>
+    <Card className={cn('flex flex-col', cardClassName)} {...props}>
       <CardHeader>
-        <CardTitle>{project.projectName}</CardTitle>
+        <CardTitle className="flex">
+          {project.projectName}&nbsp;
+          {project.verified && <ShieldCheck className="text-success" />}
+        </CardTitle>
         <CardDescription className="text-gray-600">
           <p className="my-auto">
             {project.createdAt
@@ -63,12 +70,7 @@ export function ProjectCard({
           </p>
 
           <br />
-          <Badge
-            className="text-xs"
-            variant={project.verified ? 'secondary' : 'outline'}
-          >
-            {project.verified ? 'Verified' : 'Not Verified'}
-          </Badge>
+          <Badge className={className}>{text}</Badge>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
@@ -89,9 +91,6 @@ export function ProjectCard({
           </p>
           <p>
             <strong>Experience:</strong> {project.experience}
-          </p>
-          <p>
-            <strong>Status:</strong> {project.status}
           </p>
 
           <div className="flex flex-wrap gap-1 mt-2">

@@ -90,7 +90,7 @@ export default function Dashboard() {
 
     try {
       const response = await axiosInstance.put(`/project/${project_id}`, {
-        status: 'Completed',
+        status: 'COMPLETED',
       });
 
       if (response?.status === 200) {

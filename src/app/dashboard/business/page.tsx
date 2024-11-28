@@ -48,10 +48,10 @@ export default function Dashboard() {
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == 'COMPLETED',
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== 'COMPLETED',
   );
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -128,7 +128,7 @@ export default function Dashboard() {
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
@@ -149,7 +149,7 @@ export default function Dashboard() {
                 completedProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
