@@ -202,7 +202,11 @@ export function CreateProjectBusinessForm() {
     mode: 'onChange',
   });
 
-  const { fields: urlFields, append: appendUrl } = useFieldArray({
+  const {
+    fields: urlFields,
+    append: appendUrl,
+    remove: removeUrl,
+  } = useFieldArray({
     name: 'urls',
     control: form.control,
   });
@@ -242,6 +246,7 @@ export function CreateProjectBusinessForm() {
       });
     } catch (error) {
       console.error('API Error:', error);
+      form.reset();
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -377,31 +382,60 @@ export function CreateProjectBusinessForm() {
           />
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={index}
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                      URLs
-                    </FormLabel>
-                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                      Enter URL of your account
-                    </FormDescription>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div key={field.id} className="flex items-center mb-2">
+                <FormField
+                  control={form.control}
+                  name={`urls.${index}.value`}
+                  render={({ field }) => (
+                    <FormItem className="relative w-full">
+                      <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                        URLs
+                      </FormLabel>
+                      <FormDescription className={cn(index !== 0 && 'sr-only')}>
+                        Enter URL of your account
+                      </FormDescription>
+                      <FormControl>
+                        <div className="relative">
+                          <Input className="pr-10" {...field} />
+                          {/* Position the remove button */}
+                          <button
+                            type="button"
+                            onClick={() => removeUrl(index)}
+                            className="absolute inset-y-0 right-2 flex items-center justify-center text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             ))}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => appendUrl({ value: '' })}
+              className="mt-2"
+              onClick={() => {
+                // Force validation of current URL fields
+                const isValid = urlFields.every((_, index) =>
+                  form.getValues(`urls.${index}.value`).trim(),
+                );
+
+                if (!isValid) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description:
+                      'Please fill all URL fields before adding a new one.',
+                  });
+                  return;
+                }
+
+                appendUrl({ value: '' }); // Add a new field only if validation passes
+              }}
             >
               Add URL
             </Button>
