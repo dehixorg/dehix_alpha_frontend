@@ -15,8 +15,6 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
-//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -27,7 +25,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
-// Define a union type for the filter options
+
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
   _id: string;
@@ -72,12 +70,10 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/verification/${user.uid}/oracle?doc_type=project`,
       );
-      // console.log(response.data)
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
       );
-      console.log(flattenedData._id);
       setProjectData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');

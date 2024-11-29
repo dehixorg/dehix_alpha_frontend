@@ -21,7 +21,7 @@ const maxImageSize = 1 * 1024 * 1024; // 1MB
 const ProfilePictureUpload = ({
   user_id,
   profile,
-  entityType, // Add entityType prop
+  entityType,
 }: {
   user_id: string;
   profile: string;
@@ -75,7 +75,6 @@ const ProfilePictureUpload = ({
     formData.append('profilePicture', selectedProfilePicture);
 
     try {
-      console.log('Uploading image...');
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,

@@ -151,7 +151,6 @@ export default function ConsultancyPage() {
 
   const onSubmit = async (data: ConsultancyFormValues) => {
     try {
-      console.log('Form Data:', data);
       setConsultants([...consultants, data]);
       form.reset();
       setIsDialogOpen(false);

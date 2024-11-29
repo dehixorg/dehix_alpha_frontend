@@ -37,14 +37,13 @@ export default function Dashboard() {
       try {
         const response = await axiosInstance.get(
           `/project/business/${user.uid}`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+        );
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
     };
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid]);
 
   const completedProjects = responseData.filter(

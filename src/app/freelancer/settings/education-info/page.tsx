@@ -28,18 +28,14 @@ export default function Education() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log(
-          'API Response get:',
-          Object.values(response.data?.education),
-        );
-        setEducationInfo(Object.values(response.data?.education)); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        setEducationInfo(Object.values(response.data?.education));
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid, refresh]);
 
   // const handleDelete = (index: number) => {

@@ -100,8 +100,6 @@ export default function BusinessRegisterForm() {
     };
     try {
       await axiosInstance.post('/register/business', formData);
-
-      console.log('TESTF:', formData);
       toast({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',

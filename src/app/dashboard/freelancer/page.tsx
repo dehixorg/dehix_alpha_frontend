@@ -153,7 +153,12 @@ export default function Dashboard() {
             menuItemsBottom={menuItemsBottom}
             active="Dashboard"
           />
-          <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
+          <Breadcrumb
+            items={[
+              { label: 'Dashboard', link: '/dashboard/freelancer' },
+              { label: 'Freelancer', link: '#' },
+            ]}
+          />
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>

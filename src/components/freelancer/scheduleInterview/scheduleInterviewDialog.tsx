@@ -95,8 +95,6 @@ const ScheduleInterviewDialog: React.FC = () => {
           Array.isArray(skillsResponse.data.data)
         ) {
           setSkills(skillsResponse.data.data);
-        } else {
-          console.error('Invalid response format', skillsResponse);
         }
         const domainsResponse = await axiosInstance.get('/domain');
         if (
@@ -104,8 +102,6 @@ const ScheduleInterviewDialog: React.FC = () => {
           Array.isArray(domainsResponse.data.data)
         ) {
           setDomains(domainsResponse.data.data);
-        } else {
-          console.error('Invalid domains response format', domainsResponse);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -146,7 +142,6 @@ const ScheduleInterviewDialog: React.FC = () => {
   });
 
   const onSubmitSkill = (data: SkillFormData) => {
-    console.log('Skill data:', data);
     setSkillData([
       ...skillData,
       {
