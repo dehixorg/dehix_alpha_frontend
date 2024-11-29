@@ -32,20 +32,26 @@ import { RootState } from '@/lib/store';
 // add message alert if requirement not filled!!
 const experienceFormSchema = z
   .object({
-    company: z.string().min(1, { message: 'company name is required.' }),
-    jobTitle: z.string().min(1, { message: 'job Title is required.' }),
+    company: z.string().min(1, { message: 'Company name is required.' }),
+    jobTitle: z.string().min(1, { message: 'Job Title is required.' }),
     workDescription: z
       .string()
       .min(1, { message: 'Work Description is required.' }),
     workFrom: z.string().min(1, { message: 'Work from is required.' }),
-    workTo: z.string().min(1, { message: 'work to is required.' }),
+    workTo: z.string().min(1, { message: 'Work to is required.' }),
     referencePersonName: z
       .string()
-      .min(1, { message: ' referencePersonName is required.' }),
+      .min(1, { message: 'Reference Person Name is required.' }),
     referencePersonContact: z
       .string()
-      .min(1, { message: '  referencePersonContact is required.' }),
-    githubRepoLink: z.string().url({ message: 'Invalid URL.' }).optional(),
+      .min(1, { message: 'Reference Person Contact is required.' }),
+    githubRepoLink: z
+      .string()
+      .url({ message: 'GitHub Repositry link must be a valid URL.' })
+      .optional()
+      .refine((url) => url ? url.startsWith('https://github.com/') : true, {
+        message: 'GitHub repository URL must start with https://github.com/',
+      }),
     comments: z.string().optional(),
   })
   .refine(
@@ -60,6 +66,7 @@ const experienceFormSchema = z
       path: ['workTo'],
     },
   );
+
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 

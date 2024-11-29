@@ -44,10 +44,18 @@ const businessRegisterSchema = z.object({
   position: z.string().min(1, 'Position is required'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(1, 'Phone number is required'),
-  linkedin: z.string().url('Invalid URL').optional(),
+  linkedin: z
+    .string()
+    .url('Invalid URL')
+    .optional()
+    .refine(
+      (value) => !value || value.startsWith('https://www.linkedin.com/in/'),
+      { message: 'LinkedIn URL must start with "https://www.linkedin.com/in/"' }
+    ),
   personalWebsite: z.string().url('Invalid URL').optional(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
+
 
 type BusinessRegisterFormValues = z.infer<typeof businessRegisterSchema>;
 
@@ -205,7 +213,7 @@ export default function BusinessRegisterForm() {
               control={form.control}
               name="linkedin"
               label="LinkedIn"
-              placeholder="https://www.linkedin.com/in/johndoe"
+              placeholder="https://www.linkedin.com/in/username"
               type="url"
             />
           </div>
