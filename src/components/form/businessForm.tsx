@@ -36,8 +36,19 @@ const profileFormSchema = z.object({
   companyName: z.string().optional(),
   companySize: z.string().optional(),
   position: z.string().optional(),
-  linkedIn: z.string().url().optional(),
-  website: z.string().url().optional(),
+  linkedIn: z
+    .string()
+    .url({ message: 'Must be a valid URL.' })
+    .refine(
+      (url) =>
+        url.includes('linkedin.com/in/') ||
+        url.includes('linkedin.com/company/'),
+      {
+        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+      },
+    )
+    .optional(),
+  website: z.string().url({ message: 'Must be a valid URL.' }).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
