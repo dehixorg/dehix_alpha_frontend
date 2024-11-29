@@ -49,7 +49,7 @@ const experienceFormSchema = z
       .string()
       .url({ message: 'GitHub Repositry link must be a valid URL.' })
       .optional()
-      .refine((url) => url ? url.startsWith('https://github.com/') : true, {
+      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
         message: 'GitHub repository URL must start with https://github.com/',
       }),
     comments: z.string().optional(),
@@ -66,7 +66,6 @@ const experienceFormSchema = z
       path: ['workTo'],
     },
   );
-
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 

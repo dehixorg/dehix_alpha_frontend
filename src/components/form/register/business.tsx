@@ -50,12 +50,13 @@ const businessRegisterSchema = z.object({
     .optional()
     .refine(
       (value) => !value || value.startsWith('https://www.linkedin.com/in/'),
-      { message: 'LinkedIn URL must start with "https://www.linkedin.com/in/"' }
+      {
+        message: 'LinkedIn URL must start with "https://www.linkedin.com/in/"',
+      },
     ),
   personalWebsite: z.string().url('Invalid URL').optional(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
-
 
 type BusinessRegisterFormValues = z.infer<typeof businessRegisterSchema>;
 

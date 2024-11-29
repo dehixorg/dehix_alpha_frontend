@@ -46,7 +46,7 @@ const projectFormSchema = z
       .string()
       .url({ message: 'GitHub Repositry link must be a valid URL.' })
       .optional()
-      .refine((url) => url ? url.startsWith('https://github.com/') : true, {
+      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
         message: 'GitHub repository URL must start with https://github.com/',
       }),
     start: z.string().min(1, { message: 'Start date is required.' }),
@@ -72,7 +72,6 @@ const projectFormSchema = z
       path: ['end'],
     },
   );
-
 
 // Type for form values
 type ProjectFormValues = z.infer<typeof projectFormSchema>;

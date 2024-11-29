@@ -58,10 +58,12 @@ const profileFormSchema = z.object({
   linkedin: z
     .string()
     .url({ message: 'LinkedIn link must be a valid URL.' })
-    .refine((value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value), {
-      message:
-        'LinkedIn URL must start with: https://www.linkedin.com/in/',
-    })
+    .refine(
+      (value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value),
+      {
+        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+      },
+    )
     .optional(),
   personalWebsite: z.string().url().or(z.literal('')).optional(),
   password: z
@@ -76,7 +78,6 @@ const profileFormSchema = z.object({
     .max(60, { message: 'Work experience must not exceed 60 years.' }),
   dob: z.string().optional(),
 });
-
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
