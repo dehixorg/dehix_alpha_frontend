@@ -75,7 +75,6 @@ export default function ProfessionalInfo() {
         Object.values(entry.education),
       );
       setEducationData(flattenedData);
-      console.log(flattenedData, 'data from backend');
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }

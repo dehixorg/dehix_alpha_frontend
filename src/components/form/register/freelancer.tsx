@@ -133,7 +133,6 @@ export default function FreelancerRegisterForm() {
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
-      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',

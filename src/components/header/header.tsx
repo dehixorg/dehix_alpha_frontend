@@ -6,17 +6,15 @@ import DropdownProfile from '../shared/DropdownProfile';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 
-// Define the type for a breadcrumb item
 interface BreadcrumbItem {
   label: string;
   link: string;
 }
 
-// Define the type for the props
 interface HeaderProps {
   breadcrumbItems: BreadcrumbItem[];
-  menuItemsTop: any[]; // Replace with a more specific type if you have one for your menu items
-  menuItemsBottom: any[]; // Replace with a more specific type if you have one for your menu items
+  menuItemsTop: any[];
+  menuItemsBottom: any[];
   activeMenu: string;
 }
 

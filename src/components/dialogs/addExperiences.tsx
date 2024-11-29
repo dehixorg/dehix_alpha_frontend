@@ -29,7 +29,6 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
-// add message alert if requirement not filled!!
 const experienceFormSchema = z
   .object({
     company: z.string().min(1, { message: 'company name is required.' }),
@@ -129,7 +128,6 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
           comments: data.comments || '',
         },
       );
-      console.log('API Response:', response.data);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

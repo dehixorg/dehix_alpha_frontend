@@ -48,7 +48,7 @@ const TicketForm = () => {
   const [subject, setSubject] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
-  const [customerID, setCustomerID] = useState<string>(user?.uid || ''); // generate customer Id accordinly ......?????
+  const [customerID] = useState<string>(user?.uid || ''); // generate customer Id accordinly ......?????
   const [customerType, setCustomerType] = useState<string>('business');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);

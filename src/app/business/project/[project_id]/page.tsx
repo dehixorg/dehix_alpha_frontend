@@ -75,8 +75,6 @@ export default function Dashboard() {
 
         if (projectData) {
           setProject(projectData);
-        } else {
-          console.error('Unexpected data structure:', response.data);
         }
       } catch (error) {
         console.error('API Error:', error);

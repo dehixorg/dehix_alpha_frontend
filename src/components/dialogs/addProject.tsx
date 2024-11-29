@@ -67,7 +67,6 @@ const projectFormSchema = z
     },
   );
 
-// Type for form values
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 interface AddProjectProps {
@@ -101,7 +100,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     const fetchData = async () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
-        console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
             value: skill.label, // Set the value to label
@@ -184,7 +182,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           verificationUpdateTime: new Date().toISOString(),
         },
       );
-      console.log('API Response:', response.data);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

@@ -21,15 +21,13 @@ export default function Projects() {
   const [refresh, setRefresh] = useState(false);
   const [projects, setProjects] = useState<any>([]);
   const handleFormSubmit = () => {
-    // Toggle the refresh state to trigger useEffect
     setRefresh((prev) => !prev);
   };
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response get:', response.data?.projects);
-        setProjects(Object.values(response.data?.projects)); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        setProjects(Object.values(response.data?.projects));
       } catch (error) {
         console.error('API Error:', error);
       }

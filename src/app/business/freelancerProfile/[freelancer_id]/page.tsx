@@ -21,7 +21,7 @@ interface UserProfile {
   firstName: string;
   lastName: string;
   userName: string;
-  profilepic?: string;
+  profilePic?: string;
   email: string;
   dob: string;
   linkedin?: string;
@@ -66,7 +66,6 @@ interface UserProfile {
 const formatDate = (date: string) => new Date(date).toLocaleDateString();
 
 export default function FreelancerProfile() {
-  // const { freelancer_id } = useParams();
   const { freelancer_id } = useParams<{ freelancer_id: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +114,10 @@ export default function FreelancerProfile() {
             items={[
               { label: 'Business', link: '/dashboard/business' },
               { label: 'Freelancer Profile', link: '/dashboard/business' },
-              { label: `#${freelancer_id}`, link: '#' },
+              {
+                label: `${user?.firstName}  ${user?.lastName} `,
+                link: `/dashboard/business/${freelancer_id}`,
+              },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">
@@ -130,12 +132,11 @@ export default function FreelancerProfile() {
               {loading ? (
                 <Skeleton className="w-24 h-24 rounded-full mr-6" />
               ) : (
-                <Avatar className="w-24 h-24 rounded-full mr-6">
+                <Avatar className="w-24 h-24 rounded-full mr-6 relative overflow-hidden border-4 border-primary shadow-lg hover:scale-110 transition-transform duration-300 ease-in-out">
                   <AvatarImage
-                    src={
-                      user?.profilepic || '/placeholder.svg?height=80&width=80'
-                    }
-                    alt="Null"
+                    src={user?.profilePic || '/default-avatar.png'}
+                    alt={`${user?.firstName} ${user?.lastName} Profile Picture`}
+                    className="object-cover w-full h-full"
                   />
                   <AvatarFallback>{`${user?.firstName?.[0] || 'J'}${user?.lastName?.[0] || 'D'}`}</AvatarFallback>
                 </Avatar>
@@ -161,7 +162,7 @@ export default function FreelancerProfile() {
             <div className="grid grid-cols-1 gap-4 mt-4">
               {/* Professional Info */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Professional Info</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -197,7 +198,7 @@ export default function FreelancerProfile() {
 
               {/* Skills */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-1 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Skills</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -206,7 +207,7 @@ export default function FreelancerProfile() {
                   ) : user?.skills && user.skills.length > 0 ? (
                     user.skills.map((skill) => (
                       <p key={skill._id}>
-                        {skill.name} - Level: {skill.level}
+                        {skill.name} {skill.level}
                       </p>
                     ))
                   ) : (
@@ -217,7 +218,7 @@ export default function FreelancerProfile() {
 
               {/* Education */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-1 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Education</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -244,7 +245,7 @@ export default function FreelancerProfile() {
 
               {/* Projects */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Projects</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -273,7 +274,7 @@ export default function FreelancerProfile() {
 
               {/* Other Info */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-2 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Other Info</CardTitle>
                 </CardHeader>
                 <CardContent>

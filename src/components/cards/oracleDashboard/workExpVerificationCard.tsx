@@ -82,7 +82,6 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   });
   const selectedType = form.watch('type');
   useEffect(() => {
-    // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
   }, [status]);
 
@@ -91,15 +90,8 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
       comments: data.comment,
       verification_status: data.type,
     });
-    console.log(
-      'Comments:',
-      data.comment || '',
-      { ...data, verification_status: data.type },
-      _id,
-    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
-    // console.log("Comments:", data.comment || "");
     onCommentUpdate(data.comment || '');
   }
 

@@ -208,14 +208,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                               ? 'Loading...'
                                               : 'Reject'}
                                           </Button>
-                                          <Button
-                                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto"
-                                            onClick={() =>
-                                              console.log(
-                                                `Viewing details for ${bid.userName}`,
-                                              )
-                                            }
-                                          >
+                                          <Button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto">
                                             Interview
                                           </Button>
                                         </>
