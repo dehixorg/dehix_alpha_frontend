@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation'; 
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -75,6 +76,8 @@ export default function FreelancerRegisterForm() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const searchParams = useSearchParams(); 
+  const referral = searchParams.get('referral') || ''; 
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -92,7 +95,7 @@ export default function FreelancerRegisterForm() {
       perHourPrice: 0,
       workExperience: 0,
       dob: '',
-      referralCode: '',
+      referralCode: referral,
     },
     mode: 'all',
   });
@@ -298,6 +301,7 @@ export default function FreelancerRegisterForm() {
             control={form.control}
             name="referralCode"
             label="Do you have a referral code? (Optional)"
+            type="Text"
             placeholder="Enter referral code"
           />
           <Button type="submit" className="w-full" disabled={isLoading}>
