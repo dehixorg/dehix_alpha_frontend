@@ -122,12 +122,11 @@ export default function BusinessProfile() {
         {/* Content */}
         <main className="flex flex-col items-center p-4 sm:px-6 gap-6">
           {/* Profile Overview */}
+          <h1 className="text-center text-xl font-bold text-foreground">
+            Business Profile Overview
+          </h1>
           <Card className="w-full max-w-4xl shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-center text-xl font-bold text-gray-800">
-                Business Profile Overview
-              </CardTitle>
-            </CardHeader>
+            <CardHeader></CardHeader>
             <CardContent className="flex flex-col md:flex-row items-center gap-6">
               {loading ? (
                 <Skeleton className="w-24 h-24 rounded-full" />
