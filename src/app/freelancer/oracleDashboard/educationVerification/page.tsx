@@ -26,6 +26,7 @@ import {
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import { StatusEnum } from '@/utils/freelancer/enum';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface EducationData {
@@ -60,7 +61,7 @@ export default function ProfessionalInfo() {
     }
     return (
       data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === 'pending')
+      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
     );
   });
 

@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectType {
   _id: string;
@@ -36,7 +38,7 @@ interface ProjectType {
     accepted?: string[];
     status?: string;
   }[];
-  status?: string;
+  status?: StatusEnum;
   team?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -51,7 +53,7 @@ type ProjectCardProps = React.ComponentProps<typeof Card> & {
 export function ProjectCard({
   cardClassName,
   project,
-  type = 'business',
+  type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
@@ -105,7 +107,7 @@ export function ProjectCard({
       <CardFooter>
         <Link href={`/${type}/project/${project._id}`} className="w-full">
           <Button
-            className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
+            className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >
             View full details
           </Button>

@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'; // Import the Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
   _id: string;
@@ -39,7 +40,7 @@ interface SkillDomainData {
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
-  status: string;
+  status: StatusEnum;
 }
 
 // Define the props for the SkillDialog component
@@ -81,7 +82,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       experience: '',
       monthlyPay: '',
       activeStatus: false,
-      status: 'pending',
+      status: StatusEnum.PENDING,
     },
   });
 

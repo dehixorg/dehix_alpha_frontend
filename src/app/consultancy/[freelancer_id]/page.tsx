@@ -43,6 +43,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { Separator } from '@/components/ui/separator';
+import { ProjectStatus } from '@/utils/freelancer/enum';
 
 interface Skill {
   label: string;
@@ -106,10 +107,10 @@ export default function ConsultancyPage() {
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == ProjectStatus.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== ProjectStatus.COMPLETED,
   );
 
   const form = useForm<ConsultancyFormValues>({

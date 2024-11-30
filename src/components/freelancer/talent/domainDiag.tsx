@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'; // Import ShadCN Input component
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 // Define the type for a domain
 interface Domain {
@@ -41,7 +42,7 @@ interface SkillDomainData {
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
-  status: string;
+  status: StatusEnum;
 }
 
 // Define the props for the DomainDialog component
@@ -87,7 +88,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       experience: '',
       monthlyPay: '',
       activeStatus: false,
-      status: 'pending',
+      status: StatusEnum.PENDING,
     },
   });
 

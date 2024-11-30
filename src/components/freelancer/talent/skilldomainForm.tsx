@@ -21,6 +21,7 @@ import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
   _id: string;
@@ -37,7 +38,7 @@ interface SkillDomainData {
   label: string;
   experience: string;
   monthlyPay: string;
-  status: string;
+  status: StatusEnum;
   activeStatus: boolean;
 }
 
@@ -93,7 +94,7 @@ const SkillDomainForm: React.FC = () => {
   const onSubmitSkill = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'pending', activeStatus: false },
+      { ...data, status: StatusEnum.PENDING, activeStatus: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -101,7 +102,7 @@ const SkillDomainForm: React.FC = () => {
   const onSubmitDomain = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'pending', activeStatus: false },
+      { ...data, status: StatusEnum.PENDING, activeStatus: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };

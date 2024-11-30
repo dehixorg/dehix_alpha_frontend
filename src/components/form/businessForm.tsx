@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NotificationTypeEnum, Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -142,7 +143,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         <ProfilePictureUpload
           user_id={user._id}
           profile={user.profilePic}
-          entityType="business"
+          entityType={Type.BUSINESS}
         />
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
           <div className="grid grid-cols-2 gap-6">

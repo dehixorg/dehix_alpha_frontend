@@ -20,6 +20,7 @@ import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { Button } from '@/components/ui/button';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectProfile {
   _id?: string;
@@ -57,7 +58,7 @@ interface Project {
   role?: string;
   projectType?: string;
   profiles?: ProjectProfile[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
+  status?: StatusEnum; // enum
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -88,13 +89,13 @@ export default function Dashboard() {
 
     try {
       const response = await axiosInstance.put(`/project/${project_id}`, {
-        status: 'COMPLETED',
+        status: StatusEnum.COMPLETED,
       });
 
       if (response?.status === 200) {
         setProject((prev) => {
           if (prev) {
-            return { ...prev, status: 'Completed' };
+            return { ...prev, status: StatusEnum.COMPLETED };
           }
           return prev;
         });

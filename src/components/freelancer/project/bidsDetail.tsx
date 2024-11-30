@@ -11,6 +11,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -32,7 +33,7 @@ interface BidDetail {
   userName: string;
   description: string;
   current_price: string;
-  bid_status: 'Accepted' | 'Pending' | 'Completed' | 'Rejected';
+  bid_status: StatusEnum; //enum
   createdAt?: Date;
   updatedAt?: Date;
 }

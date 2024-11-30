@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface FilterState {
   projects: string[];
@@ -48,7 +49,7 @@ interface Project {
     appliedCandidates?: string[];
     rejected?: string[];
     accepted?: string[];
-    status?: string;
+    status?: StatusEnum;
   }[];
   profiles?: {
     _id?: string;
