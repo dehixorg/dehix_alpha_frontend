@@ -246,10 +246,6 @@ export default function DropdownProfile() {
               No referral code is available for this user.
             </p>
           )}
-
-          <div className="flex justify-end mt-6">
-            <Button onClick={() => setIsReferralOpen(false)}>Close</Button>
-          </div>
         </DialogContent>
       </Dialog>
     </>
