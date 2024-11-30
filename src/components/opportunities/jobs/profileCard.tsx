@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import {
   Dialog,
@@ -15,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfileProps {
   profile: {
@@ -39,6 +41,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [amount, setAmount] = React.useState('');
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // New state to track bid submission
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
@@ -57,6 +60,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
       setAmount('');
       setDescription('');
       setDialogOpen(false);
+      setIsBidSubmitted(true); // Mark bid as submitted
       toast({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
@@ -69,26 +73,24 @@ const ProfileCard: React.FC<ProfileProps> = ({
       });
     }
   };
+
   const toggleShowMore = () => setShowMore(!showMore);
 
   return (
-    <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 hover:bg-muted rounded">
+    <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 rounded bg-secondary">
       <div className="flex flex-col sm:flex-row justify-between items-start">
         {/* Left: Domain and Freelancers Required in the same line */}
         <div className="space-y-2">
+          <p className="font-medium text-lg text-foreground mr-2">
+            {profile.domain}
+          </p>
+          <Badge className="bg-blue-400">
+            {profile.freelancersRequired} Positions
+          </Badge>
+          <Badge className="text-xs ml-2">{profile.experience} Years</Badge>
           <div className="flex items-center flex-wrap">
-            <p className="font-medium text-lg text-foreground mr-2">
-              {profile.domain}
-            </p>
-            <p className="font-medium text-lg text-foreground mr-2">
-              {profile.freelancersRequired}
-            </p>
-          </div>
-          <div className="flex items-center flex-wrap">
-            <p className="text-gray-600 text-sm mr-2">
-              {profile.experience} years
-            </p>
-            <p className="text-gray-600 text-sm mr-2">{profile.minConnect}</p>
+            Connects required:
+            <p className="text-gray-400 text-md ml-2">{profile.minConnect}</p>
           </div>
         </div>
 
@@ -97,12 +99,12 @@ const ProfileCard: React.FC<ProfileProps> = ({
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-[100px] h-[40px] "
-                variant="outline"
+                size="sm"
+                className="px-5"
                 type="button"
-                disabled={bidExist}
+                disabled={bidExist || isBidSubmitted} // Disable if bid exists or already submitted
               >
-                {!bidExist ? 'Bid' : 'Applied'}
+                {isBidSubmitted ? 'Added' : !bidExist ? 'Bid' : 'Applied'}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -143,8 +145,8 @@ const ProfileCard: React.FC<ProfileProps> = ({
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={bidExist}>
-                    {!bidExist ? 'Bid' : 'Applied'}
+                  <Button type="submit" disabled={bidExist || isBidSubmitted}>
+                    {isBidSubmitted ? 'Added' : 'Bid'}
                   </Button>
                 </div>
               </form>
@@ -162,9 +164,19 @@ const ProfileCard: React.FC<ProfileProps> = ({
               {showMore
                 ? profile.description
                 : `${profile.description.slice(0, 50)}...`}
-              <button onClick={toggleShowMore} className="text-blue-500 ml-2">
-                {showMore ? 'Show Less' : 'Show More'}
-              </button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex bg-black hover:bg-black items-center text-sm cursor-pointer ml-auto px-4"
+                onClick={toggleShowMore}
+              >
+                {showMore ? 'Less' : 'More'}
+                {showMore ? (
+                  <ChevronUp className="ml-1 h-4 w-4" />
+                ) : (
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                )}
+              </Button>
             </p>
           ) : (
             profile.description

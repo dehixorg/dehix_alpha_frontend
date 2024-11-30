@@ -21,15 +21,13 @@ export default function ProfessionalInfo() {
   const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
   const handleFormSubmit = () => {
-    // Toggle the refresh state to trigger useEffect
     setRefresh((prev) => !prev);
   };
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response get:', response.data?.professionalInfo);
-        setExperiences(Object.values(response.data?.professionalInfo)); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        setExperiences(Object.values(response.data?.professionalInfo));
       } catch (error) {
         console.error('API Error:', error);
       }

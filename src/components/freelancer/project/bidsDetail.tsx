@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -57,7 +58,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get(`/project/${id}/project`);
+        const response = await axiosInstance.get(`/project/${id}`);
         setUserData(response.data);
       } catch (error) {
         setError('Error fetching user data.');
@@ -98,7 +99,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const fetchBid = async (profileId: string) => {
     try {
       const response = await axiosInstance.get(
-        `/bid/${id}/${profileId}/profile/project/bid`,
+        `/bid/project/${id}/profile/${profileId}/bid`,
       );
       setBids(response.data?.data || []);
     } catch (e) {
@@ -175,11 +176,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                       </span>
                                     </div>
 
-                                    <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2">
+                                    <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
                                       {(status === 'Pending' ||
                                         status === 'Lobby') && (
                                         <>
-                                          <button
+                                          <Button
                                             className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
                                             onClick={() =>
                                               handleUpdateStatus(
@@ -192,8 +193,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                             {loadingBids[bid._id]
                                               ? 'Loading...'
                                               : 'Accept'}
-                                          </button>
-                                          <button
+                                          </Button>
+                                          <Button
                                             className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
                                             onClick={() =>
                                               handleUpdateStatus(
@@ -206,17 +207,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                             {loadingBids[bid._id]
                                               ? 'Loading...'
                                               : 'Reject'}
-                                          </button>
-                                          <button
-                                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto"
-                                            onClick={() =>
-                                              console.log(
-                                                `Viewing details for ${bid.userName}`,
-                                              )
-                                            }
-                                          >
+                                          </Button>
+                                          <Button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto">
                                             Interview
-                                          </button>
+                                          </Button>
                                         </>
                                       )}
                                     </div>

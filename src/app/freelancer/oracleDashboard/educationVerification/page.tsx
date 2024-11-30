@@ -67,7 +67,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/oracle?doc_type=education`,
+        `/verification/${user.uid}/oracle?doc_type=education`,
       );
       const data = response.data.data;
       setEducationData(data);
@@ -75,7 +75,6 @@ export default function ProfessionalInfo() {
         Object.values(entry.education),
       );
       setEducationData(flattenedData);
-      console.log(flattenedData, 'data from backend');
     } catch (error) {
       console.log(error, 'error in getting verification data');
     }

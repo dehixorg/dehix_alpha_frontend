@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Mail, MapPin, Building2, Eye, XCircle } from 'lucide-react';
+import {
+  Mail,
+  Building2,
+  Eye,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -90,7 +97,7 @@ const JobCard: React.FC<JobCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold text-foreground">
           <div className="flex items-center justify-between text-gray-600 gap-2">
-            <div className="flex items-center">
+            <div className="flex items-center dark:text-white">
               <Link href={`/freelancer/market/${companyId}`} passHref>
                 <span>{projectName}</span>
               </Link>
@@ -102,7 +109,7 @@ const JobCard: React.FC<JobCardProps> = ({
             <div className="flex space-x-4">
               {/* View Button */}
               <Link href={`/freelancer/project/${id}`} passHref>
-                <Button variant="outline" className="text-white">
+                <Button variant="outline" className="dark:text-white">
                   <Eye className="w-5 h-5" /> {/* Eye icon for "View" */}
                   <span>&nbsp;View</span>
                 </Button>
@@ -110,7 +117,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
               {/* Not Interested Button */}
               <Button
-                className="bg-muted hover:bg-secondary-grey-100 text-white"
+                className="dark:bg-muted hover:bg-secondary-grey-100 text-white"
                 onClick={() => notInterestedProject(id)}
               >
                 <XCircle className="w-5 h-5" />
@@ -122,38 +129,41 @@ const JobCard: React.FC<JobCardProps> = ({
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="ml-4 space-y-4">
+      <CardContent className="space-y-4">
         <div className="gap-6">
           {/* Left section */}
           <div className="space-y-4">
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-500">
               <Building2 className="w-4 h-4" />
               <p className="ml-2 mr-2"> {companyName} </p>
             </div>
-            <div className="flex items-center text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <p className="ml-2 mr-2"> {companyName} </p>
-            </div>
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-500">
               <Mail className="h-4 w-4" />
-              <p className="ml-2 text-sm"> {email} </p>
+              <p className="ml-2"> {email} </p>
             </div>
 
             {/* Description */}
-            <div className="mt-5">
-              <p className="text-gray-400 break-words">
+            <div className="flex items-start gap-1">
+              <p className="text-gray-400 break-words mt-2">
                 {showFullDescription
                   ? description
                   : description.slice(0, charLimit) +
                     (isDescriptionLong ? '...' : '')}
               </p>
               {isDescriptionLong && (
-                <button
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="flex items-center text-sm cursor-pointer ml-auto px-4"
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-gray-400 ml-1 cursor-pointer"
                 >
-                  {showFullDescription ? 'Show less' : 'Show more'}
-                </button>
+                  {showFullDescription ? 'Less' : 'More'}
+                  {showFullDescription ? (
+                    <ChevronUp className="ml-1 h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </Button>
               )}
             </div>
 

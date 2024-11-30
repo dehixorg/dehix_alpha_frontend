@@ -22,6 +22,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input'; // Import the Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
@@ -121,6 +122,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         title: 'Error',
         description: 'Failed to add talent. Please try again.',
       });
+    } finally {
+      setLoading(false); // Ensures the button returns to its default state
     }
   };
 
@@ -180,13 +183,13 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               control={control}
               name="experience"
               render={({ field }) => (
-                <input
+                <Input
                   type="number"
                   placeholder="Experience (years)"
                   min={0}
                   max={50}
                   {...field}
-                  className="border p-2 rounded mt-2 w-full"
+                  className="mt-2 w-full"
                 />
               )}
             />
@@ -198,12 +201,12 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             control={control}
             name="monthlyPay"
             render={({ field }) => (
-              <input
+              <Input
                 type="number"
-                placeholder="Monthly Pay"
+                placeholder="$ Monthly Pay"
                 min={0}
                 {...field}
-                className="border p-2 rounded mt-2 w-full"
+                className="mt-2 w-full"
               />
             )}
           />
@@ -211,7 +214,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? 'Loading...' : 'Submit'}
             </Button>
           </DialogFooter>

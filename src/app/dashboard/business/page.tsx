@@ -20,7 +20,6 @@ import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
-import InterviewCard from '@/components/shared/interviewCard';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
@@ -32,30 +31,26 @@ import dummyData from '@/dummydata.json';
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-  const sampleInterviewData = dummyData.freelancersampleInterview;
-  console.log(responseData);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+          `/project/business/${user.uid}`,
+        );
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
     };
-
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid]);
-  console.log(user);
+
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == 'COMPLETED',
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== 'COMPLETED',
   );
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -98,9 +93,14 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
+                  {/* Wrap the Button with the Link component to make it clickable */}
+                  <Link href="/business/add-project" passHref>
+                    <Button className="w-full">
+                      {' '}
+                      {/* Ensure the Button takes up full width */}
+                      Create New Project
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
 
@@ -127,7 +127,7 @@ export default function Dashboard() {
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
@@ -148,7 +148,7 @@ export default function Dashboard() {
                 completedProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
@@ -172,14 +172,15 @@ export default function Dashboard() {
                 <p className="text-gray-500">No interviews scheduled</p>
               </div>
             ) : (
-              <InterviewCard
-                interviewer={sampleInterviewData.interviewer}
-                interviewee={sampleInterviewData.interviewee}
-                skill={sampleInterviewData.skill}
-                interviewDate={new Date(sampleInterviewData.interviewDate)}
-                rating={sampleInterviewData.rating}
-                comments={sampleInterviewData.comments}
-              />
+              <></>
+              // <InterviewCard
+              //   interviewer={sampleInterviewData.interviewer}
+              //   interviewee={sampleInterviewData.interviewee}
+              //   skill={sampleInterviewData.skill}
+              //   interviewDate={new Date(sampleInterviewData.interviewDate)}
+              //   rating={sampleInterviewData.rating}
+              //   comments={sampleInterviewData.comments}
+              // />
             )}
           </div>
         </main>

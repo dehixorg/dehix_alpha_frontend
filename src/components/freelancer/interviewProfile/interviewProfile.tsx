@@ -20,7 +20,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
-// import { SkillDialog } from '@/components/dialogs/skillDialog';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
+import SkillDialog from '@/components/dialogs/skillDialog';
 
 interface Skill {
   label: string;
@@ -31,7 +32,7 @@ interface Domain {
 }
 interface SkillFormData {
   name: string;
-  experience: string;
+  experience: number;
   level: string;
 }
 
@@ -44,7 +45,7 @@ interface DomainFormData {
 interface SkillData {
   _id?: string;
   name: string;
-  experience: string;
+  experience: number;
   level: string;
   interviewStatus: string;
 }
@@ -104,10 +105,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
 
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
         const freelancerSkillsResponse = await axiosInstance.get(
@@ -140,17 +141,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const { reset: resetDomain } = useForm<DomainFormData>({
     resolver: zodResolver(DomainSchema),
   });
-
-  const getBadgeColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-500 text-white';
-      case 'pending':
-        return 'bg-yellow-500 text-black';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
 
   const onSubmitSkill = async (data: SkillFormData) => {
     setLoading(true);
@@ -293,7 +283,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             >
               <Plus className="mr-2 h-4 w-4" /> Add Skill
             </Button>
-            {/* <SkillDialog
+            <SkillDialog
               open={openSkillDialog}
               onClose={() => setOpenSkillDialog(false)}
               onSubmit={onSubmitSkill}
@@ -301,7 +291,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               levels={levels}
               defaultValues={editingSkill || undefined}
               loading={loading}
-            /> */}
+            />
           </div>
           <Table>
             <TableHeader>
@@ -336,9 +326,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>{skill.name}</TableCell>
                       <TableCell>{skill.level}</TableCell>
                       <TableCell>
-                        {skill.experience.length > 0
-                          ? skill.experience + 'years'
-                          : ''}
+                        {skill.experience > 0 ? skill.experience + 'years' : ''}
                       </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(skill.interviewStatus)}>

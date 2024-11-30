@@ -31,7 +31,7 @@ interface DomainFormData {
 interface DomainDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: DomainFormData) => void;
+  onSubmit: (data: DomainFormData) => Promise<void>;
   domainOptions: Array<{ label: string }>;
   levels: string[];
   defaultValues?: DomainFormData;
@@ -88,48 +88,80 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
           <div className="space-y-4">
+            {/* Name Field */}
             <Controller
               control={control}
               name="name"
               render={({ field }) => (
-                <Select {...field} defaultValue={defaultValues?.name}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a domain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {domainOptions.map((domain, idx) => (
-                      <SelectItem key={idx} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a domain" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {domainOptions.map((domain, idx) => (
+                        <SelectItem key={idx} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.name && (
+                    <p className="text-red-500 text-sm">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </>
               )}
             />
-            <Input
-              {...control}
+
+            {/* Experience Field */}
+            <Controller
+              control={control}
               name="experience"
-              placeholder="Years of experience"
-              type="number"
-              min="0"
-              defaultValue={defaultValues?.experience}
+              render={({ field }) => (
+                <>
+                  <Input
+                    {...field}
+                    placeholder="Years of experience"
+                    type="number"
+                    min="0"
+                  />
+                  {errors.experience && (
+                    <p className="text-red-500 text-sm">
+                      {errors.experience.message}
+                    </p>
+                  )}
+                </>
+              )}
             />
-            <Select
-              {...control}
+
+            {/* Level Field */}
+            <Controller
+              control={control}
               name="level"
-              defaultValue={defaultValues?.level}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select level" />
-              </SelectTrigger>
-              <SelectContent>
-                {levels.map((level, idx) => (
-                  <SelectItem key={idx} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              render={({ field }) => (
+                <>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {levels.map((level, idx) => (
+                        <SelectItem key={idx} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.level && (
+                    <p className="text-red-500 text-sm">
+                      {errors.level.message}
+                    </p>
+                  )}
+                </>
+              )}
+            />
           </div>
           <DialogFooter>
             <Button className="mt-3" type="submit" disabled={loading}>

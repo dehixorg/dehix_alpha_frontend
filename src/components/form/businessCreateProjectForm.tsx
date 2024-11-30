@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
-    message: 'First Name must be at least 2 characters.',
+    message: 'Project Name must be at least 2 characters.',
   }),
   email: z
     .string({
@@ -52,25 +52,23 @@ const profileFormSchema = z.object({
     )
     .optional(),
 
-  description: z.string().max(160).min(4).optional(),
+  description: z.string().max(500).min(20).optional(),
   profiles: z
     .array(
       z.object({
         domain: z.string(),
-        freelancersRequired: z // condition for freelancer
-          .string()
-          .refine((val) => parseInt(val, 10) > 0, {
-            message: 'Number of freelancers required should be greater than 0.',
-          }),
+        freelancersRequired: z.string().refine((val) => parseInt(val, 10) > 0, {
+          message: 'Number of freelancers required must be greater than 0.',
+        }),
         skills: z.array(z.string()),
         experience: z.string(),
         minConnect: z.string(),
         rate: z //condition for rate
           .string()
           .refine((val) => parseFloat(val) >= 0, {
-            message: 'Per hour rate should not be less than 0.',
+            message: 'Rate per hour must be non-negative.',
           }),
-        description: z.string().max(160).min(4),
+        description: z.string().max(200).min(20),
       }),
     )
     .optional(),
@@ -114,24 +112,18 @@ interface projectDomain {
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
 
-  const [skills, setSkills] = useState<any>([]);
-  const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [currSkills, setCurrSkills] = useState<string[]>([]);
 
-  const [domains, setDomains] = useState<any>([]);
-  const [currDomains] = useState<any>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
 
-  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
-  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [projectDomains, setProjectDomains] = useState<projectDomain[]>([]);
+  const [currProjectDomains, setCurrProjectDomains] = useState<string[]>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<string>('');
 
   const [loading, setLoading] = useState(false);
-
   const handleAddProjectDomain = () => {
-    if (
-      tmpProjectDomains &&
-      !currProjectDomains.some((domain: any) => domain === tmpProjectDomains)
-    ) {
+    if (tmpProjectDomains && !currProjectDomains.includes(tmpProjectDomains)) {
       setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
       setTmpProjectDomains('');
     }
@@ -143,57 +135,52 @@ export function CreateProjectBusinessForm() {
     );
   };
 
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
-      setCurrSkills([...currSkills, tmpSkill]);
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
-        console.log(
-          'projectDomain API Response get:',
-          projectDomainResponse.data.data,
-        );
-        const transformedProjectDomain = projectDomainResponse.data.data.map(
-          (skill: projectDomain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setProjectDomains(transformedProjectDomain);
-
-        const domainResponse = await axiosInstance.get('/domain/all');
-        console.log('Domain API Response get:', domainResponse.data.data);
-        const transformedDomain = domainResponse.data.data.map(
-          (skill: Domain) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setDomains(transformedDomain);
-
-        const skillsResponse = await axiosInstance.get('/skills/all');
-        console.log('Skills API Response get:', skillsResponse.data.data);
-        const transformedSkills = skillsResponse.data.data.map(
-          (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setSkills(transformedSkills);
+        const [projectDomainResponse, domainResponse, skillsResponse] =
+          await Promise.all([
+            axiosInstance.get('/projectdomain'),
+            axiosInstance.get('/domain'),
+            axiosInstance.get('/skills'),
+          ]);
+        if (domainResponse.status == 200 && domainResponse?.data?.data) {
+          setDomains(
+            domainResponse?.data?.data.map((domain: any) => ({
+              value: domain?.label,
+              label: domain?.label,
+            })),
+          );
+        }
+        if (skillsResponse.status == 200 && skillsResponse?.data?.data) {
+          setSkills(
+            skillsResponse?.data?.data.map((skill: any) => ({
+              value: skill?.label,
+              label: skill?.label,
+            })),
+          );
+        }
+        if (
+          projectDomainResponse.status == 200 &&
+          projectDomainResponse?.data?.data
+        ) {
+          setProjectDomains(
+            projectDomainResponse?.data?.data.map((projectDoamin: any) => ({
+              value: projectDoamin?.label,
+              label: projectDoamin?.label,
+            })),
+          );
+        }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load data. Please try again later.',
+        });
       }
     };
+
     fetchData();
   }, []);
 
@@ -203,7 +190,11 @@ export function CreateProjectBusinessForm() {
     mode: 'onChange',
   });
 
-  const { fields: urlFields, append: appendUrl } = useFieldArray({
+  const {
+    fields: urlFields,
+    append: appendUrl,
+    remove: removeUrl,
+  } = useFieldArray({
     name: 'urls',
     control: form.control,
   });
@@ -217,42 +208,64 @@ export function CreateProjectBusinessForm() {
     control: form.control,
   });
 
+  // A function to add skills to a specific profile
+  const handleAddSkillToProfile = (profileIndex: any, skill: any) => {
+    const currentSkills = form.getValues(`profiles.${profileIndex}.skills`);
+    if (!currentSkills.includes(skill)) {
+      form.setValue(`profiles.${profileIndex}.skills`, [
+        ...currentSkills,
+        skill,
+      ]);
+    }
+    if (!currSkills.includes(skill)) {
+      setCurrSkills([...currSkills, skill]);
+    }
+  };
+
+  // A function to remove skills from a specific profile
+  const handleRemoveSkillFromProfile = (profileIndex: any, skill: any) => {
+    const updatedSkills = form
+      .getValues(`profiles.${profileIndex}.skills`)
+      .filter((s) => s !== skill);
+    form.setValue(`profiles.${profileIndex}.skills`, updatedSkills);
+
+    setCurrSkills(currSkills.filter((skill) => skill !== skill));
+  };
+
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      console.log('Form body:', {
-        ...data,
-        role: '',
-        projectType: '',
-        skillsRequired: currSkills,
-        domains: currDomains,
-      });
-
       const response = await axiosInstance.post(
-        `/project/${user.uid}/project`,
+        `/project/business/${user.uid}`,
         {
           ...data,
+          companyId: user.uid,
           role: '',
           projectType: '',
+          projectDomain: currProjectDomains,
           skillsRequired: currSkills,
-          domains: currDomains,
         },
       );
-      console.log('API Response:', response.data);
-
-      toast({
-        title: 'Project Added',
-        description: 'Your project has been successfully added.',
-      });
+      if (response.status === 200) {
+        toast({
+          title: 'Project Added',
+          description: 'Your project has been successfully added.',
+        });
+      } else {
+        throw new Error('Failed to add project');
+      }
     } catch (error) {
       console.error('API Error:', error);
+      form.reset();
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to add project. Please try again later.',
       });
+    } finally {
+      setLoading(false);
+      form.reset(defaultValues); //add reset after form is submit
     }
-    form.reset(defaultValues); //add reset after form is submit
   }
 
   return (
@@ -379,31 +392,60 @@ export function CreateProjectBusinessForm() {
           />
           <div className="lg:col-span-2 xl:col-span-2">
             {urlFields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={index}
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                      URLs
-                    </FormLabel>
-                    <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                      Enter URL of your account
-                    </FormDescription>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div key={field.id} className="flex items-center mb-2">
+                <FormField
+                  control={form.control}
+                  name={`urls.${index}.value`}
+                  render={({ field }) => (
+                    <FormItem className="relative w-full">
+                      <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                        URLs
+                      </FormLabel>
+                      <FormDescription className={cn(index !== 0 && 'sr-only')}>
+                        Enter URL of your account
+                      </FormDescription>
+                      <FormControl>
+                        <div className="relative">
+                          <Input className="pr-10" {...field} />
+                          {/* Position the remove button */}
+                          <button
+                            type="button"
+                            onClick={() => removeUrl(index)}
+                            className="absolute inset-y-0 right-2 flex items-center justify-center text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             ))}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => appendUrl({ value: '' })}
+              className="mt-2"
+              onClick={() => {
+                // Force validation of current URL fields
+                const isValid = urlFields.every((_, index) =>
+                  form.getValues(`urls.${index}.value`).trim(),
+                );
+
+                if (!isValid) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description:
+                      'Please fill all URL fields before adding a new one.',
+                  });
+                  return;
+                }
+
+                appendUrl({ value: '' }); // Add a new field only if validation passes
+              }}
             >
               Add URL
             </Button>
@@ -450,6 +492,7 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter number"
+                          min={1}
                           {...field}
                         />
                       </FormControl>
@@ -467,20 +510,25 @@ export function CreateProjectBusinessForm() {
                         <div>
                           <div className="flex items-center mt-2">
                             <Select
-                              onValueChange={(value) => setTmpSkill(value)}
+                              onValueChange={(value) =>
+                                handleAddSkillToProfile(index, value)
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select skill" />
                               </SelectTrigger>
                               <SelectContent>
-                                {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
+                                {skills.map((skill) => (
+                                  <SelectItem
+                                    key={skill._id}
+                                    value={skill.label}
+                                  >
                                     {skill.label}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button
+                            {/* <Button
                               variant="outline"
                               type="button"
                               size="icon"
@@ -488,24 +536,28 @@ export function CreateProjectBusinessForm() {
                               onClick={handleAddSkill}
                             >
                               <Plus className="h-4 w-4" />
-                            </Button>
+                            </Button> */}
                           </div>
                           <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
+                            {form
+                              .getValues(`profiles.${index}.skills`)
+                              .map((skill, skillIndex) => (
+                                <Badge
+                                  key={skillIndex}
+                                  className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {skill}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveSkillFromProfile(index, skill)
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ))}
                           </div>
                         </div>
                       </FormControl>
@@ -520,7 +572,13 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter experience" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter experience"
+                          min={0}
+                          max={60}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -549,6 +607,8 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter rate"
+                          min={0}
+                          max={200}
                           {...field}
                         />
                       </FormControl>

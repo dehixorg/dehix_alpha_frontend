@@ -160,7 +160,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
   const handleDeleteProjDomain = (projectDomainToDelete: string) => {
-    setCurrDomains(
+    setCurrProjectDomains(
       currProjectDomains.filter(
         (projectDomain: any) => projectDomain.name !== projectDomainToDelete,
       ),
@@ -170,20 +170,31 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user_id}`);
-        setUser(response.data);
-        setCurrSkills(response.data.skills);
-        setCurrDomains(response.data.domain);
+        const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+        const skillsResponse = await axiosInstance.get('/skills');
+        const domainsResponse = await axiosInstance.get('/domain');
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        // Set options for dropdowns
         setSkills(skillsResponse.data.data);
-
-        const domainsResponse = await axiosInstance.get('/domain/all');
         setDomains(domainsResponse.data.data);
-
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
         setProjectDomains(projectDomainResponse.data.data);
+
+        setCurrSkills(userResponse.data.skills);
+        setCurrDomains(userResponse.data.domain);
+        setCurrProjectDomains(userResponse.data.projectDomain);
+
+        form.reset({
+          firstName: userResponse.data.firstName || '',
+          lastName: userResponse.data.lastName || '',
+          username: userResponse.data.userName || '',
+          email: userResponse.data.email || '',
+          phone: userResponse.data.phone || '',
+          role: userResponse.data.role || '',
+          personalWebsite: userResponse.data.personalWebsite || '',
+          resume: userResponse.data.resume || '',
+          description: userResponse.data.description || '',
+        });
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -213,7 +224,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: currSkills,
         domain: currDomains,
       });
-      const response = await axiosInstance.put(`/freelancer/${user_id}`, {
+      await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
         skills: currSkills,
         domain: currDomains,

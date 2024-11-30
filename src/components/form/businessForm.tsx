@@ -36,8 +36,19 @@ const profileFormSchema = z.object({
   companyName: z.string().optional(),
   companySize: z.string().optional(),
   position: z.string().optional(),
-  linkedIn: z.string().url().optional(),
-  website: z.string().url().optional(),
+  linkedIn: z
+    .string()
+    .url({ message: 'Must be a valid URL.' })
+    .refine(
+      (url) =>
+        url.includes('linkedin.com/in/') ||
+        url.includes('linkedin.com/company/'),
+      {
+        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+      },
+    )
+    .optional(),
+  website: z.string().url({ message: 'Must be a valid URL.' }).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -65,7 +76,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/business/${user_id}`);
-        console.log('API Response get:', response.data);
         setUser(response.data);
       } catch (error) {
         console.error('API Error:', error);
@@ -121,6 +131,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         title: 'Error',
         description: 'Failed to update profile. Please try again later.',
       });
+    } finally {
+      setLoading(false); // Always reset loading state
     }
   }
 

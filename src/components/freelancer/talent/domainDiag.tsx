@@ -22,6 +22,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input'; // Import ShadCN Input component
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
@@ -106,11 +107,10 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       );
 
       if (response.status === 200) {
-        // Assuming the response contains the newly created talent data including UID
         const newTalent = response.data.data; // Adjust based on your response structure
         onSubmitDomain({
           ...data,
-          uid: newTalent._id, // Update this line to use the UID from the response
+          uid: newTalent._id, // Use the UID from the response
         });
         reset();
         setOpen(false); // Close the dialog after successful submission
@@ -127,6 +127,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         title: 'Error',
         description: 'Failed to add talent. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,14 +155,11 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                 <Select
                   value={field.value}
                   onValueChange={(selectedLabel) => {
-                    // Find the selected domain by label
                     const selectedDomain = domains.find(
                       (domain) => domain.label === selectedLabel,
                     );
-
-                    // Set label and domainId in form
-                    field.onChange(selectedLabel); // Set label
-                    setValue('domainId', selectedDomain?._id || ''); // Set domainId
+                    field.onChange(selectedLabel);
+                    setValue('domainId', selectedDomain?._id || '');
                   }}
                 >
                   <SelectTrigger>
@@ -180,18 +179,19 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           {errors.label && (
             <p className="text-red-600">{errors.label.message}</p>
           )}
+
           <div className="mb-3">
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
-                <input
+                <Input
                   type="number"
                   placeholder="Experience (years)"
                   min={0}
                   max={50}
                   {...field}
-                  className="border p-2 rounded mt-2 w-full"
+                  className="w-full mt-2"
                 />
               )}
             />
@@ -199,25 +199,29 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           {errors.experience && (
             <p className="text-red-600">{errors.experience.message}</p>
           )}
-          <Controller
-            control={control}
-            name="monthlyPay"
-            render={({ field }) => (
-              <input
-                type="number"
-                placeholder="Monthly Pay"
-                min={0}
-                {...field}
-                className="border p-2 rounded mt-2 w-full"
-              />
-            )}
-          />
+
+          <div className="mb-3">
+            <Controller
+              control={control}
+              name="monthlyPay"
+              render={({ field }) => (
+                <Input
+                  type="number"
+                  placeholder="$ Monthly Pay"
+                  min={0}
+                  {...field}
+                  className="w-full mt-2"
+                />
+              )}
+            />
+          </div>
           {errors.monthlyPay && (
             <p className="text-red-600">{errors.monthlyPay.message}</p>
           )}
+
           <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Submit'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Loading...' : 'Save'}
             </Button>
           </DialogFooter>
         </form>

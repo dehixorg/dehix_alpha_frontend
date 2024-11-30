@@ -43,15 +43,30 @@ const profileFormSchema = z.object({
     .max(20, { message: 'Username must be less than 20 characters long' })
     .regex(/^[a-zA-Z0-9_]+$/, {
       message: 'Username can only contain letters, numbers, and underscores',
-    }), // Adjust regex as needed
+    }),
   phone: z
     .string()
     .min(10, { message: 'Phone number must be at least 10 digits.' })
     .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
-  githubLink: z.string().url().optional(),
+  githubLink: z
+    .string()
+    .url({ message: 'GitHub link must be a valid URL.' })
+    .refine((value) => /^https:\/\/github\.com\/[\w-]+$/.test(value), {
+      message: 'GitHub URL must start with: https://github.com/',
+    })
+    .optional(),
   resume: z.string().url().optional(),
-  linkedin: z.string().url().optional(),
-  personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
+  linkedin: z
+    .string()
+    .url({ message: 'LinkedIn link must be a valid URL.' })
+    .refine(
+      (value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value),
+      {
+        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+      },
+    )
+    .optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -60,8 +75,8 @@ const profileFormSchema = z.object({
   }),
   workExperience: z
     .number()
-    .min(0, 'Work experience must be at least 0 years')
-    .max(60, 'Work experience must not exceed 60 years'),
+    .min(0, { message: 'Work experience must be at least 0 years.' })
+    .max(60, { message: 'Work experience must not exceed 60 years.' }),
   dob: z.string().optional(),
   referralCode: z.string().optional(),
 });
@@ -148,7 +163,6 @@ export default function FreelancerRegisterForm() {
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
-      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',

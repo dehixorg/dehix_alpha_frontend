@@ -18,6 +18,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 
 interface Skill {
   _id: string;
@@ -55,15 +57,54 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
 
-  // Fetch skills, domains, and user's skill/domain data
-  const fetchData = useCallback(async () => {
+  // Fetch skills and domains once on component mount
+  useEffect(() => {
+    const fetchSkillsAndDomains = async () => {
+      try {
+        const [skillsResponse, domainsResponse] = await Promise.all([
+          axiosInstance.get('/skills/all'),
+          axiosInstance.get('/domain/all'),
+        ]);
+
+        setSkills(skillsResponse.data?.data || []);
+        setDomains(domainsResponse.data?.data || []);
+      } catch (error) {
+        console.error('Error fetching skills and domains:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load skills and domains. Please try again.',
+        });
+      }
+    };
+
+    fetchSkillsAndDomains();
+  }, []); // Empty dependency array ensures this runs only once
+
+  // Fetch user's skill/domain data
+  const fetchUserData = useCallback(async () => {
     try {
+      const skillsResponse = await axiosInstance.get('/skills');
+      if (skillsResponse?.data?.data) {
+        setSkills(skillsResponse.data.data);
+      } else {
+        throw new Error('Skills response is null or invalid');
+      }
+      const domainsResponse = await axiosInstance.get('/domain');
+      if (domainsResponse?.data?.data) {
+        setDomains(domainsResponse.data.data);
+      } else {
+        throw new Error('Domains response is null or invalid');
+      }
+
+      // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
-          `/business/${user.uid}/hireDehixTalent`,
+          `/business/${user.uid}/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 
+        // Filter and map user data
         const fetchedFilterSkills = hireTalentData
           .filter((item: any) => item.skillName && item.visible)
           .map((item: any) => ({
@@ -114,7 +155,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           }));
 
         // fetch skills and domains data
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         if (skillsResponse?.data?.data) {
           const uniqueSkills = skillsResponse.data.data.filter(
             (skill: any) =>
@@ -126,7 +167,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         } else {
           throw new Error('Skills response is null or invalid');
         }
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         if (domainsResponse?.data?.data) {
           const uniqueDomain = domainsResponse.data.data.filter(
             (domain: any) =>
@@ -140,23 +181,19 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         }
       }
     } catch (error: any) {
-      console.error('Error fetching data:', error);
-      if (error.response && error.response.status === 404) {
-        // No action needed for 404 errors
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
-      }
+      console.error('Error fetching user data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
     }
   }, [user?.uid, setFilterSkill, setFilterDomain]);
 
-  // Fetch data on mount
+  // Fetch user data on mount
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   // Handle skill/domain submission
   const onSubmitSkill = (data: SkillDomainData) => {
@@ -183,7 +220,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   ) => {
     try {
       const response = await axiosInstance.patch(
-        `/business/${user.uid}/hireDehixTalent/${hireDehixTalentId}`,
+        `/business/${user.uid}/hire-dehixtalent/${hireDehixTalentId}`,
         { visible: value },
       );
 
@@ -193,7 +230,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
         setStatusVisibility(updatedVisibility);
 
         // Callback to refetch data after visibility update
-        await fetchData();
+        await fetchUserData();
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
@@ -232,7 +269,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                   <TableHead>Experience</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Activity</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,7 +279,11 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                       <TableCell>{item.label}</TableCell>
                       <TableCell>{item.experience} years</TableCell>
                       <TableCell>{item.description}</TableCell>
-                      <TableCell>{item.status}</TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(item.status)}>
+                          {item.status.toUpperCase()}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Switch
                           checked={statusVisibility[index]}

@@ -88,14 +88,14 @@ export default function ConsultancyPage() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects`,
+          `/project/business/${user.uid}`,
         );
         setResponseData(response.data.data);
 
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         setSkills(skillsResponse.data.data);
 
-        const domainsResponse = await axiosInstance.get('/domain/all');
+        const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
       } catch (error) {
         console.error('API Error:', error);
@@ -151,7 +151,6 @@ export default function ConsultancyPage() {
 
   const onSubmit = async (data: ConsultancyFormValues) => {
     try {
-      console.log('Form Data:', data);
       setConsultants([...consultants, data]);
       form.reset();
       setIsDialogOpen(false);
@@ -399,7 +398,7 @@ export default function ConsultancyPage() {
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
@@ -423,7 +422,7 @@ export default function ConsultancyPage() {
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
