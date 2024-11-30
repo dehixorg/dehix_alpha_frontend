@@ -105,7 +105,7 @@ export default function DropdownProfile() {
 
   // Generate referral link
   const referralLink = referralCode
-    ? `${process.env.NEXT_PUBLIC__LOCAL_BASE_URL}auth/sign-up/freelancer?referral=${referralCode}`
+    ? `${process.env.NEXT_PUBLIC__APP_DEHIX_URL}auth/sign-up/freelancer?referral=${referralCode}`
     : '';
 
   // Handle Copy to Clipboard
