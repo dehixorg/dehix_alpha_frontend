@@ -87,7 +87,12 @@ const HomePage = () => {
           />
           <Breadcrumb
             items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
+              {
+                label: user.type.replace(/\b\w/g, (char: string) =>
+                  char.toUpperCase(),
+                ),
+                link: `/dashboard/${user.type}`,
+              },
               { label: 'Chats', link: '/dashboard/chats' },
             ]}
           />
