@@ -53,9 +53,7 @@ export default function DropdownProfile() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get(
-          `/freelancer/${user?.uid}/profile-info`,
-        );
+        const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
         setReferralCode(fetchCode);
       } catch (error) {

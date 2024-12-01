@@ -62,8 +62,8 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
     const fetchSkillsAndDomains = async () => {
       try {
         const [skillsResponse, domainsResponse] = await Promise.all([
-          axiosInstance.get('/skills/all'),
-          axiosInstance.get('/domain/all'),
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'),
         ]);
 
         setSkills(skillsResponse.data?.data || []);
