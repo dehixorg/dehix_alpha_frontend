@@ -11,13 +11,14 @@ import { CardsChat } from '@/components/shared/chat';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
   menuItemsBottom,
-  menuItemsTop,
+  menuItemsTop as businessMenuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Search } from '@/components/search';
 import { ChatList } from '@/components/shared/chatList';
 import { subscribeToFirestoreCollection } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
+import { menuItemsTop } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Define the Conversation interface to match the expected shape
 interface Conversation extends DocumentData {
@@ -69,14 +70,18 @@ const HomePage = () => {
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
+        menuItemsTop={
+          user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+        }
         menuItemsBottom={menuItemsBottom}
         active="Chats"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
+            menuItemsTop={
+              user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+            }
             menuItemsBottom={menuItemsBottom}
             active="Chats"
           />
