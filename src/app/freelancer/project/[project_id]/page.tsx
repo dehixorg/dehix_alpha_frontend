@@ -16,6 +16,8 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
@@ -51,7 +53,7 @@ interface Project {
     };
     totalBid?: string[];
   }[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
+  status?: StatusEnum; //enum
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;

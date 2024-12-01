@@ -27,6 +27,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -47,10 +48,10 @@ export default function Dashboard() {
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'COMPLETED',
+    (project: any) => project.status == StatusEnum.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'COMPLETED',
+    (project: any) => project.status !== StatusEnum.COMPLETED,
   );
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">

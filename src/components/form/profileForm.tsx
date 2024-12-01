@@ -31,6 +31,8 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -94,7 +96,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpSkill,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -114,7 +116,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpDomain,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -135,7 +137,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpProjectDomains,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -266,7 +268,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         <ProfilePictureUpload
           user_id={user._id}
           profile={user.profilePic}
-          entityType="freelancer"
+          entityType={Type.FREELANCER}
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}

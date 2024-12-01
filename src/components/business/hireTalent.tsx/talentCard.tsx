@@ -10,7 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
-import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
+import {
+  Dehix_Talent_Card_Pagination,
+  HireDehixTalentStatusEnum,
+} from '@/utils/enum';
 import { Button } from '@/components/ui/button';
 
 interface DehixTalent {
@@ -20,7 +23,7 @@ interface DehixTalent {
   domainName?: string;
   experience: string;
   monthlyPay: string;
-  status: string;
+  status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
 }
 

@@ -25,6 +25,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
@@ -61,7 +62,7 @@ export default function ProfessionalInfo() {
     }
     return (
       data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === 'pending')
+      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
     );
   });
 

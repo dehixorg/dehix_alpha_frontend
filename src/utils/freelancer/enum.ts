@@ -5,10 +5,10 @@ export enum InterviewLevel {
 }
 
 export enum ProjectStatus {
-  Active = 'Active',
-  Pending = 'Pending',
-  Rejected = 'Rejected',
-  Completed = 'Completed',
+  ACTIVE = 'Active',
+  PENDING = 'Pending',
+  REJECTED = 'Rejected',
+  COMPLETED = 'Completed',
 }
 
 export enum StatusEnum {

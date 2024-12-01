@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
+import { OracleStatusEnum, Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z
@@ -128,7 +129,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: 'freelancer',
+      role: Type,
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -143,7 +144,7 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: 'notApplied',
+      oracleStatus: OracleStatusEnum.NOT_APPLICABLE,
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
