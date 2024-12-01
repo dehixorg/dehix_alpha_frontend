@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -78,6 +79,7 @@ const profileFormSchema = z.object({
     .min(0, { message: 'Work experience must be at least 0 years.' })
     .max(60, { message: 'Work experience must not exceed 60 years.' }),
   dob: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -90,6 +92,8 @@ export default function FreelancerRegisterForm() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const searchParams = useSearchParams();
+  const referral = searchParams.get('referral') || '';
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -107,6 +111,7 @@ export default function FreelancerRegisterForm() {
       perHourPrice: 0,
       workExperience: 0,
       dob: '',
+      referralCode: referral,
     },
     mode: 'all',
   });
@@ -143,7 +148,17 @@ export default function FreelancerRegisterForm() {
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      await axiosInstance.post('/register/freelancer', formData);
+      // Check if referralCode exists and add it as a query string parameter
+      // If no referralCode is provided, the URL remains without a query string
+      const referralCodeQuery = data.referralCode
+        ? `?referralCode=${encodeURIComponent(data.referralCode)}`
+        : '';
+      // Make the POST request, adding referralCode in the query string
+      // The rest of the data is sent in the body (formData)
+      await axiosInstance.post(
+        `/register/freelancer${referralCodeQuery}`,
+        formData,
+      );
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
@@ -297,6 +312,13 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
+          <TextInput
+            control={form.control}
+            name="referralCode"
+            label="Do you have a referral code? (Optional)"
+            type="Text"
+            placeholder="Enter referral code"
+          />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
