@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Check } from 'lucide-react';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
@@ -30,6 +30,7 @@ import {
   SelectItem,
   SelectValue,
   SelectContent,
+  SelectGroup,
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -67,13 +68,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [user, setUser] = useState<any>({});
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
-  const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [tmpSkills, setTmpSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<any>([]);
   const [currDomains, setCurrDomains] = useState<any>([]);
-  const [tmpDomain, setTmpDomain] = useState<any>('');
+  const [tmpDomains, setTmpDomains] = useState<string[]>([]);
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<string[]>([]);
+  const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(true);
+  const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(true);
+  const [isProjectDomainDropdownOpen, setIsProjectDomianDropdownOpen] = useState(true);
+
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -88,62 +94,62 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-      setCurrSkills([
-        ...currSkills,
-        {
-          name: tmpSkill,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpSkill('');
-    }
+
+  const handleAddSkills = () => {
+    const newSkills = tmpSkills
+      .filter(
+        (skill) => 
+          !currSkills.some((s: any) => s.name === skill)
+      )
+      .map((skill) => ({
+        name: skill,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      }));
+
+    setCurrSkills([...currSkills, ...newSkills]);
+    setTmpSkills([]);
   };
 
-  const handleAddDomain = () => {
-    if (
-      tmpDomain &&
-      !currDomains.some((domain: any) => domain.name === tmpDomain)
-    ) {
-      setCurrDomains([
-        ...currDomains,
-        {
-          name: tmpDomain,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpDomain('');
-    }
-  };
-  const handleAddprojectDomain = () => {
-    if (
-      tmpProjectDomains &&
-      !currProjectDomains.some(
-        (projectDomains: any) => projectDomains.name === projectDomains,
+  const handleAddDomains = () => {
+    const newDomains = tmpDomains
+      .filter(
+        (domain) => 
+          !currDomains.some((d: any) => d.name === domain)
       )
-    ) {
-      setCurrProjectDomains([
-        ...currProjectDomains,
-        {
-          name: tmpProjectDomains,
-          level: '',
-          experience: '',
-          interviewStatus: StatusEnum.PENDING,
-          interviewInfo: '',
-          interviewerRating: 0,
-        },
-      ]);
-      setTmpProjectDomains('');
-    }
+      .map((domain) => ({
+        name: domain,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      }));
+
+    setCurrDomains([...currDomains, ...newDomains]);
+    setTmpDomains([]);
+  };
+
+  const handleAddProjectDomains = () => {
+    const newProjectDomains = tmpProjectDomains
+      .filter(
+        (projectDomain) => 
+          !currProjectDomains.some((d: any) => d.name === projectDomain)
+      )
+      .map((projectDomain) => ({
+        name: projectDomain,
+        level: '',
+        experience: '',
+        interviewStatus: StatusEnum.PENDING,
+        interviewInfo: '',
+        interviewerRating: 0,
+      }));
+
+    setCurrProjectDomains([...currProjectDomains, ...newProjectDomains]);
+    setTmpProjectDomains([]);
   };
 
   useEffect(() => {
@@ -420,26 +426,49 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => setTmpSkill(value)}
-                  value={tmpSkill || ''}
+              <Select 
+                  open={isSkillsDropdownOpen} 
+                  onOpenChange={(open) => {
+                    if (!isSkillsDropdownOpen) {
+                      setIsSkillsDropdownOpen(open);
+                    }
+                  }}
+                  onValueChange={(value) => {
+                    const updatedskills = tmpSkills.includes(value) 
+                      ? tmpSkills.filter(skill => skill !== value)
+                      : [...tmpSkills, value];
+                    setTmpSkills(updatedskills);
+                  }} 
+                  value=""
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                    />
+                    <SelectValue placeholder="Select skills" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {skills
-                      .filter(
-                        (skill: any) =>
-                          !currSkills.some((s: any) => s.name === skill.label),
-                      )
-                      .map((skill: any, index: number) => (
-                        <SelectItem key={index} value={skill.label}>
-                          {skill.label}
-                        </SelectItem>
-                      ))}
+                  <SelectContent
+                  onPointerDownOutside={() => setIsSkillsDropdownOpen(false)}
+                  onEscapeKeyDown={() => setIsSkillsDropdownOpen(false)}>
+                    <SelectGroup>
+                      {skills
+                        .filter(
+                          (skill: any) =>
+                            !currSkills.some((s: any) => s.name === skill.label)
+                        )
+                        .map((skill: any, index: number) => (
+                          <SelectItem 
+                            key={index} 
+                            value={skill.label}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span>{skill.label}</span>
+                              {tmpSkills.includes(skill.label) && (
+                                <Check className="h-4 w-4 text-green-500" />
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <Button
@@ -448,9 +477,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   size="icon"
                   className="ml-2"
                   onClick={() => {
-                    handleAddSkill();
-                    setTmpSkill('');
+                    handleAddSkills();
+                    setIsSkillsDropdownOpen(false);
                   }}
+                  disabled={tmpSkills.length === 0}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -477,28 +507,53 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => setTmpDomain(value)}
-                  value={tmpDomain || ''}
+                <Select 
+                open={isDomainDropdownOpen}
+                onOpenChange={(open) => {
+                  if (!isDomainDropdownOpen) {
+                    setIsDomainDropdownOpen(open);
+                  }
+                }}
+                  onValueChange={(value) => {
+                    const updatedDomains = tmpDomains.includes(value) 
+                      ? tmpDomains.filter(domain => domain !== value)
+                      : [...tmpDomains, value];
+                    setTmpDomains(updatedDomains);
+                  }} 
+                  value=""
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                    />
+                    <SelectValue placeholder="Select domains" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {domains
-                      .filter(
-                        (domain: any) =>
-                          !currDomains.some(
-                            (d: any) => d.name === domain.label,
-                          ),
-                      )
-                      .map((domain: any, index: number) => (
-                        <SelectItem key={index} value={domain.label}>
-                          {domain.label}
-                        </SelectItem>
-                      ))}
+                  <SelectContent
+                  onPointerDownOutside={() => setIsDomainDropdownOpen(false)}
+                  onEscapeKeyDown={() => setIsDomainDropdownOpen(false)}
+                  >
+                    <SelectGroup>
+                      {domains
+                        .filter(
+                          (domain: any) =>
+                            !currDomains.some(
+                              (d: any) => d.name === domain.label,
+                            ),
+                        )
+                        .map((domain: any, index: number) => (
+                          <SelectItem 
+                            key={index} 
+                            value={domain.label}
+                            className="flex items-center justify-between"
+                            
+                          >
+                            <div className="flex items-center justify-between w-full">
+                            <span>{domain.label}</span>
+                            {tmpDomains.includes(domain.label) && (
+                              <Check className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <Button
@@ -506,9 +561,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   type="button"
                   size="icon"
                   className="ml-2"
+                  disabled={tmpDomains.length === 0}
                   onClick={() => {
-                    handleAddDomain();
-                    setTmpDomain('');
+                    handleAddDomains();
+                    setIsDomainDropdownOpen(false);
                   }}
                 >
                   <Plus className="h-4 w-4" />
@@ -536,20 +592,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => setTmpProjectDomains(value)}
-                  value={tmpProjectDomains || ''}
+                <Select 
+                  open={isProjectDomainDropdownOpen}
+                  onOpenChange={(open) => {
+                    if (!isProjectDomainDropdownOpen) {
+                      setIsProjectDomianDropdownOpen(open);
+                    }
+                  }}
+                  onValueChange={(value) => {
+                    const updatedProjectDomains = tmpProjectDomains.includes(value) 
+                      ? tmpProjectDomains.filter(projectDomain => projectDomain !== value)
+                      : [...tmpProjectDomains, value];
+                    setTmpProjectDomains(updatedProjectDomains);
+                  }} 
+                  value=""
                 >
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        tmpProjectDomains
-                          ? tmpProjectDomains
-                          : 'Select project domain'
-                      }
-                    />
+                    <SelectValue placeholder="Select project domains" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent
+                  onPointerDownOutside={() => setIsProjectDomianDropdownOpen(false)}
+                  onEscapeKeyDown={() => setIsProjectDomianDropdownOpen(false)}>
                     {projectDomains
                       .filter(
                         (projectDomains: any) =>
@@ -558,9 +621,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           ),
                       )
                       .map((projectDomains: any, index: number) => (
-                        <SelectItem key={index} value={projectDomains.label}>
-                          {projectDomains.label}
-                        </SelectItem>
+                        <SelectItem 
+                            key={index} 
+                            value={projectDomains.label}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center justify-between w-full">
+                            <span>{projectDomains.label}</span>
+                            {tmpProjectDomains.includes(projectDomains.label) && (
+                              <Check className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                          </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
@@ -570,9 +642,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   size="icon"
                   className="ml-2"
                   onClick={() => {
-                    handleAddprojectDomain();
-                    setTmpProjectDomains('');
+                    handleAddProjectDomains();
+                    setIsProjectDomianDropdownOpen(false);
                   }}
+                  disabled={tmpProjectDomains.length === 0}
+
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
