@@ -79,8 +79,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(true);
   const [isProjectDomainDropdownOpen, setIsProjectDomianDropdownOpen] = useState(true);
 
-
-
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -94,13 +92,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
-
   const handleAddSkills = () => {
     const newSkills = tmpSkills
-      .filter(
-        (skill) => 
-          !currSkills.some((s: any) => s.name === skill)
-      )
+      .filter((skill) => !currSkills.some((s: any) => s.name === skill))
       .map((skill) => ({
         name: skill,
         level: '',
@@ -116,10 +110,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
   const handleAddDomains = () => {
     const newDomains = tmpDomains
-      .filter(
-        (domain) => 
-          !currDomains.some((d: any) => d.name === domain)
-      )
+      .filter((domain) => !currDomains.some((d: any) => d.name === domain))
       .map((domain) => ({
         name: domain,
         level: '',
@@ -136,8 +127,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const handleAddProjectDomains = () => {
     const newProjectDomains = tmpProjectDomains
       .filter(
-        (projectDomain) => 
-          !currProjectDomains.some((d: any) => d.name === projectDomain)
+        (projectDomain) =>
+          !currProjectDomains.some((d: any) => d.name === projectDomain),
       )
       .map((projectDomain) => ({
         name: projectDomain,
@@ -426,36 +417,39 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
-              <Select 
-                  open={isSkillsDropdownOpen} 
+                <Select
+                  open={isSkillsDropdownOpen}
                   onOpenChange={(open) => {
                     if (!isSkillsDropdownOpen) {
                       setIsSkillsDropdownOpen(open);
                     }
                   }}
                   onValueChange={(value) => {
-                    const updatedskills = tmpSkills.includes(value) 
-                      ? tmpSkills.filter(skill => skill !== value)
+                    const updatedskills = tmpSkills.includes(value)
+                      ? tmpSkills.filter((skill) => skill !== value)
                       : [...tmpSkills, value];
                     setTmpSkills(updatedskills);
-                  }} 
+                  }}
                   value=""
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select skills" />
                   </SelectTrigger>
                   <SelectContent
-                  onPointerDownOutside={() => setIsSkillsDropdownOpen(false)}
-                  onEscapeKeyDown={() => setIsSkillsDropdownOpen(false)}>
+                    onPointerDownOutside={() => setIsSkillsDropdownOpen(false)}
+                    onEscapeKeyDown={() => setIsSkillsDropdownOpen(false)}
+                  >
                     <SelectGroup>
                       {skills
                         .filter(
                           (skill: any) =>
-                            !currSkills.some((s: any) => s.name === skill.label)
+                            !currSkills.some(
+                              (s: any) => s.name === skill.label,
+                            ),
                         )
                         .map((skill: any, index: number) => (
-                          <SelectItem 
-                            key={index} 
+                          <SelectItem
+                            key={index}
                             value={skill.label}
                             className="flex items-center justify-between"
                           >
@@ -466,8 +460,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               )}
                             </div>
                           </SelectItem>
-                        ))
-                      }
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -507,27 +500,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select 
-                open={isDomainDropdownOpen}
-                onOpenChange={(open) => {
-                  if (!isDomainDropdownOpen) {
-                    setIsDomainDropdownOpen(open);
-                  }
-                }}
+                <Select
+                  open={isDomainDropdownOpen}
+                  onOpenChange={(open) => {
+                    if (!isDomainDropdownOpen) {
+                      setIsDomainDropdownOpen(open);
+                    }
+                  }}
                   onValueChange={(value) => {
-                    const updatedDomains = tmpDomains.includes(value) 
-                      ? tmpDomains.filter(domain => domain !== value)
+                    const updatedDomains = tmpDomains.includes(value)
+                      ? tmpDomains.filter((domain) => domain !== value)
                       : [...tmpDomains, value];
                     setTmpDomains(updatedDomains);
-                  }} 
+                  }}
                   value=""
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select domains" />
                   </SelectTrigger>
                   <SelectContent
-                  onPointerDownOutside={() => setIsDomainDropdownOpen(false)}
-                  onEscapeKeyDown={() => setIsDomainDropdownOpen(false)}
+                    onPointerDownOutside={() => setIsDomainDropdownOpen(false)}
+                    onEscapeKeyDown={() => setIsDomainDropdownOpen(false)}
                   >
                     <SelectGroup>
                       {domains
@@ -538,21 +531,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                             ),
                         )
                         .map((domain: any, index: number) => (
-                          <SelectItem 
-                            key={index} 
+                          <SelectItem
+                            key={index}
                             value={domain.label}
                             className="flex items-center justify-between"
-                            
                           >
                             <div className="flex items-center justify-between w-full">
-                            <span>{domain.label}</span>
-                            {tmpDomains.includes(domain.label) && (
-                              <Check className="h-4 w-4 text-green-500" />
-                            )}
-                          </div>
+                              <span>{domain.label}</span>
+                              {tmpDomains.includes(domain.label) && (
+                                <Check className="h-4 w-4 text-green-500" />
+                              )}
+                            </div>
                           </SelectItem>
-                        ))
-                      }
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -592,7 +583,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <div className="flex-1 min-w-[150px] max-w-[300px]">
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
-                <Select 
+                <Select
                   open={isProjectDomainDropdownOpen}
                   onOpenChange={(open) => {
                     if (!isProjectDomainDropdownOpen) {
@@ -600,19 +591,28 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     }
                   }}
                   onValueChange={(value) => {
-                    const updatedProjectDomains = tmpProjectDomains.includes(value) 
-                      ? tmpProjectDomains.filter(projectDomain => projectDomain !== value)
+                    const updatedProjectDomains = tmpProjectDomains.includes(
+                      value,
+                    )
+                      ? tmpProjectDomains.filter(
+                          (projectDomain) => projectDomain !== value,
+                        )
                       : [...tmpProjectDomains, value];
                     setTmpProjectDomains(updatedProjectDomains);
-                  }} 
+                  }}
                   value=""
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select project domains" />
                   </SelectTrigger>
                   <SelectContent
-                  onPointerDownOutside={() => setIsProjectDomianDropdownOpen(false)}
-                  onEscapeKeyDown={() => setIsProjectDomianDropdownOpen(false)}>
+                    onPointerDownOutside={() =>
+                      setIsProjectDomianDropdownOpen(false)
+                    }
+                    onEscapeKeyDown={() =>
+                      setIsProjectDomianDropdownOpen(false)
+                    }
+                  >
                     {projectDomains
                       .filter(
                         (projectDomains: any) =>
@@ -621,18 +621,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           ),
                       )
                       .map((projectDomains: any, index: number) => (
-                        <SelectItem 
-                            key={index} 
-                            value={projectDomains.label}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center justify-between w-full">
+                        <SelectItem
+                          key={index}
+                          value={projectDomains.label}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center justify-between w-full">
                             <span>{projectDomains.label}</span>
-                            {tmpProjectDomains.includes(projectDomains.label) && (
-                              <Check className="h-4 w-4 text-green-500" />
-                            )}
+                            {tmpProjectDomains.includes(
+                              projectDomains.label,
+                            ) && <Check className="h-4 w-4 text-green-500" />}
                           </div>
-                          </SelectItem>
+                        </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
@@ -646,7 +646,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     setIsProjectDomianDropdownOpen(false);
                   }}
                   disabled={tmpProjectDomains.length === 0}
-
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
