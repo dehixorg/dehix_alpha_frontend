@@ -77,7 +77,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<string[]>([]);
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(true);
   const [isDomainDropdownOpen, setIsDomainDropdownOpen] = useState(true);
-  const [isProjectDomainDropdownOpen, setIsProjectDomianDropdownOpen] = useState(true);
+  const [isProjectDomainDropdownOpen, setIsProjectDomianDropdownOpen] =
+    useState(true);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
