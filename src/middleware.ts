@@ -56,7 +56,10 @@ export async function middleware(request: NextRequest) {
     '/business',
     '/freelancer',
   ];
-  if (!userType && protectedRoutes.some((route) => pathname.startsWith(route))) {
+  if (
+    !userType &&
+    protectedRoutes.some((route) => pathname.startsWith(route))
+  ) {
     return NextResponse.redirect(new URL('/', request.url));
   }
   return NextResponse.next();
