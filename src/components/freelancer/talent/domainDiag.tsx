@@ -186,14 +186,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="experience"
               render={({ field }) => (
+              <div className="col-span-3 relative">
                 <Input
                   type="number"
                   placeholder="Experience (years)"
                   min={0}
                   max={50}
+                  step={0.1} //Allow decimals
                   {...field}
                   className="w-full mt-2"
                 />
+                <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">YEARS</span>
+              </div>
               )}
             />
           </div>
@@ -206,6 +210,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="monthlyPay"
               render={({ field }) => (
+              <div className="col-span-3 relative">
                 <Input
                   type="number"
                   placeholder="$ Monthly Pay"
@@ -213,6 +218,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   {...field}
                   className="w-full mt-2"
                 />
+                <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">$</span>
+              </div>
               )}
             />
           </div>
