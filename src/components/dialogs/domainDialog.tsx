@@ -121,17 +121,19 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               name="experience"
               render={({ field }) => (
                 <>
-                <div className="col-span-3 relative">
-                  <Input
-                    {...field}
-                    placeholder="Years of experience"
-                    type="number"
-                    min="0"
-                    step="0.1"  // Allow decimals
-                    className="w-full pl-2 pr-1" // Space for the unit
-                  />
-                  <span className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">YEARS</span>
-                </div>
+                  <div className="col-span-3 relative">
+                    <Input
+                      {...field}
+                      placeholder="Years of experience"
+                      type="number"
+                      min="0"
+                      step="0.1" // Allow decimals
+                      className="w-full pl-2 pr-1" // Space for the unit
+                    />
+                    <span className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                      YEARS
+                    </span>
+                  </div>
                   {errors.experience && (
                     <p className="text-red-500 text-sm">
                       {errors.experience.message}

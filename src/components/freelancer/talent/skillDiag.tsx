@@ -184,18 +184,20 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
               control={control}
               name="experience"
               render={({ field }) => (
-              <div className="col-span-3 relative">
-                <Input
-                  type="number"
-                  placeholder="Experience (years)"
-                  min={0}
-                  max={50}
-                  step={0.1} // Allow decimals
-                  {...field}
-                  className="mt-2 w-full"
-                />
-                <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">YEARS</span>
-              </div>
+                <div className="col-span-3 relative">
+                  <Input
+                    type="number"
+                    placeholder="Experience (years)"
+                    min={0}
+                    max={50}
+                    step={0.1} // Allow decimals
+                    {...field}
+                    className="mt-2 w-full"
+                  />
+                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                    YEARS
+                  </span>
+                </div>
               )}
             />
           </div>
@@ -206,16 +208,18 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             control={control}
             name="monthlyPay"
             render={({ field }) => (
-            <div className="col-span-3 relative">
-              <Input
-                type="number"
-                placeholder="$ Monthly Pay"
-                min={0}
-                {...field}
-                className="mt-2 w-full"
-              /> 
-              <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">$</span>
-            </div>
+              <div className="col-span-3 relative">
+                <Input
+                  type="number"
+                  placeholder="$ Monthly Pay"
+                  min={0}
+                  {...field}
+                  className="mt-2 w-full"
+                />
+                <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                  $
+                </span>
+              </div>
             )}
           />
           {errors.monthlyPay && (

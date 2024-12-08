@@ -45,7 +45,7 @@ const SkillSchema = z.object({
     z
       .number()
       .min(0, 'Experience must be a non-negative number')
-      .max(50, "Experience can't exceed 50")
+      .max(50, "Experience can't exceed 50"),
   ),
   level: z.string().min(1, 'Level is required'),
 });
@@ -127,10 +127,12 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                       placeholder="Years of experience"
                       type="number"
                       min="0"
-                      step="0.1"  // Allow decimals
+                      step="0.1" // Allow decimals
                       className="w-full pl-2 pr-1" // Space for the unit
                     />
-                    <span className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">YEARS</span>
+                    <span className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                      YEARS
+                    </span>
                   </div>
                   {errors.experience && (
                     <p className="text-red-500 text-sm">

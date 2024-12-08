@@ -592,7 +592,6 @@ export function CreateProjectBusinessForm() {
                   )}
                 />
 
-
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.minConnect`}
@@ -623,7 +622,7 @@ export function CreateProjectBusinessForm() {
                             className="w-full pr-2 mt-0"
                           />
                           <span className="absolute right-12 text-gray-500 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                          $
+                            $
                           </span>
                         </div>
                       </FormControl>
