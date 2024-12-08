@@ -572,18 +572,26 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter experience"
-                          min={0}
-                          max={60}
-                          {...field}
-                        />
+                        <div className=" col-span-3 relative flex items-center">
+                          <Input
+                            type="number"
+                            placeholder="Enter experience"
+                            min={0}
+                            max={60}
+                            step={0.1}
+                            {...field}
+                            className="w-full pr-2 mt-0"
+                          />
+                          <span className="absolute right-12 text-gray-500 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            YEARS
+                          </span>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name={`profiles.${index}.minConnect`}
@@ -604,13 +612,19 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Per Hour Rate</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter rate"
-                          min={0}
-                          max={200}
-                          {...field}
-                        />
+                        <div className=" col-span-3 relative flex items-center">
+                          <Input
+                            type="number"
+                            placeholder="Enter rate"
+                            min={0}
+                            max={200}
+                            {...field}
+                            className="w-full pr-2 mt-0"
+                          />
+                          <span className="absolute right-12 text-gray-500 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            $
+                          </span>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -28,6 +28,7 @@ interface ProfileProps {
     minConnect?: number;
     rate?: number;
     description?: string;
+    unit?: string; // Added unit field to profile
   };
   projectId: string;
   bidExist: boolean;
@@ -41,7 +42,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
   const [amount, setAmount] = React.useState('');
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // New state to track bid submission
+  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // Tracks bid submission
   const user = useSelector((state: RootState) => state.user);
   const [showMore, setShowMore] = React.useState<boolean>(false);
 
@@ -116,20 +117,31 @@ const ProfileCard: React.FC<ProfileProps> = ({
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4 py-4">
+                  {/* Amount Field with Unit */}
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="amount" className="text-center">
                       Amount
                     </Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="col-span-3"
-                      required
-                      min={1}
-                    />
+                    <div className="col-span-3 relative">
+                      {/* Input field */}
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full pl-2 pr-1" // Space for the unit
+                        required
+                        min={1}
+                        placeholder="Enter amount"
+                      />
+                      {/* Unit inside the field */}
+                      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                        {profile.unit || '$'} {/* Default unit is USD */}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Description Field */}
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="description" className="text-right block">
                       Description
@@ -158,7 +170,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
       {/* Optional Description */}
       {profile.description && (
         <div className="mt-4 text-gray-400">
-          <strong></strong>{' '}
           {profile.description.length > 50 ? (
             <p className="break-words">
               {showMore
