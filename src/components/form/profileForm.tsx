@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState ,useRef} from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,7 +8,15 @@ import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+} from '../ui/dialog';
+import ResumeTemplate from '../ResumeTemplate';
 
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,6 +65,12 @@ const profileFormSchema = z.object({
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
+  project: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+    })
+  )
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -72,6 +86,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [projects, setProjects] = useState<any>([]);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -85,6 +101,101 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+        setUser(userResponse.data);
+        const projectResponse = await axiosInstance.get(`/freelancer/${user_id}/projects`);
+        setProjects(projectResponse.data);
+
+        form.reset({
+          firstName: userResponse.data.firstName || '',
+          lastName: userResponse.data.lastName || '',
+          email: userResponse.data.email || '',
+          phone: userResponse.data.phone || '',
+          description: userResponse.data.description || '',
+        });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [user_id, form]);
+  
+
+  const [resumeData, setResumeData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+    skills: [],
+    domains: [],
+    description: '',
+    projects: [] as { name: string; description: string }[] | undefined,
+  });
+  const resumeRef = useRef<HTMLDivElement>(null);
+  const handleDownloadPDF = async () => {
+    if (resumeRef.current) {
+      try {
+        const firstName = resumeData?.firstName || 'DefaultFirstName';
+        const lastName = resumeData?.lastName || 'DefaultLastName';
+
+        // Capture HTML as canvas
+        const canvas = await html2canvas(resumeRef.current, {
+          scale: 2, // High resolution for better quality
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          x: 0,
+          y: 0,
+          width: resumeRef.current.scrollWidth, // Capture the full width
+          height: resumeRef.current.scrollHeight, // Capture the full height
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdf = new jsPDF('portrait', 'px', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pdfWidth;
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        let position = 0;
+        while (position < imgHeight) {
+          pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+          position += pdfHeight;
+          if (position < imgHeight) {
+            pdf.addPage();
+          }
+        }
+
+        // Save the PDF
+        pdf.save(`${firstName}_${lastName}_resume.pdf`);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+      }
+    }
+  };
+
+  const handlePreview = () => {
+    setResumeData({
+      firstName: form.getValues('firstName'),
+      lastName: form.getValues('lastName'),
+      email: form.getValues('email'),
+      phone: form.getValues('phone'),
+      role: form.getValues('role'),
+      skills: currSkills.map((skill: any) => skill.name),
+      domains: currDomains.map((domain: any) => domain.name),
+      description: form.getValues('description'),
+      projects: form.getValues('project') || [],
+    });
+    setIsPreviewOpen(true);
+  }; 
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
@@ -208,11 +319,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      console.log('API body', {
-        ...data,
-        skills: currSkills,
-        domain: currDomains,
-      });
       const response = await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
         skills: currSkills,
@@ -230,9 +336,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         role: data.role,
         personalWebsite: data.personalWebsite,
         resume: data.resume,
-        skills: currSkills,
-        domain: currDomains,
         projectDomains: currProjectDomains,
+        skills: currSkills.map((skill: { name: any }) => skill.name),
+        domains: currDomains.map((domain: { name: any }) => domain.name),
+        defaultValues: {
+          project: [], 
+        },
       });
 
       toast({
@@ -382,26 +491,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          {/* <Separator className="col-span-2 mt-0" /> */}
-          {/* <FormField
-            control={form.control}
-            name="resume"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Resume URL</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your Resume URL"
-                    type="url"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>Enter your Resume URL</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
-
+         
           <Separator className="col-span-2" />
           <div className="flex flex-wrap gap-6 w-full">
             <div className="flex-1 min-w-[150px] max-w-[300px]">
@@ -600,6 +690,45 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+           <Button onClick={handlePreview} className="mt-4">
+            Preview Resume
+          </Button>
+          <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent
+              className="p-4 max-w-[600px] max-h-[80vh] w-full flex flex-col overflow-y-auto" // Allow scrolling in content
+            >
+              <div
+                ref={resumeRef}
+                className="w-full h-full transform scale-[1] transform-origin-top-left mb-4"
+              >
+                <ResumeTemplate
+                  firstName={resumeData.firstName}
+                  lastName={resumeData.lastName}
+                  email={resumeData.email}
+                  phone={resumeData.phone}
+                  role={resumeData.role}
+                  skills={resumeData.skills}
+                  description={resumeData.description}
+                  domains={resumeData.domains}
+                  // projects={resumeData.projects?? []}
+                />
+              </div>
+
+              <DialogFooter className="flex justify-between mt-2 space-x-4 ">
+                <Button onClick={handleDownloadPDF} className="px-6 py-2">
+                  Download as PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="px-6 py-1"
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        
           <Separator className="col-span-2 mt-0" />
           <Button type="submit" className="col-span-2">
             Update profile
