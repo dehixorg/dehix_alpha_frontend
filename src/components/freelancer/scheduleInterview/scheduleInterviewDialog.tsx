@@ -254,17 +254,23 @@ const ScheduleInterviewDialog: React.FC = () => {
                       name="experience"
                       control={controlSkill}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          min={0}
-                          max={50}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
-                        />
+                        <div className="col-span-3 relative">
+                          <Input
+                            {...field}
+                            type="number"
+                            placeholder="Experience (years)"
+                            className="w-full"
+                            min={0}
+                            max={50}
+                            step="0.1" // Allow decimals
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value, 10))
+                            }
+                          />
+                          <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                            YEARS
+                          </span>
+                        </div>
                       )}
                     />
                     {skillErrors.experience && (
@@ -372,17 +378,23 @@ const ScheduleInterviewDialog: React.FC = () => {
                       name="experience"
                       control={controlDomain}
                       render={({ field }) => (
-                        <Input
-                          {...field}
-                          type="number"
-                          placeholder="Experience (years)"
-                          className="w-full"
-                          min={0}
-                          max={50}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value, 10))
-                          }
-                        />
+                        <div className="col-span-3 relative">
+                          <Input
+                            {...field}
+                            type="number"
+                            placeholder="Experience (years)"
+                            className="w-full"
+                            min={0}
+                            max={50}
+                            step={0.1} // Allow decimals
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value, 10))
+                            }
+                          />
+                          <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                            YEARS
+                          </span>
+                        </div>
                       )}
                     />
                     {domainErrors.experience && (
