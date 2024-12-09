@@ -1,22 +1,18 @@
-import React, { useEffect, useState ,useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogFooter } from '../ui/dialog';
 import ResumeTemplate from '../ResumeTemplate';
 
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,8 +65,8 @@ const profileFormSchema = z.object({
     z.object({
       name: z.string(),
       description: z.string(),
-    })
-  )
+    }),
+  ),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -101,12 +97,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     },
     mode: 'all',
   });
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data);
-        const projectResponse = await axiosInstance.get(`/freelancer/${user_id}/projects`);
+        const projectResponse = await axiosInstance.get(
+          `/freelancer/${user_id}/projects`,
+        );
         setProjects(projectResponse.data);
 
         form.reset({
@@ -123,7 +121,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
     fetchData();
   }, [user_id, form]);
-  
 
   const [resumeData, setResumeData] = useState({
     firstName: '',
@@ -195,7 +192,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       projects: form.getValues('project') || [],
     });
     setIsPreviewOpen(true);
-  }; 
+  };
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
@@ -340,7 +337,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: currSkills.map((skill: { name: any }) => skill.name),
         domains: currDomains.map((domain: { name: any }) => domain.name),
         defaultValues: {
-          project: [], 
+          project: [],
         },
       });
 
@@ -491,7 +488,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-         
+
           <Separator className="col-span-2" />
           <div className="flex flex-wrap gap-6 w-full">
             <div className="flex-1 min-w-[150px] max-w-[300px]">
@@ -690,7 +687,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-           <Button onClick={handlePreview} className="mt-4">
+          <Button onClick={handlePreview} className="mt-4">
             Preview Resume
           </Button>
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -728,7 +725,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        
           <Separator className="col-span-2 mt-0" />
           <Button type="submit" className="col-span-2">
             Update profile
