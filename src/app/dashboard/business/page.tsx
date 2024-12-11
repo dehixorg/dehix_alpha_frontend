@@ -55,33 +55,6 @@ export default function Dashboard() {
     (project: any) => project.status !== StatusEnum.COMPLETED,
   );
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      title: 'New Message',
-      description: 'You have a new message.',
-      isRead: false,
-    },
-    {
-      id: '2',
-      title: 'Reminder',
-      description: 'Meeting at 3 PM.',
-      isRead: false,
-    },
-    {
-      id: '3',
-      title: 'Profile Updated',
-      description: 'Your profile was updated.',
-      isRead: true,
-    },
-  ]);
-
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, isRead: true })),
-    );
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -106,10 +79,7 @@ export default function Dashboard() {
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
-          <NotificationButton
-            notifications={notifications}
-            onMarkAllAsRead={markAllAsRead}
-          />
+          <NotificationButton />
 
           {/* profile dropdown need to create separeant component */}
           <DropdownProfile />

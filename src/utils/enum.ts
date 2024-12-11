@@ -5,6 +5,23 @@ export const Dehix_Talent_Card_Pagination = {
   BATCH: 3,
 };
 
+// Enum for Notification Type
+export enum UserNotificationTypeEnum {
+  PROJECT_HIRING = 'PROJECT_HIRING',
+  SKILL_INTERVIEW = 'SKILL_INTERVIEW',
+  DOMAIN_INTERVIEW = 'DOMAIN_INTERVIEW',
+  TALENT_INTERVIEW = 'TALENT_INTERVIEW',
+}
+
+export interface UserNotification {
+  id: string;
+  message: string;
+  type: UserNotificationTypeEnum;
+  entity: string;
+  path: string;
+  userId: string;
+}
+
 export enum HireDehixTalentStatusEnum {
   ADDED = 'Added',
   APPROVED = 'Approved',

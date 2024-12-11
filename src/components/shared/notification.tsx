@@ -1,5 +1,7 @@
-import React from 'react';
-import { Bell, BellRing, Check } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bell, Check } from 'lucide-react';
+import { DocumentData } from 'firebase/firestore';
+import { useSelector } from 'react-redux';
 
 import {
   Popover,
@@ -7,24 +9,28 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { RootState } from '@/lib/store';
+import {
+  markAllNotificationsAsRead,
+  subscribeToUserNotifications,
+} from '@/utils/common/firestoreUtils';
 
-type Notification = {
-  id: string;
-  title: string;
-  description: string;
-  isRead: boolean;
-};
-
-interface NotificationProps {
-  notifications: Notification[];
-  onMarkAllAsRead: () => void;
-}
-
-export const NotificationButton: React.FC<NotificationProps> = ({
-  notifications,
-  onMarkAllAsRead,
-}) => {
+export const NotificationButton = () => {
+  const user = useSelector((state: RootState) => state.user);
+  const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  useEffect(() => {
+    // Set up real-time listener for user notifications
+    const unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
+      setNotifications(data);
+    });
+
+    // Clean up the listener when the component is unmounted
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
 
   return (
     <Popover>
@@ -51,9 +57,9 @@ export const NotificationButton: React.FC<NotificationProps> = ({
             </p>
           ) : (
             <div className="space-y-2">
-              {notifications.map((notification, index) => (
+              {notifications.map((notification) => (
                 <div
-                  key={index}
+                  key={notification.id} // Use the unique ID from Firestore (instead of index)
                   className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
                 >
                   <div>
@@ -63,10 +69,23 @@ export const NotificationButton: React.FC<NotificationProps> = ({
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {notification.title}
+                      {/* Display the title of the notification */}
+                      {notification.message} {/* message from Firestore */}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {notification.description}
+                      {/* Display the description of the notification */}
+                      {notification.type} - {notification.entity}{' '}
+                      {/* type and entity */}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {/* Optional: You can also display the path or any other field */}
+                      <a
+                        href={notification.path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {notification.path} {/* path from Firestore */}
+                      </a>
                     </p>
                   </div>
                 </div>
@@ -80,7 +99,9 @@ export const NotificationButton: React.FC<NotificationProps> = ({
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={onMarkAllAsRead}
+              onClick={() => {
+                markAllNotificationsAsRead(user.uid);
+              }}
             >
               <Check className="mr-2 h-4 w-4" /> Mark all as read
             </Button>
