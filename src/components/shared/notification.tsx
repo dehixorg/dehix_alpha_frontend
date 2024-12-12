@@ -14,6 +14,7 @@ import {
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
 
 import { Avatar } from '@/components/ui/avatar';
 import {
@@ -27,8 +28,6 @@ import {
   markAllNotificationsAsRead,
   subscribeToUserNotifications,
 } from '@/utils/common/firestoreUtils';
-
-const formatDate = (date: string) => new Date(date).toLocaleDateString();
 
 export const NotificationButton = () => {
   const router = useRouter();
@@ -118,11 +117,11 @@ export const NotificationButton = () => {
 
                       {/* Title */}
                       <p className="text-sm font-medium leading-none">
-                        {notification.message} {/* message from Firestore */}
+                        {notification.message}
                       </p>
                     </div>
                     <p className="flex justify-end text-xs text-muted-foreground">
-                      {formatDate(notification.timestamp)}
+                      {formatDistanceToNow(notification.timestamp)}
                     </p>
                   </div>
                 </div>
