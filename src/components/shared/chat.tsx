@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Send, LoaderCircle, Video, Upload, Smile } from 'lucide-react'; // Import LoaderCircle for the spinner
+import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import LoaderCircle for the spinner
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns'; // Import for human-readable tim
 import { EmojiPicker } from '../emojiPicker';
 
 import { Conversation } from './chatList';
+import Reactions from './reactions';
 
 import {
   TooltipProvider,
@@ -27,14 +28,10 @@ import { Input } from '@/components/ui/input';
 import {
   addDataToFirestore,
   subscribeToFirestoreCollection,
+  updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 type User = {
   userName: string;
@@ -42,10 +39,16 @@ type User = {
   profilePic: string;
 };
 
+// Define the types for reactions and messages
+type MessageReaction = Record<string, string[]> | undefined; // Maps emoji to user IDs
+
+// Firestore document structure might look different, but we'll convert it to Message
 type Message = {
+  id: string;
   senderId: string;
   content: string;
   timestamp: string;
+  reactions?: MessageReaction; // Optional reactions property
 };
 
 interface CardsChatProps {
@@ -68,7 +71,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
   // Function to send a message
   async function sendMessage(
     conversation: Conversation,
-    message: Message,
+    message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
     try {
@@ -178,7 +181,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
       });
 
       const meetLink = response.data.meetLink;
-      const message: Message = {
+      const message: Partial<Message> = {
         senderId: user.uid,
         content: `🔗 Join the Meet: [Click here](${meetLink})`,
         timestamp: new Date().toISOString(),
@@ -215,10 +218,10 @@ export function CardsChat({ conversation }: CardsChatProps) {
       }
       updatedReactions[emoji].push(user.uid);
     }
-
     // Update message in Firestore
-    await addDataToFirestore(
-      `conversations/${conversation.id}/messages/${messageId}`,
+    await updateDataInFirestore(
+      `conversations/${conversation.id}/messages/`,
+      messageId,
       {
         reactions: updatedReactions,
       },
@@ -257,76 +260,59 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
                 return (
-                  <div
-                    key={index}
-                    className={cn(
-                      'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
-                      message.senderId === user.uid
-                        ? 'ml-auto bg-primary text-primary-foreground'
-                        : 'bg-muted',
-                    )}
-                  >
-                    {/* Tooltip for human-readable timestamp */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="break-words">{message.content}</div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" sideOffset={10}>
-                          <p>{readableTimestamp}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  <div key={index} className="flex flex-row">
+                    <div
+                      className={cn(
+                        'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
+                        message.senderId === user.uid
+                          ? 'ml-auto bg-primary text-primary-foreground'
+                          : 'bg-muted',
+                      )}
+                    >
+                      {/* Tooltip for human-readable timestamp */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="break-words">{message.content}</div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" sideOffset={10}>
+                            <p>{readableTimestamp}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
 
                     {/* Reactions Section */}
-                    <div className="flex items-center gap-2 mt-2">
-                      {/* Display existing reactions */}
-                      {message.reactions &&
-                        Object.entries(message.reactions).map(
-                          ([emoji, users]) => (
-                            <button
-                              key={emoji}
-                              className={cn(
-                                'flex items-center px-2 py-1 rounded-md',
-                                users.includes(user.uid)
-                                  ? 'bg-primary text-white'
-                                  : 'bg-muted',
-                              )}
-                              onClick={() => toggleReaction(message.id, emoji)}
-                            >
-                              {emoji} {users?.length}
-                            </button>
-                          ),
-                        )}
-
-                      {/* Reaction button */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="text-muted hover:text-primary">
-                            <Smile className="h-4 w-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent side="top">
-                          <EmojiPicker
-                            onSelect={(emoji: any) =>
-                              toggleReaction(message.id, emoji)
-                            }
+                    {message?.reactions &&
+                      Object.keys(message.reactions).length > 0 && (
+                        <div className="flex items-center gap-2">
+                          {/* Display existing reactions */}
+                          <Reactions
+                            messageId={message.id} // Pass in the message object
+                            reactions={message.reactions}
+                            toggleReaction={toggleReaction} // Pass in the toggle function
                           />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                        </div>
+                      )}
+                    {message.senderId !== user.uid && (
+                      <EmojiPicker
+                        onSelect={(emoji: any) =>
+                          toggleReaction(message.id, emoji)
+                        }
+                      />
+                    )}
                   </div>
                 );
               })}
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-4">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
                 if (inputLength === 0) return;
 
-                const newMessage: Message = {
+                const newMessage: Partial<Message> = {
                   senderId: user.uid,
                   content: input,
                   timestamp: new Date().toISOString(),
