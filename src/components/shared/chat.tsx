@@ -1,10 +1,13 @@
 import * as React from 'react';
-import { Send, LoaderCircle } from 'lucide-react'; // Import LoaderCircle for the spinner
+import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import LoaderCircle for the spinner
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 
+import { EmojiPicker } from '../emojiPicker';
+
 import { Conversation } from './chatList';
+import Reactions from './reactions';
 
 import {
   TooltipProvider,
@@ -25,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import {
   addDataToFirestore,
   subscribeToFirestoreCollection,
+  updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
@@ -35,10 +39,16 @@ type User = {
   profilePic: string;
 };
 
+// Define the types for reactions and messages
+type MessageReaction = Record<string, string[]> | undefined; // Maps emoji to user IDs
+
+// Firestore document structure might look different, but we'll convert it to Message
 type Message = {
+  id: string;
   senderId: string;
   content: string;
   timestamp: string;
+  reactions?: MessageReaction; // Optional reactions property
 };
 
 interface CardsChatProps {
@@ -61,7 +71,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
   // Function to send a message
   async function sendMessage(
     conversation: Conversation,
-    message: Message,
+    message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
     try {
@@ -137,6 +147,87 @@ export function CardsChat({ conversation }: CardsChatProps) {
     return null; // Don't display anything
   }
 
+  async function handleDocumentUpload() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+
+      try {
+        // const storageRef = firebase.storage().ref();
+        // const fileRef = storageRef.child(`documents/${conversation.id}/${file.name}`);
+        // await fileRef.put(file);
+        // const fileUrl = await fileRef.getDownloadURL();
+        // const message: Message = {
+        //   senderId: user.uid,
+        //   content: `📄 [${file.name}](${fileUrl})`,
+        //   timestamp: new Date().toISOString(),
+        // };
+        // sendMessage(conversation, message, setInput);
+      } catch (error) {
+        console.error('Error uploading document:', error);
+      }
+    };
+
+    fileInput.click();
+  }
+
+  async function handleCreateMeet() {
+    try {
+      const response = await axiosInstance.post('/meeting', {
+        participants: conversation.participants,
+      });
+
+      const meetLink = response.data.meetLink;
+      const message: Partial<Message> = {
+        senderId: user.uid,
+        content: `🔗 Join the Meet: [Click here](${meetLink})`,
+        timestamp: new Date().toISOString(),
+      };
+
+      sendMessage(conversation, message, setInput);
+    } catch (error) {
+      console.error('Error creating meet:', error);
+    }
+  }
+
+  async function toggleReaction(messageId: string, emoji: string) {
+    const currentMessage = messages.find((msg) => msg.id === messageId);
+
+    // Check if the user already reacted with this emoji
+    const userHasReacted = currentMessage?.reactions?.[emoji]?.includes(
+      user.uid,
+    );
+
+    // Prepare the update for Firestore
+    const updatedReactions = { ...currentMessage?.reactions };
+    if (userHasReacted) {
+      // Remove user reaction
+      updatedReactions[emoji] = updatedReactions[emoji].filter(
+        (uid: any) => uid !== user.uid,
+      );
+      if (updatedReactions[emoji].length === 0) {
+        delete updatedReactions[emoji];
+      }
+    } else {
+      // Add user reaction
+      if (!updatedReactions[emoji]) {
+        updatedReactions[emoji] = [];
+      }
+      updatedReactions[emoji].push(user.uid);
+    }
+    // Update message in Firestore
+    await updateDataInFirestore(
+      `conversations/${conversation.id}/messages/`,
+      messageId,
+      {
+        reactions: updatedReactions,
+      },
+    );
+  }
+
   return (
     <>
       {loading ? (
@@ -161,58 +252,96 @@ export function CardsChat({ conversation }: CardsChatProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto mb-5">
+          <CardContent className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
             {/* Show loading spinner while fetching data */}
-            <div className="space-y-4 max-h-screen">
+            <div className="space-y-4 h-[540px]">
               {messages.map((message, index) => {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
                 return (
-                  <div
-                    key={index}
-                    className={cn(
-                      'flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
-                      message.senderId === user.uid
-                        ? 'ml-auto bg-primary text-primary-foreground'
-                        : 'bg-muted',
+                  <div key={index} className="flex flex-row">
+                    <div
+                      className={cn(
+                        'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
+                        message.senderId === user.uid
+                          ? 'ml-auto bg-primary text-primary-foreground'
+                          : 'bg-muted',
+                      )}
+                    >
+                      {/* Tooltip for human-readable timestamp */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="break-words">{message.content}</div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" sideOffset={10}>
+                            <p>{readableTimestamp}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    {/* Reactions Section */}
+                    {message?.reactions &&
+                      Object.keys(message.reactions).length > 0 && (
+                        <div className="flex items-center gap-2">
+                          {/* Display existing reactions */}
+                          <Reactions
+                            messageId={message.id} // Pass in the message object
+                            reactions={message.reactions}
+                            toggleReaction={toggleReaction} // Pass in the toggle function
+                          />
+                        </div>
+                      )}
+                    {message.senderId !== user.uid && (
+                      <EmojiPicker
+                        onSelect={(emoji: any) =>
+                          toggleReaction(message.id, emoji)
+                        }
+                      />
                     )}
-                  >
-                    {/* Tooltip for human-readable timestamp */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center break-words whitespace-normal">
-                            {message.content}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" sideOffset={10}>
-                          <p>{readableTimestamp}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </div>
                 );
               })}
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-4">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
                 if (inputLength === 0) return;
 
-                const newMessage: Message = {
+                const newMessage: Partial<Message> = {
                   senderId: user.uid,
                   content: input,
                   timestamp: new Date().toISOString(),
                 };
 
-                // Use the sendMessage function
                 sendMessage(conversation, newMessage, setInput);
               }}
               className="flex w-full items-center space-x-2"
             >
+              <div className="flex items-center space-x-2">
+                {/* Upload Document Button */}
+                <Button
+                  size="icon"
+                  onClick={() => handleDocumentUpload()}
+                  title="Send a Document"
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
+
+                {/* Create Meet Button */}
+                <Button
+                  size="icon"
+                  onClick={() => handleCreateMeet()}
+                  title="Create a Meet"
+                >
+                  <Video className="h-4 w-4" />
+                </Button>
+              </div>
+
               <Input
                 id="message"
                 placeholder="Type your message..."
@@ -226,7 +355,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 size="icon"
                 disabled={inputLength === 0 || isSending}
               >
-                {/* Show spinner when the button is in loading state */}
                 {isSending ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (

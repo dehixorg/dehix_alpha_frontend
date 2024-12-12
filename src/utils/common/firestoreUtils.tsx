@@ -13,6 +13,7 @@ import {
   where,
   getDocs,
   writeBatch,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
@@ -114,6 +115,26 @@ export async function setDataToFirestore(
     console.log('Document written with ID:', docId);
   } catch (error) {
     console.error('Error setting document:', (error as FirestoreError).message);
+  }
+}
+
+/**
+ * Update a document in Firestore with a specific ID.
+ */
+export async function updateDataInFirestore(
+  collectionPath: string,
+  docId: string,
+  data: Record<string, any>,
+): Promise<void> {
+  try {
+    const docRef = doc(db, collectionPath, docId);
+    await updateDoc(docRef, data);
+    console.log('Document updated with ID:', docId);
+  } catch (error) {
+    console.error(
+      'Error updating document:',
+      (error as FirestoreError).message,
+    );
   }
 }
 
