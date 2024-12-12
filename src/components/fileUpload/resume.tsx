@@ -11,7 +11,7 @@ const allowedResumeFormats = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-powerpoint',
 ];
-const maxResumeSize = 5 * 1024 * 1024;  
+const maxResumeSize = 5 * 1024 * 1024;
 
 interface ResumeUploadProps {
   user_id: string;
