@@ -2,7 +2,11 @@ import React from 'react';
 
 const emojis = ['👍', '❤️', '😂', '🎉', '😢'];
 
-export const EmojiPicker = ({ onSelect }: { onSelect: (emoji: string) => void }) => {
+export const EmojiPicker = ({
+  onSelect,
+}: {
+  onSelect: (emoji: string) => void;
+}) => {
   return (
     <div className="grid grid-cols-5 gap-2 p-2">
       {emojis.map((emoji) => (

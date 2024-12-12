@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 
+import { EmojiPicker } from '../emojiPicker';
+
 import { Conversation } from './chatList';
 
 import {
@@ -33,7 +35,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { EmojiPicker } from '../emojiPicker';
 
 type User = {
   userName: string;
