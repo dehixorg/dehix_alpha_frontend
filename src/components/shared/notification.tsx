@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Check } from 'lucide-react';
+import { Bell, Check, ChevronRight } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+
+import { ButtonIcon } from './buttonIcon';
 
 import {
   Popover,
@@ -15,7 +18,10 @@ import {
   subscribeToUserNotifications,
 } from '@/utils/common/firestoreUtils';
 
+const formatDate = (date: string) => new Date(date).toLocaleDateString();
+
 export const NotificationButton = () => {
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
   const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -77,16 +83,19 @@ export const NotificationButton = () => {
                       {notification.type} - {notification.entity}{' '}
                       {/* type and entity */}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {/* Optional: You can also display the path or any other field */}
-                      <a
-                        href={notification.path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {notification.path} {/* path from Firestore */}
-                      </a>
-                    </p>
+                    <div className="flex justify-between items-center">
+                      {/* Timestamp */}
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(notification.timestamp)}
+                      </p>
+
+                      {/* Button */}
+                      <ButtonIcon
+                        onClick={() => router.push(notification.path)}
+                        icon={<ChevronRight />}
+                        className="ml-2" // Add margin if needed for spacing
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
