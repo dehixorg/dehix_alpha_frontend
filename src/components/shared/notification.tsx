@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Check, FileText, Settings, User } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  DollarSign,
+  FileText,
+  Gavel,
+  LaptopMinimal,
+  Settings,
+  Ticket,
+  User,
+  UsersRound,
+} from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
@@ -45,8 +56,20 @@ export const NotificationButton = () => {
         return <Settings />;
       case 'Document':
         return <FileText />;
+      case 'Bid':
+        return <Gavel />;
+      case 'Interview':
+        return <LaptopMinimal />;
+      case 'Hire':
+        return <UsersRound />;
+      case 'Transaction':
+        return <DollarSign />;
+      case 'Verification':
+        return <Check />;
+      case 'Ticket':
+        return <Ticket />;
       default:
-        return <Bell />; // Default icon
+        return <Bell />;
     }
   }
 
