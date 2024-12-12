@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface FilterState {
   projects: string[];
@@ -48,7 +49,7 @@ interface Project {
     appliedCandidates?: string[];
     rejected?: string[];
     accepted?: string[];
-    status?: string;
+    status?: StatusEnum;
   }[];
   profiles?: {
     _id?: string;
@@ -157,17 +158,20 @@ const Market: React.FC = () => {
           `/freelancer/${user.uid}`,
         );
         const queryString = constructQueryString(appliedFilters);
-        const allJobs = await axiosInstance.get(
+        const getJobs = await axiosInstance.get(
           `/project/freelancer/${user.uid}?${queryString}`,
         );
 
-        const notInterestedProjects =
-          freelancerDetails.data.notInterestedProject || [];
+        const jobs = getJobs?.data?.data;
 
-        const filteredJobs = allJobs.data.data.filter(
-          (job: Project) => !notInterestedProjects.includes(job._id),
-        );
-        setJobs(filteredJobs);
+        if (freelancerDetails?.data && jobs) {
+          const notInterestedProjects =
+            freelancerDetails.data.notInterestedProject || [];
+          const filteredJobs = jobs.filter(
+            (job: Project) => !notInterestedProjects.includes(job._id),
+          );
+          setJobs(filteredJobs);
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -176,7 +180,6 @@ const Market: React.FC = () => {
   );
 
   const handleApply = () => {
-    console.log('Selected Filters:', filters);
     fetchData(filters);
   };
   useEffect(() => {
@@ -220,7 +223,7 @@ const Market: React.FC = () => {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Freelancer Market', link: '#' },
+              { label: 'Marketplace', link: '#' },
             ]}
           />
           <div className="relative ml-auto flex-1 md:grow-0">

@@ -78,7 +78,6 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
   });
   const selectedType = form.watch('type');
   useEffect(() => {
-    // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
   }, [status]);
 
@@ -87,12 +86,6 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
       comments: data.comment,
       verification_status: data.type,
     });
-    console.log(
-      'Comments:',
-      data.comment || '',
-      { ...data, verification_status: data.type },
-      _id,
-    );
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     onCommentUpdate(data.comment || '');

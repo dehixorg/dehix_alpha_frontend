@@ -10,6 +10,9 @@ import {
   orderBy,
   QuerySnapshot,
   query,
+  where,
+  getDocs,
+  writeBatch,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
@@ -113,3 +116,52 @@ export async function setDataToFirestore(
     console.error('Error setting document:', (error as FirestoreError).message);
   }
 }
+
+export const subscribeToUserNotifications = (
+  userId: string,
+  callback: (notifications: DocumentData[]) => void,
+) => {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(notificationsRef, where('userId', '==', userId));
+
+  // Real-time listener
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const notifications: DocumentData[] = [];
+    querySnapshot.forEach((doc) => {
+      notifications.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+    callback(notifications);
+  });
+
+  return unsubscribe; // Return the unsubscribe function to stop listening when needed
+};
+
+// Function to mark all notifications as read in Firestore
+export const markAllNotificationsAsRead = async (userId: string) => {
+  const batch = writeBatch(db); // Initialize Firestore batch operation
+
+  try {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('isRead', '==', false),
+    );
+    const querySnapshot = await getDocs(q);
+
+    // Loop through all the unread notifications and add them to the batch for updating
+    querySnapshot.forEach((docSnap) => {
+      const notificationDocRef = doc(db, 'notifications', docSnap.id);
+      batch.update(notificationDocRef, { isRead: true }); // Add update to batch
+    });
+
+    // Commit the batch update
+    await batch.commit();
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    throw new Error('Failed to mark notifications as read');
+  }
+};

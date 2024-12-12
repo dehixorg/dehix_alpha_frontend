@@ -42,7 +42,13 @@ const projectFormSchema = z
   .object({
     projectName: z.string().min(1, { message: 'Project name is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
-    githubLink: z.string().url({ message: 'Invalid URL.' }).optional(),
+    githubRepoLink: z
+      .string()
+      .url({ message: 'GitHub Repositry link must be a valid URL.' })
+      .optional()
+      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
+        message: 'GitHub repository URL must start with https://github.com/',
+      }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -67,7 +73,6 @@ const projectFormSchema = z
     },
   );
 
-// Type for form values
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 interface AddProjectProps {
@@ -101,7 +106,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     const fetchData = async () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
-        console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
             value: skill.label, // Set the value to label
@@ -122,7 +126,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     defaultValues: {
       projectName: '',
       description: '',
-      githubLink: '',
+      githubRepoLink: '',
       start: '',
       end: '',
       refer: '',
@@ -143,7 +147,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       form.reset({
         projectName: '',
         description: '',
-        githubLink: '',
+        githubRepoLink: '',
         start: '',
         end: '',
         refer: '',
@@ -184,7 +188,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           verificationUpdateTime: new Date().toISOString(),
         },
       );
-      console.log('API Response:', response.data);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({
@@ -252,7 +255,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             />
             <FormField
               control={form.control}
-              name="githubLink"
+              name="githubRepoLink"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>GitHub Repo Link</FormLabel>

@@ -27,6 +27,8 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import { NotificationButton } from '@/components/shared/notification';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -37,22 +39,22 @@ export default function Dashboard() {
       try {
         const response = await axiosInstance.get(
           `/project/business/${user.uid}`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
+        );
         setResponseData(response.data.data); // Store response data in state
       } catch (error) {
         console.error('API Error:', error);
       }
     };
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == StatusEnum.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== StatusEnum.COMPLETED,
   );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -77,6 +79,7 @@ export default function Dashboard() {
           <div className="relative ml-auto flex-1 md:grow-0">
             <Search className="w-full md:w-[200px] lg:w-[336px]" />
           </div>
+          <NotificationButton />
 
           {/* profile dropdown need to create separeant component */}
           <DropdownProfile />
@@ -94,9 +97,14 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
+                  {/* Wrap the Button with the Link component to make it clickable */}
+                  <Link href="/business/add-project" passHref>
+                    <Button className="w-full">
+                      {' '}
+                      {/* Ensure the Button takes up full width */}
+                      Create New Project
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
 
@@ -123,7 +131,7 @@ export default function Dashboard() {
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
@@ -144,7 +152,7 @@ export default function Dashboard() {
                 completedProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))

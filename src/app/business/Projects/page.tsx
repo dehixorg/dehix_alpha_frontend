@@ -60,7 +60,7 @@ export default function Dashboard() {
       label: 'Settings',
     },
   ];
-  console.log(user);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -70,14 +70,11 @@ export default function Dashboard() {
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          {/* side bar need to make caomponent */}
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             active="Projects"
           />
-
-          {/* bredcrumbs need to make compont  */}
 
           <Breadcrumb
             items={[

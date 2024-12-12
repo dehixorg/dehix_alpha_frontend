@@ -15,6 +15,7 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
@@ -38,7 +39,7 @@ interface Project {
     accepted?: string[];
     status?: string;
   }[];
-  status?: string;
+  status?: StatusEnum;
   team?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -52,7 +53,7 @@ export default function CurrentProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Active`,
+          `/freelancer/${user.uid}/project?status=ACTIVE`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {

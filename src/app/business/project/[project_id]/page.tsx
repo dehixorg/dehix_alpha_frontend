@@ -1,4 +1,5 @@
 'use client';
+
 import { Search, CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,10 +19,13 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
+import { Button } from '@/components/ui/button';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectProfile {
-  selectedFreelancer?: string[]; // Added based on the response
-  totalBid?: number[]; // Added based on the response
+  _id?: string;
+  selectedFreelancer?: string[];
+  totalBid?: number[];
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -29,17 +33,21 @@ interface ProjectProfile {
   minConnect?: number;
   rate?: number;
   description?: string;
-  _id?: string; // Added to match the response's profile structure
+  domain_id: string;
+  freelancers?: {
+    freelancerId: string;
+    bidId: string;
+  };
 }
 
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
-  url?: { value: string }[]; // Retained as optional
+  url?: { value: string }[];
   verified?: any;
   isVerified?: string;
   companyName: string;
@@ -49,9 +57,9 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  profiles?: ProjectProfile[]; // Modified to use the new ProjectProfile structure
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected'; // Matches response status
-  team?: string[]; // Retained as optional
+  profiles?: ProjectProfile[];
+  status?: StatusEnum; // enum
+  team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -64,14 +72,10 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/project/${project_id}`);
-
-        // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;
 
         if (projectData) {
           setProject(projectData);
-        } else {
-          console.error('Unexpected data structure:', response.data);
         }
       } catch (error) {
         console.error('API Error:', error);
@@ -79,6 +83,32 @@ export default function Dashboard() {
     };
     fetchData();
   }, [project_id]);
+
+  const handleCompleteProject = async () => {
+    if (!project_id) return;
+
+    try {
+      const response = await axiosInstance.put(`/project/${project_id}`, {
+        status: StatusEnum.COMPLETED,
+      });
+
+      if (response?.status === 200) {
+        setProject((prev) => {
+          if (prev) {
+            return { ...prev, status: StatusEnum.COMPLETED };
+          }
+          return prev;
+        });
+        alert('Project marked as completed!');
+      } else {
+        console.error('Unexpected response:', response);
+        alert('Failed to mark project as completed.');
+      }
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      alert('An error occurred while updating the project status.');
+    }
+  };
 
   if (!project) {
     return <div>Loading...</div>;
@@ -133,7 +163,7 @@ export default function Dashboard() {
                         status={project.status}
                         startDate={project.createdAt}
                         endDate={project.end}
-                        domains={[]}
+                        projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
                       />
                     </div>
@@ -160,6 +190,12 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </CardContent>
+                      <Button
+                        className="w-full sm:w-[50%] md:w-[30%] lg:w-[15%]"
+                        onClick={handleCompleteProject}
+                      >
+                        Mark as Completed
+                      </Button>
                     </div>
                   </div>
                 </TabsContent>

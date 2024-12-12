@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input'; // Import ShadCN Input component
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 // Define the type for a domain
 interface Domain {
@@ -41,7 +42,7 @@ interface SkillDomainData {
   experience: string;
   monthlyPay: string;
   activeStatus: boolean;
-  status: string;
+  status: StatusEnum;
 }
 
 // Define the props for the DomainDialog component
@@ -87,7 +88,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       experience: '',
       monthlyPay: '',
       activeStatus: false,
-      status: 'pending',
+      status: StatusEnum.PENDING,
     },
   });
 
@@ -185,14 +186,20 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="experience"
               render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="Experience (years)"
-                  min={0}
-                  max={50}
-                  {...field}
-                  className="w-full mt-2"
-                />
+                <div className="col-span-3 relative">
+                  <Input
+                    type="number"
+                    placeholder="Experience (years)"
+                    min={0}
+                    max={50}
+                    step={0.1} //Allow decimals
+                    {...field}
+                    className="w-full mt-2"
+                  />
+                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                    YEARS
+                  </span>
+                </div>
               )}
             />
           </div>
@@ -205,13 +212,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
               control={control}
               name="monthlyPay"
               render={({ field }) => (
-                <Input
-                  type="number"
-                  placeholder="$ Monthly Pay"
-                  min={0}
-                  {...field}
-                  className="w-full mt-2"
-                />
+                <div className="col-span-3 relative">
+                  <Input
+                    type="number"
+                    placeholder="$ Monthly Pay"
+                    min={0}
+                    {...field}
+                    className="w-full mt-2"
+                  />
+                  <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                    $
+                  </span>
+                </div>
               )}
             />
           </div>

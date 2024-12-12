@@ -15,6 +15,8 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
@@ -38,7 +40,7 @@ interface Project {
     accepted?: string[];
     status?: string;
   }[];
-  status?: string;
+  status?: StatusEnum; //enum
   team?: string[];
   createdAt: Date;
   updatedAt: Date;

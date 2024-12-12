@@ -11,6 +11,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -32,7 +33,7 @@ interface BidDetail {
   userName: string;
   description: string;
   current_price: string;
-  bid_status: 'Accepted' | 'Pending' | 'Completed' | 'Rejected';
+  bid_status: StatusEnum; //enum
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -208,14 +209,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                               ? 'Loading...'
                                               : 'Reject'}
                                           </Button>
-                                          <Button
-                                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto"
-                                            onClick={() =>
-                                              console.log(
-                                                `Viewing details for ${bid.userName}`,
-                                              )
-                                            }
-                                          >
+                                          <Button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto">
                                             Interview
                                           </Button>
                                         </>

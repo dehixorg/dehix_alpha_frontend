@@ -43,6 +43,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { Separator } from '@/components/ui/separator';
+import { ProjectStatus } from '@/utils/freelancer/enum';
 
 interface Skill {
   label: string;
@@ -106,10 +107,10 @@ export default function ConsultancyPage() {
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == ProjectStatus.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== ProjectStatus.COMPLETED,
   );
 
   const form = useForm<ConsultancyFormValues>({
@@ -151,7 +152,6 @@ export default function ConsultancyPage() {
 
   const onSubmit = async (data: ConsultancyFormValues) => {
     try {
-      console.log('Form Data:', data);
       setConsultants([...consultants, data]);
       form.reset();
       setIsDialogOpen(false);
@@ -399,7 +399,7 @@ export default function ConsultancyPage() {
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
@@ -423,7 +423,7 @@ export default function ConsultancyPage() {
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
