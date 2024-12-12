@@ -11,7 +11,7 @@ const allowedResumeFormats = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-powerpoint',
 ];
-const maxResumeSize = 5 * 1024 * 1024;
+const maxResumeSize = 5 * 1024 * 1024;  
 
 interface ResumeUploadProps {
   user_id: string;
@@ -38,7 +38,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
     if (file && allowedResumeFormats.includes(file.type)) {
       if (file.size <= maxResumeSize) {
         setSelectedResume(file);
-        setPreviewUrl(URL.createObjectURL(file)); // Generate local preview URL
+        setPreviewUrl(URL.createObjectURL(file));
       } else {
         toast({
           variant: 'destructive',
