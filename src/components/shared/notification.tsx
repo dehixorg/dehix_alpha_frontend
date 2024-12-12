@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Check, ChevronRight } from 'lucide-react';
+import { Bell, Check, FileText, Settings, User } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
-import { ButtonIcon } from './buttonIcon';
-
+import { Avatar } from '@/components/ui/avatar';
 import {
   Popover,
   PopoverTrigger,
@@ -38,6 +37,19 @@ export const NotificationButton = () => {
     };
   }, [user]);
 
+  function iconGetter(entity: string): JSX.Element {
+    switch (entity) {
+      case 'Account':
+        return <User />;
+      case 'Settings':
+        return <Settings />;
+      case 'Document':
+        return <FileText />;
+      default:
+        return <Bell />; // Default icon
+    }
+  }
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -63,39 +75,32 @@ export const NotificationButton = () => {
             </p>
           ) : (
             <div className="space-y-2">
-              {notifications.map((notification) => (
+              {notifications.map((notification: any) => (
                 <div
+                  onClick={() => router.push(notification.path)}
                   key={notification.id} // Use the unique ID from Firestore (instead of index)
-                  className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
+                  className="rounded py-4 mb-4 items-start cursor-pointer hover:bg-muted hover:opacity-75 transition"
                 >
                   <div>
                     {!notification.isRead && (
                       <span className="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {/* Display the title of the notification */}
-                      {notification.message} {/* message from Firestore */}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {/* Display the description of the notification */}
-                      {notification.type} - {notification.entity}{' '}
-                      {/* type and entity */}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      {/* Timestamp */}
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(notification.timestamp)}
-                      </p>
+                  <div className="space-y-1 px-3">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {/* Avatar with Icon */}
+                      <Avatar className="h-6 w-6 text-white flex items-center justify-center p-1 ring-1 ring-white">
+                        {iconGetter(notification.entity)}
+                      </Avatar>
 
-                      {/* Button */}
-                      <ButtonIcon
-                        onClick={() => router.push(notification.path)}
-                        icon={<ChevronRight />}
-                        className="ml-2" // Add margin if needed for spacing
-                      />
+                      {/* Title */}
+                      <p className="text-sm font-medium leading-none">
+                        {notification.message} {/* message from Firestore */}
+                      </p>
                     </div>
+                    <p className="flex justify-end text-xs text-muted-foreground">
+                      {formatDate(notification.timestamp)}
+                    </p>
                   </div>
                 </div>
               ))}
