@@ -47,12 +47,13 @@ export function subscribeToFirestoreDoc(
 export function subscribeToFirestoreCollection(
   collectionPath: string,
   callback: (data: { id: string; [key: string]: any }[]) => void,
+  sort: 'asc' | 'desc' = 'asc',
 ) {
   // Create a collection reference
   const collectionRef = collection(db, collectionPath);
 
   // Create a query that orders the documents by the timestamp field in ascending order
-  const orderedQuery = query(collectionRef, orderBy('timestamp', 'asc'));
+  const orderedQuery = query(collectionRef, orderBy('timestamp', sort));
 
   // Subscribe to the query with onSnapshot
   return onSnapshot(orderedQuery, (snapshot: QuerySnapshot<DocumentData>) => {

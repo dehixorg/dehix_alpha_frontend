@@ -136,6 +136,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
           setMessages(messagesData); // Update messages state with fetched messages
           setLoading(false); // Set loading to false after messages are loaded
         },
+        'desc',
       );
     };
 
@@ -266,7 +267,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
             <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
               {/* Dummy div to maintain focus at the end of messages */}
               <div ref={messagesEndRef} />
-              {[...messages].reverse().map((message, index) => {
+              {messages.map((message, index) => {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
