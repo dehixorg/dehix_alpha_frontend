@@ -263,8 +263,10 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
           <CardContent className="flex-1 px-6 pb-4">
             {/* Scrollable messages container */}
-            <div className="space-y-4 overflow-y-auto h-[60vh] flex flex-col justify-end">
-              {messages.map((message, index) => {
+            <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
+              {/* Dummy div to maintain focus at the end of messages */}
+              <div ref={messagesEndRef} />
+              {[...messages].reverse().map((message, index) => {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
@@ -313,8 +315,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   </div>
                 );
               })}
-              {/* Dummy div to maintain focus at the end of messages */}
-              <div ref={messagesEndRef} />
             </div>
           </CardContent>
 
