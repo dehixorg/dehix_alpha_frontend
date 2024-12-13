@@ -3,11 +3,14 @@ import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import Load
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/storage'; // Import Firebase storage if you're using it
 
 import { EmojiPicker } from '../emojiPicker';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
+
 
 import {
   TooltipProvider,
@@ -32,6 +35,27 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+
+import { format, isToday, isYesterday, isThisYear } from 'date-fns';
+
+function formatChatTimestamp(timestamp: string) {
+  const date = new Date(timestamp);
+
+  if (isToday(date)) {
+    return format(date, 'hh:mm a'); // Example: "10:30 AM"
+  }
+
+  if (isYesterday(date)) {
+    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
+  }
+
+  if (isThisYear(date)) {
+    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
+  }
+
+  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+}
+
 
 type User = {
   userName: string;
@@ -231,12 +255,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
   return (
     <>
       {loading ? (
-        <div className="flex justify-center items-center p-5 col-span-2">
+        <div className="flex justify-center items-center p-5 col-span-2  ">
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-2">
-          <CardHeader className="flex flex-row items-center">
+        <Card className="col-span-2 flex-1">
+          <CardHeader className="flex flex-row items-center border p-2 ">
             <div className="flex items-center space-x-4">
               <Avatar>
                 <AvatarImage src={primaryUser.profilePic} alt="Image" />
@@ -252,58 +276,75 @@ export function CardsChat({ conversation }: CardsChatProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
-            {/* Show loading spinner while fetching data */}
-            <div className="space-y-4 h-[540px]">
-              {messages.map((message, index) => {
-                const readableTimestamp =
-                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+          <CardContent className="flex-1 overflow-y-auto px-4 py-2 space-y-4 no-scrollbar">
+          <div className="space-y-4 h-[540px] ">
+          {messages.map((message, index) => {
+  const formattedTimestamp = formatChatTimestamp(message.timestamp);
+  const readableTimestamp = formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
-                return (
-                  <div key={index} className="flex flex-row">
-                    <div
-                      className={cn(
-                        'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
-                        message.senderId === user.uid
-                          ? 'ml-auto bg-primary text-primary-foreground'
-                          : 'bg-muted',
-                      )}
-                    >
-                      {/* Tooltip for human-readable timestamp */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="break-words">{message.content}</div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p>{readableTimestamp}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
+  return (
+    <div key={index} className="flex flex-row space-y-1">
+      {message.senderId !== user.uid && (  // Show avatar for receiver's message only
+        <div className="mr-2">
+          <Avatar>
+            <AvatarImage
+              src={primaryUser.profilePic}
+              alt="User Image"
+            />
+            <AvatarFallback>{primaryUser.userName}</AvatarFallback>
+          </Avatar>
+        </div>
+      )}
 
-                    {/* Reactions Section */}
-                    {message?.reactions &&
-                      Object.keys(message.reactions).length > 0 && (
-                        <div className="flex items-center gap-2">
-                          {/* Display existing reactions */}
-                          <Reactions
-                            messageId={message.id} // Pass in the message object
-                            reactions={message.reactions}
-                            toggleReaction={toggleReaction} // Pass in the toggle function
-                          />
-                        </div>
-                      )}
-                    {message.senderId !== user.uid && (
-                      <EmojiPicker
-                        onSelect={(emoji: any) =>
-                          toggleReaction(message.id, emoji)
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
+      <div
+        className={cn(
+          'flex w-max max-w-[45%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
+          message.senderId === user.uid
+            ? 'ml-auto bg-primary text-primary-foreground'
+            : 'bg-muted',
+        )}
+      >
+        {/* Tooltip for detailed timestamp */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="break-words">{message.content}</div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={10}>
+              <p>{readableTimestamp}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        {/* Visible concise timestamp below the message */}
+        <div
+          className={cn(
+            'text-xs mt-1',
+            message.senderId === user.uid ? 'text-muted' : 'text-muted-foreground'
+          )}
+        >
+          {formattedTimestamp}
+        </div>
+      </div>
+
+      {/* Reactions Section */}
+      {message?.reactions && Object.keys(message.reactions).length > 0 && (
+        <div className="flex items-center gap-2">
+          <Reactions
+            messageId={message.id} // Pass in the message object
+            reactions={message.reactions}
+            toggleReaction={toggleReaction} // Pass in the toggle function
+          />
+        </div>
+      )}
+      {message.senderId !== user.uid && (
+        <EmojiPicker
+          onSelect={(emoji: any) => toggleReaction(message.id, emoji)}
+        />
+      )}
+    </div>
+  );
+})}
+
             </div>
           </CardContent>
           <CardFooter className="pt-4">
