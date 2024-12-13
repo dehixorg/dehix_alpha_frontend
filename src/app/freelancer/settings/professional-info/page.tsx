@@ -2,19 +2,17 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Search } from '@/components/search';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import ExperienceCard from '@/components/cards/experienceCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddExperience } from '@/components/dialogs/addExperiences';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
+import Header from '@/components/header/header';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -43,23 +41,15 @@ export default function ProfessionalInfo() {
         active="Professional Info"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Professional Info"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Professional Info', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+      <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Professional Info"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Professional Info', link: '#' },
+          ]}
+        />
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"

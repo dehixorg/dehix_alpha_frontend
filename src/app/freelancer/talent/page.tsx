@@ -9,6 +9,7 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import Header from '@/components/header/header';
 
 export default function Talent() {
   return (
@@ -19,23 +20,15 @@ export default function Talent() {
         active="Talent"
       />
       <div className="flex flex-col sm:gap-0 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Projects"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Dehix Talent', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+      <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Projects"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Dehix Talent', link: '#' },
+          ]}
+        />
         <main className="ml-5">
           <SkillDomainForm />
         </main>

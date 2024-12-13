@@ -1,11 +1,8 @@
 'use client';
 import { useState } from 'react';
 
-import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -20,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Header from '@/components/header/header';
 interface Skill {
   _id: string;
   label: string;
@@ -46,23 +44,15 @@ export default function Talent() {
       />
 
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 py-6 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Dehix Talent"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Business', link: '/dashboard/business' },
-              { label: 'HireTalent', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+      <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dehix Talent"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'HireTalent', link: '#' },
+          ]}
+        />
 
         <main className="flex-1 gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-3 lg:items-start xl:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
