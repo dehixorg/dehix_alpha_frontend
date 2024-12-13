@@ -3,6 +3,7 @@ import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import Load
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
+import { useEffect, useRef, useState } from 'react';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -56,17 +57,24 @@ interface CardsChatProps {
 }
 
 export function CardsChat({ conversation }: CardsChatProps) {
-  const [primaryUser, setPrimaryUser] = React.useState<User>({
+  const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
     profilePic: '',
   });
-  const [messages, setMessages] = React.useState<DocumentData[]>([]);
-  const [input, setInput] = React.useState('');
-  const [loading, setLoading] = React.useState(true); // Loading state for data fetch
-  const [isSending, setIsSending] = React.useState(false); // Loading state for message sending
+  const [messages, setMessages] = useState<DocumentData[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true); // Loading state for data fetch
+  const [isSending, setIsSending] = useState(false); // Loading state for message sending
   const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   // Function to send a message
   async function sendMessage(
@@ -101,7 +109,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchPrimaryUser = async () => {
       const primaryUid = conversation.participants.find(
         (participant: string) => participant !== user.uid,
@@ -252,10 +260,10 @@ export function CardsChat({ conversation }: CardsChatProps) {
               </div>
             </div>
           </CardHeader>
+
           <CardContent className="flex-1 px-6 pb-4">
             {/* Scrollable messages container */}
             <div className="space-y-4 overflow-y-auto max-h-[60vh]">
-              {/* Show loading spinner while fetching data */}
               {messages.map((message, index) => {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
@@ -305,6 +313,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   </div>
                 );
               })}
+              {/* Dummy div to maintain focus at the end of messages */}
+              <div ref={messagesEndRef} />
             </div>
           </CardContent>
 
