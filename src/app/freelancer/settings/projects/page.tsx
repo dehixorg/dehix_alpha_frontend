@@ -40,13 +40,13 @@ export default function Projects() {
         active="Projects"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/freelancer' },
-    { label: 'Projects', link: '#' },
+            { label: 'Projects', link: '#' },
           ]}
         />
         <main

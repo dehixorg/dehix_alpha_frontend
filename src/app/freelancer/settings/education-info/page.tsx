@@ -61,13 +61,13 @@ export default function Education() {
         active="Education"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Education"
           breadcrumbItems={[
             { label: 'Settings', link: '#' },
-              { label: 'Educational Info', link: '#' },
+            { label: 'Educational Info', link: '#' },
           ]}
         />
 

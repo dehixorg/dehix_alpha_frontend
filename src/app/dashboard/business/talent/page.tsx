@@ -17,13 +17,13 @@ export default function Talent() {
         active="Talent"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Dehix Talent', link: '#' },
+            { label: 'Dehix Talent', link: '#' },
           ]}
         />
         <main className="ml-5">

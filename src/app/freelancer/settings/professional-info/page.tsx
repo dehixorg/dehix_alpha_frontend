@@ -2,7 +2,6 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ExperienceCard from '@/components/cards/experienceCard';
@@ -41,7 +40,7 @@ export default function ProfessionalInfo() {
         active="Professional Info"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Professional Info"

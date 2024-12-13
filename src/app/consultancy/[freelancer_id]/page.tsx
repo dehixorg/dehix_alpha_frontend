@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {  PackageOpen, Boxes, Home, Plus, X } from 'lucide-react';
+import { PackageOpen, Boxes, Home, Plus, X } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -166,7 +166,7 @@ export default function ConsultancyPage() {
         active="Consultancy Info"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Consultancy Info"

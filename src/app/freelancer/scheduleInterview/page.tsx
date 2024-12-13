@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 
-
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -19,13 +18,13 @@ export default function ProfilePage() {
         active="ScheduleInterviews"
       />
       <div className="flex flex-col sm:py-0 sm:gap-2 sm:pl-14 w-full">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="ScheduleInterviews"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-                { label: 'Schedule-Interview', link: '#' },
+            { label: 'Schedule-Interview', link: '#' },
           ]}
         />
         <ScheduleInterviewDialog />

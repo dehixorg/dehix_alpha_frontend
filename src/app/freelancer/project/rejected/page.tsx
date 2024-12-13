@@ -3,7 +3,6 @@ import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -70,7 +69,7 @@ export default function RejectedProject() {
         active="Rejected Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Rejected Verification"

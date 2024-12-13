@@ -2,7 +2,6 @@
 import { useState } from 'react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
-
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -44,7 +43,7 @@ export default function Talent() {
       />
 
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dehix Talent"

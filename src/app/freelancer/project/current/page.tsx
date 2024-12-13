@@ -3,10 +3,8 @@ import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -71,20 +69,20 @@ export default function CurrentProject() {
         active="Current Projects"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Current Projects"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Projects',
-                link: '/freelancer/project/current',
-              },
-              {
-                label: 'Current Projects',
-                link: '#',
-              },
+            {
+              label: 'Projects',
+              link: '/freelancer/project/current',
+            },
+            {
+              label: 'Current Projects',
+              link: '#',
+            },
           ]}
         />
 

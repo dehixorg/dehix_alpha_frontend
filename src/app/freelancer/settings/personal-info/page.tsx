@@ -21,7 +21,7 @@ export default function PersonalInfo() {
         active="Personal Info"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Personal Info"

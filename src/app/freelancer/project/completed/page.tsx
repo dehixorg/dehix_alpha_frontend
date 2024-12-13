@@ -69,21 +69,21 @@ export default function CompletedProject() {
         active="Completed Projects"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Completed Projects"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Projects',
-                link: '/freelancer/project/current',
-              },
-              {
-                label: 'Completed Projects',
-                link: '#',
-              },
-            ]}
+            {
+              label: 'Projects',
+              link: '/freelancer/project/current',
+            },
+            {
+              label: 'Completed Projects',
+              link: '#',
+            },
+          ]}
         />
 
         <div className="mb-8 ml-10">

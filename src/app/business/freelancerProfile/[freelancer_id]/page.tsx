@@ -2,13 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -102,13 +100,12 @@ export default function FreelancerProfile() {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-    <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="active"
-          breadcrumbItems=
-          {[
+          breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Freelancer Profile', link: '/dashboard/business' },
             {

@@ -3,7 +3,6 @@ import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -71,7 +70,7 @@ export default function AppliedProject() {
         active="Under Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Under Verification"
@@ -86,7 +85,6 @@ export default function AppliedProject() {
               link: '#',
             },
           ]}
-          
         />
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">Projects Under Verification</h1>
