@@ -92,7 +92,7 @@ const ProfilePictureUpload = ({
       // Adjust the endpoint and payload field based on entityType
       const updateEndpoint =
         entityType === Type.FREELANCER
-          ? `/freelancer/${user_id}`
+          ? `/freelancer/${user.uid}`
           : `/business/${user_id}`;
 
       const putResponse = await axiosInstance.put(updateEndpoint, {
