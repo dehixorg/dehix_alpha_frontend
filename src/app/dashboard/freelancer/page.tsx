@@ -28,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
 import { StatusEnum } from '@/utils/freelancer/enum';
+import Header from '@/components/header/header';
 
 interface Project {
   _id: string;
@@ -147,23 +148,15 @@ export default function Dashboard() {
         active="Dashboard"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-background px-4 sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Dashboard"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard/freelancer' },
-              { label: 'Freelancer', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Freelancer', link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             {/* Project Status Cards */}

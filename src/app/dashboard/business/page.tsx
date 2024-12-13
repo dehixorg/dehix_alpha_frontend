@@ -4,9 +4,7 @@ import { CheckCircle, Clock, PackageOpen, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,12 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -28,7 +24,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { NotificationButton } from '@/components/shared/notification';
+import Header from '@/components/header/header';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -63,27 +59,15 @@ export default function Dashboard() {
         active="Dashboard"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-background px-4  sm:border-0 sm:px-6">
-          {/* side bar need to make component */}
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Dashboard"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard/business' },
-              { label: 'Business', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <NotificationButton />
-
-          {/* profile dropdown need to create separeant component */}
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/business' },
+            { label: 'Business', link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
