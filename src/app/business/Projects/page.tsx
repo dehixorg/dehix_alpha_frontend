@@ -8,6 +8,7 @@ import {
   Users2,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'next/navigation';
 
 import { CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +22,8 @@ import Header from '@/components/header/header';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
+  const { project_id } = useParams<{ project_id: string }>(); // Extract project_id from the route.
+
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',
@@ -72,7 +75,7 @@ export default function Dashboard() {
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
-            { label: '#project_id', link: '#' },
+            { label: project_id, link: '#' }, // Use project_id dynamically
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">

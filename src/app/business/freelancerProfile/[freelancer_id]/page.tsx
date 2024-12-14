@@ -104,7 +104,7 @@ export default function FreelancerProfile() {
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="active"
+          activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Freelancer Profile', link: '/dashboard/business' },

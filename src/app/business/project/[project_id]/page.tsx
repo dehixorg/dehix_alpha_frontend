@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, CalendarX2 } from 'lucide-react';
+import { CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
