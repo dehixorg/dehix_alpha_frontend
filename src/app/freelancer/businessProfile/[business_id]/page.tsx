@@ -2,20 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-import { Search } from '@/components/search';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance'; // Ensure this is correctly configured
 import { Button } from '@/components/ui/button';
+import Header from '@/components/header/header';
 
 interface UserProfile {
   firstName: string;
@@ -97,27 +94,19 @@ export default function BusinessProfile() {
       {/* Main Content */}
       <div className="flex flex-1 flex-col sm:pl-14">
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Business Profile"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard' },
-              {
-                label: 'Business Profile',
-                link: '/dashboard/business-profile',
-              },
-              { label: `#${business_id}`, link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Business Profile"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard' },
+            {
+              label: 'Business Profile',
+              link: '/dashboard/business-profile',
+            },
+            { label: `#${business_id}`, link: '#' },
+          ]}
+        />
 
         {/* Content */}
         <main className="flex flex-col items-center p-4 sm:px-6 gap-6">

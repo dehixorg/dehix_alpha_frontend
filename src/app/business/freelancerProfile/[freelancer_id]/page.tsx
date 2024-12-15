@@ -2,20 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-import { Search } from '@/components/search';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
+import Header from '@/components/header/header';
 
 interface UserProfile {
   firstName: string;
@@ -104,27 +101,19 @@ export default function FreelancerProfile() {
         active=""
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Projects"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Business', link: '/dashboard/business' },
-              { label: 'Freelancer Profile', link: '/dashboard/business' },
-              {
-                label: `${user?.firstName}  ${user?.lastName} `,
-                link: `/dashboard/business/${freelancer_id}`,
-              },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Projects"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Freelancer Profile', link: '/dashboard/business' },
+            {
+              label: `${user?.firstName}  ${user?.lastName} `,
+              link: `/dashboard/business/${freelancer_id}`,
+            },
+          ]}
+        />
 
         <main className="flex flex-col items-center p-4 sm:px-6 sm:py-0 mb-10">
           <Card className="w-full max-w-4xl bg-black text-white p-4 shadow-md">
