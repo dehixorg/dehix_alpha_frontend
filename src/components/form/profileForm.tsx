@@ -416,8 +416,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           /> */}
 
           <Separator className="col-span-2" />
-          <div className="flex flex-wrap gap-6 w-full">
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
+          {/* <div className="flex flex-wrap gap-6 w-full"> */}
+            <div className="flex-1 min-w-[350px] max-w-[500px]">
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
@@ -474,7 +474,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </div>
             </div>
 
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
+            <div className="flex-1 min-w-[350px] max-w-[500px]">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
@@ -533,7 +533,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </div>
             </div>
 
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
+            <div className="flex-1 min-w-[350px] max-w-[500px]">
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
@@ -599,7 +599,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 )}
               </div>
             </div>
-          </div>
+          {/* </div> */}
           <Separator className="col-span-2 mt-0" />
           <FormField
             control={form.control}
