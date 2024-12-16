@@ -15,8 +15,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
-import { Button } from '@/components/ui/button';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 
 interface ProjectProfile {
@@ -81,30 +81,44 @@ export default function Dashboard() {
     fetchData();
   }, [project_id]);
 
-  const handleCompleteProject = async () => {
-    if (!project_id) return;
-
-    try {
-      const response = await axiosInstance.put(`/project/${project_id}`, {
-        status: StatusEnum.COMPLETED,
+  const handleCompleteProject = (): void => {
+    if (!project_id) {
+      toast({
+        title: 'Error',
+        description: 'Project ID is missing.',
+        variant: 'destructive',
       });
-
-      if (response?.status === 200) {
-        setProject((prev) => {
-          if (prev) {
-            return { ...prev, status: StatusEnum.COMPLETED };
-          }
-          return prev;
-        });
-        alert('Project marked as completed!');
-      } else {
-        console.error('Unexpected response:', response);
-        alert('Failed to mark project as completed.');
-      }
-    } catch (error) {
-      console.error('Error updating project status:', error);
-      alert('An error occurred while updating the project status.');
+      return;
     }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.COMPLETED })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.COMPLETED } : prev,
+          );
+          toast({
+            title: 'Success',
+            description: 'Project marked as completed!',
+          });
+        } else {
+          console.error('Unexpected response:', response);
+          toast({
+            title: 'Failed',
+            description: 'Failed to mark project as completed.',
+            variant: 'destructive',
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        toast({
+          title: 'Error',
+          description: 'An error occurred while updating the project status.',
+          variant: 'destructive',
+        });
+      });
   };
 
   if (!project) {
@@ -149,6 +163,7 @@ export default function Dashboard() {
                         endDate={project.end}
                         projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
+                        handleCompleteProject={handleCompleteProject}
                       />
                     </div>
                     <div>
@@ -174,12 +189,6 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </CardContent>
-                      <Button
-                        className="w-full sm:w-[50%] md:w-[30%] lg:w-[15%]"
-                        onClick={handleCompleteProject}
-                      >
-                        Mark as Completed
-                      </Button>
                     </div>
                   </div>
                 </TabsContent>
