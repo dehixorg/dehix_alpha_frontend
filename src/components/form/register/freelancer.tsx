@@ -7,6 +7,7 @@ import { ToastAction } from '@radix-ui/react-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+
 import countries from '../../../country-codes.json';
 
 import PhoneNumberForm from './phoneNumberChecker';
@@ -73,7 +74,6 @@ export default function FreelancerRegisterForm() {
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-  
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -149,7 +149,11 @@ export default function FreelancerRegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef} className="w-full max-w-screen-lg mx-auto space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        ref={formRef}
+        className="w-full max-w-screen-lg mx-auto space-y-6"
+      >
         <div className="">
           {/* First Name and Last Name */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -167,25 +171,27 @@ export default function FreelancerRegisterForm() {
               placeholder="Robinson"
               className="w-full"
             />
-        </div>
+          </div>
 
-
-  
           {/* Email and Phone Number */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="email"
-            label="Email"
-            type="email"
-            placeholder="m@example.com"
-            className="w-full"
-          />
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <PhoneNumberForm control={form.control} setCode={setCode} code={code} />
+            <TextInput
+              control={form.control}
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              className="w-full"
+            />
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <PhoneNumberForm
+                control={form.control}
+                setCode={setCode}
+                code={code}
+              />
+            </div>
           </div>
-        </div>
 
           {/* Username and GitHub */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -206,7 +212,6 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
-  
           {/* LinkedIn and Personal Website */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <TextInput
@@ -226,114 +231,111 @@ export default function FreelancerRegisterForm() {
               className="w-full"
             />
           </div>
-          
+
           {/* Hourly Rate and Resume */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="perHourPrice"
-            label="Hourly Rate ($)"
-            type="number"
-            placeholder="0"
-            className="w-full"
-          />
-          <TextInput
-            control={form.control}
-            name="resume"
-            label="Resume (URL)"
-            type="url"
-            placeholder="Enter Google Drive Resume Link"
-            className="w-full"
-          />
-        </div>
+            <TextInput
+              control={form.control}
+              name="perHourPrice"
+              label="Hourly Rate ($)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="resume"
+              label="Resume (URL)"
+              type="url"
+              placeholder="Enter Google Drive Resume Link"
+              className="w-full"
+            />
+          </div>
 
-  <div className="space-y-2">
-    <Label>Password</Label>
-    <div className="relative">
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <div className="relative">
-                <Input
-                  placeholder="Enter your password"
-                  type={showPassword ? 'text' : 'password'}
-                  {...field}
-                  className="w-full"
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <Eye className="h-5 w-5" />
-                  ) : (
-                    <EyeOff className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </FormControl>
-            <FormDescription>
-              Password must be at least 6 characters long.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  </div>
+          <div className="space-y-2">
+            <Label>Password</Label>
+            <div className="relative">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter your password"
+                          type={showPassword ? 'text' : 'password'}
+                          {...field}
+                          className="w-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center"
+                        >
+                          {showPassword ? (
+                            <Eye className="h-5 w-5" />
+                          ) : (
+                            <EyeOff className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Password must be at least 6 characters long.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
           {/* DOB and Work Experience */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="dob"
-            label="Date of Birth"
-            type="date"
-            className="w-full"
-          />
-          <TextInput
-            control={form.control}
-            name="workExperience"
-            label="Work Experience (Years)"
-            type="number"
-            placeholder="0"
-            className="w-full"
-          />
-        </div>
+            <TextInput
+              control={form.control}
+              name="dob"
+              label="Date of Birth"
+              type="date"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="workExperience"
+              label="Work Experience (Years)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+          </div>
 
-  <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          checked={isChecked}
-          onChange={() => setIsChecked(!isChecked)}
-        />
-        <label htmlFor="terms">
-          I agree to the <a href="/terms">Terms and Conditions</a>
-        </label>
-      </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+            />
+            <label htmlFor="terms">
+              I agree to the <a href="/terms">Terms and Conditions</a>
+            </label>
+          </div>
 
-
-  
           {/* Submit Button */}
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading || !isChecked} // Button disabled when loading or checkbox unchecked
-      >
-        {isLoading ? (
-          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Rocket className="mr-2 h-4 w-4" />
-        )}{" "}
-        Create an account
-      </Button>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !isChecked} // Button disabled when loading or checkbox unchecked
+          >
+            {isLoading ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Rocket className="mr-2 h-4 w-4" />
+            )}{' '}
+            Create an account
+          </Button>
 
-  
           {/* OTP Login */}
           <OtpLogin
             phoneNumber={phone}
@@ -344,4 +346,4 @@ export default function FreelancerRegisterForm() {
       </form>
     </Form>
   );
-}  
+}
