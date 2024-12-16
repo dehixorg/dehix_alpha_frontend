@@ -1,7 +1,7 @@
 export enum InterviewLevel {
-  Mastery = 'Mastery',
-  Proficient = 'Proficient',
-  Beginner = 'Beginner',
+  MASTERY = 'Mastery',
+  PROFICIENT = 'Proficient',
+  BEGINNER = 'Beginner',
 }
 
 export enum ProjectStatus {
@@ -12,8 +12,8 @@ export enum ProjectStatus {
 }
 
 export enum StatusEnum {
-  ACTIVE = 'ACTIVE',
-  PENDING = 'PENDING',
-  REJECTED = 'REJECTED',
-  COMPLETED = 'COMPLETED',
+  ACTIVE = 'Active',
+  PENDING = 'Pending',
+  REJECTED = 'Rejected',
+  COMPLETED = 'Completed',
 }
