@@ -176,18 +176,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         .map((tech) => tech.trim())
         .filter((tech) => tech !== '');
 
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/project`,
-        {
-          ...data,
-          techUsed: techUsedArray,
-          verified: false,
-          oracleAssigned: '',
-          start: data.start ? new Date(data.start).toISOString() : null,
-          end: data.end ? new Date(data.end).toISOString() : null,
-          verificationUpdateTime: new Date().toISOString(),
-        },
-      );
+      await axiosInstance.post(`/freelancer/${user.uid}/project`, {
+        ...data,
+        techUsed: techUsedArray,
+        verified: false,
+        oracleAssigned: '',
+        start: data.start ? new Date(data.start).toISOString() : null,
+        end: data.end ? new Date(data.end).toISOString() : null,
+        verificationUpdateTime: new Date().toISOString(),
+      });
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

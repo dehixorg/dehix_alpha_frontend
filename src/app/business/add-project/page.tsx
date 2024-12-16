@@ -1,17 +1,11 @@
 'use client';
-import { Search } from 'lucide-react';
-// Removed: import { useSelector } from 'react-redux';
 
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CreateProjectBusinessForm } from '@/components/form/businessCreateProjectForm';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import Header from '@/components/header/header';
 
 export default function Dashboard() {

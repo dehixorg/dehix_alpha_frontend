@@ -1,10 +1,6 @@
 'use client';
-import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import SkillDomainForm from '@/components/freelancer/talent/skilldomainForm';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,

@@ -7,12 +7,10 @@ import {
   Settings,
   Users2,
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 
 import { CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { RootState } from '@/lib/store';
 import InterviewCard from '@/components/shared/interviewCard';
 import ProjectDetailCard from '@/components/business/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/business/project/projectProfileDetailCard';
@@ -21,7 +19,6 @@ import dummyData from '@/dummydata.json';
 import Header from '@/components/header/header';
 
 export default function Dashboard() {
-  const user = useSelector((state: RootState) => state.user);
   const { project_id } = useParams<{ project_id: string }>(); // Extract project_id from the route.
 
   const menuItemsTop: MenuItem[] = [

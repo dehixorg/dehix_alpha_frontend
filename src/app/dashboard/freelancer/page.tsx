@@ -3,8 +3,6 @@ import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Search } from '@/components/search';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
   Card,
   CardDescription,
@@ -17,13 +15,11 @@ import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog

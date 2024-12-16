@@ -11,7 +11,6 @@ import {
 } from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
-import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 
