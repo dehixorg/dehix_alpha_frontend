@@ -10,7 +10,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
-  menuItemsBottom,
+  menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -18,7 +18,10 @@ import { Search } from '@/components/search';
 import { ChatList } from '@/components/shared/chatList';
 import { subscribeToFirestoreCollection } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
-import { menuItemsTop } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Define the Conversation interface to match the expected shape
 interface Conversation extends DocumentData {
@@ -73,7 +76,9 @@ const HomePage = () => {
         menuItemsTop={
           user.type === 'business' ? businessMenuItemsTop : menuItemsTop
         }
-        menuItemsBottom={menuItemsBottom}
+        menuItemsBottom={
+          user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
+        }
         active="Chats"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
@@ -82,7 +87,11 @@ const HomePage = () => {
             menuItemsTop={
               user.type === 'business' ? businessMenuItemsTop : menuItemsTop
             }
-            menuItemsBottom={menuItemsBottom}
+            menuItemsBottom={
+              user.type === 'business'
+                ? businessMenuItemsBottom
+                : menuItemsBottom
+            }
             active="Chats"
           />
           <Breadcrumb
