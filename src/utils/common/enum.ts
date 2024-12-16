@@ -6,9 +6,9 @@
 // }
 
 export enum Api_Methods {
-  GET = 'GET',
-  POST = 'POST',
-  PUT = 'PUT',
-  DELETE = 'DELETE',
-  PATCH = 'PATCH',
+  GET = 'Get',
+  POST = 'Post',
+  PUT = 'Put',
+  DELETE = 'Delete',
+  PATCH = 'Patch',
 }

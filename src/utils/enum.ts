@@ -7,10 +7,10 @@ export const Dehix_Talent_Card_Pagination = {
 
 // Enum for Notification Type
 export enum UserNotificationTypeEnum {
-  PROJECT_HIRING = 'PROJECT_HIRING',
-  SKILL_INTERVIEW = 'SKILL_INTERVIEW',
-  DOMAIN_INTERVIEW = 'DOMAIN_INTERVIEW',
-  TALENT_INTERVIEW = 'TALENT_INTERVIEW',
+  PROJECT_HIRING = 'Project_Hiring',
+  SKILL_INTERVIEW = 'Skill_Interview',
+  DOMAIN_INTERVIEW = 'Domain_Interview',
+  TALENT_INTERVIEW = 'Talent_Interview',
 }
 
 export interface UserNotification {
@@ -62,7 +62,7 @@ export enum BidstatusEnum {
 }
 
 export enum DomainStatus {
-  ACTIVE = 'ActiveE',
+  ACTIVE = 'Active',
   INACTIVE = 'Inactive',
   ARCHIVED = 'Archieved',
 }
@@ -75,9 +75,9 @@ export enum FreelancerStatusEnum {
 }
 
 export enum Type {
-  FREELANCER = 'freelancer',
-  ADMIN = 'admin',
-  BUSINESS = 'business',
+  FREELANCER = 'Freelancer',
+  ADMIN = 'Admin',
+  BUSINESS = 'Business',
 }
 
 export enum TicketStatus {
