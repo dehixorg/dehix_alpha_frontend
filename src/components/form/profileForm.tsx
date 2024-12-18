@@ -840,8 +840,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       >
                         <div className="mb-4">
                           <label
-                          htmlFor="skillLabel"
-                          className="block text-sm font-medium text-white mb-1">
+                            htmlFor="skillLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
                             Skill Label
                           </label>
                           <input
@@ -894,8 +895,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       >
                         <div className="mb-4">
                           <label
-                          htmlFor="domainLabel"
-                          className="block text-sm font-medium text-white mb-1">
+                            htmlFor="domainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
                             Domain Label
                           </label>
                           <input
@@ -948,8 +950,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       >
                         <div className="mb-4">
                           <label
-                          htmlFor="projectDomainLabel"
-                          className="block text-sm font-medium text-white mb-1">
+                            htmlFor="projectDomainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
                             Project Domain Label
                           </label>
                           <input
