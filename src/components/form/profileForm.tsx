@@ -266,7 +266,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          user_id={user._id}
+          user_id={user.uid}
           profile={user.profilePic}
           entityType={Type.FREELANCER}
         />

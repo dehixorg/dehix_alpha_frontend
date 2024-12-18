@@ -16,7 +16,6 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
