@@ -273,6 +273,17 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
                 return (
                   <div key={index} className="flex flex-row">
+                    {message.senderId !== user.uid && (
+                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
+                        <AvatarImage
+                          src={`https://api.adorable.io/avatars/285/${message.senderId}.png`}
+                          alt={message.senderId}
+                        />
+                        <AvatarFallback>
+                          {message.senderId.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div
                       className={cn(
                         'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
