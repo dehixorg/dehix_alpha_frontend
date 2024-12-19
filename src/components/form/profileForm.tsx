@@ -429,7 +429,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 }}
                 value={tmpSkill || ''}
                 onOpenChange={(open) => {
-                  if (!open) setSearchQuery("");
+                  if (!open) setSearchQuery('');
                 }}
               >
                 <SelectTrigger>
@@ -523,11 +523,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <Select
                 onValueChange={(value) => {
                   setTmpDomain(value);
-                  setSearchQuery("");
+                  setSearchQuery('');
                 }}
                 value={tmpDomain || ''}
                 onOpenChange={(open) => {
-                  if (!open) setSearchQuery("");
+                  if (!open) setSearchQuery('');
                 }}
               >
                 <SelectTrigger>
@@ -558,7 +558,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   {domains
                     .filter(
                       (domain: any) =>
-                        domain.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
+                        domain.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
                         !currDomains.some((d: any) => d.name === domain.label),
                     )
                     .map((domain: any, index: number) => (
@@ -569,8 +571,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   {/* No matching domain */}
                   {domains.filter(
                     (domain: any) =>
-                      domain.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                      !currDomains.some((d: any) => d.name === domain.label)
+                      domain.label
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) &&
+                      !currDomains.some((d: any) => d.name === domain.label),
                   ).length === 0 && (
                     <div className="p-2 text-gray-500 italic text-center">
                       No matching Domain
@@ -617,11 +621,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <Select
                 onValueChange={(value) => {
                   setTmpProjectDomains(value);
-                  setSearchQuery("");
+                  setSearchQuery('');
                 }}
                 value={tmpProjectDomains || ''}
                 onOpenChange={(open) => {
-                  if (!open) setSearchQuery("");
+                  if (!open) setSearchQuery('');
                 }}
               >
                 <SelectTrigger>
@@ -634,7 +638,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                <div className="p-2 relative">
+                  <div className="p-2 relative">
                     <input
                       type="text"
                       value={searchQuery}
@@ -655,8 +659,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   {projectDomains
                     .filter(
                       (projectDomains: any) =>
-                        projectDomains.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                        !currProjectDomains.some((d: any) => d.name === projectDomains.label),
+                        projectDomains.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
+                        !currProjectDomains.some(
+                          (d: any) => d.name === projectDomains.label,
+                        ),
                     )
                     .map((projectDomains: any, index: number) => (
                       <SelectItem key={index} value={projectDomains.label}>
@@ -666,8 +674,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   {/* No matching project domain */}
                   {projectDomains.filter(
                     (projectDomain: any) =>
-                      projectDomain.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                      !currProjectDomains.some((d: any) => d.name === projectDomain.label)
+                      projectDomain.label
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) &&
+                      !currProjectDomains.some(
+                        (d: any) => d.name === projectDomain.label,
+                      ),
                   ).length === 0 && (
                     <div className="p-2 text-gray-500 italic text-center">
                       No matching Project Domain
