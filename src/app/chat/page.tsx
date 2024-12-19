@@ -16,7 +16,7 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Search } from '@/components/search';
 import { ChatList } from '@/components/shared/chatList';
-import { subscribeToFirestoreCollection } from '@/utils/common/firestoreUtils';
+import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import {
   menuItemsBottom,
@@ -28,6 +28,7 @@ interface Conversation extends DocumentData {
   id: string;
   participants: string[];
   timestamp?: string;
+  lastMessage?: any;
 }
 
 const HomePage = () => {
@@ -43,14 +44,11 @@ const HomePage = () => {
 
     const fetchConversations = async () => {
       setLoading(true);
-      unsubscribe = await subscribeToFirestoreCollection(
+      unsubscribe = await subscribeToUserConversations(
         'conversations',
+        user.uid,
         (data) => {
-          // Explicitly cast data as Conversation[]
-          const filteredConversations = (data as Conversation[]).filter(
-            (conversation) => conversation.participants.includes(user.uid),
-          );
-          setConversations(filteredConversations);
+          setConversations(data as Conversation[]);
           setLoading(false);
         },
       );

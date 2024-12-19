@@ -62,7 +62,12 @@ export function ChatList({
                       {lastUpdated}
                     </div>
                   </div>
-                  {/* <div className="text-xs font-medium">Last updated</div> */}
+                  <div className="text-xs font-medium mt-2">
+                    {conversation?.lastMessage?.content?.length > 50
+                      ? conversation.lastMessage.content.substring(0, 50) +
+                        '...'
+                      : conversation?.lastMessage?.content}
+                  </div>
                 </div>
                 {/* Display the participants' avatars */}
                 <div className="flex items-center gap-2 mt-2">

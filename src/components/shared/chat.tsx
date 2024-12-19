@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
-  addDataToFirestore,
   subscribeToFirestoreCollection,
+  updateConversationWithMessageTransaction,
   updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -87,12 +87,14 @@ export function CardsChat({ conversation }: CardsChatProps) {
       const datentime = new Date().toISOString();
 
       // Add the message to Firestore
-      const messageId = await addDataToFirestore(
-        `conversations/${conversation?.id}/messages`, // Updated to sub-collection messages
+      const messageId = await updateConversationWithMessageTransaction(
+        'conversations',
+        conversation?.id,
         {
           ...message,
-          timestamp: datentime, // Include a timestamp
+          timestamp: datentime,
         },
+        datentime,
       );
 
       if (messageId) {
@@ -119,8 +121,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
         try {
           const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
           setPrimaryUser(response.data);
-          console.log('Conversation data:', conversation);
-          console.log('Primary User:', response.data);
         } catch (error) {
           console.error('Error fetching primary user:', error);
         }
