@@ -33,10 +33,13 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/business/${user.uid}`,
-        );
-        setResponseData(response.data.data); // Store response data in state
+        if (user?.uid) {
+          // Optional chaining to ensure `user` is defined
+          const response = await axiosInstance.get(
+            `/project/business/${user.uid}`,
+          );
+          setResponseData(response.data.data); // Store response data in state
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
