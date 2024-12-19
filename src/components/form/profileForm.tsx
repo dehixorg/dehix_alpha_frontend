@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
@@ -33,6 +34,9 @@ import {
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { addSkill } from '@/utils/skillUtils';
+import { addDomain } from '@/utils/DomainUtils';
+import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -74,6 +78,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customSkill, setCustomSkill] = useState({
+    label: '',
+    description: '',
+  });
+  const [customDomain, setCustomDomain] = useState({
+    label: '',
+    description: '',
+  });
+  const [customProjectDomain, setCustomProjectDomain] = useState({
+    label: '',
+    description: '',
+  });
+  const [dialogType, setDialogType] = useState<
+    'skill' | 'domain' | 'projectDomain' | null
+  >(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -89,6 +110,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   });
 
   const handleAddSkill = () => {
+    addSkill(tmpSkill, skills, setSkills);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
         ...currSkills,
@@ -105,7 +127,155 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  const handleAddCustomSkill = async () => {
+    if (!customSkill.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customSkillData = {
+      label: customSkill.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post('/skills', customSkillData);
+
+      const updatedSkills = [...skills, { label: customSkill.label }];
+      setDomains(updatedSkills);
+
+      setCurrSkills([
+        ...currSkills,
+        {
+          name: customSkill.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customSkill.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomSkill({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add skill:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add skill. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomDomain = async () => {
+    if (!customDomain.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customDomainData = {
+      label: customDomain.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post('/domain', customDomainData);
+
+      const updatedDomains = [...domains, { label: customDomain.label }];
+      setDomains(updatedDomains);
+
+      setCurrDomains([
+        ...currDomains,
+        {
+          name: customDomain.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customDomain.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomDomain({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add domain:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add domain. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomProjectDomain = async () => {
+    if (!customProjectDomain.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customProjectDomainData = {
+      label: customProjectDomain.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post(
+        '/projectdomain',
+        customProjectDomainData,
+      );
+
+      const updatedProjectDomains = [
+        ...projectDomains,
+        { label: customProjectDomain.label },
+      ];
+      setProjectDomains(updatedProjectDomains);
+
+      setCurrProjectDomains([
+        ...currProjectDomains,
+        {
+          name: customProjectDomain.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customProjectDomain.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomProjectDomain({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add project domain:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add project domain. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddDomain = () => {
+    addDomain(tmpDomain, domains, setDomains);
     if (
       tmpDomain &&
       !currDomains.some((domain: any) => domain.name === tmpDomain)
@@ -125,6 +295,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
   const handleAddprojectDomain = () => {
+    addProjectDomain(tmpProjectDomains, projectDomains, setProjectDomains);
     if (
       tmpProjectDomains &&
       !currProjectDomains.some(
@@ -419,25 +590,29 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
           <Separator className="col-span-2" />
           {/* <div className="flex flex-wrap gap-6 w-full"> */}
-          <div className="flex-1 min-w-[350px] max-w-[500px]">
-            <FormLabel>Skills</FormLabel>
-            <div className="flex items-center mt-2">
-              <Select
-                onValueChange={(value) => {
-                  setTmpSkill(value);
-                  setSearchQuery('');
-                }}
-                value={tmpSkill || ''}
+            <div className="flex-1 min-w-[350px] max-w-[500px]">
+              <FormLabel>Skills</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('skill');
+                    } else {
+                      setTmpSkill(value);
+                      setSearchQuery('');}
+                  }}
+                  value={tmpSkill || ''}
                 onOpenChange={(open) => {
                   if (!open) setSearchQuery('');
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                  />
-                </SelectTrigger>
-                <SelectContent>
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
                   {/* Add search input */}
                   <div className="p-2 relative">
                     <input
@@ -457,20 +632,20 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     )}
                   </div>
                   {/* Filtered skill list */}
-                  {skills
-                    .filter(
-                      (skill: any) =>
+                    {skills
+                      .filter(
+                        (skill: any) =>
                         skill.label
                           .toLowerCase()
                           .includes(searchQuery.toLowerCase()) &&
-                        !currSkills.some((s: any) => s.name === skill.label),
-                    )
-                    .map((skill: any, index: number) => (
-                      <SelectItem key={index} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
-                  {/* No matching skills */}
+                          !currSkills.some((s: any) => s.name === skill.label),
+                      )
+                      .map((skill: any, index: number) => (
+                        <SelectItem key={index} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
+                    {/* No matching skills */}
                   {skills.filter(
                     (skill: any) =>
                       skill.label
@@ -482,60 +657,67 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       No matching skills
                     </div>
                   )}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                type="button"
-                size="icon"
-                className="ml-2"
-                onClick={() => {
-                  handleAddSkill();
-                  setTmpSkill('');
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddSkill();
+                    setTmpSkill('');
                   setSearchQuery('');
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              {currSkills.map((skill: any, index: number) => (
-                <Badge
-                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                  key={index}
+                  }}
                 >
-                  {skill.name}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSkill(skill.name)}
-                    className="ml-2 text-red-500 hover:text-red-700"
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currSkills.map((skill: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
                   >
-                    <X className="h-4 w-4" />
-                  </button>
-                </Badge>
-              ))}
+                    {skill.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSkill(skill.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
 
           <div className="flex-1 min-w-[350px] max-w-[500px]">
-            <FormLabel>Domains</FormLabel>
-            <div className="flex items-center mt-2">
-              <Select
-                onValueChange={(value) => {
-                  setTmpDomain(value);
-                  setSearchQuery('');
-                }}
-                value={tmpDomain || ''}
+              <FormLabel>Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('domain');
+                    } else {
+                      setTmpDomain(value);
+                  setSearchQuery('');}
+                  }}
+                  value={tmpDomain || ''}
                 onOpenChange={(open) => {
                   if (!open) setSearchQuery('');
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                  />
-                </SelectTrigger>
-                <SelectContent>
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
                   {/* Add search input */}
                   <div className="p-2 relative">
                     <input
@@ -555,20 +737,20 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     )}
                   </div>
                   {/* Filtered domain list */}
-                  {domains
-                    .filter(
-                      (domain: any) =>
+                    {domains
+                      .filter(
+                        (domain: any) =>
                         domain.label
                           .toLowerCase()
                           .includes(searchQuery.toLowerCase()) &&
                         !currDomains.some((d: any) => d.name === domain.label),
-                    )
-                    .map((domain: any, index: number) => (
-                      <SelectItem key={index} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
-                  {/* No matching domain */}
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                      {/* No matching domain */}
                   {domains.filter(
                     (domain: any) =>
                       domain.label
@@ -580,64 +762,71 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       No matching Domain
                     </div>
                   )}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                type="button"
-                size="icon"
-                className="ml-2"
-                onClick={() => {
-                  handleAddDomain();
-                  setTmpDomain('');
-                  setSearchQuery('');
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              {currDomains.map((domain: any, index: number) => (
-                <Badge
-                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                  key={index}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                    setSearchQuery('');
+                  }}
                 >
-                  {domain.name}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteDomain(domain.name)}
-                    className="ml-2 text-red-500 hover:text-red-700"
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currDomains.map((domain: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
                   >
-                    <X className="h-4 w-4" />
-                  </button>
-                </Badge>
-              ))}
+                    {domain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDomain(domain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
 
           <div className="flex-1 min-w-[350px] max-w-[500px]">
-            <FormLabel>Project Domains</FormLabel>
-            <div className="flex items-center mt-2">
-              <Select
-                onValueChange={(value) => {
-                  setTmpProjectDomains(value);
-                  setSearchQuery('');
-                }}
-                value={tmpProjectDomains || ''}
+              <FormLabel>Project Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('projectDomain');
+                    } else {
+                      setTmpProjectDomains(value);
+                  setSearchQuery('');}
+                  }}
+                  value={tmpProjectDomains || ''}
                 onOpenChange={(open) => {
                   if (!open) setSearchQuery('');
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      tmpProjectDomains
-                        ? tmpProjectDomains
-                        : 'Select project domain'
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        tmpProjectDomains
+                          ? tmpProjectDomains
+                          : 'Select project domain'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
                   <div className="p-2 relative">
                     <input
                       type="text"
@@ -656,69 +845,73 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     )}
                   </div>
                   {/* Filtered project domain list */}
-                  {projectDomains
-                    .filter(
-                      (projectDomains: any) =>
+                    {projectDomains
+                      .filter(
+                        (projectDomains: any) =>
                         projectDomains.label
                           .toLowerCase()
                           .includes(searchQuery.toLowerCase()) &&
-                        !currProjectDomains.some(
-                          (d: any) => d.name === projectDomains.label,
-                        ),
-                    )
-                    .map((projectDomains: any, index: number) => (
-                      <SelectItem key={index} value={projectDomains.label}>
-                        {projectDomains.label}
-                      </SelectItem>
-                    ))}
-                  {/* No matching project domain */}
-                  {projectDomains.filter(
-                    (projectDomain: any) =>
-                      projectDomain.label
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) &&
-                      !currProjectDomains.some(
-                        (d: any) => d.name === projectDomain.label,
-                      ),
-                  ).length === 0 && (
-                    <div className="p-2 text-gray-500 italic text-center">
-                      No matching Project Domain
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                type="button"
-                size="icon"
-                className="ml-2"
-                onClick={() => {
-                  handleAddprojectDomain();
-                  setTmpProjectDomains('');
-                  setSearchQuery('');
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              {currProjectDomains.map((projectDomains: any, index: number) => (
-                <Badge
-                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                  key={index}
+                          !currProjectDomains.some(
+                            (d: any) => d.name === projectDomains.label,
+                          ),
+                      )
+                      .map((projectDomains: any, index: number) => (
+                        <SelectItem key={index} value={projectDomains.label}>
+                          {projectDomains.label}
+                        </SelectItem>
+                      ))}
+                      {/* No matching project domain */}
+                      {projectDomains.filter(
+                        (projectDomain: any) =>
+                          projectDomain.label
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) &&
+                          !currProjectDomains.some(
+                            (d: any) => d.name === projectDomain.label,
+                          ),
+                      ).length === 0 && (
+                        <div className="p-2 text-gray-500 italic text-center">
+                          No matching Project Domain
+                        </div>
+                      )}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddprojectDomain();
+                    setTmpProjectDomains('');
+                    setSearchQuery('');
+                  }}
                 >
-                  {projectDomains.name}
-                  <button
-                    type="button"
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+              {currProjectDomains.map((projectDomains: any, index: number) => (
+                    <Badge
+                      className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                      key={index}
+                    >
+                      {projectDomains.name}
+                      <button
+                        type="button"
                     onClick={() => handleDeleteProjDomain(projectDomains.name)}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </Badge>
-              ))}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </Badge>
+                  ),
+                )}
+              </div>
             </div>
-          </div>
           {/* </div> */}
           <Separator className="col-span-2 mt-0" />
           <FormField
@@ -737,6 +930,187 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <Button type="submit" className="col-span-2">
             Update profile
           </Button>
+
+          {isDialogOpen && (
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(isOpen) => setIsDialogOpen(isOpen)}
+            >
+              <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40" />
+              <DialogContent className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-black rounded-md shadow-xl p-6 w-[90%] max-w-md">
+                  {dialogType === 'skill' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Skill
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomSkill(); // Add custom skill logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="skillLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Skill Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customSkill.label}
+                            onChange={(e) =>
+                              setCustomSkill({
+                                ...customSkill,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter skill label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomSkill();
+                              setCustomSkill({ label: '', description: '' });
+                            }}
+                          >
+                            Add Skill
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                  {dialogType === 'domain' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Domain
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomDomain(); // Add custom domain logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="domainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Domain Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customDomain.label}
+                            onChange={(e) =>
+                              setCustomDomain({
+                                ...customDomain,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter Domain label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomDomain();
+                              setCustomDomain({ label: '', description: '' });
+                            }}
+                          >
+                            Add Domain
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                  {dialogType === 'projectDomain' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Project Domain
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomProjectDomain(); // Add custom project domain logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="projectDomainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Project Domain Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customProjectDomain.label}
+                            onChange={(e) =>
+                              setCustomProjectDomain({
+                                ...customProjectDomain,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter Project Domain label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomProjectDomain();
+                              setCustomProjectDomain({
+                                label: '',
+                                description: '',
+                              });
+                            }}
+                          >
+                            Add Project Domain
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </form>
       </Form>
     </Card>
