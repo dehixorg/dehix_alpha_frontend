@@ -169,7 +169,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
 
-    const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -425,7 +425,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <Select
                 onValueChange={(value) => {
                   setTmpSkill(value);
-                  setSearchQuery(""); // Reset search query when a value is selected
+                  setSearchQuery(''); // Reset search query when a value is selected
                 }}
                 value={tmpSkill || ''}
               >
@@ -436,37 +436,41 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 </SelectTrigger>
                 <SelectContent>
                   {/* Add search input */}
-        <div className="p-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded"
-            placeholder="Type to search..."
-          />
-        </div>
-        {/* Filtered skill list */}
-        {skills
-          .filter(
-            (skill: any) =>
-              skill.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
-              !currSkills.some((s: any) => s.name === skill.label),
-          )
-          .map((skill: any, index: number) => (
-            <SelectItem key={index} value={skill.label}>
-              {skill.label}
-            </SelectItem>
-          ))}
-        {/* No matching skills */}
-        {skills.filter(
-          (skill: any) =>
-            skill.label.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !currSkills.some((s: any) => s.name === skill.label)
-        ).length === 0 && (
-          <div className="p-2 text-gray-500 italic text-center">
-            No matching skills
-          </div>
-        )}
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded"
+                      placeholder="Type to search..."
+                    />
+                  </div>
+                  {/* Filtered skill list */}
+                  {skills
+                    .filter(
+                      (skill: any) =>
+                        skill.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
+                        !currSkills.some((s: any) => s.name === skill.label),
+                    )
+                    .map((skill: any, index: number) => (
+                      <SelectItem key={index} value={skill.label}>
+                        {skill.label}
+                      </SelectItem>
+                    ))}
+                  {/* No matching skills */}
+                  {skills.filter(
+                    (skill: any) =>
+                      skill.label
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) &&
+                      !currSkills.some((s: any) => s.name === skill.label),
+                  ).length === 0 && (
+                    <div className="p-2 text-gray-500 italic text-center">
+                      No matching skills
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               <Button
@@ -477,7 +481,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 onClick={() => {
                   handleAddSkill();
                   setTmpSkill('');
-                  setSearchQuery(""); // Reset search query
+                  setSearchQuery(''); // Reset search query
                 }}
               >
                 <Plus className="h-4 w-4" />
