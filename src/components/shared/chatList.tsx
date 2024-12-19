@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react';
+import React, { useState, useEffect, ComponentProps } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
 
@@ -26,14 +26,39 @@ export function ChatList({
   active,
   setConversation,
 }: ChatListProps) {
+  const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
+    Record<string, string>
+  >({});
+
+  // Function to update the last updated time for each conversation
+  const updateLastUpdated = () => {
+    const updatedTimes: Record<string, string> = {};
+
+    conversations.forEach((conversation) => {
+      if (conversation.timestamp) {
+        updatedTimes[conversation.id] =
+          formatDistanceToNow(new Date(conversation.timestamp)) + ' ago';
+      }
+    });
+
+    setLastUpdatedTimes(updatedTimes);
+  };
+
+  // Update lastUpdated every minute
+  useEffect(() => {
+    updateLastUpdated();
+    const intervalId = setInterval(updateLastUpdated, 60000); // Update every minute
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [conversations]);
+
   return (
     <ScrollArea className="h-[85vh]">
       <div className="flex flex-col gap-2 pt-0">
         {conversations.length > 0 ? (
           conversations.map((conversation) => {
-            const lastUpdated = conversation.timestamp
-              ? formatDistanceToNow(new Date(conversation.timestamp)) + ' ago'
-              : 'N/A';
+            const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
 
             return (
               <button
