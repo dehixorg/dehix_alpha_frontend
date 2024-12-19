@@ -862,15 +862,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-white hover:bg-gray-600"
+                            className="mt-3"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="button"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+                            className="mt-3"
                             onClick={() => {
                               handleAddCustomSkill();
                               setCustomSkill({ label: '', description: '' });
@@ -917,15 +917,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-white hover:bg-gray-600"
+                            className="mt-3"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="button"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+                            className="mt-3"
                             onClick={() => {
                               handleAddCustomDomain();
                               setCustomDomain({ label: '', description: '' });
@@ -972,15 +972,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                         <div className="flex justify-end space-x-3">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => setIsDialogOpen(false)}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-white hover:bg-gray-600"
+                            className="mt-3"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="button"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+                            className="mt-3"
                             onClick={() => {
                               handleAddCustomProjectDomain();
                               setCustomProjectDomain({
