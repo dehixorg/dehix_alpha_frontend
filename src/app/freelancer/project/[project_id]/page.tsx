@@ -66,7 +66,6 @@ export default function Dashboard() {
     // Logic to handle project completion
     console.log('Project Completed');
   };
-  
 
   useEffect(() => {
     const fetchData = async () => {
