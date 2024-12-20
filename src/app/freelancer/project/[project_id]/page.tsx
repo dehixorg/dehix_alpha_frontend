@@ -62,6 +62,11 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true); // Add loading state
+  const handleCompleteProject = () => {
+    // Logic to handle project completion
+    console.log('Project Completed');
+  };
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -144,6 +149,7 @@ export default function Dashboard() {
                 endDate={project.end}
                 projectDomain={project.projectDomain}
                 skills={project.skillsRequired}
+                handleCompleteProject={handleCompleteProject}
               />
             </div>
           </div>

@@ -43,6 +43,7 @@ interface ProjectProfileDetailCardProps {
   endDate?: string;
   className?: string;
   domain_id: string;
+  handleCompleteProject: () => void;
 }
 
 type CardProps = React.ComponentProps<typeof Card> &
@@ -79,7 +80,7 @@ export function ProjectProfileDetailCard({
       await axiosInstance.post(`/bid`, {
         current_price: amount,
         description: descriptionValue,
-        bidder_id: user.uid,
+        bidder_id: user.id,
         project_id: params.project_id,
         domain_id: domain_id,
         profile_id: _id,
