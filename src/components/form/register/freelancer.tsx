@@ -129,7 +129,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: Type,
+      role: Type.FREELANCER,
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -144,7 +144,7 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: OracleStatusEnum.NOT_APPLICABLE,
+      oracleStatus: OracleStatusEnum.NOT_APPLIED,
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {

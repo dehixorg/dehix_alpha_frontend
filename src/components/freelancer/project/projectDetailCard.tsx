@@ -21,7 +21,7 @@ export interface ProjectDetailCardProps {
   endDate: Date | null | undefined;
   projectDomain: string[];
   skills: string[];
-  handleCompleteProject: () => void;
+  handleCompleteProject?: () => void;
 }
 
 function ProjectDetailCard({
