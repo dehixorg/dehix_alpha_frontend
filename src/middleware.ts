@@ -11,11 +11,15 @@ export async function middleware(request: NextRequest) {
   if (!token) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
+
   if (token && userType) {
+
     if (
       userType === 'freelancer' &&
       (pathname.startsWith('/dashboard/business') ||
-        pathname.startsWith('/business'))
+        pathname.startsWith('/business') ||
+        pathname === '/'
+      )
     ) {
       return NextResponse.redirect(
         new URL('/dashboard/freelancer', request.url),
@@ -23,10 +27,13 @@ export async function middleware(request: NextRequest) {
     } else if (
       userType === 'business' &&
       (pathname.startsWith('/dashboard/freelancer') ||
-        pathname.startsWith('/freelancer'))
+        pathname.startsWith('/freelancer') ||
+        pathname === '/'
+      )
     ) {
       return NextResponse.redirect(new URL('/dashboard/business', request.url));
     }
+
   } else {
     const protectedRoutes = [
       '/dashboard',
@@ -44,6 +51,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/protected/:path*',
     '/business/:path*',
