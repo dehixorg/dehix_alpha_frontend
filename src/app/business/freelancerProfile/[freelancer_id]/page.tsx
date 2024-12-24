@@ -146,13 +146,13 @@ export default function FreelancerProfile() {
                     `${user?.firstName} ${user?.lastName}`
                   )}
                 </h2>
-                <p className="text-lg">
+                <div className="text-lg">
                   {loading ? (
-                    <Skeleton className="h-4 w-64 mt-2" />
+                      <Skeleton className="h-4 w-64 mt-2" />
                   ) : (
                     user?.description || 'No description provided.'
                   )}
-                </p>
+                </div>
               </div>
             </Card>
 
