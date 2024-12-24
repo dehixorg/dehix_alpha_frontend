@@ -85,15 +85,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
       } catch (error: any) {
         console.error('Error fetching talent data', error);
-        if (error.response && error.response.status === 404) {
-          setHasMore(false);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong. Please try again.',
-          });
-        }
+        const errorMessage =
+          error.response?.data?.statusCode === 404
+            ? 'No more talents to load.'
+            : 'Something went wrong. Please try again later.';
+
+        setHasMore(false); 
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: errorMessage,
+        });
       } finally {
         setLoading(false);
         isRequestInProgress.current = false;
@@ -180,9 +182,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   {/* <button>
                     <Link href="/business/freelancerProfile">view</Link>
                   </button> */}
-                    <Link href={`/business/freelancerProfile/${talentEntry._id}`}>
-                      <Button className='w-full'>View</Button>
-                    </Link>
+                  <Link href={`/business/freelancerProfile/${talentEntry._id}`}>
+                    <Button className='w-full'>View</Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
