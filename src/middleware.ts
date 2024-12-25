@@ -13,13 +13,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (token && userType) {
-
     if (
       userType === 'freelancer' &&
       (pathname.startsWith('/dashboard/business') ||
         pathname.startsWith('/business') ||
-        pathname === '/'
-      )
+        pathname === '/')
     ) {
       return NextResponse.redirect(
         new URL('/dashboard/freelancer', request.url),
@@ -28,12 +26,10 @@ export async function middleware(request: NextRequest) {
       userType === 'business' &&
       (pathname.startsWith('/dashboard/freelancer') ||
         pathname.startsWith('/freelancer') ||
-        pathname === '/'
-      )
+        pathname === '/')
     ) {
       return NextResponse.redirect(new URL('/dashboard/business', request.url));
     }
-
   } else {
     const protectedRoutes = [
       '/dashboard',

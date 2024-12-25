@@ -2,8 +2,6 @@
 
 import { Pencil, Code, Type } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import FAQAccordion from '@/components/accordian/faqAccordian';
 import { Navbar } from '@/components/navbar';
@@ -24,7 +22,6 @@ const rightNavItems = [
 ];
 
 const HomePage = () => {
-
   return (
     <>
       <div className="fixed right-10 bottom-10">
