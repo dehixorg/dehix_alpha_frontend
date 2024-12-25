@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
 
   // Handle explicit logout logic
   if (pathname === '/auth/login') {
-    // If the user is already logged in, redirect them to the appropriate dashboard
     if (token && userType) {
       const redirectPath =
         userType === 'freelancer'
