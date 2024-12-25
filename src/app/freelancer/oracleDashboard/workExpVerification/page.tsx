@@ -27,6 +27,7 @@ import {
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+import { StatusEnum } from '@/utils/freelancer/enum';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
@@ -63,14 +64,14 @@ export default function ProfessionalInfo() {
     }
     return (
       data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === 'Pending')
+      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
     );
   });
 
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/oracle?doc_type=experience`,
+        `/verification/${user.uid}/oracle?doc_type=experience`,
       );
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
@@ -115,10 +116,6 @@ export default function ProfessionalInfo() {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Oracle Dashboard',
-                link: '/freelancer/oracleDashboard/businessVerification',
-              },
               {
                 label: 'Experience Verification',
                 link: '#',

@@ -1,25 +1,25 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
-import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
-import { Button } from '@/components/ui/button';
+import { Dehix_Talent_Card_Pagination, HireDehixTalentStatusEnum } from '@/utils/enum';
 
 interface DehixTalent {
+  freelancer_id: any;
   _id: string;
   skillName?: string;
   domainName?: string;
   experience: string;
   monthlyPay: string;
-  status: string;
+  status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
 }
 
@@ -36,10 +36,7 @@ interface TalentCardProps {
   domainFilter: string | null;
 }
 
-const TalentCard: React.FC<TalentCardProps> = ({
-  skillFilter,
-  domainFilter,
-}) => {
+const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter }) => {
   const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const [skip, setSkip] = useState(0);
@@ -47,12 +44,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
 
-  // Function to reset state when filters change
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     setSkip(0);
     setHasMore(true);
-    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+    fetchTalentData(0, true);
   }, [skillFilter, domainFilter]);
 
   const fetchTalentData = useCallback(
@@ -64,33 +60,24 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setLoading(true);
 
         const response = await axiosInstance.get(
-          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
+          `freelancer/dehixtalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`
         );
 
         if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
-          setTalents((prev) =>
-            reset ? response.data.data : [...prev, ...response.data.data],
-          );
-          return;
         }
 
-        if (response?.data?.data) {
-          setTalents((prev) =>
-            reset ? response.data.data : [...prev, ...response.data.data],
-          );
-          setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
-        } else {
-          throw new Error('Fail to fetch data');
-        }
+        setTalents((prev) =>
+          reset ? response.data.data : [...prev, ...response.data.data]
+        );
+        setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
       } catch (error: any) {
-        console.error('Error fetching talent data', error);
         const errorMessage =
           error.response?.data?.statusCode === 404
             ? 'No more talents to load.'
             : 'Something went wrong. Please try again later.';
 
-        setHasMore(false); 
+        setHasMore(false);
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -101,37 +88,25 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = false;
       }
     },
-    [skip, loading, hasMore],
+    [skip, loading, hasMore]
   );
 
-  // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
   }, [skillFilter, domainFilter, resetAndFetchData]);
 
-  // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
-      if (skillFilter == 'all' && domainFilter == 'all') {
+      if (skillFilter === 'all' && domainFilter === 'all') return true;
+      if (skillFilter === 'all' && domainFilter === talent.dehixTalent.domainName) return true;
+      if (skillFilter === talent.dehixTalent.skillName && domainFilter === 'all') return true;
+      if (
+        skillFilter === talent.dehixTalent.skillName ||
+        domainFilter === talent.dehixTalent.domainName
+      )
         return true;
-      } else if (
-        skillFilter == 'all' &&
-        domainFilter == talent.dehixTalent.domainName
-      ) {
-        return true;
-      } else if (
-        skillFilter == talent.dehixTalent.skillName &&
-        domainFilter == 'all'
-      ) {
-        return true;
-      } else if (
-        skillFilter == talent.dehixTalent.skillName ||
-        domainFilter == talent.dehixTalent.domainName
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+
+      return false;
     });
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
@@ -140,32 +115,25 @@ const TalentCard: React.FC<TalentCardProps> = ({
     <div className="flex flex-wrap justify-center gap-4">
       {filteredTalents.map((talent) => {
         const talentEntry = talent.dehixTalent;
-        const label = talentEntry.skillName ? 'Skill' : 'Domain';
-        const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
 
         return (
-          <Card
-            key={talentEntry._id}
-            className="w-full sm:w-[350px] lg:w-[450px]"
-          >
+          <Card key={talentEntry._id} className="w-full sm:w-[350px] lg:w-[450px]">
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage src={talent.profilePic} alt="Profile picture" />
+                <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {talent.userName}
-                </p>
+                <p className="text-sm text-muted-foreground">{talent.userName}</p>
               </div>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
                 <div className="flex justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{label}</span>
-                    <Badge>{value}</Badge>
+                    <span className="text-sm font-semibold">Skill</span>
+                    <Badge>{talentEntry.skillName || 'N/A'}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">Experience</span>
@@ -178,25 +146,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
                 </div>
-                <div>
-                  {/* <button>
-                    <Link href="/business/freelancerProfile">view</Link>
-                  </button> */}
-                  <Link href={`/business/freelancerProfile/${talentEntry._id}`}>
-                    <Button className='w-full'>View</Button>
-                  </Link>
-                </div>
+                <Link href={`/business/freelancerProfile/${talent.freelancer_id}`}>
+                  <Button className="w-full">View</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
         );
       })}
-      <InfiniteScroll
-        hasMore={hasMore}
-        isLoading={loading}
-        next={fetchTalentData}
-        threshold={1}
-      >
+      <InfiniteScroll hasMore={hasMore} isLoading={loading} next={fetchTalentData} threshold={1}>
         {hasMore && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
       </InfiniteScroll>
     </div>

@@ -38,8 +38,6 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
 
   const handleRequest = (meetingData: object) => {
     const query = Object.fromEntries(searchParams.entries());
-
-    console.log('Query params:', query);
     if (query.code) {
       handleCreateMeet(meetingData, query.code);
     } else {
@@ -57,7 +55,6 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
         },
       }
     );
-    console.log("CODE:", code)
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -77,8 +74,6 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       },
       attendees,
     };
-
-    console.log('Meeting Details:', meetingData);
     handleRequest(meetingData);
     // onClose();
   };
