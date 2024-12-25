@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RootState } from '@/lib/store';
 import { clearUser } from '@/lib/userSlice';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/config/firebaseConfig';
 
 export default function DropdownProfile() {
   const user = useSelector((state: RootState) => state.user);
@@ -36,11 +38,20 @@ export default function DropdownProfile() {
     }
   }, [user]);
 
-  const handleLogout = () => {
-    dispatch(clearUser());
-    Cookies.remove('userType');
-    Cookies.remove('token');
-    router.replace('/auth/login');
+  const handleLogout = async () => {
+    try {
+      
+      await signOut(auth);// Log out from Firebase
+      
+      dispatch(clearUser());// Clear user from Redux
+  
+      Cookies.remove('userType'); // Remove userType cookie
+      Cookies.remove('token'); // Remove token cookie
+  
+      router.replace('/auth/login');   // Redirect to login page
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return (
