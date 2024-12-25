@@ -50,12 +50,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
-
+  
+ // Function to reset state when filters change
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     setSkip(0);
     setHasMore(true);
-    fetchTalentData(0, true);
+    fetchTalentData(0, true);// Pass 0 as the skip value to start from the beginning
   }, [skillFilter, domainFilter]);
 
   const fetchTalentData = useCallback(
@@ -107,10 +108,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
     [skip, loading, hasMore],
   );
 
+  // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
   }, [skillFilter, domainFilter, resetAndFetchData]);
 
+  // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
       if (skillFilter === 'all' && domainFilter === 'all') {
