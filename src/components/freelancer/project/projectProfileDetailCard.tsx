@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectProfileDetailCardProps {
   _id: string;
@@ -37,7 +38,7 @@ interface ProjectProfileDetailCardProps {
   rate: number;
   description: string;
   email?: string;
-  status?: string;
+  status?: StatusEnum;
   startDate?: string;
   endDate?: string;
   className?: string;

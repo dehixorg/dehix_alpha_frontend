@@ -10,16 +10,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
-import { Dehix_Talent_Card_Pagination } from '@/utils/enum';
+import {
+  Dehix_Talent_Card_Pagination,
+  HireDehixTalentStatusEnum,
+} from '@/utils/enum';
 import { Button } from '@/components/ui/button';
 
 interface DehixTalent {
+  freelancer_id: any;
   _id: string;
   skillName?: string;
   domainName?: string;
   experience: string;
   monthlyPay: string;
-  status: string;
+  status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
 }
 
@@ -47,12 +51,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
 
-  // Function to reset state when filters change
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     setSkip(0);
     setHasMore(true);
-    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+    fetchTalentData(0, true);
   }, [skillFilter, domainFilter]);
 
   const fetchTalentData = useCallback(
@@ -64,7 +67,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         setLoading(true);
 
         const response = await axiosInstance.get(
-          `freelancer/dehixTalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
+          `freelancer/dehixtalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
         if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
@@ -90,7 +93,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             ? 'No more talents to load.'
             : 'Something went wrong. Please try again later.';
 
-        setHasMore(false); 
+        setHasMore(false);
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -104,29 +107,27 @@ const TalentCard: React.FC<TalentCardProps> = ({
     [skip, loading, hasMore],
   );
 
-  // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
   }, [skillFilter, domainFilter, resetAndFetchData]);
 
-  // Apply the filters to the talents
   useEffect(() => {
     const filtered = talents.filter((talent) => {
-      if (skillFilter == 'all' && domainFilter == 'all') {
+      if (skillFilter === 'all' && domainFilter === 'all') {
         return true;
       } else if (
-        skillFilter == 'all' &&
-        domainFilter == talent.dehixTalent.domainName
+        skillFilter === 'all' &&
+        domainFilter === talent.dehixTalent.domainName
       ) {
         return true;
       } else if (
-        skillFilter == talent.dehixTalent.skillName &&
-        domainFilter == 'all'
+        skillFilter === talent.dehixTalent.skillName &&
+        domainFilter === 'all'
       ) {
         return true;
       } else if (
-        skillFilter == talent.dehixTalent.skillName ||
-        domainFilter == talent.dehixTalent.domainName
+        skillFilter === talent.dehixTalent.skillName ||
+        domainFilter === talent.dehixTalent.domainName
       ) {
         return true;
       } else {
@@ -150,7 +151,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           >
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage src={talent.profilePic} alt="Profile picture" />
+                <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
@@ -179,11 +180,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </div>
                 </div>
                 <div>
-                  {/* <button>
-                    <Link href="/business/freelancerProfile">view</Link>
-                  </button> */}
-                  <Link href={`/business/freelancerProfile/${talentEntry._id}`}>
-                    <Button className='w-full'>View</Button>
+                  <Link
+                    href={`/business/freelancerProfile/${talent.dehixTalent._id}`}
+                    passHref
+                  >
+                    <Button className="w-full">View</Button>
                   </Link>
                 </div>
               </div>

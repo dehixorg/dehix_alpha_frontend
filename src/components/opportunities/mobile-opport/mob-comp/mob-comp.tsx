@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input'; // Importing the input component from ShadCN UI
 import { Label } from '@/components/ui/label';
 
