@@ -35,7 +35,8 @@ export default function ProfilePage() {
             <Breadcrumb
               items={[
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
-                { label: 'Interview Profile', link: '#' },
+                { label: 'Interview', link: '#' },
+                { label: 'Profile', link: '#' },
               ]}
               className="hidden sm:flex-1 sm:flex sm:items-center"
             />

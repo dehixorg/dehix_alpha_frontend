@@ -9,63 +9,63 @@ export const apiHelperService = {
   getAllFreelancers: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/freelancer/allfreelancer',
+      endpoint: '/freelancer',
       params,
     });
   },
   getAllAdmin: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/admin/all',
+      endpoint: '/admin',
       params,
     });
   },
   getAllProject: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/business/all_projects',
+      endpoint: '/project',
       params,
     });
   },
   getAllFaq: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/faq/all',
+      endpoint: '/faq',
       params,
     });
   },
   getAllNotification: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/notification/all_notification',
+      endpoint: '/notification',
       params,
     });
   },
   getAllDomain: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/domain/all',
+      endpoint: '/domain',
       params,
     });
   },
   getAllBusiness: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/business/all',
+      endpoint: '/business',
       params,
     });
   },
   getAllBid: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/bid/all',
+      endpoint: '/bid',
       params,
     });
   },
   getDomainList: async (params = {}) => {
     return apiService({
       method: Api_Methods.GET,
-      endpoint: '/domain/all',
+      endpoint: '/domain',
       params,
     });
   },
@@ -91,21 +91,21 @@ export const apiHelperService = {
   createFaq: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/faq/createfaq',
+      endpoint: '/faq',
       body,
     });
   },
   createAdmin: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/admin/create',
+      endpoint: '/admin',
       body,
     });
   },
   createDomain: async (body: Record<string, any>) => {
     return apiService({
       method: Api_Methods.POST,
-      endpoint: '/domain/createdomain',
+      endpoint: '/domain',
       body,
     });
   },

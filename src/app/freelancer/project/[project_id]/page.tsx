@@ -16,10 +16,12 @@ import {
   menuItemsBottom,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
@@ -42,8 +44,15 @@ interface Project {
     minConnect?: number;
     rate?: number;
     description?: string;
+    domain_id: string;
+    selectedFreelancer?: string[];
+    freelancers?: {
+      freelancerId: string;
+      bidId: string;
+    };
+    totalBid?: string[];
   }[];
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected';
+  status?: StatusEnum; //enum
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -57,9 +66,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/${project_id}/project`,
-        );
+        const response = await axiosInstance.get(`/project/${project_id}`);
         // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;
 
@@ -135,7 +142,7 @@ export default function Dashboard() {
                 status={project.status}
                 startDate={project.createdAt}
                 endDate={project.end}
-                domains={[]}
+                projectDomain={project.projectDomain}
                 skills={project.skillsRequired}
               />
             </div>

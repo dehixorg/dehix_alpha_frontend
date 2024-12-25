@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { BidstatusEnum } from '@/utils/enum';
 interface Action {
   label: string;
   type: string;
@@ -20,7 +21,7 @@ interface Action {
 
 interface Bid {
   _id: string;
-  bid_status: string;
+  bid_status: BidstatusEnum; //enum
   project_id: string;
   bidder_id: string;
   current_price: number;
@@ -42,9 +43,7 @@ const BidItem: React.FC<BidItemProps> = ({ bid, onAction, actions }) => {
   useEffect(() => {
     const fetchProjectname = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/${project_id}/project`,
-        );
+        const response = await axiosInstance.get(`/project/${project_id}`);
         const name = response.data.data.projectName;
         setProjectname(name);
       } catch (error) {
