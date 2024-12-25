@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import { HireDehixTalentStatusEnum } from '@/utils/enum';
 
 interface ProfileData {
   _id: string;
@@ -28,7 +29,7 @@ interface ProfileData {
   Appliedcandidates: string[];
   hirefreelancer: {
     freelancer: string;
-    status: string;
+    status: HireDehixTalentStatusEnum; //use enum
     _id: string;
   }[];
   profileImage?: string; // Adding profile image field

@@ -1,17 +1,14 @@
 'use client';
 import { useSelector } from 'react-redux';
 
-import { Search } from '@/components/search';
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { ProfileForm } from '@/components/form/profileForm';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import Header from '@/components/header/header';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -24,23 +21,15 @@ export default function PersonalInfo() {
         active="Personal Info"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Personal Info"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Settings', link: '#' },
-              { label: 'Personal Info', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Personal Info"
+          breadcrumbItems={[
+            { label: 'Settings', link: '#' },
+            { label: 'Personal Info', link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start  sm:px-6 sm:py-0 md:gap-8">
           <ProfileForm user_id={user.uid} />
         </main>

@@ -9,6 +9,7 @@ import {
   TabletSmartphone,
   ShieldCheck,
   CalendarClock,
+  MessageSquare,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -58,6 +59,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/talent',
     icon: <Sparkles className="h-5 w-5" />,
     label: 'Talent',
+  },
+  {
+    href: '/chat',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'Chats',
   },
 ];
 

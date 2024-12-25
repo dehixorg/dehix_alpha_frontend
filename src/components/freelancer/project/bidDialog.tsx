@@ -48,7 +48,7 @@ const BidDialog: React.FC<BidDialogProps> = ({
     const fetchBidDetails = async () => {
       try {
         const response = await axiosInstance.get(
-          `/bid/${projectId}/${bidId}/profile/project/bid`,
+          `/bid/project/${projectId}/profile/${bidId}/bid`,
         );
         if (response.data) {
           setBidDetails(response.data);

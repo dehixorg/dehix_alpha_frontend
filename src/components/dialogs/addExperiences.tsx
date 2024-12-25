@@ -29,23 +29,28 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
-// add message alert if requirement not filled!!
 const experienceFormSchema = z
   .object({
-    company: z.string().min(1, { message: 'company name is required.' }),
-    jobTitle: z.string().min(1, { message: 'job Title is required.' }),
+    company: z.string().min(1, { message: 'Company name is required.' }),
+    jobTitle: z.string().min(1, { message: 'Job Title is required.' }),
     workDescription: z
       .string()
       .min(1, { message: 'Work Description is required.' }),
     workFrom: z.string().min(1, { message: 'Work from is required.' }),
-    workTo: z.string().min(1, { message: 'work to is required.' }),
+    workTo: z.string().min(1, { message: 'Work to is required.' }),
     referencePersonName: z
       .string()
-      .min(1, { message: ' referencePersonName is required.' }),
+      .min(1, { message: 'Reference Person Name is required.' }),
     referencePersonContact: z
       .string()
-      .min(1, { message: '  referencePersonContact is required.' }),
-    githubRepoLink: z.string().url({ message: 'Invalid URL.' }).optional(),
+      .min(1, { message: 'Reference Person Contact is required.' }),
+    githubRepoLink: z
+      .string()
+      .url({ message: 'GitHub Repositry link must be a valid URL.' })
+      .optional()
+      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
+        message: 'GitHub repository URL must start with https://github.com/',
+      }),
     comments: z.string().optional(),
   })
   .refine(
@@ -89,6 +94,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (isDialogOpen) {
@@ -109,26 +115,20 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/experience`,
-        {
-          company: data.company || '',
-          jobTitle: data.jobTitle || '',
-          workDescription: data.workDescription || '',
-          workFrom: data.workFrom
-            ? new Date(data.workFrom).toISOString()
-            : null,
-          workTo: data.workTo ? new Date(data.workTo).toISOString() : null,
-          referencePersonName: data.referencePersonName || '',
-          referencePersonContact: data.referencePersonContact || '',
-          githubRepoLink: data.githubRepoLink || '',
-          oracleAssigned: null, // Assuming no assignment
-          verificationStatus: 'Pending',
-          verificationUpdateTime: new Date().toISOString(),
-          comments: data.comments || '',
-        },
-      );
-      console.log('API Response:', response.data);
+      await axiosInstance.post(`/freelancer/${user.uid}/experience`, {
+        company: data.company || '',
+        jobTitle: data.jobTitle || '',
+        workDescription: data.workDescription || '',
+        workFrom: data.workFrom ? new Date(data.workFrom).toISOString() : null,
+        workTo: data.workTo ? new Date(data.workTo).toISOString() : null,
+        referencePersonName: data.referencePersonName || '',
+        referencePersonContact: data.referencePersonContact || '',
+        githubRepoLink: data.githubRepoLink || '',
+        oracleAssigned: null, // Assuming no assignment
+        verificationStatus: 'Pending',
+        verificationUpdateTime: new Date().toISOString(),
+        comments: data.comments || '',
+      });
       onFormSubmit();
       setIsDialogOpen(false);
       toast({
@@ -213,7 +213,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 <FormItem>
                   <FormLabel>Work From</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the start date</FormDescription>
                   <FormMessage />
@@ -227,7 +227,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 <FormItem>
                   <FormLabel>Work To</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <Input type="date" max={currentDate} {...field} />
                   </FormControl>
                   <FormDescription>Select the end date</FormDescription>
                   <FormMessage />
