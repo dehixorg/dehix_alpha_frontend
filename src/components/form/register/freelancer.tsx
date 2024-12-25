@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
+import { OracleStatusEnum, Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z
@@ -42,15 +44,30 @@ const profileFormSchema = z.object({
     .max(20, { message: 'Username must be less than 20 characters long' })
     .regex(/^[a-zA-Z0-9_]+$/, {
       message: 'Username can only contain letters, numbers, and underscores',
-    }), // Adjust regex as needed
+    }),
   phone: z
     .string()
     .min(10, { message: 'Phone number must be at least 10 digits.' })
     .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
-  githubLink: z.string().url().optional(),
+  githubLink: z
+    .string()
+    .url({ message: 'GitHub link must be a valid URL.' })
+    .refine((value) => /^https:\/\/github\.com\/[\w-]+$/.test(value), {
+      message: 'GitHub URL must start with: https://github.com/',
+    })
+    .optional(),
   resume: z.string().url().optional(),
-  linkedin: z.string().url().optional(),
-  personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
+  linkedin: z
+    .string()
+    .url({ message: 'LinkedIn link must be a valid URL.' })
+    .refine(
+      (value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value),
+      {
+        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
+      },
+    )
+    .optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(),
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -59,9 +76,10 @@ const profileFormSchema = z.object({
   }),
   workExperience: z
     .number()
-    .min(0, 'Work experience must be at least 0 years')
-    .max(60, 'Work experience must not exceed 60 years'),
+    .min(0, { message: 'Work experience must be at least 0 years.' })
+    .max(60, { message: 'Work experience must not exceed 60 years.' }),
   dob: z.string().optional(),
+  referralCode: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -74,6 +92,8 @@ export default function FreelancerRegisterForm() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const searchParams = useSearchParams();
+  const referral = searchParams.get('referral') || '';
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -91,6 +111,7 @@ export default function FreelancerRegisterForm() {
       perHourPrice: 0,
       workExperience: 0,
       dob: '',
+      referralCode: referral,
     },
     mode: 'all',
   });
@@ -108,7 +129,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: 'freelancer',
+      role: Type.FREELANCER,
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -123,17 +144,26 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: 'notApplied',
+      oracleStatus: OracleStatusEnum.NOT_APPLIED,
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      await axiosInstance.post('/register/freelancer', formData);
+      // Check if referralCode exists and add it as a query string parameter
+      // If no referralCode is provided, the URL remains without a query string
+      const referralCodeQuery = data.referralCode
+        ? `?referralCode=${encodeURIComponent(data.referralCode)}`
+        : '';
+      // Make the POST request, adding referralCode in the query string
+      // The rest of the data is sent in the body (formData)
+      await axiosInstance.post(
+        `/register/freelancer${referralCodeQuery}`,
+        formData,
+      );
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
-      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
@@ -282,6 +312,13 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
+          <TextInput
+            control={form.control}
+            name="referralCode"
+            label="Do you have a referral code? (Optional)"
+            type="Text"
+            placeholder="Enter referral code"
+          />
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

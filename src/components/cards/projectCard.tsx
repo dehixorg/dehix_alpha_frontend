@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ShieldCheck } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { getStatusBadge } from '@/utils/statusBadge';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface ProjectType {
   _id: string;
@@ -34,27 +38,32 @@ interface ProjectType {
     accepted?: string[];
     status?: string;
   }[];
-  status?: string;
+  status?: StatusEnum;
   team?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 type ProjectCardProps = React.ComponentProps<typeof Card> & {
+  cardClassName?: string;
   project: ProjectType;
   type?: string;
 };
 
 export function ProjectCard({
-  className,
+  cardClassName,
   project,
-  type = 'business',
+  type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
+  const { text, className } = getStatusBadge(project.status);
   return (
-    <Card className={cn('flex flex-col', className)} {...props}>
+    <Card className={cn('flex flex-col', cardClassName)} {...props}>
       <CardHeader>
-        <CardTitle>{project.projectName}</CardTitle>
+        <CardTitle className="flex">
+          {project.projectName}&nbsp;
+          {project.verified && <ShieldCheck className="text-success" />}
+        </CardTitle>
         <CardDescription className="text-gray-600">
           <p className="my-auto">
             {project.createdAt
@@ -63,12 +72,7 @@ export function ProjectCard({
           </p>
 
           <br />
-          <Badge
-            className="text-xs"
-            variant={project.verified ? 'secondary' : 'outline'}
-          >
-            {project.verified ? 'Verified' : 'Not Verified'}
-          </Badge>
+          <Badge className={className}>{text}</Badge>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 mb-auto flex-grow">
@@ -90,9 +94,6 @@ export function ProjectCard({
           <p>
             <strong>Experience:</strong> {project.experience}
           </p>
-          <p>
-            <strong>Status:</strong> {project.status}
-          </p>
 
           <div className="flex flex-wrap gap-1 mt-2">
             {project.skillsRequired.map((skill, index) => (
@@ -106,7 +107,7 @@ export function ProjectCard({
       <CardFooter>
         <Link href={`/${type}/project/${project._id}`} className="w-full">
           <Button
-            className={`w-full ${project.status === 'Completed' && 'bg-green-900 hover:bg-green-700'}`}
+            className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >
             View full details
           </Button>

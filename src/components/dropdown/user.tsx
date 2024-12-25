@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Type } from '@/utils/enum';
 
 interface UserDropdownMenuProps {
   email: string;
-  type: string;
+  type: Type;
 }
 
 const UserDropdownMenu: React.FC<UserDropdownMenuProps> = ({ email, type }) => {

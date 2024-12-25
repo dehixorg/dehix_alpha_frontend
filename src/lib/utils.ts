@@ -52,7 +52,6 @@ export const loginUser = async (email: string, password: string) => {
 };
 
 export const loginGoogleUser = async () => {
-  //console.log(googleProvider);
   return await signInWithPopup(auth, googleProvider);
 };
 
