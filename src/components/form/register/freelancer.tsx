@@ -7,7 +7,7 @@ import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
+
 import countries from '../../../country-codes.json';
 
 import PhoneNumberForm from './phoneNumberChecker';
@@ -23,7 +23,6 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -90,14 +89,9 @@ export default function FreelancerRegisterForm() {
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-<<<<<<< HEAD
   const [passwordStrength, setPasswordStrength] = useState<string>('');
   const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
-=======
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-  
->>>>>>> ccdd639 (updated the signup formby dividing into 2 columns and moving terms and condition above submit button)
-
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
   const referral = searchParams.get('referral') || '';
@@ -210,7 +204,7 @@ export default function FreelancerRegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef} className="w-full max-w-screen-lg mx-auto space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef}>
         <div className="">
           {/* First Name and Last Name */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -228,25 +222,27 @@ export default function FreelancerRegisterForm() {
               placeholder="Robinson"
               className="w-full"
             />
-        </div>
+          </div>
 
-
-  
           {/* Email and Phone Number */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="email"
-            label="Email"
-            type="email"
-            placeholder="m@example.com"
-            className="w-full"
-          />
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <PhoneNumberForm control={form.control} setCode={setCode} code={code} />
+            <TextInput
+              control={form.control}
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              className="w-full"
+            />
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <PhoneNumberForm
+                control={form.control}
+                setCode={setCode}
+                code={code}
+              />
+            </div>
           </div>
-        </div>
 
           {/* Username and GitHub */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -267,7 +263,6 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
-  
           {/* LinkedIn and Personal Website */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <TextInput
@@ -287,7 +282,7 @@ export default function FreelancerRegisterForm() {
               className="w-full"
             />
           </div>
-          
+
           {/* Hourly Rate and Resume */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
           <TextInput
@@ -306,91 +301,84 @@ export default function FreelancerRegisterForm() {
             placeholder="Enter Google Drive Resume Link"
             className="w-full"
           />
-<<<<<<< HEAD
-      <div className="space-y-2">
-      <Label>Password</Label>
-      <div className="relative">
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter your password"
-                    type={showPassword ? 'text' : 'password'}
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      checkPasswordStrength(e.target.value);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 px-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <Eye className="h-5 w-5" />
-                    ) : (
-                      <EyeOff className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </FormControl>
-              <FormDescription>
-                Password must:
-                <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                  <li>Be at least 12 characters long</li>
-                  <li>Include uppercase and lowercase letters</li>
-                  <li>Contain numbers and special characters</li>
-                </ul>
-              </FormDescription>
-              <div className="mt-2 text-sm text-gray-600">
-                Password Strength:{' '}
-                <span className={passwordStrengthClass}>{passwordStrength}</span>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </div>
-          <div className="grid grid-cols-2 gap-4 mt-3">
-            <div className="grid gap-2">
+        </div>
+
+          <div className="space-y-2">
+            <Label>Password</Label>
+            <div className="relative">
               <FormField
                 control={form.control}
-                name="dob"
+                name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>DOB</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter your password"
+                          type={showPassword ? 'text' : 'password'}
+                          {...field}
+                          className="w-full"
+                        />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center"
+                        >
+                          {showPassword ? (
+                            <Eye className="h-5 w-5" />
+                          ) : (
+                            <EyeOff className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
-                    <FormDescription>Select the Date</FormDescription>
+                    <FormDescription>
+                      Password must be at least 6 characters long.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="grid gap-2">
-              <TextInput
-                label="Experience"
-                control={form.control}
-                name="workExperience"
-                type="number"
-              />
-            </div>
           </div>
-          <TextInput
-            control={form.control}
-            name="referralCode"
-            label="Do you have a referral code? (Optional)"
-            type="Text"
-            placeholder="Enter referral code"
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+
+          {/* DOB and Work Experience */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="dob"
+              label="Date of Birth"
+              type="date"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="workExperience"
+              label="Work Experience (Years)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+            />
+            <label htmlFor="terms">
+              I agree to the <a href="/terms">Terms and Conditions</a>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !isChecked}
+          >
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -398,98 +386,8 @@ export default function FreelancerRegisterForm() {
             )}{' '}
             Create an account
           </Button>
-=======
-        </div>
 
-  <div className="space-y-2">
-    <Label>Password</Label>
-    <div className="relative">
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <div className="relative">
-                <Input
-                  placeholder="Enter your password"
-                  type={showPassword ? 'text' : 'password'}
-                  {...field}
-                  className="w-full"
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <Eye className="h-5 w-5" />
-                  ) : (
-                    <EyeOff className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </FormControl>
-            <FormDescription>
-              Password must be at least 6 characters long.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  </div>
-
-          {/* DOB and Work Experience */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="dob"
-            label="Date of Birth"
-            type="date"
-            className="w-full"
-          />
-          <TextInput
-            control={form.control}
-            name="workExperience"
-            label="Work Experience (Years)"
-            type="number"
-            placeholder="0"
-            className="w-full"
-          />
-        </div>
-
-  <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          checked={isChecked}
-          onChange={() => setIsChecked(!isChecked)}
-        />
-        <label htmlFor="terms">
-          I agree to the <a href="/terms">Terms and Conditions</a>
-        </label>
-      </div>
-
-
-  
-          {/* Submit Button */}
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isLoading || !isChecked} // Button disabled when loading or checkbox unchecked
-      >
-        {isLoading ? (
-          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Rocket className="mr-2 h-4 w-4" />
-        )}{" "}
-        Create an account
-      </Button>
-
-  
           {/* OTP Login */}
->>>>>>> ccdd639 (updated the signup formby dividing into 2 columns and moving terms and condition above submit button)
           <OtpLogin
             phoneNumber={phone}
             isModalOpen={isModalOpen}
@@ -499,4 +397,4 @@ export default function FreelancerRegisterForm() {
       </form>
     </Form>
   );
-}  
+}
