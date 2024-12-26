@@ -37,7 +37,6 @@ export default function SignUp() {
                 <Link href="/auth/login">Sign in</Link>
               </Button>
             </div>
-            
           </div>
         </div>
       </div>

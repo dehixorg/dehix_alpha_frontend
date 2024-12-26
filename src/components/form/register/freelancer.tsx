@@ -149,9 +149,7 @@ export default function FreelancerRegisterForm() {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        ref={formRef}>
+      <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef}>
         <div className="">
           {/* First Name and Last Name */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -324,7 +322,7 @@ export default function FreelancerRegisterForm() {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading && !isChecked} 
+            disabled={isLoading && !isChecked}
           >
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
