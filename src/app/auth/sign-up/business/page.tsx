@@ -37,17 +37,7 @@ export default function SignUp() {
                 <Link href="/auth/login">Sign in</Link>
               </Button>
             </div>
-            <p className="px-2 text-center text-xs text-muted-foreground sm:px-8 sm:text-sm">
-              By clicking continue, you agree to our{' '}
-              <Button variant="link" className="p-0" asChild>
-                <Link href="/terms">Terms of Service</Link>
-              </Button>{' '}
-              and{' '}
-              <Button variant="link" className="p-0" asChild>
-                <Link href="/privacy">Privacy Policy</Link>
-              </Button>
-              .
-            </p>
+            
           </div>
         </div>
       </div>
