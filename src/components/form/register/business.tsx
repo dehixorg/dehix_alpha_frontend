@@ -255,7 +255,6 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
-          
 
           <div className="grid gap-2">
             <TextInput
