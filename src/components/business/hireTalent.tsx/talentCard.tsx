@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -15,6 +13,13 @@ import {
   HireDehixTalentStatusEnum,
 } from '@/utils/enum';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface DehixTalent {
   freelancer_id: any;
@@ -25,6 +30,16 @@ interface DehixTalent {
   monthlyPay: string;
   status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
+}
+
+interface Projects {
+  projects?: {
+    [key: string]: {
+      _id: string;
+      projectName: string;
+      role: string;
+    };
+  };
 }
 
 interface Talent {
@@ -50,13 +65,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
+  const [projects, setProjects] = useState<Projects['projects'] | null>(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
-  // Function to reset state when filters change
   const resetAndFetchData = useCallback(() => {
     setTalents([]);
     setSkip(0);
     setHasMore(true);
-    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+    fetchTalentData(0, true);
   }, [skillFilter, domainFilter]);
 
   const fetchTalentData = useCallback(
@@ -106,12 +123,35 @@ const TalentCard: React.FC<TalentCardProps> = ({
     [skip, loading, hasMore],
   );
 
-  // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
   }, [skillFilter, domainFilter, resetAndFetchData]);
 
-  // Apply the filters to the talents
+  const fetchProjects = useCallback(async (freelancerId: string) => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${freelancerId}/profile-info`,
+      );
+      console.log('Fetched projects:', response.data);
+      setProjects(response.data.projects || []);
+      setOpenDialog(true);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch projects. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleInviteClick = (freelancerId: string) => {
+    fetchProjects(freelancerId);
+  };
+
   useEffect(() => {
     const filtered = talents.filter((talent) => {
       if (skillFilter == 'all' && domainFilter == 'all') {
@@ -153,7 +193,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar className="h-14 w-14">
                 <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>NA</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
@@ -180,6 +220,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
                 </div>
+                <div className="flex gap-3 mt-3 mb-3">
+                  <Button className="flex-1">Hire</Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => handleInviteClick(talent.freelancer_id)}
+                  >
+                    Invite
+                  </Button>
+                </div>
                 <div>
                   <Link
                     href={`/business/freelancerProfile/${talent.freelancer_id}`}
@@ -201,6 +250,58 @@ const TalentCard: React.FC<TalentCardProps> = ({
       >
         {hasMore && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
       </InfiniteScroll>
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Projects</DialogTitle>
+          </DialogHeader>
+          <div>
+            {projects && Object.values(projects).length > 0 ? (
+              Object.values(projects).map((project) => (
+                <div
+                  key={project._id}
+                  className="flex items-center justify-between mb-2"
+                >
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="selectedProject"
+                      value={project._id}
+                      checked={selectedProject === project._id}
+                      onChange={() => setSelectedProject(project._id)}
+                      className="radio"
+                    />
+                    <span>{project.projectName}</span>
+                  </label>
+                  <span className="text-muted">{project.role}</span>
+                </div>
+              ))
+            ) : (
+              <p>No projects available.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setOpenDialog(false)}>Close</Button>
+            <Button
+              onClick={() => {
+                if (selectedProject) {
+                  console.log('Invitation sent for project:', selectedProject);
+                  setOpenDialog(false);
+                } else {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description:
+                      'Please select a project before sending the invitation.',
+                  });
+                }
+              }}
+            >
+              Send Invitation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
