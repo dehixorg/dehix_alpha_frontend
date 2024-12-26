@@ -181,9 +181,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   </div>
                 </div>
                 <div>
-                  {/* <button>
-                        <Link href="/business/freelancerProfile">view</Link>
-                      </button> */}
                   <Button className="w-full">
                     <Link href={`/business/freelancerProfile/${talentEntry._id}`} passHref>
                       View
