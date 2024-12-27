@@ -68,7 +68,8 @@ export default function BusinessRegisterForm() {
 
   const [passwordStrength, setPasswordStrength] = useState<string>('');
 
-  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
+  const [passwordStrengthClass, setPasswordStrengthClass] =
+    useState<string>('');
 
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
@@ -246,10 +247,7 @@ export default function BusinessRegisterForm() {
               control={form.control}
               name="linkedin"
               label="LinkedIn"
-
               placeholder="https://www.linkedin.com/in/username"
-
-
               type="url"
               className="w-full"
             />
@@ -330,7 +328,6 @@ export default function BusinessRegisterForm() {
             isModalOpen={isModalOpen}
             setIsModalOpen={setIsModalOpen}
           />
-
 
           <div className="space-y-2 col-span-2">
             <Label>Password</Label>

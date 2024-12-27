@@ -91,7 +91,8 @@ export default function FreelancerRegisterForm() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>('');
 
-  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
+  const [passwordStrengthClass, setPasswordStrengthClass] =
+    useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const formRef = useRef<HTMLFormElement>(null);
