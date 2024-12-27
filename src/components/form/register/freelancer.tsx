@@ -23,6 +23,7 @@ import {
   FormDescription,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -90,13 +91,7 @@ export default function FreelancerRegisterForm() {
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>('');
-
-  const [passwordStrengthClass, setPasswordStrengthClass] =
-    useState<string>('');
-
-
   const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
-  const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
@@ -127,26 +122,15 @@ export default function FreelancerRegisterForm() {
     setShowPassword((prev) => !prev);
   };
 
-
-  const checkPasswordStrength = (password: string) => {
-
   const checkPasswordStrength = (password:string) => {
-
     let strength = '';
     let className = '';
 
     const strongRegex = new RegExp(
-
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
-    );
-    const mediumRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
-
       '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$'
     );
     const mediumRegex = new RegExp(
       '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$'
-
     );
 
     if (strongRegex.test(password)) {
@@ -222,198 +206,161 @@ export default function FreelancerRegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef}>
-        <div className="">
-          {/* First Name and Last Name */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <TextInput
               control={form.control}
               name="firstName"
               label="First Name"
               placeholder="Max"
-              className="w-full"
             />
             <TextInput
               control={form.control}
               name="lastName"
               label="Last Name"
               placeholder="Robinson"
-              className="w-full"
             />
           </div>
-
-          {/* Email and Phone Number */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <TextInput
+          <TextInput
+            control={form.control}
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="m@example.com"
+          />
+          <div className="grid gap-2 mt-3">
+            <Label htmlFor="phone">Phone Number</Label>
+            <PhoneNumberForm
               control={form.control}
-              name="email"
-              label="Email"
-              type="email"
-              placeholder="m@example.com"
-              className="w-full"
-            />
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <PhoneNumberForm
-                control={form.control}
-                setCode={setCode}
-                code={code}
-              />
-            </div>
-          </div>
-
-          {/* Username and GitHub */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <TextInput
-              control={form.control}
-              name="userName"
-              label="Username"
-              placeholder="your_username"
-              className="w-full"
-            />
-            <TextInput
-              control={form.control}
-              name="githubLink"
-              label="GitHub"
-              type="url"
-              placeholder="https://github.com/yourusername"
-              className="w-full"
+              setCode={setCode}
+              code={code}
             />
           </div>
-
-          {/* LinkedIn and Personal Website */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <TextInput
-              control={form.control}
-              name="linkedin"
-              label="LinkedIn"
-              type="url"
-              placeholder="https://linkedin.com/in/yourprofile"
-              className="w-full"
-            />
-            <TextInput
-              control={form.control}
-              name="personalWebsite"
-              label="Personal Website"
-              type="url"
-              placeholder="https://www.yourwebsite.com"
-              className="w-full"
-            />
-          </div>
-
-          {/* Hourly Rate and Resume */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <TextInput
+            control={form.control}
+            name="userName"
+            label="Username"
+            placeholder="your_username"
+          />
+          <TextInput
+            control={form.control}
+            name="githubLink"
+            label="GitHub"
+            type="url"
+            placeholder="https://github.com/yourusername"
+          />
+          <TextInput
+            control={form.control}
+            name="linkedin"
+            label="LinkedIn"
+            type="url"
+            placeholder="https://www.linkedin.com/in/yourprofile"
+          />
+          <TextInput
+            control={form.control}
+            name="personalWebsite"
+            label="Personal Website(Optional)"
+            type="url"
+            placeholder="https://www.yourwebsite.com"
+          />
           <TextInput
             control={form.control}
             name="perHourPrice"
             label="Hourly Rate ($)"
             type="number"
             placeholder="0"
-            className="w-full"
           />
           <TextInput
             control={form.control}
             name="resume"
             label="Resume (URL)"
             type="url"
-            placeholder="Enter Google Drive Resume Link"
-            className="w-full"
+            placeholder="Enter your Resume Google Drive Link"
           />
-        </div>
-
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <div className="relative">
+      <div className="space-y-2">
+      <Label>Password</Label>
+      <div className="relative">
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter your password"
+                    type={showPassword ? 'text' : 'password'}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      checkPasswordStrength(e.target.value);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-5 w-5" />
+                    ) : (
+                      <EyeOff className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </FormControl>
+              <FormDescription>
+                Password must:
+                <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
+                  <li>Be at least 12 characters long</li>
+                  <li>Include uppercase and lowercase letters</li>
+                  <li>Contain numbers and special characters</li>
+                </ul>
+              </FormDescription>
+              <div className="mt-2 text-sm text-gray-600">
+                Password Strength:{' '}
+                <span className={passwordStrengthClass}>{passwordStrength}</span>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+          <div className="grid grid-cols-2 gap-4 mt-3">
+            <div className="grid gap-2">
               <FormField
                 control={form.control}
-                name="password"
+                name="dob"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>DOB</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input
-                          placeholder="Enter your password"
-                          type={showPassword ? 'text' : 'password'}
-                          {...field}
-
-                          onChange={(e) => {
-                            field.onChange(e);
-                            checkPasswordStrength(e.target.value);
-                          }}
-
-                          className="w-full"
-
-                        />
-                        <button
-                          type="button"
-                          onClick={togglePasswordVisibility}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center"
-                        >
-                          {showPassword ? (
-                            <Eye className="h-5 w-5" />
-                          ) : (
-                            <EyeOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
+                      <Input type="date" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Password must:
-                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                        <li>Be at least 12 characters long</li>
-                        <li>Include uppercase and lowercase letters</li>
-                        <li>Contain numbers and special characters</li>
-                      </ul>
-                    </FormDescription>
-                    <div className="mt-2 text-sm text-gray-600">
-                      Password Strength:{' '}
-                      <span className={passwordStrengthClass}>
-                        {passwordStrength}
-                      </span>
-                    </div>
+                    <FormDescription>Select the Date</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            <div className="grid gap-2">
+              <TextInput
+                label="Experience"
+                control={form.control}
+                name="workExperience"
+                type="number"
+              />
+            </div>
           </div>
-
-          {/* DOB and Work Experience */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            <TextInput
-              control={form.control}
-              name="dob"
-              label="Date of Birth"
-              type="date"
-              className="w-full"
-            />
-            <TextInput
-              control={form.control}
-              name="workExperience"
-              label="Work Experience (Years)"
-              type="number"
-              placeholder="0"
-              className="w-full"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={isChecked}
-              onChange={() => setIsChecked(!isChecked)}
-            />
-            <label htmlFor="terms">
-              I agree to the <a href="/terms">Terms and Conditions</a>
-            </label>
-          </div>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading || !isChecked}
-          >
+          <TextInput
+            control={form.control}
+            name="referralCode"
+            label="Do you have a referral code? (Optional)"
+            type="Text"
+            placeholder="Enter referral code"
+          />
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -421,8 +368,6 @@ export default function FreelancerRegisterForm() {
             )}{' '}
             Create an account
           </Button>
-
-          {/* OTP Login */}
           <OtpLogin
             phoneNumber={phone}
             isModalOpen={isModalOpen}

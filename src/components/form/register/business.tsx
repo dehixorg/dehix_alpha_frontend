@@ -65,33 +65,24 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
-
   const [passwordStrength, setPasswordStrength] = useState<string>('');
   const [passwordStrengthClass, setPasswordStrengthClass] =
     useState<string>('');
 
-  const [passwordStrength, setPasswordStrength] = useState<string>('');
-  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
-
-  const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
-
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-
   const checkPasswordStrength = (password: string) => {
-
-  const checkPasswordStrength = (password:string) => {
-
     let strength = '';
     let className = '';
 
     const strongRegex = new RegExp(
-
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
+    );
+    const mediumRegex = new RegExp(
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
     );
 
     if (strongRegex.test(password)) {
@@ -169,25 +160,26 @@ export default function BusinessRegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <div className="grid gap-4 grid-cols-2">
-          <div className="grid gap-2">
-            <TextInput
-              control={form.control}
-              name="firstName"
-              label="First name"
-              placeholder="John"
-            />
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <TextInput
+                control={form.control}
+                name="firstName"
+                label="First name"
+                placeholder="John"
+              />
+            </div>
+            <div className="grid gap-2">
+              <TextInput
+                control={form.control}
+                name="lastName"
+                label="Last name"
+                placeholder="Doe"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <TextInput
-              control={form.control}
-              name="lastName"
-              label="Last name"
-              placeholder="Doe"
-            />
-          </div>
-
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <TextInput
               control={form.control}
               name="companyName"
@@ -195,7 +187,7 @@ export default function BusinessRegisterForm() {
               placeholder="Tech Innovators"
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <Label htmlFor="company-size">Company Size</Label>
             <Controller
               control={form.control}
@@ -219,8 +211,7 @@ export default function BusinessRegisterForm() {
               )}
             />
           </div>
-
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <TextInput
               control={form.control}
               name="position"
@@ -228,7 +219,7 @@ export default function BusinessRegisterForm() {
               placeholder="CTO"
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <TextInput
               control={form.control}
               name="email"
@@ -237,7 +228,7 @@ export default function BusinessRegisterForm() {
               type="email"
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <Label htmlFor="phone">Phone Number</Label>
             <PhoneNumberForm
               control={form.control}
@@ -245,99 +236,25 @@ export default function BusinessRegisterForm() {
               code={code}
             />
           </div>
-
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <TextInput
               control={form.control}
               name="linkedin"
               label="LinkedIn"
-
               placeholder="https://www.linkedin.com/in/username"
-
-
               type="url"
-              placeholder="https://linkedin.com/in/yourprofile"
-              className="w-full"
             />
           </div>
-
-          <div className="grid gap-2">
+          <div className="grid gap-2 mt-3">
             <TextInput
               control={form.control}
               name="personalWebsite"
-              label="Personal Website"
+              label="Website"
+              placeholder="https://www.johndoe.com"
               type="url"
-              placeholder="https://www.yourwebsite.com"
-              className="w-full"
             />
           </div>
-
           <div className="space-y-2">
-      <Label>Password</Label>
-      <div className="relative">
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter your password"
-                    type={showPassword ? 'text' : 'password'}
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      checkPasswordStrength(e.target.value);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 px-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <Eye className="h-5 w-5" />
-                    ) : (
-                      <EyeOff className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </FormControl>
-              <FormDescription>
-                Password must:
-                <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                  <li>Be at least 12 characters long</li>
-                  <li>Include uppercase and lowercase letters</li>
-                  <li>Contain numbers and special characters</li>
-                </ul>
-              </FormDescription>
-              <div className="mt-2 text-sm text-gray-600">
-                Password Strength:{' '}
-                <span className={passwordStrengthClass}>{passwordStrength}</span>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Rocket className="mr-2 h-4 w-4" />
-            )}{' '}
-            Create an account
-          </Button>
-          <OtpLogin
-            phoneNumber={phone}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-          />
-
-
-          <div className="space-y-2 col-span-2">
             <Label>Password</Label>
             <div className="relative">
               <FormField
@@ -389,40 +306,20 @@ export default function BusinessRegisterForm() {
               />
             </div>
           </div>
-
-          <div className="flex items-center gap-2 col-span-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={isChecked}
-              onChange={() => setIsChecked(!isChecked)}
-            />
-            <label htmlFor="terms">
-              I agree to the <a href="/terms">Terms and Conditions</a>
-            </label>
-          </div>
-
-          <div className="col-span-2">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isChecked} // Button disabled when loading or checkbox unchecked
-            >
-              {isLoading ? (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Rocket className="mr-2 h-4 w-4" />
-              )}{' '}
-              Create an account
-            </Button>
-          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Rocket className="mr-2 h-4 w-4" />
+            )}{' '}
+            Create an account
+          </Button>
+          <OtpLogin
+            phoneNumber={phone}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
         </div>
-
-        <OtpLogin
-          phoneNumber={phone}
-          isModalOpen={isModalOpen}
-          setIsModalOpen={setIsModalOpen}
-        />
       </form>
     </Form>
   );
