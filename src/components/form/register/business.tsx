@@ -259,7 +259,7 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
-
+          
           {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
