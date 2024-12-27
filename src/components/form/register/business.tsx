@@ -65,14 +65,10 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
-
   const [passwordStrength, setPasswordStrength] = useState<string>('');
-
   const [passwordStrengthClass, setPasswordStrengthClass] =
     useState<string>('');
-
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const togglePasswordVisibility = () => {
@@ -247,9 +243,9 @@ export default function BusinessRegisterForm() {
               control={form.control}
               name="linkedin"
               label="LinkedIn"
-              placeholder="https://www.linkedin.com/in/username"
               type="url"
               className="w-full"
+              placeholder="https://www.linkedin.com/in/username"
             />
           </div>
 
@@ -263,6 +259,8 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
+
+          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -315,58 +313,8 @@ export default function BusinessRegisterForm() {
               />
             </div>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Rocket className="mr-2 h-4 w-4" />
-            )}{' '}
-            Create an account
-          </Button>
-          <OtpLogin
-            phoneNumber={phone}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-          />
 
-          <div className="space-y-2 col-span-2">
-            <Label>Password</Label>
-            <div className="relative">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          placeholder="Enter your password"
-                          type={showPassword ? 'text' : 'password'}
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={togglePasswordVisibility}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center"
-                        >
-                          {showPassword ? (
-                            <Eye className="h-5 w-5" />
-                          ) : (
-                            <EyeOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Password must be at least 6 characters long.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
+          {/* Terms and Conditions */}
           <div className="flex items-center gap-2 col-span-2">
             <input
               type="checkbox"
@@ -379,6 +327,7 @@ export default function BusinessRegisterForm() {
             </label>
           </div>
 
+          {/* Submit Button */}
           <div className="col-span-2">
             <Button
               type="submit"
