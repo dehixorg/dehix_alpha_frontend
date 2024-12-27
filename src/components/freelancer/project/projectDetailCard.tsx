@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
 import DateRange from '@/components/cards/dateRange';
+import { Button } from '@/components/ui/button';
 export interface ProjectDetailCardProps {
   projectName: string;
   description: string;
@@ -20,6 +21,7 @@ export interface ProjectDetailCardProps {
   endDate: Date | null | undefined;
   projectDomain: string[];
   skills: string[];
+  handleCompleteProject?: () => void;
 }
 
 function ProjectDetailCard({
@@ -31,6 +33,7 @@ function ProjectDetailCard({
   endDate,
   projectDomain,
   skills,
+  handleCompleteProject,
 }: ProjectDetailCardProps) {
   const { text: projectStatus, className: statusBadgeStyle } =
     getStatusBadge(status);
@@ -90,6 +93,15 @@ function ProjectDetailCard({
 
       <CardFooter className="flex items-center">
         <DateRange startDate={startDate} endDate={endDate} />
+
+        <Button
+          className="ml-auto"
+          size="sm"
+          onClick={handleCompleteProject}
+          disabled={!handleCompleteProject} // Disable if the function is not provided
+        >
+          Mark as Completed
+        </Button>
       </CardFooter>
     </Card>
   );

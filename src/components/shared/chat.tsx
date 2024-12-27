@@ -3,8 +3,7 @@ import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import Load
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/storage'; // Import Firebase storage if you're using it
+import { useEffect, useRef, useState } from 'react';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -29,8 +28,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
-  addDataToFirestore,
   subscribeToFirestoreCollection,
+  updateConversationWithMessageTransaction,
   updateDataInFirestore,
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -80,17 +79,24 @@ interface CardsChatProps {
 }
 
 export function CardsChat({ conversation }: CardsChatProps) {
-  const [primaryUser, setPrimaryUser] = React.useState<User>({
+  const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
     profilePic: '',
   });
-  const [messages, setMessages] = React.useState<DocumentData[]>([]);
-  const [input, setInput] = React.useState('');
-  const [loading, setLoading] = React.useState(true); // Loading state for data fetch
-  const [isSending, setIsSending] = React.useState(false); // Loading state for message sending
+  const [messages, setMessages] = useState<DocumentData[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true); // Loading state for data fetch
+  const [isSending, setIsSending] = useState(false); // Loading state for message sending
   const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   // Function to send a message
   async function sendMessage(
@@ -103,12 +109,14 @@ export function CardsChat({ conversation }: CardsChatProps) {
       const datentime = new Date().toISOString();
 
       // Add the message to Firestore
-      const messageId = await addDataToFirestore(
-        `conversations/${conversation?.id}/messages`, // Updated to sub-collection messages
+      const messageId = await updateConversationWithMessageTransaction(
+        'conversations',
+        conversation?.id,
         {
           ...message,
-          timestamp: datentime, // Include a timestamp
+          timestamp: datentime,
         },
+        datentime,
       );
 
       if (messageId) {
@@ -125,7 +133,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchPrimaryUser = async () => {
       const primaryUid = conversation.participants.find(
         (participant: string) => participant !== user.uid,
@@ -135,8 +143,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
         try {
           const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
           setPrimaryUser(response.data);
-          console.log('Conversation data:', conversation);
-          console.log('Primary User:', response.data);
         } catch (error) {
           console.error('Error fetching primary user:', error);
         }
@@ -152,6 +158,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
           setMessages(messagesData); // Update messages state with fetched messages
           setLoading(false); // Set loading to false after messages are loaded
         },
+        'desc',
       );
     };
 
@@ -259,8 +266,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-2 flex-1">
-          <CardHeader className="flex flex-row items-center border p-2 ">
+        <Card className="col-span-2 min-h-[85vh]">
+          <CardHeader className="flex flex-row items-center">
             <div className="flex items-center space-x-4">
               <Avatar>
                 <AvatarImage src={primaryUser.profilePic} alt="Image" />
@@ -347,7 +354,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
             </div>
           </CardContent>
-          <CardFooter className="pt-4">
+
+          <CardFooter>
             <form
               onSubmit={(event) => {
                 event.preventDefault();

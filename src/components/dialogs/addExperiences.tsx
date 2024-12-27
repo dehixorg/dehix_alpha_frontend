@@ -115,25 +115,20 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/experience`,
-        {
-          company: data.company || '',
-          jobTitle: data.jobTitle || '',
-          workDescription: data.workDescription || '',
-          workFrom: data.workFrom
-            ? new Date(data.workFrom).toISOString()
-            : null,
-          workTo: data.workTo ? new Date(data.workTo).toISOString() : null,
-          referencePersonName: data.referencePersonName || '',
-          referencePersonContact: data.referencePersonContact || '',
-          githubRepoLink: data.githubRepoLink || '',
-          oracleAssigned: null, // Assuming no assignment
-          verificationStatus: 'Pending',
-          verificationUpdateTime: new Date().toISOString(),
-          comments: data.comments || '',
-        },
-      );
+      await axiosInstance.post(`/freelancer/${user.uid}/experience`, {
+        company: data.company || '',
+        jobTitle: data.jobTitle || '',
+        workDescription: data.workDescription || '',
+        workFrom: data.workFrom ? new Date(data.workFrom).toISOString() : null,
+        workTo: data.workTo ? new Date(data.workTo).toISOString() : null,
+        referencePersonName: data.referencePersonName || '',
+        referencePersonContact: data.referencePersonContact || '',
+        githubRepoLink: data.githubRepoLink || '',
+        oracleAssigned: null, // Assuming no assignment
+        verificationStatus: 'Pending',
+        verificationUpdateTime: new Date().toISOString(),
+        comments: data.comments || '',
+      });
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

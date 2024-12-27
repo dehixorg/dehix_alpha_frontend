@@ -90,6 +90,8 @@ export default function FreelancerRegisterForm() {
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [passwordStrength, setPasswordStrength] = useState<string>('');
+  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
 
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
@@ -120,6 +122,32 @@ export default function FreelancerRegisterForm() {
     setShowPassword((prev) => !prev);
   };
 
+  const checkPasswordStrength = (password:string) => {
+    let strength = '';
+    let className = '';
+
+    const strongRegex = new RegExp(
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$'
+    );
+    const mediumRegex = new RegExp(
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$'
+    );
+
+    if (strongRegex.test(password)) {
+      strength = 'Strong';
+      className = 'text-green-500';
+    } else if (mediumRegex.test(password)) {
+      strength = 'Medium';
+      className = 'text-yellow-500';
+    } else if (password.length > 0) {
+      strength = 'Weak';
+      className = 'text-red-500';
+    }
+
+    setPasswordStrength(strength);
+    setPasswordStrengthClass(className);
+  };
+
   const onSubmit = async (data: ProfileFormValues) => {
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
@@ -129,7 +157,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: Type,
+      role: Type.FREELANCER,
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -144,7 +172,7 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: OracleStatusEnum.NOT_APPLICABLE,
+      oracleStatus: OracleStatusEnum.NOT_APPLIED,
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
@@ -249,43 +277,56 @@ export default function FreelancerRegisterForm() {
             type="url"
             placeholder="Enter your Resume Google Drive Link"
           />
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <div className="relative">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          placeholder="Enter your password"
-                          type={showPassword ? 'text' : 'password'}
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={togglePasswordVisibility}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center"
-                        >
-                          {showPassword ? (
-                            <Eye className="h-5 w-5" />
-                          ) : (
-                            <EyeOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Password must be at least 6 characters long.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
+      <div className="space-y-2">
+      <Label>Password</Label>
+      <div className="relative">
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    placeholder="Enter your password"
+                    type={showPassword ? 'text' : 'password'}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      checkPasswordStrength(e.target.value);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-5 w-5" />
+                    ) : (
+                      <EyeOff className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </FormControl>
+              <FormDescription>
+                Password must:
+                <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
+                  <li>Be at least 12 characters long</li>
+                  <li>Include uppercase and lowercase letters</li>
+                  <li>Contain numbers and special characters</li>
+                </ul>
+              </FormDescription>
+              <div className="mt-2 text-sm text-gray-600">
+                Password Strength:{' '}
+                <span className={passwordStrengthClass}>{passwordStrength}</span>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
           <div className="grid grid-cols-2 gap-4 mt-3">
             <div className="grid gap-2">
               <FormField

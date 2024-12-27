@@ -1,16 +1,19 @@
-import React from 'react';
-import { formatDistanceToNow, format } from 'date-fns';
+import React, { useState, useEffect, ComponentProps } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react'; // Import an icon from lucide-react
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'; // Avatar components
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils'; // Utility class names
+import { Badge } from '../ui/badge';
 
 export interface Conversation extends DocumentData {
   id: string;
   participants: string[];
   project_name?: string;
-  lastMessage?: string; // Add a lastMessage field
+  lastMessage?: string;
   timestamp?: string;
 }
 
@@ -25,27 +28,48 @@ export function ChatList({
   active,
   setConversation,
 }: ChatListProps) {
+  const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
+    Record<string, string>
+  >({});
+
+  const updateLastUpdated = () => {
+    const updatedTimes: Record<string, string> = {};
+    conversations.forEach((conversation) => {
+      if (conversation.timestamp) {
+        updatedTimes[conversation.id] =
+          formatDistanceToNow(new Date(conversation.timestamp)) + ' ago';
+      }
+    });
+    setLastUpdatedTimes(updatedTimes);
+  };
+
+  useEffect(() => {
+    updateLastUpdated();
+    const intervalId = setInterval(updateLastUpdated, 60000);
+    return () => clearInterval(intervalId);
+  }, [conversations]);
+
   return (
-    <Card>
+    <Card className="h-[85vh]">
       {conversations.length > 0 ? (
         <Table>
           <TableBody>
             {conversations.map((conversation) => {
-              const lastUpdated = conversation.timestamp
-                ? formatDistanceToNow(new Date(conversation.timestamp)) + ' ago'
-                : 'N/A';
-
-              // Assume you have logic to get the last message (can be from Firestore)
+              const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
               const lastMessage = conversation.lastMessage || 'No messages yet';
-
-              // Simulating user profile data
-              const participantId = conversation.participants[0]; // Just use the first participant as an example
-              const participant = { name: 'John Doe', profilePic: 'https://placekitten.com/50/50' }; // Replace with real data
+              const participantId = conversation.participants[0];
+              const participant = {
+                name: 'John Doe',
+                profilePic: 'https://placekitten.com/50/50',
+              };
 
               return (
                 <TableRow
                   key={conversation.id}
-                  className={active?.id === conversation.id ? 'bg-muted' : 'cursor-pointer hover:bg-muted'}
+                  className={cn(
+                    'cursor-pointer hover:bg-muted',
+                    active?.id === conversation.id && 'bg-muted'
+                  )}
                   onClick={() => setConversation(conversation)}
                 >
                   <TableCell className="flex items-center space-x-4">
@@ -54,12 +78,14 @@ export function ChatList({
                       <AvatarFallback>{participant.name[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <p className="font-medium">{conversation.project_name || 'Unnamed Project'}</p>
+                      <p className="font-medium">
+                        {conversation.project_name || 'Unnamed Project'}
+                      </p>
                       <p className="text-sm text-muted-foreground">{lastMessage}</p>
                     </div>
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
-                    <span>{lastUpdated}</span>
+                    {lastUpdated}
                   </TableCell>
                 </TableRow>
               );
@@ -75,4 +101,18 @@ export function ChatList({
       )}
     </Card>
   );
+}
+
+function getBadgeVariantFromLabel(
+  label: string
+): ComponentProps<typeof Badge>['variant'] {
+  if (['a'].includes(label.toLowerCase())) {
+    return 'default';
+  }
+
+  if (['Project'].includes(label.toLowerCase())) {
+    return 'outline';
+  }
+
+  return 'secondary';
 }

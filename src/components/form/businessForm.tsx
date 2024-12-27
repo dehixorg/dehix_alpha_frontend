@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { NotificationTypeEnum, Type } from '@/utils/enum';
+import { Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -103,7 +103,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      const response = await axiosInstance.put(`/business/${user_id}`, {
+      await axiosInstance.put(`/business/${user_id}`, {
         ...data,
       });
 

@@ -26,6 +26,23 @@ import {
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 
+const useShare = () => {
+  const share = async (title: string, text: string, url: string) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        console.log('Content shared successfully');
+      } catch (error) {
+        console.error('Error sharing content:', error);
+      }
+    } else {
+      console.warn('Share API is not supported on this browser.');
+    }
+  };
+
+  return share;
+};
+
 export default function DropdownProfile() {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -36,6 +53,7 @@ export default function DropdownProfile() {
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
+  const share = useShare();
 
   useEffect(() => {
     // Check if user type is available in Redux store
@@ -83,22 +101,7 @@ export default function DropdownProfile() {
   };
 
   const handleShare = (text: string) => {
-    if (navigator.share) {
-      navigator
-        .share({
-          title: 'Referral Link',
-          text: 'Check out this referral link!',
-          url: text,
-        })
-        .then(() => {
-          console.log('Referral link shared successfully');
-        })
-        .catch((error) => {
-          console.error('Error sharing referral link:', error);
-        });
-    } else {
-      console.warn('Share API is not supported on this browser.');
-    }
+    share('Referral Link', 'Check out this referral link!', text);
   };
 
   // Generate referral link

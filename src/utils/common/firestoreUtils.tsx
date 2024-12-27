@@ -14,6 +14,7 @@ import {
   getDocs,
   writeBatch,
   updateDoc,
+  runTransaction,
 } from 'firebase/firestore';
 
 import { db } from '../../config/firebaseConfig';
@@ -47,12 +48,13 @@ export function subscribeToFirestoreDoc(
 export function subscribeToFirestoreCollection(
   collectionPath: string,
   callback: (data: { id: string; [key: string]: any }[]) => void,
+  sort: 'asc' | 'desc' = 'asc',
 ) {
   // Create a collection reference
   const collectionRef = collection(db, collectionPath);
 
   // Create a query that orders the documents by the timestamp field in ascending order
-  const orderedQuery = query(collectionRef, orderBy('timestamp', 'asc'));
+  const orderedQuery = query(collectionRef, orderBy('timestamp', sort));
 
   // Subscribe to the query with onSnapshot
   return onSnapshot(orderedQuery, (snapshot: QuerySnapshot<DocumentData>) => {
@@ -65,6 +67,59 @@ export function subscribeToFirestoreCollection(
     // Pass the ordered data to the callback function
     callback(data);
   });
+}
+
+/**
+ * Subscribe to a Firestore collection for real-time updates with participants filter and sorted by the last message's timestamp.
+ * @param collectionPath - Path to the collection.
+ * @param userID - The ID of the user to filter conversations by (participants should contain userID).
+ * @param callback - Function to handle the updated collection data with the last message details.
+ */
+export function subscribeToUserConversations(
+  collectionPath: string,
+  userID: string,
+  callback: (
+    data: { id: string; lastMessage: any | null; [key: string]: any }[],
+  ) => void,
+) {
+  // Create a collection reference
+  const collectionRef = collection(db, collectionPath);
+
+  // Create a query that filters conversations where the participants array contains the userID
+  const filteredQuery = query(
+    collectionRef,
+    where('participants', 'array-contains', userID),
+    orderBy('lastMessage.timestamp', 'desc'), // Sort conversations by the timestamp of the last message (descending)
+  );
+
+  // Subscribe to the query with onSnapshot
+  return onSnapshot(
+    filteredQuery,
+    async (snapshot: QuerySnapshot<DocumentData>) => {
+      const data = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const conversation: {
+            id: string;
+            [key: string]: any;
+          } = {
+            id: doc.id,
+            ...doc.data(),
+          };
+
+          // Get the last message from the `lastMessage` field, if available
+          const lastMessage = conversation?.lastMessage || null;
+
+          return {
+            ...conversation,
+            lastMessage, // Include the last message for each conversation
+          };
+        }),
+      );
+
+      // Pass the updated data to the callback function
+      callback(data);
+    },
+  );
 }
 
 /**
@@ -99,6 +154,55 @@ export async function addDataToFirestore(
   } catch (error) {
     console.error('Error adding document:', (error as FirestoreError).message);
     return null;
+  }
+}
+
+/**
+ * Updates the conversation document and adds the message to its subcollection in a single transaction.
+ * @param collectionPath - Path to the Firestore collection.
+ * @param conversationId - The ID of the conversation.
+ * @param message - The message object to add.
+ * @param datentime - The timestamp for the message.
+ */
+export async function updateConversationWithMessageTransaction(
+  collectionPath: string,
+  conversationId: string,
+  message: any,
+  datentime: any,
+) {
+  try {
+    await runTransaction(db, async (transaction: any) => {
+      // Reference to the conversation document
+      const conversationRef = doc(db, collectionPath, conversationId);
+
+      // Reference to the messages subcollection
+      const messagesRef = collection(
+        db,
+        collectionPath,
+        conversationId,
+        'messages',
+      );
+
+      // Update the conversation document with the last message and timestamp
+      transaction.update(conversationRef, {
+        lastMessage: message,
+        timestamp: datentime,
+      });
+
+      // Add the message to the messages subcollection
+      const newMessageRef = doc(messagesRef); // Generate a new document ID for the message
+      transaction.set(newMessageRef, {
+        ...message,
+        timestamp: datentime,
+      });
+
+      console.log(`Transaction committed: Message ID - ${newMessageRef.id}`);
+    });
+
+    return 'Transaction successful';
+  } catch (error) {
+    console.error('Transaction failed:', error);
+    throw error;
   }
 }
 
@@ -143,7 +247,7 @@ export const subscribeToUserNotifications = (
   callback: (notifications: DocumentData[]) => void,
 ) => {
   const notificationsRef = collection(db, 'notifications');
-  const q = query(notificationsRef, where('userId', '==', userId));
+  const q = query(notificationsRef, where('userId', 'array-contains', userId));
 
   // Real-time listener
   const unsubscribe = onSnapshot(q, (querySnapshot) => {

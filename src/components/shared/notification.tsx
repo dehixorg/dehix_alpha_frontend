@@ -34,16 +34,21 @@ export const NotificationButton = () => {
   const user = useSelector((state: RootState) => state.user);
   const [notifications, setNotifications] = useState<DocumentData[]>([]);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
     // Set up real-time listener for user notifications
-    const unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
-      setNotifications(data);
-    });
+    if (user?.uid) {
+      unsubscribe = subscribeToUserNotifications(user.uid, (data) => {
+        setNotifications(data);
+      });
+    }
 
     // Clean up the listener when the component is unmounted
     return () => {
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe(); // Call unsubscribe only if it is defined
+      }
     };
   }, [user]);
 

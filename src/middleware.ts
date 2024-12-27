@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
 
   // Handle explicit logout logic
   if (pathname === '/auth/login') {
-    // If the user is already logged in, redirect them to the appropriate dashboard
     if (token && userType) {
       const redirectPath =
         userType === 'freelancer'
@@ -29,12 +28,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // Protect routes and enforce role-based redirection
   if (token && userType) {
     if (
       userType === 'freelancer' &&
       (pathname.startsWith('/dashboard/business') ||
-        pathname.startsWith('/business'))
+        pathname.startsWith('/business') ||
+        pathname === '/')
     ) {
       return NextResponse.redirect(
         new URL('/dashboard/freelancer', request.url),
@@ -42,7 +41,8 @@ export async function middleware(request: NextRequest) {
     } else if (
       userType === 'business' &&
       (pathname.startsWith('/dashboard/freelancer') ||
-        pathname.startsWith('/freelancer'))
+        pathname.startsWith('/freelancer') ||
+        pathname === '/')
     ) {
       return NextResponse.redirect(new URL('/dashboard/business', request.url));
     }
@@ -67,6 +67,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/protected/:path*',
     '/business/:path*',
