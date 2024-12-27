@@ -69,7 +69,6 @@ export default function BusinessRegisterForm() {
   const [passwordStrengthClass, setPasswordStrengthClass] =
     useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const togglePasswordVisibility = () => {
@@ -245,8 +244,8 @@ export default function BusinessRegisterForm() {
               name="linkedin"
               label="LinkedIn"
               type="url"
-              placeholder="https://linkedin.com/in/yourprofile"
               className="w-full"
+              placeholder="https://www.linkedin.com/in/username"
             />
           </div>
 
@@ -260,6 +259,8 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
+
+          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -313,6 +314,7 @@ export default function BusinessRegisterForm() {
             </div>
           </div>
 
+          {/* Terms and Conditions */}
           <div className="flex items-center gap-2 col-span-2">
             <input
               type="checkbox"
@@ -325,6 +327,7 @@ export default function BusinessRegisterForm() {
             </label>
           </div>
 
+          {/* Submit Button */}
           <div className="col-span-2">
             <Button
               type="submit"

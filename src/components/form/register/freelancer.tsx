@@ -90,9 +90,11 @@ export default function FreelancerRegisterForm() {
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>('');
+
   const [passwordStrengthClass, setPasswordStrengthClass] =
     useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
+
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
   const referral = searchParams.get('referral') || '';
@@ -176,13 +178,9 @@ export default function FreelancerRegisterForm() {
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      // Check if referralCode exists and add it as a query string parameter
-      // If no referralCode is provided, the URL remains without a query string
       const referralCodeQuery = data.referralCode
         ? `?referralCode=${encodeURIComponent(data.referralCode)}`
         : '';
-      // Make the POST request, adding referralCode in the query string
-      // The rest of the data is sent in the body (formData)
       await axiosInstance.post(
         `/register/freelancer${referralCodeQuery}`,
         formData,
@@ -304,6 +302,7 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
+          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -318,7 +317,10 @@ export default function FreelancerRegisterForm() {
                           placeholder="Enter your password"
                           type={showPassword ? 'text' : 'password'}
                           {...field}
-                          className="w-full"
+                          onChange={(e) => {
+                            field.onChange(e);
+                            checkPasswordStrength(e.target.value);
+                          }}
                         />
                         <button
                           type="button"
@@ -334,8 +336,19 @@ export default function FreelancerRegisterForm() {
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Password must be at least 6 characters long.
+                      Password must:
+                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
+                        <li>Be at least 12 characters long</li>
+                        <li>Include uppercase and lowercase letters</li>
+                        <li>Contain numbers and special characters</li>
+                      </ul>
                     </FormDescription>
+                    <div className="mt-2 text-sm text-gray-600">
+                      Password Strength:{' '}
+                      <span className={passwordStrengthClass}>
+                        {passwordStrength}
+                      </span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -362,6 +375,7 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
+          {/* Terms and Conditions */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
