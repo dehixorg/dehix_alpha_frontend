@@ -90,7 +90,8 @@ export default function FreelancerRegisterForm() {
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>('');
-  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
+  const [passwordStrengthClass, setPasswordStrengthClass] =
+    useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
@@ -121,15 +122,15 @@ export default function FreelancerRegisterForm() {
     setShowPassword((prev) => !prev);
   };
 
-  const checkPasswordStrength = (password:string) => {
+  const checkPasswordStrength = (password: string) => {
     let strength = '';
     let className = '';
 
     const strongRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$'
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
     );
     const mediumRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$'
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
     );
 
     if (strongRegex.test(password)) {
@@ -285,23 +286,23 @@ export default function FreelancerRegisterForm() {
 
           {/* Hourly Rate and Resume */}
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-          <TextInput
-            control={form.control}
-            name="perHourPrice"
-            label="Hourly Rate ($)"
-            type="number"
-            placeholder="0"
-            className="w-full"
-          />
-          <TextInput
-            control={form.control}
-            name="resume"
-            label="Resume (URL)"
-            type="url"
-            placeholder="Enter Google Drive Resume Link"
-            className="w-full"
-          />
-        </div>
+            <TextInput
+              control={form.control}
+              name="perHourPrice"
+              label="Hourly Rate ($)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="resume"
+              label="Resume (URL)"
+              type="url"
+              placeholder="Enter Google Drive Resume Link"
+              className="w-full"
+            />
+          </div>
 
           <div className="space-y-2">
             <Label>Password</Label>

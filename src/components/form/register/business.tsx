@@ -65,12 +65,10 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
-<<<<<<< HEAD
   const [passwordStrength, setPasswordStrength] = useState<string>('');
-  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
-=======
+  const [passwordStrengthClass, setPasswordStrengthClass] =
+    useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
->>>>>>> ccdd639 (updated the signup formby dividing into 2 columns and moving terms and condition above submit button)
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -78,15 +76,15 @@ export default function BusinessRegisterForm() {
     setShowPassword((prev) => !prev);
   };
 
-  const checkPasswordStrength = (password:string) => {
+  const checkPasswordStrength = (password: string) => {
     let strength = '';
     let className = '';
 
     const strongRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$'
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
     );
     const mediumRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$'
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
     );
 
     if (strongRegex.test(password)) {
@@ -246,10 +244,6 @@ export default function BusinessRegisterForm() {
               control={form.control}
               name="linkedin"
               label="LinkedIn"
-<<<<<<< HEAD
-              placeholder="https://www.linkedin.com/in/username"
-=======
->>>>>>> ccdd639 (updated the signup formby dividing into 2 columns and moving terms and condition above submit button)
               type="url"
               placeholder="https://linkedin.com/in/yourprofile"
               className="w-full"
@@ -266,73 +260,7 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
-<<<<<<< HEAD
           <div className="space-y-2">
-      <Label>Password</Label>
-      <div className="relative">
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter your password"
-                    type={showPassword ? 'text' : 'password'}
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      checkPasswordStrength(e.target.value);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 px-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <Eye className="h-5 w-5" />
-                    ) : (
-                      <EyeOff className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </FormControl>
-              <FormDescription>
-                Password must:
-                <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                  <li>Be at least 12 characters long</li>
-                  <li>Include uppercase and lowercase letters</li>
-                  <li>Contain numbers and special characters</li>
-                </ul>
-              </FormDescription>
-              <div className="mt-2 text-sm text-gray-600">
-                Password Strength:{' '}
-                <span className={passwordStrengthClass}>{passwordStrength}</span>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Rocket className="mr-2 h-4 w-4" />
-            )}{' '}
-            Create an account
-          </Button>
-          <OtpLogin
-            phoneNumber={phone}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
-          />
-=======
-
-          <div className="space-y-2 col-span-2">
             <Label>Password</Label>
             <div className="relative">
               <FormField
@@ -346,6 +274,10 @@ export default function BusinessRegisterForm() {
                           placeholder="Enter your password"
                           type={showPassword ? 'text' : 'password'}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            checkPasswordStrength(e.target.value);
+                          }}
                         />
                         <button
                           type="button"
@@ -361,8 +293,19 @@ export default function BusinessRegisterForm() {
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Password must be at least 6 characters long.
+                      Password must:
+                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
+                        <li>Be at least 12 characters long</li>
+                        <li>Include uppercase and lowercase letters</li>
+                        <li>Contain numbers and special characters</li>
+                      </ul>
                     </FormDescription>
+                    <div className="mt-2 text-sm text-gray-600">
+                      Password Strength:{' '}
+                      <span className={passwordStrengthClass}>
+                        {passwordStrength}
+                      </span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -396,7 +339,6 @@ export default function BusinessRegisterForm() {
               Create an account
             </Button>
           </div>
->>>>>>> ccdd639 (updated the signup formby dividing into 2 columns and moving terms and condition above submit button)
         </div>
 
         <OtpLogin
