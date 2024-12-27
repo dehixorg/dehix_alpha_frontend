@@ -23,7 +23,6 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -91,8 +90,9 @@ export default function FreelancerRegisterForm() {
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<string>('');
-  const [passwordStrengthClass, setPasswordStrengthClass] =
-    useState<string>('');
+
+  const [passwordStrengthClass, setPasswordStrengthClass] = useState<string>('');
+  const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const formRef = useRef<HTMLFormElement>(null);
   const searchParams = useSearchParams();
@@ -177,13 +177,9 @@ export default function FreelancerRegisterForm() {
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      // Check if referralCode exists and add it as a query string parameter
-      // If no referralCode is provided, the URL remains without a query string
       const referralCodeQuery = data.referralCode
         ? `?referralCode=${encodeURIComponent(data.referralCode)}`
         : '';
-      // Make the POST request, adding referralCode in the query string
-      // The rest of the data is sent in the body (formData)
       await axiosInstance.post(
         `/register/freelancer${referralCodeQuery}`,
         formData,
@@ -207,77 +203,105 @@ export default function FreelancerRegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef}>
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="">
+          {/* First Name and Last Name */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <TextInput
               control={form.control}
               name="firstName"
               label="First Name"
               placeholder="Max"
+              className="w-full"
             />
             <TextInput
               control={form.control}
               name="lastName"
               label="Last Name"
               placeholder="Robinson"
+              className="w-full"
             />
           </div>
-          <TextInput
-            control={form.control}
-            name="email"
-            label="Email"
-            type="email"
-            placeholder="m@example.com"
-          />
-          <div className="grid gap-2 mt-3">
-            <Label htmlFor="phone">Phone Number</Label>
-            <PhoneNumberForm
+
+          {/* Email and Phone Number */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
               control={form.control}
-              setCode={setCode}
-              code={code}
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              className="w-full"
+            />
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <PhoneNumberForm
+                control={form.control}
+                setCode={setCode}
+                code={code}
+              />
+            </div>
+          </div>
+
+          {/* Username and GitHub */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="userName"
+              label="Username"
+              placeholder="your_username"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="githubLink"
+              label="GitHub"
+              type="url"
+              placeholder="https://github.com/yourusername"
+              className="w-full"
             />
           </div>
-          <TextInput
-            control={form.control}
-            name="userName"
-            label="Username"
-            placeholder="your_username"
-          />
-          <TextInput
-            control={form.control}
-            name="githubLink"
-            label="GitHub"
-            type="url"
-            placeholder="https://github.com/yourusername"
-          />
-          <TextInput
-            control={form.control}
-            name="linkedin"
-            label="LinkedIn"
-            type="url"
-            placeholder="https://www.linkedin.com/in/yourprofile"
-          />
-          <TextInput
-            control={form.control}
-            name="personalWebsite"
-            label="Personal Website(Optional)"
-            type="url"
-            placeholder="https://www.yourwebsite.com"
-          />
-          <TextInput
-            control={form.control}
-            name="perHourPrice"
-            label="Hourly Rate ($)"
-            type="number"
-            placeholder="0"
-          />
-          <TextInput
-            control={form.control}
-            name="resume"
-            label="Resume (URL)"
-            type="url"
-            placeholder="Enter your Resume Google Drive Link"
-          />
+
+          {/* LinkedIn and Personal Website */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="linkedin"
+              label="LinkedIn"
+              type="url"
+              placeholder="https://linkedin.com/in/yourprofile"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="personalWebsite"
+              label="Personal Website"
+              type="url"
+              placeholder="https://www.yourwebsite.com"
+              className="w-full"
+            />
+          </div>
+
+          {/* Hourly Rate and Resume */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="perHourPrice"
+              label="Hourly Rate ($)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="resume"
+              label="Resume (URL)"
+              type="url"
+              placeholder="Enter Google Drive Resume Link"
+              className="w-full"
+            />
+          </div>
+
+          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -330,40 +354,45 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-3">
-            <div className="grid gap-2">
-              <FormField
-                control={form.control}
-                name="dob"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DOB</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormDescription>Select the Date</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid gap-2">
-              <TextInput
-                label="Experience"
-                control={form.control}
-                name="workExperience"
-                type="number"
-              />
-            </div>
+
+          {/* DOB and Work Experience */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="dob"
+              label="Date of Birth"
+              type="date"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="workExperience"
+              label="Work Experience (Years)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
           </div>
-          <TextInput
-            control={form.control}
-            name="referralCode"
-            label="Do you have a referral code? (Optional)"
-            type="Text"
-            placeholder="Enter referral code"
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+
+          {/* Terms and Conditions */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+            />
+            <label htmlFor="terms">
+              I agree to the <a href="/terms">Terms and Conditions</a>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !isChecked}
+          >
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -371,6 +400,8 @@ export default function FreelancerRegisterForm() {
             )}{' '}
             Create an account
           </Button>
+
+          {/* OTP Login */}
           <OtpLogin
             phoneNumber={phone}
             isModalOpen={isModalOpen}
