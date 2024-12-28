@@ -105,7 +105,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const [docId, setDocId] = useState<string>();
   const [docType, setDocType] = useState<string>();
 
-
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -155,11 +154,11 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         name: data.name,
         level: data.level,
         experience: data.experience,
-        interviewPermission: "NOT_VERIFIED",  // Ensure interviewStatus is set
+        interviewPermission: 'NOT_VERIFIED', // Ensure interviewStatus is set
       };
-  
+
       const payload = {
-        skills: [skillToSubmit],  // Wrap in an array
+        skills: [skillToSubmit], // Wrap in an array
       };
 
       if (editingSkill) {
@@ -300,7 +299,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     setShowMeetingDialog(true);
     setDocId(data?._id);
     setDocType(type);
-  }
+  };
 
   const handleEditSkill = (skill: SkillData) => {
     setEditingSkill(skill);
@@ -386,7 +385,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>
                         <ButtonIcon
                           icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() => handleSkillDomainDialog(skill, "skill")}
+                          onClick={() =>
+                            handleSkillDomainDialog(skill, 'skill')
+                          }
                         />
                       </TableCell>
                     </TableRow>
@@ -464,7 +465,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>
                         <ButtonIcon
                           icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() => handleSkillDomainDialog(domain, "domain")}
+                          onClick={() =>
+                            handleSkillDomainDialog(domain, 'domain')
+                          }
                         />
                       </TableCell>
                     </TableRow>
