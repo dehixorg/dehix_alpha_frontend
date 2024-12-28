@@ -74,7 +74,7 @@ const NotFound = () => {
             className="w-full sm:w-auto gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-              {isLoggedIn ? 'Go Back' : 'Login'}
+            {isLoggedIn ? 'Go Back' : 'Login'}
           </Button>
         </CardFooter>
       </Card>
