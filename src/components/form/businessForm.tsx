@@ -31,7 +31,7 @@ const profileFormSchema = z.object({
     message: 'Email must be a valid email address.',
   }),
   phone: z.string().min(10, {
-    message: 'Phone number must be at least 10 digits.',
+    message: 'Phone number must be at least 10 digits',
   }),
   companyName: z.string().optional(),
   companySize: z.string().optional(),
