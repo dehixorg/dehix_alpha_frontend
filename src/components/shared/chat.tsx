@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -156,31 +157,49 @@ export function CardsChat({ conversation }: CardsChatProps) {
     return null; // Don't display anything
   }
 
-  async function handleDocumentUpload() {
+  // Handle image upload
+  async function handleImageUpload() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
+    fileInput.accept = 'image/*'; // Only allow image files
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
-      if (!file) return;
+      if (!file) return; // If no file is selected, exit
 
       try {
-        // const storageRef = firebase.storage().ref();
-        // const fileRef = storageRef.child(`documents/${conversation.id}/${file.name}`);
-        // await fileRef.put(file);
-        // const fileUrl = await fileRef.getDownloadURL();
-        // const message: Message = {
-        //   senderId: user.uid,
-        //   content: `📄 [${file.name}](${fileUrl})`,
-        //   timestamp: new Date().toISOString(),
-        // };
-        // sendMessage(conversation, message, setInput);
+        // Create FormData to send the image to S3
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Post request to upload image to S3
+        const postImgResponse = await axiosInstance.post(
+          '/register/upload-image',
+          formData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          },
+        );
+
+        // Assuming the S3 response contains the URL of the uploaded image
+        const imageUrl = postImgResponse.data.data.Location;
+        console.log(`image url : ${imageUrl}`);
+
+        // Prepare message with the image URL
+        const message: Partial<Message> = {
+          senderId: user.uid,
+          content: imageUrl, // Embedding the image link in the message
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send the message with the image URL
+        sendMessage(conversation, message, setInput);
       } catch (error) {
-        console.error('Error uploading document:', error);
+        console.error('Error uploading image:', error);
       }
     };
 
-    fileInput.click();
+    fileInput.click(); // Trigger file selection
   }
 
   async function handleCreateMeet() {
@@ -296,7 +315,22 @@ export function CardsChat({ conversation }: CardsChatProps) {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="break-words">{message.content}</div>
+                            <div className="break-words">
+                              {/* Check if the message is an image */}
+                              {message.content.match(
+                                /\.(jpeg|jpg|gif|png)$/,
+                              ) ? (
+                                <Image
+                                  src={message.content}
+                                  alt="Message Image"
+                                  width={300}
+                                  height={300}
+                                  className="rounded-lg"
+                                />
+                              ) : (
+                                <div>{message.content}</div>
+                              )}
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" sideOffset={10}>
                             <p>{readableTimestamp}</p>
@@ -347,11 +381,10 @@ export function CardsChat({ conversation }: CardsChatProps) {
               className="flex w-full items-center space-x-2"
             >
               <div className="flex items-center space-x-2">
-                {/* Upload Document Button */}
                 <Button
                   size="icon"
-                  onClick={() => handleDocumentUpload()}
-                  title="Send a Document"
+                  onClick={() => handleImageUpload()} // Trigger image upload
+                  title="Send an Image"
                 >
                   <Upload className="h-4 w-4" />
                 </Button>
