@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -27,7 +26,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-import { OracleStatusEnum, Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z
@@ -43,30 +41,15 @@ const profileFormSchema = z.object({
     .max(20, { message: 'Username must be less than 20 characters long' })
     .regex(/^[a-zA-Z0-9_]+$/, {
       message: 'Username can only contain letters, numbers, and underscores',
-    }),
+    }), // Adjust regex as needed
   phone: z
     .string()
     .min(10, { message: 'Phone number must be at least 10 digits.' })
     .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
-  githubLink: z
-    .string()
-    .url({ message: 'GitHub link must be a valid URL.' })
-    .refine((value) => /^https:\/\/github\.com\/[\w-]+$/.test(value), {
-      message: 'GitHub URL must start with: https://github.com/',
-    })
-    .optional(),
+  githubLink: z.string().url().optional(),
   resume: z.string().url().optional(),
-  linkedin: z
-    .string()
-    .url({ message: 'LinkedIn link must be a valid URL.' })
-    .refine(
-      (value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value),
-      {
-        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
-      },
-    )
-    .optional(),
-  personalWebsite: z.string().url().or(z.literal('')).optional(),
+  linkedin: z.string().url().optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -75,10 +58,9 @@ const profileFormSchema = z.object({
   }),
   workExperience: z
     .number()
-    .min(0, { message: 'Work experience must be at least 0 years.' })
-    .max(60, { message: 'Work experience must not exceed 60 years.' }),
+    .min(0, 'Work experience must be at least 0 years')
+    .max(60, 'Work experience must not exceed 60 years'),
   dob: z.string().optional(),
-  referralCode: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -89,15 +71,9 @@ export default function FreelancerRegisterForm() {
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<string>('');
-
-  const [passwordStrengthClass, setPasswordStrengthClass] =
-    useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const formRef = useRef<HTMLFormElement>(null);
-  const searchParams = useSearchParams();
-  const referral = searchParams.get('referral') || '';
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -115,39 +91,12 @@ export default function FreelancerRegisterForm() {
       perHourPrice: 0,
       workExperience: 0,
       dob: '',
-      referralCode: referral,
     },
     mode: 'all',
   });
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
-  };
-
-  const checkPasswordStrength = (password: string) => {
-    let strength = '';
-    let className = '';
-
-    const strongRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
-    );
-    const mediumRegex = new RegExp(
-      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
-    );
-
-    if (strongRegex.test(password)) {
-      strength = 'Strong';
-      className = 'text-green-500';
-    } else if (mediumRegex.test(password)) {
-      strength = 'Medium';
-      className = 'text-yellow-500';
-    } else if (password.length > 0) {
-      strength = 'Weak';
-      className = 'text-red-500';
-    }
-
-    setPasswordStrength(strength);
-    setPasswordStrengthClass(className);
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
@@ -159,7 +108,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: Type.FREELANCER,
+      role: 'freelancer',
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -174,22 +123,17 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: OracleStatusEnum.NOT_APPLIED,
+      oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      const referralCodeQuery = data.referralCode
-        ? `?referralCode=${encodeURIComponent(data.referralCode)}`
-        : '';
-      await axiosInstance.post(
-        `/register/freelancer${referralCodeQuery}`,
-        formData,
-      );
+      await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
+      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
@@ -302,7 +246,6 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
-          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -317,10 +260,7 @@ export default function FreelancerRegisterForm() {
                           placeholder="Enter your password"
                           type={showPassword ? 'text' : 'password'}
                           {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            checkPasswordStrength(e.target.value);
-                          }}
+                          className="w-full"
                         />
                         <button
                           type="button"
@@ -336,19 +276,8 @@ export default function FreelancerRegisterForm() {
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Password must:
-                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                        <li>Be at least 12 characters long</li>
-                        <li>Include uppercase and lowercase letters</li>
-                        <li>Contain numbers and special characters</li>
-                      </ul>
+                      Password must be at least 6 characters long.
                     </FormDescription>
-                    <div className="mt-2 text-sm text-gray-600">
-                      Password Strength:{' '}
-                      <span className={passwordStrengthClass}>
-                        {passwordStrength}
-                      </span>
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -375,7 +304,6 @@ export default function FreelancerRegisterForm() {
             />
           </div>
 
-          {/* Terms and Conditions */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
