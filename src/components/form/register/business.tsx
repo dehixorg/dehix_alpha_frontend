@@ -39,7 +39,7 @@ import OtpLogin from '@/components/shared/otpDialog';
 const businessRegisterSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  userName: z.string().min(1, 'User name is required'),
+  userName: z.string().min(1, 'Username is required'),
   companyName: z.string().min(1, 'Company name is required'),
   companySize: z.string().min(1, 'Company size is required'),
   position: z.string().min(1, 'Position is required'),
@@ -184,7 +184,7 @@ export default function BusinessRegisterForm() {
             <TextInput
               control={form.control}
               name="userName"
-              label="User name"
+              label="Username"
               placeholder="JohnDoe123"
             />
           </div>
