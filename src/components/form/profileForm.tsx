@@ -374,7 +374,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     fetchData();
-  }, [user_id]);
+  }, [user_id, form]);
 
   useEffect(() => {
     form.reset({
