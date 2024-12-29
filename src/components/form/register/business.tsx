@@ -181,25 +181,6 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
-        <div className="grid gap-4 grid-cols-2">
-          <div className="grid gap-2">
-            <TextInput
-              control={form.control}
-              name="firstName"
-              label="First name"
-              placeholder="John"
-            />
-          </div>
-          <div className="grid gap-2">
-            <TextInput
-              control={form.control}
-              name="lastName"
-              label="Last name"
-              placeholder="Doe"
-            />
-          </div>
-
-          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="companyName"
@@ -207,7 +188,6 @@ export default function BusinessRegisterForm() {
               placeholder="Tech Innovators"
             />
           </div>
-          <div className="grid gap-2">
           <div className="grid gap-2">
             <Label htmlFor="company-size">Company Size</Label>
             <Controller
@@ -234,8 +214,6 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
-
-          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="position"
@@ -243,7 +221,6 @@ export default function BusinessRegisterForm() {
               placeholder="CTO"
             />
           </div>
-          <div className="grid gap-2">
           <div className="grid gap-2">
             <TextInput
               control={form.control}
@@ -254,7 +231,6 @@ export default function BusinessRegisterForm() {
             />
           </div>
           <div className="grid gap-2">
-          <div className="grid gap-2">
             <Label htmlFor="phone">Phone Number</Label>
             <PhoneNumberForm
               control={form.control}
@@ -264,36 +240,27 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
-
-          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="linkedin"
               label="LinkedIn"
+              placeholder="https://www.linkedin.com/in/username"
               type="url"
-              placeholder="https://linkedin.com/in/yourprofile"
-              className="w-full"
               className="w-full"
             />
           </div>
-
-          <div className="grid gap-2">
 
           <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="personalWebsite"
               label="Personal Website"
-              label="Personal Website"
               type="url"
-              placeholder="https://www.yourwebsite.com"
-              className="w-full"
               placeholder="https://www.yourwebsite.com"
               className="w-full"
             />
           </div>
-
-          <div className="space-y-2 col-span-2">
+          <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
               <FormField
@@ -325,20 +292,49 @@ export default function BusinessRegisterForm() {
                         </button>
                       </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          <OtpLogin
+            phoneNumber={phone}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
+
+          <div className="space-y-2 col-span-2">
+            <Label>Password</Label>
+            <div className="relative">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter your password"
+                          type={showPassword ? 'text' : 'password'}
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center"
+                        >
+                          {showPassword ? (
+                            <Eye className="h-5 w-5" />
+                          ) : (
+                            <EyeOff className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </FormControl>
                     <FormDescription>
-                      Password must:
-                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
-                        <li>Be at least 12 characters long</li>
-                        <li>Include uppercase and lowercase letters</li>
-                        <li>Contain numbers and special characters</li>
-                      </ul>
+                      Password must be at least 6 characters long.
                     </FormDescription>
-                    <div className="mt-2 text-sm text-gray-600">
-                      Password Strength:{' '}
-                      <span className={passwordStrengthClass}>
-                        {passwordStrength}
-                      </span>
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
