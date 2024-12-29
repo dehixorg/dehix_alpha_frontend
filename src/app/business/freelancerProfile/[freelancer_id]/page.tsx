@@ -2,26 +2,23 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
-import { Search } from '@/components/search';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
+import Header from '@/components/header/header';
 
 interface UserProfile {
   firstName: string;
   lastName: string;
   userName: string;
-  profilepic?: string;
+  profilePic?: string;
   email: string;
   dob: string;
   linkedin?: string;
@@ -66,7 +63,6 @@ interface UserProfile {
 const formatDate = (date: string) => new Date(date).toLocaleDateString();
 
 export default function FreelancerProfile() {
-  // const { freelancer_id } = useParams();
   const { freelancer_id } = useParams<{ freelancer_id: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,24 +101,19 @@ export default function FreelancerProfile() {
         active=""
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Projects"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Business', link: '/dashboard/business' },
-              { label: 'Freelancer Profile', link: '/dashboard/business' },
-              { label: `#${freelancer_id}`, link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Projects"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Freelancer Profile', link: '/dashboard/business' },
+            {
+              label: `${user?.firstName}  ${user?.lastName} `,
+              link: `/dashboard/business/${freelancer_id}`,
+            },
+          ]}
+        />
 
         <main className="flex flex-col items-center p-4 sm:px-6 sm:py-0 mb-10">
           <Card className="w-full max-w-4xl bg-black text-white p-4 shadow-md">
@@ -130,12 +121,11 @@ export default function FreelancerProfile() {
               {loading ? (
                 <Skeleton className="w-24 h-24 rounded-full mr-6" />
               ) : (
-                <Avatar className="w-24 h-24 rounded-full mr-6">
+                <Avatar className="w-24 h-24 rounded-full mr-6 relative overflow-hidden border-4 border-primary shadow-lg hover:scale-110 transition-transform duration-300 ease-in-out">
                   <AvatarImage
-                    src={
-                      user?.profilepic || '/placeholder.svg?height=80&width=80'
-                    }
-                    alt="Null"
+                    src={user?.profilePic || '/default-avatar.png'}
+                    alt={`${user?.firstName} ${user?.lastName} Profile Picture`}
+                    className="object-cover w-full h-full"
                   />
                   <AvatarFallback>{`${user?.firstName?.[0] || 'J'}${user?.lastName?.[0] || 'D'}`}</AvatarFallback>
                 </Avatar>
@@ -161,7 +151,7 @@ export default function FreelancerProfile() {
             <div className="grid grid-cols-1 gap-4 mt-4">
               {/* Professional Info */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Professional Info</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -197,7 +187,7 @@ export default function FreelancerProfile() {
 
               {/* Skills */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-1 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Skills</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -206,7 +196,7 @@ export default function FreelancerProfile() {
                   ) : user?.skills && user.skills.length > 0 ? (
                     user.skills.map((skill) => (
                       <p key={skill._id}>
-                        {skill.name} - Level: {skill.level}
+                        {skill.name} {skill.level}
                       </p>
                     ))
                   ) : (
@@ -217,7 +207,7 @@ export default function FreelancerProfile() {
 
               {/* Education */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-1 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Education</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -244,7 +234,7 @@ export default function FreelancerProfile() {
 
               {/* Projects */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-3 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Projects</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -273,7 +263,7 @@ export default function FreelancerProfile() {
 
               {/* Other Info */}
               <Card className="p-4 rounded-lg">
-                <CardHeader className="text-xl font-semibold">
+                <CardHeader className="bg-black p-2 mt-0 mb-4 text-white rounded-sm text-center">
                   <CardTitle>Other Info</CardTitle>
                 </CardHeader>
                 <CardContent>

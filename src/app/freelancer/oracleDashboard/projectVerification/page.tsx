@@ -15,8 +15,6 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
-// import { axiosInstance } from '@/lib/axiosinstance';
-//import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -27,7 +25,8 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
-// Define a union type for the filter options
+import { StatusEnum } from '@/utils/freelancer/enum';
+
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
   _id: string;
@@ -63,7 +62,7 @@ export default function ProfessionalInfo() {
     }
     return (
       data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === 'pending')
+      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
     );
   });
 
@@ -72,12 +71,10 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/verification/${user.uid}/oracle?doc_type=project`,
       );
-      // console.log(response.data)
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>
         Object.values(entry.projects),
       );
-      console.log(flattenedData._id);
       setProjectData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
@@ -116,10 +113,6 @@ export default function ProfessionalInfo() {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Oracle Dashboard',
-                link: '/freelancer/oracleDashboard/businessVerification',
-              },
               {
                 label: 'Project Verification',
                 link: '#',

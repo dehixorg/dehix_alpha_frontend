@@ -2,9 +2,11 @@ import React from 'react';
 
 import BidItem from './biditem';
 
+import { BidstatusEnum } from '@/utils/enum';
+
 interface Bid {
   _id: string;
-  bid_status: string;
+  bid_status: BidstatusEnum; //enum
   project_id: string;
   bidder_id: string;
   current_price: 0;

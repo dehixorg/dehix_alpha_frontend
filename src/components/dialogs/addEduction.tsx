@@ -103,11 +103,10 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         verificationUpdateTime: data.verificationUpdateTime || new Date(),
         comments: '',
       };
-      const response = await axiosInstance.post(
+      await axiosInstance.post(
         `/freelancer/${user.uid}/education`,
         formattedData,
       );
-      console.log('API Response:', response.data);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

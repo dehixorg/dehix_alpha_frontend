@@ -1,15 +1,12 @@
 'use client';
-import { Search, CalendarX2 } from 'lucide-react';
+
+import { CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsTop,
   menuItemsBottom,
@@ -18,10 +15,14 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectSkillCard from '@/components/business/projectSkillCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BidsDetails from '@/components/freelancer/project/bidsDetail';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
+import Header from '@/components/header/header';
 
 interface ProjectProfile {
-  selectedFreelancer?: string[]; // Added based on the response
-  totalBid?: number[]; // Added based on the response
+  _id?: string;
+  selectedFreelancer?: string[];
+  totalBid?: number[];
   domain?: string;
   freelancersRequired?: string;
   skills?: string[];
@@ -29,17 +30,21 @@ interface ProjectProfile {
   minConnect?: number;
   rate?: number;
   description?: string;
-  _id?: string; // Added to match the response's profile structure
+  domain_id: string;
+  freelancers?: {
+    freelancerId: string;
+    bidId: string;
+  };
 }
 
 interface Project {
   _id: string;
   projectName: string;
-  projectDomain: string;
+  projectDomain: string[];
   description: string;
   companyId: string;
   email: string;
-  url?: { value: string }[]; // Retained as optional
+  url?: { value: string }[];
   verified?: any;
   isVerified?: string;
   companyName: string;
@@ -49,9 +54,9 @@ interface Project {
   experience?: string;
   role?: string;
   projectType?: string;
-  profiles?: ProjectProfile[]; // Modified to use the new ProjectProfile structure
-  status?: 'Active' | 'Pending' | 'Completed' | 'Rejected'; // Matches response status
-  team?: string[]; // Retained as optional
+  profiles?: ProjectProfile[];
+  status?: StatusEnum; // enum
+  team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -64,14 +69,10 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/project/${project_id}`);
-
-        // Safely access nested data
         const projectData = response?.data?.data?.data || response?.data?.data;
 
         if (projectData) {
           setProject(projectData);
-        } else {
-          console.error('Unexpected data structure:', response.data);
         }
       } catch (error) {
         console.error('API Error:', error);
@@ -79,6 +80,46 @@ export default function Dashboard() {
     };
     fetchData();
   }, [project_id]);
+
+  const handleCompleteProject = (): void => {
+    if (!project_id) {
+      toast({
+        title: 'Error',
+        description: 'Project ID is missing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.COMPLETED })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.COMPLETED } : prev,
+          );
+          toast({
+            title: 'Success',
+            description: 'Project marked as completed!',
+          });
+        } else {
+          console.error('Unexpected response:', response);
+          toast({
+            title: 'Failed',
+            description: 'Failed to mark project as completed.',
+            variant: 'destructive',
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        toast({
+          title: 'Error',
+          description: 'An error occurred while updating the project status.',
+          variant: 'destructive',
+        });
+      });
+  };
 
   if (!project) {
     return <div>Loading...</div>;
@@ -92,29 +133,16 @@ export default function Dashboard() {
         active=""
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active=""
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard/business' },
-              { label: 'Project', link: '/dashboard/business' },
-              { label: project_id, link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu=""
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/business' },
+            { label: 'Project', link: '/dashboard/business' },
+            { label: project_id, link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div>
@@ -133,8 +161,9 @@ export default function Dashboard() {
                         status={project.status}
                         startDate={project.createdAt}
                         endDate={project.end}
-                        domains={[]}
+                        projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
+                        handleCompleteProject={handleCompleteProject}
                       />
                     </div>
                     <div>

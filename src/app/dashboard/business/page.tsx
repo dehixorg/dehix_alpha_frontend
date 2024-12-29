@@ -4,9 +4,7 @@ import { CheckCircle, Clock, PackageOpen, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,18 +13,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { ProjectCard } from '@/components/cards/projectCard';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import Header from '@/components/header/header';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -35,24 +33,27 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/business/${user.uid}`,
-        ); // Example API endpoint, replace with your actual endpoint
-        console.log('API Response:', response.data.data);
-        setResponseData(response.data.data); // Store response data in state
+        if (user?.uid) {
+          // Optional chaining to ensure `user` is defined
+          const response = await axiosInstance.get(
+            `/project/business/${user.uid}`,
+          );
+          setResponseData(response.data.data); // Store response data in state
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
     };
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == StatusEnum.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== StatusEnum.COMPLETED,
   );
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -61,26 +62,15 @@ export default function Dashboard() {
         active="Dashboard"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-background px-4  sm:border-0 sm:px-6">
-          {/* side bar need to make component */}
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Dashboard"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Dashboard', link: '/dashboard/business' },
-              { label: 'Business', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-
-          {/* profile dropdown need to create separeant component */}
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/business' },
+            { label: 'Business', link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
@@ -94,9 +84,14 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <Button>
-                    <Link href="/business/add-project">Create New Project</Link>
-                  </Button>
+                  {/* Wrap the Button with the Link component to make it clickable */}
+                  <Link href="/business/add-project" passHref>
+                    <Button className="w-full">
+                      {' '}
+                      {/* Ensure the Button takes up full width */}
+                      Create New Project
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
 
@@ -123,7 +118,7 @@ export default function Dashboard() {
                 pendingProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))
@@ -144,7 +139,7 @@ export default function Dashboard() {
                 completedProjects.map((project: any, index: number) => (
                   <ProjectCard
                     key={index}
-                    className="min-w-[45%]"
+                    cardClassName="min-w-[45%]"
                     project={project}
                   />
                 ))

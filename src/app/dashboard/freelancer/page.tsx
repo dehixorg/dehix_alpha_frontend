@@ -3,8 +3,6 @@ import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Search } from '@/components/search';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
   Card,
   CardDescription,
@@ -17,65 +15,122 @@ import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
+import { StatusEnum } from '@/utils/freelancer/enum';
+import Header from '@/components/header/header';
 
 interface Project {
   _id: string;
   projectName: string;
+  projectDomain: string[];
   description: string;
+  companyId: string;
   email: string;
+  url?: { value: string }[];
   verified?: any;
   isVerified?: string;
   companyName: string;
   start?: Date;
-  end?: Date;
+  end?: Date | null;
   skillsRequired: string[];
   experience?: string;
-  role: string;
-  projectType: string;
-  totalNeedOfFreelancer?: {
-    category?: string;
-    needOfFreelancer?: number;
-    appliedCandidates?: string[];
-    rejected?: string[];
-    accepted?: string[];
-    status?: string;
+  role?: string;
+  projectType?: string;
+  profiles?: {
+    _id?: string;
+    domain?: string;
+    freelancersRequired?: string;
+    skills?: string[];
+    experience?: number;
+    minConnect?: number;
+    rate?: number;
+    description?: string;
+    domain_id: string;
+    selectedFreelancer?: string[];
+    freelancers?: {
+      freelancerId: string;
+      bidId: string;
+    };
+    totalBid?: string[];
   }[];
-  status?: string;
+  status?: StatusEnum;
   team?: string[];
 }
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeProjects, setActiveProjects] = useState<Project[]>([]);
+  const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
+  const [currentTab, setCurrentTab] = useState('ACTIVE');
+  const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const fetchProjectData = async (status: string) => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=${status}`,
+      );
+      if (response.status == 200 && response?.data?.data) {
+        setProjects(response.data.data);
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProjectStats = async () => {
+    setLoadingStats(true);
+    try {
+      const activeCountResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=ACTIVE`,
+      );
+      const pendingCountResponse = await axiosInstance.get(
+        `/freelancer/${user.uid}/project?status=PENDING`,
+      );
+
+      if (
+        activeCountResponse.status == 200 &&
+        activeCountResponse?.data?.data
+      ) {
+        setActiveProjects(activeCountResponse.data.data);
+      }
+      if (
+        pendingCountResponse.status == 200 &&
+        pendingCountResponse?.data?.data
+      ) {
+        setPendingProjects(pendingCountResponse.data.data);
+      }
+    } catch (error) {
+      console.error('API Error for project stats:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project`,
-        );
-        setProjects(response.data.data);
-      } catch (error) {
-        console.error('API Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchProjectData(currentTab);
+  }, [user.uid, currentTab]);
 
-    fetchData();
+  useEffect(() => {
+    fetchProjectStats();
   }, [user.uid]);
+
+  const handleTabChange = (status: string) => {
+    setCurrentTab(status);
+    fetchProjectData(status);
+  };
 
   const handleCreateMeetClick = () => {
     setShowMeetingDialog(true); // Open meeting dialog
@@ -89,18 +144,15 @@ export default function Dashboard() {
         active="Dashboard"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-background px-4 sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Dashboard"
-          />
-          <Breadcrumb items={[{ label: 'Dashboard', link: '#' }]} />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Freelancer', link: '#' },
+          ]}
+        />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             {/* Project Status Cards */}
@@ -130,64 +182,51 @@ export default function Dashboard() {
 
               <StatCard
                 title="Active Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Active').length
-                }
+                value={loadingStats ? '...' : activeProjects.length}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo={
-                  loading ? 'Loading...' : 'Earning stats will be here'
-                }
+                additionalInfo={'Earning stats will be here'}
               />
               <StatCard
                 title="Pending Projects"
-                value={
-                  loading
-                    ? '...'
-                    : projects.filter((p) => p.status === 'Pending').length
-                }
+                value={loadingStats ? '...' : pendingProjects.length}
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo={
-                  loading ? 'Loading...' : 'Project stats will be here'
+                  loadingStats ? 'Loading...' : 'Project stats will be here'
                 }
               />
             </div>
 
             {/* Tabs for project filtering */}
             <div className="overflow-x-auto">
-              <Tabs defaultValue="active">
+              <Tabs
+                value={currentTab}
+                onValueChange={(status) => handleTabChange(status)}
+              >
                 <div className="flex items-center">
                   <TabsList>
-                    <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                    <TabsTrigger value={StatusEnum.ACTIVE}>Active</TabsTrigger>
+                    <TabsTrigger value={StatusEnum.PENDING}>
+                      Pending
+                    </TabsTrigger>
+                    <TabsTrigger value={StatusEnum.COMPLETED}>
+                      Completed
+                    </TabsTrigger>
+                    <TabsTrigger value={StatusEnum.REJECTED}>
+                      Rejected
+                    </TabsTrigger>
                   </TabsList>
                 </div>
-                <TabsContent value="active">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Active')}
-                    loading={loading}
-                  />
+                <TabsContent value={StatusEnum.ACTIVE}>
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="pending">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Pending')}
-                    loading={loading}
-                  />
+                <TabsContent value={StatusEnum.PENDING}>
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="completed">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Completed')}
-                    loading={loading}
-                  />
+                <TabsContent value={StatusEnum.COMPLETED}>
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
-                <TabsContent value="rejected">
-                  <ProjectTableCard
-                    projects={projects.filter((p) => p.status === 'Rejected')}
-                    loading={loading}
-                  />
+                <TabsContent value={StatusEnum.REJECTED}>
+                  <ProjectTableCard projects={projects} loading={loading} />
                 </TabsContent>
               </Tabs>
             </div>

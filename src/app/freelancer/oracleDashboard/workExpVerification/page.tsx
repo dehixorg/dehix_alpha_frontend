@@ -27,6 +27,7 @@ import {
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
+import { StatusEnum } from '@/utils/freelancer/enum';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
@@ -63,7 +64,7 @@ export default function ProfessionalInfo() {
     }
     return (
       data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === 'Pending')
+      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
     );
   });
 
@@ -115,10 +116,6 @@ export default function ProfessionalInfo() {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Oracle Dashboard',
-                link: '/freelancer/oracleDashboard/businessVerification',
-              },
               {
                 label: 'Experience Verification',
                 link: '#',

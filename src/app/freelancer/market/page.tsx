@@ -2,21 +2,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { Search } from '@/components/search';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import Header from '@/components/header/header';
 
 interface FilterState {
   projects: string[];
@@ -48,7 +46,7 @@ interface Project {
     appliedCandidates?: string[];
     rejected?: string[];
     accepted?: string[];
-    status?: string;
+    status?: StatusEnum;
   }[];
   profiles?: {
     _id?: string;
@@ -157,17 +155,20 @@ const Market: React.FC = () => {
           `/freelancer/${user.uid}`,
         );
         const queryString = constructQueryString(appliedFilters);
-        const allJobs = await axiosInstance.get(
-          `/project/freelancer/${user.uid}/?${queryString}`,
+        const getJobs = await axiosInstance.get(
+          `/project/freelancer/${user.uid}?${queryString}`,
         );
 
-        const notInterestedProjects =
-          freelancerDetails.data.notInterestedProject || [];
+        const jobs = getJobs?.data?.data;
 
-        const filteredJobs = allJobs.data.data.filter(
-          (job: Project) => !notInterestedProjects.includes(job._id),
-        );
-        setJobs(filteredJobs);
+        if (freelancerDetails?.data && jobs) {
+          const notInterestedProjects =
+            freelancerDetails.data.notInterestedProject || [];
+          const filteredJobs = jobs.filter(
+            (job: Project) => !notInterestedProjects.includes(job._id),
+          );
+          setJobs(filteredJobs);
+        }
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -176,7 +177,6 @@ const Market: React.FC = () => {
   );
 
   const handleApply = () => {
-    console.log('Selected Filters:', filters);
     fetchData(filters);
   };
   useEffect(() => {
@@ -210,24 +210,15 @@ const Market: React.FC = () => {
         active="Market"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Market"
-          />
-
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Freelancer Market', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Market"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Marketplace', link: '#' },
+          ]}
+        />
         <div className="mb-8 ml-8">
           <h1 className="text-3xl font-bold">Freelancer Marketplace</h1>
           <p className="text-gray-400 mt-2 ">

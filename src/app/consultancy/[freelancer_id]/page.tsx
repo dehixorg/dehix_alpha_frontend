@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, PackageOpen, Boxes, Home, Plus, X } from 'lucide-react';
+import { PackageOpen, Boxes, Home, Plus, X } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 
 import ConsultantCard from '@/components/cards/ConsultantCard';
-import { Input } from '@/components/ui/input';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -43,6 +39,9 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { Separator } from '@/components/ui/separator';
+import { ProjectStatus } from '@/utils/freelancer/enum';
+import { Input } from '@/components/ui/input';
+import Header from '@/components/header/header';
 
 interface Skill {
   label: string;
@@ -106,10 +105,10 @@ export default function ConsultancyPage() {
   }, [user.uid]);
 
   const completedProjects = responseData.filter(
-    (project: any) => project.status == 'Completed',
+    (project: any) => project.status == ProjectStatus.COMPLETED,
   );
   const pendingProjects = responseData.filter(
-    (project: any) => project.status !== 'Completed',
+    (project: any) => project.status !== ProjectStatus.COMPLETED,
   );
 
   const form = useForm<ConsultancyFormValues>({
@@ -151,7 +150,6 @@ export default function ConsultancyPage() {
 
   const onSubmit = async (data: ConsultancyFormValues) => {
     try {
-      console.log('Form Data:', data);
       setConsultants([...consultants, data]);
       form.reset();
       setIsDialogOpen(false);
@@ -168,28 +166,15 @@ export default function ConsultancyPage() {
         active="Consultancy Info"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Consultancy Info"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Consultancy', link: '#' },
-              { label: 'Consultancy Info', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-            />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Consultancy Info"
+          breadcrumbItems={[
+            { label: 'Consultancy', link: '#' },
+            { label: 'Consultancy Info', link: '#' },
+          ]}
+        />
         {experience < 5 ? (
           <div className="flex flex-col items-center justify-center mt-[10rem]">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
@@ -399,7 +384,7 @@ export default function ConsultancyPage() {
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))
@@ -423,7 +408,7 @@ export default function ConsultancyPage() {
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
-                        className="min-w-[45%]"
+                        cardClassName="min-w-[45%]"
                         project={project}
                       />
                     ))

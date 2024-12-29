@@ -46,9 +46,6 @@ const Market: React.FC = () => {
     let transformedValues: string | string[] = selectedValues;
 
     if (filterType === 'experience') {
-      console.log('TEST:', selectedValues);
-
-      // Ensure selectedValues is always an array
       const values = Array.isArray(selectedValues)
         ? selectedValues
         : [selectedValues];
@@ -59,17 +56,15 @@ const Market: React.FC = () => {
           const [start, end] = value.split('-').map(Number);
           return Array.from({ length: end - start + 1 }, (_, i) =>
             (start + i).toString(),
-          ); // Convert numbers to strings
+          );
         }
-        // Handle "7+" range separately
         if (value === '7+') {
           return ['7', '8', '9', '10']; // Return as strings
         }
-        return [value]; // Return the string itself if it's a single value
+        return [value];
       });
     }
 
-    // Apply the transformation (or no transformation for other filter types)
     setFilters((prevFilters) => ({
       ...prevFilters,
       [filterType]: transformedValues,

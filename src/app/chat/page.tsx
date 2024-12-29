@@ -1,28 +1,31 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { DocumentData } from 'firebase/firestore';
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
+import Header from '@/components/header/header'; // Adjust the import path as necessary
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
-import Breadcrumb from '@/components/shared/breadcrumbList';
+import {
+  menuItemsBottom as businessMenuItemsBottom,
+  menuItemsTop as businessMenuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+import { ChatList } from '@/components/shared/chatList';
+import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+import { RootState } from '@/lib/store';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Search } from '@/components/search';
-import { ChatList } from '@/components/shared/chatList';
-import { subscribeToFirestoreCollection } from '@/utils/common/firestoreUtils';
-import { RootState } from '@/lib/store';
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Define the Conversation interface to match the expected shape
 interface Conversation extends DocumentData {
   id: string;
   participants: string[];
   timestamp?: string;
+  lastMessage?: any;
 }
 
 const HomePage = () => {
@@ -38,14 +41,11 @@ const HomePage = () => {
 
     const fetchConversations = async () => {
       setLoading(true);
-      unsubscribe = await subscribeToFirestoreCollection(
+      unsubscribe = await subscribeToUserConversations(
         'conversations',
+        user.uid,
         (data) => {
-          // Explicitly cast data as Conversation[]
-          const filteredConversations = (data as Conversation[]).filter(
-            (conversation) => conversation.participants.includes(user.uid),
-          );
-          setConversations(filteredConversations);
+          setConversations(data as Conversation[]);
           setLoading(false);
         },
       );
@@ -66,54 +66,62 @@ const HomePage = () => {
   }, [conversations, activeConversation]);
 
   return (
-    <>
-      <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <SidebarMenu
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          active="Chats"
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+      <SidebarMenu
+        menuItemsTop={
+          user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+        }
+        menuItemsBottom={
+          user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
+        }
+        active="Chats"
+      />
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={
+            user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+          }
+          menuItemsBottom={
+            user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
+          }
+          activeMenu="Chats"
+          breadcrumbItems={[
+            {
+              label: user.type.replace(/\b\w/g, (char: string) =>
+                char.toUpperCase(),
+              ),
+              link: '#',
+            },
+            { label: 'Chats', link: '/dashboard/chats' },
+          ]}
+          searchPlaceholder="Search..."
         />
-        <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="Chats"
-            />
-            <Breadcrumb items={[{ label: 'Chats', link: '/chat' }]} />
-
-            <div className="relative ml-auto flex-1 md:grow-0">
-              <Search className="w-full md:w-[200px] lg:w-[336px]" />
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-4 lg:grid-cols-3 xl:grid-cols-3">
+          {loading ? (
+            <div className="col-span-3 flex justify-center items-center p-5">
+              <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
             </div>
-            <DropdownProfile />
-          </header>
-          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-            {loading ? (
-              <div className="col-span-3 flex justify-center items-center p-5">
-                <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
-              </div>
-            ) : conversations.length > 0 ? (
-              <>
-                <ChatList
-                  conversations={conversations}
-                  active={activeConversation}
-                  setConversation={setActiveConversation}
-                />
-                <CardsChat conversation={activeConversation} />
-              </>
-            ) : (
-              <div className="col-span-3 flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
-                <MessageSquare className="w-10 h-10 mb-2" />
-                <p className="text-lg font-medium">No conversations found</p>
-                <p className="text-sm">
-                  Start a new chat or wait for others to connect!
-                </p>
-              </div>
-            )}
-          </main>
-        </div>
+          ) : conversations.length > 0 ? (
+            <>
+              <ChatList
+                conversations={conversations}
+                active={activeConversation}
+                setConversation={setActiveConversation}
+              />
+              <CardsChat conversation={activeConversation} />
+            </>
+          ) : (
+            <div className="col-span-3 flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
+              <MessageSquare className="w-10 h-10 mb-2" />
+              <p className="text-lg font-medium">No conversations found</p>
+              <p className="text-sm">
+                Start a new chat or wait for others to connect!
+              </p>
+            </div>
+          )}
+        </main>
       </div>
-    </>
+    </div>
   );
 };
 

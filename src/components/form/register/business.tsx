@@ -44,7 +44,16 @@ const businessRegisterSchema = z.object({
   position: z.string().min(1, 'Position is required'),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(1, 'Phone number is required'),
-  linkedin: z.string().url('Invalid URL').optional(),
+  linkedin: z
+    .string()
+    .url('Invalid URL')
+    .optional()
+    .refine(
+      (value) => !value || value.startsWith('https://www.linkedin.com/in/'),
+      {
+        message: 'LinkedIn URL must start with "https://www.linkedin.com/in/"',
+      },
+    ),
   personalWebsite: z.string().url('Invalid URL').optional(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
@@ -56,11 +65,41 @@ export default function BusinessRegisterForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
+  const [passwordStrength, setPasswordStrength] = useState<string>('');
+  const [passwordStrengthClass, setPasswordStrengthClass] =
+    useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const checkPasswordStrength = (password: string) => {
+    let strength = '';
+    let className = '';
+
+    const strongRegex = new RegExp(
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{12,}$',
+    );
+    const mediumRegex = new RegExp(
+      '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d!@#$%^&*]{8,}$',
+    );
+
+    if (strongRegex.test(password)) {
+      strength = 'Strong';
+      className = 'text-green-500';
+    } else if (mediumRegex.test(password)) {
+      strength = 'Medium';
+      className = 'text-yellow-500';
+    } else if (password.length > 0) {
+      strength = 'Weak';
+      className = 'text-red-500';
+    }
+
+    setPasswordStrength(strength);
+    setPasswordStrengthClass(className);
   };
 
   const form = useForm<BusinessRegisterFormValues>({
@@ -101,8 +140,6 @@ export default function BusinessRegisterForm() {
     };
     try {
       await axiosInstance.post('/register/business', formData);
-
-      console.log('TESTF:', formData);
       toast({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',
@@ -144,6 +181,25 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
+        <div className="grid gap-4 grid-cols-2">
+          <div className="grid gap-2">
+            <TextInput
+              control={form.control}
+              name="firstName"
+              label="First name"
+              placeholder="John"
+            />
+          </div>
+          <div className="grid gap-2">
+            <TextInput
+              control={form.control}
+              name="lastName"
+              label="Last name"
+              placeholder="Doe"
+            />
+          </div>
+
+          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="companyName"
@@ -151,6 +207,7 @@ export default function BusinessRegisterForm() {
               placeholder="Tech Innovators"
             />
           </div>
+          <div className="grid gap-2">
           <div className="grid gap-2">
             <Label htmlFor="company-size">Company Size</Label>
             <Controller
@@ -177,6 +234,8 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
+
+          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="position"
@@ -184,6 +243,7 @@ export default function BusinessRegisterForm() {
               placeholder="CTO"
             />
           </div>
+          <div className="grid gap-2">
           <div className="grid gap-2">
             <TextInput
               control={form.control}
@@ -194,6 +254,7 @@ export default function BusinessRegisterForm() {
             />
           </div>
           <div className="grid gap-2">
+          <div className="grid gap-2">
             <Label htmlFor="phone">Phone Number</Label>
             <PhoneNumberForm
               control={form.control}
@@ -203,6 +264,8 @@ export default function BusinessRegisterForm() {
           </div>
 
           <div className="grid gap-2">
+
+          <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="linkedin"
@@ -210,15 +273,21 @@ export default function BusinessRegisterForm() {
               type="url"
               placeholder="https://linkedin.com/in/yourprofile"
               className="w-full"
+              className="w-full"
             />
           </div>
+
+          <div className="grid gap-2">
 
           <div className="grid gap-2">
             <TextInput
               control={form.control}
               name="personalWebsite"
               label="Personal Website"
+              label="Personal Website"
               type="url"
+              placeholder="https://www.yourwebsite.com"
+              className="w-full"
               placeholder="https://www.yourwebsite.com"
               className="w-full"
             />
@@ -238,6 +307,10 @@ export default function BusinessRegisterForm() {
                           placeholder="Enter your password"
                           type={showPassword ? 'text' : 'password'}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            checkPasswordStrength(e.target.value);
+                          }}
                         />
                         <button
                           type="button"
@@ -253,8 +326,19 @@ export default function BusinessRegisterForm() {
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Password must be at least 6 characters long.
+                      Password must:
+                      <ul className="list-disc ml-4 mt-1 text-sm text-gray-600">
+                        <li>Be at least 12 characters long</li>
+                        <li>Include uppercase and lowercase letters</li>
+                        <li>Contain numbers and special characters</li>
+                      </ul>
                     </FormDescription>
+                    <div className="mt-2 text-sm text-gray-600">
+                      Password Strength:{' '}
+                      <span className={passwordStrengthClass}>
+                        {passwordStrength}
+                      </span>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

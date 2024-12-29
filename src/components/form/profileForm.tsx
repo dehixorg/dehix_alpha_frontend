@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
@@ -31,6 +32,11 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
+import { Type } from '@/utils/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import { addSkill } from '@/utils/skillUtils';
+import { addDomain } from '@/utils/DomainUtils';
+import { addProjectDomain } from '@/utils/ProjectDomainUtils';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -72,6 +78,23 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+  const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customSkill, setCustomSkill] = useState({
+    label: '',
+    description: '',
+  });
+  const [customDomain, setCustomDomain] = useState({
+    label: '',
+    description: '',
+  });
+  const [customProjectDomain, setCustomProjectDomain] = useState({
+    label: '',
+    description: '',
+  });
+  const [dialogType, setDialogType] = useState<
+    'skill' | 'domain' | 'projectDomain' | null
+  >(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -87,6 +110,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   });
 
   const handleAddSkill = () => {
+    addSkill(tmpSkill, skills, setSkills);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
         ...currSkills,
@@ -94,7 +118,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpSkill,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -103,7 +127,155 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
+  const handleAddCustomSkill = async () => {
+    if (!customSkill.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customSkillData = {
+      label: customSkill.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post('/skills', customSkillData);
+
+      const updatedSkills = [...skills, { label: customSkill.label }];
+      setDomains(updatedSkills);
+
+      setCurrSkills([
+        ...currSkills,
+        {
+          name: customSkill.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customSkill.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomSkill({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add skill:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add skill. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomDomain = async () => {
+    if (!customDomain.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customDomainData = {
+      label: customDomain.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post('/domain', customDomainData);
+
+      const updatedDomains = [...domains, { label: customDomain.label }];
+      setDomains(updatedDomains);
+
+      setCurrDomains([
+        ...currDomains,
+        {
+          name: customDomain.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customDomain.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomDomain({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add domain:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add domain. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomProjectDomain = async () => {
+    if (!customProjectDomain.label.trim()) {
+      console.warn('Field is required.');
+      return;
+    }
+    const customProjectDomainData = {
+      label: customProjectDomain.label,
+      createdBy: Type.FREELANCER,
+      createdById: user_id,
+      status: StatusEnum.ACTIVE,
+    };
+
+    try {
+      const response = await axiosInstance.post(
+        '/projectdomain',
+        customProjectDomainData,
+      );
+
+      const updatedProjectDomains = [
+        ...projectDomains,
+        { label: customProjectDomain.label },
+      ];
+      setProjectDomains(updatedProjectDomains);
+
+      setCurrProjectDomains([
+        ...currProjectDomains,
+        {
+          name: customProjectDomain.label,
+          level: '',
+          experience: '',
+          interviewStatus: 'PENDING',
+          interviewInfo: customProjectDomain.description,
+          interviewerRating: 0,
+        },
+      ]);
+
+      setCustomProjectDomain({ label: '', description: '' });
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      console.error(
+        'Failed to add project domain:',
+        error.response?.data || error.message,
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to add project domain. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddDomain = () => {
+    addDomain(tmpDomain, domains, setDomains);
     if (
       tmpDomain &&
       !currDomains.some((domain: any) => domain.name === tmpDomain)
@@ -114,7 +286,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpDomain,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -123,6 +295,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
   const handleAddprojectDomain = () => {
+    addProjectDomain(tmpProjectDomains, projectDomains, setProjectDomains);
     if (
       tmpProjectDomains &&
       !currProjectDomains.some(
@@ -135,7 +308,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           name: tmpProjectDomains,
           level: '',
           experience: '',
-          interviewStatus: 'pending',
+          interviewStatus: StatusEnum.PENDING,
           interviewInfo: '',
           interviewerRating: 0,
         },
@@ -264,9 +437,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          user_id={user._id}
+          user_id={user.uid}
           profile={user.profilePic}
-          entityType="freelancer"
+          entityType={Type.FREELANCER}
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -419,7 +592,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormLabel>Skills</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
-                  onValueChange={(value) => setTmpSkill(value)}
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('skill');
+                    } else {
+                      setTmpSkill(value);
+                    }
+                  }}
                   value={tmpSkill || ''}
                 >
                   <SelectTrigger>
@@ -438,6 +618,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           {skill.label}
                         </SelectItem>
                       ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -476,7 +659,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
-                  onValueChange={(value) => setTmpDomain(value)}
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('domain');
+                    } else {
+                      setTmpDomain(value);
+                    }
+                  }}
                   value={tmpDomain || ''}
                 >
                   <SelectTrigger>
@@ -497,6 +687,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           {domain.label}
                         </SelectItem>
                       ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -535,7 +728,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
-                  onValueChange={(value) => setTmpProjectDomains(value)}
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('projectDomain');
+                    } else {
+                      setTmpProjectDomains(value);
+                    }
+                  }}
                   value={tmpProjectDomains || ''}
                 >
                   <SelectTrigger>
@@ -560,6 +760,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           {projectDomains.label}
                         </SelectItem>
                       ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -615,6 +818,187 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <Button type="submit" className="col-span-2">
             Update profile
           </Button>
+
+          {isDialogOpen && (
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(isOpen) => setIsDialogOpen(isOpen)}
+            >
+              <DialogOverlay className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40" />
+              <DialogContent className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-black rounded-md shadow-xl p-6 w-[90%] max-w-md">
+                  {dialogType === 'skill' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Skill
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomSkill(); // Add custom skill logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="skillLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Skill Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customSkill.label}
+                            onChange={(e) =>
+                              setCustomSkill({
+                                ...customSkill,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter skill label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomSkill();
+                              setCustomSkill({ label: '', description: '' });
+                            }}
+                          >
+                            Add Skill
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                  {dialogType === 'domain' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Domain
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomDomain(); // Add custom domain logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="domainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Domain Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customDomain.label}
+                            onChange={(e) =>
+                              setCustomDomain({
+                                ...customDomain,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter Domain label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomDomain();
+                              setCustomDomain({ label: '', description: '' });
+                            }}
+                          >
+                            Add Domain
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                  {dialogType === 'projectDomain' && (
+                    <>
+                      <h2 className="text-lg font-semibold text-white mb-4">
+                        Add New Project Domain
+                      </h2>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleAddCustomProjectDomain(); // Add custom project domain logic
+                        }}
+                      >
+                        <div className="mb-4">
+                          <label
+                            htmlFor="projectDomainLabel"
+                            className="block text-sm font-medium text-white mb-1"
+                          >
+                            Project Domain Label
+                          </label>
+                          <input
+                            type="text"
+                            value={customProjectDomain.label}
+                            onChange={(e) =>
+                              setCustomProjectDomain({
+                                ...customProjectDomain,
+                                label: e.target.value,
+                              })
+                            }
+                            placeholder="Enter Project Domain label"
+                            className="w-full px-3 py-2 rounded-md text-white bg-black placeholder-gray-400 border border-white"
+                            required
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setIsDialogOpen(false)}
+                            className="mt-3"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            onClick={() => {
+                              handleAddCustomProjectDomain();
+                              setCustomProjectDomain({
+                                label: '',
+                                description: '',
+                              });
+                            }}
+                          >
+                            Add Project Domain
+                          </Button>
+                        </div>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </form>
       </Form>
     </Card>

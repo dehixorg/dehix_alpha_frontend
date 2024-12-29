@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { BidstatusEnum } from '@/utils/enum';
 interface Action {
   label: string;
   type: string;
@@ -20,7 +21,7 @@ interface Action {
 
 interface Bid {
   _id: string;
-  bid_status: string;
+  bid_status: BidstatusEnum; //enum
   project_id: string;
   bidder_id: string;
   current_price: number;
