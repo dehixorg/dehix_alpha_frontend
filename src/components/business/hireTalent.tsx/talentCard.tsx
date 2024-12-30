@@ -80,6 +80,8 @@ interface SkillDomainData {
 interface SkillDomainFormProps {
   setFilterSkill: (skills: Skill[]) => void;
   setFilterDomain: (domains: Domain[]) => void;
+  skills: Skill[];
+  domains: Domain[];
 }
 
 const SHEET_SIDES = ['left'] as const;
