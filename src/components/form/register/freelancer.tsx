@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { LoaderCircle, Rocket, Eye, EyeOff } from 'lucide-react';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -23,12 +22,10 @@ import {
   FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-import { OracleStatusEnum, Type } from '@/utils/enum';
 
 const profileFormSchema = z.object({
   firstName: z
@@ -44,30 +41,15 @@ const profileFormSchema = z.object({
     .max(20, { message: 'Username must be less than 20 characters long' })
     .regex(/^[a-zA-Z0-9_]+$/, {
       message: 'Username can only contain letters, numbers, and underscores',
-    }),
+    }), // Adjust regex as needed
   phone: z
     .string()
     .min(10, { message: 'Phone number must be at least 10 digits.' })
     .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
-  githubLink: z
-    .string()
-    .url({ message: 'GitHub link must be a valid URL.' })
-    .refine((value) => /^https:\/\/github\.com\/[\w-]+$/.test(value), {
-      message: 'GitHub URL must start with: https://github.com/',
-    })
-    .optional(),
+  githubLink: z.string().url().optional(),
   resume: z.string().url().optional(),
-  linkedin: z
-    .string()
-    .url({ message: 'LinkedIn link must be a valid URL.' })
-    .refine(
-      (value) => /^https:\/\/www\.linkedin\.com\/in\/[\w-]+$/.test(value),
-      {
-        message: 'LinkedIn URL must start with: https://www.linkedin.com/in/',
-      },
-    )
-    .optional(),
-  personalWebsite: z.string().url().or(z.literal('')).optional(),
+  linkedin: z.string().url().optional(),
+  personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -76,10 +58,9 @@ const profileFormSchema = z.object({
   }),
   workExperience: z
     .number()
-    .min(0, { message: 'Work experience must be at least 0 years.' })
-    .max(60, { message: 'Work experience must not exceed 60 years.' }),
+    .min(0, 'Work experience must be at least 0 years')
+    .max(60, 'Work experience must not exceed 60 years'),
   dob: z.string().optional(),
-  referralCode: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -90,10 +71,9 @@ export default function FreelancerRegisterForm() {
   const [code, setCode] = useState<string>('IN');
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
 
   const formRef = useRef<HTMLFormElement>(null);
-  const searchParams = useSearchParams();
-  const referral = searchParams.get('referral') || '';
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -111,7 +91,6 @@ export default function FreelancerRegisterForm() {
       perHourPrice: 0,
       workExperience: 0,
       dob: '',
-      referralCode: referral,
     },
     mode: 'all',
   });
@@ -129,7 +108,7 @@ export default function FreelancerRegisterForm() {
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
-      role: Type,
+      role: 'freelancer',
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -144,26 +123,17 @@ export default function FreelancerRegisterForm() {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: OracleStatusEnum.NOT_APPLICABLE,
+      oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
     try {
-      // Check if referralCode exists and add it as a query string parameter
-      // If no referralCode is provided, the URL remains without a query string
-      const referralCodeQuery = data.referralCode
-        ? `?referralCode=${encodeURIComponent(data.referralCode)}`
-        : '';
-      // Make the POST request, adding referralCode in the query string
-      // The rest of the data is sent in the body (formData)
-      await axiosInstance.post(
-        `/register/freelancer${referralCodeQuery}`,
-        formData,
-      );
+      await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
+      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
@@ -178,77 +148,104 @@ export default function FreelancerRegisterForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} ref={formRef}>
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="">
+          {/* First Name and Last Name */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <TextInput
               control={form.control}
               name="firstName"
               label="First Name"
               placeholder="Max"
+              className="w-full"
             />
             <TextInput
               control={form.control}
               name="lastName"
               label="Last Name"
               placeholder="Robinson"
+              className="w-full"
             />
           </div>
-          <TextInput
-            control={form.control}
-            name="email"
-            label="Email"
-            type="email"
-            placeholder="m@example.com"
-          />
-          <div className="grid gap-2 mt-3">
-            <Label htmlFor="phone">Phone Number</Label>
-            <PhoneNumberForm
+
+          {/* Email and Phone Number */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
               control={form.control}
-              setCode={setCode}
-              code={code}
+              name="email"
+              label="Email"
+              type="email"
+              placeholder="m@example.com"
+              className="w-full"
+            />
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <PhoneNumberForm
+                control={form.control}
+                setCode={setCode}
+                code={code}
+              />
+            </div>
+          </div>
+
+          {/* Username and GitHub */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="userName"
+              label="Username"
+              placeholder="your_username"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="githubLink"
+              label="GitHub"
+              type="url"
+              placeholder="https://github.com/yourusername"
+              className="w-full"
             />
           </div>
-          <TextInput
-            control={form.control}
-            name="userName"
-            label="Username"
-            placeholder="your_username"
-          />
-          <TextInput
-            control={form.control}
-            name="githubLink"
-            label="GitHub"
-            type="url"
-            placeholder="https://github.com/yourusername"
-          />
-          <TextInput
-            control={form.control}
-            name="linkedin"
-            label="LinkedIn"
-            type="url"
-            placeholder="https://www.linkedin.com/in/yourprofile"
-          />
-          <TextInput
-            control={form.control}
-            name="personalWebsite"
-            label="Personal Website(Optional)"
-            type="url"
-            placeholder="https://www.yourwebsite.com"
-          />
-          <TextInput
-            control={form.control}
-            name="perHourPrice"
-            label="Hourly Rate ($)"
-            type="number"
-            placeholder="0"
-          />
-          <TextInput
-            control={form.control}
-            name="resume"
-            label="Resume (URL)"
-            type="url"
-            placeholder="Enter your Resume Google Drive Link"
-          />
+
+          {/* LinkedIn and Personal Website */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="linkedin"
+              label="LinkedIn"
+              type="url"
+              placeholder="https://linkedin.com/in/yourprofile"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="personalWebsite"
+              label="Personal Website"
+              type="url"
+              placeholder="https://www.yourwebsite.com"
+              className="w-full"
+            />
+          </div>
+
+          {/* Hourly Rate and Resume */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="perHourPrice"
+              label="Hourly Rate ($)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="resume"
+              label="Resume (URL)"
+              type="url"
+              placeholder="Enter Google Drive Resume Link"
+              className="w-full"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -263,6 +260,7 @@ export default function FreelancerRegisterForm() {
                           placeholder="Enter your password"
                           type={showPassword ? 'text' : 'password'}
                           {...field}
+                          className="w-full"
                         />
                         <button
                           type="button"
@@ -286,40 +284,44 @@ export default function FreelancerRegisterForm() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-3">
-            <div className="grid gap-2">
-              <FormField
-                control={form.control}
-                name="dob"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>DOB</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormDescription>Select the Date</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid gap-2">
-              <TextInput
-                label="Experience"
-                control={form.control}
-                name="workExperience"
-                type="number"
-              />
-            </div>
+
+          {/* DOB and Work Experience */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <TextInput
+              control={form.control}
+              name="dob"
+              label="Date of Birth"
+              type="date"
+              className="w-full"
+            />
+            <TextInput
+              control={form.control}
+              name="workExperience"
+              label="Work Experience (Years)"
+              type="number"
+              placeholder="0"
+              className="w-full"
+            />
           </div>
-          <TextInput
-            control={form.control}
-            name="referralCode"
-            label="Do you have a referral code? (Optional)"
-            type="Text"
-            placeholder="Enter referral code"
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={isChecked}
+              onChange={() => setIsChecked(!isChecked)}
+            />
+            <label htmlFor="terms">
+              I agree to the <a href="/terms">Terms and Conditions</a>
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || !isChecked}
+          >
             {isLoading ? (
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -327,6 +329,8 @@ export default function FreelancerRegisterForm() {
             )}{' '}
             Create an account
           </Button>
+
+          {/* OTP Login */}
           <OtpLogin
             phoneNumber={phone}
             isModalOpen={isModalOpen}

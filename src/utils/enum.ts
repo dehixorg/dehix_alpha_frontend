@@ -47,11 +47,13 @@ export enum NotificationStatusEnum {
 
 // Enum for Oracle Status
 export enum OracleStatusEnum {
-  NOT_APPLICABLE = 'Not Applicaple',
-  APPLICABLE = 'Applicable',
-  STOPPED = 'Stopped',
+  APPLIED = 'APPLIED',
+  NOT_APPLIED = 'NOT_APPLIED',
+  APPROVED = 'APPROVED',
+  FAILED = 'FAILED',
+  STOPPED = 'STOPPED',
+  REAPPLIED = 'REAPPLIED',
 }
-
 // Enum for Bid Status
 export enum BidstatusEnum {
   PENDING = 'Pending',
