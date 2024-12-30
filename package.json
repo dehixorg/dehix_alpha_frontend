@@ -57,6 +57,10 @@
     "react-hook-form": "^7.52.1",
     "react-redux": "^9.1.2",
     "react-select": "^5.8.0",
+    "slate": "^0.112.0",
+    "slate-history": "^0.110.3",
+    "slate-hyperscript": "^0.100.0",
+    "slate-react": "^0.112.0",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
