@@ -44,7 +44,7 @@ interface ProjectProfileDetailCardProps {
   endDate?: string;
   className?: string;
   domain_id: string;
-  business_id: string;
+  // business_id: string;
 }
 
 type CardProps = React.ComponentProps<typeof Card> &
@@ -64,7 +64,7 @@ export function ProjectProfileDetailCard({
   endDate,
   className,
   domain_id,
-  business_id,
+  // business_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);

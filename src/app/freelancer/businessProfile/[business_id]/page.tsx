@@ -100,7 +100,7 @@ export default function BusinessProfile() {
         />
 
         <main className="flex flex-col items-center p-4 sm:px-6 gap-6 mt-7">
-        <h1>Business Profile Overview</h1>
+          <h1>Business Profile Overview</h1>
           <Card className="w-full max-w-4xl bg-black text-white p-4 shadow-md">
             <Card className="p-14 flex items-center rounded-lg">
               {loading ? (
