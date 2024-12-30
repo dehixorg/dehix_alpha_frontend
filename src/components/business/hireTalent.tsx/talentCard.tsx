@@ -67,7 +67,7 @@ interface Domain {
 interface TalentCardProps {
   skillFilter: string | null;
   domainFilter: string | null;
-  skillDomainFormProps: SkillDomainFormProps;
+  skillDomainFormProps: any;
 }
 interface SkillDomainData {
   uid: string;
@@ -78,10 +78,8 @@ interface SkillDomainData {
   visible: boolean;
 }
 interface SkillDomainFormProps {
-  setFilterSkill: (skills: Skill[]) => void;
-  setFilterDomain: (domains: Domain[]) => void;
-  skills: Skill[];
-  domains: Domain[];
+  skillFilter: (skills: Skill[]) => void;
+  domainFilter: (domains: Domain[]) => void;
 }
 
 const SHEET_SIDES = ['left'] as const;
@@ -184,8 +182,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
             label: item.domainName,
           }));
         // Send the filtered skills and domains back to the parent
-        skillDomainFormProps?.setFilterSkill(fetchedFilterSkills);
-        skillDomainFormProps?.setFilterDomain(fetchedFilterDomains);
+        skillDomainFormProps?.skillFilter(fetchedFilterSkills);
+        skillDomainFormProps?.domainFilter(fetchedFilterDomains);
 
         // Convert the talent object into an array
         const formattedHireTalentData = Object.values(hireTalentData).map(
@@ -254,8 +252,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   }, [
     user?.uid,
-    skillDomainFormProps?.setFilterSkill,
-    skillDomainFormProps?.setFilterDomain,
+    skillDomainFormProps?.skillFilter,
+    skillDomainFormProps?.domainFilter,
   ]);
 
   useEffect(() => {
