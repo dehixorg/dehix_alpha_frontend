@@ -70,6 +70,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
   const [clickedMessageId, setClickedMessageId] = useState<string | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -263,7 +264,13 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                 return (
-                  <div key={index} className="flex flex-row">
+                  <div
+                    id={message.id}
+                    key={index}
+                    className="flex flex-row"
+                    onMouseEnter={() => setHoveredMessageId(message.id)}
+                    onMouseLeave={() => setHoveredMessageId(null)}
+                  >
                     {message.senderId !== user.uid && (
                       <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
                         <AvatarImage
@@ -282,7 +289,43 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           ? 'ml-auto bg-primary text-primary-foreground'
                           : 'bg-muted',
                       )}
-                      onClick={() => setClickedMessageId(message.id)}
+                      onClick={() => {
+                        setClickedMessageId(message.id); // Set the clicked message ID
+                        if (message.replyTo) {
+                          const replyMessage = messages.find(
+                            (msg) => msg.id === message.replyTo,
+                          );
+                          if (replyMessage) {
+                            const replyMessageElement = document.getElementById(
+                              replyMessage.id,
+                            );
+                            if (replyMessageElement) {
+                              // Add a very light gray highlight with transparency before scrolling
+                              replyMessageElement.classList.add(
+                                'bg-gray-200',
+                                'border-2',
+                                'border-gray-300',
+                                'bg-opacity-50',
+                              );
+
+                              // Scroll to the referred message with smooth behavior
+                              replyMessageElement.scrollIntoView({
+                                behavior: 'smooth',
+                              });
+
+                              // Remove the highlight classes after 2 seconds
+                              setTimeout(() => {
+                                replyMessageElement.classList.remove(
+                                  'bg-gray-200',
+                                  'border-2',
+                                  'border-gray-300',
+                                  'bg-opacity-50',
+                                );
+                              }, 2000); // Highlight removed after 2 seconds
+                            }
+                          }
+                        }
+                      }}
                     >
                       <TooltipProvider>
                         <Tooltip>
@@ -308,7 +351,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    {clickedMessageId === message.id && (
+                    {hoveredMessageId === message.id && (
                       <Button
                         className="h-6 w-6"
                         onClick={() => setReplyToMessageId(message.id)}
