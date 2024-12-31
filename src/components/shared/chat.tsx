@@ -10,6 +10,7 @@ import { EmojiPicker } from '../emojiPicker';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
 
 import {
   TooltipProvider,
@@ -158,10 +159,9 @@ export function CardsChat({ conversation }: CardsChatProps) {
   }
 
   // Handle image upload
-  async function handleImageUpload() {
+  async function handleFileUpload() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'image/*'; // Only allow image files
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
@@ -173,7 +173,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
         formData.append('file', file);
 
         // Post request to upload image to S3
-        const postImgResponse = await axiosInstance.post(
+        const postFileResponse = await axiosInstance.post(
           '/register/upload-image',
           formData,
           {
@@ -182,13 +182,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
         );
 
         // Assuming the S3 response contains the URL of the uploaded image
-        const imageUrl = postImgResponse.data.data.Location;
-        console.log(`image url : ${imageUrl}`);
+        const fileUrl = postFileResponse.data.data.Location;
 
         // Prepare message with the image URL
         const message: Partial<Message> = {
           senderId: user.uid,
-          content: imageUrl, // Embedding the image link in the message
+          content: fileUrl, // Embedding the image link in the message
           timestamp: new Date().toISOString(),
         };
 
@@ -316,7 +315,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="break-words">
-                              {/* Check if the message is an image */}
                               {message.content.match(
                                 /\.(jpeg|jpg|gif|png)$/,
                               ) ? (
@@ -326,6 +324,18 @@ export function CardsChat({ conversation }: CardsChatProps) {
                                   width={300}
                                   height={300}
                                   className="rounded-lg"
+                                />
+                              ) : message.content.match(
+                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                ) ? (
+                                <FileAttachment
+                                  fileName={
+                                    message.content.split('/').pop() || 'File'
+                                  }
+                                  fileUrl={message.content}
+                                  fileType={
+                                    message.content.split('.').pop() || 'file'
+                                  }
                                 />
                               ) : (
                                 <div>{message.content}</div>
@@ -383,7 +393,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
               <div className="flex items-center space-x-2">
                 <Button
                   size="icon"
-                  onClick={() => handleImageUpload()} // Trigger image upload
+                  onClick={() => handleFileUpload()} // Trigger image upload
                   title="Send an Image"
                 >
                   <Upload className="h-4 w-4" />
