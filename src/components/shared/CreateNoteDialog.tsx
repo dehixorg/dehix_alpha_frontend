@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Note } from '@/utils/types/note';
+import { Note, NoteType } from '@/utils/types/note';
 
 type Props = {
   onNoteCreate: (note: Note) => void;
@@ -49,6 +49,7 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
       bgColor: selectedBanner ? undefined : selectedColor,
       banner: selectedBanner || undefined,
       createdAt: new Date(),
+      noteType: NoteType.NOTE,
       isHTML,
     };
 

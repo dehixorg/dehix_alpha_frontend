@@ -1,20 +1,28 @@
-// Define an enum for entity types
+
+
+// Define an enum for note entity types 
 export enum EntityType {
-  BUSINESS = 'business',
-  FREELANCER = 'freelancer',
-  TRANSACTION = 'transaction',
-  PROJECT = 'project',
-  BID = 'bid',
-  INTERVIEW = 'interview',
-  DEHIX_TALENT = 'dehix_talent',
+  BUSINESS = 'BUSINESS',
+  FREELANCER = 'FREELANCER',
+  TRANSACTION = 'TRANSACTION',
+  PROJECT = 'PROJECT',
+  BID = 'BID',
+  INTERVIEW = 'INTERVIEW',
+  DEHIX_TALENT = 'DEHIX_TALENT',
 }
 
 // Define an enum for note types (labels)
 export enum LabelType {
-  PERSONAL = 'personal',
-  WORK = 'work',
-  REMINDER = 'reminder',
-  TASK = 'task',
+  PERSONAL = 'PERSONAL',
+  WORK = 'WORK',
+  REMINDER = 'REMINDER',
+  TASK = 'TASK',
+}
+
+export enum NoteType {
+  NOTE = "NOTE",
+  TRASH = "TRASH",
+  ARCHIVE = "ARCHIVE",
 }
 
 // Updated Note type
@@ -28,13 +36,13 @@ export type Note = {
   entityID?: string; // Used for fetching related notes
   entityType?: EntityType; // Type of the entity associated with the note
   type?: LabelType; // Label or type of the note
-  noteType?: string;
+  noteType: NoteType;
   createdAt?: Date;
 };
 
 export const badgeColors: { [key: string]: string } = {
-  personal: 'bg-blue-500 text-white hover:text-black',
-  work: 'bg-green-500 text-white hover:text-black',
-  reminder: 'bg-yellow-500 text-black',
-  task: 'bg-red-500 text-white hover:text-black',
+  PERSONAL: 'bg-blue-500 text-white hover:text-black',
+  WORK: 'bg-green-500 text-white hover:text-black',
+  REMAINDER: 'bg-yellow-500 text-black',
+  TASK: 'bg-red-500 text-white hover:text-black',
 };

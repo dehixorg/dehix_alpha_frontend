@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
-import { Note } from '@/utils/types/note';
+import { LabelType, Note, NoteType } from '@/utils/types/note';
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -39,13 +39,13 @@ const Page = () => {
       userId,
       bgColor: note.bgColor || '#FFFFFF',
       banner: note.banner || '',
-      noteType: note.noteType || 'archive',
-      type: 'personal',
-      entityType: user?.type || 'business',
+      noteType:  NoteType.ARCHIVE,
+      type: LabelType.PERSONAL,
+      entityType: user?.type?.toUpperCase() || 'BUSINESS',
     } as Note;
 
     try {
-      const response = await axiosInstance.post('/notes/create', newNote);
+      const response = await axiosInstance.post('/notes', newNote);
       const updatedNotes = [response.data, ...archive];
 
       setArchive(updatedNotes);

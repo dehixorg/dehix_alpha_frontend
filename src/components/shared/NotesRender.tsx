@@ -10,7 +10,7 @@ import DialogSelectedNote from './DialogSelectedNote';
 import DialogConfirmation from './DialogConfirmation';
 import DialogUpdateType from './DialogUpdateType';
 
-import { badgeColors, Note } from '@/utils/types/note';
+import { badgeColors, LabelType, Note, NoteType } from '@/utils/types/note';
 import {
   Card,
   CardContent,
@@ -84,8 +84,8 @@ const NotesRender = ({
         isHTML: note.isHTML || false,
         entityID: note.entityID || '',
         entityType: user?.type || '',
-        noteType: note.noteType || 'note',
-        type: note?.type || 'personal',
+        noteType: note.noteType.toUpperCase() || NoteType.NOTE,
+        type: note?.type || LabelType.PERSONAL ,
       });
 
       if (response?.status === 200) {
@@ -127,7 +127,7 @@ const NotesRender = ({
         notes: Note[],
         setNotes: (notes: Note[]) => void,
       ) => {
-        handleNoteUpdate(noteId, 'trash');
+        handleNoteUpdate(noteId, NoteType.TRASH);
       },
     },
     {
@@ -181,9 +181,10 @@ const NotesRender = ({
     try {
       const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
         ...noteToUpdate,
-        noteType,
+        noteType: noteType.toUpperCase(),
       });
-
+      console.log(response);
+      
       if (response?.status == 200) {
         showSuccess(`Note moved to ${noteType}.`);
       }
@@ -338,7 +339,7 @@ const NotesRender = ({
                       <RotateCwIcon
                         size={15}
                         className="text-black cursor-pointer"
-                        onClick={() => handleNoteUpdate(note._id, 'note')}
+                        onClick={() => handleNoteUpdate(note._id, NoteType.NOTE)}
                       />
                       <Trash2Icon
                         size={15}
@@ -350,13 +351,13 @@ const NotesRender = ({
                     <ArchiveRestoreIcon
                       size={15}
                       className="text-black"
-                      onClick={() => handleNoteUpdate(note._id, 'archive')}
+                      onClick={() => handleNoteUpdate(note._id, NoteType.ARCHIVE)}
                     />
                   ) : (
                     <ArchiveRestoreIcon
                       size={15}
                       className="text-black"
-                      onClick={() => handleNoteUpdate(note._id, 'note')}
+                      onClick={() => handleNoteUpdate(note._id, NoteType.NOTE)}
                     />
                   )}
                   <BannerChangerPopover

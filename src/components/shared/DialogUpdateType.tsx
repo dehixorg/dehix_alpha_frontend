@@ -32,7 +32,7 @@ const DialogUpdateType = ({
 
   const handleUpdate = () => {
     if (selectedType) {
-      onUpdate(note._id, selectedType);
+      onUpdate(note._id, selectedType.toUpperCase());
     }
   };
 
@@ -50,10 +50,10 @@ const DialogUpdateType = ({
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="personal">Personal</SelectItem>
-            <SelectItem value="work">Work</SelectItem>
-            <SelectItem value="reminder">reminder</SelectItem>
-            <SelectItem value="task">task</SelectItem>
+            <SelectItem value="PERSONAL">Personal</SelectItem>
+            <SelectItem value="WORK">Work</SelectItem>
+            <SelectItem value="REMAINDER">reminder</SelectItem>
+            <SelectItem value="TASK">task</SelectItem>
           </SelectContent>
         </Select>
         <DialogFooter>

@@ -13,7 +13,7 @@ import {
 import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per your project structure
-import { Note } from '@/utils/types/note';
+import { LabelType, Note, NoteType } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
 
@@ -41,9 +41,9 @@ const Notes = () => {
       userId,
       bgColor: note.bgColor || '#FFFFFF',
       banner: note.banner || '',
-      noteType: note.noteType || 'note',
-      type: 'personal',
-      entityType: user?.type || 'business',
+      noteType:  NoteType.NOTE,
+      type: LabelType.PERSONAL,
+      entityType: user?.type?.toUpperCase() || 'BUSINESS',
     } as Note;
 
     try {
