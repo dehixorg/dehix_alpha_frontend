@@ -1,6 +1,4 @@
-
-
-// Define an enum for note entity types 
+// Define an enum for note entity types
 export enum EntityType {
   BUSINESS = 'BUSINESS',
   FREELANCER = 'FREELANCER',
@@ -20,9 +18,9 @@ export enum LabelType {
 }
 
 export enum NoteType {
-  NOTE = "NOTE",
-  TRASH = "TRASH",
-  ARCHIVE = "ARCHIVE",
+  NOTE = 'NOTE',
+  TRASH = 'TRASH',
+  ARCHIVE = 'ARCHIVE',
 }
 
 // Updated Note type

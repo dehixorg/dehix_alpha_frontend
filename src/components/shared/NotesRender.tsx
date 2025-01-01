@@ -85,7 +85,7 @@ const NotesRender = ({
         entityID: note.entityID || '',
         entityType: user?.type || '',
         noteType: note.noteType.toUpperCase() || NoteType.NOTE,
-        type: note?.type || LabelType.PERSONAL ,
+        type: note?.type || LabelType.PERSONAL,
       });
 
       if (response?.status === 200) {
@@ -184,7 +184,7 @@ const NotesRender = ({
         noteType: noteType.toUpperCase(),
       });
       console.log(response);
-      
+
       if (response?.status == 200) {
         showSuccess(`Note moved to ${noteType}.`);
       }
@@ -339,7 +339,9 @@ const NotesRender = ({
                       <RotateCwIcon
                         size={15}
                         className="text-black cursor-pointer"
-                        onClick={() => handleNoteUpdate(note._id, NoteType.NOTE)}
+                        onClick={() =>
+                          handleNoteUpdate(note._id, NoteType.NOTE)
+                        }
                       />
                       <Trash2Icon
                         size={15}
@@ -351,7 +353,9 @@ const NotesRender = ({
                     <ArchiveRestoreIcon
                       size={15}
                       className="text-black"
-                      onClick={() => handleNoteUpdate(note._id, NoteType.ARCHIVE)}
+                      onClick={() =>
+                        handleNoteUpdate(note._id, NoteType.ARCHIVE)
+                      }
                     />
                   ) : (
                     <ArchiveRestoreIcon

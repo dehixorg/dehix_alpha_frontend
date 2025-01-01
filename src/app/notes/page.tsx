@@ -41,7 +41,7 @@ const Notes = () => {
       userId,
       bgColor: note.bgColor || '#FFFFFF',
       banner: note.banner || '',
-      noteType:  NoteType.NOTE,
+      noteType: NoteType.NOTE,
       type: LabelType.PERSONAL,
       entityType: user?.type?.toUpperCase() || 'BUSINESS',
     } as Note;

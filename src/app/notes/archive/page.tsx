@@ -39,7 +39,7 @@ const Page = () => {
       userId,
       bgColor: note.bgColor || '#FFFFFF',
       banner: note.banner || '',
-      noteType:  NoteType.ARCHIVE,
+      noteType: NoteType.ARCHIVE,
       type: LabelType.PERSONAL,
       entityType: user?.type?.toUpperCase() || 'BUSINESS',
     } as Note;
