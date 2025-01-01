@@ -2,9 +2,14 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { menuItemsBottom, menuItemsTop, notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+  notesMenu,
+} from '@/config/menuItems/business/dashboardMenuItems';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per your project structure
@@ -18,13 +23,14 @@ const Notes = () => {
   // Get userId from Redux
   const userId = useSelector((state: any) => state.user?.uid);
 
-  const { notes, archive, isLoading, fetchNotes , setNotes } = useFetchNotes(userId);
+  const { notes, archive, isLoading, fetchNotes, setNotes } =
+    useFetchNotes(userId);
 
   useEffect(() => {
     if (userId) {
       fetchNotes();
     }
-  }, [fetchNotes, userId]); 
+  }, [fetchNotes, userId]);
 
   const handleCreateNote = async (note: Partial<Note>) => {
     // Field validation
@@ -39,7 +45,7 @@ const Notes = () => {
       bgColor: note.bgColor || '#FFFFFF',
       banner: note.banner || '',
       noteType: note.noteType || 'note',
-      type:'personal',
+      type: 'personal',
     } as Note;
 
     setIsCreating(true);
@@ -52,7 +58,7 @@ const Notes = () => {
           title: 'Note Created',
           description: 'Your note was successfully created.',
         });
-  
+
         fetchNotes();
       }
     } catch (error) {
@@ -77,7 +83,12 @@ const Notes = () => {
       />
       {/* Main content area */}
       <div className="ml-12">
-        <NotesHeader isTrash={false} setNotes={setNotes} notes={notes} onNoteCreate={handleCreateNote} />
+        <NotesHeader
+          isTrash={false}
+          setNotes={setNotes}
+          notes={notes}
+          onNoteCreate={handleCreateNote}
+        />
         <div className="p-6">
           {isLoading ? (
             <div className="flex justify-center items-center h-[40vh] w-full">
@@ -86,7 +97,12 @@ const Notes = () => {
           ) : (
             <div>
               {notes?.length > 0 ? (
-                <NotesRender fetchNotes={fetchNotes}  notes={notes} setNotes={setNotes} isArchive={false} />
+                <NotesRender
+                  fetchNotes={fetchNotes}
+                  notes={notes}
+                  setNotes={setNotes}
+                  isArchive={false}
+                />
               ) : (
                 <div className="flex justify-center items-center h-[40vh] w-full">
                   <p>No notes available. Start adding some!</p>

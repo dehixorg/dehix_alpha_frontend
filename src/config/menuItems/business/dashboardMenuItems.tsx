@@ -53,7 +53,6 @@ export const menuItemsBottom: MenuItem[] = [
   },
 ];
 
-
 export const notesMenu: MenuItem[] = [
   {
     href: '#',
@@ -63,7 +62,7 @@ export const notesMenu: MenuItem[] = [
   {
     href: '/dashboard/business',
     icon: <Home className="h-5 w-5" />,
-    label: 'Home'
+    label: 'Home',
   },
   {
     href: '/notes',
@@ -73,11 +72,11 @@ export const notesMenu: MenuItem[] = [
   {
     href: '/notes/archive',
     icon: <Archive className="h-5 w-5" />,
-    label: 'Archive'
+    label: 'Archive',
   },
   {
     href: '/notes/trash',
     icon: <Trash2 className="h-5 w-5" />,
-    label: 'Trash'
+    label: 'Trash',
   },
 ];

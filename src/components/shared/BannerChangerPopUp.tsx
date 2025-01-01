@@ -1,12 +1,19 @@
 import React from 'react';
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card'; 
 import { Palette } from 'lucide-react';
+
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from '@/components/ui/hover-card';
 
 interface BannerChangerPopoverProps {
   handleChangeBanner: (banner: string) => void;
 }
 
-const BannerChangerPopover: React.FC<BannerChangerPopoverProps> = ({ handleChangeBanner }) => {
+const BannerChangerPopover: React.FC<BannerChangerPopoverProps> = ({
+  handleChangeBanner,
+}) => {
   const banners = [
     '/banner1.svg',
     '/banner2.svg',

@@ -1,37 +1,39 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+
+import { ColorPicker } from './ColorPickerForNotes';
+
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { ColorPicker } from "./ColorPickerForNotes"; 
-import { Plus } from "lucide-react";
-import { Note } from "@/utils/types/note"; 
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Note } from '@/utils/types/note';
 
 type Props = {
   onNoteCreate: (note: Note) => void;
 };
 
 const banners = [
-  "/banner1.svg",
-  "/banner2.svg",
-  "/banner3.svg",
-  "/banner4.svg",
-  "/banner5.svg",
-  "/banner6.svg",
-  "/banner7.svg",
+  '/banner1.svg',
+  '/banner2.svg',
+  '/banner3.svg',
+  '/banner4.svg',
+  '/banner5.svg',
+  '/banner6.svg',
+  '/banner7.svg',
 ];
 
 export function CreateNoteDialog({ onNoteCreate }: Props) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [selectedColor, setSelectedColor] = useState('#ffffff');
   const [selectedBanner, setSelectedBanner] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [isHTML, setIsHTML] = useState(false);
@@ -50,9 +52,9 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
     };
 
     onNoteCreate(newNote);
-    setTitle("");
-    setContent("");
-    setSelectedColor("#ffffff");
+    setTitle('');
+    setContent('');
+    setSelectedColor('#ffffff');
     setSelectedBanner(null);
     setOpen(false);
   };
@@ -66,7 +68,7 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-          <DialogTitle>Create New Note</DialogTitle>
+        <DialogTitle>Create New Note</DialogTitle>
         <div className="grid gap-4 py-4">
           <Input
             placeholder="Title"
@@ -89,7 +91,9 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
             <span className="text-xs">Render content as HTML</span>
           </label>
           <div>
-            <p className="text-sm font-medium mb-2">Select a color or banner:</p>
+            <p className="text-sm font-medium mb-2">
+              Select a color or banner:
+            </p>
             <ColorPicker
               selectedColor={selectedColor}
               onColorSelect={(color) => {
@@ -103,16 +107,22 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
                   key={index}
                   onClick={() => {
                     setSelectedBanner(banner);
-                    setSelectedColor("#ffffff"); // Clear color when banner is selected
+                    setSelectedColor('#ffffff'); // Clear color when banner is selected
                   }}
-                  className={`cursor-pointer border rounded-full p-1 flex items-center justify-center ${selectedBanner === banner ? "border-blue-500" : "border-gray-300"
-                    }`}
+                  className={`cursor-pointer border rounded-full p-1 flex items-center justify-center ${
+                    selectedBanner === banner
+                      ? 'border-blue-500'
+                      : 'border-gray-300'
+                  }`}
                 >
-                  <img src={banner} alt={`Banner ${index + 1}`} className="w-8 h-8 object-cover rounded-full" />
+                  <img
+                    src={banner}
+                    alt={`Banner ${index + 1}`}
+                    className="w-8 h-8 object-cover rounded-full"
+                  />
                 </div>
               ))}
             </div>
-
           </div>
           <Button onClick={handleSubmit} className="w-full">
             Save Note

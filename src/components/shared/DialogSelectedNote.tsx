@@ -1,16 +1,22 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Note, EntityType } from "@/utils/types/note";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Note, EntityType } from '@/utils/types/note';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type DialogSelectedNoteProps = {
   note: Note;
@@ -20,21 +26,27 @@ type DialogSelectedNoteProps = {
 
 const entityTypes = Object.values(EntityType);
 
-const DialogSelectedNote = ({ note, onClose, onSave }: DialogSelectedNoteProps) => {
-  const [title, setTitle] = useState(note.title || "");
-  const [content, setContent] = useState(note.content || "");
-  const [entityID, setEntityID] = useState(note.entityID || "");
-  const [entityType, setEntityType] = useState<EntityType | undefined>(note.entityType || undefined);
-  const [error, setError] = useState("");
+const DialogSelectedNote = ({
+  note,
+  onClose,
+  onSave,
+}: DialogSelectedNoteProps) => {
+  const [title, setTitle] = useState(note.title || '');
+  const [content, setContent] = useState(note.content || '');
+  const [entityID, setEntityID] = useState(note.entityID || '');
+  const [entityType, setEntityType] = useState<EntityType | undefined>(
+    note.entityType || undefined,
+  );
+  const [error, setError] = useState('');
 
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
-      setError("Title and content cannot be empty.");
+      setError('Title and content cannot be empty.');
       return;
     }
 
-    setError("");
-    const updatedNote = { ...note, title, content, entityID,  };
+    setError('');
+    const updatedNote = { ...note, title, content, entityID };
     onSave(updatedNote);
   };
 
@@ -42,7 +54,9 @@ const DialogSelectedNote = ({ note, onClose, onSave }: DialogSelectedNoteProps) 
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] p-6 rounded-lg shadow-lg">
         <DialogHeader className="border-b pb-4">
-          <DialogTitle className="text-2xl font-semibold">Edit Note</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold">
+            Edit Note
+          </DialogTitle>
         </DialogHeader>
 
         {/* Error Message */}

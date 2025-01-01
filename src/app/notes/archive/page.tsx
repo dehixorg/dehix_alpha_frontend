@@ -1,13 +1,18 @@
-"use client";
+'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+
 import { Note } from '@/utils/types/note';
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { menuItemsBottom, menuItemsTop, notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+  notesMenu,
+} from '@/config/menuItems/business/dashboardMenuItems';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { useSelector } from 'react-redux';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import { toast } from '@/components/ui/use-toast';
@@ -18,9 +23,12 @@ const Page = () => {
   // const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
-  const userId: string | undefined = useSelector((state: any) => state.user?.uid);
+  const userId: string | undefined = useSelector(
+    (state: any) => state.user?.uid,
+  );
 
-  const { notes, archive, isLoading, fetchNotes, setArchive } = useFetchNotes(userId);
+  const { notes, archive, isLoading, fetchNotes, setArchive } =
+    useFetchNotes(userId);
 
   useEffect(() => {
     if (!userId) return;
@@ -90,7 +98,11 @@ const Page = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
             </div>
           ) : archive?.length > 0 ? (
-            <NotesRender notes={archive} setNotes={setArchive} isArchive={true} fetchNotes={fetchNotes}
+            <NotesRender
+              notes={archive}
+              setNotes={setArchive}
+              isArchive={true}
+              fetchNotes={fetchNotes}
             />
           ) : (
             <div className="flex justify-center items-center h-[40vh]">
