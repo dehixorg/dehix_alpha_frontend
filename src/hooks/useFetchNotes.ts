@@ -15,7 +15,7 @@ const useFetchNotes = (userId: string | undefined) => {
 
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get('/notes/get-notes', {
+      const response = await axiosInstance.get('/notes', {
         params: { userId },
       });
       if (response?.data?.notes) {

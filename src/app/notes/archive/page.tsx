@@ -47,19 +47,17 @@ const Page = () => {
     try {
       const response = await axiosInstance.post('/notes/create', newNote);
       const updatedNotes = [response.data, ...archive];
-      console.log(updatedNotes);
 
       setArchive(updatedNotes);
       toast({
         title: 'Note Created',
         description: 'Your note was successfully created.',
+        duration: 5000,
       });
 
       fetchNotes();
     } catch (error) {
       console.error('Failed to create note:', error);
-    } finally {
-      fetchNotes();
     }
   };
 

@@ -76,7 +76,7 @@ const NotesRender = ({
       return;
     }
     try {
-      const response = await axiosInstance.put(`/notes/update/${note._id}`, {
+      const response = await axiosInstance.put(`/notes/${note._id}`, {
         title: note.title,
         content: note.content,
         bgColor: note.bgColor || '#FFFFFF',
@@ -180,7 +180,7 @@ const NotesRender = ({
     }
     try {
       const response = await axiosInstance.put(
-        `/notes/update/${noteToUpdate._id}`,
+        `/notes/${noteToUpdate._id}`,
         {
           ...noteToUpdate,
           noteType,
@@ -204,7 +204,7 @@ const NotesRender = ({
       return;
     }
     try {
-      await axiosInstance.delete(`/notes/delete/${noteId}`);
+      await axiosInstance.delete(`/notes/${noteId}`);
       showSuccess('Note deleted permanently.');
       fetchNotes();
     } catch (error) {
@@ -223,7 +223,7 @@ const NotesRender = ({
     }
     try {
       const response = await axiosInstance.put(
-        `/notes/update/${noteToUpdate._id}`,
+        `/notes/${noteToUpdate._id}`,
         {
           ...noteToUpdate,
           banner,
@@ -250,7 +250,7 @@ const NotesRender = ({
     }
     try {
       const response = await axiosInstance.put(
-        `/notes/update/${noteToUpdate._id}`,
+        `/notes/${noteToUpdate._id}`,
         {
           ...noteToUpdate,
           type,

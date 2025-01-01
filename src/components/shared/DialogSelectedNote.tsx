@@ -89,6 +89,7 @@ const DialogSelectedNote = ({
             <Input
               id="entityID"
               type="text"
+              disabled={true}
               value={entityID}
               onChange={(e) => setEntityID(e.target.value)}
               placeholder="Enter related entity ID"

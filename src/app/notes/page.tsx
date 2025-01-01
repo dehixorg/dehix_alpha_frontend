@@ -47,13 +47,14 @@ const Notes = () => {
     } as Note;
 
     try {
-      const response = await axiosInstance.post('/notes/create', newNote);
+      const response = await axiosInstance.post('/notes', newNote);
       if (response?.data) {
         const updatedNotes = [response.data, ...notes];
         setNotes(updatedNotes);
         toast({
           title: 'Note Created',
           description: 'Your note was successfully created.',
+          duration: 5000,
         });
 
         fetchNotes();
