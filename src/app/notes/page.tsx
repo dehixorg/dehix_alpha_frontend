@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -12,19 +10,15 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
-import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per your project structure
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Note } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
 
 const Notes = () => {
-  const [isCreating, setIsCreating] = useState(false);
-
-  // Get userId from Redux
   const userId = useSelector((state: any) => state.user?.uid);
 
-  const { notes, archive, isLoading, fetchNotes, setNotes } =
-    useFetchNotes(userId);
+  const { notes, isLoading, fetchNotes, setNotes } = useFetchNotes(userId);
 
   useEffect(() => {
     if (userId) {
@@ -33,7 +27,6 @@ const Notes = () => {
   }, [fetchNotes, userId]);
 
   const handleCreateNote = async (note: Partial<Note>) => {
-    // Field validation
     if (!note.title || !note.content || !userId) {
       console.error('Missing required fields.');
       return;
@@ -48,7 +41,6 @@ const Notes = () => {
       type: 'personal',
     } as Note;
 
-    setIsCreating(true);
     try {
       const response = await axiosInstance.post('/notes/create', newNote);
       if (response?.data) {
@@ -63,8 +55,6 @@ const Notes = () => {
       }
     } catch (error) {
       console.error('Failed to create note:', error);
-    } finally {
-      setIsCreating(false);
     }
   };
 

@@ -13,22 +13,17 @@ interface DropdownNavNotesProps {
 }
 
 const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen((prev) => !prev);
-  };
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button onClick={toggleDropdown}>
+        <button>
           <MoreVertical
             size={15}
-            className=" transition-all text-black duration-200"
+            className="transition-all text-black duration-200"
           />
         </button>
       </HoverCardTrigger>
-      <HoverCardContent className=" shadow-md rounded-md p-1">
+      <HoverCardContent className="shadow-md rounded-md p-1">
         <ul className="flex flex-col gap-1">
           {navItems.map((item, index) => (
             <button

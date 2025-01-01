@@ -10,21 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Note, EntityType } from '@/utils/types/note';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Note } from '@/utils/types/note';
 
 type DialogSelectedNoteProps = {
   note: Note;
   onClose: () => void;
   onSave: (updatedNote: Note) => void;
 };
-
-const entityTypes = Object.values(EntityType);
 
 const DialogSelectedNote = ({
   note,
@@ -34,9 +26,6 @@ const DialogSelectedNote = ({
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content || '');
   const [entityID, setEntityID] = useState(note.entityID || '');
-  const [entityType, setEntityType] = useState<EntityType | undefined>(
-    note.entityType || undefined,
-  );
   const [error, setError] = useState('');
 
   const handleSave = () => {
@@ -62,11 +51,13 @@ const DialogSelectedNote = ({
         {/* Error Message */}
         {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
-        {/* Inputs for title, content, entityID, and entityType */}
+        {/* Inputs for title, content, and entityID */}
         <div className="mt-6">
           {/* Title Input */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold">Title</label>
+            <label htmlFor="title" className="block text-sm font-semibold">
+              Title
+            </label>
             <Input
               id="title"
               type="text"
@@ -80,7 +71,9 @@ const DialogSelectedNote = ({
 
           {/* Content Input */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold">Content</label>
+            <label htmlFor="content" className="block text-sm font-semibold">
+              Content
+            </label>
             <Textarea
               id="content"
               value={content}
@@ -93,7 +86,9 @@ const DialogSelectedNote = ({
 
           {/* Entity ID Input */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold">Entity ID</label>
+            <label htmlFor="entityID" className="block text-sm font-semibold">
+              Entity ID
+            </label>
             <Input
               id="entityID"
               type="text"
@@ -103,29 +98,6 @@ const DialogSelectedNote = ({
               className="mt-2 p-2 border rounded-md w-full text-sm"
             />
           </div>
-
-          {/* Entity Type Dropdown */}
-          {/* <div className="mb-4 flex items-center">
-            <label className="w-1/3">Entity Type</label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex justify-start w-2/3">
-                  {entityType || "Select entity type"}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {entityTypes.map((type) => (
-                  <DropdownMenuItem
-                    key={type}
-                    onClick={() => setEntityType(type as EntityType)}
-                    className="cursor-pointer"
-                  >
-                    {type}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div> */}
         </div>
 
         <DialogFooter className="mt-6">

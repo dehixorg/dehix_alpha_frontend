@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import NotesRender from '@/components/shared/NotesRender';
@@ -13,16 +13,15 @@ import {
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
 
-const page = () => {
+const Page = () => {
   const userId = useSelector((state: any) => state.user?.uid);
 
-  const { trash, setTrash, archive, isLoading, fetchNotes } =
-    useFetchNotes(userId);
+  const { trash, setTrash, isLoading, fetchNotes } = useFetchNotes(userId);
 
   useEffect(() => {
     if (!userId) return;
     fetchNotes();
-  }, [userId]);
+  }, [userId, fetchNotes]); // Fixed the missing dependency here
 
   const handleCreateNote = () => {};
   return (
@@ -76,4 +75,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

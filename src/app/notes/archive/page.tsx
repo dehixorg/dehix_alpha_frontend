@@ -18,22 +18,18 @@ import useFetchNotes from '@/hooks/useFetchNotes';
 import { toast } from '@/components/ui/use-toast';
 
 const Page = () => {
-  // const [notes, setNotes] = useState<Note[]>([]);
-  // const [archive, setArchive] = useState<Note[]>([]);
-  // const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const userId: string | undefined = useSelector(
     (state: any) => state.user?.uid,
   );
 
-  const { notes, archive, isLoading, fetchNotes, setArchive } =
-    useFetchNotes(userId);
+  const { archive, isLoading, fetchNotes, setArchive } = useFetchNotes(userId);
 
   useEffect(() => {
     if (!userId) return;
     fetchNotes();
-  }, [userId]);
+  }, [userId, fetchNotes]); // Fixed the missing dependency warning
 
   const handleCreateNote = async (note: Partial<Note>) => {
     if (!note.title || !note.content || !userId) {
@@ -93,7 +89,7 @@ const Page = () => {
           onNoteCreate={handleCreateNote}
         />
         <div className="p-6">
-          {isLoading ? (
+          {isLoading || isCreating ? ( // Added isCreating for loading indicator
             <div className="flex justify-center items-center h-[40vh] w-full">
               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
             </div>

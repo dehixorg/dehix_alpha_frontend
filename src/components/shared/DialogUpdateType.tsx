@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Note, LabelType } from '@/utils/types/note';
+import { Note } from '@/utils/types/note'; // Removed LabelType import
 
 interface DialogUpdateTypeProps {
   note: Note;
