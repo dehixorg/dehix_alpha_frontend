@@ -40,7 +40,7 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
     if (!title.trim() && !content.trim()) return;
 
     const newNote: Note = {
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
       title: title.trim(),
       content: content.trim(),
       bgColor: selectedBanner ? undefined : selectedColor,
