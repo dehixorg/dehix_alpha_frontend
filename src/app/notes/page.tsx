@@ -39,7 +39,7 @@ const Notes = () => {
     const newNote = {
       ...note,
       userId,
-      bgColor: note.bgColor || '#FFFFFF',
+      bgColor: note.bgColor || "#FFFFFF",
       banner: note.banner || '',
       noteType: note.noteType || 'note',
       type: 'personal',
