@@ -179,13 +179,10 @@ const NotesRender = ({
       return;
     }
     try {
-      const response = await axiosInstance.put(
-        `/notes/${noteToUpdate._id}`,
-        {
-          ...noteToUpdate,
-          noteType,
-        },
-      );
+      const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
+        ...noteToUpdate,
+        noteType,
+      });
 
       if (response?.status == 200) {
         showSuccess(`Note moved to ${noteType}.`);
@@ -222,13 +219,10 @@ const NotesRender = ({
       return;
     }
     try {
-      const response = await axiosInstance.put(
-        `/notes/${noteToUpdate._id}`,
-        {
-          ...noteToUpdate,
-          banner,
-        },
-      );
+      const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
+        ...noteToUpdate,
+        banner,
+      });
 
       if (response?.status == 200) {
         showSuccess(`Note Banner updated`);
@@ -249,13 +243,10 @@ const NotesRender = ({
       return;
     }
     try {
-      const response = await axiosInstance.put(
-        `/notes/${noteToUpdate._id}`,
-        {
-          ...noteToUpdate,
-          type,
-        },
-      );
+      const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
+        ...noteToUpdate,
+        type,
+      });
 
       if (response?.status == 200) {
         showSuccess(`Note Label updated`);
