@@ -27,6 +27,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
+// import Link from 'next/link';
 
 interface ProjectProfileDetailCardProps {
   _id: string;
@@ -43,6 +44,7 @@ interface ProjectProfileDetailCardProps {
   endDate?: string;
   className?: string;
   domain_id: string;
+  // business_id: string;
 }
 
 type CardProps = React.ComponentProps<typeof Card> &
@@ -62,6 +64,7 @@ export function ProjectProfileDetailCard({
   endDate,
   className,
   domain_id,
+  // business_id,
   ...props
 }: CardProps) {
   const user = useSelector((state: RootState) => state.user);
@@ -177,7 +180,7 @@ export function ProjectProfileDetailCard({
                 {skills.map((skill, index) => (
                   <li
                     key={index}
-                    className="bg-gray-200 rounded px-2 py-1 text-sm"
+                    className="bg-gray-200 text-black rounded px-2 py-1 text-sm"
                   >
                     {skill}
                   </li>
@@ -201,6 +204,7 @@ export function ProjectProfileDetailCard({
                 Click on bid if you want to bid for this profile
               </DialogDescription>
             </DialogHeader>
+
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -238,6 +242,11 @@ export function ProjectProfileDetailCard({
             </form>
           </DialogContent>
         </Dialog>
+        {/* <div className="ml-3">
+          <Link href={`/freelancer/businessProfile/${_id}`} passHref>
+            <Button className="w-full ">View Profile</Button>
+          </Link>
+        </div> */}
       </CardFooter>
     </Card>
   );

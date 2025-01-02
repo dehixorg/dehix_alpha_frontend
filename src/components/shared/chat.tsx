@@ -1,9 +1,11 @@
+//chat.tsx
 import * as React from 'react';
 import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
+import { format, isToday, isYesterday, isThisYear } from 'date-fns';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -34,6 +36,24 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
+function formatChatTimestamp(timestamp: string) {
+  const date = new Date(timestamp);
+
+  if (isToday(date)) {
+    return format(date, 'hh:mm a'); // Example: "10:30 AM"
+  }
+
+  if (isYesterday(date)) {
+    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
+  }
+
+  if (isThisYear(date)) {
+    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
+  }
+
+  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+}
+
 type User = {
   userName: string;
   email: string;
@@ -61,6 +81,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
     email: '',
     profilePic: '',
   });
+
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -261,6 +282,9 @@ export function CardsChat({ conversation }: CardsChatProps) {
             <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
+                const formattedTimestamp = formatChatTimestamp(
+                  message.timestamp,
+                );
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                 return (
@@ -274,7 +298,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     {message.senderId !== user.uid && (
                       <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
                         <AvatarImage
-                          src={`https://api.adorable.io/avatars/285/${message.senderId}.png`}
+                          src={primaryUser.profilePic}
                           alt={message.senderId}
                         />
                         <AvatarFallback>
@@ -350,6 +374,16 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      <div
+                        className={cn(
+                          'text-xs mt-1',
+                          message.senderId === user.uid
+                            ? 'text-muted'
+                            : 'text-muted-foreground',
+                        )}
+                      >
+                        {formattedTimestamp}
+                      </div>
                     </div>
                     {hoveredMessageId === message.id && (
                       <Button
