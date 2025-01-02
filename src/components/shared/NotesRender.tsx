@@ -76,6 +76,7 @@ const NotesRender = ({
       return;
     }
     try {
+            
       const response = await axiosInstance.put(`/notes/${note._id}`, {
         title: note.title,
         content: note.content,
@@ -83,8 +84,8 @@ const NotesRender = ({
         banner: note.banner || '',
         isHTML: note.isHTML || false,
         entityID: note.entityID || '',
-        entityType: user?.type || '',
-        noteType: note.noteType.toUpperCase() || NoteType.NOTE,
+        entityType: user?.entityType ,
+        noteType: note?.noteType|| NoteType.NOTE,
         type: note?.type || LabelType.PERSONAL,
       });
 
@@ -243,6 +244,9 @@ const NotesRender = ({
       showError('Note not found.');
       return;
     }
+    console.log(noteToUpdate);
+    console.log(type);
+    
     try {
       const response = await axiosInstance.put(`/notes/${noteToUpdate._id}`, {
         ...noteToUpdate,

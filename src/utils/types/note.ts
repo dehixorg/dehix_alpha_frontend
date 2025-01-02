@@ -9,14 +9,14 @@ export enum EntityType {
   DEHIX_TALENT = 'DEHIX_TALENT',
 }
 
-// Define an enum for note types (labels)
+// Define an enum for label types (labels)
 export enum LabelType {
   PERSONAL = 'PERSONAL',
   WORK = 'WORK',
   REMINDER = 'REMINDER',
   TASK = 'TASK',
 }
-
+// Define an enum for note types 
 export enum NoteType {
   NOTE = 'NOTE',
   TRASH = 'TRASH',
@@ -41,6 +41,6 @@ export type Note = {
 export const badgeColors: { [key: string]: string } = {
   PERSONAL: 'bg-blue-500 text-white hover:text-black',
   WORK: 'bg-green-500 text-white hover:text-black',
-  REMAINDER: 'bg-yellow-500 text-black',
+  REMINDER: 'bg-yellow-500 text-black hover:text-black' ,
   TASK: 'bg-red-500 text-white hover:text-black',
 };

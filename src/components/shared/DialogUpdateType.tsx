@@ -52,7 +52,7 @@ const DialogUpdateType = ({
           <SelectContent>
             <SelectItem value="PERSONAL">Personal</SelectItem>
             <SelectItem value="WORK">Work</SelectItem>
-            <SelectItem value="REMAINDER">reminder</SelectItem>
+            <SelectItem value="REMINDER">reminder</SelectItem>
             <SelectItem value="TASK">task</SelectItem>
           </SelectContent>
         </Select>

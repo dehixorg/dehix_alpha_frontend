@@ -43,9 +43,9 @@ const Notes = () => {
       banner: note.banner || '',
       noteType: NoteType.NOTE,
       type: LabelType.PERSONAL,
-      entityType: user?.type?.toUpperCase() || 'BUSINESS',
+      entityType: user?.type?.toUpperCase(),
     } as Note;
-
+    
     try {
       const response = await axiosInstance.post('/notes', newNote);
       if (response?.data) {
@@ -61,6 +61,10 @@ const Notes = () => {
       }
     } catch (error) {
       console.error('Failed to create note:', error);
+      toast({
+        title: 'Failed to create note',
+        duration: 5000,
+      });
     }
   };
 
