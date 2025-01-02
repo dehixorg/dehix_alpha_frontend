@@ -16,7 +16,7 @@ export enum LabelType {
   REMINDER = 'REMINDER',
   TASK = 'TASK',
 }
-// Define an enum for note types 
+// Define an enum for note types
 export enum NoteType {
   NOTE = 'NOTE',
   TRASH = 'TRASH',
@@ -41,6 +41,6 @@ export type Note = {
 export const badgeColors: { [key: string]: string } = {
   PERSONAL: 'bg-blue-500 text-white hover:text-black',
   WORK: 'bg-green-500 text-white hover:text-black',
-  REMINDER: 'bg-yellow-500 text-black hover:text-black' ,
+  REMINDER: 'bg-yellow-500 text-black hover:text-black',
   TASK: 'bg-red-500 text-white hover:text-black',
 };

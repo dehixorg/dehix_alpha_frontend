@@ -45,7 +45,7 @@ const Notes = () => {
       type: LabelType.PERSONAL,
       entityType: user?.type?.toUpperCase(),
     } as Note;
-    
+
     try {
       const response = await axiosInstance.post('/notes', newNote);
       if (response?.data) {
