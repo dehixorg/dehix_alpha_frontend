@@ -39,6 +39,7 @@ import OtpLogin from '@/components/shared/otpDialog';
 const businessRegisterSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
+  userName: z.string().min(1, 'Username is required'),
   companyName: z.string().min(1, 'Company name is required'),
   companySize: z.string().min(1, 'Company size is required'),
   position: z.string().min(1, 'Position is required'),
@@ -69,6 +70,7 @@ export default function BusinessRegisterForm() {
   const [passwordStrengthClass, setPasswordStrengthClass] =
     useState<string>('');
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const togglePasswordVisibility = () => {
@@ -106,6 +108,7 @@ export default function BusinessRegisterForm() {
     defaultValues: {
       firstName: '',
       lastName: '',
+      userName: '',
       companyName: '',
       companySize: '',
       position: '',
@@ -178,6 +181,14 @@ export default function BusinessRegisterForm() {
               placeholder="Doe"
             />
           </div>
+          <div className="grid gap-2">
+            <TextInput
+              control={form.control}
+              name="userName"
+              label="Username"
+              placeholder="JohnDoe123"
+            />
+          </div>
 
           <div className="grid gap-2">
             <TextInput
@@ -243,9 +254,9 @@ export default function BusinessRegisterForm() {
               control={form.control}
               name="linkedin"
               label="LinkedIn"
+              placeholder="https://www.linkedin.com/in/username"
               type="url"
               className="w-full"
-              placeholder="https://www.linkedin.com/in/username"
             />
           </div>
 
@@ -259,8 +270,6 @@ export default function BusinessRegisterForm() {
               className="w-full"
             />
           </div>
-
-          {/* Password */}
           <div className="space-y-2">
             <Label>Password</Label>
             <div className="relative">
@@ -313,8 +322,58 @@ export default function BusinessRegisterForm() {
               />
             </div>
           </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Rocket className="mr-2 h-4 w-4" />
+            )}{' '}
+            Create an account
+          </Button>
+          <OtpLogin
+            phoneNumber={phone}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
 
-          {/* Terms and Conditions */}
+          <div className="space-y-2 col-span-2">
+            <Label>Password</Label>
+            <div className="relative">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter your password"
+                          type={showPassword ? 'text' : 'password'}
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute inset-y-0 right-0 px-3 flex items-center"
+                        >
+                          {showPassword ? (
+                            <Eye className="h-5 w-5" />
+                          ) : (
+                            <EyeOff className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Password must be at least 6 characters long.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
           <div className="flex items-center gap-2 col-span-2">
             <input
               type="checkbox"
@@ -327,7 +386,6 @@ export default function BusinessRegisterForm() {
             </label>
           </div>
 
-          {/* Submit Button */}
           <div className="col-span-2">
             <Button
               type="submit"

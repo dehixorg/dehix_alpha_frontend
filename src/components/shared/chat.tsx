@@ -1,9 +1,11 @@
+//chat.tsx
 import * as React from 'react';
 import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import LoaderCircle for the spinner
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
 import { useEffect, useRef, useState } from 'react';
+import { format, isToday, isYesterday, isThisYear } from 'date-fns';
 import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
@@ -36,6 +38,24 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
+function formatChatTimestamp(timestamp: string) {
+  const date = new Date(timestamp);
+
+  if (isToday(date)) {
+    return format(date, 'hh:mm a'); // Example: "10:30 AM"
+  }
+
+  if (isYesterday(date)) {
+    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
+  }
+
+  if (isThisYear(date)) {
+    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
+  }
+
+  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+}
+
 type User = {
   userName: string;
   email: string;
@@ -51,6 +71,7 @@ type Message = {
   senderId: string;
   content: string;
   timestamp: string;
+
   reactions?: MessageReaction; // Optional reactions property
 };
 
@@ -64,8 +85,10 @@ export function CardsChat({ conversation }: CardsChatProps) {
     email: '',
     profilePic: '',
   });
+
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
+  const [replyTo, setReplyTo] = useState<Message | null>(null); // State to track the reply context
   const [loading, setLoading] = useState(true); // Loading state for data fetch
   const [isSending, setIsSending] = useState(false); // Loading state for message sending
   const inputLength = input.trim().length;
@@ -95,6 +118,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
         {
           ...message,
           timestamp: datentime,
+          replyTo: replyTo?.id || null, // Include replyTo ID
         },
         datentime,
       );
@@ -103,6 +127,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
         console.log('Message sent with ID:', messageId);
         setInput('');
         setIsSending(false);
+        setReplyTo(null); // Reset reply context after sending
       } else {
         console.error('Failed to send message');
       }
@@ -280,21 +305,23 @@ export function CardsChat({ conversation }: CardsChatProps) {
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 px-6 pb-4">
+          <CardContent className="flex-1 overflow-y-auto px-4 py-2 space-y-4 no-scrollbar">
             {/* Scrollable messages container */}
             <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
               {/* Dummy div to maintain focus at the end of messages */}
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
+                const formattedTimestamp = formatChatTimestamp(
+                  message.timestamp,
+                );
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
-
                 return (
                   <div key={index} className="flex flex-row">
                     {message.senderId !== user.uid && (
                       <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
                         <AvatarImage
-                          src={`https://api.adorable.io/avatars/285/${message.senderId}.png`}
+                          src={primaryUser.profilePic}
                           alt={message.senderId}
                         />
                         <AvatarFallback>
@@ -304,7 +331,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     )}
                     <div
                       className={cn(
-                        'flex w-max max-w-[75%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
+                        'flex w-max max-w-[50%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
                         message.senderId === user.uid
                           ? 'ml-auto bg-primary text-primary-foreground'
                           : 'bg-muted',
@@ -347,6 +374,16 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      <div
+                        className={cn(
+                          'text-xs mt-1',
+                          message.senderId === user.uid
+                            ? 'text-muted'
+                            : 'text-muted-foreground',
+                        )}
+                      >
+                        {formattedTimestamp}
+                      </div>
                     </div>
 
                     {/* Reactions Section */}
@@ -392,6 +429,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
             >
               <div className="flex items-center space-x-2">
                 <Button
+                  type="button"
                   size="icon"
                   onClick={() => handleFileUpload()} // Trigger image upload
                   title="Send an Image"
