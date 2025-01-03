@@ -1,11 +1,16 @@
 //chat.tsx
 import * as React from 'react';
-import { Send, LoaderCircle, Video, Upload } from 'lucide-react'; // Import LoaderCircle for the spinner
+import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns'; // Import for human-readable timestamps
+import {
+  formatDistanceToNow,
+  format,
+  isToday,
+  isYesterday,
+  isThisYear,
+} from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import { format, isToday, isYesterday, isThisYear } from 'date-fns';
 import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
@@ -19,7 +24,7 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from '@/components/ui/tooltip'; // Import Tooltip components
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -62,17 +67,15 @@ type User = {
   profilePic: string;
 };
 
-// Define the types for reactions and messages
-type MessageReaction = Record<string, string[]> | undefined; // Maps emoji to user IDs
+type MessageReaction = Record<string, string[]> | undefined;
 
-// Firestore document structure might look different, but we'll convert it to Message
 type Message = {
   id: string;
   senderId: string;
   content: string;
   timestamp: string;
-
-  reactions?: MessageReaction; // Optional reactions property
+  replyTo?: string;
+  reactions?: MessageReaction;
 };
 
 interface CardsChatProps {
@@ -88,12 +91,14 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
-  const [replyTo, setReplyTo] = useState<Message | null>(null); // State to track the reply context
-  const [loading, setLoading] = useState(true); // Loading state for data fetch
-  const [isSending, setIsSending] = useState(false); // Loading state for message sending
+  const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [replyToMessageId, setReplyToMessageId] = useState<string>('');
+  const [clickedMessageId, setClickedMessageId] = useState<string | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -101,24 +106,23 @@ export function CardsChat({ conversation }: CardsChatProps) {
     }
   }, [messages]);
 
-  // Function to send a message
   async function sendMessage(
     conversation: Conversation,
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
+    replyTo?: string,
   ) {
     try {
-      setIsSending(true); // Set loading state to true when sending a message
+      setIsSending(true);
       const datentime = new Date().toISOString();
 
-      // Add the message to Firestore
       const messageId = await updateConversationWithMessageTransaction(
         'conversations',
         conversation?.id,
         {
           ...message,
           timestamp: datentime,
-          replyTo: replyTo?.id || null, // Include replyTo ID
+          replyTo,
         },
         datentime,
       );
@@ -127,14 +131,13 @@ export function CardsChat({ conversation }: CardsChatProps) {
         console.log('Message sent with ID:', messageId);
         setInput('');
         setIsSending(false);
-        setReplyTo(null); // Reset reply context after sending
       } else {
         console.error('Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
-      setIsSending(false); // Set loading state to false after sending
+      setIsSending(false);
     }
   }
 
@@ -156,12 +159,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
     let unsubscribeMessages: (() => void) | undefined;
 
     const fetchMessages = async () => {
-      setLoading(true); // Set loading to true when fetching messages
+      setLoading(true);
       unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversation.id}/messages`, // Sub-collection for messages
+        `conversations/${conversation.id}/messages`,
         (messagesData) => {
-          setMessages(messagesData); // Update messages state with fetched messages
-          setLoading(false); // Set loading to false after messages are loaded
+          setMessages(messagesData);
+          setLoading(false);
         },
         'desc',
       );
@@ -172,15 +175,13 @@ export function CardsChat({ conversation }: CardsChatProps) {
       fetchMessages();
     }
 
-    // Cleanup subscription on component unmount
     return () => {
       if (unsubscribeMessages) unsubscribeMessages();
     };
   }, [conversation, user.uid]);
 
-  // Return early if the conversation is undefined or null
   if (!conversation) {
-    return null; // Don't display anything
+    return null;
   }
 
   // Handle image upload
@@ -247,16 +248,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
   async function toggleReaction(messageId: string, emoji: string) {
     const currentMessage = messages.find((msg) => msg.id === messageId);
-
-    // Check if the user already reacted with this emoji
     const userHasReacted = currentMessage?.reactions?.[emoji]?.includes(
       user.uid,
     );
 
-    // Prepare the update for Firestore
     const updatedReactions = { ...currentMessage?.reactions };
     if (userHasReacted) {
-      // Remove user reaction
       updatedReactions[emoji] = updatedReactions[emoji].filter(
         (uid: any) => uid !== user.uid,
       );
@@ -264,13 +261,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
         delete updatedReactions[emoji];
       }
     } else {
-      // Add user reaction
       if (!updatedReactions[emoji]) {
         updatedReactions[emoji] = [];
       }
       updatedReactions[emoji].push(user.uid);
     }
-    // Update message in Firestore
+
     await updateDataInFirestore(
       `conversations/${conversation.id}/messages/`,
       messageId,
@@ -305,10 +301,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 overflow-y-auto px-4 py-2 space-y-4 no-scrollbar">
-            {/* Scrollable messages container */}
+          <CardContent className="flex-1 px-6 pb-4">
             <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
-              {/* Dummy div to maintain focus at the end of messages */}
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(
@@ -317,7 +311,13 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                 return (
-                  <div key={index} className="flex flex-row">
+                  <div
+                    id={message.id}
+                    key={index}
+                    className="flex flex-row"
+                    onMouseEnter={() => setHoveredMessageId(message.id)}
+                    onMouseLeave={() => setHoveredMessageId(null)}
+                  >
                     {message.senderId !== user.uid && (
                       <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
                         <AvatarImage
@@ -336,12 +336,59 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           ? 'ml-auto bg-primary text-primary-foreground'
                           : 'bg-muted',
                       )}
+                      onClick={() => {
+                        setClickedMessageId(message.id); // Set the clicked message ID
+                        if (message.replyTo) {
+                          const replyMessage = messages.find(
+                            (msg) => msg.id === message.replyTo,
+                          );
+                          if (replyMessage) {
+                            const replyMessageElement = document.getElementById(
+                              replyMessage.id,
+                            );
+                            if (replyMessageElement) {
+                              // Add a very light gray highlight with transparency before scrolling
+                              replyMessageElement.classList.add(
+                                'bg-gray-200',
+                                'border-2',
+                                'border-gray-300',
+                                'bg-opacity-50',
+                              );
+
+                              // Scroll to the referred message with smooth behavior
+                              replyMessageElement.scrollIntoView({
+                                behavior: 'smooth',
+                              });
+
+                              // Remove the highlight classes after 2 seconds
+                              setTimeout(() => {
+                                replyMessageElement.classList.remove(
+                                  'bg-gray-200',
+                                  'border-2',
+                                  'border-gray-300',
+                                  'bg-opacity-50',
+                                );
+                              }, 2000); // Highlight removed after 2 seconds
+                            }
+                          }
+                        }
+                      }}
                     >
-                      {/* Tooltip for human-readable timestamp */}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="break-words">
+                              {message.replyTo && (
+                                <div className="flex items-center justify-between p-2 bg-foreground rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
+                                  <div className="text-sm italic text-gray-400 bg-foreground ">
+                                    <span className="font-semibold">
+                                      {messages.find(
+                                        (msg) => msg.id === message.replyTo,
+                                      )?.content || 'Message not found'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                               {message.content.match(
                                 /\.(jpeg|jpg|gif|png)$/,
                               ) ? (
@@ -385,16 +432,23 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         {formattedTimestamp}
                       </div>
                     </div>
-
-                    {/* Reactions Section */}
+                    {hoveredMessageId === message.id && (
+                      <Button
+                        className="h-6 w-6"
+                        onClick={() => setReplyToMessageId(message.id)}
+                        size="icon"
+                        title="Reply"
+                      >
+                        <Reply className="h-4 w-4 " />
+                      </Button>
+                    )}
                     {message?.reactions &&
                       Object.keys(message.reactions).length > 0 && (
                         <div className="flex items-center gap-2">
-                          {/* Display existing reactions */}
                           <Reactions
-                            messageId={message.id} // Pass in the message object
+                            messageId={message.id}
                             reactions={message.reactions}
-                            toggleReaction={toggleReaction} // Pass in the toggle function
+                            toggleReaction={toggleReaction}
                           />
                         </div>
                       )}
@@ -415,58 +469,110 @@ export function CardsChat({ conversation }: CardsChatProps) {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                if (inputLength === 0) return;
+                if (input.trim().length === 0) return;
 
                 const newMessage: Partial<Message> = {
                   senderId: user.uid,
                   content: input,
                   timestamp: new Date().toISOString(),
+                  replyTo: replyToMessageId,
                 };
 
-                sendMessage(conversation, newMessage, setInput);
+                sendMessage(
+                  conversation,
+                  newMessage,
+                  setInput,
+                  replyToMessageId,
+                );
+                setReplyToMessageId('');
               }}
-              className="flex w-full items-center space-x-2"
+              className="flex flex-col bg-foreground  rounded-md shadow-md w-full"
             >
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  size="icon"
-                  onClick={() => handleFileUpload()} // Trigger image upload
-                  title="Send an Image"
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
+              {replyToMessageId && (
+                <div className="flex items-center justify-between p-2 bg-foreground rounded-lg border-l-4 border-primary shadow-sm opacity-90 transition-opacity duration-300">
+                  <div className="text-sm italic text-gray-400 ">
+                    <span className="font-semibold">
+                      {messages.find((msg) => msg.id === replyToMessageId)
+                        ?.content || 'Message not found'}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => setReplyToMessageId('')}
+                    className="text-foreground hover:text-gray-500 bg-background h-6 "
+                    title="Cancel Reply"
+                  >
+                    <X className="h-4 w-4 text-foreground " />
+                  </Button>
+                </div>
+              )}
 
-                {/* Create Meet Button */}
+              {/* Input area with dynamic height on reply */}
+              <div className="flex items-center space-x-2 p-2 rounded-lg shadow-sm bg-foreground border-l-4 border-primary">
+                <textarea
+                  className="w-full resize-none p-2 text-background outline-none bg-foreground placeholder:text-gray-500"
+                  placeholder="Type your message..."
+                  value={input}
+                  rows={1}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      // Only send the message if Enter is pressed (not Shift + Enter)
+                      if (input.trim().length > 0) {
+                        const newMessage: Partial<Message> = {
+                          senderId: user.uid,
+                          content: input,
+                          timestamp: new Date().toISOString(),
+                          replyTo: replyToMessageId,
+                        };
+                        sendMessage(
+                          conversation,
+                          newMessage,
+                          setInput,
+                          replyToMessageId,
+                        );
+                        setReplyToMessageId('');
+                      }
+                    }
+                  }}
+                />
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    title="Attach File"
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => handleFileUpload()}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    title="Send Video"
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={handleCreateMeet}
+                  >
+                    <Video className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 <Button
                   size="icon"
-                  onClick={() => handleCreateMeet()}
-                  title="Create a Meet"
+                  type="submit"
+                  variant="outline"
+                  disabled={inputLength === 0 || isSending}
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  <Video className="h-4 w-4" />
+                  {isSending ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">Send</span>
                 </Button>
               </div>
-
-              <Input
-                id="message"
-                placeholder="Type your message..."
-                className="flex-1"
-                autoComplete="off"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-              />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={inputLength === 0 || isSending}
-              >
-                {isSending ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                <span className="sr-only">Send</span>
-              </Button>
             </form>
           </CardFooter>
         </Card>
