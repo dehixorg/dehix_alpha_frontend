@@ -113,7 +113,7 @@ const NotesRender = ({
     {
       label: 'Delete permanently',
       onClick: (
-        noteId: string,
+        noteId: string | undefined,
         notes: Note[],
         setNotes: (notes: Note[]) => void,
       ) => {
@@ -123,7 +123,7 @@ const NotesRender = ({
     {
       label: 'Move To Trash',
       onClick: (
-        noteId: string,
+        noteId: string | undefined,
         notes: Note[],
         setNotes: (notes: Note[]) => void,
       ) => {
@@ -272,7 +272,10 @@ const NotesRender = ({
   };
 
   // this is used to update the note label (type)
-  const handleUpdateNoteType = async (noteId: string, type: string) => {
+  const handleUpdateNoteType = async (
+    noteId: string | undefined,
+    type: string,
+  ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {

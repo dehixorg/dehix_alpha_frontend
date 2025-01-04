@@ -20,7 +20,7 @@ import { Note } from '@/utils/types/note';
 interface DialogUpdateTypeProps {
   note: Note;
   onClose: () => void;
-  onUpdate: (noteId: string, type: string) => void;
+  onUpdate: (noteId: string | undefined, type: string) => void;
 }
 
 const DialogUpdateType = ({
