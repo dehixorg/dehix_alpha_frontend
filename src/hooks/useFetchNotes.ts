@@ -19,7 +19,7 @@ const useFetchNotes = (userId: string | undefined) => {
         params: { userId },
       });
       console.log(response);
-      
+
       if (response?.data?.notes) {
         setNotes(response.data.notes.notes);
         setArchive(response.data.notes.archive || []);
