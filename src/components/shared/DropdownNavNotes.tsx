@@ -28,13 +28,13 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
           />
         </button>
       </HoverCardTrigger>
-      <HoverCardContent className=" shadow-md rounded-md p-1">
+      <HoverCardContent className=" shadow-md rounded-md  w-40 p-1">
         <ul className="flex flex-col gap-1">
           {navItems.map((item, index) => (
             <button
               key={index}
               onClick={() => item.onClick(noteId)}
-              className="block px-4 py-2 text-sm"
+              className="block whitespace-nowrap  px-4 py-2 text-xs"
             >
               {item.label}
             </button>
