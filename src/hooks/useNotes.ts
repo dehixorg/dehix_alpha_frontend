@@ -1,12 +1,15 @@
 // hooks/useNotes.ts
 import { useState } from 'react';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { Note, NoteType, LabelType } from '@/utils/types/note';
 
 const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [selectedDeleteNote, setSelectedDeleteNote] = useState<Note | null>(null);
+  const [selectedDeleteNote, setSelectedDeleteNote] = useState<Note | null>(
+    null,
+  );
   const [selectedTypeNote, setSelectedTypeNote] = useState<Note | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -77,7 +80,10 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     setIsDeleting(false);
   };
 
-  const handleChangeBanner = async (noteId: string | undefined, banner: string) => {
+  const handleChangeBanner = async (
+    noteId: string | undefined,
+    banner: string,
+  ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
@@ -100,7 +106,10 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     }
   };
 
-  const handleUpdateNoteType = async (noteId: string | undefined, type: string) => {
+  const handleUpdateNoteType = async (
+    noteId: string | undefined,
+    type: string,
+  ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
@@ -123,7 +132,10 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
     }
   };
 
-  const handleUpdateNoteLabel = async (noteId: string | undefined, type: string) => {
+  const handleUpdateNoteLabel = async (
+    noteId: string | undefined,
+    type: string,
+  ) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {

@@ -1,9 +1,11 @@
 // components/NotesContainer.tsx
 import React from 'react';
+
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
 import DialogSelectedNote from './DialogSelectedNote';
 import DialogUpdateType from './DialogUpdateType';
+
 import { Note, NoteType } from '@/utils/types/note';
 import useNotes from '@/hooks/useNotes';
 import useDragAndDrop from '@/hooks/useDragAndDrop';
@@ -38,7 +40,7 @@ const NotesContainer = ({
     handleChangeBanner,
     handleUpdateNoteType,
     handleUpdateNoteLabel,
-  } = useNotes(fetchNotes,notes);
+  } = useNotes(fetchNotes, notes);
 
   const {
     draggingIndex,
@@ -51,20 +53,34 @@ const NotesContainer = ({
   const navItems = [
     {
       label: 'Delete permanently',
-      onClick: (noteId: string | undefined, notes: Note[], setNotes: (notes: Note[]) => void) => {
+      onClick: (
+        noteId: string | undefined,
+        notes: Note[],
+        setNotes: (notes: Note[]) => void,
+      ) => {
         setIsDeleting(true);
-        setSelectedDeleteNote(notes.find((note) => note._id === noteId) || null);
+        setSelectedDeleteNote(
+          notes.find((note) => note._id === noteId) || null,
+        );
       },
     },
     {
       label: 'Move To Trash',
-      onClick: (noteId: string | undefined, notes: Note[], setNotes: (notes: Note[]) => void) => {
+      onClick: (
+        noteId: string | undefined,
+        notes: Note[],
+        setNotes: (notes: Note[]) => void,
+      ) => {
         handleUpdateNoteType(noteId, NoteType.TRASH);
       },
     },
     {
       label: 'Add Label',
-      onClick: (noteId: string | undefined, notes: Note[], setNotes: (notes: Note[]) => void) => {
+      onClick: (
+        noteId: string | undefined,
+        notes: Note[],
+        setNotes: (notes: Note[]) => void,
+      ) => {
         setSelectedTypeNote(notes.find((note) => note._id === noteId) || null);
       },
     },
@@ -90,7 +106,9 @@ const NotesContainer = ({
             onEditNote={setSelectedNote}
             onUpdateNoteType={handleUpdateNoteType}
             onDeleteClick={(noteId: string | undefined) => {
-              setSelectedDeleteNote(notes.find((note) => note._id === noteId) || null);
+              setSelectedDeleteNote(
+                notes.find((note) => note._id === noteId) || null,
+              );
             }}
             onChangeBanner={handleChangeBanner}
             navItems={navItems}

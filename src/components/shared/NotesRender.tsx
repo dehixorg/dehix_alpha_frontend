@@ -1,5 +1,7 @@
 import React from 'react';
+
 import NotesContainer from './NotesContainer';
+
 import { Note } from '@/utils/types/note';
 
 interface NotesRenderProps {

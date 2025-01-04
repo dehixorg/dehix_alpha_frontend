@@ -1,11 +1,14 @@
 // hooks/useDragAndDrop.ts
 import { useState } from 'react';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Note } from '@/utils/types/note';
 
 const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [draggingOverIndex, setDraggingOverIndex] = useState<number | null>(null);
+  const [draggingOverIndex, setDraggingOverIndex] = useState<number | null>(
+    null,
+  );
 
   const handleDragStart = (index: number) => {
     setDraggingIndex(index);
