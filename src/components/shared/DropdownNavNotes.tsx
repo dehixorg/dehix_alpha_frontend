@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/hover-card';
 
 interface DropdownNavNotesProps {
-  navItems: { label: string; onClick: (noteId: string) => void }[];
-  noteId: string;
+  navItems: { label: string; onClick: (noteId: string | undefined) => void }[];
+  noteId: string | undefined;
 }
 
 const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {

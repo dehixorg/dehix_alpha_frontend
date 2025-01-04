@@ -25,7 +25,8 @@ export enum NoteType {
 
 // Updated Note type
 export type Note = {
-  _id: string;
+  _id?: string  ;
+  userId?:string,
   title: string;
   content: string;
   bgColor?: string; // Optional color for note display
@@ -37,6 +38,8 @@ export type Note = {
   noteType: NoteType;
   createdAt?: Date;
 };
+
+
 
 export const badgeColors: { [key: string]: string } = {
   PERSONAL: 'bg-blue-500 text-white hover:text-black',

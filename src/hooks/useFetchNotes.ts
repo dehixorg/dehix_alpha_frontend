@@ -18,6 +18,8 @@ const useFetchNotes = (userId: string | undefined) => {
       const response = await axiosInstance.get('/notes', {
         params: { userId },
       });
+      console.log(response);
+      
       if (response?.data?.notes) {
         setNotes(response.data.notes.notes);
         setArchive(response.data.notes.archive || []);

@@ -104,7 +104,7 @@ const NotesRender = ({
     setIsDeleting(false);
   };
 
-  const handelDeletClick = (noteId: string) => {
+  const handelDeletClick = (noteId: string | undefined) => {
     setIsDeleting(true);
     setSelectedDeleteNote(notes.find((note) => note._id === noteId) || null);
   };
@@ -132,7 +132,7 @@ const NotesRender = ({
     },
     {
       label: 'Add Label',
-      onClick: (noteId: string) => {
+      onClick: (noteId: string ) => {
         setSelectedTypeNote(notes.find((note) => note._id === noteId) || null);
       },
     },
@@ -151,29 +151,58 @@ const NotesRender = ({
   };
 
   // this is used for handel drop event
-  const handleDrop = () => {
+  const handleDrop = async () => {
     if (
       draggingIndex !== null &&
       draggingOverIndex !== null &&
       draggingIndex !== draggingOverIndex
     ) {
+      // Update the local notes order
       const updatedNotesRender = [...notes];
       const draggedNote = updatedNotesRender[draggingIndex];
       const targetNote = updatedNotesRender[draggingOverIndex];
-
+  
       updatedNotesRender[draggingIndex] = targetNote;
       updatedNotesRender[draggingOverIndex] = draggedNote;
-
+  
       setNotes(updatedNotesRender);
+  
+      // Prepare data for API request
+      const updatedNoteOrder = updatedNotesRender.map(note => note._id);
+      const userId = updatedNotesRender[0]?.userId; 
+  
+      if (userId) {
+        try {
+          const response = await axiosInstance.patch('/notes/update-noteorder', {
+            userId,
+            noteOrder: updatedNoteOrder,
+          });
+          console.log(response);
+          
+  
+          if (response.status === 200) {
+            console.log('Notes order updated successfully:', response.data);
+          } else {
+            console.error('Failed to update note order:', response.statusText);
+          }
+        } catch (error: any) {
+          console.error('Error updating note order:', error.message);
+        }
+      } else {
+        console.error('User ID is missing. Cannot update note order.');
+      }
     }
+  
     setDraggingIndex(null);
     setDraggingOverIndex(null);
   };
+  
 
   // this is used to update the note data
-  const handleNoteUpdate = async (noteId: string, noteType: string) => {
+  const handleNoteUpdate = async (noteId: string | undefined , noteType: string) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
-
+    console.log(noteToUpdate);
+    
     if (!noteToUpdate) {
       showError('Note not found.');
       return;
@@ -212,7 +241,7 @@ const NotesRender = ({
   };
 
   // this is used to update the note Banner
-  const handleChangeBanner = async (noteId: string, banner: string) => {
+  const handleChangeBanner = async (noteId: string | undefined, banner: string) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
@@ -236,7 +265,7 @@ const NotesRender = ({
   };
 
   // this is used to update the note label (type)
-  const handleUpdateNoteType = async (noteId: string, type: string) => {
+  const handleUpdateNoteType = async (noteId: string , type: string) => {
     const noteToUpdate = notes.find((note) => note._id === noteId);
 
     if (!noteToUpdate) {
@@ -268,9 +297,9 @@ const NotesRender = ({
       notes: Note[],
       setNotes: (notes: Note[]) => void,
     ) => void,
-    noteId: string,
+    noteId: string | undefined,
   ) => {
-    action(noteId, notes, setNotes);
+    action(noteId || '', notes, setNotes);
   };
 
   return (
@@ -307,7 +336,7 @@ const NotesRender = ({
                       <Badge
                         className={`text-xs py-0.5 ${badgeColors[note.type] || ' '}`}
                       >
-                        {note.type}
+                        {note.type.toLowerCase()}
                       </Badge>
                     </div>
                   )}
@@ -413,3 +442,4 @@ const NotesRender = ({
 };
 
 export default NotesRender;
+
