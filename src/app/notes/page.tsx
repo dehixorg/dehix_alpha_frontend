@@ -16,6 +16,7 @@ import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per
 import { LabelType, Note, NoteType } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
+import { Loader2 } from 'lucide-react';
 
 const Notes = () => {
   // Get userId from Redux
@@ -91,8 +92,8 @@ const Notes = () => {
         />
         <div className="p-6">
           {isLoading ? (
-            <div className="flex justify-center items-center h-[40vh] w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+            <div className="flex justify-center items-center h-[40vh]">
+              <Loader2 className="my-4 h-8 w-8 animate-spin" />
             </div>
           ) : (
             <div>

@@ -16,6 +16,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import { toast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
@@ -85,8 +86,8 @@ const Page = () => {
         />
         <div className="p-6">
           {isLoading ? (
-            <div className="flex justify-center items-center h-[40vh] w-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+            <div className="flex justify-center items-center h-[40vh]">
+              <Loader2 className="my-4 h-8 w-8 animate-spin" />
             </div>
           ) : archive?.length > 0 ? (
             <NotesRender

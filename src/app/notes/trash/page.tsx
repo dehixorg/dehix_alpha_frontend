@@ -12,6 +12,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
+import { Loader2 } from 'lucide-react';
 
 const TrashPage = () => {
   const userId = useSelector((state: any) => state.user?.uid);
@@ -22,7 +23,7 @@ const TrashPage = () => {
     fetchNotes();
   }, [userId, fetchNotes]);
 
-  const handleCreateNote = () => {};
+  const handleCreateNote = () => { };
 
   return (
     <section className="p-3 relative sm:pl-6">
@@ -48,8 +49,8 @@ const TrashPage = () => {
         <div className="p-6">
           <div>
             {isLoading ? (
-              <div className="flex justify-center items-center h-[40vh] w-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+              <div className="flex justify-center items-center h-[40vh]">
+                <Loader2 className="my-4 h-8 w-8 animate-spin" />
               </div>
             ) : (
               <div>
