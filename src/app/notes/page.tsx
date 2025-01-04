@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -16,7 +17,6 @@ import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per
 import { LabelType, Note, NoteType } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
-import { Loader2 } from 'lucide-react';
 
 const Notes = () => {
   // Get userId from Redux

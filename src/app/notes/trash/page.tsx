@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
@@ -12,7 +13,6 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
-import { Loader2 } from 'lucide-react';
 
 const TrashPage = () => {
   const userId = useSelector((state: any) => state.user?.uid);
@@ -23,7 +23,7 @@ const TrashPage = () => {
     fetchNotes();
   }, [userId, fetchNotes]);
 
-  const handleCreateNote = () => { };
+  const handleCreateNote = () => {};
 
   return (
     <section className="p-3 relative sm:pl-6">

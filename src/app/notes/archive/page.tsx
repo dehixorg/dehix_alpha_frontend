@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import { LabelType, Note, NoteType } from '@/utils/types/note';
 import NotesRender from '@/components/shared/NotesRender';
@@ -16,7 +17,6 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import { toast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
