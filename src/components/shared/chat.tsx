@@ -3,14 +3,21 @@ import * as React from 'react';
 import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  formatDistanceToNow,
+  format,
+  isToday,
+  isYesterday,
+  isThisYear,
+} from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import { format, isToday, isYesterday, isThisYear } from 'date-fns';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
 
 import {
   TooltipProvider,
@@ -177,31 +184,47 @@ export function CardsChat({ conversation }: CardsChatProps) {
     return null;
   }
 
-  async function handleDocumentUpload() {
+  // Handle image upload
+  async function handleFileUpload() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
-      if (!file) return;
+      if (!file) return; // If no file is selected, exit
 
       try {
-        // const storageRef = firebase.storage().ref();
-        // const fileRef = storageRef.child(`documents/${conversation.id}/${file.name}`);
-        // await fileRef.put(file);
-        // const fileUrl = await fileRef.getDownloadURL();
-        // const message: Message = {
-        //   senderId: user.uid,
-        //   content: `📄 [${file.name}](${fileUrl})`,
-        //   timestamp: new Date().toISOString(),
-        // };
-        // sendMessage(conversation, message, setInput);
+        // Create FormData to send the image to S3
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Post request to upload image to S3
+        const postFileResponse = await axiosInstance.post(
+          '/register/upload-image',
+          formData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          },
+        );
+
+        // Assuming the S3 response contains the URL of the uploaded image
+        const fileUrl = postFileResponse.data.data.Location;
+
+        // Prepare message with the image URL
+        const message: Partial<Message> = {
+          senderId: user.uid,
+          content: fileUrl, // Embedding the image link in the message
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send the message with the image URL
+        sendMessage(conversation, message, setInput);
       } catch (error) {
-        console.error('Error uploading document:', error);
+        console.error('Error uploading image:', error);
       }
     };
 
-    fileInput.click();
+    fileInput.click(); // Trigger file selection
   }
 
   async function handleCreateMeet() {
@@ -366,7 +389,31 @@ export function CardsChat({ conversation }: CardsChatProps) {
                                   </div>
                                 </div>
                               )}
-                              <div>{message.content}</div>
+                              {message.content.match(
+                                /\.(jpeg|jpg|gif|png)$/,
+                              ) ? (
+                                <Image
+                                  src={message.content}
+                                  alt="Message Image"
+                                  width={300}
+                                  height={300}
+                                  className="rounded-lg"
+                                />
+                              ) : message.content.match(
+                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                ) ? (
+                                <FileAttachment
+                                  fileName={
+                                    message.content.split('/').pop() || 'File'
+                                  }
+                                  fileUrl={message.content}
+                                  fileType={
+                                    message.content.split('.').pop() || 'file'
+                                  }
+                                />
+                              ) : (
+                                <div>{message.content}</div>
+                              )}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" sideOffset={10}>
@@ -496,7 +543,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     variant="outline"
                     title="Attach File"
                     className="text-gray-500 hover:text-gray-700"
-                    onClick={() => handleDocumentUpload()}
+                    onClick={() => handleFileUpload()}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
