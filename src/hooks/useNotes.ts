@@ -123,7 +123,7 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       });
 
       if (response?.status == 200) {
-        showSuccess(`Note Label updated`);
+        showSuccess(`Note moved to ${type.toLowerCase()}`);
       }
       await fetchNotes();
     } catch (error) {
