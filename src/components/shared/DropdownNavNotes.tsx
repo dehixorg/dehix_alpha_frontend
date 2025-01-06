@@ -8,7 +8,11 @@ import {
 } from '@/components/ui/hover-card';
 
 interface DropdownNavNotesProps {
-  navItems: { label: string; icon?: JSX.Element; onClick: (noteId: string | undefined) => void }[];
+  navItems: {
+    label: string;
+    icon?: JSX.Element;
+    onClick: (noteId: string | undefined) => void;
+  }[];
   noteId: string | undefined;
 }
 
@@ -21,7 +25,7 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-      <button
+        <button
           onClick={toggleDropdown}
           className="flex items-center justify-center p-1 rounded hover:bg-gray-700 transition-all duration-200"
           aria-label="Options"
@@ -32,14 +36,14 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
       <HoverCardContent className=" shadow-md rounded-md  w-14 p-1 bg-white dark:bg-black">
         <ul className="flex flex-col gap-1">
           {navItems.map((item, index) => (
-             <li key={index} className="flex justify-center">
-             <button
-               onClick={() => item.onClick(noteId)}
-               className="flex justify-center items-center p-2 text-white rounded-full transition-all transform hover:scale-105 hover:bg-gray-800"
-             >
-               {item.icon}
-             </button>
-           </li>
+            <li key={index} className="flex justify-center">
+              <button
+                onClick={() => item.onClick(noteId)}
+                className="flex justify-center items-center p-2 text-white rounded-full transition-all transform hover:scale-105 hover:bg-gray-800"
+              >
+                {item.icon}
+              </button>
+            </li>
           ))}
         </ul>
       </HoverCardContent>

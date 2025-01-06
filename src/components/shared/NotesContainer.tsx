@@ -1,5 +1,6 @@
 // components/NotesContainer.tsx
 import React from 'react';
+import { ArchiveRestoreIcon, icons, TagIcon, Trash2Icon } from 'lucide-react';
 
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
@@ -9,7 +10,6 @@ import DialogUpdateType from './DialogUpdateType';
 import { Note, NoteType } from '@/utils/types/note';
 import useNotes from '@/hooks/useNotes';
 import useDragAndDrop from '@/hooks/useDragAndDrop';
-import { ArchiveRestoreIcon, icons, TagIcon, Trash2Icon } from 'lucide-react';
 
 interface NotesContainerProps {
   notes: Note[];
@@ -54,7 +54,7 @@ const NotesContainer = ({
   const navItems = [
     {
       label: '',
-      icon: <Trash2Icon size={15} className="text-red-500"/>,
+      icon: <Trash2Icon size={15} className="text-red-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -68,7 +68,7 @@ const NotesContainer = ({
     },
     {
       label: '',
-      icon: <ArchiveRestoreIcon size={15} className="text-yellow-500"/>,
+      icon: <ArchiveRestoreIcon size={15} className="text-yellow-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -79,7 +79,7 @@ const NotesContainer = ({
     },
     {
       label: '',
-      icon: <TagIcon size={15} className="text-blue-500"/>,
+      icon: <TagIcon size={15} className="text-blue-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
