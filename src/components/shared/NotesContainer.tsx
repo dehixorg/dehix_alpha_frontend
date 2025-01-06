@@ -9,6 +9,7 @@ import DialogUpdateType from './DialogUpdateType';
 import { Note, NoteType } from '@/utils/types/note';
 import useNotes from '@/hooks/useNotes';
 import useDragAndDrop from '@/hooks/useDragAndDrop';
+import { ArchiveRestoreIcon, icons, TagIcon, Trash2Icon } from 'lucide-react';
 
 interface NotesContainerProps {
   notes: Note[];
@@ -52,7 +53,8 @@ const NotesContainer = ({
 
   const navItems = [
     {
-      label: 'Delete permanently',
+      label: '',
+      icon: <Trash2Icon size={15} className="text-red-500"/>,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -65,7 +67,8 @@ const NotesContainer = ({
       },
     },
     {
-      label: 'Move To Trash',
+      label: '',
+      icon: <ArchiveRestoreIcon size={15} className="text-yellow-500"/>,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -75,7 +78,8 @@ const NotesContainer = ({
       },
     },
     {
-      label: 'Add Label',
+      label: '',
+      icon: <TagIcon size={15} className="text-blue-500"/>,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
