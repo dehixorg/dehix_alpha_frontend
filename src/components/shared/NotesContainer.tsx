@@ -1,6 +1,6 @@
 // components/NotesContainer.tsx
 import React from 'react';
-import { ArchiveRestoreIcon, icons, TagIcon, Trash2Icon } from 'lucide-react';
+import { ArchiveRestoreIcon, icons, TagIcon, Trash2Icon, RecycleIcon } from 'lucide-react';
 
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
@@ -53,7 +53,7 @@ const NotesContainer = ({
 
   const navItems = [
     {
-      label: '',
+      label: 'Delete',
       icon: <Trash2Icon size={15} className="text-red-500" />,
       onClick: (
         noteId: string | undefined,
@@ -67,8 +67,8 @@ const NotesContainer = ({
       },
     },
     {
-      label: '',
-      icon: <ArchiveRestoreIcon size={15} className="text-yellow-500" />,
+      label: 'Recycle',
+      icon: <RecycleIcon size={15} className="text-green-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -78,7 +78,7 @@ const NotesContainer = ({
       },
     },
     {
-      label: '',
+      label: 'Label',
       icon: <TagIcon size={15} className="text-blue-500" />,
       onClick: (
         noteId: string | undefined,

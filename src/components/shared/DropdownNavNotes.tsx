@@ -22,6 +22,7 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
+
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
@@ -33,15 +34,22 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
           <MoreVertical size={18} className="text-white" />
         </button>
       </HoverCardTrigger>
-      <HoverCardContent className=" shadow-md rounded-md  w-14 p-1 bg-white dark:bg-black">
-        <ul className="flex flex-col gap-1">
+      <HoverCardContent
+        className="shadow-md rounded-md w-auto p-2 bg-white dark:bg-black"
+        style={{ display: isDropdownOpen ? 'block' : 'none' }}
+      >
+        <ul className="flex flex-row gap-2 md:flex-col">
           {navItems.map((item, index) => (
-            <li key={index} className="flex justify-center">
+            <li key={index} className="flex items-center justify-center">
               <button
                 onClick={() => item.onClick(noteId)}
-                className="flex justify-center items-center p-2 text-white rounded-full transition-all transform hover:scale-105 hover:bg-gray-800"
+                className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto p-2 text-black dark:text-white rounded-full transition-all transform hover:scale-105 hover:bg-gray-200 dark:hover:bg-gray-800"
+                aria-label={item.label}
               >
                 {item.icon}
+                <span className="hidden md:inline-block ml-2 text-sm">
+                  {item.label}
+                </span>
               </button>
             </li>
           ))}
