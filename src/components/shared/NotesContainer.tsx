@@ -116,6 +116,7 @@ const NotesContainer = ({
             onEditNote={setSelectedNote}
             onUpdateNoteType={handleUpdateNoteType}
             onDeleteClick={(noteId: string | undefined) => {
+              setIsDeleting(true);
               setSelectedDeleteNote(
                 notes.find((note) => note._id === noteId) || null,
               );
