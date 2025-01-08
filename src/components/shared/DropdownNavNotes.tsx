@@ -40,14 +40,14 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
       >
         <ul className="flex flex-row gap-2 md:flex-col">
           {navItems.map((item, index) => (
-            <li key={index} className="flex items-center justify-center">
+            <li key={index} className="flex items-center">
               <button
                 onClick={() => item.onClick(noteId)}
-                className="flex items-center justify-center w-10 h-10 md:w-auto md:h-auto p-2 text-black dark:text-white rounded-full transition-all transform hover:scale-105 hover:bg-gray-200 dark:hover:bg-gray-800"
+                className="flex items-center w-full p-2 text-black dark:text-white rounded-md transition-all hover:bg-gray-200 dark:hover:bg-gray-800"
                 aria-label={item.label}
               >
-                {item.icon}
-                <span className="hidden md:inline-block ml-2 text-sm">
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="ml-3 text-sm hidden sm:hidden md:inline">
                   {item.label}
                 </span>
               </button>
