@@ -6,6 +6,7 @@ import {
   Package,
   User,
 } from 'lucide-react';
+import { ImagePlus } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
@@ -39,6 +40,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/education-info',
     icon: <BookOpen className="h-5 w-5" />,
     label: 'Education',
+  },
+  {
+    href: '/freelancer/settings/resume',
+    icon: <ImagePlus className="h-5 w-5" />,
+    label: 'Resume',
   },
 ];
 
