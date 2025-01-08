@@ -60,7 +60,7 @@ const NotesContainer = ({
   const navItems = [
     {
       label: 'Delete',
-      icon: <Trash2Icon size={15} className="text-red-500" />,
+      icon: <Trash2Icon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -74,7 +74,7 @@ const NotesContainer = ({
     },
     {
       label: 'Recycle',
-      icon: <RecycleIcon size={15} className="text-green-500" />,
+      icon: <RecycleIcon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -85,7 +85,7 @@ const NotesContainer = ({
     },
     {
       label: 'Label',
-      icon: <TagIcon size={15} className="text-blue-500" />,
+      icon: <TagIcon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
