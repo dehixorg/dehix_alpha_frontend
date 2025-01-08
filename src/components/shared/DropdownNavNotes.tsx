@@ -8,7 +8,11 @@ import {
 } from '@/components/ui/hover-card';
 
 interface DropdownNavNotesProps {
-  navItems: { label: string; onClick: (noteId: string | undefined) => void }[];
+  navItems: {
+    label: string;
+    icon?: JSX.Element;
+    onClick: (noteId: string | undefined) => void;
+  }[];
   noteId: string | undefined;
 }
 
@@ -18,26 +22,36 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
   const toggleDropdown = () => {
     setIsDropdownOpen((prev) => !prev);
   };
+
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <button onClick={toggleDropdown}>
-          <MoreVertical
-            size={15}
-            className=" transition-all text-black duration-200"
-          />
+        <button
+          onClick={toggleDropdown}
+          className="flex items-center justify-center p-1 rounded hover:bg-gray-700 transition-all duration-200"
+          aria-label="Options"
+        >
+          <MoreVertical size={18} className="text-white" />
         </button>
       </HoverCardTrigger>
-      <HoverCardContent className=" shadow-md rounded-md  w-40 p-1">
-        <ul className="flex flex-col gap-1">
+      <HoverCardContent
+        className="shadow-md rounded-md w-auto p-2 bg-white dark:bg-black"
+        style={{ display: isDropdownOpen ? 'block' : 'none' }}
+      >
+        <ul className="flex flex-row gap-2 md:flex-col">
           {navItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => item.onClick(noteId)}
-              className="block whitespace-nowrap  px-4 py-2 text-xs"
-            >
-              {item.label}
-            </button>
+            <li key={index} className="flex items-center">
+              <button
+                onClick={() => item.onClick(noteId)}
+                className="flex items-center w-full p-2 text-black dark:text-white rounded-md transition-all hover:bg-gray-200 dark:hover:bg-gray-800"
+                aria-label={item.label}
+              >
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="ml-3 text-sm hidden sm:hidden md:inline">
+                  {item.label}
+                </span>
+              </button>
+            </li>
           ))}
         </ul>
       </HoverCardContent>

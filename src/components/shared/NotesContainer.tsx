@@ -1,5 +1,12 @@
 // components/NotesContainer.tsx
 import React from 'react';
+import {
+  ArchiveRestoreIcon,
+  icons,
+  TagIcon,
+  Trash2Icon,
+  RecycleIcon,
+} from 'lucide-react';
 
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
@@ -52,7 +59,8 @@ const NotesContainer = ({
 
   const navItems = [
     {
-      label: 'Delete permanently',
+      label: 'Delete',
+      icon: <Trash2Icon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -65,7 +73,8 @@ const NotesContainer = ({
       },
     },
     {
-      label: 'Move To Trash',
+      label: 'Recycle',
+      icon: <RecycleIcon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -75,7 +84,8 @@ const NotesContainer = ({
       },
     },
     {
-      label: 'Add Label',
+      label: 'Label',
+      icon: <TagIcon size={15} className="text-white-500" />,
       onClick: (
         noteId: string | undefined,
         notes: Note[],
@@ -106,6 +116,7 @@ const NotesContainer = ({
             onEditNote={setSelectedNote}
             onUpdateNoteType={handleUpdateNoteType}
             onDeleteClick={(noteId: string | undefined) => {
+              setIsDeleting(true);
               setSelectedDeleteNote(
                 notes.find((note) => note._id === noteId) || null,
               );
