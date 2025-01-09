@@ -140,7 +140,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 <AccordionContent>
                   <div className="p-4 flex flex-col gap-2">
                     <div className="flex gap-2 items-center">
-                      <p >Experience:</p>
+                      <p>Experience:</p>
                       <p>{profile.experience ?? 'N/A'}</p>
                     </div>
                     <div className="flex gap-2 items-center">
@@ -160,7 +160,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                           <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
                           <AccordionContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                              {bids.filter((bid) => bid.bid_status === status).length > 0 ? (
+                              {bids.filter((bid) => bid.bid_status === status)
+                                .length > 0 ? (
                                 bids
                                   .filter((bid) => bid.bid_status === status)
                                   .map((bid) => (
@@ -168,7 +169,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                       key={bid._id}
                                       className="border border-gray-800 rounded-lg p-6  shadow-lg "
                                     >
-                                      <h3 className="font-semibold text-xl mb-2">{bid.userName}</h3>
+                                      <h3 className="font-semibold text-xl mb-2">
+                                        {bid.userName}
+                                      </h3>
                                       <p className=" mb-4">{bid.description}</p>
                                       <div className="flex flex-col mb-4">
                                         <span className="text-sm ">
@@ -177,36 +180,50 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                       </div>
 
                                       <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
-                                        {(status === "Pending" || status === "Lobby") && (
+                                        {(status === 'Pending' ||
+                                          status === 'Lobby') && (
                                           <>
                                             <Button
                                               className="flex items-center justify-center bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
-                                              onClick={() => handleUpdateStatus(bid._id, "Accepted")}
+                                              onClick={() =>
+                                                handleUpdateStatus(
+                                                  bid._id,
+                                                  'Accepted',
+                                                )
+                                              }
                                               disabled={loadingBids[bid._id]}
                                             >
                                               {loadingBids[bid._id] ? (
-                                                "Loading..."
+                                                'Loading...'
                                               ) : (
                                                 <>
-                                                  <CheckCircle className="mr-2 h-5 w-5" /> Accept
+                                                  <CheckCircle className="mr-2 h-5 w-5" />{' '}
+                                                  Accept
                                                 </>
                                               )}
                                             </Button>
                                             <Button
                                               className="flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
-                                              onClick={() => handleUpdateStatus(bid._id, "Rejected")}
+                                              onClick={() =>
+                                                handleUpdateStatus(
+                                                  bid._id,
+                                                  'Rejected',
+                                                )
+                                              }
                                               disabled={loadingBids[bid._id]}
                                             >
                                               {loadingBids[bid._id] ? (
-                                                "Loading..."
+                                                'Loading...'
                                               ) : (
                                                 <>
-                                                  <XCircle className="mr-2 h-5 w-5" />reject
+                                                  <XCircle className="mr-2 h-5 w-5" />
+                                                  reject
                                                 </>
                                               )}
                                             </Button>
                                             <Button className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full h-10 md:w-auto">
-                                              <Video className="mr-2 h-5 w-5" />Interview
+                                              <Video className="mr-2 h-5 w-5" />
+                                              Interview
                                             </Button>
                                           </>
                                         )}

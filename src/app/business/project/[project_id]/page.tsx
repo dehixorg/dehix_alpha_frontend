@@ -74,7 +74,6 @@ export default function Dashboard() {
         if (projectData) {
           setProject(projectData);
           console.log(projectData);
-          
         }
       } catch (error) {
         console.error('API Error:', error);
@@ -184,13 +183,11 @@ export default function Dashboard() {
                                 status={project.status}
                                 startDate={project.createdAt}
                                 endDate={project.end}
-                                domains={['domain1','domain2']}
+                                domains={['domain1', 'domain2']}
                                 skills={profile.skills}
                               />
                             ))}
-                            <ProjectSkillCard
-                                isLastCard={true}
-                              />
+                            <ProjectSkillCard isLastCard={true} />
                           </div>
                         </div>
                       </CardContent>

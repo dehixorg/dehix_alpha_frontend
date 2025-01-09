@@ -1,10 +1,16 @@
 import React from 'react';
 import { Mail, Calendar, Tag, Code2, Plus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+
 import { Separator } from '../ui/separator';
 import DateRange from '../cards/dateRange';
 import { Card } from '../ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '../ui/hover-card';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '../ui/hover-card';
+
+import { Badge } from '@/components/ui/badge';
 
 export interface ProjectSkillCardProps {
   domainName?: string | undefined;
@@ -16,7 +22,7 @@ export interface ProjectSkillCardProps {
   domains?: string[];
   skills?: string[] | undefined;
   imageUrl?: string;
-  isLastCard?: Boolean;
+  isLastCard?: boolean;
 }
 function ProjectSkillCard({
   domainName,
@@ -29,7 +35,6 @@ function ProjectSkillCard({
   skills = [],
   isLastCard,
 }: ProjectSkillCardProps) {
-
   if (isLastCard) {
     return (
       <Card className="flex w-[300px] mx-auto items-center justify-center h-[430px] border border-dashed border-gray-400 rounded-lg  cursor-pointer ">
@@ -51,16 +56,19 @@ function ProjectSkillCard({
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <HoverCard>
-          <HoverCardTrigger><h2 className="text-lg cursor-pointer font-semibold">{truncateFileName(domainName)}</h2></HoverCardTrigger>
-          <HoverCardContent className='py-2 w-auto'>
+          <HoverCardTrigger>
+            <h2 className="text-lg cursor-pointer font-semibold">
+              {truncateFileName(domainName)}
+            </h2>
+          </HoverCardTrigger>
+          <HoverCardContent className="py-2 w-auto">
             {domainName}
           </HoverCardContent>
         </HoverCard>
-        
+
         <Badge className="bg-yellow-400 capitalize text-black text-xs px-2 py-1 rounded-md">
           {status?.toLocaleLowerCase() || 'Pending'}
         </Badge>
-
       </div>
 
       {/* Content */}
@@ -71,7 +79,9 @@ function ProjectSkillCard({
         </div>
 
         {/* Description */}
-        <p className="text-sm mb-4">{description || 'No description available.'}</p>
+        <p className="text-sm mb-4">
+          {description || 'No description available.'}
+        </p>
 
         {/* Domains */}
         {domains.length > 0 && (
@@ -79,10 +89,7 @@ function ProjectSkillCard({
             <h3 className="text-sm font-semibold mb-2">Project Domain:</h3>
             <div className="flex flex-wrap gap-2">
               {domains.map((domain, index) => (
-                <Badge
-                  key={index}
-                  className=" px-3 py-1 text-xs rounded-full"
-                >
+                <Badge key={index} className=" px-3 py-1 text-xs rounded-full">
                   {domain}
                 </Badge>
               ))}
@@ -96,10 +103,7 @@ function ProjectSkillCard({
             <h3 className="text-sm font-semibold mb-2">Skills:</h3>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill, index) => (
-                <Badge
-                  key={index}
-                  className=" px-3 py-1 text-xs rounded-full"
-                >
+                <Badge key={index} className=" px-3 py-1 text-xs rounded-full">
                   {skill}
                 </Badge>
               ))}

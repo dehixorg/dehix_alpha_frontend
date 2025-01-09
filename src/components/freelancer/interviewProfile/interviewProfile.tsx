@@ -358,51 +358,51 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 : skillData.map((skill) => (
-                  <TableRow key={skill._id}>
-                    <TableCell>{skill.name}</TableCell>
-                    <TableCell>{skill.level}</TableCell>
-                    <TableCell>
-                      {skill.experience > 0 ? skill.experience + 'years' : ''}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getBadgeColor(skill.interviewStatus)}>
-                        {skill.interviewStatus.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ButtonIcon
-                        icon={<Edit2 className="w-4 h-4" />}
-                        onClick={() =>
-                          handleSkillDomainDialog(skill, 'skill')
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="airplane-mode" />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    <TableRow key={skill._id}>
+                      <TableCell>{skill.name}</TableCell>
+                      <TableCell>{skill.level}</TableCell>
+                      <TableCell>
+                        {skill.experience > 0 ? skill.experience + 'years' : ''}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getBadgeColor(skill.interviewStatus)}>
+                          {skill.interviewStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ButtonIcon
+                          icon={<Edit2 className="w-4 h-4" />}
+                          onClick={() =>
+                            handleSkillDomainDialog(skill, 'skill')
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Switch id="airplane-mode" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>
@@ -443,55 +443,55 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 : domainData.map((domain) => (
-                  <TableRow key={domain._id}>
-                    <TableCell>{domain.name}</TableCell>
-                    <TableCell>{domain.level}</TableCell>
-                    <TableCell>
-                      {domain.experience.length > 0
-                        ? domain.experience + 'years'
-                        : ''}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getBadgeColor(domain.interviewStatus)}
-                      >
-                        {domain.interviewStatus.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ButtonIcon
-                        icon={<Edit2 className="w-4 h-4" />}
-                        onClick={() =>
-                          handleSkillDomainDialog(domain, 'domain')
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Switch id="airplane-mode" />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    <TableRow key={domain._id}>
+                      <TableCell>{domain.name}</TableCell>
+                      <TableCell>{domain.level}</TableCell>
+                      <TableCell>
+                        {domain.experience.length > 0
+                          ? domain.experience + 'years'
+                          : ''}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={getBadgeColor(domain.interviewStatus)}
+                        >
+                          {domain.interviewStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ButtonIcon
+                          icon={<Edit2 className="w-4 h-4" />}
+                          onClick={() =>
+                            handleSkillDomainDialog(domain, 'domain')
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Switch id="airplane-mode" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>

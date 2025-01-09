@@ -44,7 +44,7 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/freelancer/project/milestone',
-    icon: <Milestone/>,
+    icon: <Milestone />,
     label: 'Milestone',
   },
 ];

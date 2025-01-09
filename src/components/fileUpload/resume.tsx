@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { X, UploadCloud, Image as ImageIcon } from 'lucide-react';
+
 import { Button } from '../ui/button';
+
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -70,9 +72,13 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
     try {
       setIsUploading(true);
 
-      const postResponse = await axiosInstance.post('/register/upload-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const postResponse = await axiosInstance.post(
+        '/register/upload-image',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      );
 
       const { Location } = postResponse.data?.data || {};
 
@@ -80,7 +86,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
         throw new Error('Failed to upload the resume.');
       }
 
-      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, { resume: Location });
+      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
+        resume: Location,
+      });
 
       if (putResponse.status === 200) {
         setUploadedFileName(selectedResume.name);
@@ -101,7 +109,10 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
       toast({
         variant: 'destructive',
         title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'File upload failed. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'File upload failed. Please try again.',
       });
     } finally {
       setIsUploading(false);
@@ -122,7 +133,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
         >
           {selectedResume ? (
             <div className="w-full flex justify-center items-center gap-4 text-gray-700 text-center">
-              <p className="truncate">{truncateFileName(selectedResume.name)}</p>
+              <p className="truncate">
+                {truncateFileName(selectedResume.name)}
+              </p>
               <button
                 className="bg-red-600 text-white rounded-full "
                 onClick={handleCancelClick}

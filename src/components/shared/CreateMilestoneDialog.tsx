@@ -1,5 +1,11 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Plus } from 'lucide-react';
+
+import { ScrollArea } from '../ui/scroll-area';
+
+import MilestoneForm from './MilestoneForm';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -9,16 +15,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import MilestoneForm from './MilestoneForm';
-import { Plus } from 'lucide-react';
-import { ScrollArea } from '../ui/scroll-area';
+} from '@/components/ui/dialog';
 
 export function CreateMilestoneDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button > <Plus className="mr-2" />Milestone</Button>
+        <Button>
+          {' '}
+          <Plus className="mr-2" />
+          Milestone
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <ScrollArea className="flex justify-center items-center max-h-[90vh] p-4 custom-scrollbar">

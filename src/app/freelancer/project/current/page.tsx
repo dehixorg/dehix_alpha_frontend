@@ -54,7 +54,7 @@ export default function CurrentProject() {
           `/freelancer/${user.uid}/project?status=ACTIVE`,
         ); // Fetch data from API
         console.log(response);
-        
+
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
