@@ -1,7 +1,9 @@
 import React from 'react';
+import { PlusCircle, X } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, X, CheckCircle } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 
 interface Skill {
   skillName: string;
@@ -40,10 +42,7 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
 
       <form className="space-y-5">
         {skillData.map((skill, index) => (
-          <div
-            key={index}
-            className="relative space-y-4 p-6 shadow-lg border rounded-lg"
-          >
+          <div key={index} className="relative space-y-4 p-6 shadow-lg">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold">Skill {index + 1}</h3>
               {index > 0 && (
@@ -57,10 +56,14 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500">
+              <Label
+                htmlFor={`skillName-${index}`}
+                className="block text-sm font-medium text-gray-500"
+              >
                 Skill Name
-              </label>
+              </Label>
               <Input
+                id={`skillName-${index}`}
                 type="text"
                 value={skill.skillName}
                 onChange={(e) => handleSkillChange(index, e.target.value)}
@@ -89,14 +92,6 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
           ))}
         </ul>
       </div>
-
-      <div className="flex justify-center mt-4">
-        <Button className="text-center justify-items-center bg-green-500 hover:bg-green-600 text-white">
-          <CheckCircle />
-        </Button>
-      </div>
     </div>
   );
 };
-
-export default SkillInfo;

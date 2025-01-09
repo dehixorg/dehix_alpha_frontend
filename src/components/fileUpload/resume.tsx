@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Image as ImageIcon, UploadCloud } from 'lucide-react'; // Import necessary icons
+import { Image as ImageIcon, UploadCloud } from 'lucide-react'; // Import necessary icons
 
 import { Button } from '../ui/button';
 

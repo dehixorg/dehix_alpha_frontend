@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { PlusCircle, X } from 'lucide-react';
+
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X, CheckCircle } from 'lucide-react';
 
 interface ProjectInfo {
   title: string;
@@ -62,10 +64,14 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">
+              <Label
+                htmlFor={`project-title-${index}`}
+                className="block text-sm font-medium text-gray-500"
+              >
                 Project Name
-              </label>
+              </Label>
               <Input
+                id={`project-title-${index}`}
                 name="title"
                 value={project.title}
                 onChange={(e) =>
@@ -77,10 +83,14 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">
+              <Label
+                htmlFor={`project-description-${index}`}
+                className="block text-sm font-medium text-gray-500"
+              >
                 Description
-              </label>
+              </Label>
               <Input
+                id={`project-description-${index}`}
                 name="description"
                 value={project.description}
                 onChange={(e) =>
@@ -105,14 +115,6 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
           <PlusCircle />
         </Button>
       </div>
-
-      <div className="flex justify-center mt-4">
-        <Button className="text-center justify-items-center bg-green-500 hover:bg-green-600 text-white">
-          <CheckCircle />
-        </Button>
-      </div>
     </div>
   );
 };
-
-export default GeneralInfo;

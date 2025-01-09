@@ -1,7 +1,9 @@
 import React from 'react';
+import { PlusCircle, X } from 'lucide-react';
+
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, PlusCircle, X } from 'lucide-react';
 
 interface WorkExperience {
   jobTitle: string;
@@ -15,7 +17,6 @@ interface WorkExperienceInfoProps {
   workExperienceData: WorkExperience[];
   setWorkExperienceData: React.Dispatch<React.SetStateAction<WorkExperience[]>>;
 }
-
 export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
   workExperienceData,
   setWorkExperienceData,
@@ -79,71 +80,65 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
                 </Button>
               )}
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-500">
-                Job Title
-              </label>
+              <Label htmlFor={`jobTitle-${index}`}>Job Title</Label>
               <Input
+                id={`jobTitle-${index}`}
                 type="text"
                 value={work.jobTitle}
                 onChange={(e) =>
                   handleInputChange(index, 'jobTitle', e.target.value)
                 }
                 placeholder="e.g., Software Engineer"
-                className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                className="border border-gray-300 rounded-md p-2"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">
-                Company
-              </label>
+              <Label htmlFor={`company-${index}`}>Company</Label>
               <Input
+                id={`company-${index}`}
                 type="text"
                 value={work.company}
                 onChange={(e) =>
                   handleInputChange(index, 'company', e.target.value)
                 }
                 placeholder="e.g., Tech Solutions Inc."
-                className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                className="border border-gray-300 rounded-md p-2"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-500">
-                  Start Date
-                </label>
+                <Label htmlFor={`startDate-${index}`}>Start Date</Label>
                 <Input
+                  id={`startDate-${index}`}
                   type="date"
                   value={work.startDate}
                   onChange={(e) =>
                     handleInputChange(index, 'startDate', e.target.value)
                   }
-                  className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                  className="border border-gray-300 rounded-md p-2"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500">
-                  End Date
-                </label>
+                <Label htmlFor={`endDate-${index}`}>End Date</Label>
                 <Input
+                  id={`endDate-${index}`}
                   type="date"
                   value={work.endDate}
                   onChange={(e) =>
                     handleInputChange(index, 'endDate', e.target.value)
                   }
-                  className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
+                  className="border border-gray-300 rounded-md p-2"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-500">
-                Description
-              </label>
+              <Label htmlFor={`description-${index}`}>Description</Label>
               <textarea
+                id={`description-${index}`}
                 className="block w-full p-2 border-gray-300 rounded-md shadow-sm sm:text-sm"
                 rows={4}
                 value={work.description}
@@ -157,21 +152,14 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
         ))}
       </form>
 
-      <div className=" flex justify-center mt-4">
+      <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddWorkExperience}
-          className="text-center justify-items-center text-white bg-gray"
+          className="text-center text-white bg-gray"
         >
           <PlusCircle />
-        </Button>
-      </div>
-      <div className="flex justify-center mt-4">
-        <Button className="text-center justify-items-center bg-green-500 hover:bg-green-600 text-white">
-          <CheckCircle />
         </Button>
       </div>
     </div>
   );
 };
-
-export default WorkExperienceInfo;

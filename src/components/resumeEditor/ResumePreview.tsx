@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
@@ -28,6 +29,7 @@ interface ResumePreviewProps {
   }[];
   projectData: { title: string; description: string }[];
   skillData: { skillName: string }[];
+  summaryData: string[];
   headingColor?: string;
 }
 
@@ -37,6 +39,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   personalData,
   projectData,
   skillData,
+  summaryData,
   headingColor = '#1A73E8',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,30 +56,41 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         {personalData.map((person, index) => (
           <div key={index} className="text-center">
             <h1
-              className="text-3xl font-bold mb-3"
+              className={cn('text-3xl font-bold mb-3')}
               style={{ color: headingColor }}
             >
               {`${person.firstName} ${person.lastName}`}
             </h1>
-            <p className="text-sm text-gray-500">{`${person.city}, ${person.country} • ${person.phoneNumber} • ${person.email}`}</p>
-            <p className="text-sm text-gray-500">{`${person.github}, ${person.linkedin}`}</p>
+            <p className="text-sm text-gray-500">
+              {`${person.city}, ${person.country} • ${person.phoneNumber} • ${person.email}`}
+            </p>
+            <p className="text-sm text-gray-500">
+              {`${person.github}, ${person.linkedin}`}
+            </p>
           </div>
         ))}
 
         <Separator className="my-1 border border-gray-400" />
 
         {/* Summary Section */}
-        <h2 className="text-xl font-semibold" style={{ color: headingColor }}>
+        <h2
+          className={cn('text-xl font-semibold')}
+          style={{ color: headingColor }}
+        >
           Summary
         </h2>
         <p className="text-sm text-gray-600">
-          Experienced full-stack developer with expertise in building scalable
-          web applications and intuitive user interfaces.
+          {summaryData.length > 0
+            ? summaryData.join(', ')
+            : 'No summary provided.'}
         </p>
         <Separator className="my-1 border border-gray-400" />
 
         {/* Work Experience Section */}
-        <h2 className="text-xl font-semibold" style={{ color: headingColor }}>
+        <h2
+          className={cn('text-xl font-semibold')}
+          style={{ color: headingColor }}
+        >
           Work Experience
         </h2>
         <div>
@@ -99,7 +113,10 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         <Separator className="my-1 border border-gray-400" />
 
         {/* Education Section */}
-        <h2 className="text-xl font-semibold" style={{ color: headingColor }}>
+        <h2
+          className={cn('text-xl font-semibold')}
+          style={{ color: headingColor }}
+        >
           Education
         </h2>
         <div className="space-y-4 mt-3">
@@ -118,13 +135,18 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         <Separator className="my-1 border border-gray-400" />
 
         {/* Projects Section */}
-        <h3 className="text-xl font-semibold" style={{ color: headingColor }}>
+        <h3
+          className={cn('text-xl font-semibold')}
+          style={{ color: headingColor }}
+        >
           Projects
         </h3>
         <div className="space-y-4 mt-3">
           {projectData.map((project, index) => (
             <div key={index} className="space-y-1">
-              <p className="text-sm font-medium text-black">{project.title}</p>
+              <p className="text-sm font-medium text-black">
+                ` {project.title} `
+              </p>
               <p className="text-xs text-gray-600">{project.description}</p>
             </div>
           ))}
@@ -133,7 +155,10 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         <Separator className="my-1 border border-gray-400" />
 
         {/* Skills Section */}
-        <h3 className="text-xl font-semibold" style={{ color: headingColor }}>
+        <h3
+          className={cn('text-xl font-semibold')}
+          style={{ color: headingColor }}
+        >
           Skills
         </h3>
         <div className="flex flex-wrap gap-2 mt-2">

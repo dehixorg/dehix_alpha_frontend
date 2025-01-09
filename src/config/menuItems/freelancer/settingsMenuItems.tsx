@@ -5,8 +5,8 @@ import {
   HomeIcon,
   Package,
   User,
+  ImagePlus,
 } from 'lucide-react';
-import { ImagePlus } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 

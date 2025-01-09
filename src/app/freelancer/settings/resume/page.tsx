@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import ResumeEditor from '@/components/resumeEditor/page';

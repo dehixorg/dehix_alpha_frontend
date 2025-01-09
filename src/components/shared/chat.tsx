@@ -3,9 +3,14 @@ import * as React from 'react';
 import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  formatDistanceToNow,
+  format,
+  isToday,
+  isYesterday,
+  isThisYear,
+} from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import { format, isToday, isYesterday, isThisYear } from 'date-fns';
 
 import { EmojiPicker } from '../emojiPicker';
 

@@ -1,66 +1,71 @@
 import React, { useState, useRef } from 'react';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+import { Button } from '../ui/button';
+import { GeneralInfo } from '../form/resumeform/GeneralInfo';
+import { PersonalInfo } from '../form/resumeform/PersonalInfo';
+import { EducationInfo } from '../form/resumeform/EducationInfo';
+import { SkillInfo } from '../form/resumeform/SkillInfo';
+import { WorkExperienceInfo } from '../form/resumeform/WorkExperienceInfo';
+import { SummaryInfo } from '../form/resumeform/SummaryInfo';
+
+import { ResumePreview } from './ResumePreview';
+
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
-import { Button } from '../ui/button';
-import Link from 'next/link';
-import GeneralInfo from '../form/resumeform/GeneralInfo';
-import { PersonalInfo } from '../form/resumeform/PersonalInfo';
-import EducationInfo from '../form/resumeform/EducationInfo';
-import SkillInfo from '../form/resumeform/SkillInfo';
-import WorkExperienceInfo from '../form/resumeform/WorkExperienceInfo';
-import { ResumePreview } from './ResumePreview';
-import SummaryInfo from '../form/resumeform/SummaryInfo';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import Header from '@/components/header/header';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 
 export default function ResumeEditor() {
   const [currentStep, setCurrentStep] = useState(0);
   const [educationData, setEducationData] = useState([
     {
-      degree: '',
-      school: '',
-      startDate: '',
-      endDate: '',
+      degree: 'B.Tech in Computer Science',
+      school: 'XYZ University',
+      startDate: '2015',
+      endDate: '2019',
     },
   ]);
   const [workExperienceData, setWorkExperienceData] = useState([
     {
-      jobTitle: '',
-      company: '',
-      startDate: '',
-      endDate: '',
-      description: '',
+      jobTitle: 'Software Engineer',
+      company: 'Tech Solutions',
+      startDate: '2019',
+      endDate: 'Present',
+      description: 'Developed scalable web applications.',
     },
   ]);
   const [personalData, setPersonalData] = useState([
     {
-      firstName: '',
-      lastName: '',
-      city: '',
-      country: '',
-      phoneNumber: '',
-      email: '',
-      github: '',
-      linkedin: '',
+      firstName: 'rxxx',
+      lastName: 'chxxxx',
+      city: 'New York',
+      country: 'USA',
+      phoneNumber: '123-456-7890',
+      email: '123.doe@example.com',
+      github: 'github.com/rixx',
+      linkedin: 'linkedin.com/in/rixx',
     },
   ]);
   const [projectData, setProjectData] = useState([
     {
-      title: '',
-      description: '',
+      title: 'Project A',
+      description: 'A brief description of Project A.',
     },
   ]);
   const [skillData, setSkillData] = useState([
     {
-      skillName: '',
+      skillName: 'JavaScript',
     },
   ]);
-
+  const [summaryData, setSummaryData] = useState([
+    'Passionate about delivering innovative solutions while maintaining a focus on performance, security, and user experience.',
+  ]);
   const [selectedColor, setSelectedColor] = useState('#000000');
 
   const resumeRef = useRef<HTMLDivElement | null>(null);
@@ -86,7 +91,11 @@ export default function ResumeEditor() {
       setProjectData={setProjectData}
     />,
     <SkillInfo key="skill" skillData={skillData} setSkillData={setSkillData} />,
-    <SummaryInfo key="summary" />,
+    <SummaryInfo
+      key="summary"
+      summaryData={summaryData}
+      setSummaryData={setSummaryData}
+    />,
   ];
 
   const handlePrevious = () => {
@@ -158,6 +167,7 @@ export default function ResumeEditor() {
               projectData={projectData}
               skillData={skillData}
               headingColor={selectedColor}
+              summaryData={summaryData}
             />
           </div>
         </main>
