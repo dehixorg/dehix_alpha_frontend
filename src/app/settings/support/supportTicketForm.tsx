@@ -58,7 +58,6 @@ const TicketForm = () => {
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
-
   useEffect(() => {
     const fetchTickets = async () => {
       try {
@@ -77,29 +76,36 @@ const TicketForm = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-  
+
     if (selectedFile) {
       // Check for file size limit (e.g., 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
         toast({
           variant: 'destructive',
           title: 'File Too Large',
-          description: 'The selected file exceeds the size limit of 5MB. Please select a smaller file.',
+          description:
+            'The selected file exceeds the size limit of 5MB. Please select a smaller file.',
         });
         return;
       }
-  
+
       // Check for supported file types (e.g., image or PDF)
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+      ];
       if (!allowedTypes.includes(selectedFile.type)) {
         toast({
           variant: 'destructive',
           title: 'Unsupported File Type',
-          description: 'The selected file type is not supported. Please upload an image or PDF.',
+          description:
+            'The selected file type is not supported. Please upload an image or PDF.',
         });
         return;
       }
-  
+
       setFile(selectedFile);
       const fileUrl = URL.createObjectURL(selectedFile); // Create a preview URL for the file
       setFilePreview(fileUrl); // Store the preview URL
@@ -111,8 +117,6 @@ const TicketForm = () => {
       });
     }
   };
-  
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +183,6 @@ const TicketForm = () => {
       });
     }
   };
-  
 
   const openEditDialog = (ticket: Ticket) => {
     setEditingTicketId(ticket._id);
@@ -291,8 +294,6 @@ const TicketForm = () => {
     setFilePreview(null);
   };
 
-
-
   return (
     <div className="max-w-7xl mx-auto bg-background p-6 rounded shadow-md">
       {/* Create Ticket Button */}
@@ -324,57 +325,63 @@ const TicketForm = () => {
               rows={4}
               required
             />
-   <div className="file-upload-container w-80 mx-auto mt-6">
-      <div
-        className="file-upload p-4 border-2 border-dashed border-gray-400 rounded-lg text-center"
-        style={{ cursor: 'pointer' }}
-        onClick={() => document.getElementById('file-input')?.click()}
-      >
-        {!file ? (
-          <>
-            <p className="text-lg text-gray-500">Click or drag to upload a file</p>
-            <p className="text-sm text-gray-400">Supported formats: Images, PDFs, etc.</p>
-          </>
-        ) : (
-          <>
-            {file.type.startsWith('image/') ? (
-              filePreview ? (
-                <Image
-                  src={filePreview} // Use the filePreview string directly
-                  alt="File Preview"
-                  width={200}
-                  height={200}
-                  className="rounded border mt-4"
-                />
-              ) : (
-                <div className="text-center">
-                  <p>Loading preview...</p>
-                </div>
-              )
-            ) : (
-              <div className="p-4 border rounded bg-gray-100">
-                <p className="text-sm">Preview not available for this file type</p>
-                <p className="text-xs text-gray-500">{file.name}</p>
+            <div className="file-upload-container w-80 mx-auto mt-6">
+              <div
+                className="file-upload p-4 border-2 border-dashed border-gray-400 rounded-lg text-center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => document.getElementById('file-input')?.click()}
+              >
+                {!file ? (
+                  <>
+                    <p className="text-lg text-gray-500">
+                      Click or drag to upload a file
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Supported formats: Images, PDFs, etc.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    {file.type.startsWith('image/') ? (
+                      filePreview ? (
+                        <Image
+                          src={filePreview} // Use the filePreview string directly
+                          alt="File Preview"
+                          width={200}
+                          height={200}
+                          className="rounded border mt-4"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <p>Loading preview...</p>
+                        </div>
+                      )
+                    ) : (
+                      <div className="p-4 border rounded bg-gray-100">
+                        <p className="text-sm">
+                          Preview not available for this file type
+                        </p>
+                        <p className="text-xs text-gray-500">{file.name}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={removeFile}
+                      className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Remove File
+                    </button>
+                  </>
+                )}
               </div>
-            )}
-            <button
-              onClick={removeFile}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Remove File
-            </button>
-          </>
-        )}
-      </div>
-      <input
-        id="file-input"
-        type="file"
-        className="hidden"
-        onChange={handleFileChange}
-        accept="image/*,application/pdf"
-      />
-    </div>
-  
+              <input
+                id="file-input"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept="image/*,application/pdf"
+              />
+            </div>
+
             <Button type="submit">Submit Ticket</Button>
           </form>
         </DialogContent>
