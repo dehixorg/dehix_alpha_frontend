@@ -43,6 +43,7 @@
     "cookie": "^0.6.0",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
+    "emoji-mart": "^3.0.0",
     "firebase": "^10.11.0",
     "input-otp": "^1.2.4",
     "js-cookie": "^3.0.5",
@@ -63,6 +64,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.2.4",
+    "@types/emoji-mart": "^3.0.14",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-autosuggest": "^10.1.11",

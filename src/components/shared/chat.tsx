@@ -3,9 +3,14 @@ import * as React from 'react';
 import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { formatDistanceToNow } from 'date-fns';
+import {
+  formatDistanceToNow,
+  format,
+  isToday,
+  isYesterday,
+  isThisYear,
+} from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import { format, isToday, isYesterday, isThisYear } from 'date-fns';
 
 import { EmojiPicker } from '../emojiPicker';
 
@@ -225,25 +230,43 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
   async function toggleReaction(messageId: string, emoji: string) {
     const currentMessage = messages.find((msg) => msg.id === messageId);
-    const userHasReacted = currentMessage?.reactions?.[emoji]?.includes(
-      user.uid,
+
+    // Initialize the reactions object if it doesn't exist
+    const updatedReactions = { ...currentMessage?.reactions };
+
+    // Check if the user has already reacted with a different emoji
+    const userHasReactedWithOtherEmoji = Object.keys(updatedReactions).some(
+      (existingEmoji) =>
+        existingEmoji !== emoji &&
+        updatedReactions[existingEmoji]?.includes(user.uid),
     );
 
-    const updatedReactions = { ...currentMessage?.reactions };
-    if (userHasReacted) {
-      updatedReactions[emoji] = updatedReactions[emoji].filter(
-        (uid: any) => uid !== user.uid,
-      );
-      if (updatedReactions[emoji].length === 0) {
-        delete updatedReactions[emoji];
-      }
-    } else {
-      if (!updatedReactions[emoji]) {
-        updatedReactions[emoji] = [];
-      }
-      updatedReactions[emoji].push(user.uid);
+    // If the user has reacted with another emoji, remove it
+    if (userHasReactedWithOtherEmoji) {
+      Object.keys(updatedReactions).forEach((existingEmoji) => {
+        if (
+          existingEmoji !== emoji &&
+          updatedReactions[existingEmoji]?.includes(user.uid)
+        ) {
+          updatedReactions[existingEmoji] = updatedReactions[
+            existingEmoji
+          ].filter((uid: any) => uid !== user.uid);
+          if (updatedReactions[existingEmoji].length === 0) {
+            delete updatedReactions[existingEmoji];
+          }
+        }
+      });
     }
 
+    // Toggle the current emoji reaction
+    if (!updatedReactions[emoji]) {
+      updatedReactions[emoji] = [];
+    }
+
+    // Add the user's UID to the reaction array
+    updatedReactions[emoji].push(user.uid);
+
+    // Update the Firestore database with the updated reactions
     await updateDataInFirestore(
       `conversations/${conversation.id}/messages/`,
       messageId,
@@ -277,7 +300,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
               </div>
             </div>
           </CardHeader>
-
           <CardContent className="flex-1 px-6 pb-4">
             <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
               <div ref={messagesEndRef} />
@@ -287,11 +309,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 );
                 const readableTimestamp =
                   formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+
                 return (
                   <div
                     id={message.id}
                     key={index}
-                    className="flex flex-row"
+                    className="flex flex-row relative"
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => setHoveredMessageId(null)}
                   >
@@ -306,6 +329,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         </AvatarFallback>
                       </Avatar>
                     )}
+
                     <div
                       className={cn(
                         'flex w-max max-w-[50%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
@@ -356,8 +380,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           <TooltipTrigger asChild>
                             <div className="break-words">
                               {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-foreground rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
-                                  <div className="text-sm italic text-gray-400 bg-foreground ">
+                                <div className="flex items-center justify-between p-2 bg-background rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
+                                  <div className="text-sm italic text-gray-400 bg-background  ">
                                     <span className="font-semibold">
                                       {messages.find(
                                         (msg) => msg.id === message.replyTo,
@@ -374,6 +398,14 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+
+                      {/* Render reactions inside the message bubble */}
+                      <Reactions
+                        messageId={message.id}
+                        reactions={message.reactions || {}}
+                        toggleReaction={toggleReaction}
+                      />
+
                       <div
                         className={cn(
                           'text-xs mt-1',
@@ -385,29 +417,23 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         {formattedTimestamp}
                       </div>
                     </div>
+
                     {hoveredMessageId === message.id && (
                       <Button
-                        className="h-6 w-6"
-                        onClick={() => setReplyToMessageId(message.id)}
+                        className="absolute  top-0 right-0 h-6 w-6 z-10 pointer-events-auto"
+                        onClick={() =>
+                          setReplyToMessageId(message.id && message.senderId)
+                        }
                         size="icon"
                         title="Reply"
                       >
                         <Reply className="h-4 w-4 " />
                       </Button>
                     )}
-                    {message?.reactions &&
-                      Object.keys(message.reactions).length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions}
-                            toggleReaction={toggleReaction}
-                          />
-                        </div>
-                      )}
+
                     {message.senderId !== user.uid && (
                       <EmojiPicker
-                        onSelect={(emoji: any) =>
+                        onSelect={(emoji: string) =>
                           toggleReaction(message.id, emoji)
                         }
                       />
@@ -451,7 +477,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   </div>
                   <Button
                     onClick={() => setReplyToMessageId('')}
-                    className="text-foreground hover:text-gray-500 bg-background h-6 "
+                    className="text-foreground hover:text-gray-500 bg-primary-foreground h-6 "
                     title="Cancel Reply"
                   >
                     <X className="h-4 w-4 text-foreground " />
