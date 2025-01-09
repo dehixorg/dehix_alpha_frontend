@@ -203,13 +203,6 @@ export default function ResumeEditor() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button>
-                <Link href="/settings/resume">Close</Link>
-              </Button>
-              <p className="text-muted-foreground opacity-0">Saving...</p>
-            </div>
-
             <div className="flex items-center">
               <Button onClick={downloadPDF} className="p-2">
                 Download PDF

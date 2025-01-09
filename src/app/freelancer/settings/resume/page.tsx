@@ -11,21 +11,17 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
+// import { axiosInstance } from '@/lib/axiosinstance';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
 
-  const handleFormSubmit = () => {
-    setRefresh((prev) => !prev);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        // const response = await axiosInstance.get(`/freelancer/${user.uid}`);
       } catch (error) {
         console.error('API Error:', error);
       }
