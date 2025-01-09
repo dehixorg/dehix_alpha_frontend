@@ -73,6 +73,8 @@ export default function Dashboard() {
 
         if (projectData) {
           setProject(projectData);
+          console.log(projectData);
+          
         }
       } catch (error) {
         console.error('API Error:', error);
@@ -172,7 +174,7 @@ export default function Dashboard() {
                       </CardHeader>
                       <CardContent className="pl-0">
                         <div className="grid w-full items-center gap-4">
-                          <div className="w-auto grid grid-cols-2 gap-4">
+                          <div className="w-auto grid grid-cols-1 md:grid-cols-2 gap-4">
                             {project.profiles?.map((profile, index) => (
                               <ProjectSkillCard
                                 key={index}
@@ -182,10 +184,13 @@ export default function Dashboard() {
                                 status={project.status}
                                 startDate={project.createdAt}
                                 endDate={project.end}
-                                domains={[]}
+                                domains={['domain1','domain2']}
                                 skills={profile.skills}
                               />
                             ))}
+                            <ProjectSkillCard
+                                isLastCard={true}
+                              />
                           </div>
                         </div>
                       </CardContent>

@@ -1,17 +1,18 @@
 import React from 'react';
-import { Mail } from 'lucide-react';
+import { CheckCircle, Code2, Mail, Tag } from 'lucide-react';
 
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
+import { Separator } from '@/components/ui/separator';
 import DateRange from '@/components/cards/dateRange';
 import { Button } from '@/components/ui/button';
+
 export interface ProjectDetailCardProps {
   projectName: string;
   description: string;
@@ -39,71 +40,81 @@ function ProjectDetailCard({
     getStatusBadge(status);
 
   return (
-    <Card className="p-4">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between">
-          <CardTitle className="text-2xl font-bold">{projectName}</CardTitle>
-          <div>
-            <Badge className={statusBadgeStyle}>{projectStatus}</Badge>
+    <Card className="shadow-lg border border-gray-800 rounded-lg">
+    <CardHeader>
+      <div className="flex flex-wrap justify-between items-center mb-0.5">
+        <CardTitle className="text-xl md:text-2xl font-semibold">{projectName}</CardTitle>
+        <Badge className={`${statusBadgeStyle} px-1 py-0.5 text-xs md:text-sm rounded-md`}>
+          {projectStatus}
+        </Badge>
+      </div>
+      <Separator className="my-4" />
+    </CardHeader>
+  
+    <CardContent className="space-y-6">
+      <DateRange startDate={startDate} endDate={endDate} />
+  
+      <p className="text-sm md:text-base leading-relaxed">{description}</p>
+  
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Project Domain Section */}
+        <div className="flex flex-col gap-2 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner w-full md:w-1/2">
+          <div className="flex items-center gap-2">
+            <Tag className="w-4 h-4 block md:hidden" />
+            <p className="font-medium">Project Domain:</p>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {projectDomain.map((domain, index) => (
+              <Badge
+                key={index}
+                className="bg-gray-200 text-gray-900 text-xs md:text-sm px-2 py-1 rounded-full"
+              >
+                {domain}
+              </Badge>
+            ))}
           </div>
         </div>
-        <div className="h-[1px] bg-gray-600 mt-2 mb-4"></div>
-      </CardHeader>
-
-      <CardContent>
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-          <div className="lg:col-span-full">
-            <p className="mb-6 mx-4 w-full break-words">{description}</p>
-
-            <Badge className="uppercase flex font-semibold items-center text-sm bg-gray-300 px-2 rounded">
-              <Mail className="mr-2 h-4 w-4" />
-              <span>{email}</span>
-            </Badge>
-
-            <div className="flex justify-start items-center mb-2">
-              <h4 className="text-xl font-semibold">Project Domains: </h4>
-              <div className="flex flex-wrap gap-1 my-2 ml-1">
-                {projectDomain.map((projectDomain, index) => (
-                  <Badge
-                    key={index}
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
-                  >
-                    {projectDomain}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-start items-center">
-              <h4 className="text-xl font-semibold">Skills: </h4>
-              <div className="flex flex-wrap gap-1 my-2 ml-1">
-                {skills?.map((skill, index) => (
-                  <Badge
-                    key={index}
-                    className="uppercase mx-1 text-xs font-normal bg-gray-300"
-                  >
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+  
+        {/* Skills Section */}
+        <div className="flex flex-col gap-2 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner w-full md:w-1/2">
+          <div className="flex items-center gap-2">
+            <Code2 className="w-4 h-4 block md:hidden" />
+            <p className="font-medium">Skills:</p>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {skills.map((skill, index) => (
+              <Badge
+                key={index}
+                className="bg-gray-200 text-gray-900 text-xs md:text-sm px-2 py-1 rounded-full"
+              >
+                {skill}
+              </Badge>
+            ))}
           </div>
         </div>
-      </CardContent>
-
-      <CardFooter className="flex items-center">
-        <DateRange startDate={startDate} endDate={endDate} />
-
+      </div>
+  
+      {/* Email Section */}
+      <div className="flex flex-wrap items-center gap-4 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner">
+        <Mail className="w-4 h-4 text-[#fcd062]" />
+        <span className="text-sm">{email}</span>
+      </div>
+  
+      {/* Completed Button */}
+      <div className="flex justify-end mt-4">
         <Button
-          className="ml-auto"
+          className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium  text-white rounded-md  ${projectStatus == "COMPLETED" ? 'bg-green-600 hover:bg-green-500 ' : 'bg-blue-600 hover:bg-blue-500' } `}
           size="sm"
           onClick={handleCompleteProject}
-          disabled={!handleCompleteProject} // Disable if the function is not provided
+          disabled={!handleCompleteProject}
         >
-          Mark as Completed
+          <CheckCircle className="w-4 h-4 mr-1" />
+          {projectStatus == "COMPLETED" ? 'Completed' : 'Mark complete' }
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </CardContent>
+  </Card>
+  
   );
 }
 

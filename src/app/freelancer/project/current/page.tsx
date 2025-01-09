@@ -13,6 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 
 interface Project {
   _id: string;
@@ -52,6 +53,8 @@ export default function CurrentProject() {
         const response = await axiosInstance.get(
           `/freelancer/${user.uid}/project?status=ACTIVE`,
         ); // Fetch data from API
+        console.log(response);
+        
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
@@ -86,12 +89,18 @@ export default function CurrentProject() {
           ]}
         />
 
-        <div className="mb-8 ml-10">
-          <h1 className="text-3xl font-bold">Current Projects</h1>
-          <p className="text-gray-400 mt-2">
-            Browse and manage your active freelance projects
-          </p>
+        <div className="mb-8 mx-4 lg:mx-10 flex flex-col lg:flex-row justify-between items-start lg:items-center p-3">
+          <div>
+            <h1 className="text-3xl font-bold">Current Projects</h1>
+            <p className="text-gray-400 mt-2">
+              Browse and manage your active freelance projects
+            </p>
+          </div>
+          <div className="mt-4 lg:mt-0">
+            <CreateMilestoneDialog />
+          </div>
         </div>
+
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"

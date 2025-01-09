@@ -6,6 +6,7 @@ import {
   FolderDot,
   CircleX,
   Settings,
+  Milestone,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -40,6 +41,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/project/rejected',
     icon: <CircleX className="h-5 w-5" />,
     label: 'Rejected Verification',
+  },
+  {
+    href: '/freelancer/project/milestone',
+    icon: <Milestone/>,
+    label: 'Milestone',
   },
 ];
 

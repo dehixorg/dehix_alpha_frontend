@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes loopScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.loop-scroll {
+  display: flex;
+  animation: loopScroll 10s linear infinite;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
