@@ -301,16 +301,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     setDocType(type);
   };
 
-  const handleEditSkill = (skill: SkillData) => {
-    setEditingSkill(skill);
-    setOpenSkillDialog(true);
-  };
-
-  const handleEditDomain = (domain: DomainData) => {
-    setEditingDomain(domain);
-    setOpenDomainDialog(true);
-  };
-
   return (
     <div className="p-6">
       <div className="mb-8 ml-5">
