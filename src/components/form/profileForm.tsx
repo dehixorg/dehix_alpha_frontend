@@ -155,8 +155,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
     try {
       const response = await axiosInstance.post('/skills', customSkillData);
-      console.log(response);
-      
+
       const updatedSkills = [...skills, { label: customSkill.label }];
       setDomains(updatedSkills);
 
@@ -203,8 +202,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
     try {
       const response = await axiosInstance.post('/domain', customDomainData);
-      console.log(response);
-      
+
       const updatedDomains = [...domains, { label: customDomain.label }];
       setDomains(updatedDomains);
 
@@ -369,11 +367,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         console.log(userResponse);
-        
+
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
-        
+
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
@@ -422,13 +420,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...data,
         skills: currSkills,
         domain: currDomains,
-        projectDomains:currProjectDomains,
+        projectDomains: currProjectDomains,
       });
       await axiosInstance.put(`/freelancer/${user_id}`, {
         ...data,
         skills: currSkills,
         domain: currDomains,
-        projectDomain:currProjectDomains,
+        projectDomain: currProjectDomains,
         description: data.description,
       });
 
