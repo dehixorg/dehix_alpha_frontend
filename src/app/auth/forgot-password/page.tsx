@@ -1,15 +1,16 @@
 'use client';
+import { LoaderCircle } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { ThemeToggle } from '@/components/shared/themeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { resetPassword } from '@/lib/utils';
-import { LoaderCircle } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState<string>('');
@@ -27,7 +28,6 @@ export default function ForgotPassword() {
         description: 'Password reset email sent! Please check your inbox.',
       });
       router.push('/auth/login');
-
     } catch (error: any) {
       toast({
         variant: 'destructive',
