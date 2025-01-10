@@ -80,15 +80,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [lastAddedItems, setLastAddedItems] = useState<{
-    skills: { name: string }[];
-    projectsDomains: { name: string }[];
-    domains: { name: string }[];
-  }>({
-    skills: [],
-    projectsDomains: [],
-    domains: [],
-  });
   const [customSkill, setCustomSkill] = useState({
     label: '',
     description: '',
@@ -118,7 +109,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
-  const handleAddSkill = (type: string) => {
+  const handleAddSkill = () => {
     addSkill(tmpSkill, skills, setSkills);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
@@ -132,11 +123,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        skills: [...prev.skills, { name: tmpSkill }],
-      }));
-
       setTmpSkill('');
     }
   };
@@ -288,7 +274,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleAddDomain = (type: string) => {
+  const handleAddDomain = () => {
     addDomain(tmpDomain, domains, setDomains);
     if (
       tmpDomain &&
@@ -305,10 +291,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        domains: [...prev.domains, { name: tmpDomain }],
-      }));
       setTmpDomain('');
     }
   };
@@ -331,10 +313,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
-      setLastAddedItems((prev) => ({
-        ...prev,
-        projectsDomains: [...prev.projectsDomains, { name: tmpProjectDomains }],
-      }));
       setTmpProjectDomains('');
     }
   };
@@ -465,7 +443,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-10 grid-cols-1 sm:grid-cols-2 mt-4"
+          className="grid gap-10 grid-cols-2 mt-4"
         >
           <FormField
             control={form.control}
@@ -513,18 +491,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input disabled placeholder="Enter your email" {...field} />
+                  <Input placeholder="Enter your email" {...field} />
                 </FormControl>
                 <FormDescription>Non editable field</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="col-span-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Enter description" {...field} />
@@ -533,6 +512,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="phone"
@@ -567,264 +547,261 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* <Separator className="col-span-2 mt-0" /> */}
           {/* <FormField
-          control={form.control}
-          name="resume"
-          render={({ field }) => (
-            <FormItem 
-          className=" col-span-1 md:col-span-2">
-              <FormLabel>Resume URL</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your Resume URL"
-                  type="url"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>Enter your Resume URL</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
-          <Separator className="sm:col-span-2 mt-0" />
-          <div className="sm:col-span-2">
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
-              <div className="sm:col-span-2">
-                <FormLabel>Skills</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('skill');
-                      } else {
-                        setTmpSkill(value);
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+
+          <Separator className="col-span-2" />
+          <div className="flex flex-wrap gap-6 w-full">
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
+              <FormLabel>Skills</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('skill');
+                    } else {
+                      setTmpSkill(value);
+                    }
+                  }}
+                  value={tmpSkill || ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skills
+                      .filter(
+                        (skill: any) =>
+                          !currSkills.some((s: any) => s.name === skill.label),
+                      )
+                      .map((skill: any, index: number) => (
+                        <SelectItem key={index} value={skill.label}>
+                          {skill.label}
+                        </SelectItem>
+                      ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddSkill();
+                    setTmpSkill('');
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currSkills.map((skill: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
+                  >
+                    {skill.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSkill(skill.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
+              <FormLabel>Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('domain');
+                    } else {
+                      setTmpDomain(value);
+                    }
+                  }}
+                  value={tmpDomain || ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains
+                      .filter(
+                        (domain: any) =>
+                          !currDomains.some(
+                            (d: any) => d.name === domain.label,
+                          ),
+                      )
+                      .map((domain: any, index: number) => (
+                        <SelectItem key={index} value={domain.label}>
+                          {domain.label}
+                        </SelectItem>
+                      ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddDomain();
+                    setTmpDomain('');
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currDomains.map((domain: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
+                  >
+                    {domain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDomain(domain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-[150px] max-w-[300px]">
+              <FormLabel>Project Domains</FormLabel>
+              <div className="flex items-center mt-2">
+                <Select
+                  onValueChange={(value) => {
+                    if (value === 'other') {
+                      setIsDialogOpen(true);
+                      setDialogType('projectDomain');
+                    } else {
+                      setTmpProjectDomains(value);
+                    }
+                  }}
+                  value={tmpProjectDomains || ''}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        tmpProjectDomains
+                          ? tmpProjectDomains
+                          : 'Select project domain'
                       }
-                    }}
-                    value={tmpSkill || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skills
-                        .filter(
-                          (skill: any) =>
-                            !currSkills.some(
-                              (s: any) => s.name === skill.label,
-                            ),
-                        )
-                        .map((skill: any, index: number) => (
-                          <SelectItem key={index} value={skill.label}>
-                            {skill.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpSkill}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddSkill('skills');
-                      setTmpSkill('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currSkills.map((skill: any, index: number) => (
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectDomains
+                      .filter(
+                        (projectDomains: any) =>
+                          !currProjectDomains.some(
+                            (d: any) => d.name === projectDomains.label,
+                          ),
+                      )
+                      .map((projectDomains: any, index: number) => (
+                        <SelectItem key={index} value={projectDomains.label}>
+                          {projectDomains.label}
+                        </SelectItem>
+                      ))}
+                    <SelectItem value="other">
+                      <span className="text-gray-500 italic">Other</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => {
+                    handleAddprojectDomain();
+                    setTmpProjectDomains('');
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-5">
+                {currProjectDomains.map(
+                  (projectDomains: any, index: number) => (
                     <Badge
-                      className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                        lastAddedItems.skills.some(
-                          (item) => item.name === skill.name,
-                        )
-                          ? 'bg-blue-500 text-white hover:bg-[#4486eb] '
-                          : ''
-                      }`}
+                      className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                       key={index}
                     >
-                      {skill.name}
+                      {projectDomains.name}
                       <button
                         type="button"
-                        onClick={() => handleDeleteSkill(skill.name)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <FormLabel>Domains</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('domain');
-                      } else {
-                        setTmpDomain(value);
-                      }
-                    }}
-                    value={tmpDomain || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {domains
-                        .filter(
-                          (domain: any) =>
-                            !currDomains.some(
-                              (d: any) => d.name === domain.label,
-                            ),
-                        )
-                        .map((domain: any, index: number) => (
-                          <SelectItem key={index} value={domain.label}>
-                            {domain.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpDomain}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddDomain('domains');
-                      setTmpDomain('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currDomains.map((domain: any, index: number) => (
-                    <Badge
-                      className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                        lastAddedItems.domains.some(
-                          (item) => item.name === domain.name,
-                        )
-                          ? 'bg-blue-500 text-white'
-                          : ''
-                      }`}
-                      key={index}
-                    >
-                      {domain.name}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteDomain(domain.name)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <FormLabel>Project Domains</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('projectDomain');
-                      } else {
-                        setTmpProjectDomains(value);
-                      }
-                    }}
-                    value={tmpProjectDomains || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          tmpProjectDomains
-                            ? tmpProjectDomains
-                            : 'Select project domain'
+                        onClick={() =>
+                          handleDeleteProjDomain(projectDomains.name)
                         }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectDomains
-                        .filter(
-                          (projectDomains: any) =>
-                            !currProjectDomains.some(
-                              (d: any) => d.name === projectDomains.label,
-                            ),
-                        )
-                        .map((projectDomains: any, index: number) => (
-                          <SelectItem key={index} value={projectDomains.label}>
-                            {projectDomains.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpProjectDomains}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddprojectDomain();
-                      setTmpProjectDomains('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currProjectDomains.map(
-                    (projectDomains: any, index: number) => (
-                      <Badge
-                        className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                          lastAddedItems.projectsDomains.some(
-                            (item) => item.name === projectDomains.name,
-                          )
-                            ? 'bg-blue-500 text-white'
-                            : ''
-                        }`}
-                        key={index}
+                        className="ml-2 text-red-500 hover:text-red-700"
                       >
-                        {projectDomains.name}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDeleteProjDomain(projectDomains.name)
-                          }
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </Badge>
-                    ),
-                  )}
-                </div>
+                        <X className="h-4 w-4" />
+                      </button>
+                    </Badge>
+                  ),
+                )}
               </div>
             </div>
           </div>
-          <Separator className="sm:col-span-2 mt-0" />
+          <Separator className="col-span-2 mt-0" />
           <FormField
             control={form.control}
             name="resume"
@@ -837,10 +814,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          <Separator className="sm:col-span-2 mt-0" />
-          <Button type="submit" className="sm:col-span-2">
+          <Separator className="col-span-2 mt-0" />
+          <Button type="submit" className="col-span-2">
             Update profile
           </Button>
+
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}
