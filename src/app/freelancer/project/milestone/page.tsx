@@ -37,7 +37,7 @@ const page = () => {
         <div className="py-8 px-4">
           <h1 className="text-2xl font-bold mb-4">Project Milestones</h1>
           <div className="w-full flex justify-center items-center">
-            <div className="flex justify-center items-center w-[80vw] h-[70vh] p-10">
+            <div className="flex justify-center items-center w-[100vw] h-[39vh] p-10">
               <MilestoneTimeline />
             </div>
           </div>

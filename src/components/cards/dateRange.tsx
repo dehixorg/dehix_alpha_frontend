@@ -1,5 +1,6 @@
 import React from 'react';
-import { CalendarIcon } from 'lucide-react';
+
+import { Badge } from '../ui/badge'; // Adjust the import path as needed
 
 interface DateRangeProps {
   startDate: Date | string | null | undefined; // Allow string or Date types
@@ -17,21 +18,20 @@ const DateRange: React.FC<DateRangeProps> = ({ startDate, endDate }) => {
   // Format endDate, handle both Date and string, and "current" string value
   const formattedEndDate =
     endDate === 'current' || !endDate
-      ? 'Still Going On!'
+      ? 'Current'
       : typeof endDate === 'string'
         ? new Date(endDate).toLocaleDateString() // If it's a string, convert to Date first
         : new Date(endDate).toLocaleDateString(); // If it's a Date object, use it directly
 
   return (
-    <div className="flex relative  items-start sm:items-center gap-1 rounded-md ">
-      <div className="flex items-center gap-1 sm:gap-2 ">
-        <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 " />
-        <span className="text-xs sm:text-sm font-medium">{`Start  ${formattedStartDate}`}</span>
-      </div>
+    <div className="flex items-center">
+      <Badge className="text-sm font-semibold px-3 py-1 uppercase rounded">
+        {formattedStartDate}
+      </Badge>
       <p>-</p>
-      <div className="flex items-center ">
-        <span className="text-xs sm:text-sm font-medium">{` ${formattedEndDate}`}</span>
-      </div>
+      <Badge className="text-sm font-semibold px-3 py-1 uppercase rounded">
+        {formattedEndDate}
+      </Badge>
     </div>
   );
 };
