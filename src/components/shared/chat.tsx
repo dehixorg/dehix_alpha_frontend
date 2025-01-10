@@ -11,19 +11,12 @@ import {
   isThisYear,
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
 
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -33,7 +26,6 @@ import {
   CardFooter,
   CardHeader,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   subscribeToFirestoreCollection,
   updateConversationWithMessageTransaction,
@@ -376,29 +368,20 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         }
                       }}
                     >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="break-words">
-                              {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-background rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
-                                  <div className="text-sm italic text-gray-400 bg-background  ">
-                                    <span className="font-semibold">
-                                      {messages.find(
-                                        (msg) => msg.id === message.replyTo,
-                                      )?.content || 'Message not found'}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                              <div>{message.content}</div>
+                      <div className="break-words">
+                        {message.replyTo && (
+                          <div className="flex items-center justify-between p-2 bg-background rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
+                            <div className="text-sm italic text-gray-400 bg-background  ">
+                              <span className="font-semibold">
+                                {messages.find(
+                                  (msg) => msg.id === message.replyTo,
+                                )?.content || 'Message not found'}
+                              </span>
                             </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p>{readableTimestamp}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                          </div>
+                        )}
+                        <div>{message.content}</div>
+                      </div>
 
                       {/* Render reactions inside the message bubble */}
                       <Reactions

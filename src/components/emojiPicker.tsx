@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Smile } from 'lucide-react';
-import { Picker } from 'emoji-mart'; // Import the Picker component from emoji-mart v3
+import Picker from '@emoji-mart/react';
 
 import { Button } from '@/components/ui/button'; // Import Button from ShadCN UI
 import {
@@ -8,9 +8,6 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover'; // Import Popover components
-
-// Options for emoji-mart (can customize this if needed)
-import 'emoji-mart/css/emoji-mart.css'; // Import default emoji-mart styles
 
 export const EmojiPicker = ({
   onSelect,
@@ -34,17 +31,9 @@ export const EmojiPicker = ({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="p-0 w-[320px] border border-gray-300 bg-white shadow-md rounded-lg"
+        className="p-0 w-[320px] shadow-md rounded-lg"
       >
-        <Picker
-          set="apple" // Option for emoji set style ('apple', 'google', 'twitter', etc.)
-          onSelect={handleEmojiSelect} // Pass the selected emoji to handleEmojiSelect
-          title="Pick your emoji" // Title of the picker
-          emoji="point_up" // Default emoji to show
-          skin={1} // Default skin tone (1-6)
-          style={{ width: '100%' }} // Ensure the picker is fully responsive
-          theme="auto" // Auto theme to switch between light/dark mode
-        />
+        <Picker onEmojiSelect={handleEmojiSelect} />
       </PopoverContent>
     </Popover>
   );
