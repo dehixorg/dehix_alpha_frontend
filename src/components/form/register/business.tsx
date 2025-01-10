@@ -65,59 +65,6 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
     { id: 2, title: 'Verification', icon: Shield },
   ];
 
-  //   return (
-  //     <div className="w-full py-6 mb-8">
-  //   <div className="text-center space-y-4 top-0">
-  //     <h1 className="text-2xl font-bold">Create Your Business Account</h1>
-  //     <p className="text-muted-foreground">
-  //       Join our community and start your Business
-  //     </p>
-  //   </div>
-  //   <div className="flex items-center justify-center mt-8">
-  //     {steps.map((step, index) => (
-  //       <React.Fragment key={step.id}>
-  //         <div className="relative">
-  //           <div
-  //             className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-  //               ${
-  //                 currentStep > step.id
-  //                   ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-  //                   : currentStep === step.id
-  //                   ? 'border-primary bg-background text-primary dark:bg-background dark:text-primary'
-  //                   : 'border-muted bg-background text-muted dark:border-muted dark:bg-background dark:text-muted'
-  //               }`}
-  //           >
-  //             {currentStep > step.id ? (
-  //               <CheckCircle2 className="w-6 h-6 text-background dark:text-background" />
-  //             ) : (
-  //               <step.icon className="w-6 h-6" />
-  //             )}
-  //           </div>
-  //           <span
-  //             className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-sm whitespace-nowrap font-medium
-  //               ${
-  //                 currentStep >= step.id
-  //                   ? 'text-primary dark:text-primary'
-  //                   : 'text-muted-foreground dark:text-muted-foreground'
-  //               }`}
-  //           >
-  //             {step.title}
-  //           </span>
-  //         </div>
-  //         {index < steps.length - 1 && (
-  //           <div className="w-24 mx-2 h-[2px] bg-muted dark:bg-muted">
-  //             <div
-  //               className="h-full bg-primary dark:bg-primary transition-all duration-500"
-  //               style={{ width: currentStep > step.id ? '100%' : '0%' }}
-  //             />
-  //           </div>
-  //         )}
-  //       </React.Fragment>
-  //     ))}
-  //   </div>
-  // </div>
-
-  //   );
   return (
     <div className="w-full py-4 sm:py-6 mb-4 sm:mb-8">
       <div className="text-center space-y-2 sm:space-y-4">
