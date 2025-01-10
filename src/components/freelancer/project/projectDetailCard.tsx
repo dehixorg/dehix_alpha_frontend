@@ -95,7 +95,7 @@ function ProjectDetailCard({
 
         {/* Email Section */}
         <div className="flex flex-wrap items-center gap-4 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner">
-          <Mail className="w-4 h-4 text-[#fcd062]" />
+          <Mail className="w-4 h-4 " />
           <span className="text-sm">{email}</span>
         </div>
 

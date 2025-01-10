@@ -23,7 +23,7 @@ const DateRange: React.FC<DateRangeProps> = ({ startDate, endDate }) => {
         : new Date(endDate).toLocaleDateString(); // If it's a Date object, use it directly
 
   return (
-    <div className="flex relative  items-start sm:items-center gap-1 rounded-md shadow-md">
+    <div className="flex relative  items-start sm:items-center gap-1 rounded-md ">
       <div className="flex items-center gap-1 sm:gap-2 ">
         <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 " />
         <span className="text-xs sm:text-sm font-medium">{`Start  ${formattedStartDate}`}</span>
