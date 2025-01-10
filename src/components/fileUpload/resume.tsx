@@ -175,9 +175,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
         )}
 
         {previewUrl && !selectedResume && (
-          <p className="text-center text-gray-600">
-            Resume Uploaded
-          </p>
+          <p className="text-center text-gray-600">Resume Uploaded</p>
         )}
       </div>
     </div>
