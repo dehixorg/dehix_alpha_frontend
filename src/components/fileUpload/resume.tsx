@@ -17,7 +17,7 @@ interface ResumeUploadProps {
   url: string;
 }
 
-const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id , url }) => {
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
