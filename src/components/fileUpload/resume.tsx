@@ -174,12 +174,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id, url }) => {
           </Button>
         )}
 
-        {previewUrl && (
+        {previewUrl && !selectedResume && (
           <p className="text-center text-gray-600">
-            Uploaded:{' '}
-            <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-              {previewUrl}
-            </a>
+            Resume Uploaded
           </p>
         )}
       </div>
