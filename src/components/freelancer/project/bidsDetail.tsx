@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { PackageOpen } from 'lucide-react';
+import { CheckCircle, PackageOpen, Video, XCircle } from 'lucide-react';
 
 import {
   Accordion,
@@ -138,17 +138,19 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="p-4 flex flex-col space-y-2">
-                    <p>
-                      <strong>Experience:</strong> {profile.experience ?? 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Min Connect:</strong>{' '}
-                      {profile.minConnect ?? 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Total Bids:</strong> {bids.length}
-                    </p>
+                  <div className="p-4 flex flex-col gap-2">
+                    <div className="flex gap-2 items-center">
+                      <p>Experience:</p>
+                      <p>{profile.experience ?? 'N/A'}</p>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <p>Min Connect:</p>
+                      <p>{profile.minConnect ?? 'N/A'}</p>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <p>Total Bids:</p>
+                      <p>{bids.length}</p>
+                    </div>
                   </div>
 
                   <Accordion type="single" collapsible>
@@ -157,66 +159,82 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         <AccordionItem key={status} value={`${status}-bids`}>
                           <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
                           <AccordionContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {bids
-                                .filter((bid) => bid.bid_status === status)
-                                .map((bid) => (
-                                  <Card
-                                    key={bid._id}
-                                    className="border border-gray-800 rounded-lg p-6 bg-black text-white shadow-lg transition-transform transform hover:scale-105"
-                                  >
-                                    <h3 className="font-semibold text-xl mb-2">
-                                      {bid.userName}
-                                    </h3>
-                                    <p className="text-gray-400 mb-4">
-                                      {bid.description}
-                                    </p>
-                                    <div className="flex flex-col mb-4">
-                                      <span className="text-sm text-gray-400">
-                                        Current Price: ${bid.current_price}
-                                      </span>
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                              {bids.filter((bid) => bid.bid_status === status)
+                                .length > 0 ? (
+                                bids
+                                  .filter((bid) => bid.bid_status === status)
+                                  .map((bid) => (
+                                    <Card
+                                      key={bid._id}
+                                      className="border border-gray-800 rounded-lg p-6  shadow-lg "
+                                    >
+                                      <h3 className="font-semibold text-xl mb-2">
+                                        {bid.userName}
+                                      </h3>
+                                      <p className=" mb-4">{bid.description}</p>
+                                      <div className="flex flex-col mb-4">
+                                        <span className="text-sm ">
+                                          Current Price: ${bid.current_price}
+                                        </span>
+                                      </div>
 
-                                    <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
-                                      {(status === 'Pending' ||
-                                        status === 'Lobby') && (
-                                        <>
-                                          <Button
-                                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
-                                            onClick={() =>
-                                              handleUpdateStatus(
-                                                bid._id,
-                                                'Accepted',
-                                              )
-                                            }
-                                            disabled={loadingBids[bid._id]}
-                                          >
-                                            {loadingBids[bid._id]
-                                              ? 'Loading...'
-                                              : 'Accept'}
-                                          </Button>
-                                          <Button
-                                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
-                                            onClick={() =>
-                                              handleUpdateStatus(
-                                                bid._id,
-                                                'Rejected',
-                                              )
-                                            }
-                                            disabled={loadingBids[bid._id]}
-                                          >
-                                            {loadingBids[bid._id]
-                                              ? 'Loading...'
-                                              : 'Reject'}
-                                          </Button>
-                                          <Button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full md:w-auto">
-                                            Interview
-                                          </Button>
-                                        </>
-                                      )}
-                                    </div>
-                                  </Card>
-                                ))}
+                                      <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
+                                        {(status === 'Pending' ||
+                                          status === 'Lobby') && (
+                                          <>
+                                            <Button
+                                              className="flex items-center justify-center bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
+                                              onClick={() =>
+                                                handleUpdateStatus(
+                                                  bid._id,
+                                                  'Accepted',
+                                                )
+                                              }
+                                              disabled={loadingBids[bid._id]}
+                                            >
+                                              {loadingBids[bid._id] ? (
+                                                'Loading...'
+                                              ) : (
+                                                <>
+                                                  <CheckCircle className="mr-2 h-5 w-5" />{' '}
+                                                  Accept
+                                                </>
+                                              )}
+                                            </Button>
+                                            <Button
+                                              className="flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
+                                              onClick={() =>
+                                                handleUpdateStatus(
+                                                  bid._id,
+                                                  'Rejected',
+                                                )
+                                              }
+                                              disabled={loadingBids[bid._id]}
+                                            >
+                                              {loadingBids[bid._id] ? (
+                                                'Loading...'
+                                              ) : (
+                                                <>
+                                                  <XCircle className="mr-2 h-5 w-5" />
+                                                  reject
+                                                </>
+                                              )}
+                                            </Button>
+                                            <Button className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full h-10 md:w-auto">
+                                              <Video className="mr-2 h-5 w-5" />
+                                              Interview
+                                            </Button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </Card>
+                                  ))
+                              ) : (
+                                <div className="text-center col-span-1 md:col-span-2 lg:col-span-3 text-gray-500">
+                                  No bids to show
+                                </div>
+                              )}
                             </div>
                           </AccordionContent>
                         </AccordionItem>
