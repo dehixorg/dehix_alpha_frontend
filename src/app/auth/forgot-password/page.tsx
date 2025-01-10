@@ -1,32 +1,39 @@
 'use client';
-import { useState } from 'react';
-import { LoaderCircle } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-
+import { ThemeToggle } from '@/components/shared/themeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ThemeToggle } from '@/components/shared/themeToggle';
+import { toast } from '@/components/ui/use-toast';
 import { resetPassword } from '@/lib/utils';
+import { LoaderCircle } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleForgotPassword = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       await resetPassword(email);
-      setSuccessMessage('Password reset email sent! Please check your inbox.');
+      toast({
+        title: 'Success',
+        description: 'Password reset email sent! Please check your inbox.',
+      });
+      router.push('/auth/login');
+
     } catch (error: any) {
-      setError('Failed to send password reset email. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Invalid Email or Password. Please try again.',
+      }); // Error toast
       console.error(error.message);
     } finally {
       setIsLoading(false);
@@ -46,8 +53,6 @@ export default function ForgotPassword() {
               Enter your email address below to reset your password
             </p>
           </div>
-          {error && <p className="text-red-500">{error}</p>}
-          {successMessage && <p className="text-green-500">{successMessage}</p>}
           <form onSubmit={handleForgotPassword}>
             <div className="grid gap-4">
               <div className="grid gap-2">
