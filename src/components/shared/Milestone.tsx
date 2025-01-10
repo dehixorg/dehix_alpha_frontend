@@ -35,11 +35,15 @@ const Milestone: React.FC<MilestoneProps> = ({
         } backdrop-blur-sm border border-[rgba(255,255,255,0.1)]`}
       >
         <p className="text-xs text-white/80">{date}</p>
-        <h3 className={`font-medium text-white ${isMobile ? 'text-lg' : 'text-sm'}`}>
+        <h3
+          className={`font-medium text-white ${isMobile ? 'text-lg' : 'text-sm'}`}
+        >
           {truncateDescription(title, isMobile ? 30 : 20)}
         </h3>
         {description && (
-          <p className={`text-white/60 mt-0.5 ${isMobile ? 'text-sm' : 'text-xs'}`}>
+          <p
+            className={`text-white/60 mt-0.5 ${isMobile ? 'text-sm' : 'text-xs'}`}
+          >
             {truncateDescription(description, isMobile ? 100 : 50)}
           </p>
         )}

@@ -74,10 +74,7 @@ const MilestoneTimeline: React.FC = () => {
             className="relative px-10 py-4 flex whitespace-nowrap items-center scrollbar-hide overflow-x-auto"
           >
             {dummyMilestones.map((milestone, index) => (
-              <div
-                key={index}
-                className="relative inline-block px-16"
-              >
+              <div key={index} className="relative inline-block px-16">
                 {/* Timeline Dot */}
                 <div
                   className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-4 border-white mx-auto "
@@ -116,7 +113,7 @@ const MilestoneTimeline: React.FC = () => {
           </CarouselPrevious>
 
           {/* Carousel Content */}
-          <CarouselContent className=''>
+          <CarouselContent className="">
             {dummyMilestones.map((milestone, index) => (
               <CarouselItem key={index}>
                 <Milestone
