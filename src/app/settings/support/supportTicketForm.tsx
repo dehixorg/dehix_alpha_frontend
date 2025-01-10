@@ -166,7 +166,7 @@ const TicketForm = () => {
     };
 
     try {
-      // Create a new ticket using POST
+      // Create a new ticket using POSt
       const response = await axiosInstance.post('/ticket', ticketData);
       toast({
         title: 'Ticket Submitted',
