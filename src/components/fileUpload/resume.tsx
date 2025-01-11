@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, UploadCloud, Image as ImageIcon } from 'lucide-react';
 
 import { Button } from '../ui/button';
