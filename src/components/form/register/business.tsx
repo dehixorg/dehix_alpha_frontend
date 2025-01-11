@@ -58,23 +58,15 @@ interface StepperProps {
   currentStep: number;
 }
 
-const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
-  const steps: Step[] = [
+const Stepper = ({ currentStep = 0 }: StepperProps) => {
+  const steps = [
     { id: 0, title: 'Personal Info', icon: User },
     { id: 1, title: 'Company Info', icon: Briefcase },
     { id: 2, title: 'Verification', icon: Shield },
   ];
 
   return (
-    <div className="w-full py-4 sm:py-6 mb-4 sm:mb-8">
-      <div className="text-center space-y-2 sm:space-y-4">
-        <h1 className="text-xl sm:text-2xl font-bold">
-          Create Your Business Account
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Join our community and start your Business
-        </p>
-      </div>
+    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-4 sm:mb-8">
       <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
@@ -103,7 +95,7 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className="w-12 sm:w-24 mx-1 sm:mx-2 h-[2px] bg-muted">
+              <div className="w-20 sm:w-40 mx-2 sm:mx-4 h-[2px] bg-muted">
                 <div
                   className="h-full bg-primary transition-all duration-500"
                   style={{ width: currentStep > step.id ? '100%' : '0%' }}
@@ -154,31 +146,27 @@ type BusinessRegisterFormValues = z.infer<typeof businessRegisterSchema>;
 export default function BusinessRegisterPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const steps = [
-    {
-      title: 'Account Details',
-      description: 'Basic information',
-      icon: <UserCircle className="w-6 h-6" />,
-    },
-    {
-      title: 'Company Info',
-      description: 'About your business',
-      icon: <Building2 className="w-6 h-6" />,
-    },
-    {
-      title: 'Verification',
-      description: 'Contact details',
-      icon: <Shield className="w-6 h-6" />,
-    },
-  ];
-
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      <Stepper currentStep={currentStep} />
-      <BusinessRegisterForm
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-      />
+    <div className="flex min-h-screen w-full items-center justify-center">
+      <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4 py-4 sm:py-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">
+            Create Your Business <span className="block">Account</span>
+          </h1>
+          <p className="text-muted-foreground">
+            Join our community and find the best talent in web3 space
+          </p>
+        </div>
+        <Stepper currentStep={currentStep} />
+        <div className="flex justify-center w-full">
+          <div className="w-full max-w-4xl">
+            <BusinessRegisterForm
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -319,12 +307,9 @@ function BusinessRegisterForm({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full flex flex-col items-center justify-center"
-      >
-        <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 rounded-lg shadow-sm border">
-          <div className="grid gap-4 sm:gap-6 w-full max-w-3xl mx-auto">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+        <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
+          <div className="grid gap-4 sm:gap-6 w-full">
             {/* First Step */}
             <div
               className={cn('grid gap-4', currentStep === 0 ? '' : 'hidden')}
@@ -334,13 +319,13 @@ function BusinessRegisterForm({
                   control={form.control}
                   name="firstName"
                   label="First name"
-                  placeholder="John"
+                  placeholder="First Name"
                 />
                 <TextInput
                   control={form.control}
                   name="lastName"
                   label="Last name"
-                  placeholder="Doe"
+                  placeholder="Last Name"
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -348,13 +333,13 @@ function BusinessRegisterForm({
                   control={form.control}
                   name="userName"
                   label="Username"
-                  placeholder="JohnDoe123"
+                  placeholder="Username"
                 />
                 <TextInput
                   control={form.control}
                   name="email"
                   label="Email"
-                  placeholder="john.doe@techinnovators.com"
+                  placeholder="Enter your email"
                   type="email"
                 />
               </div>
@@ -440,40 +425,34 @@ function BusinessRegisterForm({
             <div
               className={cn('grid gap-4', currentStep === 1 ? '' : 'hidden')}
             >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <TextInput
+              <TextInput
+                control={form.control}
+                name="companyName"
+                label="Company Name"
+                placeholder="Company Name"
+              />
+              <div className="grid gap-2">
+                <Label htmlFor="company-size">Company Size</Label>
+                <Controller
                   control={form.control}
-                  name="companyName"
-                  label="Company Name"
-                  placeholder="Tech Innovators"
+                  name="companySize"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="company-size">
+                        <SelectValue placeholder="Select Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="0-20">0-20</SelectItem>
+                          <SelectItem value="20-50">20-50</SelectItem>
+                          <SelectItem value="50-100">50-100</SelectItem>
+                          <SelectItem value="100-500">100-500</SelectItem>
+                          <SelectItem value="500+">500 +</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-                <div className="grid gap-2">
-                  <Label htmlFor="company-size">Company Size</Label>
-                  <Controller
-                    control={form.control}
-                    name="companySize"
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger id="company-size">
-                          <SelectValue placeholder="Select Size" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>Company Size</SelectLabel>
-                            <SelectItem value="0-20">0-20</SelectItem>
-                            <SelectItem value="20-50">20-50</SelectItem>
-                            <SelectItem value="50-100">50-100</SelectItem>
-                            <SelectItem value="100-500">100-500</SelectItem>
-                            <SelectItem value="500+">500 +</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
               </div>
               <TextInput
                 control={form.control}
@@ -492,7 +471,7 @@ function BusinessRegisterForm({
                 <TextInput
                   control={form.control}
                   name="personalWebsite"
-                  label="Personal Website"
+                  label="Portfolio Url"
                   type="url"
                   placeholder="https://www.yourwebsite.com"
                 />
