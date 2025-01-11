@@ -51,6 +51,7 @@ export default function Resume() {
             { label: 'Resume Building', link: '#' },
           ]}
         />
+        
         <div className="flex flex-col h-screen">
           <h1 className="text-2xl font-bold mb-6 mt-5 ml-8">
             Start Building Your Resume
