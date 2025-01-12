@@ -57,12 +57,22 @@ const TicketForm = () => {
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const loggedInUserId = localStorage.getItem('userId') || ''; // Get userId from localStorage
+// Or use sessionStorage
+// const loggedInUserId = sessionStorage.getItem('userId') || '';
+
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const response = await axiosInstance.get('/ticket'); /////here may be ticket id need
-        setTickets(response.data.data);
+        const response = await axiosInstance.get('/ticket');
+        const currentFreelancerId = loggedInUserId; // Assuming loggedInUserId is the current freelancer's ID
+        
+        // Filter tickets based on the current freelancer's ID
+        const filteredTickets = response.data.data.filter((ticket: Ticket) => ticket._id === currentFreelancerId);
+        
+        // Set the state with the filtered tickets
+        setTickets(filteredTickets);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -71,8 +81,9 @@ const TicketForm = () => {
         });
       }
     };
+  
     fetchTickets();
-  }, []);
+  }, []);  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -246,7 +257,7 @@ const TicketForm = () => {
           ),
         );
         toast({
-          title: 'Ticket Updated',
+          title: 'Ticket Updated', 
           description: 'The ticket has been successfully updated.',
         });
         setIsEditDialogOpen(false);
@@ -295,7 +306,7 @@ const TicketForm = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto bg-background p-6 rounded shadow-md">
+    <div className="max-w-8xl mx-auto bg-background p-6 rounded shadow-md">
       {/* Create Ticket Button */}
       <h1 className=" mt-3 sm:text-3xl">Submit a Support Ticket</h1>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
