@@ -1,6 +1,6 @@
 // components/NotesContainer.tsx
 import React from 'react';
-import { TagIcon, Trash2Icon, RecycleIcon } from 'lucide-react';
+import { TagIcon, Trash2Icon, RecycleIcon, EditIcon } from 'lucide-react';
 
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
@@ -49,6 +49,17 @@ const NotesContainer = ({
   );
 
   const navItems = [
+    {
+      label: 'Edit',
+      icon: <EditIcon size={15} className="text-white-500" />,
+      onClick: (
+        noteId: string | undefined,
+        notes: Note[],
+        setNotes: (notes: Note[]) => void,
+      ) => {
+        setSelectedNote(notes.find((note) => note._id === noteId) || null);
+      },
+    },
     {
       label: 'Delete',
       icon: <Trash2Icon size={15} className="text-white-500" />,
