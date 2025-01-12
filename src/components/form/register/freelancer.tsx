@@ -241,8 +241,6 @@ const FreelancerRegisterForm = () => {
 
     setIsLoading(true);
 
-    // Combine all form data
-
     const formData = {
       firstName: values?.step1?.firstName,
       lastName: values?.step1?.lastName,
@@ -255,7 +253,7 @@ const FreelancerRegisterForm = () => {
       githubLink: values?.step2?.githubLink || '',
       linkedin: values?.step2?.linkedin || '',
       personalWebsite: values?.step2?.personalWebsite || '',
-      phone: `${countries.find((c) => c.code === code)?.dialCode}${values?.phone}`,
+      phone: `${countries.find((c) => c.code === code)?.dialCode}${values?.step3?.phone}`,
       role: 'freelancer',
       resume: '',
       connects: 0,
