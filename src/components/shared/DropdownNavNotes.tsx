@@ -28,10 +28,10 @@ const DropdownNavNotes = ({ navItems, noteId }: DropdownNavNotesProps) => {
       <HoverCardTrigger asChild>
         <button
           onClick={toggleDropdown}
-          className="flex items-center justify-center p-1 rounded hover:bg-gray-700 transition-all duration-200"
+          className="flex items-center justify-center p-1 rounded transition-all duration-200"
           aria-label="Options"
         >
-          <MoreVertical size={18} className="text-white" />
+          <MoreVertical size={18} className="text-black" />
         </button>
       </HoverCardTrigger>
       <HoverCardContent
