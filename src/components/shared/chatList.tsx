@@ -62,7 +62,7 @@ export function ChatList({
   return (
     <Card className="p-4">
       <ScrollArea className="h-[85vh]">
-        <Table className="w-full">
+        <Table className="w-full border-separate border-spacing-y-2">
           <TableBody>
             {conversations.length > 0 ? (
               conversations.map((conversation) => {
@@ -71,40 +71,46 @@ export function ChatList({
                 return (
                   <TableRow
                     key={conversation.id}
-                    className={cn(
-                      'cursor-pointer hover:bg-muted',
-                      active?.id === conversation.id && 'bg-muted',
-                    )}
+                    className="cursor-pointer border-none hover:bg-transparent" // Remove default hover/bg classes from <tr>
                     onClick={() => setConversation(conversation)}
                   >
-                    <TableCell className="flex items-center space-x-4">
-                      <Avatar>
-                        <AvatarImage
-                          src={`https://api.adorable.io/avatars/285/${conversation.participants[0]}.png`}
-                          alt={conversation.participants[0]}
-                        />
-                        <AvatarFallback>
-                          {conversation.participants[0]
-                            ?.charAt(0)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <p className="font-medium">
-                          {conversation.project_name || 'Unnamed Project'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {conversation.lastMessage?.content?.length > 50
-                            ? conversation.lastMessage.content.substring(
-                                0,
-                                50,
-                              ) + '...'
-                            : conversation.lastMessage?.content}
-                        </p>
+                    <TableCell colSpan={2} className="p-0 my-2">
+                      <div
+                        className={cn(
+                          'flex items-center justify-between p-4 rounded-md hover:bg-muted', // Apply rounded corners and hover effect
+                          active?.id === conversation.id && 'bg-muted',
+                        )}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <Avatar>
+                            <AvatarImage
+                              src={`https://api.adorable.io/avatars/285/${conversation.participants[0]}.png`}
+                              alt={conversation.participants[0]}
+                            />
+                            <AvatarFallback>
+                              {conversation.participants[0]
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <p className="font-medium">
+                              {conversation.project_name || 'Unnamed Project'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {conversation.lastMessage?.content?.length > 50
+                                ? conversation.lastMessage.content.substring(
+                                    0,
+                                    50,
+                                  ) + '...'
+                                : conversation.lastMessage?.content}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right text-sm text-muted-foreground">
+                          <span>{lastUpdated}</span>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      <span>{lastUpdated}</span>
                     </TableCell>
                   </TableRow>
                 );
