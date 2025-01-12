@@ -1,4 +1,3 @@
-// components/NotesContainer.tsx
 import React from 'react';
 import {
   ArchiveRestoreIcon,
@@ -8,7 +7,7 @@ import {
   RecycleIcon,
   EditIcon,
 } from 'lucide-react';
-
+ 
 import NoteCard from './NoteCard';
 import DialogConfirmation from './DialogConfirmation';
 import DialogSelectedNote from './DialogSelectedNote';
