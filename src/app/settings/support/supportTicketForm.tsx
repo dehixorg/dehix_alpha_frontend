@@ -58,19 +58,20 @@ const TicketForm = () => {
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const loggedInUserId = localStorage.getItem('userId') || ''; // Get userId from localStorage
-// Or use sessionStorage
-// const loggedInUserId = sessionStorage.getItem('userId') || '';
-
+  // Or use sessionStorage
+  // const loggedInUserId = sessionStorage.getItem('userId') || '';
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         const response = await axiosInstance.get('/ticket');
         const currentFreelancerId = loggedInUserId; // Assuming loggedInUserId is the current freelancer's ID
-        
+
         // Filter tickets based on the current freelancer's ID
-        const filteredTickets = response.data.data.filter((ticket: Ticket) => ticket._id === currentFreelancerId);
-        
+        const filteredTickets = response.data.data.filter(
+          (ticket: Ticket) => ticket._id === currentFreelancerId,
+        );
+
         // Set the state with the filtered tickets
         setTickets(filteredTickets);
       } catch (error) {
@@ -81,9 +82,9 @@ const TicketForm = () => {
         });
       }
     };
-  
+
     fetchTickets();
-  }, []);  
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -257,7 +258,7 @@ const TicketForm = () => {
           ),
         );
         toast({
-          title: 'Ticket Updated', 
+          title: 'Ticket Updated',
           description: 'The ticket has been successfully updated.',
         });
         setIsEditDialogOpen(false);
