@@ -241,8 +241,6 @@ const FreelancerRegisterForm = () => {
 
     setIsLoading(true);
 
-    // Combine all form data
-
     const formData = {
       firstName: values?.step1?.firstName,
       lastName: values?.step1?.lastName,
@@ -272,7 +270,7 @@ const FreelancerRegisterForm = () => {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: 'notApplied',
+      oracleStatus: 'NOT_APPLIED',
     };
     console.log(formData);
     try {
