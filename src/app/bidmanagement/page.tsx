@@ -44,7 +44,6 @@ interface Bid {
 
 const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
-  console.log(user.uid);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
 
@@ -52,7 +51,7 @@ const BidsPage = () => {
     const fetchProjectIds = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/${user.uid}/projects?status=Pending`,
+          `/project/business/${user.uid}/?status=Pending`,
         );
 
         const ids = response.data.data.map((project: Project) => project._id);
@@ -88,8 +87,6 @@ const BidsPage = () => {
 
     fetchBidsForProjects();
   }, [projectIds]);
-
-  console.log(bidsArray);
 
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;

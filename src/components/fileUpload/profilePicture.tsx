@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { setUser } from '@/lib/userSlice';
 import { RootState } from '@/lib/store';
+import { Type } from '@/utils/enum';
 
 const allowedImageFormats = [
   'image/png',
@@ -21,11 +22,11 @@ const maxImageSize = 1 * 1024 * 1024; // 1MB
 const ProfilePictureUpload = ({
   user_id,
   profile,
-  entityType, // Add entityType prop
+  entityType,
 }: {
   user_id: string;
   profile: string;
-  entityType: 'freelancer' | 'business'; // Specify possible values for entityType
+  entityType: Type.BUSINESS | Type.FREELANCER; // Specify possible values for entityType
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -75,7 +76,6 @@ const ProfilePictureUpload = ({
     formData.append('profilePicture', selectedProfilePicture);
 
     try {
-      console.log('Uploading image...');
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
@@ -91,8 +91,8 @@ const ProfilePictureUpload = ({
       dispatch(setUser({ ...user, photoURL: Location }));
       // Adjust the endpoint and payload field based on entityType
       const updateEndpoint =
-        entityType === 'freelancer'
-          ? `/freelancer/${user_id}`
+        entityType === Type.FREELANCER
+          ? `/freelancer/${user.uid}`
           : `/business/${user_id}`;
 
       const putResponse = await axiosInstance.put(updateEndpoint, {

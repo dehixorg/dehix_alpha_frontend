@@ -2,19 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { Search } from '@/components/search';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import EducationInfoCard from '@/components/cards/educationInfoCard';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
-import DropdownProfile from '@/components/shared/DropdownProfile';
+import Header from '@/components/header/header';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -28,18 +25,14 @@ export default function Education() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`); // Example API endpoint, replace with your actual endpoint
-        console.log(
-          'API Response get:',
-          Object.values(response.data?.education),
-        );
-        setEducationInfo(Object.values(response.data?.education)); // Store response data in state
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        setEducationInfo(Object.values(response.data?.education));
       } catch (error) {
         console.error('API Error:', error);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid, refresh]);
 
   // const handleDelete = (index: number) => {
@@ -68,23 +61,15 @@ export default function Education() {
         active="Education"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Education"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Settings', link: '#' },
-              { label: 'Educational Info', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Education"
+          breadcrumbItems={[
+            { label: 'Settings', link: '#' },
+            { label: 'Educational Info', link: '#' },
+          ]}
+        />
 
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 

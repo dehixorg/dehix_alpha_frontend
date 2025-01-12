@@ -157,8 +157,7 @@ export function CreateProjectBusinessForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const projectDomainResponse =
-          await axiosInstance.get('/projectDomain/all');
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
         console.log(
           'projectDomain API Response get:',
           projectDomainResponse.data.data,
@@ -171,7 +170,7 @@ export function CreateProjectBusinessForm() {
         );
         setProjectDomains(transformedProjectDomain);
 
-        const domainResponse = await axiosInstance.get('/domain/all');
+        const domainResponse = await axiosInstance.get('/domain');
         console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
           (skill: Domain) => ({
@@ -181,7 +180,7 @@ export function CreateProjectBusinessForm() {
         );
         setDomains(transformedDomain);
 
-        const skillsResponse = await axiosInstance.get('/skills/all');
+        const skillsResponse = await axiosInstance.get('/skills');
         console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
@@ -228,16 +227,13 @@ export function CreateProjectBusinessForm() {
         domains: currDomains,
       });
 
-      const response = await axiosInstance.post(
-        `/project/${user.uid}/project`,
-        {
-          ...data,
-          role: '',
-          projectType: '',
-          skillsRequired: currSkills,
-          domains: currDomains,
-        },
-      );
+      const response = await axiosInstance.post(`/project/${user.uid}`, {
+        ...data,
+        role: '',
+        projectType: '',
+        skillsRequired: currSkills,
+        domains: currDomains,
+      });
       console.log('API Response:', response.data);
 
       toast({
@@ -251,6 +247,8 @@ export function CreateProjectBusinessForm() {
         title: 'Error',
         description: 'Failed to add project. Please try again later.',
       });
+    } finally {
+      setLoading(false);
     }
     form.reset(defaultValues); //add reset after form is submit
   }
@@ -450,6 +448,7 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter number"
+                          min={1}
                           {...field}
                         />
                       </FormControl>
@@ -520,7 +519,13 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Experience</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter experience" {...field} />
+                        <Input
+                          type="number"
+                          placeholder="Enter experience"
+                          min={0}
+                          max={60}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -549,6 +554,8 @@ export function CreateProjectBusinessForm() {
                         <Input
                           type="number"
                           placeholder="Enter rate"
+                          min={0}
+                          max={200}
                           {...field}
                         />
                       </FormControl>
