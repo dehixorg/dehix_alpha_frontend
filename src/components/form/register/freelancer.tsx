@@ -255,7 +255,7 @@ const FreelancerRegisterForm = () => {
       githubLink: values?.step2?.githubLink || '',
       linkedin: values?.step2?.linkedin || '',
       personalWebsite: values?.step2?.personalWebsite || '',
-      phone: `${countries.find((c) => c.code === code)?.dialCode}${values?.step3?.phone}`,
+      phone: `${countries.find((c) => c.code === code)?.dialCode}${values?.phone}`,
       role: 'freelancer',
       resume: '',
       connects: 0,
@@ -272,7 +272,7 @@ const FreelancerRegisterForm = () => {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: 'notApplied',
+      oracleStatus: 'NOT_APPLIED',
     };
     console.log(formData);
     try {
