@@ -49,7 +49,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 }) => {
   const [tmpSkill, setTmpSkill] = React.useState<string>('');
   const [currSkills, setCurrSkills] = React.useState<{ name: string }[]>([]);
-  const skillDomainData: { label: string }[] = []; // Define skillDomainData with appropriate data
+  const skillDomainData: { label: string }[] = [];
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   const handleAddSkill = () => {
