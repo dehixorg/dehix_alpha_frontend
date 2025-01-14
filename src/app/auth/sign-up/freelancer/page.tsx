@@ -21,7 +21,7 @@ export default function SignUp() {
               <h1 className="text-2xl font-bold sm:text-3xl">
                 Sign Up as a Freelancer
               </h1>
-              <p className="text text-muted-foreground">
+              <p className="text-sm text-muted-foreground sm:text-base">
                 Enter your information to create an account
               </p>
             </div>
