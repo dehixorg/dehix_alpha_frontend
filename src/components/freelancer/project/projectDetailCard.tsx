@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Code2, Mail, Tag } from 'lucide-react';
+import { CheckCircle, Code2, Mail, Milestone, MilestoneIcon, Tag } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -100,7 +100,16 @@ function ProjectDetailCard({
         </div>
 
         {/* Completed Button */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-between mt-4">
+          <Button
+            className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium  text-white rounded-md  ${projectStatus == 'COMPLETED' ? 'bg-green-600 hover:bg-green-500 ' : 'bg-blue-600 hover:bg-blue-500'} `}
+            size="sm"
+            onClick={handleCompleteProject}
+            disabled={!handleCompleteProject}
+          >
+            <Milestone className="w-4 h-4 mr-1" />
+              Milestone
+          </Button>
           <Button
             className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium  text-white rounded-md  ${projectStatus == 'COMPLETED' ? 'bg-green-600 hover:bg-green-500 ' : 'bg-blue-600 hover:bg-blue-500'} `}
             size="sm"
