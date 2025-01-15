@@ -9,6 +9,13 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -55,7 +62,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingBids, setLoadingBids] = useState<{ [key: string]: boolean }>(
     {},
   );
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -152,7 +158,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       <p>{bids.length}</p>
                     </div>
                   </div>
-
                   <Accordion type="single" collapsible>
                     {['Pending', 'Accepted', 'Rejected', 'Lobby'].map(
                       (status) => (
@@ -160,81 +165,112 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                           <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
                           <AccordionContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                              {bids.filter((bid) => bid.bid_status === status)
-                                .length > 0 ? (
-                                bids
-                                  .filter((bid) => bid.bid_status === status)
-                                  .map((bid) => (
-                                    <Card
-                                      key={bid._id}
-                                      className="border border-gray-800 rounded-lg p-6  shadow-lg "
-                                    >
-                                      <h3 className="font-semibold text-xl mb-2">
-                                        {bid.userName}
-                                      </h3>
-                                      <p className=" mb-4">{bid.description}</p>
-                                      <div className="flex flex-col mb-4">
-                                        <span className="text-sm ">
-                                          Current Price: ${bid.current_price}
-                                        </span>
-                                      </div>
+                              <Carousel className="w-full">
+                                <CarouselContent className="flex justify-center mt-3 gap-4">
+                                  {bids.filter(
+                                    (bid) => bid.bid_status === status,
+                                  ).length > 0 ? (
+                                    bids
+                                      .filter(
+                                        (bid) => bid.bid_status === status,
+                                      )
+                                      .map((bid) => (
+                                        <CarouselItem
+                                          key={bid._id}
+                                          className="flex shrink-0 w-1/3 justify-center"
+                                        >
+                                          <Card
+                                            key={bid._id}
+                                            className="border border-gray-800 rounded-lg p-6  shadow-lg "
+                                          >
+                                            <h3 className="font-semibold text-xl mb-2">
+                                              {bid.userName}
+                                            </h3>
+                                            <p className=" mb-4">
+                                              {bid.description}
+                                            </p>
+                                            <div className="flex flex-col mb-4">
+                                              <span className="text-sm ">
+                                                Current Price: $
+                                                {bid.current_price}
+                                              </span>
+                                            </div>
 
-                                      <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
-                                        {(status === 'Pending' ||
-                                          status === 'Lobby') && (
-                                          <>
-                                            <Button
-                                              className="flex items-center justify-center bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
-                                              onClick={() =>
-                                                handleUpdateStatus(
-                                                  bid._id,
-                                                  'Accepted',
-                                                )
-                                              }
-                                              disabled={loadingBids[bid._id]}
-                                            >
-                                              {loadingBids[bid._id] ? (
-                                                'Loading...'
-                                              ) : (
+                                            <div className="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0 md:space-x-2 w-full">
+                                              {(status === 'Pending' ||
+                                                status === 'Lobby') && (
                                                 <>
-                                                  <CheckCircle className="mr-2 h-5 w-5" />{' '}
-                                                  Accept
+                                                  <Button
+                                                    className="flex items-center justify-center bg-green-500 text-white px-2 py-1 rounded-lg hover:bg-green-600 transition w-full h-10 md:w-auto"
+                                                    onClick={() =>
+                                                      handleUpdateStatus(
+                                                        bid._id,
+                                                        'Accepted',
+                                                      )
+                                                    }
+                                                    disabled={
+                                                      loadingBids[bid._id]
+                                                    }
+                                                  >
+                                                    {loadingBids[bid._id] ? (
+                                                      'Loading...'
+                                                    ) : (
+                                                      <>
+                                                        <CheckCircle className="mr-2 h-5 w-5" />{' '}
+                                                        Accept
+                                                      </>
+                                                    )}
+                                                  </Button>
+                                                  <Button
+                                                    className="flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
+                                                    onClick={() =>
+                                                      handleUpdateStatus(
+                                                        bid._id,
+                                                        'Rejected',
+                                                      )
+                                                    }
+                                                    disabled={
+                                                      loadingBids[bid._id]
+                                                    }
+                                                  >
+                                                    {loadingBids[bid._id] ? (
+                                                      'Loading...'
+                                                    ) : (
+                                                      <>
+                                                        <XCircle className="mr-2 h-5 w-5" />
+                                                        reject
+                                                      </>
+                                                    )}
+                                                  </Button>
+                                                  <Button className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full h-10 md:w-auto">
+                                                    <Video className="mr-2 h-5 w-5" />
+                                                    Interview
+                                                  </Button>
                                                 </>
                                               )}
-                                            </Button>
-                                            <Button
-                                              className="flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full h-10 md:w-auto"
-                                              onClick={() =>
-                                                handleUpdateStatus(
-                                                  bid._id,
-                                                  'Rejected',
-                                                )
-                                              }
-                                              disabled={loadingBids[bid._id]}
-                                            >
-                                              {loadingBids[bid._id] ? (
-                                                'Loading...'
-                                              ) : (
-                                                <>
-                                                  <XCircle className="mr-2 h-5 w-5" />
-                                                  reject
-                                                </>
-                                              )}
-                                            </Button>
-                                            <Button className="flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition w-full h-10 md:w-auto">
-                                              <Video className="mr-2 h-5 w-5" />
-                                              Interview
-                                            </Button>
-                                          </>
-                                        )}
-                                      </div>
-                                    </Card>
-                                  ))
-                              ) : (
-                                <div className="text-center col-span-1 md:col-span-2 lg:col-span-3 text-gray-500">
-                                  No bids to show
-                                </div>
-                              )}
+                                            </div>
+                                          </Card>
+                                        </CarouselItem>
+                                      ))
+                                  ) : (
+                                    <div className=" col-span-1 md:col-span-2 lg:col-span-3 text-gray-500">
+                                      No bids to show
+                                    </div>
+                                  )}
+                                </CarouselContent>
+
+                                {bids.filter((bid) => bid.bid_status === status)
+                                  .length > 1 && (
+                                  <>
+                                    <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                      Previous
+                                    </CarouselPrevious>
+                                    <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                      Next
+                                    </CarouselNext>
+                                  </>
+                                )}
+                              </Carousel>
                             </div>
                           </AccordionContent>
                         </AccordionItem>
