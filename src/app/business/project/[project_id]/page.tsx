@@ -207,15 +207,15 @@ export default function Dashboard() {
                         </CarouselContent>
                         {project.profiles && project.profiles.length > 0 && (
                           <>
-                          <div className="flex">
-                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                              Previous
-                            </CarouselPrevious>
-                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                              Next
-                            </CarouselNext>
+                            <div className="flex">
+                              <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                Previous
+                              </CarouselPrevious>
+                              <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                Next
+                              </CarouselNext>
                             </div>
-                          </> 
+                          </>
                         )}
                       </Carousel>
                     </div>
@@ -241,5 +241,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-

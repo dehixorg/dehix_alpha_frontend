@@ -149,13 +149,13 @@ export default function Dashboard() {
                 </CarouselContent>
                 {pendingProjects.length > 2 && (
                   <>
-                  <div className="flex">
-                    <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                      Previous
-                    </CarouselPrevious>
-                    <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                      Next
-                    </CarouselNext>
+                    <div className="flex">
+                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Previous
+                      </CarouselPrevious>
+                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Next
+                      </CarouselNext>
                     </div>
                   </>
                 )}
@@ -163,7 +163,7 @@ export default function Dashboard() {
             </div>
 
             <Separator className="my-1" />
-            
+
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Completed Projects {`(${completedProjects.length})`}
             </h2>
@@ -194,13 +194,13 @@ export default function Dashboard() {
                 </CarouselContent>
                 {completedProjects.length > 2 && (
                   <>
-                  <div className="flex">
-                    <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                      Previous
-                    </CarouselPrevious>
-                    <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                      Next
-                    </CarouselNext>
+                    <div className="flex">
+                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Previous
+                      </CarouselPrevious>
+                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Next
+                      </CarouselNext>
                     </div>
                   </>
                 )}

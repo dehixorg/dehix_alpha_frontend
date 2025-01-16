@@ -261,7 +261,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
                                 {bids.filter((bid) => bid.bid_status === status)
                                   .length > 1 && (
-                                    <>
+                                  <>
                                     <div className="flex">
                                       <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                                         Previous
@@ -269,8 +269,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                       <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                                         Next
                                       </CarouselNext>
-                                      </div>
-                                    </>
+                                    </div>
+                                  </>
                                 )}
                               </Carousel>
                             </div>
