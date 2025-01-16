@@ -164,7 +164,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         <AccordionItem key={status} value={`${status}-bids`}>
                           <AccordionTrigger>{`${status} Bids`}</AccordionTrigger>
                           <AccordionContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 pt-4">
                               <Carousel className="w-full">
                                 <CarouselContent className="flex justify-center mt-3 gap-4">
                                   {bids.filter(
@@ -261,14 +261,16 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
                                 {bids.filter((bid) => bid.bid_status === status)
                                   .length > 1 && (
-                                  <>
-                                    <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                                      Previous
-                                    </CarouselPrevious>
-                                    <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                                      Next
-                                    </CarouselNext>
-                                  </>
+                                    <>
+                                    <div className="flex">
+                                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                        Previous
+                                      </CarouselPrevious>
+                                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                        Next
+                                      </CarouselNext>
+                                      </div>
+                                    </>
                                 )}
                               </Carousel>
                             </div>

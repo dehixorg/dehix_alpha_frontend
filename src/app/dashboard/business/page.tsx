@@ -121,7 +121,7 @@ export default function Dashboard() {
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Current Projects {`(${pendingProjects.length})`}
             </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
               <Carousel className="w-full relative">
                 <CarouselContent className="flex mt-3 gap-4">
                   {pendingProjects.length > 0 ? (
@@ -148,25 +148,28 @@ export default function Dashboard() {
                   )}
                 </CarouselContent>
                 {pendingProjects.length > 2 && (
-                  <div className="">
-                    <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                  <>
+                  <div className="flex">
+                    <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                       Previous
                     </CarouselPrevious>
-                    <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                    <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                       Next
                     </CarouselNext>
-                  </div>
+                    </div>
+                  </>
                 )}
               </Carousel>
             </div>
 
             <Separator className="my-1" />
+            
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Completed Projects {`(${completedProjects.length})`}
             </h2>
-            <div className="flex relative gap-4 overflow-x-scroll no-scrollbar pb-8">
-              <Carousel className="w-full relative">
-                <CarouselContent className="flex mt-3 gap-4">
+            <div className="flex relative gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
+              <Carousel className="w-full relative pt-9">
+                <CarouselContent className="flex gap-4">
                   {completedProjects.length > 2 ? (
                     completedProjects.map((project: any, index: number) => (
                       <CarouselItem
@@ -191,12 +194,14 @@ export default function Dashboard() {
                 </CarouselContent>
                 {completedProjects.length > 2 && (
                   <>
-                    <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                  <div className="flex">
+                    <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                       Previous
                     </CarouselPrevious>
-                    <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                    <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                       Next
                     </CarouselNext>
+                    </div>
                   </>
                 )}
               </Carousel>

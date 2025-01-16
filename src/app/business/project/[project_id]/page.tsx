@@ -179,10 +179,10 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <CardHeader className="pl-0">
-                        <CardTitle>Profiles</CardTitle>
+                      <CardHeader className="pl-0 ">
+                        <CardTitle className="pb-4">Profiles</CardTitle>
                       </CardHeader>
-                      <Carousel className="w-1/2 relative ">
+                      <Carousel className="w-1/2 relative pt-3">
                         <CarouselContent className="flex mt-3 gap-4">
                           {project.profiles?.map((profile, index) => (
                             <CarouselItem
@@ -207,19 +207,15 @@ export default function Dashboard() {
                         </CarouselContent>
                         {project.profiles && project.profiles.length > 0 && (
                           <>
-                            <CarouselPrevious
-                              className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors"
-                              aria-label="Previous Slide"
-                            >
+                          <div className="flex">
+                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                               Previous
                             </CarouselPrevious>
-                            <CarouselNext
-                              className="absolute right-0 top-1/2 transform -translate-y-1/2 p-2 shadow-md transition-colors"
-                              aria-label="Next Slide"
-                            >
+                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                               Next
                             </CarouselNext>
-                          </>
+                            </div>
+                          </> 
                         )}
                       </Carousel>
                     </div>
@@ -245,3 +241,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
