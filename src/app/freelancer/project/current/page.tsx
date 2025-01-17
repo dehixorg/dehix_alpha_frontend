@@ -96,9 +96,6 @@ export default function CurrentProject() {
               Browse and manage your active freelance projects
             </p>
           </div>
-          <div className="mt-4 lg:mt-0">
-            <CreateMilestoneDialog />
-          </div>
         </div>
 
         <main

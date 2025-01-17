@@ -1,14 +1,14 @@
-import { MilestoneFormData } from '@/utils/types/Milestone';
+import { Milestone } from '@/utils/types/Milestone';
 
 export const useNestedFormState = (
-  formData: MilestoneFormData,
-  setFormData: React.Dispatch<React.SetStateAction<MilestoneFormData>>,
+  formData: Milestone,
+  setFormData: React.Dispatch<React.SetStateAction<Milestone>>,
 ) => {
   const handleNestedChange = (field: string, key: string, value: string) => {
     setFormData((prevState) => ({
       ...prevState,
       [field]: {
-        ...(prevState[field as keyof MilestoneFormData] as any),
+        ...(prevState[field as keyof Milestone] as any),
         [key]: value,
       },
     }));
