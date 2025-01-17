@@ -186,6 +186,7 @@ export default function Dashboard() {
                                 skills={profile.skills}
                               />
                             ))}
+                            <ProjectSkillCard isLastCard={true} />
                           </div>
                         </div>
                       </CardContent>
