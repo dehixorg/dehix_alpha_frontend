@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import {
-  MilestoneFormData,
+  Milestone,
   MilestoneStatus,
   PaymentStatus,
 } from '@/utils/types/Milestone';
@@ -11,7 +11,7 @@ export const useFormState = ({
 }: {
   setErrors: (errors: string[]) => void;
 }) => {
-  const [formData, setFormData] = useState<MilestoneFormData>({
+  const [formData, setFormData] = useState<Milestone>({
     title: '',
     description: '',
     startDate: {
@@ -22,19 +22,6 @@ export const useFormState = ({
     },
     amount: undefined,
     status: MilestoneStatus.NOT_STARTED,
-    stories: [
-      {
-        _id: '1',
-        summary: '',
-        importantUrl: [''],
-        title: '',
-        taskStatus: MilestoneStatus.NOT_STARTED,
-      },
-    ],
-    payment: {
-      amount: undefined,
-      status: PaymentStatus.PENDING,
-    },
   });
 
   const handleChange = (
@@ -65,45 +52,9 @@ export const useFormState = ({
     if ((formData.amount ?? 0) < 0) {
       newErrors.push('Amount must be a positive number.');
     }
-    if ((formData.payment.amount ?? 0) < 0) {
-      newErrors.push('Payment amount must be a positive number.');
-    }
-    if (!formData.payment.amount) {
-      newErrors.push('Payment amount is required.');
-    }
-    if (!formData.payment.status) {
-      newErrors.push('Payment status is required.');
-    }
-    formData.stories.forEach((story, index) => {
-      if (!story.summary.trim()) {
-        newErrors.push(`Story ${index + 1} summary is required.`);
-      }
-      if (!story.title.trim()) {
-        newErrors.push(`Story ${index + 1} title is required.`);
-      }
-      story.importantUrl.forEach((url, urlIndex) => {
-        if (!url.trim()) {
-          newErrors.push(
-            `Story ${index + 1} Important URL ${urlIndex + 1} is required.`,
-          );
-        }
-      });
-    });
 
     setErrors(newErrors);
     return newErrors.length === 0;
-  };
-
-  const handleDeleteUrl = (storyIndex: number, urlIndex: number) => {
-    const updatedStories = [...formData.stories];
-    updatedStories[storyIndex].importantUrl.splice(urlIndex, 1);
-    setFormData((prevState) => ({ ...prevState, stories: updatedStories }));
-  };
-
-  const handleDeleteStory = (storyIndex: number) => {
-    const updatedStories = [...formData.stories];
-    updatedStories.splice(storyIndex, 1);
-    setFormData((prevState) => ({ ...prevState, stories: updatedStories }));
   };
 
   return {
@@ -111,7 +62,5 @@ export const useFormState = ({
     setFormData,
     handleChange,
     validateForm,
-    handleDeleteUrl,
-    handleDeleteStory,
   };
 };

@@ -23,8 +23,6 @@ import DomainDialog from '@/components/dialogs/domainDialog';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 interface Skill {
   label: string;
@@ -352,16 +350,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 <TableHead>Experience</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
-                <TableHead>Active</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-full" />
                       </TableCell>
@@ -395,11 +389,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                             handleSkillDomainDialog(skill, 'skill')
                           }
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="airplane-mode" />
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -437,16 +426,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 <TableHead>Experience</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
-                <TableHead>Active</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-full" />
                       </TableCell>
@@ -484,11 +469,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                             handleSkillDomainDialog(domain, 'domain')
                           }
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Switch id="airplane-mode" />
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
