@@ -41,10 +41,9 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
 
     const handleWheel = (event: WheelEvent) => {
       if (div) {
-        // Stop vertical scroll from propagating to the parent
-        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) {
-          event.preventDefault(); // Prevent default vertical scrolling behavior
-          div.scrollLeft += event.deltaY; // Use vertical scroll for horizontal movement
+        if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+          event.preventDefault(); // Block vertical scrolling
+          div.scrollLeft += event.deltaY; // Use vertical delta for horizontal scrolling
         }
       }
     };
@@ -63,7 +62,6 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   const handelStorySelect = (milestone: any, index: number) => {
     setSelectedStories(milestone);
     setSelectedIndex(index);
-    console.log('milestone' + milestone);
   };
 
   const truncateDescription = (text: string, maxLength: number = 50) => {
@@ -95,14 +93,14 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         {/* Timeline for larger screens */}
         <ScrollArea className="w-full whitespace-nowrap rounded-md border">
           {milestones && (
-            <div className="hidden md:block ">
+            <div ref={scrollRef} className="hidden md:block ">
               {/* Timeline Line */}
               <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg transform -translate-y-1/2"></div>
 
               {/* Scrolling Timeline */}
               <div
                 ref={scrollRef}
-                className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-auto px-4 py-6  scrollbar-hide"
+                className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-scroll px-4 py-6  scrollbar-hide"
               >
                 {displayMilestones.map((milestone, index) => (
                   <div

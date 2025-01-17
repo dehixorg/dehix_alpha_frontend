@@ -89,20 +89,9 @@ export const useMilestones = () => {
       updatedStories = [...updatedMilestone.stories, newStory];
     }
 
-    const sanitizedStories = updatedStories.map((story: any) => {
-      const { _id, ...rest } = story; // Exclude _id
-      return {
-        ...rest,
-        tasks: story.tasks?.map((task: any) => {
-          const { _id: taskId, ...taskRest } = task; // Exclude task _id
-          return taskRest;
-        }),
-      };
-    });
-
     const milestoneData = {
       ...updatedMilestone,
-      stories: sanitizedStories,
+      stories: updatedStories,
     };
 
     try {
@@ -126,9 +115,10 @@ export const useMilestones = () => {
       console.log(response);
 
       setMilestones(updatedMilestones);
+      console.log(response.data.newMilestone.stories);
 
-      setStories(updatedStories);
-      // fetchMilestones();
+      setStories(response.data.newMilestone.stories);
+      fetchMilestones();
     } catch (error: any) {
       console.error(
         'Error updating milestone:',

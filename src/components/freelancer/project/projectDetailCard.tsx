@@ -33,7 +33,7 @@ function ProjectDetailCard({
   projectDomain,
   skills,
   userRole = 'Business', // Default to 'Business'
-  projectId, // Project ID prop
+  projectId,
   handleCompleteProject,
 }: ProjectDetailCardProps) {
   const { text: projectStatus, className: statusBadgeStyle } =
@@ -103,15 +103,15 @@ function ProjectDetailCard({
 
         {/* Email Section */}
         <div className="flex flex-wrap items-center gap-4 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner">
-          <Mail className="w-4 h-4 " />
+          <Mail className="w-4 h-4" />
           <span className="text-sm">{email}</span>
         </div>
 
-        {/* Completed Button */}
+        {/* Buttons */}
         <div className="flex justify-between mt-4">
           <Link href={milestoneRoute}>
             <Button
-              className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-blue-600 hover:bg-blue-500`}
+              className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-blue-600 hover:bg-blue-500"
               size="sm"
             >
               <Milestone className="w-4 h-4 mr-1" />

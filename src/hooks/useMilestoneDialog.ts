@@ -5,7 +5,6 @@ import { Story } from '@/utils/types/Milestone';
 export const useMilestoneDialog = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [storyData, setStoryData] = useState<Story>({
-    _id: '',
     title: '',
     summary: '',
     storyStatus: '',
@@ -15,7 +14,6 @@ export const useMilestoneDialog = () => {
 
   const resetFields = () => {
     setStoryData({
-      _id: '',
       title: '',
       summary: '',
       storyStatus: '',
@@ -30,9 +28,8 @@ export const useMilestoneDialog = () => {
   };
 
   const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    console.log('called');
     resetFields();
+    setIsDialogOpen(false);
   };
 
   const handleStoryInputChange = (
@@ -73,5 +70,6 @@ export const useMilestoneDialog = () => {
     handleAddUrl,
     handleRemoveUrl,
     setIsDialogOpen,
+    resetFields,
   };
 };

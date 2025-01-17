@@ -144,3 +144,16 @@
   }
 }
 
+.scroll-container {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden; /* Prevent vertical scroll */
+  white-space: nowrap;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE */
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, Opera */
+}

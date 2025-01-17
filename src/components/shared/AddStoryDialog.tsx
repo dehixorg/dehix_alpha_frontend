@@ -51,7 +51,6 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
   handleAddUrl,
   milestones,
 }) => {
-  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validateFields = () => {
@@ -151,13 +150,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                       placeholder="URL Name"
                       value={url.urlName}
                       // className={`transition-all duration-300 ${focusedInput === `urlName-${index}` ? 'w-4/5' : 'w-1/5'}`}
-                      className={`transition-all duration-300 ${
-                        focusedInput === `url-${index}` || !focusedInput
-                          ? 'w-4/5'
-                          : 'w-1/5'
-                      }`}
-                      onFocus={() => setFocusedInput(`url-${index}`)}
-                      onBlur={() => setFocusedInput(null)}
+                      className="w-1/2"
                       onChange={(e) =>
                         handleInputChange(
                           'importantUrls',
@@ -171,13 +164,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                       type="text"
                       placeholder="URL"
                       value={url.url}
-                      className={`transition-all duration-300 ${
-                        focusedInput === `urlName-${index}` || !focusedInput
-                          ? 'w-4/5'
-                          : 'w-1/5'
-                      }`}
-                      onFocus={() => setFocusedInput(`urlName-${index}`)}
-                      onBlur={() => setFocusedInput(null)}
+                      className="w-1/2"
                       onChange={(e) =>
                         handleInputChange(
                           'importantUrls',
@@ -193,7 +180,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                     type="button"
                     variant="ghost"
                     onClick={() => handleRemoveUrl(index)}
-                    className="text-red-500"
+                    className="text-red-500 px-1"
                   >
                     <X />
                   </Button>

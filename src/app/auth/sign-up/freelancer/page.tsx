@@ -14,7 +14,7 @@ export default function SignUp() {
       </div>
 
       <div className="flex items-center justify-center py-8 sm:py-12">
-        <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-3/4 px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6">
             <div className="grid gap-2 text-center mt-12 sm:mt-0">
               {/* Added margin-top to prevent overlap */}

@@ -81,10 +81,7 @@ const StoriesAccordion = ({
   const { handleStorySubmit, stories, tasks } = useMilestones();
   const { storyData, handleRemoveUrl, handleAddUrl, handleStoryInputChange } =
     useMilestoneDialog();
-
-  const handleAccordionToggle = (id: string) => {
-    setOpenAccordion((prevId) => (prevId === id ? undefined : id));
-  };
+  console.log(stories);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
@@ -179,9 +176,6 @@ const StoriesAccordion = ({
                   className="py-2"
                 >
                   <AccordionTrigger
-                    onClick={() =>
-                      story._id && handleAccordionToggle(story._id)
-                    }
                     className={`flex items-center px-4 w-full ${idx === (milestone.stories ?? []).length - 1 ? 'border-b-0 pb-3' : ''}`}
                   >
                     <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
@@ -344,10 +338,10 @@ const StoriesAccordion = ({
                         </Carousel>
                       </div>
                     ) : (
-                      <div className="text-center mt-4 p-4 rounded-md ">
+                      <div className="text-center mt-12 p-4 rounded-md ">
                         <p>
-                          This story currently has no tasks. Add tasks to ensure
-                          smooth progress and better tracking.
+                          This {story.title} currently has no tasks. Add tasks
+                          to ensure smooth progress and better tracking.
                         </p>
                         <Button
                           className="mt-2 px-3 py-1 text-sm sm:text-base"
@@ -364,8 +358,9 @@ const StoriesAccordion = ({
           ) : (
             <div className="text-center mt-4 p-4 rounded-md">
               <p>
-                This milestone currently has no associated stories. Please add a
-                story to ensure smooth progress and effective tracking.
+                This {milestone.title} currently has no associated stories.
+                Please add a story to ensure smooth progress and effective
+                tracking.
               </p>
               <Button
                 className="mt-2 px-3 py-1 text-sm sm:text-base"

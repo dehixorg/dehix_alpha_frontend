@@ -112,9 +112,10 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
               Task Status
             </label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`w-full p-2 border rounded-md text-left ${errors.taskStatus ? 'border-red-500' : ''}`}
+              <DropdownMenuTrigger className="mt-1" asChild>
+                <Button
+                  variant="ghost"
+                  className={`w-full p-2 mt-1 border rounded-md text-left ${errors.taskStatus ? 'border-red-500' : ''}`}
                   type="button"
                 >
                   {formData.taskStatus
@@ -124,7 +125,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                         COMPLETED: 'Completed',
                       }[formData.taskStatus]
                     : 'Select Status'}
-                </button>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem
