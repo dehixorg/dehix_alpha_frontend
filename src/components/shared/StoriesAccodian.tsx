@@ -68,6 +68,13 @@ const StoriesAccordion = ({
     title: '',
     taskStatus: 'NOT_STARTED',
   });
+  const [storyData, setStoryData] = useState<Story>({
+    title: '',
+    summary: '',
+    storyStatus: '',
+    tasks: [],
+    importantUrls: [{ urlName: '', url: '' }],
+  });
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
 
@@ -78,10 +85,19 @@ const StoriesAccordion = ({
     setValue('');
   };
 
-  const { handleStorySubmit, stories, tasks } = useMilestones();
-  const { storyData, handleRemoveUrl, handleAddUrl, handleStoryInputChange } =
-    useMilestoneDialog();
-  console.log(stories);
+  const { handleStorySubmit } = useMilestones();
+  const { handleRemoveUrl, handleAddUrl, handleStoryInputChange } =
+    useMilestoneDialog({ setStoryData });
+
+  const resetFields = () => {
+    setStoryData({
+      title: '',
+      summary: '',
+      storyStatus: '',
+      tasks: [],
+      importantUrls: [{ urlName: '', url: '' }],
+    });
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string,
@@ -103,12 +119,15 @@ const StoriesAccordion = ({
     e.preventDefault();
     const updatedFormData = { formData, storyId: openAccordion };
 
-    const selectedStory = (milestone.stories ?? []).find(
-      (story) => story._id === openAccordion,
-    );
-    if (selectedStory) {
-      handleStorySubmit(e, selectedStory, milestone, true, updatedFormData);
+    if (milestone.stories) {
+      const story = milestone.stories.find(
+        (story) => story._id === openAccordion,
+      );
+      if (story) {
+        handleStorySubmit(e, story, milestone, true, updatedFormData);
+      }
     }
+
     setFormData({
       summary: '',
       title: '',
@@ -162,6 +181,7 @@ const StoriesAccordion = ({
           type="single"
           collapsible
           value={openAccordion}
+          onValueChange={(value) => setOpenAccordion(value)}
           className="pt-4 px-0"
         >
           {(milestone.stories ?? []).length > 0 ? (
@@ -176,7 +196,7 @@ const StoriesAccordion = ({
                   className="py-2"
                 >
                   <AccordionTrigger
-                    className={`flex items-center px-4 w-full ${idx === (milestone.stories ?? []).length - 1 ? 'border-b-0 pb-3' : ''}`}
+                    className={`flex hover:no-underline items-center px-4 w-full ${idx === (milestone.stories ?? []).length - 1 ? 'border-b-0 pb-3' : ''}`}
                   >
                     <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
                       <h3 className="text-lg md:text-xl font-semibold">
@@ -390,6 +410,7 @@ const StoriesAccordion = ({
           handleInputChange={handleStoryInputChange}
           handleCloseDialog={() => setIsStoryDialogOpen(false)}
           storyData={storyData}
+          resetFields={resetFields}
           handleRemoveUrl={handleRemoveUrl}
           handleAddUrl={handleAddUrl}
           milestones={milestone}

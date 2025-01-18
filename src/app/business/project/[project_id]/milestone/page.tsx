@@ -16,8 +16,11 @@ import { useMilestones } from '@/hooks/useMilestones';
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
 
-  const { milestones, loading, handleStorySubmit, fetchMilestones } =
+  const { milestones, loading, handleStorySubmit, fetchMilestones, stories } =
     useMilestones();
+  console.log(stories);
+
+  const derivedStories = milestones.map((milestone) => milestone.stories || []);
 
   return (
     <div className="flex min-h-screen h-auto w-full flex-col bg-muted/40">
@@ -59,6 +62,7 @@ const Page = () => {
                 milestones={milestones}
                 handleStorySubmit={handleStorySubmit}
                 milestoneId={milestones[0]._id}
+                stories={derivedStories}
               />
             ) : (
               <div className="flex justify-center items-center h-[50vh]">

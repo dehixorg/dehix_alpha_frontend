@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/carousel';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Milestone, Story } from '@/utils/types/Milestone';
+import { useMilestones } from '@/hooks/useMilestones';
 
 interface MilestoneTimelineProps {
   milestones: Milestone[];
@@ -26,15 +27,19 @@ interface MilestoneTimelineProps {
     newTask?: any,
     selectedMilestone?: Milestone,
   ) => void;
+  stories: Story;
 }
 
 const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   milestones,
   milestoneId,
+  stories,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedStories, setSelectedStories] = useState<Story[] | undefined>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+
+  console.log(stories);
 
   useEffect(() => {
     const div = scrollRef.current;
@@ -208,7 +213,6 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         <div className="mt-10">
           <StoriesAccordion
             milestone={milestones[selectedIndex]}
-            // handleStorySubmit={handleStorySubmit}
             milestoneId={milestoneId ?? ''}
           />
         </div>

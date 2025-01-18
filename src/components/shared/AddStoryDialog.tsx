@@ -38,6 +38,7 @@ interface AddStoryDialogProps {
   handleRemoveUrl: (index: number) => void;
   handleAddUrl: () => void;
   milestones: any;
+  resetFields: () => void;
 }
 
 const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
@@ -50,6 +51,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
   handleRemoveUrl,
   handleAddUrl,
   milestones,
+  resetFields,
 }) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -84,6 +86,7 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
     e.preventDefault();
     if (validateFields()) {
       handleStorySubmit(e, storyData, milestones);
+      resetFields();
       handleCloseDialog();
     }
   };

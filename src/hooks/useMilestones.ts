@@ -75,6 +75,10 @@ export const useMilestones = () => {
     let updatedStories;
 
     if (isTask && newTask) {
+      console.log('CHECK');
+
+      console.log(newTask);
+
       const storyId = newTask.storyId;
       updatedStories = updatedMilestone.stories.map((story: any) => {
         if (story._id === storyId) {

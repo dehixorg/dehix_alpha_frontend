@@ -2,33 +2,20 @@ import { useState } from 'react';
 
 import { Story } from '@/utils/types/Milestone';
 
-export const useMilestoneDialog = () => {
+export const useMilestoneDialog = (
+  {
+    setStoryData,
+  }: { setStoryData: React.Dispatch<React.SetStateAction<Story>> } = {
+    setStoryData: () => {},
+  },
+) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [storyData, setStoryData] = useState<Story>({
-    title: '',
-    summary: '',
-    storyStatus: '',
-    tasks: [],
-    importantUrls: [{ urlName: '', url: '' }],
-  });
-
-  const resetFields = () => {
-    setStoryData({
-      title: '',
-      summary: '',
-      storyStatus: '',
-      tasks: [],
-      importantUrls: [{ urlName: '', url: '' }],
-    });
-  };
 
   const handleOpenDialog = () => {
-    resetFields();
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    resetFields();
     setIsDialogOpen(false);
   };
 
@@ -63,13 +50,11 @@ export const useMilestoneDialog = () => {
 
   return {
     isDialogOpen,
-    storyData,
     handleOpenDialog,
     handleCloseDialog,
     handleStoryInputChange,
     handleAddUrl,
     handleRemoveUrl,
     setIsDialogOpen,
-    resetFields,
   };
 };
