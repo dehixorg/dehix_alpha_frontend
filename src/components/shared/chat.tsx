@@ -23,12 +23,20 @@ import {
   isThisYear,
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
 import { Textarea } from '../ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -78,7 +86,7 @@ type Message = {
   senderId: string;
   content: string;
   timestamp: string;
-  replyTo?: string;
+  replyTo?: string | null; // Allow null
   reactions?: MessageReaction;
 };
 
@@ -129,7 +137,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
         {
           ...message,
           timestamp: datentime,
-          replyTo,
+          replyTo: replyToMessageId || null,
         },
         datentime,
       );
@@ -191,31 +199,47 @@ export function CardsChat({ conversation }: CardsChatProps) {
     return null;
   }
 
-  async function handleDocumentUpload() {
+  // Handle image upload
+  async function handleFileUpload() {
     const fileInput = document.createElement('input');
-    fileInput.type = 'file';
+    fileInput.type = 'file'; // Allows selection of any file type
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
-      if (!file) return;
+      if (!file) return; // Exit if no file is selected
 
       try {
-        // const storageRef = firebase.storage().ref();
-        // const fileRef = storageRef.child(`documents/${conversation.id}/${file.name}`);
-        // await fileRef.put(file);
-        // const fileUrl = await fileRef.getDownloadURL();
-        // const message: Message = {
-        //   senderId: user.uid,
-        //   content: `📄 [${file.name}](${fileUrl})`,
-        //   timestamp: new Date().toISOString(),
-        // };
-        // sendMessage(conversation, message, setInput);
+        // Create FormData to send the file
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Post request to upload the file
+        const postFileResponse = await axiosInstance.post(
+          '/register/upload-image', // Endpoint that handles both files and images
+          formData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          },
+        );
+
+        // Assuming the response contains the URL of the uploaded file
+        const fileUrl = postFileResponse.data.data.Location;
+
+        // Prepare a message containing the file URL
+        const message: Partial<Message> = {
+          senderId: user.uid,
+          content: fileUrl, // Use the file URL as the message content
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send the message with the file URL
+        sendMessage(conversation, message, setInput);
       } catch (error) {
-        console.error('Error uploading document:', error);
+        console.error('Error uploading file:', error);
       }
     };
 
-    fileInput.click();
+    fileInput.click(); // Trigger file selection
   }
 
   async function handleCreateMeet() {
@@ -436,25 +460,56 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         }
                       }}
                     >
-                      <div className="break-words rounded-lg  w-full ">
-                        {message.replyTo && (
-                          <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg border-l-4 border-gray-100 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl ">
-                            <div className="text-sm italic text-gray-400 bg-gray-100 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                              <span className="font-semibold">
-                                {messages.find(
-                                  (msg) => msg.id === message.replyTo,
-                                )?.content || 'Message not found'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="break-words rounded-lg  w-full ">
+                              {message.replyTo && (
+                                <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg border-l-4 border-gray-100 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl ">
+                                  <div className="text-sm italic text-gray-400 bg-gray-100 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
+                                    <span className="font-semibold">
+                                      {messages.find(
+                                        (msg) => msg.id === message.replyTo,
+                                      )?.content || 'Message not found'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
 
-                        <div>
-                          {/* <div className="break-words rounded-lg  w-full"> */}
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
-                          {/* </div> */}
-                        </div>
-                      </div>
+                              {message.content.match(
+                                /\.(jpeg|jpg|gif|png)$/,
+                              ) ? (
+                                <Image
+                                  src={message.content}
+                                  alt="Message Image"
+                                  width={300}
+                                  height={300}
+                                  className="rounded-lg"
+                                />
+                              ) : message.content.match(
+                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                ) ? (
+                                <FileAttachment
+                                  fileName={
+                                    message.content.split('/').pop() || 'File'
+                                  }
+                                  fileUrl={message.content}
+                                  fileType={
+                                    message.content.split('.').pop() || 'file'
+                                  }
+                                />
+                              ) : (
+                                // {/* <div className="break-words rounded-lg  w-full"> */}
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                                // {/* </div> */}
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" sideOffset={10}>
+                            <p>{readableTimestamp}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
                       {/* Render reactions inside the message bubble */}
                       <Reactions
@@ -509,7 +564,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   senderId: user.uid,
                   content: input,
                   timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId,
+                  replyTo: replyToMessageId || null,
                 };
 
                 sendMessage(
@@ -624,7 +679,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     variant="outline"
                     title="Attach File"
                     className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                    onClick={() => handleDocumentUpload()}
+                    onClick={() => handleFileUpload()}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
