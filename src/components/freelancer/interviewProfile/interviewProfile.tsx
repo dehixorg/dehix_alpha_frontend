@@ -320,10 +320,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           and provide your experience levels.
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8">
-        {/* Skills Table */}
-        <div className="mb-8 w-full sm:w-1/2">
-          <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
+   {/* Skills Table */}
+   <div className="mb-8 w-full sm:w-1/2 sm:pr-4 relative border border-gray-200 rounded-lg p-4">
+       <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Skills</h2>
             <Button
               onClick={() => {
@@ -397,8 +397,8 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         </div>
 
         {/* Domain Table */}
-        <div className="mb-8 w-full sm:w-1/2">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-8 w-full sm:w-1/2 sm:pl-4 relative border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Domains</h2>
             <Button
               onClick={() => {
