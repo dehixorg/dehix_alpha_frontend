@@ -12,18 +12,6 @@
   }
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-  /* Chrome, Safari, and Opera */
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -49,10 +37,11 @@
     --cyan: 180, 100%, 50%;
     --cyan-foreground: 180, 100%, 43%;
     --line-color-light: 0 0% 0% / 90%;
-    /* Black with 20% opacity for light mode */
     --line-color-dark: 0 0% 100% / 20%;
-    /* White with 20% opacity for dark mode */
-
+    --dot-bg-color: #ffffff;
+    --dot-border-color: #000000;
+    --dot-hover-bg-color: #000000;
+    --dot-hover-border-color: #11a0ff;
   }
 
   .dark {
@@ -78,10 +67,11 @@
     --cyan: 180, 100%, 43%;
     --cyan-foreground: 180, 100%, 50%;
     --line-color-light: 0 0% 0% / 20%;
-    /* Black with 20% opacity for light mode */
     --line-color-dark: 0 0% 100% / 20%;
-    /* White with 20% opacity for dark mode */
-
+    --dot-bg-color: #fffefe;
+    --dot-border-color: #f5f5f5;
+    --dot-hover-bg-color: #ffffff;
+    --dot-hover-border-color: #11a0ff;
   }
 }
 
@@ -96,18 +86,13 @@
 }
 
 @layer utilities {
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
     -ms-overflow-style: none;
-    /* IE and Edge */
     scrollbar-width: none;
-    /* Firefox */
   }
 }
 
@@ -131,29 +116,27 @@
 
 @layer utilities {
   .dynamic-bg {
-    background-color: hsl(var(--background));
+    background-color: var(--background);
   }
 
   .dynamic-text {
-    color: hsl(var(--foreground));
+    color: var(--foreground);
   }
 
   .dynamic-card {
-    background-color: hsl(var(--card));
-    color: hsl(var(--card-foreground));
+    background: linear-gradient(
+      135deg,
+      rgba(240, 240, 240, 0.8),
+      rgba(240, 240, 240, 0.6)
+    );
+    color: var(--foreground);
   }
-}
 
-.scroll-container {
-  display: flex;
-  align-items: center;
-  overflow-x: auto;
-  overflow-y: hidden; /* Prevent vertical scroll */
-  white-space: nowrap;
-  scrollbar-width: none; /* Hide scrollbar for Firefox */
-  -ms-overflow-style: none; /* Hide scrollbar for IE */
-}
-
-.scroll-container::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for Chrome, Safari, Opera */
+  .dark .dynamic-card {
+    background: rgba(255, 255, 255, 0.2);
+    color: #f5f5f5;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
 }

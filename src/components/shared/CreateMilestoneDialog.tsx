@@ -31,12 +31,12 @@ export function CreateMilestoneDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button variant="default" className="hover:bg-transparent">
           <Plus className="mr-2" />
           Milestone
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[80vh] p-4 overflow-y-auto">
+      <DialogContent className="max-h-[80vh] sm:max-w-[80vw] md:w-1/3 p-4 no-scrollbar overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create Milestone</DialogTitle>
           <DialogDescription>

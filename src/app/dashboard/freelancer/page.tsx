@@ -217,16 +217,32 @@ export default function Dashboard() {
                   </TabsList>
                 </div>
                 <TabsContent value={StatusEnum.ACTIVE}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="active"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="pending"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="completed"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="rejected"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
               </Tabs>
             </div>

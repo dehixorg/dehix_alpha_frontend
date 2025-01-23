@@ -99,7 +99,6 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleFormSubmit}>
           <div className="space-y-6">
-            {/* Story Title */}
             <div>
               <label
                 htmlFor="storyTitle"
@@ -117,8 +116,6 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                 <p className="text-red-500 text-sm mt-1">{errors.title}</p>
               )}
             </div>
-
-            {/* Summary */}
             <div>
               <label
                 htmlFor="storySummary"
@@ -136,8 +133,6 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                 <p className="text-red-500 text-sm mt-1">{errors.summary}</p>
               )}
             </div>
-
-            {/* Important URLs */}
             <div>
               <label
                 htmlFor="storyUrls"
@@ -152,7 +147,6 @@ const AddStoryDialog: React.FC<AddStoryDialogProps> = ({
                       type="text"
                       placeholder="URL Name"
                       value={url.urlName}
-                      // className={`transition-all duration-300 ${focusedInput === `urlName-${index}` ? 'w-4/5' : 'w-1/5'}`}
                       className="w-1/2"
                       onChange={(e) =>
                         handleInputChange(

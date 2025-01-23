@@ -26,10 +26,10 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
 
   return (
     <div
-      className={`flex flex-col rounded-md   items-center gap-2 relative ${
+      className={`flex flex-col group-hover:bg-[#5b9dc9] rounded-md   items-center gap-2 relative ${
         isMobile ? 'w-64' : 'w-48 h-20'
-      } ${position === 'top' ? 'mt-[128px]' : position === 'bottom' ? '-mt-[104px]' : ''} 
-          ${isSelected ? 'bg-[#11a0ff]' : 'bg-card'}
+      } ${position === 'top' ? 'mt-[132px]' : position === 'bottom' ? '-mt-[106px]' : ''} 
+          ${isSelected ? 'bg-[#11a0ff]' : 'dynamic-card'}
         `}
       style={{
         width: '200px',

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Input } from '../ui/input';
@@ -16,7 +15,7 @@ import { toast } from '@/components/ui/use-toast';
 
 interface MilestoneFormProps {
   projectId: string;
-  fetchMilestones: () => void; // Add this prop to refetch milestones after creating one
+  fetchMilestones: () => void;
   closeDialog: () => void;
 }
 
@@ -26,7 +25,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
   closeDialog,
 }) => {
   const userId = useSelector((state: any) => state.user?.uid);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { formData, setFormData, handleChange, validateForm } = useFormState({
     setErrors,
@@ -35,8 +34,6 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
-
     if (validateForm()) {
       try {
         const response = await axiosInstance.post('/milestones', {
@@ -51,7 +48,6 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         });
         fetchMilestones();
       } catch (error) {
-        console.error('Error creating milestone:', error);
         toast({
           title: 'Error',
           description: 'Failed to create milestone.',
@@ -71,16 +67,6 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
         </div>
         <div>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.length > 0 && (
-              <div className="p-4 mb-4 border border-red-500 rounded">
-                <ul className="text-sm text-red-500">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <div>
               <label htmlFor="title" className="block text-sm font-medium mb-2">
                 Title
@@ -94,6 +80,9 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                 required
                 className="mt-1 block w-full"
               />
+              {errors.title && (
+                <p className="text-xs text-red-500 mt-1">{errors.title}</p>
+              )}
             </div>
 
             <div>
@@ -109,66 +98,65 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Description"
+                required
                 className="mt-1 block w-full"
               />
+              {errors.description && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label
                   htmlFor="startDate"
-                  className="block text-sm font-medium mb-2"
+                  className="block whitespace-nowrap text-sm font-medium mb-2"
                 >
-                  Start Date
+                  Start Date (Expected)
                 </label>
-                <div>
-                  <label
-                    htmlFor="startDateExpected"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    (Expected)
-                  </label>
-                  <MilestoneDatePicker
-                    selected={
-                      formData.startDate.expected
-                        ? new Date(formData.startDate.expected)
-                        : null
-                    }
-                    onChange={(date) =>
-                      handleDateChange('startDate', 'expected', date)
-                    }
-                    placeholderText="Start Date (Expected)"
-                    className="mt-1 block text-xs w-full"
-                  />
-                </div>
+                <MilestoneDatePicker
+                  selected={
+                    formData.startDate.expected
+                      ? new Date(formData.startDate.expected)
+                      : null
+                  }
+                  onChange={(date) =>
+                    handleDateChange('startDate', 'expected', date)
+                  }
+                  placeholderText="Start Date (Expected)"
+                  className="mt-1 block text-xs w-full"
+                />
+                {errors.startDate && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.startDate}
+                  </p>
+                )}
               </div>
+
               <div>
                 <label
                   htmlFor="endDate"
-                  className="block text-sm font-medium mb-2"
+                  className="block whitespace-nowrap text-sm font-medium mb-2"
                 >
-                  End Date
+                  End Date (Expected)
                 </label>
-                <div>
-                  <label
-                    htmlFor="endDateExpected"
-                    className="block text-sm font-medium mb-1"
-                  >
-                    (Expected)
-                  </label>
-                  <MilestoneDatePicker
-                    selected={
-                      formData.endDate.expected
-                        ? new Date(formData.endDate.expected)
-                        : null
-                    }
-                    onChange={(date) =>
-                      handleDateChange('endDate', 'expected', date)
-                    }
-                    placeholderText="End Date (Expected)"
-                    className="mt-1 block text-xs w-full"
-                  />
-                </div>
+                <MilestoneDatePicker
+                  selected={
+                    formData.endDate.expected
+                      ? new Date(formData.endDate.expected)
+                      : null
+                  }
+                  onChange={(date) =>
+                    handleDateChange('endDate', 'expected', date)
+                  }
+                  placeholderText="End Date (Expected)"
+                  className="mt-1 block text-xs w-full"
+                />
+                {errors.endDate && (
+                  <p className="text-xs text-red-500 mt-1">{errors.endDate}</p>
+                )}
               </div>
             </div>
 
@@ -186,8 +174,12 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                 value={formData.amount}
                 onChange={handleChange}
                 placeholder="Amount"
+                required
                 className="mt-1 block w-full"
               />
+              {errors.amount && (
+                <p className="text-xs text-red-500 mt-1">{errors.amount}</p>
+              )}
             </div>
 
             <div>
@@ -208,6 +200,9 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
                   setFormData((prevState) => ({ ...prevState, status: value }))
                 }
               />
+              {errors.status && (
+                <p className="text-xs text-red-500 mt-1">{errors.status}</p>
+              )}
             </div>
 
             <div className="mt-4">

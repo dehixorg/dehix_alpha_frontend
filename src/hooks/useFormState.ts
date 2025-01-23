@@ -9,7 +9,7 @@ import {
 export const useFormState = ({
   setErrors,
 }: {
-  setErrors: (errors: string[]) => void;
+  setErrors: (errors: { [key: string]: string }) => void;
 }) => {
   const [formData, setFormData] = useState<Milestone>({
     title: '',
@@ -35,26 +35,26 @@ export const useFormState = ({
   };
 
   const validateForm = () => {
-    const newErrors: string[] = [];
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.title.trim()) {
-      newErrors.push('Title is required.');
+      newErrors.title = 'Title is required.';
     }
     if (!formData.description.trim()) {
-      newErrors.push('Description is required.');
+      newErrors.description = 'Description is required.';
     }
     if (
       new Date(formData.startDate.expected) >
       new Date(formData.endDate.expected)
     ) {
-      newErrors.push('Start date cannot be after end date.');
+      newErrors.startDate = 'Start date cannot be after end date.';
     }
     if ((formData.amount ?? 0) < 0) {
-      newErrors.push('Amount must be a positive number.');
+      newErrors.amount = 'Amount must be a positive number.';
     }
 
     setErrors(newErrors);
-    return newErrors.length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   return {

@@ -165,6 +165,7 @@ export default function Dashboard() {
                         skills={project.skillsRequired}
                         projectId={project._id}
                         handleCompleteProject={handleCompleteProject}
+                        userRole="Business"
                       />
                     </div>
                     <div>

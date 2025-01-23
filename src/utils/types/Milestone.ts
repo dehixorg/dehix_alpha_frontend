@@ -70,6 +70,7 @@ export interface Task {
   title: string;
   summary: string;
   taskStatus: string;
+  freelancers?: any;
 }
 
 export interface importantUrl {

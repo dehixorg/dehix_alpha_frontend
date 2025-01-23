@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Code2, Mail, Milestone, Tag } from 'lucide-react';
+import { CheckCircle, Code2, FlagIcon, Mail, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +32,7 @@ function ProjectDetailCard({
   endDate,
   projectDomain,
   skills,
-  userRole = 'Business', // Default to 'Business'
+  userRole = 'Business',
   projectId,
   handleCompleteProject,
 }: ProjectDetailCardProps) {
@@ -114,7 +114,7 @@ function ProjectDetailCard({
               className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-blue-600 hover:bg-blue-500"
               size="sm"
             >
-              <Milestone className="w-4 h-4 mr-1" />
+              <FlagIcon className="w-4 h-4 mr-1" />
               Milestone
             </Button>
           </Link>

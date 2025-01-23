@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -9,12 +8,10 @@ import MilestoneTimeline from '@/components/shared/MilestoneTimeline';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
-import { Button } from '@/components/ui/button';
-import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
-import { axiosInstance } from '@/lib/axiosinstance';
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { toast } from '@/components/ui/use-toast';
 import { Milestone, Story } from '@/utils/types/Milestone';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
@@ -141,9 +138,9 @@ const Page = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
-            { label: 'Project', link: '/dashboard/business' },
-            { label: project_id, link: `/business/project/${project_id}` },
+            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Project', link: '/dashboard/freelancer' },
+            { label: project_id, link: `/freelancer/project/${project_id}` },
             { label: 'Milestone', link: '#' },
           ]}
         />
@@ -152,23 +149,17 @@ const Page = () => {
             <h1 className="text-xl md:text-2xl font-bold">
               Project Milestones
             </h1>
-
-            <Button className="px-3 py-1 ">
-              <CreateMilestoneDialog
-                projectId={project_id}
-                fetchMilestones={fetchMilestones}
-              />
-            </Button>
           </div>
           <div className="w-full flex justify-center items-center">
             {loading ? (
               <p>Loading milestones...</p>
             ) : milestones.length > 0 ? (
               <MilestoneTimeline
-                fetchMilestones={fetchMilestones}
                 milestones={milestones}
-                milestoneId={milestones[0]._id}
                 handleStorySubmit={handleStorySubmit}
+                milestoneId={milestones[0]._id}
+                fetchMilestones={fetchMilestones}
+                isFreelancer={true}
               />
             ) : (
               <div className="flex justify-center items-center h-[50vh]">

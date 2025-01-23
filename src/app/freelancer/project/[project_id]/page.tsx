@@ -145,6 +145,7 @@ export default function Dashboard() {
                 projectDomain={project.projectDomain}
                 projectId={project._id}
                 skills={project.skillsRequired}
+                userRole="Freelancer"
               />
             </div>
           </div>

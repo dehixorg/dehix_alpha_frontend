@@ -14,41 +14,55 @@ import {
 } from '@/components/ui/carousel';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Milestone, Story } from '@/utils/types/Milestone';
-import { useMilestones } from '@/hooks/useMilestones';
 
 interface MilestoneTimelineProps {
   milestones: Milestone[];
   milestoneId: string | undefined;
-  handleStorySubmit?: (
-    e: React.FormEvent,
-    storyData: Story,
-    milestoneId: string,
-    isTask?: boolean,
-    newTask?: any,
-    selectedMilestone?: Milestone,
-  ) => void;
-  stories: Story;
+  fetchMilestones: any;
+  handleStorySubmit: any;
+  isFreelancer?: boolean;
 }
+
+export const truncateDescription = (
+  text: string,
+  maxLength: number = 50,
+): string => {
+  if (text.length > maxLength) {
+    return text.slice(0, maxLength) + '...';
+  }
+  return text;
+};
 
 const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   milestones,
   milestoneId,
-  stories,
+  fetchMilestones,
+  handleStorySubmit,
+  isFreelancer = false,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedStories, setSelectedStories] = useState<Story[] | undefined>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
-
-  console.log(stories);
 
   useEffect(() => {
     const div = scrollRef.current;
 
     const handleWheel = (event: WheelEvent) => {
       if (div) {
+        // Ensure we only scroll horizontally if there's overflow
+        const maxScrollLeft = div.scrollWidth - div.clientWidth;
+
         if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
           event.preventDefault(); // Block vertical scrolling
-          div.scrollLeft += event.deltaY; // Use vertical delta for horizontal scrolling
+
+          // Handle boundary cases to prevent overscrolling
+          if (div.scrollLeft + event.deltaY > maxScrollLeft) {
+            div.scrollLeft = maxScrollLeft; // Prevent overshooting the right edge
+          } else if (div.scrollLeft + event.deltaY < 0) {
+            div.scrollLeft = 0; // Prevent overshooting the left edge
+          } else {
+            div.scrollLeft += event.deltaY; // Perform horizontal scrolling
+          }
         }
       }
     };
@@ -62,21 +76,14 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         div.removeEventListener('wheel', handleWheel);
       }
     };
-  }, []);
+  }, [scrollRef]);
 
-  const handelStorySelect = (milestone: any, index: number) => {
-    setSelectedStories(milestone);
+  const handleStorySelect = (milestone: any, index: number) => {
+    if (index < 0 || index >= milestones.length) return;
+    setSelectedStories(milestone.stories);
     setSelectedIndex(index);
   };
 
-  const truncateDescription = (text: string, maxLength: number = 50) => {
-    if (text.length > maxLength) {
-      return text.slice(0, maxLength) + '...';
-    }
-    return text;
-  };
-
-  // Add a dummy story if there's only one
   const displayMilestones =
     milestones.length === 1
       ? [
@@ -103,15 +110,12 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
               <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg transform -translate-y-1/2"></div>
 
               {/* Scrolling Timeline */}
-              <div
-                ref={scrollRef}
-                className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-scroll px-4 py-6  scrollbar-hide"
-              >
+              <div className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-scroll px-4 py-6  no-scrollbar">
                 {displayMilestones.map((milestone, index) => (
                   <div
                     key={index}
-                    className={`relative px-16 inline-block ${displayMilestones.length === 1 ? 'mx-auto ' : ''}`} // Center for single milestone
-                    onClick={() => handelStorySelect(milestone, index)}
+                    className={`relative group px-16 inline-block ${displayMilestones.length === 1 ? 'mx-auto ' : ''}`} // Center for single milestone
+                    onClick={() => handleStorySelect(milestone, index)}
                   >
                     {/* Timeline Dot */}
                     <div
@@ -119,7 +123,11 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                         milestones.length === 1 && milestone.title === 'dummy'
                           ? 'hidden'
                           : ''
-                      } ${index === selectedIndex ? 'bg-[#11a0ff] border-[#11a0ff]' : 'border-[#FFF]'} top-1/2 transform -translate-y-1/2 w-5 h-5 bg-primary rounded-full border-4   group hover:bg-[#11a0ff] hover:border-[#11a0ff]`}
+                      } ${
+                        index === selectedIndex
+                          ? 'bg-[var(--dot-hover-bg-color)] border-[var(--dot-hover-border-color)]'
+                          : 'border-[var(--dot-border-color)]'
+                      } top-1/2 transform -translate-y-1/2 w-5 h-5 bg-[var(--dot-bg-color)] rounded-full border-4 group group-hover:bg-[var(--dot-hover-bg-color)] group-hover:border-[var(--dot-hover-border-color)] `}
                       style={{
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
@@ -128,7 +136,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                       <div
                         className={`absolute left-1/2 transform -translate-x-1/2 ${
                           index % 2 === 0 ? '-top-6' : 'top-3'
-                        } ${index === selectedIndex ? 'bg-[#11a0ff] text-[#11a0ff]' : ''}  group-hover:text-[#11a0ff] `}
+                        } ${index === selectedIndex ? 'bg-[#11a0ff] text-[#11a0ff]' : ''}  group-hover:text-[#11a0ff] overflow-hidden `}
                       >
                         |
                       </div>
@@ -156,17 +164,17 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         </ScrollArea>
       </div>
       {/* Carousel for mobile view */}
-      <div className="flex justify-center items-center md:hidden">
+      <div className="flex pb-8 justify-center  items-center md:hidden">
         <Carousel>
-          <CarouselContent className="flex items-center w-[100vw] gap-4">
+          <CarouselContent className="flex min-h-[200px] items-center w-[100vw] gap-4">
             {milestones.map((milestone, index) => (
               <CarouselItem
                 key={index}
-                className="flex justify-center items-center"
-                onClick={() => handelStorySelect(milestone, index)}
+                className="flex relative justify-center top-0  h-auto items-center"
+                onClick={() => handleStorySelect(milestone, index + 1)}
               >
                 {milestone._id !== 'dummy' && (
-                  <div className="border p-6 border-line-bg bg-card rounded-lg shadow-lg relative w-full max-w-[80vw]">
+                  <div className="border p-6 border-line-bg  rounded-lg shadow-lg  w-full max-w-[80vw]">
                     {/* Card Content */}
                     <div className="text-center">
                       <p className="text-xs">
@@ -189,14 +197,25 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                         </p>
                       )}
                     </div>
-                    <CarouselPrevious className="absolute top-1/3 left-4 transform -translate-y-1/2">
-                      <button className="bg-white/20 rounded-full p-3 text-white hover:bg-white/30">
+                    <CarouselPrevious className="absolute top-[117%] left-12 transform -translate-y-1/2">
+                      <button
+                        onClick={() => handleStorySelect(milestone, index - 1)}
+                        className="bg-white/20 rounded-full p-3 text-white hover:bg-white/30"
+                        disabled={index === 0}
+                      >
                         <IconLeft />
                       </button>
                     </CarouselPrevious>
-
-                    <CarouselNext className="absolute top-1/3 right-4 transform -translate-y-1/2">
-                      <button className="bg-white/20 rounded-full p-3 text-white hover:bg-white/30">
+                    <CarouselNext className="absolute top-[117%] right-8 transform -translate-y-1/2">
+                      <button
+                        onClick={() => handleStorySelect(milestone, index + 1)}
+                        className={`bg-white/20 rounded-full p-3 text-white ${
+                          index === milestones.length - 1
+                            ? 'cursor-not-allowed'
+                            : 'hover:bg-white/30'
+                        }`}
+                        disabled={index === milestones.length - 1}
+                      >
                         <IconRight />
                       </button>
                     </CarouselNext>
@@ -214,6 +233,9 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           <StoriesAccordion
             milestone={milestones[selectedIndex]}
             milestoneId={milestoneId ?? ''}
+            fetchMilestones={fetchMilestones}
+            handleStorySubmit={handleStorySubmit}
+            isFreelancer={isFreelancer}
           />
         </div>
       )}
