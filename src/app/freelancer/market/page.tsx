@@ -15,6 +15,7 @@ import { RootState } from '@/lib/store';
 import JobCard from '@/components/opportunities/jobs/jobs';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FilterState {
   projects: string[];
@@ -223,14 +224,16 @@ const Market: React.FC = () => {
           <h1 className="text-3xl font-bold">Freelancer Marketplace</h1>
           <p className="text-gray-400 mt-2 ">
             Discover and manage your freelance opportunities, connect with
-            potential projects, and filter by skills, domains and project domian
-            to enhance your portfolio.
+            potential projects, and filter by skills, domains and project
+            domains to enhance your portfolio.
           </p>
         </div>
       </div>
+
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
-        <div className="hidden lg:block lg:sticky lg:top-16 lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
-          <div className="h-full px-4 flex flex-col space-y-4 ">
+        {/* Left Sidebar Scroll */}
+        <div className="hidden lg:block lg:sticky lg:top-16  lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)]">
+          <ScrollArea className="h-full scrollbar-hidden overflow-y-auto px-4 space-y-4">
             <Button onClick={handleApply} className="w-full">
               Apply
             </Button>
@@ -278,31 +281,35 @@ const Market: React.FC = () => {
                 }
               />
             </div>
-          </div>
+          </ScrollArea>
         </div>
 
+        {/* Right Content Scroll */}
         <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
-          {jobs.map((job: Project, index: number) => (
-            <JobCard
-              key={index}
-              id={job._id}
-              companyId={job.companyId}
-              projectName={job.projectName}
-              description={job.description}
-              companyName={job.companyName}
-              email={job.email}
-              skillsRequired={job.skillsRequired}
-              status={job.status}
-              profiles={job.profiles || []}
-              onRemove={handleRemoveJob}
-            />
-          ))}
+          <ScrollArea className="h-[calc(100vh-4rem)] scrollbar-hidden overflow-y-auto">
+            {jobs.map((job: Project, index: number) => (
+              <JobCard
+                key={index}
+                id={job._id}
+                companyId={job.companyId}
+                projectName={job.projectName}
+                description={job.description}
+                companyName={job.companyName}
+                email={job.email}
+                skillsRequired={job.skillsRequired}
+                status={job.status}
+                profiles={job.profiles || []}
+                onRemove={handleRemoveJob}
+              />
+            ))}
+          </ScrollArea>
         </div>
       </div>
 
+      {/* Modal for Filters */}
       {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
-          <div className="bg-secondary rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+          <div className="bg-secondary rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col ">
             <div className="overflow-y-auto p-4 flex-grow">
               <div className="border-b border-gray-300 pb-4">
                 <MobileSkillDom
@@ -347,6 +354,8 @@ const Market: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Mobile Filter Toggle Button */}
       {isClient && (
         <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4 flex justify-center z-50">
           <button

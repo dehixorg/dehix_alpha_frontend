@@ -18,6 +18,7 @@ interface TextInputProps<T extends FieldValues> {
   placeholder?: string;
   type?: string;
   description?: string;
+  className?: string; // Add className to the props interface
 }
 
 const TextInput: FC<TextInputProps<any>> = ({
@@ -27,6 +28,7 @@ const TextInput: FC<TextInputProps<any>> = ({
   placeholder = 'Enter value',
   type = 'text',
   description = '',
+  className = '', // Default to an empty string if no className is passed
 }) => {
   return (
     <div className="space-y-2">
@@ -41,6 +43,7 @@ const TextInput: FC<TextInputProps<any>> = ({
                 placeholder={placeholder}
                 type={type}
                 {...field}
+                className={`p-2 border rounded-md ${className}`} // Apply className here
                 onChange={(e) => {
                   const value = e.target.value;
                   if (type === 'number') {
