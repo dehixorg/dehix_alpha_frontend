@@ -21,13 +21,21 @@ const Reactions: React.FC<ReactionProps> = ({
 }) => {
   const user = useSelector((state: RootState) => state.user);
 
+  const handleEmojiClick = (emoji: string) => {
+    toggleReaction(messageId, emoji);
+  };
+
   return (
     <div className="flex items-center gap-2 mt-2">
       {Object.entries(reactions).map(([emoji, users]) => (
         <Badge
           key={emoji}
-          onClick={() => toggleReaction(messageId, emoji)} // Handle click to toggle reaction
-          className={`cursor-pointer ${users.includes(user.uid) ? 'bg-green' : 'bg-white'}`}
+          onClick={() => handleEmojiClick(emoji)} // Handle click to toggle reaction
+          className={`cursor-pointer ${
+            Array.isArray(users) && users.includes(user.uid)
+              ? 'bg-gray-400'
+              : 'bg-green'
+          }`}
         >
           <span className="flex items-center">
             {emoji} {/* Display emoji */}
@@ -45,7 +53,7 @@ const Reactions: React.FC<ReactionProps> = ({
 // Add PropTypes validation
 Reactions.propTypes = {
   messageId: PropTypes.string.isRequired, // The messageId is now required
-  reactions: PropTypes.any, // Reactions are required
+  reactions: PropTypes.any.isRequired, // Reactions are required
   toggleReaction: PropTypes.func.isRequired, // Function to toggle reactions is required
 };
 

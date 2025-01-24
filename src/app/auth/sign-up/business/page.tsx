@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 
 export default function SignUp() {
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen w-full">
       <div className="absolute left-4 top-4 sm:left-10 sm:top-10">
         <ThemeToggle />
       </div>
       <div className="flex items-center justify-center py-8 sm:py-12">
-        <div className="mx-auto w-full max-w-md px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full  px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6">
             <div className="grid gap-2 text-center mt-12 sm:mt-0">
               {/* Added margin-top to prevent overlap */}
@@ -44,9 +44,8 @@ export default function SignUp() {
               </Button>{' '}
               and{' '}
               <Button variant="link" className="p-0" asChild>
-                <Link href="/privacy">Privacy Policy</Link>
+                <Link href="/privacy">Privacy Policy.</Link>
               </Button>
-              .
             </p>
           </div>
         </div>

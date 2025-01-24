@@ -22,6 +22,7 @@ import { ButtonIcon } from '@/components/shared/buttonIcon';
 import DomainDialog from '@/components/dialogs/domainDialog';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
+import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 
 interface Skill {
   label: string;
@@ -100,6 +101,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
 
   const [editingSkill, setEditingSkill] = useState<SkillData | null>(null);
   const [editingDomain, setEditingDomain] = useState<DomainData | null>(null);
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
+  const [docId, setDocId] = useState<string>();
+  const [docType, setDocType] = useState<string>();
 
   useEffect(() => {
     async function fetchData() {
@@ -144,7 +148,19 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
 
   const onSubmitSkill = async (data: SkillFormData) => {
     setLoading(true);
+
     try {
+      const skillToSubmit = {
+        name: data.name,
+        level: data.level,
+        experience: data.experience,
+        interviewPermission: 'NOT_VERIFIED', // Ensure interviewStatus is set
+      };
+
+      const payload = {
+        skills: [skillToSubmit], // Wrap in an array
+      };
+
       if (editingSkill) {
         // Update existing skill using API
         const updatedSkill = {
@@ -155,7 +171,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
 
         const response = await axiosInstance.put(
           `/freelancer/${freelancerId}/skill`,
-          updatedSkill,
+          payload,
         );
 
         if (response.status === 200) {
@@ -175,6 +191,33 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         }
       } else {
         // Add new skill
+        const response = await axiosInstance.put(
+          `/freelancer/${freelancerId}/skill`,
+          payload,
+        );
+
+        if (response.status === 200) {
+          // After a successful response (status 200), update local state
+
+          setSkillData([
+            ...skillData,
+            {
+              name: data.name,
+              experience: data.experience,
+              level: data.level,
+              interviewStatus: defaultStatus,
+            },
+          ]);
+
+          toast({
+            title: 'Skill Added',
+            description: `${data.name} skill added successfully.`,
+          });
+        } else {
+          // Handle non-200 responses (optional)
+          throw new Error('Failed to add skill');
+        }
+
         setSkillData([
           ...skillData,
           {
@@ -251,6 +294,13 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     }
   };
 
+  const handleSkillDomainDialog = (data: any, type: string) => {
+    console.log('Opening dialog for', type, 'with ID:', data?._id);
+    setShowMeetingDialog(true);
+    setDocId(data?._id);
+    setDocType(type);
+  };
+
   const handleEditSkill = (skill: SkillData) => {
     setEditingSkill(skill);
     setOpenSkillDialog(true);
@@ -277,7 +327,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             <h2 className="text-xl font-semibold">Skills</h2>
             <Button
               onClick={() => {
-                setEditingSkill(null);
                 setOpenSkillDialog(true);
               }}
             >
@@ -336,7 +385,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>
                         <ButtonIcon
                           icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() => handleEditSkill(skill)}
+                          onClick={() =>
+                            handleSkillDomainDialog(skill, 'skill')
+                          }
                         />
                       </TableCell>
                     </TableRow>
@@ -414,7 +465,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       <TableCell>
                         <ButtonIcon
                           icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() => handleEditDomain(domain)}
+                          onClick={() =>
+                            handleSkillDomainDialog(domain, 'domain')
+                          }
                         />
                       </TableCell>
                     </TableRow>
@@ -423,6 +476,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           </Table>
         </div>
       </div>
+      <SkillDomainMeetingDialog
+        isOpen={showMeetingDialog}
+        onClose={() => setShowMeetingDialog(false)}
+        doc_id={docId || ''}
+        doc_type={docType || ''}
+      />
     </div>
   );
 };
