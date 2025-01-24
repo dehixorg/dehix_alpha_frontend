@@ -31,6 +31,7 @@ interface TaskUpdateDetailDialogProps {
     acceptanceBusiness: boolean,
     acceptanceFreelancer: boolean,
   ) => void;
+  fetchMilestones: () => void;
 }
 
 const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
@@ -42,6 +43,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   showPermissionDialog,
   setShowPermissionDialog,
   handleConfirmPermissionRequest,
+  fetchMilestones,
 }) => {
   const [taskData, setTaskData] = useState({
     title: task?.title || '',
@@ -123,20 +125,24 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
         taskStatus: taskData.taskStatus,
       });
 
-      if (response.status === 200) {
-        alert('Task updated successfully!');
-        setShowPermissionDialog(false);
-      }
+      toast({
+        description: 'Task updated',
+        duration: 3000,
+      });
+      setShowPermissionDialog(false);
+      fetchMilestones();
     } catch (error) {
-      console.error('Error updating task:', error);
-      alert('Failed to update task. Please try again later.');
+      toast({
+        description: 'Task not update , plz try again .',
+        duration: 3000,
+      });
     }
   };
 
   return (
     <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
       <DialogTrigger className="hidden">Trigger</DialogTrigger>
-      <DialogContent className="w-[450px] p-6 border rounded-md shadow-md">
+      <DialogContent className=" sm:w-[86vw] md:w-[450px]  p-6 border rounded-md shadow-md">
         <DialogHeader>
           <DialogTitle>
             {isUpdatePermissionAllowed

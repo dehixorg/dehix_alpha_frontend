@@ -195,16 +195,16 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                           </DialogHeader>
                           <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
-                              <strong>Project Name:</strong>
+                              <strong>Project Name :</strong>
                               <span>{selectedProject?.projectName}</span>
                             </div>
                             <div className="flex justify-between">
-                              <strong>Company:</strong>
+                              <strong>Company :</strong>
                               <span>{selectedProject?.companyName}</span>
                             </div>
                             <div className="flex justify-between items-center gap-2">
-                              <strong>Description:</strong>
-                              <p className="">
+                              <strong className="w-1/3">Description :</strong>
+                              <p className="w-2/3">
                                 {selectedProject?.description &&
                                 selectedProject.description.length > 55 &&
                                 !isExpanded ? (
@@ -241,19 +241,24 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                               </p>
                             </div>
                             <div className="flex justify-between">
-                              <strong>Skills Required:</strong>
+                              <strong>Skills Required :</strong>
                               <span>
-                                {selectedProject?.skillsRequired.join(', ')}
+                                {selectedProject?.skillsRequired?.length ??
+                                0 > 0
+                                  ? selectedProject?.skillsRequired?.join(
+                                      ', ',
+                                    ) ?? 'Not specified'
+                                  : 'Not specified'}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <strong>Status:</strong>
+                              <strong>Status :</strong>
                               <span className="font-medium">
                                 {selectedProject?.status}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <strong>Created:</strong>
+                              <strong>Created :</strong>
                               <span>
                                 {selectedProject?.createdAt
                                   ? new Date(

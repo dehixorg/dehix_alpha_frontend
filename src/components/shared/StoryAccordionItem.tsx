@@ -74,7 +74,7 @@ interface TaskDetailsDialogProps {
 
 interface StoryAccordionItemProps {
   milestoneId: string | undefined;
-  story: Story;
+  story: any;
   idx: number;
   milestoneStoriesLength: number;
   setIsTaskDialogOpen: (open: boolean) => void;
@@ -94,6 +94,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
+  console.log(milestoneId);
+
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -112,6 +114,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     return text;
   };
 
+  console.log(story);
+
   return (
     <AccordionItem
       key={story._id}
@@ -122,7 +126,61 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         className={`flex hover:no-underline items-center under px-4 w-full `}
       >
         <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
-          <h3 className="text-lg md:text-xl font-semibold">{story.title}</h3>
+          <h3 className="text-lg md:text-xl flex items-center font-semibold">
+            {story.title}
+            <span className="text-sm">
+              {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
+                ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
+                  story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
+                  !story?.tasks[0]?.freelancers[0]
+                    ?.updatePermissionFreelancer &&
+                  story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+                    <>
+                      <span className="text-yellow-500 ml-5 hidden md:flex">
+                        Update Req
+                      </span>
+                      <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
+                    </>
+                  )
+                : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
+                  story?.tasks?.[0]?.freelancers?.[0]
+                    ?.updatePermissionFreelancer &&
+                  !story?.tasks?.[0]?.freelancers?.[0]
+                    ?.updatePermissionBusiness &&
+                  story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
+                    <>
+                      <span className="text-yellow-500 ml-5 hidden md:flex">
+                        Update Req
+                      </span>
+                      <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
+                    </>
+                  )}
+              {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
+                ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
+                  story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
+                  !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+                    <>
+                      <span className="text-green-500 ml-5 hidden md:flex">
+                        Req Approve
+                      </span>
+                      <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
+                    </>
+                  )
+                : story?.tasks?.[0]?.freelancers?.[0]
+                    ?.updatePermissionFreelancer &&
+                  story?.tasks?.[0]?.freelancers?.[0]
+                    ?.updatePermissionBusiness &&
+                  !story?.tasks?.[0]?.freelancers?.[0]
+                    ?.acceptanceFreelancer && (
+                    <>
+                      <span className="text-green-500 ml-5 hidden md:flex">
+                        Req Approve
+                      </span>
+                      <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
+                    </>
+                  )}
+            </span>
+          </h3>
           <Badge
             className={`${statusBadgeStyle} px-3 py-1 hidden md:flex text-xs md:text-sm rounded-full`}
           >
@@ -131,14 +189,14 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         </div>
       </AccordionTrigger>
       <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div className="space-y-4">
+        <div className="space-y-1">
           <Badge
             className={`${statusBadgeStyle} px-2 py-1 block md:hidden text-xs md:text-sm rounded-full`}
             style={{ width: 'fit-content' }}
           >
             {projectStatus}
           </Badge>
-          <p className="leading-relaxed text-sm md:text-base">
+          <p className="leading-relaxed px-2 py-1  text-sm md:text-base">
             {story.summary}
           </p>
           <div className="space-y-4 hidden md:flex justify-start items-center gap-4">
@@ -220,7 +278,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               </div>
               <Carousel className="w-[85vw] md:w-full relative mt-4">
                 <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
-                  {story.tasks.map((task) => {
+                  {story.tasks.map((task: any) => {
                     const { text: taskStatusText, className: taskBadgeStyle } =
                       getStatusBadge(task.taskStatus);
 
