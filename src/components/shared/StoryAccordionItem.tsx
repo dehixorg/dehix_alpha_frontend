@@ -94,7 +94,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
-  console.log(milestoneId);
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -113,8 +112,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     }
     return text;
   };
-
-  console.log(story);
 
   return (
     <AccordionItem

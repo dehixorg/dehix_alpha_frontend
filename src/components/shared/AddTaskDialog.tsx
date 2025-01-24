@@ -109,10 +109,6 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         const response = await axiosInstance.get(
           `/project/get-freelancer/${project_id}`,
         );
-        console.log(
-          'Fetched freelancers data:',
-          response.data.freelancers.freelancerData,
-        );
         setFreelancersData(response.data.freelancers.freelancerData);
         setFilteredFreelancers(response.data.freelancers.freelancerData);
       } catch (error) {

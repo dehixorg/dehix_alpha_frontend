@@ -86,7 +86,6 @@ const StoriesAccordion = ({
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const updatedFormData = { formData, storyId: openAccordion };
-    console.log(updatedFormData);
 
     if (milestone.stories) {
       const story = milestone.stories.find(

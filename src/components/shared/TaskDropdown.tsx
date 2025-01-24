@@ -143,7 +143,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                 <Eye className="w-4 h-4 text-gray-500" />
                 View Transaction Details
               </DropdownMenuItem> */}
-              {task?.taskStatus === 'COMPLETED' &&
+              {/* {task?.taskStatus === 'COMPLETED' &&
                 task?.freelancers[0]?.paymentStatus !== 'COMPLETED' && (
                   <DropdownMenuItem
                     className="flex items-center gap-2"
@@ -152,19 +152,10 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                     <DollarSign className="w-4 h-4 text-blue-500" />
                     Request Payment
                   </DropdownMenuItem>
-                )}
+                )} */}
             </>
           ) : type === 'business' ? (
             <>
-              {task?.freelancers?.length === 0 && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() => console.log(`Assign freelancer: ${task._id}`)}
-                >
-                  <UserPlus className="w-4 h-4 text-blue-500" />
-                  Assign Freelancer
-                </DropdownMenuItem>
-              )}
               {!task?.freelancers[0]?.updatePermissionBusiness &&
                 task?.freelancers[0].updatePermissionFreelancer &&
                 !task?.freelancers[0]?.acceptanceBusiness && (
@@ -176,16 +167,6 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                   >
                     <CheckCircle className="w-4 h-4 text-yellow-500" />
                     Approve Updates permission
-                  </DropdownMenuItem>
-                )}
-              {task?.taskStatus === 'Completed' &&
-                task?.paymentStatus !== 'COMPLETED' && (
-                  <DropdownMenuItem
-                    className="flex items-center gap-2"
-                    onClick={() => console.log(`Approve payment: ${task._id}`)}
-                  >
-                    <DollarSign className="w-4 h-4 text-blue-500" />
-                    Approve Payment
                   </DropdownMenuItem>
                 )}
               {task.freelancers.length > 0 && (
