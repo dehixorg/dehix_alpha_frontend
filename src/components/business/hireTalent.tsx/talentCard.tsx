@@ -437,12 +437,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         </div>
 
                         <table className="min-w-full table-auto border-collapse ">
-                          {/* <thead>
-                          <tr>
-                            <th className="border-b px-4 py-2 text-left">Attribute</th>
-                            <th className="border-b px-4 py-2 text-left">Details</th>
-                          </tr>
-                        </thead> */}
                           <tbody>
                             <tr>
                               <td className="border-b px-4 py-2 font-medium">
@@ -594,15 +588,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </div>
                           </div>
                         </div>
-
-                        {/* <SheetFooter className= "px-4 py-8">
-                        <SheetClose asChild>
-                          
-                              
-                          <Button className="w-full text-sm py-1 px-2  text-black rounded-md">Expand</Button>
-                          
-                        </SheetClose>
-                      </SheetFooter> */}
                       </SheetContent>
                     </Sheet>
                   ))}
