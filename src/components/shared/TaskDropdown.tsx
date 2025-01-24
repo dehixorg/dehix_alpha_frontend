@@ -48,7 +48,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
       acceptanceFreelancer,
     };
 
-    const url = `/milestones/${milestoneId}/${storyId}/${task._id}`;
+    const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
 
     try {
       const response = await axiosInstance.patch(url, payload);
