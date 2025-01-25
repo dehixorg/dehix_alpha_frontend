@@ -105,7 +105,6 @@ const Page = () => {
           : milestone,
       );
 
-      setMilestones(updatedMilestones);
       fetchMilestones();
     } catch (error) {
       console.error(
