@@ -340,6 +340,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -587,87 +588,115 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           /> */}
 
           <Separator className="col-span-2" />
-          <div className="flex flex-wrap gap-6 w-full">
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
-              <FormLabel>Skills</FormLabel>
-              <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => {
-                    if (value === 'other') {
-                      setIsDialogOpen(true);
-                      setDialogType('skill');
-                    } else {
-                      setTmpSkill(value);
-                    }
-                  }}
-                  value={tmpSkill || ''}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+          <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+            <FormLabel>Skills</FormLabel>
+            <div className="flex items-center mt-2">
+              <Select
+                onValueChange={(value) => {
+                  setTmpSkill(value);
+                  setSearchQuery(''); // Reset search query when a value is selected
+                }}
+                value={tmpSkill || ''}
+                onOpenChange={(open) => {
+                  if (!open) setSearchQuery('');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Add search input */}
+                  <div className="p-2 relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Search skills"
                     />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills
-                      .filter(
-                        (skill: any) =>
-                          !currSkills.some((s: any) => s.name === skill.label),
-                      )
-                      .map((skill: any, index: number) => (
-                        <SelectItem key={index} value={skill.label}>
-                          {skill.label}
-                        </SelectItem>
-                      ))}
-                    <SelectItem value="other">
-                      <span className="text-gray-500 italic">Other</span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  type="button"
-                  size="icon"
-                  className="ml-2"
-                  onClick={() => {
-                    handleAddSkill();
-                    setTmpSkill('');
-                  }}
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  {/* Filtered skill list */}
+                  {skills
+                    .filter(
+                      (skill: any) =>
+                        skill.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
+                        !currSkills.some((s: any) => s.name === skill.label),
+                    )
+                    .map((skill: any, index: number) => (
+                      <SelectItem key={index} value={skill.label}>
+                        {skill.label}
+                      </SelectItem>
+                    ))}
+                  {/* No matching skills */}
+                  {skills.filter(
+                    (skill: any) =>
+                      skill.label
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) &&
+                      !currSkills.some((s: any) => s.name === skill.label),
+                  ).length === 0 && (
+                    <div className="p-2 text-gray-500 italic text-center">
+                      No matching skills
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                type="button"
+                size="icon"
+                className="ml-2"
+                onClick={() => {
+                  handleAddSkill();
+                  setTmpSkill('');
+                  setSearchQuery(''); // Reset search query
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-5">
+              {currSkills.map((skill: any, index: number) => (
+                <Badge
+                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                  key={index}
                 >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {currSkills.map((skill: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
+                  {skill.name}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSkill(skill.name)}
+                    className="ml-2 text-red-500 hover:text-red-700"
                   >
-                    {skill.name}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSkill(skill.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
+                    <X className="h-4 w-4" />
+                  </button>
+                </Badge>
+              ))}
             </div>
 
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
+            <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
               <FormLabel>Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
                   onValueChange={(value) => {
-                    if (value === 'other') {
-                      setIsDialogOpen(true);
-                      setDialogType('domain');
-                    } else {
-                      setTmpDomain(value);
-                    }
+                    setTmpDomain(value);
+                    setSearchQuery(''); // Reset search query when a value is selected
                   }}
                   value={tmpDomain || ''}
+                  onOpenChange={(open) => {
+                    if (!open) setSearchQuery('');
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue
@@ -675,11 +704,33 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                     />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* Add search input */}
+                    <div className="p-2 relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Search domains"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    {/* Filtered domain list */}
                     {domains
                       .filter(
                         (domain: any) =>
+                          domain.label
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) &&
                           !currDomains.some(
-                            (d: any) => d.name === domain.label,
+                            (s: any) => s.name === domain.label,
                           ),
                       )
                       .map((domain: any, index: number) => (
@@ -687,9 +738,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                           {domain.label}
                         </SelectItem>
                       ))}
-                    <SelectItem value="other">
-                      <span className="text-gray-500 italic">Other</span>
-                    </SelectItem>
+                    {/* No matching domains */}
+                    {domains.filter(
+                      (Domain: any) =>
+                        Domain.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
+                        !currDomains.some((s: any) => s.name === domains.label),
+                    ).length === 0 && (
+                      <div className="p-2 text-gray-500 italic text-center">
+                        No matching domains
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
                 <Button
@@ -700,21 +760,22 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onClick={() => {
                     handleAddDomain();
                     setTmpDomain('');
+                    setSearchQuery(''); // Reset search query
                   }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-5">
-                {currDomains.map((domain: any, index: number) => (
+                {currDomains.map((Domain: any, index: number) => (
                   <Badge
                     className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                     key={index}
                   >
-                    {domain.name}
+                    {Domain.name}
                     <button
                       type="button"
-                      onClick={() => handleDeleteDomain(domain.name)}
+                      onClick={() => handleDeleteDomain(Domain.name)}
                       className="ml-2 text-red-500 hover:text-red-700"
                     >
                       <X className="h-4 w-4" />
@@ -724,45 +785,71 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </div>
             </div>
 
-            <div className="flex-1 min-w-[150px] max-w-[300px]">
+            <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
               <FormLabel>Project Domains</FormLabel>
               <div className="flex items-center mt-2">
                 <Select
                   onValueChange={(value) => {
-                    if (value === 'other') {
-                      setIsDialogOpen(true);
-                      setDialogType('projectDomain');
-                    } else {
-                      setTmpProjectDomains(value);
-                    }
+                    setTmpProjectDomains(value);
+                    setSearchQuery(''); // Reset search query when a value is selected
                   }}
                   value={tmpProjectDomains || ''}
+                  onOpenChange={(open) => {
+                    if (!open) setSearchQuery('');
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={
-                        tmpProjectDomains
-                          ? tmpProjectDomains
-                          : 'Select project domain'
-                      }
+                      placeholder={tmpProjectDomains ? tmpProjectDomains : 'Select project domain'}
                     />
                   </SelectTrigger>
                   <SelectContent>
+                    {/* Add search input */}
+                    <div className="p-2 relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Search project domains"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    {/* Filtered domain list */}
                     {projectDomains
                       .filter(
-                        (projectDomains: any) =>
+                        (projectDomain: any) =>
+                          projectDomain.label
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()) &&
                           !currProjectDomains.some(
-                            (d: any) => d.name === projectDomains.label,
+                            (s: any) => s.name === projectDomain.label,
                           ),
                       )
-                      .map((projectDomains: any, index: number) => (
-                        <SelectItem key={index} value={projectDomains.label}>
-                          {projectDomains.label}
+                      .map((projectDomain: any, index: number) => (
+                        <SelectItem key={index} value={projectDomain.label}>
+                          {projectDomain.label}
                         </SelectItem>
                       ))}
-                    <SelectItem value="other">
-                      <span className="text-gray-500 italic">Other</span>
-                    </SelectItem>
+                    {/* No matching domains */}
+                    {projectDomains.filter(
+                      (projectDomain: any) =>
+                        projectDomain.label
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) &&
+                        !currProjectDomains.some((s: any) => s.name === projectDomains.label),
+                    ).length === 0 && (
+                      <div className="p-2 text-gray-500 italic text-center">
+                        No matching domains
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
                 <Button
@@ -773,34 +860,31 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                   onClick={() => {
                     handleAddprojectDomain();
                     setTmpProjectDomains('');
+                    setSearchQuery(''); // Reset search query
                   }}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-5">
-                {currProjectDomains.map(
-                  (projectDomains: any, index: number) => (
-                    <Badge
-                      className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                      key={index}
+                {currProjectDomains.map((projectDomain: any, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                    key={index}
+                  >
+                    {projectDomain.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProjDomain(projectDomain.name)}
+                      className="ml-2 text-red-500 hover:text-red-700"
                     >
-                      {projectDomains.name}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDeleteProjDomain(projectDomains.name)
-                        }
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ),
-                )}
+                      <X className="h-4 w-4" />
+                    </button>
+                  </Badge>
+                ))}
               </div>
             </div>
-          </div>
+            </div>
           <Separator className="col-span-2 mt-0" />
           <FormField
             control={form.control}
