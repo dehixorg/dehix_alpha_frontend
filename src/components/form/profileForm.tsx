@@ -800,7 +800,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 >
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={tmpProjectDomains ? tmpProjectDomains : 'Select project domain'}
+                      placeholder={
+                        tmpProjectDomains
+                          ? tmpProjectDomains
+                          : 'Select project domain'
+                      }
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -844,7 +848,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                         projectDomain.label
                           .toLowerCase()
                           .includes(searchQuery.toLowerCase()) &&
-                        !currProjectDomains.some((s: any) => s.name === projectDomains.label),
+                        !currProjectDomains.some(
+                          (s: any) => s.name === projectDomains.label,
+                        ),
                     ).length === 0 && (
                       <div className="p-2 text-gray-500 italic text-center">
                         No matching domains
@@ -884,7 +890,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 ))}
               </div>
             </div>
-            </div>
+          </div>
           <Separator className="col-span-2 mt-0" />
           <FormField
             control={form.control}
