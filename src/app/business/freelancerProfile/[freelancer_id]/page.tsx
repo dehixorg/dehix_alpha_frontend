@@ -17,6 +17,7 @@ import Projects from '@/components/freelancerProfile/Projects';
 import ProjectDialog from '@/components/freelancerProfile/ProjectDialog';
 import FreelancerProfileSkeleton from '@/components/freelancerProfile/FreelancerProfileSkeleton';
 import Education from '@/components/freelancerProfile/Education';
+import { Separator } from '@/components/ui/separator';
 export interface UserProfile {
   firstName: string;
   lastName: string;
@@ -25,7 +26,7 @@ export interface UserProfile {
   email: string;
   dob: string;
   linkedin?: string;
-  github?: string;
+  githubLink?: string;
   personalWebsite?: string;
   connects?: string;
   workExperience?: string;
@@ -87,6 +88,8 @@ export default function FreelancerProfile() {
           if (response.status === 200) {
             setUser(response.data);
           }
+          console.log(response);
+          
         } catch (error) {
           console.error('Error fetching freelancer details', error);
           toast({
@@ -147,20 +150,22 @@ export default function FreelancerProfile() {
             },
           ]}
         />
-        <div className="flex p-3 relative sm:pl-6 flex-col sm:gap-8 sm:py-0 ">
+        <div className="flex p-3 px-3 md:px-14 relative  flex-col sm:gap-8 sm:py-0 ">
           <main className="mt-8">
             {user && <ProfileInfo user={user} />}
             <Sections sections={sections} />
-            <Education education={user?.education || []} />
-            <ProfessionalExperience
-              professionalInfo={user?.professionalInfo || []}
-            />
             <Projects
               projects={Object.values(user?.projects || {})}
               visibleProjects={visibleProjects}
               setVisibleProjects={setVisibleProjects}
               setDialog={setDialog}
             />
+             <ProfessionalExperience
+              professionalInfo={user?.professionalInfo || []}
+            />
+            <Separator className='h-1 mt-4' />
+            <Education education={user?.education || []} />
+           
           </main>
         </div>
         {dialog && <ProjectDialog dialog={dialog} setDialog={setDialog} />}
