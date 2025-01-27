@@ -26,8 +26,10 @@ const Education: React.FC<EducationProps> = ({ education }) => {
                 <div key={index} className="w-[calc(50%-1rem)] flex-shrink-0">
                   <Card className="shadow-lg rounded-lg p-5 hover:shadow-xl transition-shadow">
                     <h3 className="text-xl font-semibold">{edu.degree}</h3>
-                    <p className="text-md font-medium">{edu.universityName}</p>
-                    <p className="text-sm italic">
+                    <p className="text-md font-medium mt-2">
+                      {edu.universityName}
+                    </p>
+                    <p className="text-sm italic mt-2">
                       {edu.startDate} - {edu.endDate}
                     </p>
                     {edu.grade && (

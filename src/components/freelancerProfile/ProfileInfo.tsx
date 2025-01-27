@@ -44,7 +44,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
           <div className="flex items-center gap-2 text-red-600">
             <HoverCard>
               <HoverCardTrigger asChild>
-                <ShieldAlert   className="w-6 cursor-pointer h-6" />
+                <ShieldAlert className="w-6 cursor-pointer h-6" />
               </HoverCardTrigger>
               <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
                 Not-verified
@@ -63,16 +63,16 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
         className="w-36 h-36 rounded-full border-4 border-indigo-500"
       />
       <div className="text-center md:text-left">
-        <div className='flex justify-center items-center gap-3'>
-          <h2 className="text-2xl font-semibold">{`${user?.firstName} ${user?.lastName}`} </h2>
-          <p className=" flex justify-center items-center">
-            {render()}
-          </p>
+        <div className="flex justify-center items-center gap-3">
+          <h2 className="text-2xl font-semibold">
+            {`${user?.firstName} ${user?.lastName}`}{' '}
+          </h2>
+          <p className=" flex justify-center items-center">{render()}</p>
         </div>
         <p>{user?.description || 'No Job Title Provided'}</p>
         <div className="flex mt-2 justify-center md:justify-start items-center gap-8 md:gap-10">
           <HoverCard>
-            {user?.linkedin &&
+            {user?.linkedin && (
               <>
                 <a href={user.linkedin}>
                   <HoverCardTrigger asChild>
@@ -86,11 +86,10 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                   </HoverCardContent>
                 </a>
               </>
-            }
+            )}
           </HoverCard>
           <HoverCard>
-            {
-              user?.githubLink &&
+            {user?.githubLink && (
               <>
                 <a href={user.githubLink}>
                   <HoverCardTrigger asChild>
@@ -104,22 +103,22 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
                   </HoverCardContent>
                 </a>
               </>
-            }
-
+            )}
           </HoverCard>
           <HoverCard>
-            {
-              user?.personalWebsite &&
+            {user?.personalWebsite && (
               <a href={user.personalWebsite}>
                 <HoverCardTrigger asChild>
-                  <Globe className="cursor-pointer hover:text-gray-500" size={20} />
+                  <Globe
+                    className="cursor-pointer hover:text-gray-500"
+                    size={20}
+                  />
                 </HoverCardTrigger>
                 <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
                   <p>Portfolio</p>
                 </HoverCardContent>
               </a>
-            }
-
+            )}
           </HoverCard>
         </div>
       </div>

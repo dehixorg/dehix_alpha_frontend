@@ -38,10 +38,10 @@ const ProfessionalExperience: React.FC<ProfessionalExperienceProps> = ({
                       {item.workDescription}
                     </p>
                     <div className="text-sm italic mt-2 flex gap-2 justify-normal items-center">
-                      <p>
+                      <p className="mb-2">
                         <Calendar className="w-4 h-4" />{' '}
                       </p>
-                      <p>
+                      <p className="mb-2">
                         {item.workFrom} {'- ' + item.workTo}
                       </p>
                     </div>

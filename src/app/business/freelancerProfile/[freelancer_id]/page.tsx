@@ -89,7 +89,6 @@ export default function FreelancerProfile() {
             setUser(response.data);
           }
           console.log(response);
-          
         } catch (error) {
           console.error('Error fetching freelancer details', error);
           toast({
@@ -160,12 +159,11 @@ export default function FreelancerProfile() {
               setVisibleProjects={setVisibleProjects}
               setDialog={setDialog}
             />
-             <ProfessionalExperience
+            <ProfessionalExperience
               professionalInfo={user?.professionalInfo || []}
             />
-            <Separator className='h-1 mt-4' />
+            <Separator className="h-1 mt-4" />
             <Education education={user?.education || []} />
-           
           </main>
         </div>
         {dialog && <ProjectDialog dialog={dialog} setDialog={setDialog} />}
