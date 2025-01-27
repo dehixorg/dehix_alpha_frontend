@@ -1,0 +1,110 @@
+import React from 'react';
+import {
+  LinkedinIcon,
+  GithubIcon,
+  Globe,
+  UserCheck,
+  Clock,
+  RefreshCw,
+  ShieldAlert,
+  UserX,
+} from 'lucide-react';
+
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import { UserProfile } from '@/app/business/freelancerProfile/[freelancer_id]/page';
+
+interface ProfileInfoProps {
+  user: UserProfile;
+}
+
+const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
+  // Destructure KYC status from the user object
+  const { status } = user.kyc;
+  const render = () => {
+    switch (status) {
+      case 'VERIFIED':
+        return (
+          <div className="flex items-center gap-2 text-green-600">
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <UserCheck className="w-6 cursor-pointer h-6" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+                Verified
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-2 text-red-600">
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <UserX className="w-6 cursor-pointer h-6" />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+                Not-verified
+              </HoverCardContent>
+            </HoverCard>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <section className="flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6">
+      <img
+        src={user?.profilePic || 'https://via.placeholder.com/150'}
+        alt="Profile"
+        className="w-36 h-36 rounded-full border-4 border-indigo-500"
+      />
+      <div className="text-center md:text-left">
+        <h2 className="text-2xl font-semibold">{`${user?.firstName} ${user?.lastName}`}</h2>
+        <p>{user?.description || 'No Job Title Provided'}</p>
+        <div className="flex mt-2 justify-center md:justify-start items-center gap-8 md:gap-10">
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <LinkedinIcon
+                className="cursor-pointer hover:text-gray-400"
+                size={20}
+              />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+              <p>LinkedIn</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <GithubIcon
+                className="cursor-pointer hover:text-gray-400"
+                size={20}
+              />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+              <p>Github</p>
+            </HoverCardContent>
+          </HoverCard>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Globe className="cursor-pointer hover:text-gray-500" size={20} />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+              <p>Portfolio</p>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+
+        {/* Render KYC status */}
+        <div className="mt-4 md:block flex justify-center items-center">
+          {render()}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ProfileInfo;
