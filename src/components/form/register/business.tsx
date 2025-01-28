@@ -58,8 +58,8 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-4 sm:mb-8">
-      <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
+    <div className="w-full max-w-5xl mx-auto sm:py-6 mb-4 sm:mb-8">
+      <div className="flex items-center justify-center sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <div className="relative">
@@ -253,17 +253,6 @@ function BusinessRegisterForm({
   };
 
   const onSubmit = async (data: BusinessRegisterFormValues) => {
-    setIsModalOpen(true);
-    // Simulate OTP verification after 5 seconds
-    setTimeout(() => {
-      setIsVerified(true);
-      setIsModalOpen(false);
-      toast({
-        title: 'Phone number verified successfully!',
-        description: 'You can now create your account.',
-      });
-    }, 5000);
-
     setIsLoading(true);
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
@@ -289,7 +278,6 @@ function BusinessRegisterForm({
         description: 'Your business account has been created.',
       });
       setIsModalOpen(true);
-      router.push('/auth/login');
     } catch (error: any) {
       console.error('API Error:', error);
       toast({

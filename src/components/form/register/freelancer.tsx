@@ -19,6 +19,7 @@ import {
   User,
   UserCircle,
 } from 'lucide-react';
+import Link from 'next/link';
 
 import countries from '../../../country-codes.json';
 
@@ -33,7 +34,6 @@ import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormMessage,
@@ -67,6 +67,12 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
         <p className="text-muted-foreground">
           Join our community and start your Freelancing Journey.
         </p>
+      </div>
+      <div className="my-4 text-center text-xs sm:text-sm">
+        Are you a business?{' '}
+        <Button variant="outline" size="sm" className="ml-2" asChild>
+          <Link href="/auth/sign-up/business">Register Business</Link>
+        </Button>
       </div>
       <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
@@ -305,7 +311,6 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
-    console.log(formData);
     try {
       await axiosInstance.post('/register/freelancer', formData);
       toast({ title: 'Account created successfully!' });
