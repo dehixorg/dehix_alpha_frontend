@@ -30,6 +30,7 @@ interface Domain {
 export default function Talent() {
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
+  const [skillDomainFormProps, setskillDomainFormProps] = useState<any>();
 
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
@@ -101,6 +102,7 @@ export default function Talent() {
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
+                skillDomainFormProps={skillDomainFormProps}
               />
             </div>
           </div>

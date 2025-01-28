@@ -362,6 +362,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     );
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
   useEffect(() => {
     const fetchData = async () => {
       try {

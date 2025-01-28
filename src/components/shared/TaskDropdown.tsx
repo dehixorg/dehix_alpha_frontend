@@ -19,7 +19,7 @@ import {
 import { toast } from '../ui/use-toast';
 
 import FreelancerDetailsDialog from './FreelancerDetailsDialog';
-import TaskUpdateDeatilDialog from './TaskUpdateDeatilDialog';
+import TaskUpdateDeatilDialog from './TaskUpdateDetailDialog';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 
