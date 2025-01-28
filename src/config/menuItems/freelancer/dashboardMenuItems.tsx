@@ -51,7 +51,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/freelancer/scheduleInterview',
     icon: <CalendarClock className="h-5 w-5" />,
-    label: 'ScheduleInterviews',
+    label: 'Schedule Interviews',
   },
   {
     href: '/freelancer/oracleDashboard/businessVerification',
