@@ -33,6 +33,7 @@ import {
 import { auth } from '@/config/firebaseConfig';
 import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -91,6 +92,13 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
       try {
         const userCredential: UserCredential =
           await confirmationResult?.confirm(otp);
+
+        // Update phone verification status in backend
+        await axiosInstance.patch(`/freelancer/${userCredential.user.uid}`, {
+          phone: phoneNumber,
+          phoneVerify: true,
+        });
+
         const { user, claims } = await getUserData(userCredential);
         dispatch(setUser({ ...user, type: claims.type }));
         router.replace(`/dashboard/${claims.type}`);
