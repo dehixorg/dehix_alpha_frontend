@@ -147,16 +147,8 @@ export default function BusinessRegisterPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center">
-      <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4 py-4 sm:py-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">
-            Create Your Business <span className="block">Account</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Join our community and find the best talent in web3 space
-          </p>
-        </div>
+    <div className="flex w-full items-center justify-center">
+      <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
         <Stepper currentStep={currentStep} />
         <div className="flex justify-center w-full">
           <div className="w-full max-w-4xl">
