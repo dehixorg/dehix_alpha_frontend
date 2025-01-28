@@ -15,21 +15,6 @@ export default function SignUp() {
       <div className="flex items-center justify-center py-8 sm:py-12">
         <div className="mx-auto w-full  px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6">
-            <div className="grid gap-2 text-center mt-12 sm:mt-0">
-              {/* Added margin-top to prevent overlap */}
-              <h1 className="text-2xl font-bold sm:text-3xl">
-                Sign Up as a Business
-              </h1>
-              <p className="text-sm text-muted-foreground sm:text-base">
-                Enter your information to create an account
-              </p>
-            </div>
-            <div className="my-4 text-center text-xs sm:text-sm">
-              Are you a Freelancer?{' '}
-              <Button variant="outline" size="sm" className="ml-2" asChild>
-                <Link href="/auth/sign-up/freelancer">Register</Link>
-              </Button>
-            </div>
             <BusinessRegisterForm />
             <div className="mt-4 text-center text-xs sm:text-sm">
               Already have an account?{' '}
