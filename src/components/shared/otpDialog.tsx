@@ -93,13 +93,17 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         const userCredential: UserCredential =
           await confirmationResult?.confirm(otp);
 
-        // Update phone verification status in backend
-        await axiosInstance.patch(`/freelancer/${userCredential.user.uid}`, {
-          phone: phoneNumber,
-          phoneVerify: true,
-        });
-
         const { user, claims } = await getUserData(userCredential);
+
+        // Update phone verification status in mongoDb and firebase
+        await axiosInstance.patch(
+          `/${claims.type}/${userCredential.user.uid}`,
+          {
+            phone: phoneNumber,
+            phoneVerify: true,
+          },
+        );
+
         dispatch(setUser({ ...user, type: claims.type }));
         router.replace(`/dashboard/${claims.type}`);
       } catch (error) {
