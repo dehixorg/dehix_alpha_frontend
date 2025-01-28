@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Briefcase,
-  Building2,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -12,12 +11,12 @@ import {
   Rocket,
   Shield,
   User,
-  UserCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import Link from 'next/link';
 
 import countries from '../../../country-codes.json';
 
@@ -40,19 +39,12 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
-
-interface Step {
-  id: number;
-  title: string;
-  icon: React.ElementType;
-}
 
 interface StepperProps {
   currentStep: number;
@@ -156,6 +148,12 @@ export default function BusinessRegisterPage() {
           <p className="text-muted-foreground">
             Join our community and find the best talent in web3 space
           </p>
+        </div>
+        <div className="my-4 text-center text-xs sm:text-sm">
+          Are you a Freelancer?{' '}
+          <Button variant="outline" size="sm" className="ml-2" asChild>
+            <Link href="/auth/sign-up/freelancer">Register</Link>
+          </Button>
         </div>
         <Stepper currentStep={currentStep} />
         <div className="flex justify-center w-full">
