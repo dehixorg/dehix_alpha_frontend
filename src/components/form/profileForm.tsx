@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { string, z } from 'zod';
 import { Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
@@ -33,7 +33,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { kycBadgeColors, StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -63,6 +63,10 @@ const profileFormSchema = z.object({
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
+  aadharOrGovtId: z.string().optional(),
+  frontImageUrl: z.instanceof(File).optional(),
+  backImageUrl: z.instanceof(File).optional(),
+  liveCaptureUrl: z.instanceof(File).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -95,6 +99,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [dialogType, setDialogType] = useState<
     'skill' | 'domain' | 'projectDomain' | null
   >(null);
+  const [kycStatus, setKycStatus] = useState<string>('PENDING');
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -357,6 +362,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setCurrSkills(userResponse.data.skills);
         setCurrDomains(userResponse.data.domain);
         setCurrProjectDomains(userResponse.data.projectDomain);
+        setKycStatus(userResponse?.data?.kyc?.status);
 
         form.reset({
           firstName: userResponse.data.firstName || '',
@@ -368,6 +374,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           personalWebsite: userResponse.data.personalWebsite || '',
           resume: userResponse.data.resume || '',
           description: userResponse.data.description || '',
+          aadharOrGovtId: userResponse.data.kyc.aadharOrGovtId || '',
+          frontImageUrl: userResponse.data.kyc.frontImageUrl || '',
+          backImageUrl: userResponse.data.kyc.backImageUrl || '',
+          liveCaptureUrl: userResponse.data.kyc.liveCapture || '',
         });
       } catch (error) {
         console.error('API Error:', error);
@@ -388,21 +398,74 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
       description: user?.description || '',
+      aadharOrGovtId: user?.aadharOrGovtId || '',
+      frontImageUrl: user?.frontImageUrl || '',
+      backImageUrl: user?.backImageUrl || '',
+      liveCaptureUrl: user?.liveCaptureUrl || '',
     });
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      console.log('API body', {
-        ...data,
-        skills: currSkills,
-        domain: currDomains,
-      });
+      const uploadedUrls = {
+        frontImageUrl: data.frontImageUrl,
+        backImageUrl: data.backImageUrl,
+        liveCaptureUrl: data.liveCaptureUrl,
+      };
+      // Append files to the form data
+      if (data.frontImageUrl) {
+        const frontFormData = new FormData();
+        frontFormData.append('frontImageUrl', data.frontImageUrl);
+
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          frontFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.frontImageUrl = response.data.data.Location;
+      }
+      if (data.backImageUrl) {
+        const backFormData = new FormData();
+        backFormData.append('backImageUrl', data.backImageUrl);
+
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          backFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.backImageUrl = response.data.data.Location;
+      }
+      if (data.liveCaptureUrl) {
+        const liveFormData = new FormData();
+        liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          liveFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.liveCaptureUrl = response.data.data.Location;
+      }
+
+      const {
+        aadharOrGovtId,
+        frontImageUrl,
+        backImageUrl,
+        liveCaptureUrl,
+        ...restData
+      } = data;
+      const kyc = {
+        aadharOrGovtId,
+        frontImageUrl: uploadedUrls.frontImageUrl,
+        backImageUrl: uploadedUrls.backImageUrl,
+        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
+      };
+
       await axiosInstance.put(`/freelancer/${user_id}`, {
-        ...data,
+        ...restData,
         skills: currSkills,
         domain: currDomains,
         description: data.description,
+        kyc,
       });
 
       setUser({
@@ -418,6 +481,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: currSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
+        aadharOrGovtId: data.aadharOrGovtId,
+        frontImageUrl: uploadedUrls.frontImageUrl,
+        backImageUrl: uploadedUrls.backImageUrl,
+        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
       });
 
       toast({
@@ -567,26 +634,95 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          {/* <Separator className="col-span-2 mt-0" /> */}
-          {/* <FormField
+
+          <Separator className="col-span-2" />
+          <div>
+            KYC Status{' '}
+            <Badge
+              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
+            >
+              {kycStatus.toLowerCase()}
+            </Badge>
+          </div>
+          <div></div>
+          <FormField
             control={form.control}
-            name="resume"
+            name="aadharOrGovtId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Resume URL</FormLabel>
+                <FormLabel>Aadhar or Govt Id</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your Resume URL"
-                    type="url"
-                    {...field}
-                  />
+                  <Input placeholder="Enter your Aadhar Id" {...field} />
                 </FormControl>
-                <FormDescription>Enter your Resume URL</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
-
+          />
+          <FormField
+            control={form.control}
+            name="frontImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document Front Img</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
+                      if (file) {
+                        field.onChange(file); // Pass the file if it exists
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="backImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document Back Img</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
+                      if (file) {
+                        field.onChange(file); // Pass the file if it exists
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="liveCaptureUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Live Capture</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
+                      if (file) {
+                        field.onChange(file); // Pass the file if it exists
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
           <Separator className="col-span-2" />
           <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
             <FormLabel>Skills</FormLabel>
