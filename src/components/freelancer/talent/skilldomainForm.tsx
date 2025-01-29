@@ -25,12 +25,12 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
   _id: string;
-  label: string;
+  name: string;
 }
 
 interface Domain {
   _id: string;
-  label: string;
+  name: string;
 }
 
 interface SkillDomainData {
@@ -55,33 +55,51 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get('/skills');
-        setSkills(skillsResponse.data.data);
-        const domainsResponse = await axiosInstance.get('/domain');
-        setDomains(domainsResponse.data.data);
+        const skillsResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/skill`,
+        );
+
+        const domainsResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/domain`,
+        );
+
+        setSkills(skillsResponse.data.data[0]?.skills);
+        setDomains(domainsResponse.data.data[0]?.domain);
+
+        let talentResponse = { data: { data: {} } };
 
         if (user?.uid) {
-          const talentResponse = await axiosInstance.get(
+          talentResponse = await axiosInstance.get(
             `/freelancer/${user.uid}/dehix-talent`,
           );
-          const talentData = talentResponse.data?.data[0]?.dehixTalent || {};
-
-          const formattedTalentData = Object.values(talentData).map(
-            (item: any) => ({
-              uid: item._id,
-              label: item.skillName || item.domainName || 'N/A',
-              experience: item.experience || 'N/A',
-              monthlyPay: item.monthlyPay || 'N/A',
-              status: item.status,
-              activeStatus: item.activeStatus,
-            }),
-          );
-
-          setSkillDomainData(formattedTalentData);
-          setStatusVisibility(
-            formattedTalentData.map((item) => item.activeStatus),
-          );
         }
+
+        const talentData = Object.values(talentResponse.data?.data || {});
+        const existingIds = talentData.map((item: any) => item.talentId);
+
+        const filteredSkills = skillsResponse.data.data[0]?.skills.filter(
+          (skill: any) => !existingIds.includes(skill._id),
+        );
+
+        const filteredDomains = domainsResponse.data.data[0]?.domain.filter(
+          (domain: any) => !existingIds.includes(domain._id),
+        );
+
+        const formattedTalentData = talentData.map((item: any) => ({
+          uid: item._id,
+          label: item.talentName || 'N/A',
+          experience: item.experience || 'N/A',
+          monthlyPay: item.monthlyPay || 'N/A',
+          status: item.status,
+          activeStatus: item.activeStatus,
+        }));
+
+        setSkills(filteredSkills);
+        setDomains(filteredDomains);
+        setSkillDomainData(formattedTalentData);
+        setStatusVisibility(
+          formattedTalentData.map((item) => item.activeStatus),
+        );
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -141,8 +159,16 @@ const SkillDomainForm: React.FC = () => {
         <div className="mb-8 mt-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex space-x-4">
-              <SkillDialog skills={skills} onSubmitSkill={onSubmitSkill} />
-              <DomainDialog domains={domains} onSubmitDomain={onSubmitDomain} />
+              <SkillDialog
+                setSkills={setSkills}
+                skills={skills}
+                onSubmitSkill={onSubmitSkill}
+              />
+              <DomainDialog
+                setDomains={setDomains}
+                domains={domains}
+                onSubmitDomain={onSubmitDomain}
+              />
             </div>
           </div>
           <Card>

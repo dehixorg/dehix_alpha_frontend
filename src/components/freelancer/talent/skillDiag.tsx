@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+import Link from 'next/link';
 
 import {
   Dialog,
@@ -30,7 +31,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
   _id: string;
-  label: string;
+  name: string;
 }
 
 interface SkillDomainData {
@@ -47,6 +48,7 @@ interface SkillDomainData {
 interface SkillDialogProps {
   skills: Skill[];
   onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
+  setSkills: any;
 }
 
 const skillSchema = z.object({
@@ -64,7 +66,11 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({
+  skills,
+  onSubmitSkill,
+  setSkills,
+}) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -92,12 +98,13 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
         {
-          skillId: data.skillId,
-          skillName: data.label,
+          talentId: data.skillId,
+          talentName: data.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
           activeStatus: data.activeStatus,
           status: data.status,
+          type: 'SKILL',
         },
       );
 
@@ -108,6 +115,9 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           ...data,
           uid: newTalent._id, // Update this line to use the UID from the response
         });
+        setSkills((prevSkills: any) =>
+          prevSkills.filter((skill: any) => skill._id !== data.skillId),
+        );
         reset();
         setOpen(false); // Close the dialog after successful submission
         toast({
@@ -154,7 +164,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                   onValueChange={(selectedLabel) => {
                     // Find the selected skill by label
                     const selectedDomain = skills.find(
-                      (skill) => skill.label === selectedLabel,
+                      (skill) => skill.name === selectedLabel,
                     );
 
                     // Set label and domainId in form
@@ -166,11 +176,23 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                     <SelectValue placeholder="Select a skill" />
                   </SelectTrigger>
                   <SelectContent>
-                    {skills.map((skill: Skill) => (
-                      <SelectItem key={skill.label} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
+                    {skills.length > 0 ? (
+                      skills.map((skill: Skill) => (
+                        <SelectItem key={skill.name} value={skill.name}>
+                          {skill.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-4 flex justify-center items-center">
+                        No skills to add -{' '}
+                        <Link
+                          href="/freelancer/settings/personal-info"
+                          className="text-blue-500 ml-2"
+                        >
+                          Add some
+                        </Link>
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               )}
