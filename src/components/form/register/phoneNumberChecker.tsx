@@ -39,7 +39,7 @@ const PhoneNumberForm: React.FC<PhoneNumberFormProps<any>> = ({
   return (
     <FormField
       control={control}
-      name="step3.phone"
+      name="phone"
       render={({ field }) => (
         <FormItem className="flex-1">
           <div className="flex flex-col items-start w-full">
