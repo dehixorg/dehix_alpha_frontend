@@ -548,346 +548,325 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="resume"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Resume URL</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your Resume URL"
-                    type="url"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>Enter your Resume URL</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* <Separator className="col-span-2 mt-0" /> */}
-          {/* <FormField
-            control={form.control}
-            name="resume"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Resume URL</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your Resume URL"
-                    type="url"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>Enter your Resume URL</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
-
           <Separator className="col-span-2" />
-          <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-            <FormLabel>Skills</FormLabel>
-            <div className="flex items-center mt-2">
-              <Select
-                onValueChange={(value) => {
-                  setTmpSkill(value);
-                  setSearchQuery(''); // Reset search query when a value is selected
-                }}
-                value={tmpSkill || ''}
-                onOpenChange={(open) => {
-                  if (!open) setSearchQuery('');
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Add search input */}
-                  <div className="p-2 relative">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Search skills"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+          <div className="sm:col-span-2">
+            <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
+              <div className="sm:col-span-2">
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Skills</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        setTmpSkill(value);
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpSkill || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search skills"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered skill list */}
+                        {skills
+                          .filter(
+                            (skill: any) =>
+                              skill.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currSkills.some(
+                                (s: any) => s.name === skill.label,
+                              ),
+                          )
+                          .map((skill: any, index: number) => (
+                            <SelectItem key={index} value={skill.label}>
+                              {skill.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching skills */}
+                        {skills.filter(
+                          (skill: any) =>
+                            skill.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !currSkills.some(
+                              (s: any) => s.name === skill.label,
+                            ),
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching skills
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddSkill();
+                        setTmpSkill('');
+                        setSearchQuery(''); // Reset search query
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currSkills.map((skill: any, index: number) => (
+                      <Badge
+                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                        key={index}
                       >
-                        ×
-                      </button>
+                        {skill.name}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSkill(skill.name)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Domains</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        setTmpDomain(value);
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpDomain || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search domains"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered domain list */}
+                        {domains
+                          .filter(
+                            (domain: any) =>
+                              domain.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currDomains.some(
+                                (s: any) => s.name === domain.label,
+                              ),
+                          )
+                          .map((domain: any, index: number) => (
+                            <SelectItem key={index} value={domain.label}>
+                              {domain.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching domains */}
+                        {domains.filter(
+                          (Domain: any) =>
+                            Domain.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !currDomains.some(
+                              (s: any) => s.name === domains.label,
+                            ),
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddDomain();
+                        setTmpDomain('');
+                        setSearchQuery(''); // Reset search query
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currDomains.map((Domain: any, index: number) => (
+                      <Badge
+                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                        key={index}
+                      >
+                        {Domain.name}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDomain(Domain.name)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Project Domains</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        setTmpProjectDomains(value);
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpProjectDomains || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            tmpProjectDomains
+                              ? tmpProjectDomains
+                              : 'Select project domain'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search project domains"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered domain list */}
+                        {projectDomains
+                          .filter(
+                            (projectDomain: any) =>
+                              projectDomain.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currProjectDomains.some(
+                                (s: any) => s.name === projectDomain.label,
+                              ),
+                          )
+                          .map((projectDomain: any, index: number) => (
+                            <SelectItem key={index} value={projectDomain.label}>
+                              {projectDomain.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching domains */}
+                        {projectDomains.filter(
+                          (projectDomain: any) =>
+                            projectDomain.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !currProjectDomains.some(
+                              (s: any) => s.name === projectDomains.label,
+                            ),
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddprojectDomain();
+                        setTmpProjectDomains('');
+                        setSearchQuery(''); // Reset search query
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currProjectDomains.map(
+                      (projectDomain: any, index: number) => (
+                        <Badge
+                          className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                          key={index}
+                        >
+                          {projectDomain.name}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteProjDomain(projectDomain.name)
+                            }
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </Badge>
+                      ),
                     )}
                   </div>
-                  {/* Filtered skill list */}
-                  {skills
-                    .filter(
-                      (skill: any) =>
-                        skill.label
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()) &&
-                        !currSkills.some((s: any) => s.name === skill.label),
-                    )
-                    .map((skill: any, index: number) => (
-                      <SelectItem key={index} value={skill.label}>
-                        {skill.label}
-                      </SelectItem>
-                    ))}
-                  {/* No matching skills */}
-                  {skills.filter(
-                    (skill: any) =>
-                      skill.label
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase()) &&
-                      !currSkills.some((s: any) => s.name === skill.label),
-                  ).length === 0 && (
-                    <div className="p-2 text-gray-500 italic text-center">
-                      No matching skills
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                type="button"
-                size="icon"
-                className="ml-2"
-                onClick={() => {
-                  handleAddSkill();
-                  setTmpSkill('');
-                  setSearchQuery(''); // Reset search query
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-5">
-              {currSkills.map((skill: any, index: number) => (
-                <Badge
-                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                  key={index}
-                >
-                  {skill.name}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteSkill(skill.name)}
-                    className="ml-2 text-red-500 hover:text-red-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-
-            <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-              <FormLabel>Domains</FormLabel>
-              <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => {
-                    setTmpDomain(value);
-                    setSearchQuery(''); // Reset search query when a value is selected
-                  }}
-                  value={tmpDomain || ''}
-                  onOpenChange={(open) => {
-                    if (!open) setSearchQuery('');
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Add search input */}
-                    <div className="p-2 relative">
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="Search domains"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                    {/* Filtered domain list */}
-                    {domains
-                      .filter(
-                        (domain: any) =>
-                          domain.label
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()) &&
-                          !currDomains.some(
-                            (s: any) => s.name === domain.label,
-                          ),
-                      )
-                      .map((domain: any, index: number) => (
-                        <SelectItem key={index} value={domain.label}>
-                          {domain.label}
-                        </SelectItem>
-                      ))}
-                    {/* No matching domains */}
-                    {domains.filter(
-                      (Domain: any) =>
-                        Domain.label
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()) &&
-                        !currDomains.some((s: any) => s.name === domains.label),
-                    ).length === 0 && (
-                      <div className="p-2 text-gray-500 italic text-center">
-                        No matching domains
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  type="button"
-                  size="icon"
-                  className="ml-2"
-                  onClick={() => {
-                    handleAddDomain();
-                    setTmpDomain('');
-                    setSearchQuery(''); // Reset search query
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {currDomains.map((Domain: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
-                  >
-                    {Domain.name}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDomain(Domain.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
-              <FormLabel>Project Domains</FormLabel>
-              <div className="flex items-center mt-2">
-                <Select
-                  onValueChange={(value) => {
-                    setTmpProjectDomains(value);
-                    setSearchQuery(''); // Reset search query when a value is selected
-                  }}
-                  value={tmpProjectDomains || ''}
-                  onOpenChange={(open) => {
-                    if (!open) setSearchQuery('');
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        tmpProjectDomains
-                          ? tmpProjectDomains
-                          : 'Select project domain'
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Add search input */}
-                    <div className="p-2 relative">
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                        placeholder="Search project domains"
-                      />
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery('')}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                    {/* Filtered domain list */}
-                    {projectDomains
-                      .filter(
-                        (projectDomain: any) =>
-                          projectDomain.label
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()) &&
-                          !currProjectDomains.some(
-                            (s: any) => s.name === projectDomain.label,
-                          ),
-                      )
-                      .map((projectDomain: any, index: number) => (
-                        <SelectItem key={index} value={projectDomain.label}>
-                          {projectDomain.label}
-                        </SelectItem>
-                      ))}
-                    {/* No matching domains */}
-                    {projectDomains.filter(
-                      (projectDomain: any) =>
-                        projectDomain.label
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()) &&
-                        !currProjectDomains.some(
-                          (s: any) => s.name === projectDomains.label,
-                        ),
-                    ).length === 0 && (
-                      <div className="p-2 text-gray-500 italic text-center">
-                        No matching domains
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  type="button"
-                  size="icon"
-                  className="ml-2"
-                  onClick={() => {
-                    handleAddprojectDomain();
-                    setTmpProjectDomains('');
-                    setSearchQuery(''); // Reset search query
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {currProjectDomains.map((projectDomain: any, index: number) => (
-                  <Badge
-                    className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                    key={index}
-                  >
-                    {projectDomain.name}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteProjDomain(projectDomain.name)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </Badge>
-                ))}
+                </div>
               </div>
             </div>
           </div>

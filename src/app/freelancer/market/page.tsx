@@ -233,7 +233,7 @@ const Market: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:space-x-4 ml-4 lg:ml-20 md:ml-20 md:-space-x-3 pr-4 sm:pr-5">
         {/* Left Sidebar Scroll */}
         <div className="hidden lg:block lg:sticky lg:top-16  lg:w-[40%] lg:self-start lg:h-[calc(100vh-4rem)]">
-          <ScrollArea className="h-full scrollbar-hidden overflow-y-auto px-4 space-y-4">
+          <ScrollArea className="h-full no-scrollbar overflow-y-auto px-4 space-y-4">
             <Button onClick={handleApply} className="w-full">
               Apply
             </Button>
@@ -286,7 +286,7 @@ const Market: React.FC = () => {
 
         {/* Right Content Scroll */}
         <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
-          <ScrollArea className="h-[calc(100vh-4rem)] scrollbar-hidden overflow-y-auto">
+          <ScrollArea className="h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
             {jobs.map((job: Project, index: number) => (
               <JobCard
                 key={index}
