@@ -145,9 +145,12 @@ const profileFormSchema = z
     password: z
       .string()
       .min(6, { message: 'Password must be at least 6 characters.' }),
-    perHourPrice: z.number().refine((value) => value >= 0, {
-      message: 'Price must be a non-negative number.',
-    }),
+    perHourPrice: z
+      .number()
+      .max(300, 'Per hour price must not excedd 300')
+      .refine((value) => value >= 0, {
+        message: 'Price must be a non-negative number.',
+      }),
     workExperience: z
       .number()
       .min(0, 'Work experience must be at least 0 years')
@@ -293,6 +296,7 @@ function FreelancerRegisterForm({
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneVerify: false,
       role: 'freelancer',
       connects: 0,
       professionalInfo: {},

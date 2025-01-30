@@ -14,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/shared/themeToggle';
 import { getUserData, loginGoogleUser, loginUser } from '@/lib/utils';
 import { setUser } from '@/lib/userSlice';
+import { axiosInstance } from '@/lib/axiosinstance';
+import OtpLogin from '@/components/shared/otpDialog';
 
 export default function Login() {
   const router = useRouter();
@@ -21,26 +23,37 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const userCredential: UserCredential = await loginUser(email, pass);
-      const { user, claims } = await getUserData(userCredential);
-      dispatch(
-        setUser({
-          ...user,
-          type: claims.type,
-        }),
-      );
-      router.replace(`/dashboard/${claims.type}`);
-      toast({
-        title: 'Login Successful',
-        description: 'You have successfully logged in.',
-      }); // Success toast
+      axiosInstance
+        .get(`/public/user_email?user=${email}`)
+        .then(async (response) => {
+          setPhone(response.data.phone);
+          if (response.data.phoneVerify) {
+            const userCredential: UserCredential = await loginUser(email, pass);
+            const { user, claims } = await getUserData(userCredential);
+            dispatch(
+              setUser({
+                ...user,
+                type: claims.type,
+              }),
+            );
+            router.replace(`/dashboard/${claims.type}`);
+            toast({
+              title: 'Login Successful',
+              description: 'You have successfully logged in.',
+            }); // Success toast
+          } else {
+            setIsModalOpen(true);
+          }
+        });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -178,6 +191,12 @@ export default function Login() {
           className="h-full w-full object-cover dark:brightness-[0.2] dark:invert"
         />
       </div>
+      {/* OTP Login */}
+      <OtpLogin
+        phoneNumber={phone}
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+      />
     </div>
   );
 }
