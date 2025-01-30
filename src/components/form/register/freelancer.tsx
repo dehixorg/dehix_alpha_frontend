@@ -296,6 +296,7 @@ function FreelancerRegisterForm({
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneVerify: false,
       role: 'freelancer',
       connects: 0,
       professionalInfo: {},

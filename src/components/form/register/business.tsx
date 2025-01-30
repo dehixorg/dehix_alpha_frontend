@@ -246,6 +246,7 @@ function BusinessRegisterForm({
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneVerify: false,
       isBusiness: true,
       connects: 0,
       otp: '123456',
