@@ -353,6 +353,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+        setUser(userResponse.data);
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -533,6 +534,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     setShowLiveCapture(false);
   };
+  console.log(user);
 
   return (
     <Card className="p-10">
@@ -873,6 +875,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpSkill}
                       onClick={() => {
                         handleAddSkill();
                         setTmpSkill('');
@@ -976,6 +979,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpDomain}
                       onClick={() => {
                         handleAddDomain();
                         setTmpDomain('');
@@ -1083,6 +1087,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpProjectDomains}
                       onClick={() => {
                         handleAddprojectDomain();
                         setTmpProjectDomains('');
