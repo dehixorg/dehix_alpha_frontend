@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { string, z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Camera, Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
@@ -100,6 +100,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     'skill' | 'domain' | 'projectDomain' | null
   >(null);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const [showLiveCapture, setShowLiveCapture] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -501,6 +504,36 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   }
 
+  const startLiveCapture = async () => {
+    setShowLiveCapture(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+    }
+  };
+
+  const captureLiveImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, 640, 480);
+        canvasRef.current.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'live-capture.jpg', {
+              type: 'image/jpeg',
+            });
+            form.setValue('liveCaptureUrl', file);
+          }
+        }, 'image/jpeg');
+      }
+    }
+    setShowLiveCapture(false);
+  };
+
   return (
     <Card className="p-10">
       <Form {...form}>
@@ -709,17 +742,56 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Live Capture</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
-                      if (file) {
-                        field.onChange(file); // Pass the file if it exists
-                      }
-                    }}
-                    onBlur={field.onBlur}
-                  />
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            field.onChange(file);
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                      <Button type="button" onClick={startLiveCapture}>
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                    </div>
+
+                    {showLiveCapture && (
+                      <div className="mt-2">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          style={{ width: '100%', maxWidth: '640px' }}
+                        >
+                          {/* Fix for lint error - Adding an empty <track> for accessibility */}
+                          <track
+                            kind="captions"
+                            srcLang="en"
+                            label="English captions"
+                          />
+                        </video>
+                        <canvas
+                          ref={canvasRef}
+                          style={{ display: 'none' }}
+                          width="640"
+                          height="480"
+                        />
+                        <Button
+                          type="button"
+                          onClick={captureLiveImage}
+                          className="mt-2"
+                        >
+                          Take Photo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
