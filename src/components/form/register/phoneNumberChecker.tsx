@@ -35,11 +35,10 @@ const PhoneNumberForm: React.FC<PhoneNumberFormProps<any>> = ({
   const handleCountryChange = (value: string) => {
     setCode(value);
   };
-
   return (
     <FormField
       control={control}
-      name="step3.phone"
+      name="phone"
       render={({ field }) => (
         <FormItem className="flex-1">
           <div className="flex flex-col items-start w-full">
@@ -61,7 +60,7 @@ const PhoneNumberForm: React.FC<PhoneNumberFormProps<any>> = ({
               <FormControl>
                 <Input
                   placeholder="Enter your phone number"
-                  type="text" // Use 'text' type for better handling of phone numbers
+                  type="text"
                   {...field}
                   className="w-full"
                 />

@@ -281,7 +281,7 @@ const FreelancerRegisterForm = () => {
       });
 
       setTimeout(() => {
-        router.push('/login');
+        router.push('/auth/login');   
       }, 1500);
     } catch (error: any) {
       console.log(error);
