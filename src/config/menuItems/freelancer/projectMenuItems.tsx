@@ -39,7 +39,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/freelancer/project/rejected',
     icon: <CircleX className="h-5 w-5" />,
-    label: 'Rejected Verification',
+    label: 'Rejected Projects',
   },
 ];
 
