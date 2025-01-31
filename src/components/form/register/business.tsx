@@ -264,6 +264,11 @@ function BusinessRegisterForm({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',
       });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
+
       setIsModalOpen(true);
     } catch (error: any) {
       console.error('API Error:', error);

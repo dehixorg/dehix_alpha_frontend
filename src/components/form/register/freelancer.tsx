@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import countries from '../../../country-codes.json';
 
@@ -209,6 +210,7 @@ function FreelancerRegisterForm({
   currentStep,
   setCurrentStep,
 }: FreelancerRegisterFormProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
@@ -317,7 +319,13 @@ function FreelancerRegisterForm({
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
+
       toast({ title: 'Account created successfully!' });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
+
       setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
