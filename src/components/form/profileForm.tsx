@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { string, z } from 'zod';
-import { Camera, Plus, X } from 'lucide-react';
+import { z } from 'zod';
+import { Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
+import Image from 'next/image';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
+
+import LiveCaptureField from './register/livecapture';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -64,9 +67,17 @@ const profileFormSchema = z.object({
     message: 'Description cannot exceed 500 characters.',
   }),
   aadharOrGovtId: z.string().optional(),
-  frontImageUrl: z.instanceof(File).optional(),
-  backImageUrl: z.instanceof(File).optional(),
-  liveCaptureUrl: z.instanceof(File).optional(),
+  frontImageUrl: z
+    .union([z.instanceof(File), z.string().url(), z.null()])
+    .optional(),
+
+  backImageUrl: z
+    .union([z.instanceof(File), z.string().url(), z.null()])
+    .optional(),
+
+  liveCaptureUrl: z
+    .union([z.instanceof(File), z.string().url(), z.null()])
+    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -100,9 +111,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     'skill' | 'domain' | 'projectDomain' | null
   >(null);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
-  const [showLiveCapture, setShowLiveCapture] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -148,7 +156,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      const response = await axiosInstance.post('/skills', customSkillData);
+      await axiosInstance.post('/skills', customSkillData);
 
       const updatedSkills = [...skills, { label: customSkill.label }];
       setDomains(updatedSkills);
@@ -195,7 +203,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      const response = await axiosInstance.post('/domain', customDomainData);
+      await axiosInstance.post('/domain', customDomainData);
 
       const updatedDomains = [...domains, { label: customDomain.label }];
       setDomains(updatedDomains);
@@ -242,10 +250,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     try {
-      const response = await axiosInstance.post(
-        '/projectdomain',
-        customProjectDomainData,
-      );
+      await axiosInstance.post('/projectdomain', customProjectDomainData);
 
       const updatedProjectDomains = [
         ...projectDomains,
@@ -353,6 +358,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
+        setUser(userResponse.data);
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -416,7 +422,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         liveCaptureUrl: data.liveCaptureUrl,
       };
       // Append files to the form data
-      if (data.frontImageUrl) {
+      if (data.frontImageUrl instanceof File) {
         const frontFormData = new FormData();
         frontFormData.append('frontImageUrl', data.frontImageUrl);
 
@@ -427,7 +433,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         );
         uploadedUrls.frontImageUrl = response.data.data.Location;
       }
-      if (data.backImageUrl) {
+      if (data.backImageUrl instanceof File) {
         const backFormData = new FormData();
         backFormData.append('backImageUrl', data.backImageUrl);
 
@@ -438,7 +444,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         );
         uploadedUrls.backImageUrl = response.data.data.Location;
       }
-      if (data.liveCaptureUrl) {
+      if (data.liveCaptureUrl instanceof File) {
         const liveFormData = new FormData();
         liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
         const response = await axiosInstance.post(
@@ -461,6 +467,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         frontImageUrl: uploadedUrls.frontImageUrl,
         backImageUrl: uploadedUrls.backImageUrl,
         liveCaptureUrl: uploadedUrls.liveCaptureUrl,
+        status: 'APPLIED',
       };
 
       await axiosInstance.put(`/freelancer/${user_id}`, {
@@ -503,36 +510,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       });
     }
   }
-
-  const startLiveCapture = async () => {
-    setShowLiveCapture(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error('Error accessing camera:', err);
-    }
-  };
-
-  const captureLiveImage = () => {
-    if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
-      if (context) {
-        context.drawImage(videoRef.current, 0, 0, 640, 480);
-        canvasRef.current.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'live-capture.jpg', {
-              type: 'image/jpeg',
-            });
-            form.setValue('liveCaptureUrl', file);
-          }
-        }, 'image/jpeg');
-      }
-    }
-    setShowLiveCapture(false);
-  };
 
   return (
     <Card className="p-10">
@@ -698,52 +675,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Document Front Img</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
-                      if (file) {
-                        field.onChange(file); // Pass the file if it exists
-                      }
-                    }}
-                    onBlur={field.onBlur}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="backImageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Back Img</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
-                      if (file) {
-                        field.onChange(file); // Pass the file if it exists
-                      }
-                    }}
-                    onBlur={field.onBlur}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="liveCaptureUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Live Capture</FormLabel>
-                <FormControl>
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex items-center gap-4">
+                    {field.value && typeof field.value === 'string' ? (
+                      <>
+                        <Image
+                          src={field.value}
+                          alt="Front Document"
+                          width={128}
+                          height={128}
+                          className="rounded-md object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => field.onChange('')}
+                          className="ml-auto"
+                        >
+                          Change Image
+                        </Button>
+                      </>
+                    ) : (
                       <Input
                         type="file"
                         onChange={(e) => {
@@ -754,40 +706,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                         }}
                         onBlur={field.onBlur}
                       />
-                      <Button type="button" onClick={startLiveCapture}>
-                        <Camera className="w-4 h-4 mr-2" />
-                        Capture
-                      </Button>
-                    </div>
-
-                    {showLiveCapture && (
-                      <div className="mt-2">
-                        <video
-                          ref={videoRef}
-                          autoPlay
-                          style={{ width: '100%', maxWidth: '640px' }}
-                        >
-                          {/* Fix for lint error - Adding an empty <track> for accessibility */}
-                          <track
-                            kind="captions"
-                            srcLang="en"
-                            label="English captions"
-                          />
-                        </video>
-                        <canvas
-                          ref={canvasRef}
-                          style={{ display: 'none' }}
-                          width="640"
-                          height="480"
-                        />
-                        <Button
-                          type="button"
-                          onClick={captureLiveImage}
-                          className="mt-2"
-                        >
-                          Take Photo
-                        </Button>
-                      </div>
                     )}
                   </div>
                 </FormControl>
@@ -795,6 +713,55 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="backImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document Back Img</FormLabel>
+                <FormControl>
+                  <div className="flex items-center gap-4">
+                    {field.value && typeof field.value === 'string' ? (
+                      <>
+                        <Image
+                          src={field.value}
+                          alt="Back Document"
+                          width={128}
+                          height={128}
+                          className="rounded-md object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => field.onChange('')}
+                          className="ml-auto"
+                        >
+                          Change Image
+                        </Button>
+                      </>
+                    ) : (
+                      <Input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            field.onChange(file);
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <LiveCaptureField form={form} />
+
           <Separator className="col-span-2" />
           <div className="sm:col-span-2">
             <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
@@ -873,6 +840,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpSkill}
                       onClick={() => {
                         handleAddSkill();
                         setTmpSkill('');
@@ -976,6 +944,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpDomain}
                       onClick={() => {
                         handleAddDomain();
                         setTmpDomain('');
@@ -1083,6 +1052,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       type="button"
                       size="icon"
                       className="ml-2"
+                      disabled={!tmpProjectDomains}
                       onClick={() => {
                         handleAddprojectDomain();
                         setTmpProjectDomains('');
