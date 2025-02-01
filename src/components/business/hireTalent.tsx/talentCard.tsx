@@ -406,7 +406,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                       </SheetTrigger>
                       <SheetContent
                         side={View}
-                        className="overflow-y-auto max-h-[100vh]"
+                        className="overflow-y-auto no-scrollbar max-h-[100vh]"
                       >
                         <SheetHeader>
                           <SheetTitle className="text-center text-lg font-bold py-4">

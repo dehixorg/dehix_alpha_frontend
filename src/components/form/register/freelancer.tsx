@@ -19,6 +19,8 @@ import {
   User,
   UserCircle,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -33,7 +35,6 @@ import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormMessage,
@@ -67,6 +68,12 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
         <p className="text-muted-foreground">
           Join our community and start your Freelancing Journey.
         </p>
+      </div>
+      <div className="my-4 text-center text-xs sm:text-sm">
+        Are you a business?{' '}
+        <Button variant="outline" size="sm" className="ml-2" asChild>
+          <Link href="/auth/sign-up/business">Register Business</Link>
+        </Button>
       </div>
       <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
@@ -139,9 +146,12 @@ const profileFormSchema = z
     password: z
       .string()
       .min(6, { message: 'Password must be at least 6 characters.' }),
-    perHourPrice: z.number().refine((value) => value >= 0, {
-      message: 'Price must be a non-negative number.',
-    }),
+    perHourPrice: z
+      .number()
+      .max(300, 'Per hour price must not excedd 300')
+      .refine((value) => value >= 0, {
+        message: 'Price must be a non-negative number.',
+      }),
     workExperience: z
       .number()
       .min(0, 'Work experience must be at least 0 years')
@@ -206,7 +216,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -287,6 +297,7 @@ function FreelancerRegisterForm({
     const formData = {
       ...data,
       phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneVerify: false,
       role: 'freelancer',
       connects: 0,
       professionalInfo: {},
@@ -305,11 +316,16 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
-    console.log(formData);
     try {
       await axiosInstance.post('/register/freelancer', formData);
-      toast({ title: 'Account created successfully!' });
-      setIsModalOpen(true);
+      toast({
+        title: 'Account created successfully!',
+        description: 'Redirecting to login page...',
+      });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';

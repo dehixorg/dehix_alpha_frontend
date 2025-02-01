@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { string, z } from 'zod';
+import { Camera, Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
 
 import { Card } from '../ui/card';
@@ -33,7 +33,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
-import { StatusEnum } from '@/utils/freelancer/enum';
+import { kycBadgeColors, StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -63,6 +63,10 @@ const profileFormSchema = z.object({
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
+  aadharOrGovtId: z.string().optional(),
+  frontImageUrl: z.instanceof(File).optional(),
+  backImageUrl: z.instanceof(File).optional(),
+  liveCaptureUrl: z.instanceof(File).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -104,6 +108,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [dialogType, setDialogType] = useState<
     'skill' | 'domain' | 'projectDomain' | null
   >(null);
+  const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const [showLiveCapture, setShowLiveCapture] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -118,7 +126,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     mode: 'all',
   });
 
-  const handleAddSkill = (type: string) => {
+  const handleAddSkill = () => {
     addSkill(tmpSkill, skills, setSkills);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
@@ -288,7 +296,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  const handleAddDomain = (type: string) => {
+  const handleAddDomain = () => {
     addDomain(tmpDomain, domains, setDomains);
     if (
       tmpDomain &&
@@ -381,6 +389,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setCurrSkills(userResponse.data.skills);
         setCurrDomains(userResponse.data.domain);
         setCurrProjectDomains(userResponse.data.projectDomain);
+        setKycStatus(userResponse?.data?.kyc?.status);
 
         form.reset({
           firstName: userResponse.data.firstName || '',
@@ -392,6 +401,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           personalWebsite: userResponse.data.personalWebsite || '',
           resume: userResponse.data.resume || '',
           description: userResponse.data.description || '',
+          aadharOrGovtId: userResponse.data.kyc.aadharOrGovtId || '',
+          frontImageUrl: userResponse.data.kyc.frontImageUrl || '',
+          backImageUrl: userResponse.data.kyc.backImageUrl || '',
+          liveCaptureUrl: userResponse.data.kyc.liveCapture || '',
         });
       } catch (error) {
         console.error('API Error:', error);
@@ -412,23 +425,75 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
       description: user?.description || '',
+      aadharOrGovtId: user?.aadharOrGovtId || '',
+      frontImageUrl: user?.frontImageUrl || '',
+      backImageUrl: user?.backImageUrl || '',
+      liveCaptureUrl: user?.liveCaptureUrl || '',
     });
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      console.log('API body', {
-        ...data,
-        skills: currSkills,
-        domain: currDomains,
-        projectDomains: currProjectDomains,
-      });
+      const uploadedUrls = {
+        frontImageUrl: data.frontImageUrl,
+        backImageUrl: data.backImageUrl,
+        liveCaptureUrl: data.liveCaptureUrl,
+      };
+      // Append files to the form data
+      if (data.frontImageUrl) {
+        const frontFormData = new FormData();
+        frontFormData.append('frontImageUrl', data.frontImageUrl);
+
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          frontFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.frontImageUrl = response.data.data.Location;
+      }
+      if (data.backImageUrl) {
+        const backFormData = new FormData();
+        backFormData.append('backImageUrl', data.backImageUrl);
+
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          backFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.backImageUrl = response.data.data.Location;
+      }
+      if (data.liveCaptureUrl) {
+        const liveFormData = new FormData();
+        liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
+        const response = await axiosInstance.post(
+          '/register/upload-image',
+          liveFormData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        uploadedUrls.liveCaptureUrl = response.data.data.Location;
+      }
+
+      const {
+        aadharOrGovtId,
+        frontImageUrl,
+        backImageUrl,
+        liveCaptureUrl,
+        ...restData
+      } = data;
+      const kyc = {
+        aadharOrGovtId,
+        frontImageUrl: uploadedUrls.frontImageUrl,
+        backImageUrl: uploadedUrls.backImageUrl,
+        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
+      };
+
       await axiosInstance.put(`/freelancer/${user_id}`, {
-        ...data,
+        ...restData,
         skills: currSkills,
         domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
+        kyc,
       });
 
       setUser({
@@ -444,6 +509,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         skills: currSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
+        aadharOrGovtId: data.aadharOrGovtId,
+        frontImageUrl: uploadedUrls.frontImageUrl,
+        backImageUrl: uploadedUrls.backImageUrl,
+        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
       });
 
       toast({
@@ -459,6 +528,36 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       });
     }
   }
+
+  const startLiveCapture = async () => {
+    setShowLiveCapture(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+    }
+  };
+
+  const captureLiveImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, 640, 480);
+        canvasRef.current.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'live-capture.jpg', {
+              type: 'image/jpeg',
+            });
+            form.setValue('liveCaptureUrl', file);
+          }
+        }, 'image/jpeg');
+      }
+    }
+    setShowLiveCapture(false);
+  };
 
   return (
     <Card className="p-10">
@@ -518,7 +617,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input disabled placeholder="Enter your email" {...field} />
+                  <Input placeholder="Enter your email" {...field} readOnly />
                 </FormControl>
                 <FormDescription>Non editable field</FormDescription>
                 <FormMessage />
@@ -545,7 +644,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} />
+                  <Input placeholder="+91" {...field} readOnly />
                 </FormControl>
                 <FormMessage />
                 <FormDescription>Non editable field</FormDescription>
@@ -572,245 +671,476 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          <Separator className="sm:col-span-2 mt-0" />
+
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Separator className="col-span-2" />
+          <div>
+            KYC Status{' '}
+            <Badge
+              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
+            >
+              {kycStatus.toLowerCase()}
+            </Badge>
+          </div>
+          <div></div>
+          <FormField
+            control={form.control}
+            name="aadharOrGovtId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Aadhar or Govt Id</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your Aadhar Id" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="frontImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document Front Img</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
+                      if (file) {
+                        field.onChange(file); // Pass the file if it exists
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="backImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document Back Img</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]; // Optional chaining to check if files is not null
+                      if (file) {
+                        field.onChange(file); // Pass the file if it exists
+                      }
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="liveCaptureUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Live Capture</FormLabel>
+                <FormControl>
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            field.onChange(file);
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                      <Button type="button" onClick={startLiveCapture}>
+                        <Camera className="w-4 h-4 mr-2" />
+                        Capture
+                      </Button>
+                    </div>
+
+                    {showLiveCapture && (
+                      <div className="mt-2">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          style={{ width: '100%', maxWidth: '640px' }}
+                        >
+                          {/* Fix for lint error - Adding an empty <track> for accessibility */}
+                          <track
+                            kind="captions"
+                            srcLang="en"
+                            label="English captions"
+                          />
+                        </video>
+                        <canvas
+                          ref={canvasRef}
+                          style={{ display: 'none' }}
+                          width="640"
+                          height="480"
+                        />
+                        <Button
+                          type="button"
+                          onClick={captureLiveImage}
+                          className="mt-2"
+                        >
+                          Take Photo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Separator className="col-span-2" />
           <div className="sm:col-span-2">
             <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
               <div className="sm:col-span-2">
-                <FormLabel>Skills</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('skill');
-                      } else {
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Skills</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
                         setTmpSkill(value);
-                      }
-                    }}
-                    value={tmpSkill || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {skills
-                        .filter(
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpSkill || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search skills"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered skill list */}
+                        {skills
+                          .filter(
+                            (skill: any) =>
+                              skill.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currSkills.some(
+                                (s: any) => s.name === skill.label,
+                              ),
+                          )
+                          .map((skill: any, index: number) => (
+                            <SelectItem key={index} value={skill.label}>
+                              {skill.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching skills */}
+                        {skills.filter(
                           (skill: any) =>
+                            skill.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
                             !currSkills.some(
                               (s: any) => s.name === skill.label,
                             ),
-                        )
-                        .map((skill: any, index: number) => (
-                          <SelectItem key={index} value={skill.label}>
-                            {skill.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpSkill}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddSkill('skills');
-                      setTmpSkill('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currSkills.map((skill: any, index: number) => (
-                    <Badge
-                      className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                        lastAddedItems.skills.some(
-                          (item) => item.name === skill.name,
-                        )
-                          ? 'bg-blue-500 text-white hover:bg-[#4486eb] '
-                          : ''
-                      }`}
-                      key={index}
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching skills
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddSkill();
+                        setTmpSkill('');
+                        setSearchQuery(''); // Reset search query
+                      }}
                     >
-                      {skill.name}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteSkill(skill.name)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <FormLabel>Domains</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('domain');
-                      } else {
-                        setTmpDomain(value);
-                      }
-                    }}
-                    value={tmpDomain || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={tmpDomain ? tmpDomain : 'Select domain'}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {domains
-                        .filter(
-                          (domain: any) =>
-                            !currDomains.some(
-                              (d: any) => d.name === domain.label,
-                            ),
-                        )
-                        .map((domain: any, index: number) => (
-                          <SelectItem key={index} value={domain.label}>
-                            {domain.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpDomain}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddDomain('domains');
-                      setTmpDomain('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currDomains.map((domain: any, index: number) => (
-                    <Badge
-                      className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                        lastAddedItems.domains.some(
-                          (item) => item.name === domain.name,
-                        )
-                          ? 'bg-blue-500 text-white'
-                          : ''
-                      }`}
-                      key={index}
-                    >
-                      {domain.name}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteDomain(domain.name)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <FormLabel>Project Domains</FormLabel>
-                <div className="flex items-center mt-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === 'other') {
-                        setIsDialogOpen(true);
-                        setDialogType('projectDomain');
-                      } else {
-                        setTmpProjectDomains(value);
-                      }
-                    }}
-                    value={tmpProjectDomains || ''}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          tmpProjectDomains
-                            ? tmpProjectDomains
-                            : 'Select project domain'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectDomains
-                        .filter(
-                          (projectDomains: any) =>
-                            !currProjectDomains.some(
-                              (d: any) => d.name === projectDomains.label,
-                            ),
-                        )
-                        .map((projectDomains: any, index: number) => (
-                          <SelectItem key={index} value={projectDomains.label}>
-                            {projectDomains.label}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="other">
-                        <span className="text-gray-500 italic">Other</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    disabled={!tmpProjectDomains}
-                    type="button"
-                    size="icon"
-                    className="ml-2"
-                    onClick={() => {
-                      handleAddprojectDomain();
-                      setTmpProjectDomains('');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {currProjectDomains.map(
-                    (projectDomains: any, index: number) => (
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currSkills.map((skill: any, index: number) => (
                       <Badge
-                        className={`uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1 ${
-                          lastAddedItems.projectsDomains.some(
-                            (item) => item.name === projectDomains.name,
-                          )
-                            ? 'bg-blue-500 text-white'
-                            : ''
-                        }`}
+                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                         key={index}
                       >
-                        {projectDomains.name}
+                        {skill.name}
                         <button
                           type="button"
-                          onClick={() =>
-                            handleDeleteProjDomain(projectDomains.name)
-                          }
+                          onClick={() => handleDeleteSkill(skill.name)}
                           className="ml-2 text-red-500 hover:text-red-700"
                         >
                           <X className="h-4 w-4" />
                         </button>
                       </Badge>
-                    ),
-                  )}
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Domains</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        setTmpDomain(value);
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpDomain || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={tmpDomain ? tmpDomain : 'Select domain'}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search domains"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered domain list */}
+                        {domains
+                          .filter(
+                            (domain: any) =>
+                              domain.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currDomains.some(
+                                (s: any) => s.name === domain.label,
+                              ),
+                          )
+                          .map((domain: any, index: number) => (
+                            <SelectItem key={index} value={domain.label}>
+                              {domain.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching domains */}
+                        {domains.filter(
+                          (Domain: any) =>
+                            Domain.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !currDomains.some(
+                              (s: any) => s.name === domains.label,
+                            ),
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddDomain();
+                        setTmpDomain('');
+                        setSearchQuery(''); // Reset search query
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currDomains.map((Domain: any, index: number) => (
+                      <Badge
+                        className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                        key={index}
+                      >
+                        {Domain.name}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDomain(Domain.name)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="flex-1 min-w-[350px] max-w-[500px] mt-5">
+                  <FormLabel>Project Domains</FormLabel>
+                  <div className="flex items-center mt-2">
+                    <Select
+                      onValueChange={(value) => {
+                        setTmpProjectDomains(value);
+                        setSearchQuery(''); // Reset search query when a value is selected
+                      }}
+                      value={tmpProjectDomains || ''}
+                      onOpenChange={(open) => {
+                        if (!open) setSearchQuery('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            tmpProjectDomains
+                              ? tmpProjectDomains
+                              : 'Select project domain'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Add search input */}
+                        <div className="p-2 relative">
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Search project domains"
+                          />
+                          {searchQuery && (
+                            <button
+                              onClick={() => setSearchQuery('')}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        {/* Filtered domain list */}
+                        {projectDomains
+                          .filter(
+                            (projectDomain: any) =>
+                              projectDomain.label
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()) &&
+                              !currProjectDomains.some(
+                                (s: any) => s.name === projectDomain.label,
+                              ),
+                          )
+                          .map((projectDomain: any, index: number) => (
+                            <SelectItem key={index} value={projectDomain.label}>
+                              {projectDomain.label}
+                            </SelectItem>
+                          ))}
+                        {/* No matching domains */}
+                        {projectDomains.filter(
+                          (projectDomain: any) =>
+                            projectDomain.label
+                              .toLowerCase()
+                              .includes(searchQuery.toLowerCase()) &&
+                            !currProjectDomains.some(
+                              (s: any) => s.name === projectDomains.label,
+                            ),
+                        ).length === 0 && (
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      size="icon"
+                      className="ml-2"
+                      onClick={() => {
+                        handleAddprojectDomain();
+                        setTmpProjectDomains('');
+                        setSearchQuery(''); // Reset search query
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {currProjectDomains.map(
+                      (projectDomain: any, index: number) => (
+                        <Badge
+                          className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                          key={index}
+                        >
+                          {projectDomain.name}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteProjDomain(projectDomain.name)
+                            }
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </Badge>
+                      ),
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <Separator className="sm:col-span-2 mt-0" />
+          <Separator className="col-span-2 mt-0" />
           <FormField
             control={form.control}
             name="resume"
