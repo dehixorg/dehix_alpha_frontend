@@ -319,14 +319,14 @@ function FreelancerRegisterForm({
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
-
-      toast({ title: 'Account created successfully!' });
+      toast({
+        title: 'Account created successfully!',
+        description: 'Redirecting to login page...',
+      });
 
       setTimeout(() => {
         router.push('/auth/login');
       }, 1500);
-
-      setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
