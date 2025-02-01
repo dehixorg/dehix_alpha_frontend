@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Loader2 } from 'lucide-react'; // Import Loader2
+import { Plus, Loader2, Minus } from 'lucide-react'; // Import Loader2
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -143,8 +143,8 @@ const ProfilePictureUpload = ({
             ) : (
               <div className="w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center">
                 <Image
-                  width={28}
-                  height={28}
+                  width={112}
+                  height={112}
                   src={profile}
                   alt="Avatar Preview"
                   className="w-28 h-28 rounded-full object-cover border-2 border-black-300"
@@ -155,10 +155,20 @@ const ProfilePictureUpload = ({
               variant="outline"
               type="button"
               size="icon"
-              className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-black border border-black-300 flex items-center justify-center shadow-md"
-              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-black border border-gray-300 flex items-center justify-center shadow-md"
+              onClick={() => {
+                if (previewUrl) {
+                  setPreviewUrl(null);
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
             >
-              <Plus className="h-4 w-4 text-gray-400" />
+              {previewUrl ? (
+                <Minus className="h-4 w-4 text-gray-400" />
+              ) : (
+                <Plus className="h-4 w-4 text-gray-400" />
+              )}
             </Button>
           </label>
         </div>
