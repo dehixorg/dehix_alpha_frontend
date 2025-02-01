@@ -264,13 +264,18 @@ function BusinessRegisterForm({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',
       });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
+
       setIsModalOpen(true);
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        description: `Error: ${error.response?.data.message || 'Something went wrong!'}`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {

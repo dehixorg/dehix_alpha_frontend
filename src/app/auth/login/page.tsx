@@ -36,20 +36,40 @@ export default function Login() {
         .get(`/public/user_email?user=${email}`)
         .then(async (response) => {
           setPhone(response.data.phone);
+
           if (response.data.phoneVerify) {
-            const userCredential: UserCredential = await loginUser(email, pass);
-            const { user, claims } = await getUserData(userCredential);
-            dispatch(
-              setUser({
-                ...user,
-                type: claims.type,
-              }),
-            );
-            router.replace(`/dashboard/${claims.type}`);
-            toast({
-              title: 'Login Successful',
-              description: 'You have successfully logged in.',
-            }); // Success toast
+            try {
+              const userCredential: UserCredential = await loginUser(
+                email,
+                pass,
+              );
+              const { user, claims } = await getUserData(userCredential);
+
+              dispatch(
+                setUser({
+                  ...user,
+                  type: claims.type,
+                }),
+              );
+              router.replace(`/dashboard/${claims.type}`);
+
+              toast({
+                title: 'Login Successful',
+                description: 'You have successfully logged in.',
+              });
+            } catch (error: any) {
+              console.error('Login error:', error);
+
+              let errorMessage = 'Something went wrong. Please try again.';
+
+              errorMessage = error.message.replace(/^Firebase:\s*/, '');
+
+              toast({
+                title: 'Login Failed',
+                description: errorMessage,
+                variant: 'destructive',
+              });
+            }
           } else {
             setIsModalOpen(true);
           }

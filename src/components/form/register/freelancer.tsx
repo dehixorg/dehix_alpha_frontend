@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -209,6 +210,7 @@ function FreelancerRegisterForm({
   currentStep,
   setCurrentStep,
 }: FreelancerRegisterFormProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [code, setCode] = useState<string>('IN');
@@ -323,7 +325,7 @@ function FreelancerRegisterForm({
       });
 
       setTimeout(() => {
-        router.push('/auth/login');   
+        router.push('/auth/login');
       }, 1500);
     } catch (error: any) {
       const errorMessage =
