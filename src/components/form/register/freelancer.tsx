@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import countries from '../../../country-codes.json';
 
@@ -40,7 +41,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-
 interface Step {
   id: number;
   title: string;
@@ -169,7 +169,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
   const steps = [
     {
       title: 'Account Details',
@@ -215,7 +214,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -323,7 +322,7 @@ function FreelancerRegisterForm({
       });
 
       setTimeout(() => {
-        router.push('/auth/login');   
+        router.push('/auth/login');
       }, 1500);
     } catch (error: any) {
       const errorMessage =
