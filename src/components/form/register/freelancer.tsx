@@ -1,30 +1,36 @@
 'use client';
+
+import React, { useState, useRef } from 'react';
+import { z } from 'zod';
+import { ToastAction } from '@radix-ui/react-toast';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  ArrowLeft,
+  ArrowRight,
   Briefcase,
+  Building2,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Eye,
   EyeOff,
   LoaderCircle,
   Rocket,
   Shield,
   User,
+  UserCircle,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import PropTypes from 'prop-types';
+import Link from 'next/link';
 
 import countries from '../../../country-codes.json';
 
 import PhoneNumberForm from './phoneNumberChecker';
 
-import TextInput from '@/components/shared/input';
-import OtpLogin from '@/components/shared/otpDialog';
+import { cn } from '@/lib/utils';
+import TextInput from '@/components/shared/input'; // Import the reusable TextInput component
 import { Button } from '@/components/ui/button';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import {
   Form,
   FormControl,
@@ -33,60 +39,72 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
+import OtpLogin from '@/components/shared/otpDialog';
 
 interface Step {
   id: number;
-  label: string;
-  icon: React.ElementType; // The type for React components
+  title: string;
+  icon: React.ElementType;
 }
 
-interface SignupStepperProps {
-  currentStep?: number;
+interface StepperProps {
+  currentStep: number;
 }
 
-const SignupStepper: React.FC<SignupStepperProps> = ({ currentStep = 1 }) => {
+const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
   const steps: Step[] = [
-    { id: 1, label: 'Personal Info', icon: User },
-    { id: 2, label: 'Professional Info', icon: Briefcase },
-    { id: 3, label: 'Verification', icon: Shield },
+    { id: 0, title: 'Personal Info', icon: User },
+    { id: 1, title: 'Professional Info', icon: Briefcase },
+    { id: 2, title: 'Verification', icon: Shield },
   ];
 
   return (
-    <div className="w-full py-6 mb-8">
-      <div className="flex items-center justify-center">
+    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-4 sm:mb-8">
+      <div className="text-center space-y-2 sm:space-y-4">
+        <h1 className="text-3xl font-bold">
+          Create Your Freelancer <span className="block">Account</span>
+        </h1>
+        <p className="text-muted-foreground">
+          Join our community and start your Freelancing Journey.
+        </p>
+      </div>
+      <div className="my-4 text-center text-xs sm:text-sm">
+        Are you a business?{' '}
+        <Button variant="outline" size="sm" className="ml-2" asChild>
+          <Link href="/auth/sign-up/business">Register Business</Link>
+        </Button>
+      </div>
+      <div className="flex items-center justify-center mt-4 sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <div className="relative">
               <div
-                className={`w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-                  ${
-                    currentStep > step.id
-                      ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-                      : currentStep === step.id
-                        ? 'border-primary bg-background text-primary dark:bg-background dark:text-primary'
-                        : 'border-muted bg-background text-muted dark:border-muted dark:bg-background dark:text-muted'
-                  }`}
+                className={`w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
+                ${
+                  currentStep > step.id
+                    ? 'bg-primary border-primary'
+                    : currentStep === step.id
+                      ? 'border-primary bg-background text-primary'
+                      : 'border-muted bg-background text-muted'
+                }`}
               >
                 {currentStep > step.id ? (
-                  <CheckCircle2 className="w-6 h-6 text-background dark:text-background" />
+                  <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-background" />
                 ) : (
-                  <step.icon className="w-6 h-6" />
+                  <step.icon className="w-4 h-4 sm:w-6 sm:h-6" />
                 )}
               </div>
               <span
-                className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-sm whitespace-nowrap font-medium
-                ${currentStep >= step.id ? 'text-primary dark:text-primary' : 'text-muted-foreground dark:text-muted-foreground'}`}
+                className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs sm:text-sm whitespace-nowrap font-medium
+                ${currentStep >= step.id ? 'text-primary' : 'text-muted-foreground'}`}
               >
-                {step.label}
+                {step.title}
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className="w-24 mx-2 h-[2px] bg-muted dark:bg-muted">
+              <div className="w-20 sm:w-40 mx-2 sm:mx-4 h-[2px] bg-muted">
                 <div
-                  className="h-full bg-primary dark:bg-primary transition-all duration-500"
+                  className="h-full bg-primary transition-all duration-500"
                   style={{ width: currentStep > step.id ? '100%' : '0%' }}
                 />
               </div>
@@ -98,164 +116,188 @@ const SignupStepper: React.FC<SignupStepperProps> = ({ currentStep = 1 }) => {
   );
 };
 
-const formSchema = z.object({
-  step1: z
-    .object({
-      firstName: z
-        .string()
-        .min(2, { message: 'First Name must be at least 2 characters.' }),
-      lastName: z
-        .string()
-        .min(2, { message: 'Last Name must be at least 2 characters.' }),
-      email: z
-        .string()
-        .email({ message: 'Please enter a valid email address.' }),
-      userName: z
-        .string()
-        .min(3, { message: 'Username must be at least 3 characters.' })
-        .regex(/^[a-zA-Z0-9_]+$/, {
-          message:
-            'Username can only contain letters, numbers, and underscores.',
-        }),
-      password: z
-        .string()
-        .min(6, { message: 'Password must be at least 6 characters.' }),
-      confirmPassword: z.string(),
-      dob: z.string().min(1, { message: 'Date of birth is required.' }),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords don't match",
-      path: ['confirmPassword'],
-    }),
-  step2: z.object({
-    perHourPrice: z.number().min(1, { message: 'Hourly rate is required.' }),
-    workExperience: z
-      .number()
-      .min(1, { message: 'Work experience is required.' }),
-    githubLink: z.string().url().optional().or(z.literal('')),
-    linkedin: z.string().url().optional().or(z.literal('')),
-    personalWebsite: z.string().url().optional().or(z.literal('')),
-  }),
-  step3: z.object({
+const profileFormSchema = z
+  .object({
+    firstName: z
+      .string()
+      .min(2, { message: 'First Name must be at least 2 characters.' }),
+    lastName: z
+      .string()
+      .min(2, { message: 'Last Name must be at least 2 characters.' }),
+    email: z
+      .string()
+      .email({ message: 'Email must be a valid email address.' }),
+    userName: z
+      .string()
+      .min(3, { message: 'Username must be at least 3 characters long' })
+      .max(20, { message: 'Username must be less than 20 characters long' })
+      .regex(/^[a-zA-Z0-9_]+$/, {
+        message: 'Username can only contain letters, numbers, and underscores',
+      }), // Adjust regex as needed
     phone: z
       .string()
-      .min(10, { message: 'Phone number must be at least 10 digits.' }),
-  }),
-});
-
-const FreelancerRegisterForm = () => {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showOptionalInfo, setShowOptionalInfo] = useState(false);
-  const [code, setCode] = useState('IN');
-  const [phone, setPhone] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      step1: {
-        firstName: '',
-        lastName: '',
-        email: '',
-        userName: '',
-        password: '',
-        confirmPassword: '',
-        dob: '',
-      },
-      step2: {
-        perHourPrice: 0,
-        workExperience: 0,
-        githubLink: '',
-        linkedin: '',
-        personalWebsite: '',
-      },
-      step3: {
-        phone: '',
-      },
-    },
-    mode: 'onBlur',
-    shouldUnregister: false, // Add this line
+      .min(10, { message: 'Phone number must be at least 10 digits.' })
+      .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
+    githubLink: z.string().url().optional(),
+    resume: z.string().url().optional(),
+    linkedin: z.string().url().optional(),
+    personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
+    password: z
+      .string()
+      .min(6, { message: 'Password must be at least 6 characters.' }),
+    perHourPrice: z
+      .number()
+      .max(300, 'Per hour price must not excedd 300')
+      .refine((value) => value >= 0, {
+        message: 'Price must be a non-negative number.',
+      }),
+    workExperience: z
+      .number()
+      .min(0, 'Work experience must be at least 0 years')
+      .max(60, 'Work experience must not exceed 60 years'),
+    dob: z.string().optional(),
+    confirmPassword: z
+      .string()
+      .min(6, 'Confirm Password must be at least 6 characters long'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'], // Associate the error with the `confirmPassword` field
+    message: 'Passwords do not match',
   });
 
-  // Modify handleNext to preserve values
-  const handlePrevious = () => {
-    setCurrentStep((prev) => prev - 1);
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
+export default function FreelancerPage() {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    {
+      title: 'Account Details',
+      description: 'Basic information',
+      icon: <UserCircle className="w-6 h-6" />,
+    },
+    {
+      title: 'Company Info',
+      description: 'About your business',
+      icon: <Building2 className="w-6 h-6" />,
+    },
+    {
+      title: 'Verification',
+      description: 'Contact details',
+      icon: <Shield className="w-6 h-6" />,
+    },
+  ];
+
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <Stepper currentStep={currentStep} />
+      {/* Form content goes here */}
+      <FreelancerRegisterForm
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+      />
+    </div>
+  );
+}
+
+interface FreelancerRegisterFormProps {
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+}
+
+function FreelancerRegisterForm({
+  currentStep,
+  setCurrentStep,
+}: FreelancerRegisterFormProps) {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [code, setCode] = useState<string>('IN');
+  const [phone, setPhone] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
-  const handleVerification = () => {
-    setIsModalOpen(true);
-    // Simulate OTP verification after 5 seconds
-    setTimeout(() => {
-      setIsVerified(true);
-      setIsModalOpen(false);
-      toast({
-        title: 'Phone number verified successfully!',
-        description: 'You can now create your account.',
-      });
-    }, 5000);
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      userName: '',
+      phone: '',
+      githubLink: '',
+      resume: '',
+      linkedin: '',
+      personalWebsite: '',
+      password: '',
+      perHourPrice: 0,
+      workExperience: 0,
+      dob: '',
+    },
+    mode: 'all',
+  });
+
+  const handlePreviousStep = async () => {
+    setCurrentStep(currentStep - 1);
   };
 
-  const handleNext = async () => {
-    const currentStepData = form.getValues(
-      `step${currentStep}` as 'step1' | 'step2' | 'step3',
-    );
-    const stepSchema =
-      formSchema.shape[`step${currentStep}` as 'step1' | 'step2' | 'step3'];
-
-    try {
-      // Validate the data for the current step
-      await stepSchema.parseAsync(currentStepData);
-
-      // If valid, go to the next step
-      if (currentStep < 3) {
-        setCurrentStep((prev) => prev + 1);
+  const handleNextStep = async () => {
+    if (currentStep === 0) {
+      const isValid = await form.trigger([
+        'firstName',
+        'lastName',
+        'email',
+        'dob',
+        'password',
+        'confirmPassword',
+      ]);
+      if (isValid) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: 'Please fill in all required fields before proceeding.',
+        });
       }
-    } catch (error) {
-      // Trigger validation for each field on failure
-      Object.keys(currentStepData).forEach((field) => {
-        form.trigger(
-          `step${currentStep}.${field}` as keyof typeof formSchema.shape,
-        );
-      });
+    } else if (currentStep === 1) {
+      const isValid = await form.trigger([
+        'userName',
+        'githubLink',
+        'linkedin',
+        'personalWebsite',
+        'perHourPrice',
+        'resume',
+        'workExperience',
+      ]);
+      if (isValid) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: 'Please fill in all required fields before proceeding.',
+        });
+      }
     }
   };
 
-  const onSubmit: (
-    values: z.infer<typeof formSchema>,
-  ) => Promise<void> = async (values) => {
-    console.log('clicked on create account');
-
-    if (!isVerified) {
-      toast({
-        variant: 'destructive',
-        title: 'Verification required',
-        description: 'Please verify your phone number first.',
-      });
-      return;
-    }
+  const onSubmit = async (data: ProfileFormValues) => {
+    setPhone(
+      `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+    );
 
     setIsLoading(true);
-
     const formData = {
-      firstName: values?.step1?.firstName,
-      lastName: values?.step1?.lastName,
-      email: values?.step1?.email,
-      userName: values?.step1?.userName,
-      password: values?.step1?.password,
-      dob: values?.step1 ? new Date(values.step1?.dob).toISOString() : null,
-      perHourPrice: values?.step2?.perHourPrice,
-      workExperience: values?.step2?.workExperience,
-      githubLink: values?.step2?.githubLink || '',
-      linkedin: values?.step2?.linkedin || '',
-      personalWebsite: values?.step2?.personalWebsite || '',
-      phone: `${countries.find((c) => c.code === code)?.dialCode}${values?.step3?.phone}`,
+      ...data,
+      phone: `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
+      phoneVerify: false,
       role: 'freelancer',
-      resume: '',
       connects: 0,
       professionalInfo: {},
       skills: [],
@@ -270,9 +312,9 @@ const FreelancerRegisterForm = () => {
       oracleProject: [],
       userDataForVerification: [],
       interviewsAligned: [],
-      oracleStatus: 'NOT_APPLIED',
+      // oracleStatus: 'notApplied',
+      dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
-    console.log(formData);
     try {
       await axiosInstance.post('/register/freelancer', formData);
       toast({
@@ -284,294 +326,297 @@ const FreelancerRegisterForm = () => {
         router.push('/auth/login');   
       }, 1500);
     } catch (error: any) {
-      console.log(error);
+      const errorMessage =
+        error.response?.data?.message || 'Something went wrong!';
+      console.error('API Error:', error);
       toast({
         variant: 'destructive',
-        title: 'Registration failed',
-        description: error.response?.data?.message || 'Something went wrong',
+        title: 'Uh oh! Something went wrong.',
+        description: errorMessage,
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextInput
-                control={form.control}
-                name="step1.firstName"
-                label="First Name"
-                placeholder="Max"
-                className="w-full"
-              />
-              <TextInput
-                control={form.control}
-                name="step1.lastName"
-                label="Last Name"
-                placeholder="Robinson"
-                className="w-full"
-              />
-            </div>
-
-            <TextInput
-              control={form.control}
-              name="step1.email"
-              label="Email"
-              type="email"
-              placeholder="m@example.com"
-              className="w-full"
-            />
-
-            <TextInput
-              control={form.control}
-              name="step1.userName"
-              label="Username"
-              placeholder="your_username"
-              className="w-full"
-            />
-
-            <TextInput
-              control={form.control}
-              name="step1.dob"
-              label="Date of Birth"
-              type="date"
-              className="w-full"
-            />
-
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="step1.password"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Password</Label>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter your password"
-                          {...field}
-                          className="w-full pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showPassword ? (
-                            <Eye className="h-5 w-5" />
-                          ) : (
-                            <EyeOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="step1.confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Confirm Password</Label>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="Confirm your password"
-                          {...field}
-                          className="w-full pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute inset-y-0 right-0 px-3 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showConfirmPassword ? (
-                            <Eye className="h-5 w-5" />
-                          ) : (
-                            <EyeOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TextInput
-                control={form.control}
-                name="step2.perHourPrice"
-                label="Hourly Rate ($)"
-                type="number"
-                placeholder="0"
-                className="w-full"
-              />
-              <TextInput
-                control={form.control}
-                name="step2.workExperience"
-                label="Work Experience (Years)"
-                type="number"
-                placeholder="0"
-                className="w-full"
-              />
-            </div>
-
-            <div className="border rounded-lg p-4 dark:border-muted">
-              <button
-                type="button"
-                onClick={() => setShowOptionalInfo(!showOptionalInfo)}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <span className="font-medium">Optional Information</span>
-                {showOptionalInfo ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </button>
-
-              {showOptionalInfo && (
-                <div className="space-y-6 mt-6">
-                  <TextInput
-                    control={form.control}
-                    name="step2.githubLink"
-                    label="GitHub"
-                    type="url"
-                    placeholder="https://github.com/yourusername"
-                    className="w-full"
-                  />
-                  <TextInput
-                    control={form.control}
-                    name="step2.linkedin"
-                    label="LinkedIn"
-                    type="url"
-                    placeholder="https://linkedin.com/in/yourprofile"
-                    className="w-full"
-                  />
-                  <TextInput
-                    control={form.control}
-                    name="step2.personalWebsite"
-                    label="Personal Website"
-                    type="url"
-                    placeholder="https://www.yourwebsite.com"
-                    className="w-full"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div>
-              <Label>Phone Number</Label>
-              <PhoneNumberForm
-                control={form.control}
-                setCode={setCode}
-                code={code}
-              />
-            </div>
-            <Button
-              type="button"
-              onClick={handleVerification}
-              className="w-full"
-              disabled={isVerified}
-            >
-              {isVerified ? 'Phone Number Verified ✓' : 'Verify Phone Number'}
-            </Button>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full max-w-2xl mx-auto p-6 space-y-8"
-      >
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">Create Your Freelancer Account</h1>
-          <p className="text-muted-foreground">
-            Join our community and start your freelancing journey
-          </p>
-        </div>
-
-        <SignupStepper currentStep={currentStep} />
-
-        <div className="bg-card dark:bg-card rounded-lg p-6 shadow-sm border dark:border-muted">
-          {renderStep()}
-        </div>
-
-        <div className="flex justify-between gap-4">
-          {currentStep > 1 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrevious}
-              className="min-w-[100px]"
+      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+        <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
+          <div className="grid gap-4 sm:gap-6 w-full">
+            {/* FirstStep */}
+            <div
+              className={cn('grid gap-4', currentStep === 0 ? '' : 'hidden')}
             >
-              Previous
-            </Button>
-          )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* First Name and Last Name */}
+                <TextInput
+                  control={form.control}
+                  name="firstName"
+                  label="First Name"
+                  placeholder="Max"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="lastName"
+                  label="Last Name"
+                  placeholder="Robinson"
+                  className="w-full"
+                />
+              </div>
 
-          <Button
-            type="submit"
-            onClick={(event) => {
-              event.preventDefault();
-              if (currentStep === 3) {
-                onSubmit(form.getValues()); // Ensure formValues is defined and accessible
-              } else {
-                handleNext();
-              }
-            }}
-            className={`min-w-[100px] ${currentStep === 1 ? 'w-full' : 'ml-auto'}`}
-            disabled={isLoading || (currentStep === 3 && !isVerified)}
-          >
-            {isLoading ? (
-              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            ) : currentStep === 3 ? (
-              <>
-                <Rocket className="mr-2 h-4 w-4" />
-                Create Account
-              </>
-            ) : (
-              'Next'
-            )}
-          </Button>
+              {/* Email */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="email"
+                  label="Email"
+                  placeholder="john.doe@techinnovators.com"
+                  type="email"
+                />
+
+                <TextInput
+                  control={form.control}
+                  name="dob"
+                  label="Date of Birth"
+                  type="date"
+                  className="w-full"
+                />
+              </div>
+              {/* Password and Confirm Password */}
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="Enter your password"
+                            type={showPassword ? 'text' : 'password'}
+                            className="pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={togglePasswordVisibility}
+                            className="absolute inset-y-0 right-0 px-3 flex items-center"
+                          >
+                            {showPassword ? (
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                            ) : (
+                              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Confirm Password</Label>
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="Confirm your password"
+                            type={showPassword ? 'text' : 'password'}
+                            className="pr-10"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={togglePasswordVisibility}
+                            className="absolute inset-y-0 right-0 px-3 flex items-center"
+                          >
+                            {showPassword ? (
+                              <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                            ) : (
+                              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex gap-2 justify-end mt-4">
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="w-full sm:w-auto"
+                >
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Second Step */}
+            <div
+              className={cn('grid gap-4', currentStep === 1 ? '' : 'hidden')}
+            >
+              {/* Username and GitHub */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="userName"
+                  label="Username"
+                  placeholder="JohnDoe123"
+                />
+                <TextInput
+                  control={form.control}
+                  name="githubLink"
+                  label="GitHub"
+                  type="url"
+                  placeholder="https://github.com/yourusername"
+                  className="w-full"
+                />
+              </div>
+
+              {/* LinkedIn and Personal Website */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="linkedin"
+                  label="LinkedIn"
+                  type="url"
+                  placeholder="https://linkedin.com/in/yourprofile"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="personalWebsite"
+                  label="Personal Website"
+                  type="url"
+                  placeholder="https://www.yourwebsite.com"
+                  className="w-full"
+                />
+              </div>
+
+              {/* Hourly Rate and Resume */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="perHourPrice"
+                  label="Hourly Rate ($)"
+                  type="number"
+                  placeholder="0"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="resume"
+                  label="Resume (URL)"
+                  type="url"
+                  placeholder="Enter Google Drive Resume Link"
+                  className="w-full"
+                />
+              </div>
+
+              {/* Work Experience */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="workExperience"
+                  label="Work Experience (Years)"
+                  type="number"
+                  placeholder="0"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-between mt-4">
+                <Button
+                  type="button"
+                  onClick={handlePreviousStep}
+                  className="w-full sm:w-auto"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="w-full sm:w-auto"
+                >
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+
+            <div
+              className={cn('grid gap-4', currentStep === 2 ? '' : 'hidden')}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <PhoneNumberForm
+                  control={form.control}
+                  setCode={setCode}
+                  code={code}
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-4">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={isChecked}
+                  onChange={() => setIsChecked(!isChecked)}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-600">
+                  I agree to the{' '}
+                  <a href="/terms" className="text-primary hover:underline">
+                    Terms and Conditions
+                  </a>
+                </label>
+              </div>
+              <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
+                <Button
+                  type="button"
+                  onClick={handlePreviousStep}
+                  className="w-full sm:w-auto"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+                <Button
+                  type="submit"
+                  className="w-full sm:w-auto"
+                  disabled={isLoading || !isChecked}
+                >
+                  {isLoading ? (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Rocket className="mr-2 h-4 w-4" />
+                  )}
+                  Create account
+                </Button>
+              </div>
+            </div>
+
+            {/* OTP Login */}
+            <OtpLogin
+              phoneNumber={phone}
+              isModalOpen={isModalOpen}
+              setIsModalOpen={setIsModalOpen}
+            />
+          </div>
         </div>
-
-        <OtpLogin
-          phoneNumber={phone}
-          isModalOpen={isModalOpen}
-          setIsModalOpen={setIsModalOpen}
-        />
       </form>
     </Form>
   );
-};
-
-export default FreelancerRegisterForm;
+}

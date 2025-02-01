@@ -57,12 +57,21 @@ const TicketForm = () => {
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const loggedInUserId = localStorage.getItem('userId') || ''; // Get userId from localStorage
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const response = await axiosInstance.get('/ticket'); /////here may be ticket id need
-        setTickets(response.data.data);
+        const response = await axiosInstance.get('/ticket');
+        const currentFreelancerId = loggedInUserId; // Assuming loggedInUserId is the current freelancer's ID
+
+        // Filter tickets based on the current freelancer's ID
+        const filteredTickets = response.data.data.filter(
+          (ticket: Ticket) => ticket._id === currentFreelancerId,
+        );
+
+        // Set the state with the filtered tickets
+        setTickets(filteredTickets);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -71,6 +80,7 @@ const TicketForm = () => {
         });
       }
     };
+
     fetchTickets();
   }, []);
 
@@ -295,12 +305,12 @@ const TicketForm = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto bg-background p-6 rounded shadow-md">
+    <div className="max-w-8xl mx-auto bg-background p-6 rounded shadow-sm">
       {/* Create Ticket Button */}
       <h1 className=" mt-3 sm:text-3xl">Submit a Support Ticket</h1>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button onClick={() => setIsDialogOpen(true)} className="mt-8">
+          <Button onClick={() => setIsDialogOpen(true)} className="mt-6">
             Create Ticket
           </Button>
         </DialogTrigger>
@@ -482,96 +492,76 @@ const TicketForm = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Display Tickets Table */}
-      <div className="mt-2">
-        <Card className="h-[65.4vh] overflow-auto no-scrollbar">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="flexitems-center">ID</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>File Attached</TableHead>
-                <TableHead>Actions</TableHead> {/* New column for buttons */}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tickets.length > 0 ? (
-                tickets.map((ticket) => (
-                  <TableRow key={ticket._id}>
-                    {/* Ticket ID and Copy Button */}
-                    <TableCell>
-                      <div className="flexitems-center space-x-2">
-                        <span>{ticket._id}</span>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleCopyId(ticket._id)}
-                          size="icon"
-                          className="p-1 "
-                        >
-                          <CopyIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+      {/* Display Tickets in Card View */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {tickets.length > 0 ? (
+          tickets.map((ticket) => (
+            <Card key={ticket._id} className="p-4 shadow-md rounded-lg border">
+              {/* Ticket Subject */}
+              <h2 className="text-lg font-semibold">{ticket.subject}</h2>
 
-                    {/* Ticket Subject */}
-                    <TableCell>{ticket.subject}</TableCell>
-                    {/* Ticket Status */}
-                    <TableCell>{ticket.status}</TableCell>
-                    {/* Ticket File */}
-                    <TableCell>
-                      {ticket.filesAttached ? (
-                        allowedFileFormats.includes(
-                          ticket.filesAttached.split('.').pop() || '',
-                        ) ? (
-                          <Image
-                            src={ticket.filesAttached}
-                            alt="Attached file"
-                            width={80} // Adjust according to your design
-                            height={80} // Adjust according to your design
-                            className="object-cover"
-                          />
-                        ) : (
-                          <a
-                            href={ticket.filesAttached}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 underline"
-                          >
-                            {ticket.filesAttached.split('/').pop()}
-                          </a>
-                        )
-                      ) : (
-                        'None'
-                      )}
-                    </TableCell>
+              {/* Ticket ID with Copy Button */}
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-sm text-gray-600">{ticket._id}</span>
+                <Button
+                  variant="outline"
+                  onClick={() => handleCopyId(ticket._id)}
+                  size="icon"
+                  className="p-1"
+                >
+                  <CopyIcon className="h-4 w-4" />
+                </Button>
+              </div>
 
-                    {/* Actions */}
-                    <TableCell>
-                      <div className="flex flex-row">
-                        <Button onClick={() => openEditDialog(ticket)}>
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => openDetailDialog(ticket)}
-                          className="mx-2"
-                        >
-                          Open Ticket
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    No tickets available.
-                  </TableCell>
-                </TableRow>
+              {/* Ticket Description */}
+              <p className="text-sm text-gray-600 mt-2">
+                <strong>Description:</strong> {ticket.description}
+              </p>
+
+              {/* Ticket Status */}
+              <p className="text-sm font-medium mt-2">
+                <strong>Status:</strong> {ticket.status}
+              </p>
+
+              {/* Ticket Files */}
+              {ticket.filesAttached && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium">Attached File:</p>
+                  {ticket.filesAttached.match(/\.(jpeg|jpg|gif|png)$/) ? (
+                    <Image
+                      src={ticket.filesAttached}
+                      alt="Attached file"
+                      width={80}
+                      height={80}
+                      className="rounded-md object-cover mt-2"
+                    />
+                  ) : (
+                    <a
+                      href={ticket.filesAttached}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline text-sm"
+                    >
+                      View/Download File
+                    </a>
+                  )}
+                </div>
               )}
-            </TableBody>
-          </Table>
-        </Card>
+
+              {/* Actions */}
+              <div className="mt-4 flex justify-between">
+                <Button onClick={() => openEditDialog(ticket)} size="sm">
+                  Edit
+                </Button>
+                <Button onClick={() => openDetailDialog(ticket)} size="sm">
+                  Open Ticket
+                </Button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <p className="text-center text-gray-500">No tickets available.</p>
+        )}
       </div>
     </div>
   );

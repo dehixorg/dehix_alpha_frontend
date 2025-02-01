@@ -33,6 +33,7 @@ import {
 import { auth } from '@/config/firebaseConfig';
 import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -91,7 +92,15 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
       try {
         const userCredential: UserCredential =
           await confirmationResult?.confirm(otp);
+
         const { user, claims } = await getUserData(userCredential);
+
+        // Update phone verification status in mongoDb and firebase
+        await axiosInstance.put(`/${claims.type}/${userCredential.user.uid}`, {
+          phone: phoneNumber,
+          phoneVerify: true,
+        });
+
         dispatch(setUser({ ...user, type: claims.type }));
         router.replace(`/dashboard/${claims.type}`);
       } catch (error) {
