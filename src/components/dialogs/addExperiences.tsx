@@ -125,7 +125,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         referencePersonContact: data.referencePersonContact || '',
         githubRepoLink: data.githubRepoLink || '',
         oracleAssigned: null, // Assuming no assignment
-        verificationStatus: 'Pending',
+        verificationStatus: 'ADDED',
         verificationUpdateTime: new Date().toISOString(),
         comments: data.comments || '',
       });

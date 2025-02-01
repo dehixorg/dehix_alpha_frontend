@@ -42,7 +42,7 @@ const projectFormSchema = z
   .object({
     projectName: z.string().min(1, { message: 'Project name is required.' }),
     description: z.string().min(1, { message: 'Description is required.' }),
-    githubRepoLink: z
+    githubLink: z
       .string()
       .url({ message: 'GitHub Repositry link must be a valid URL.' })
       .optional()
@@ -126,14 +126,14 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     defaultValues: {
       projectName: '',
       description: '',
-      githubRepoLink: '',
+      githubLink: '',
       start: '',
       end: '',
       refer: '',
       techUsed: '',
       role: '',
       projectType: '',
-      verificationStatus: 'added',
+      verificationStatus: 'ADDED',
       comments: '',
     },
     mode: 'all',
@@ -147,14 +147,14 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       form.reset({
         projectName: '',
         description: '',
-        githubRepoLink: '',
+        githubLink: '',
         start: '',
         end: '',
         refer: '',
         techUsed: '',
         role: '',
         projectType: '',
-        verificationStatus: 'added',
+        verificationStatus: 'ADDED',
         comments: '',
       });
     }
@@ -252,7 +252,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             />
             <FormField
               control={form.control}
-              name="githubRepoLink"
+              name="githubLink"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>GitHub Repo Link</FormLabel>
