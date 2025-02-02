@@ -68,15 +68,28 @@ const profileFormSchema = z.object({
   }),
   aadharOrGovtId: z.string().optional(),
   frontImageUrl: z
-    .union([z.instanceof(File), z.string().url(), z.null()])
+    .union([
+      // Ensure File is only validated on the client-side
+      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
+      z.string().url(),
+      z.null(),
+    ])
     .optional(),
 
   backImageUrl: z
-    .union([z.instanceof(File), z.string().url(), z.null()])
+    .union([
+      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
+      z.string().url(),
+      z.null(),
+    ])
     .optional(),
 
   liveCaptureUrl: z
-    .union([z.instanceof(File), z.string().url(), z.null()])
+    .union([
+      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
+      z.string().url(),
+      z.null(),
+    ])
     .optional(),
 });
 
