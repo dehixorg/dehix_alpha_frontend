@@ -2,29 +2,60 @@
 import * as React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input'; // Importing the input component from ShadCN UI
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
 
 interface CompanyCardProps {
   heading: string;
-  setLimits: (limit: string) => void; // To pass the selected limit range back to the parent
+  setLimits: (limit: string) => void;
 }
 
 const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
-  // Use state to manage lower and higher limits internally
+  const { toast } = useToast();
+
   const [lowerLimit, setLowerLimit] = React.useState<number>(0);
   const [higherLimit, setHigherLimit] = React.useState<number>(10);
 
+  const validateAndSetLimits = (lower: number, higher: number) => {
+    if (lower < 0 || higher < 0) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Experience cannot be negative.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (higher > 30) {
+      toast({
+        title: 'Invalid Input',
+        description: 'Maximum experience cannot exceed 30 years.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (lower > higher) {
+      toast({
+        title: 'Invalid Range',
+        description: 'Minimum cannot be greater than Maximum.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLowerLimit(lower);
+    setHigherLimit(higher);
+    setLimits(`${lower}-${higher}`);
+  };
+
   const handleLowerLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLowerLimit = Number(e.target.value);
-    setLowerLimit(newLowerLimit);
-    setLimits(`${newLowerLimit}-${higherLimit}`);
+    validateAndSetLimits(newLowerLimit, higherLimit);
   };
 
   const handleHigherLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newHigherLimit = Number(e.target.value);
-    setHigherLimit(newHigherLimit);
-    setLimits(`${lowerLimit}-${newHigherLimit}`);
+    validateAndSetLimits(lowerLimit, newHigherLimit);
   };
 
   return (
@@ -45,6 +76,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               value={lowerLimit}
               onChange={handleLowerLimitChange}
               className="w-20 mt-1"
+              onFocus={(e) => (e.target.value = '')}
             />
           </div>
 
@@ -59,6 +91,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               value={higherLimit}
               onChange={handleHigherLimitChange}
               className="w-20 mt-1"
+              onFocus={(e) => (e.target.value = '')}
             />
           </div>
         </div>
