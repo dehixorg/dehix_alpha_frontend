@@ -59,6 +59,20 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
 
   return (
     <div className="w-full max-w-5xl mx-auto sm:py-6 mb-4 sm:mb-8">
+      <div className="text-center space-y-2 sm:space-y-4">
+        <h1 className="text-3xl font-bold">
+          Create Your Business <span className="block">Account</span>
+        </h1>
+        <p className="text-muted-foreground">
+        Join our community and find the best talent in web3 space
+        </p>
+      </div>
+      <div className="my-4 text-center text-xs sm:text-sm">
+        Are you a Freelancer?{' '}
+        <Button variant="outline" size="sm" className="ml-2" asChild>
+          <Link href="/auth/sign-up/freelancer">Register Freelancer</Link>
+        </Button>
+      </div>
       <div className="flex items-center justify-center sm:mt-8 px-2 sm:px-0">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
