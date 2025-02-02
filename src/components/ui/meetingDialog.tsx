@@ -35,7 +35,6 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
   );
   const [attendees, setAttendees] = useState<string[]>(['']);
 
-
   const handleRequest = (meetingData: object) => {
     const query = Object.fromEntries(searchParams.entries());
     if (query.code) {
@@ -43,23 +42,18 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
     } else {
       handleAuth();
     }
-  }
+  };
 
-  const handleCreateMeet = (meetingData: object, code: string) =>{
-    const response = axiosInstance.post(
-      `/meeting`,
-      meetingData,
-      {
-        params: {
-          code: code, // Add the query string here
-        },
-      }
-    );
-  }
+  const handleCreateMeet = (meetingData: object, code: string) => {
+    const response = axiosInstance.post(`/meeting`, meetingData, {
+      params: {
+        code: code, // Add the query string here
+      },
+    });
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-
 
     const meetingData = {
       summary,

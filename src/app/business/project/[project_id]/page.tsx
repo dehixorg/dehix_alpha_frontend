@@ -163,7 +163,9 @@ export default function Dashboard() {
                         endDate={project.end}
                         projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
+                        projectId={project._id}
                         handleCompleteProject={handleCompleteProject}
+                        userRole="Business"
                       />
                     </div>
                     <div>

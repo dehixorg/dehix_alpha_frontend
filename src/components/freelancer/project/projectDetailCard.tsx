@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  CheckCircle,
-  Code2,
-  Mail,
-  Milestone,
-  MilestoneIcon,
-  Tag,
-} from 'lucide-react';
+import { CheckCircle, Code2, FlagIcon, Mail, Tag } from 'lucide-react';
+import Link from 'next/link';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +18,8 @@ export interface ProjectDetailCardProps {
   endDate: Date | null | undefined;
   projectDomain: string[];
   skills: string[];
+  userRole?: 'Business' | 'Freelancer'; // Added role prop
+  projectId: string; // Added project ID prop
   handleCompleteProject?: () => void;
 }
 
@@ -36,10 +32,15 @@ function ProjectDetailCard({
   endDate,
   projectDomain,
   skills,
+  userRole = 'Business',
+  projectId,
   handleCompleteProject,
 }: ProjectDetailCardProps) {
   const { text: projectStatus, className: statusBadgeStyle } =
     getStatusBadge(status);
+
+  // Construct the milestone route dynamically based on userRole and projectId
+  const milestoneRoute = `/${userRole.toLowerCase()}/project/${projectId}/milestone`;
 
   return (
     <Card className="shadow-lg border border-gray-800 rounded-lg">
@@ -102,29 +103,33 @@ function ProjectDetailCard({
 
         {/* Email Section */}
         <div className="flex flex-wrap items-center gap-4 px-3 py-1 text-xs md:text-sm rounded-md shadow-inner">
-          <Mail className="w-4 h-4 " />
+          <Mail className="w-4 h-4" />
           <span className="text-sm">{email}</span>
         </div>
 
-        {/* Completed Button */}
+        {/* Buttons */}
         <div className="flex justify-between mt-4">
+          <Link href={milestoneRoute}>
+            <Button
+              className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-blue-600 hover:bg-blue-500"
+              size="sm"
+            >
+              <FlagIcon className="w-4 h-4 mr-1" />
+              Milestone
+            </Button>
+          </Link>
           <Button
-            className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium  text-white rounded-md  ${projectStatus == 'COMPLETED' ? 'bg-green-600 hover:bg-green-500 ' : 'bg-blue-600 hover:bg-blue-500'} `}
-            size="sm"
-            onClick={handleCompleteProject}
-            disabled={!handleCompleteProject}
-          >
-            <Milestone className="w-4 h-4 mr-1" />
-            Milestone
-          </Button>
-          <Button
-            className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium  text-white rounded-md  ${projectStatus == 'COMPLETED' ? 'bg-green-600 hover:bg-green-500 ' : 'bg-blue-600 hover:bg-blue-500'} `}
+            className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md ${
+              projectStatus === 'COMPLETED'
+                ? 'bg-green-600 hover:bg-green-500'
+                : 'bg-blue-600 hover:bg-blue-500'
+            }`}
             size="sm"
             onClick={handleCompleteProject}
             disabled={!handleCompleteProject}
           >
             <CheckCircle className="w-4 h-4 mr-1" />
-            {projectStatus == 'COMPLETED' ? 'Completed' : 'Mark complete'}
+            {projectStatus === 'COMPLETED' ? 'Completed' : 'Mark complete'}
           </Button>
         </div>
       </CardContent>
