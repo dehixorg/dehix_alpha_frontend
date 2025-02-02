@@ -5,6 +5,14 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
+import { Progress } from '@/components/ui/progress';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -122,7 +130,11 @@ export default function Dashboard() {
   };
 
   if (!project) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Progress className="w-1/2" value={50} />
+      </div>
+    );
   }
 
   return (
@@ -167,15 +179,17 @@ export default function Dashboard() {
                       />
                     </div>
                     <div>
-                      <CardHeader className="pl-0">
-                        <CardTitle>Profiles</CardTitle>
+                      <CardHeader className="pl-0 ">
+                        <CardTitle className="pb-4">Profiles</CardTitle>
                       </CardHeader>
-                      <CardContent className="pl-0">
-                        <div className="grid w-full items-center gap-4">
-                          <div className="w-auto grid grid-cols-2 gap-4">
-                            {project.profiles?.map((profile, index) => (
+                      <Carousel className="w-1/2 relative pt-3">
+                        <CarouselContent className="flex mt-3 gap-4">
+                          {project.profiles?.map((profile, index) => (
+                            <CarouselItem
+                              key={index}
+                              className="flex shrink-0 w-1/3"
+                            >
                               <ProjectSkillCard
-                                key={index}
                                 domainName={profile.domain}
                                 description={profile.description}
                                 email={project.email}
@@ -185,11 +199,25 @@ export default function Dashboard() {
                                 domains={[]}
                                 skills={profile.skills}
                               />
-                            ))}
+                            </CarouselItem>
+                          ))}
+                          <div className="flex-nowrap w-full">
                             <ProjectSkillCard isLastCard={true} />
                           </div>
-                        </div>
-                      </CardContent>
+                        </CarouselContent>
+                        {project.profiles && project.profiles.length > 0 && (
+                          <>
+                            <div className="flex">
+                              <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                Previous
+                              </CarouselPrevious>
+                              <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                                Next
+                              </CarouselNext>
+                            </div>
+                          </>
+                        )}
+                      </Carousel>
                     </div>
                   </div>
                 </TabsContent>
