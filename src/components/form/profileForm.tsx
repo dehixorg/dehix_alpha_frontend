@@ -419,7 +419,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         domain: currDomains,
         projectDomains: currProjectDomains,
       });
-
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
