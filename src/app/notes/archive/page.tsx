@@ -17,6 +17,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import { toast } from '@/components/ui/use-toast';
+import Header from '@/components/header/header';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
@@ -29,78 +30,45 @@ const Page = () => {
     fetchNotes();
   }, [userId]);
 
-  const handleCreateNote = async (note: Partial<Note>) => {
-    if (!note.title || !note.content || !userId) {
-      console.error('Missing required fields.');
-      return;
-    }
-
-    const newNote = {
-      ...note,
-      userId,
-      bgColor: note.bgColor || '#FFFFFF',
-      banner: note.banner || '',
-      noteType: NoteType.ARCHIVE,
-      type: LabelType.PERSONAL,
-      entityType: user?.type?.toUpperCase() || 'BUSINESS',
-    } as Note;
-
-    try {
-      const response = await axiosInstance.post('/notes', newNote);
-      const updatedNotes = [response.data, ...archive];
-
-      setArchive(updatedNotes);
-      toast({
-        title: 'Note Created',
-        description: 'Your note was successfully created.',
-        duration: 5000,
-      });
-
-      fetchNotes();
-    } catch (error) {
-      console.error('Failed to create note:', error);
-    }
-  };
-
   return (
-    <section className="p-3 relative sm:pl-6">
+    <section className="flex min-h-screen w-full flex-col bg-muted/40">
       {/* Sidebar menus */}
       <SidebarMenu
         menuItemsTop={notesMenu}
         menuItemsBottom={menuItemsBottom}
         active="Archive"
       />
-      <CollapsibleSidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Archive"
-      />
-
-      {/* Main content area */}
-      <div className="ml-12">
-        <NotesHeader
-          isTrash={false}
-          setNotes={setArchive}
-          notes={archive}
-          onNoteCreate={handleCreateNote}
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Archive"
+          breadcrumbItems={[
+            { label: 'Notes', link: '/notes' },
+            { label: 'Archive', link: '/archive' },
+          ]}
         />
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-[40vh]">
-              <Loader2 className="my-4 h-8 w-8 animate-spin" />
-            </div>
-          ) : archive?.length > 0 ? (
-            <NotesRender
-              notes={archive}
-              setNotes={setArchive}
-              isArchive={true}
-              fetchNotes={fetchNotes}
-            />
-          ) : (
-            <div className="flex justify-center items-center h-[40vh]">
-              <p>No archive available. Start adding some!</p>
-            </div>
-          )}
+        {/* Main content area */}
+        <div className="">
+          <NotesHeader isTrash={true} setNotes={setArchive} notes={archive} />
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-[40vh]">
+                <Loader2 className="my-4 h-8 w-8 animate-spin" />
+              </div>
+            ) : archive?.length > 0 ? (
+              <NotesRender
+                notes={archive}
+                setNotes={setArchive}
+                isArchive={true}
+                fetchNotes={fetchNotes}
+              />
+            ) : (
+              <div className="flex justify-center items-center h-[40vh]">
+                <p>No archive available. Start adding some!</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

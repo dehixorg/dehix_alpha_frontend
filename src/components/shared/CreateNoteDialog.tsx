@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Note, NoteType } from '@/utils/types/note';
 
 type Props = {
-  onNoteCreate: (note: Note) => void;
+  onNoteCreate?: (note: Note) => void;
 };
 
 const banners = [
@@ -52,7 +52,9 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
       isHTML,
     };
 
-    onNoteCreate(newNote);
+    if (onNoteCreate) {
+      onNoteCreate(newNote);
+    }
     setTitle('');
     setContent('');
     setSelectedColor('#ffffff');
