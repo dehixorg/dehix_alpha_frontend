@@ -55,7 +55,10 @@ export default function InfiniteScroll({
     [hasMore, isLoading, next, threshold, root, rootMargin],
   );
 
-  const flattenChildren = React.useMemo(() => React.Children.toArray(children), [children]);
+  const flattenChildren = React.useMemo(
+    () => React.Children.toArray(children),
+    [children],
+  );
 
   return (
     <>
@@ -66,7 +69,9 @@ export default function InfiniteScroll({
           return child;
         }
 
-        const isObserveTarget = reverse ? index === 0 : index === flattenChildren.length - 1;
+        const isObserveTarget = reverse
+          ? index === 0
+          : index === flattenChildren.length - 1;
         const ref = isObserveTarget ? observerRef : null;
         // @ts-ignore ignore ref type
         return React.cloneElement(child, { ref });
