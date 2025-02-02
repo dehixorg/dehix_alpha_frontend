@@ -36,7 +36,7 @@ export default function Login() {
         .get(`/public/user_email?user=${email}`)
         .then(async (response) => {
           setPhone(response.data.phone);
-          if (response.data.phoneVerify) {
+          if (!response.data.phoneVerify) {
             const userCredential: UserCredential = await loginUser(email, pass);
             const { user, claims } = await getUserData(userCredential);
             dispatch(

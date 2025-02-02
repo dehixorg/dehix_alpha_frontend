@@ -64,7 +64,7 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
           Create Your Business <span className="block">Account</span>
         </h1>
         <p className="text-muted-foreground">
-        Join our community and find the best talent in web3 space
+          Join our community and find the best talent in web3 space
         </p>
       </div>
       <div className="my-4 text-center text-xs sm:text-sm">

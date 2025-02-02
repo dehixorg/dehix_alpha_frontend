@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -40,7 +41,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-import { useRouter } from 'next/navigation';
 
 interface Step {
   id: number;
@@ -189,7 +189,6 @@ export default function FreelancerPage() {
     },
   ];
 
-
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <Stepper currentStep={currentStep} />
@@ -325,7 +324,7 @@ function FreelancerRegisterForm({
       });
 
       setTimeout(() => {
-        router.push('/auth/login');   
+        router.push('/auth/login');
       }, 1500);
     } catch (error: any) {
       const errorMessage =
