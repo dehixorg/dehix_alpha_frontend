@@ -579,9 +579,14 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your username" {...field} />
+                  <Input
+                    placeholder="Enter your username"
+                    {...field}
+                    readOnly
+                  />
                 </FormControl>
                 <FormMessage />
+                <FormDescription>Non editable field</FormDescription>
               </FormItem>
             )}
           />
