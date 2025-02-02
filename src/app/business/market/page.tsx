@@ -44,26 +44,26 @@ const Market: React.FC = () => {
     selectedValues: string | string[],
   ) => {
     let transformedValues: string | string[] = selectedValues;
+    console.log(filterType);
+    console.log(selectedValues);
 
-    if (filterType === 'experience') {
-      const values = Array.isArray(selectedValues)
-        ? selectedValues
-        : [selectedValues];
+    const values = Array.isArray(selectedValues)
+      ? selectedValues
+      : [selectedValues];
 
-      transformedValues = values.flatMap((value) => {
-        // Check for experience ranges like "0-2", "3-6", "7+" and split them
-        if (value.includes('-')) {
-          const [start, end] = value.split('-').map(Number);
-          return Array.from({ length: end - start + 1 }, (_, i) =>
-            (start + i).toString(),
-          );
-        }
-        if (value === '7+') {
-          return ['7', '8', '9', '10']; // Return as strings
-        }
-        return [value];
-      });
-    }
+    transformedValues = values.flatMap((value) => {
+      // Check for experience ranges like "0-2", "3-6", "7+" and split them
+      if (value.includes('-')) {
+        const [start, end] = value.split('-').map(Number);
+        return Array.from({ length: end - start + 1 }, (_, i) =>
+          (start + i).toString(),
+        );
+      }
+      if (value === '7+') {
+        return ['7', '8', '9', '10']; // Return as strings
+      }
+      return [value];
+    });
 
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -100,6 +100,7 @@ const Market: React.FC = () => {
     try {
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
+
       setFreelancers(response.data.data);
     } catch (error) {
       console.error('API Error:', error);
