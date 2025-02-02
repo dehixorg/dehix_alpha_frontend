@@ -489,7 +489,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         backImageUrl: uploadedUrls.backImageUrl,
         liveCaptureUrl: uploadedUrls.liveCaptureUrl,
       });
-
       toast({
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
