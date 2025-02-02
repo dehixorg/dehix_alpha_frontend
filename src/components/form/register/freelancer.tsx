@@ -322,9 +322,11 @@ function FreelancerRegisterForm({
         description: 'Redirecting to login page...',
       });
 
-      setTimeout(() => {
-        router.push('/auth/login');   
-      }, 1500);
+      setIsModalOpen(true);
+
+      // setTimeout(() => {
+      //   router.push('/auth/login');
+      // }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
