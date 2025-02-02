@@ -13,6 +13,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
+import Header from '@/components/header/header';
 
 const TrashPage = () => {
   const userId = useSelector((state: any) => state.user?.uid);
@@ -23,52 +24,53 @@ const TrashPage = () => {
     fetchNotes();
   }, [userId, fetchNotes]);
 
-  const handleCreateNote = () => {};
-
   return (
-    <section className="p-3 relative sm:pl-6">
+    <section className="flex min-h-screen w-full flex-col bg-muted/40">
       {/* Sidebar menus */}
       <SidebarMenu
         menuItemsTop={notesMenu}
         menuItemsBottom={menuItemsBottom}
         active="Trash"
       />
-      <CollapsibleSidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Trash"
-      />
-      {/* Main content area */}
-      <div className="ml-12">
-        <NotesHeader
-          isTrash={true}
-          setNotes={setTrash}
-          notes={trash}
-          onNoteCreate={handleCreateNote}
-        />
-        <div className="p-6">
-          <div>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-[40vh]">
-                <Loader2 className="my-4 h-8 w-8 animate-spin" />
-              </div>
-            ) : (
-              <div>
-                {trash?.length > 0 ? (
-                  <NotesRender
-                    fetchNotes={fetchNotes}
-                    isTrash={true}
-                    notes={trash}
-                    setNotes={setTrash}
-                    isArchive={true}
-                  />
-                ) : (
-                  <div className="flex justify-center items-center h-[40vh] w-full">
-                    <p>No trash here! Add some to get started!</p>
-                  </div>
-                )}
-              </div>
-            )}
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+        <div>
+          <Header
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            activeMenu="Trash"
+            breadcrumbItems={[
+              { label: 'Notes', link: '/notes' },
+              { label: 'Trash', link: '/trash' },
+            ]}
+          />
+        </div>
+        {/* Main content area */}
+        <div>
+          <NotesHeader isTrash={true} setNotes={setTrash} notes={trash} />
+          <div className="p-6">
+            <div>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-[40vh]">
+                  <Loader2 className="my-4 h-8 w-8 animate-spin" />
+                </div>
+              ) : (
+                <div>
+                  {trash?.length > 0 ? (
+                    <NotesRender
+                      fetchNotes={fetchNotes}
+                      isTrash={true}
+                      notes={trash}
+                      setNotes={setTrash}
+                      isArchive={true}
+                    />
+                  ) : (
+                    <div className="flex justify-center items-center h-[40vh] w-full">
+                      <p>No trash here! Add some to get started!</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
