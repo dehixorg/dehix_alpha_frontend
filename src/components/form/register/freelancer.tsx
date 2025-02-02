@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useForm } from 'react-hook-form';
@@ -219,7 +219,7 @@ function FreelancerRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const searchParams = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
-
+  const router = useRouter();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -332,8 +332,14 @@ function FreelancerRegisterForm({
 
     try {
       await axiosInstance.post(url, formData);
-      toast({ title: 'Account created successfully!' });
-      setIsModalOpen(true);
+      toast({
+        title: 'Account created successfully!',
+        description: 'Redirecting to login page...',
+      });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
