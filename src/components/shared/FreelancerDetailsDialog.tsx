@@ -34,7 +34,6 @@ const FreelancerDetailsDialog: React.FC<FreelancerDetailsDialogProps> = ({
             `/freelancer/${freelancerId}`,
           );
           setFreelancerDetails(response.data);
-          console.log(response);
         } catch (error) {
           console.error('Error fetching freelancer details:', error);
         } finally {

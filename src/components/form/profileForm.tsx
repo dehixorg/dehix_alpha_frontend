@@ -347,10 +347,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-  useEffect(() => {
-    console.log('domain selected', currDomains);
-  }, [currDomains]);
-
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
@@ -375,7 +371,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
-        console.log(userResponse);
 
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');

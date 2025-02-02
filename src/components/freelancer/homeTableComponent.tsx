@@ -91,7 +91,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
 
   const handleDialogOpen = (project: Project) => {
     setSelectedProject(project);
-    console.log(project);
 
     setIsDialogOpen(true); // Open the dialog with the selected project
   };

@@ -53,7 +53,6 @@ export default function CurrentProject() {
         const response = await axiosInstance.get(
           `/freelancer/${user.uid}/project?status=ACTIVE`,
         ); // Fetch data from API
-        console.log(response);
 
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
