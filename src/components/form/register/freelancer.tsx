@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useForm } from 'react-hook-form';
@@ -156,6 +157,7 @@ const profileFormSchema = z
       .min(0, 'Work experience must be at least 0 years')
       .max(60, 'Work experience must not exceed 60 years'),
     dob: z.string().optional(),
+    referralCode: z.string().optional(),
     confirmPassword: z
       .string()
       .min(6, 'Confirm Password must be at least 6 characters long'),
@@ -215,7 +217,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
+  const searchParams = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -237,6 +239,7 @@ function FreelancerRegisterForm({
       password: '',
       perHourPrice: 0,
       workExperience: 0,
+      referralCode: '',
       dob: '',
     },
     mode: 'all',
@@ -288,6 +291,13 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    const referralCodeFromQuery = searchParams.get('referral');
+    console.log(referralCodeFromQuery);
+
+    const referralCodeFromForm = data.referralCode;
+
+    const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
+
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -315,8 +325,13 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
+    const url = referralCode
+      ? `/register/freelancer?referralCode=${referralCode}`
+      : '/register/freelancer';
+    console.log(url);
+
     try {
-      await axiosInstance.post('/register/freelancer', formData);
+      await axiosInstance.post(url, formData);
       toast({ title: 'Account created successfully!' });
       setIsModalOpen(true);
     } catch (error: any) {
@@ -528,6 +543,14 @@ function FreelancerRegisterForm({
                   label="Work Experience (Years)"
                   type="number"
                   placeholder="0"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
                   className="w-full"
                 />
               </div>
