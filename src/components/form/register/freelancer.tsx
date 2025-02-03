@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { useForm } from 'react-hook-form';
@@ -20,7 +21,6 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -157,6 +157,7 @@ const profileFormSchema = z
       .min(0, 'Work experience must be at least 0 years')
       .max(60, 'Work experience must not exceed 60 years'),
     dob: z.string().optional(),
+    referralCode: z.string().optional(),
     confirmPassword: z
       .string()
       .min(6, 'Confirm Password must be at least 6 characters long'),
@@ -216,9 +217,9 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
-
+  const router = useRouter();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -238,6 +239,7 @@ function FreelancerRegisterForm({
       password: '',
       perHourPrice: 0,
       workExperience: 0,
+      referralCode: '',
       dob: '',
     },
     mode: 'all',
@@ -289,6 +291,12 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    const referralCodeFromQuery = searchParams.get('referral');
+
+    const referralCodeFromForm = data.referralCode;
+
+    const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
+
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -316,8 +324,12 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
+    const url = referralCode
+      ? `/register/freelancer?referralCode=${referralCode}`
+      : '/register/freelancer';
+
     try {
-      await axiosInstance.post('/register/freelancer', formData);
+      await axiosInstance.post(url, formData);
       toast({
         title: 'Account created successfully!',
         description: 'Redirecting to login page...',
@@ -535,6 +547,14 @@ function FreelancerRegisterForm({
                   label="Work Experience (Years)"
                   type="number"
                   placeholder="0"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
                   className="w-full"
                 />
               </div>
