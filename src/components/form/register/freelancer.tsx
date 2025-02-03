@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -323,7 +324,7 @@ function FreelancerRegisterForm({
       });
 
       setTimeout(() => {
-        router.push('/auth/login');   
+        router.push('/auth/login');
       }, 1500);
     } catch (error: any) {
       const errorMessage =
@@ -340,6 +341,7 @@ function FreelancerRegisterForm({
     }
   };
 
+  const router = useRouter();
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
