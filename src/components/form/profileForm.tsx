@@ -534,7 +534,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     setShowLiveCapture(false);
   };
-  console.log(user);
 
   return (
     <Card className="p-10">
