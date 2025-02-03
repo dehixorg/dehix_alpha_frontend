@@ -173,20 +173,22 @@ const ProfilePictureUpload = ({
           </label>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={!selectedProfilePicture || isUploading}
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Please wait
-            </>
-          ) : (
-            'Upload Profile Picture'
-          )}
-        </Button>
+        {previewUrl && (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!selectedProfilePicture || isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please wait
+              </>
+            ) : (
+              'Upload Profile Picture'
+            )}
+          </Button>
+        )}
       </form>
     </div>
   );
