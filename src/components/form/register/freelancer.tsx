@@ -292,6 +292,7 @@ function FreelancerRegisterForm({
 
   const onSubmit = async (data: ProfileFormValues) => {
     const referralCodeFromQuery = searchParams.get('referral');
+    console.log(referralCodeFromQuery);
 
     const referralCodeFromForm = data.referralCode;
 

@@ -15,7 +15,6 @@ import {
   HoverCardTrigger,
 } from '../ui/hover-card';
 
-import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
 interface HeaderProps {
