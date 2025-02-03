@@ -202,7 +202,7 @@ export default function DropdownProfile() {
                     href={referralLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-white flex-1 max-w-full break-words sm:truncate"
+                    className="flex-1 max-w-full break-words sm:truncate"
                     title={referralLink} // Tooltip for the full link
                   >
                     {referralLink}
@@ -213,7 +213,7 @@ export default function DropdownProfile() {
                     onClick={() => handleShare(referralLink)} // Share Button
                     className="ml-2 sm:ml-4"
                   >
-                    <Share2 size={16} className="text-white" />
+                    <Share2 size={16} />
                   </Button>
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function DropdownProfile() {
                   Referral Code:
                 </p>
                 <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <span className="text-white font-medium flex-1 truncate">
+                  <span className="font-medium flex-1 truncate">
                     {referralCode}
                   </span>
                   <Button
@@ -236,7 +236,7 @@ export default function DropdownProfile() {
                     {copied === referralCode ? (
                       <Check size={16} className="text-green-500" />
                     ) : (
-                      <Copy size={16} className="text-white" />
+                      <Copy size={16} />
                     )}
                   </Button>
                 </div>
