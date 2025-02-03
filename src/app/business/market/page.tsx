@@ -100,6 +100,7 @@ const Market: React.FC = () => {
     try {
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
+      console.log(response);
 
       setFreelancers(response.data.data);
     } catch (error) {
