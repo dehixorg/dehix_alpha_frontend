@@ -76,7 +76,6 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               value={lowerLimit}
               onChange={handleLowerLimitChange}
               className="w-20 mt-1"
-              onFocus={(e) => (e.target.value = '')}
             />
           </div>
 
@@ -91,7 +90,6 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               value={higherLimit}
               onChange={handleHigherLimitChange}
               className="w-20 mt-1"
-              onFocus={(e) => (e.target.value = '')}
             />
           </div>
         </div>
