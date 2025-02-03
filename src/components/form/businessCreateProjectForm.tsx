@@ -398,7 +398,7 @@ export function CreateProjectBusinessForm() {
               />
             ))}
             <Button
-            className='mt-2'
+              className="mt-2"
               type="button"
               variant="outline"
               size="sm"
@@ -538,7 +538,9 @@ export function CreateProjectBusinessForm() {
                   render={({ field }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Min Connect</FormLabel>
-                      <FormDescription>Minimum number of connects for the project</FormDescription>
+                      <FormDescription>
+                        Minimum number of connects for the project
+                      </FormDescription>
                       <FormControl>
                         <Input placeholder="Enter Min Connects" {...field} />
                       </FormControl>
