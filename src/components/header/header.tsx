@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Loader2 } from 'lucide-react';
-import Image from 'next/image';
+import { Loader2, WalletIcon } from 'lucide-react';
 
 import { Search } from '../search';
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
@@ -95,21 +94,14 @@ const Header: React.FC<HeaderProps> = ({
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-            <Image
-              alt="TOKEN"
-              width={40}
-              height={40}
-              src="/vector-token.svg"
-              className="drop-shadow-lg"
-              priority
-            />
+            <WalletIcon />
             {loading ? (
               <span className="absolute -top-1 -right-2  text-white font-semibold rounded-full px-1 animate-spin shadow-md">
                 <Loader2 size={16} />
               </span>
             ) : (
               connects !== null && (
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
+                <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
                   {formatConnects(connects)}
                 </span>
               )
