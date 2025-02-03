@@ -34,7 +34,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
       });
       return;
     }
-    if (lower > higher) {
+    if (lower > higher && higher !== 0) {  
       toast({
         title: 'Invalid Range',
         description: 'Minimum cannot be greater than Maximum.',
@@ -42,11 +42,11 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
       });
       return;
     }
-
+  
     setLowerLimit(lower);
     setHigherLimit(higher);
     setLimits(`${lower}-${higher}`);
-  };
+  };  
 
   const handleLowerLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newLowerLimit = Number(e.target.value);
