@@ -44,8 +44,6 @@ const Market: React.FC = () => {
     selectedValues: string | string[],
   ) => {
     let transformedValues: string | string[] = selectedValues;
-    console.log(filterType);
-    console.log(selectedValues);
 
     const values = Array.isArray(selectedValues)
       ? selectedValues
