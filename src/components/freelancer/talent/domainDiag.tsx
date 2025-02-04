@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+import Link from 'next/link';
 
 import {
   Dialog,
@@ -31,7 +32,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 // Define the type for a domain
 interface Domain {
   _id: string;
-  label: string;
+  name: string;
 }
 
 // Define SkillDomainData based on your form data structure
@@ -49,6 +50,7 @@ interface SkillDomainData {
 interface DomainDialogProps {
   domains: Domain[];
   onSubmitDomain: (data: SkillDomainData) => void; // Update this type based on your actual data structure
+  setDomains: any;
 }
 
 // Define the schema for validation
@@ -70,6 +72,7 @@ const domainSchema = z.object({
 const DomainDialog: React.FC<DomainDialogProps> = ({
   domains,
   onSubmitDomain,
+  setDomains,
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
@@ -98,12 +101,13 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       const response = await axiosInstance.post(
         `/freelancer/${user.uid}/dehix-talent`,
         {
-          domainId: data.domainId,
-          domainName: data.label,
+          talentId: data.domainId,
+          talentName: data.label,
           experience: data.experience,
           monthlyPay: data.monthlyPay,
           activeStatus: data.activeStatus,
           status: data.status,
+          type: 'DOMAIN',
         },
       );
 
@@ -113,6 +117,9 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           ...data,
           uid: newTalent._id, // Use the UID from the response
         });
+        setDomains((prevSkills: any) =>
+          prevSkills.filter((domain: any) => domain._id !== data.domainId),
+        );
         reset();
         setOpen(false); // Close the dialog after successful submission
         toast({
@@ -157,7 +164,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedDomain = domains.find(
-                      (domain) => domain.label === selectedLabel,
+                      (domain) => domain.name === selectedLabel,
                     );
                     field.onChange(selectedLabel);
                     setValue('domainId', selectedDomain?._id || '');
@@ -167,11 +174,20 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     <SelectValue placeholder="Select a domain" />
                   </SelectTrigger>
                   <SelectContent>
-                    {domains.map((domain) => (
-                      <SelectItem key={domain._id} value={domain.label}>
-                        {domain.label}
-                      </SelectItem>
-                    ))}
+                    {domains.length > 0 ? (
+                      domains.map((domain) => (
+                        <SelectItem key={domain._id} value={domain.name}>
+                          {domain.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <Link href="/freelancer/settings/personal-info">
+                        <p className="p-4 flex justify-center items-center">
+                          No domains to add -{' '}
+                          <span className="text-blue-500 ml-2">Add some</span>{' '}
+                        </p>
+                      </Link>
+                    )}
                   </SelectContent>
                 </Select>
               )}

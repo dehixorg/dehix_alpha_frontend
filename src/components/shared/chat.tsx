@@ -1,8 +1,20 @@
 //chat.tsx
 import * as React from 'react';
-import { Send, LoaderCircle, Video, Upload, Reply, X } from 'lucide-react';
+import {
+  Send,
+  LoaderCircle,
+  Video,
+  Upload,
+  Reply,
+  Text,
+  X,
+  Bold,
+  Italic,
+  Underline,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
 import {
   formatDistanceToNow,
   format,
@@ -11,11 +23,20 @@ import {
   isThisYear,
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
+import { Textarea } from '../ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
+import { FileAttachment } from './fileAttachment';
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -65,7 +86,7 @@ type Message = {
   senderId: string;
   content: string;
   timestamp: string;
-  replyTo?: string;
+  replyTo?: string | null; // Allow null
   reactions?: MessageReaction;
 };
 
@@ -90,6 +111,9 @@ export function CardsChat({ conversation }: CardsChatProps) {
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
   const [clickedMessageId, setClickedMessageId] = useState<string | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [showFormattingOptions, setShowFormattingOptions] =
+    useState<boolean>(false); // Toggle formatting options
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -113,7 +137,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
         {
           ...message,
           timestamp: datentime,
-          replyTo,
+          replyTo: replyToMessageId || null,
         },
         datentime,
       );
@@ -175,31 +199,47 @@ export function CardsChat({ conversation }: CardsChatProps) {
     return null;
   }
 
-  async function handleDocumentUpload() {
+  // Handle image upload
+  async function handleFileUpload() {
     const fileInput = document.createElement('input');
-    fileInput.type = 'file';
+    fileInput.type = 'file'; // Allows selection of any file type
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
-      if (!file) return;
+      if (!file) return; // Exit if no file is selected
 
       try {
-        // const storageRef = firebase.storage().ref();
-        // const fileRef = storageRef.child(`documents/${conversation.id}/${file.name}`);
-        // await fileRef.put(file);
-        // const fileUrl = await fileRef.getDownloadURL();
-        // const message: Message = {
-        //   senderId: user.uid,
-        //   content: `📄 [${file.name}](${fileUrl})`,
-        //   timestamp: new Date().toISOString(),
-        // };
-        // sendMessage(conversation, message, setInput);
+        // Create FormData to send the file
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Post request to upload the file
+        const postFileResponse = await axiosInstance.post(
+          '/register/upload-image', // Endpoint that handles both files and images
+          formData,
+          {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          },
+        );
+
+        // Assuming the response contains the URL of the uploaded file
+        const fileUrl = postFileResponse.data.data.Location;
+
+        // Prepare a message containing the file URL
+        const message: Partial<Message> = {
+          senderId: user.uid,
+          content: fileUrl, // Use the file URL as the message content
+          timestamp: new Date().toISOString(),
+        };
+
+        // Send the message with the file URL
+        sendMessage(conversation, message, setInput);
       } catch (error) {
-        console.error('Error uploading document:', error);
+        console.error('Error uploading file:', error);
       }
     };
 
-    fileInput.click();
+    fileInput.click(); // Trigger file selection
   }
 
   async function handleCreateMeet() {
@@ -220,6 +260,58 @@ export function CardsChat({ conversation }: CardsChatProps) {
       console.error('Error creating meet:', error);
     }
   }
+
+  function handleBold() {
+    if (textAreaRef.current) {
+      const textarea = textAreaRef.current;
+      const { selectionStart, selectionEnd, value } = textarea;
+
+      if (selectionStart === selectionEnd) return; // No selection, do nothing
+
+      const selectedText = value.slice(selectionStart, selectionEnd);
+      const newText = `${value.slice(0, selectionStart)}**${selectedText}**${value.slice(selectionEnd)}`;
+
+      // Update the state with the new text (including the bold markdown)
+      setInput(newText);
+      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Adjust selection to include the bold syntax
+    }
+  }
+  const handleUnderline = () => {
+    if (textAreaRef.current) {
+      const textarea = textAreaRef.current;
+      const { selectionStart, selectionEnd, value } = textarea;
+      if (selectionStart === selectionEnd) return; // No selection, do nothing
+
+      // Apply the underline markdown syntax (__text__)
+      const selectedText = value.slice(selectionStart, selectionEnd);
+      const newText = `${value.slice(0, selectionStart)}__${selectedText}__${value.slice(selectionEnd)}`;
+
+      // Update the state with the new text (including the underline markdown)
+      setInput(newText);
+
+      // Adjust the selection range to include the underline syntax
+      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Add 2 for the __ around the text
+    }
+  };
+
+  function handleitalics() {
+    if (textAreaRef.current) {
+      const textarea = textAreaRef.current;
+      const { selectionStart, selectionEnd, value } = textarea;
+
+      if (selectionStart === selectionEnd) return; // No selection, do nothing
+
+      const selectedText = value.slice(selectionStart, selectionEnd);
+      const newText = `${value.slice(0, selectionStart)}*${selectedText}*${value.slice(selectionEnd)}`;
+
+      // Update the state with the new text (including the italic markdown)
+      setInput(newText);
+      textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1); // Adjust selection to include the italic syntax
+    }
+  }
+  const toggleFormattingOptions = () => {
+    setShowFormattingOptions((prev) => !prev);
+  };
 
   async function toggleReaction(messageId: string, emoji: string) {
     const currentMessage = messages.find((msg) => msg.id === messageId);
@@ -276,8 +368,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-2 min-h-[85vh]">
-          <CardHeader className="flex flex-row items-center">
+        <Card className="col-span-2 min-h-[85vh]  ">
+          <CardHeader className="flex flex-row items-center border ">
             <div className="flex items-center space-x-4">
               <Avatar>
                 <AvatarImage src={primaryUser.profilePic} alt="Image" />
@@ -327,7 +419,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                       className={cn(
                         'flex w-max max-w-[50%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
                         message.senderId === user.uid
-                          ? 'ml-auto bg-primary text-primary-foreground'
+                          ? 'ml-auto bg-blue-100 text-black'
                           : 'bg-muted',
                       )}
                       onClick={() => {
@@ -368,20 +460,56 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         }
                       }}
                     >
-                      <div className="break-words">
-                        {message.replyTo && (
-                          <div className="flex items-center justify-between p-2 bg-background rounded-lg border-l-4 border-primary shadow-sm opacity-100 transition-opacity duration-300">
-                            <div className="text-sm italic text-gray-400 bg-background  ">
-                              <span className="font-semibold">
-                                {messages.find(
-                                  (msg) => msg.id === message.replyTo,
-                                )?.content || 'Message not found'}
-                              </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="break-words rounded-lg  w-full ">
+                              {message.replyTo && (
+                                <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg border-l-4 border-gray-100 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl ">
+                                  <div className="text-sm italic text-gray-400 bg-gray-100 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
+                                    <span className="font-semibold">
+                                      {messages.find(
+                                        (msg) => msg.id === message.replyTo,
+                                      )?.content || 'Message not found'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {message.content.match(
+                                /\.(jpeg|jpg|gif|png)$/,
+                              ) ? (
+                                <Image
+                                  src={message.content}
+                                  alt="Message Image"
+                                  width={300}
+                                  height={300}
+                                  className="rounded-lg"
+                                />
+                              ) : message.content.match(
+                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                ) ? (
+                                <FileAttachment
+                                  fileName={
+                                    message.content.split('/').pop() || 'File'
+                                  }
+                                  fileUrl={message.content}
+                                  fileType={
+                                    message.content.split('.').pop() || 'file'
+                                  }
+                                />
+                              ) : (
+                                // {/* <div className="break-words rounded-lg  w-full"> */}
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                                // {/* </div> */}
+                              )}
                             </div>
-                          </div>
-                        )}
-                        <div>{message.content}</div>
-                      </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" sideOffset={10}>
+                            <p>{readableTimestamp}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
                       {/* Render reactions inside the message bubble */}
                       <Reactions
@@ -394,7 +522,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                         className={cn(
                           'text-xs mt-1',
                           message.senderId === user.uid
-                            ? 'text-muted'
+                            ? 'text-gray-700'
                             : 'text-muted-foreground',
                         )}
                       >
@@ -405,9 +533,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     {hoveredMessageId === message.id && (
                       <Button
                         className="absolute  top-0 right-0 h-6 w-6 z-10 pointer-events-auto"
-                        onClick={() =>
-                          setReplyToMessageId(message.id && message.senderId)
-                        }
+                        onClick={() => setReplyToMessageId(message.id)}
                         size="icon"
                         title="Reply"
                       >
@@ -438,7 +564,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   senderId: user.uid,
                   content: input,
                   timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId,
+                  replyTo: replyToMessageId || null,
                 };
 
                 sendMessage(
@@ -449,11 +575,12 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 );
                 setReplyToMessageId('');
               }}
-              className="flex flex-col bg-foreground  rounded-md shadow-md w-full"
+              className="flex flex-col bg-primary-foreground shadow-md w-full border rounded-[10%] "
             >
+              {/* Reply Preview Area */}
               {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 bg-foreground rounded-lg border-l-4 border-primary shadow-sm opacity-90 transition-opacity duration-300">
-                  <div className="text-sm italic text-gray-400 ">
+                <div className="flex items-center justify-between p-2 rounded-[10%] shadow-sm opacity-90 bg-muted transition-opacity duration-300 ">
+                  <div className="text-sm italic text-gray-400 rounded-[10%] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
                     <span className="font-semibold">
                       {messages.find((msg) => msg.id === replyToMessageId)
                         ?.content || 'Message not found'}
@@ -461,18 +588,19 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   </div>
                   <Button
                     onClick={() => setReplyToMessageId('')}
-                    className="text-foreground hover:text-gray-500 bg-primary-foreground h-6 "
+                    className="text-foreground hover:text-gray-500 bg-muted hover:bg-gray-600 h-6 rounded-full"
                     title="Cancel Reply"
                   >
-                    <X className="h-4 w-4 text-foreground " />
+                    <X className="h-4 w-4 text-foreground" />
                   </Button>
                 </div>
               )}
 
               {/* Input area with dynamic height on reply */}
-              <div className="flex items-center space-x-2 p-2 rounded-lg shadow-sm bg-foreground border-l-4 border-primary">
+              <div className="h-20 flex items-center space-x-2 p-2 rounded-[10%] shadow-sm bg-primary-foreground ">
                 <textarea
-                  className="w-full resize-none p-2 text-background outline-none bg-foreground placeholder:text-gray-500"
+                  ref={textAreaRef}
+                  className="flex-1 h-20 resize-none border-none hover:border-none p-2 text-foreground  bg-primary-foreground placeholder:text-gray-500  rounded-[10%]"
                   placeholder="Type your message..."
                   value={input}
                   rows={1}
@@ -480,7 +608,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      // Only send the message if Enter is pressed (not Shift + Enter)
                       if (input.trim().length > 0) {
                         const newMessage: Partial<Message> = {
                           senderId: user.uid,
@@ -501,12 +628,58 @@ export function CardsChat({ conversation }: CardsChatProps) {
                 />
 
                 <div className="flex items-center space-x-2">
+                  {/* Text Formatting Icon Button */}
+                  {/* Text Formatting Icon Button */}
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    title="Text Formatting"
+                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
+                    onClick={toggleFormattingOptions}
+                  >
+                    <Text className="h-4 w-4" />
+                  </Button>
+
+                  {showFormattingOptions && (
+                    <div className="formatting-options">
+                      <Button
+                        size="icon"
+                        type="button"
+                        onClick={handleBold}
+                        title="Bold"
+                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
+                      >
+                        <Bold className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={handleitalics}
+                        title="Italics"
+                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
+                      >
+                        <Italic className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={handleUnderline}
+                        title="Underline"
+                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
+                      >
+                        <Underline className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
                   <Button
                     size="icon"
                     variant="outline"
                     title="Attach File"
-                    className="text-gray-500 hover:text-gray-700"
-                    onClick={() => handleDocumentUpload()}
+                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
+                    onClick={() => handleFileUpload()}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
@@ -514,7 +687,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                     size="icon"
                     variant="outline"
                     title="Send Video"
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
                     onClick={handleCreateMeet}
                   >
                     <Video className="h-4 w-4" />
@@ -526,7 +699,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   type="submit"
                   variant="outline"
                   disabled={inputLength === 0 || isSending}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
                 >
                   {isSending ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
