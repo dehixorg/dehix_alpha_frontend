@@ -349,7 +349,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
-        setUser(userResponse.data);
+        setUser(userResponse.data.data);
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -359,10 +359,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setDomains(domainsResponse.data.data);
         setProjectDomains(projectDomainResponse.data.data);
 
-        setCurrSkills(userResponse.data.skills);
-        setCurrDomains(userResponse.data.domain);
-        setCurrProjectDomains(userResponse.data.projectDomain);
-        setKycStatus(userResponse?.data?.kyc?.status);
+        setCurrSkills(userResponse.data.data.skills);
+        setCurrDomains(userResponse.data.data.domain);
+        setCurrProjectDomains(userResponse.data.data.projectDomain);
+        setKycStatus(userResponse?.data?.data?.kyc?.status);
 
         form.reset({
           firstName: userResponse.data.firstName || '',
@@ -675,7 +675,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             <Badge
               className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
             >
-              {kycStatus.toLowerCase()}
+              {kycStatus?.toLowerCase()}
             </Badge>
           </div>
           <div></div>
@@ -964,7 +964,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               .toLowerCase()
                               .includes(searchQuery.toLowerCase()) &&
                             !currDomains.some(
-                              (s: any) => s.name === domains.label,
+                              (s: any) => s.name === domains.name,
                             ),
                         ).length === 0 && (
                           <div className="p-2 text-gray-500 italic text-center">
@@ -1072,7 +1072,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               .toLowerCase()
                               .includes(searchQuery.toLowerCase()) &&
                             !currProjectDomains.some(
-                              (s: any) => s.name === projectDomains.label,
+                              (s: any) => s.name === projectDomains.name,
                             ),
                         ).length === 0 && (
                           <div className="p-2 text-gray-500 italic text-center">
