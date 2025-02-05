@@ -416,10 +416,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
       description: user?.description || '',
-      aadharOrGovtId: user?.aadharOrGovtId || '',
-      frontImageUrl: user?.frontImageUrl || '',
-      backImageUrl: user?.backImageUrl || '',
-      liveCaptureUrl: user?.liveCaptureUrl || '',
+      aadharOrGovtId: user?.kyc?.aadharOrGovtId || '',
+      frontImageUrl: user?.kyc?.frontImageUrl || '',
+      backImageUrl: user?.kyc?.backImageUrl || '',
+      liveCaptureUrl: user?.kyc?.liveCaptureUrl || '',
     });
   }, [user, form]);
 
