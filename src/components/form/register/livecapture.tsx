@@ -84,54 +84,19 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
             <div className="flex flex-col gap-2">
               {/* Live Capture Buttons */}
               <div className="flex gap-2">
-                {!isCapturing && (
-                  <Button type="button" onClick={startLiveCapture}>
-                    <Camera className="w-4 h-4 mr-2" />
-                    Live Capture
-                  </Button>
+                {/* Captured Image Preview */}
+                {(capturedImage || field.value) && (
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src={capturedImage || field.value}
+                      alt="Live Capture"
+                      width={128}
+                      height={128}
+                      className="rounded-md object-cover"
+                    />
+                  </div>
                 )}
-                {isCapturing && (
-                  <Button type="button" onClick={captureLiveImage}>
-                    Take Photo
-                  </Button>
-                )}
-              </div>
-
-              {/* Live Video Preview */}
-              {isCapturing && (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  className="w-64 h-48 border rounded-md"
-                >
-                  {/* Add track element for accessibility */}
-                  <track
-                    kind="captions"
-                    srcLang="en"
-                    label="English captions"
-                    src=""
-                  />
-                </video>
-              )}
-
-              {/* Canvas (Hidden) */}
-              <canvas
-                ref={canvasRef}
-                className="hidden"
-                width="640"
-                height="480"
-              />
-
-              {/* Captured Image Preview */}
-              {capturedImage && (
-                <div className="flex flex-col items-center">
-                  <Image
-                    src={capturedImage}
-                    alt="Live Capture"
-                    width={128}
-                    height={128}
-                    className="rounded-md object-cover"
-                  />
+                {!field.value && capturedImage && (
                   <Button
                     type="button"
                     variant="outline"
@@ -145,8 +110,44 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                   >
                     Retake Photo
                   </Button>
-                </div>
-              )}
+                )}
+                {!isCapturing && (
+                  <Button type="button" onClick={startLiveCapture}>
+                    <Camera className="w-4 h-4 mr-2" />
+                    Live Capture
+                  </Button>
+                )}
+                {isCapturing && (
+                  <Button type="button" onClick={captureLiveImage}>
+                    Take Photo
+                  </Button>
+                )}
+
+                {/* Live Video Preview */}
+                {isCapturing && (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    className="w-64 h-48 border rounded-md"
+                  >
+                    {/* Add track element for accessibility */}
+                    <track
+                      kind="captions"
+                      srcLang="en"
+                      label="English captions"
+                      src=""
+                    />
+                  </video>
+                )}
+
+                {/* Canvas (Hidden) */}
+                <canvas
+                  ref={canvasRef}
+                  className="hidden"
+                  width="640"
+                  height="480"
+                />
+              </div>
             </div>
           </FormControl>
           <FormMessage />
