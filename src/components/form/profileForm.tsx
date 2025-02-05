@@ -325,7 +325,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
   };
 
-
   const handleDeleteSkill = (skillToDelete: string) => {
     setCurrSkills(
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
