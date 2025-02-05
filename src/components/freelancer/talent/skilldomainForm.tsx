@@ -101,7 +101,6 @@ const SkillDomainForm: React.FC = () => {
           activeStatus: item.activeStatus,
         }));
 
-        // Set state values
         setSkills(filteredSkills);
         setDomains(filteredDomains);
         setSkillDomainData(formattedTalentData);
