@@ -64,9 +64,9 @@ export enum BidstatusEnum {
 }
 
 export enum DomainStatus {
-  ACTIVE = 'ActiveE',
-  INACTIVE = 'Inactive',
-  ARCHIVED = 'Archieved',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  ARCHIVED = 'ARCHIVED',
 }
 
 export enum FreelancerStatusEnum {
@@ -77,9 +77,9 @@ export enum FreelancerStatusEnum {
 }
 
 export enum Type {
-  FREELANCER = 'freelancer',
-  ADMIN = 'admin',
-  BUSINESS = 'business',
+  FREELANCER = 'FREELANCER',
+  ADMIN = 'ADMIN',
+  BUSINESS = 'BUSINESS',
 }
 
 export enum TicketStatus {

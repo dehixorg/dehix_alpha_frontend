@@ -59,12 +59,12 @@ const SkillDomainForm: React.FC = () => {
           `/freelancer/${user.uid}/skill`,
         );
 
+        const skillsArray = skillsResponse.data?.data?.[0]?.skills || [];
+
         const domainsResponse = await axiosInstance.get(
           `/freelancer/${user.uid}/domain`,
         );
-
-        setSkills(skillsResponse.data.data[0]?.skills);
-        setDomains(domainsResponse.data.data[0]?.domain);
+        const domainsArray = domainsResponse.data?.data?.[0]?.domain || [];
 
         let talentResponse = { data: { data: {} } };
 
@@ -74,18 +74,25 @@ const SkillDomainForm: React.FC = () => {
           );
         }
 
-        const talentData = Object.values(talentResponse.data?.data || {});
-        const existingIds = talentData.map((item: any) => item.talentId);
+        const talentData = Array.isArray(talentResponse.data?.data)
+          ? talentResponse.data?.data
+          : Object.values(talentResponse.data?.data || {});
 
-        const filteredSkills = skillsResponse.data.data[0]?.skills.filter(
-          (skill: any) => !existingIds.includes(skill._id),
-        );
+        const existingIds = talentData.map((item: any) => item.talentId) || [];
 
-        const filteredDomains = domainsResponse.data.data[0]?.domain.filter(
-          (domain: any) => !existingIds.includes(domain._id),
-        );
+        const filteredSkills = Array.isArray(skillsArray)
+          ? skillsArray.filter((skill: any) => !existingIds.includes(skill._id))
+          : [];
 
-        const formattedTalentData = talentData.map((item: any) => ({
+        const filteredDomains = Array.isArray(domainsArray)
+          ? domainsArray.filter(
+              (domain: any) => !existingIds.includes(domain._id),
+            )
+          : [];
+
+        const flattenedTalentData = talentData.flat();
+
+        const formattedTalentData = flattenedTalentData.map((item: any) => ({
           uid: item._id,
           label: item.talentName || 'N/A',
           experience: item.experience || 'N/A',
@@ -106,6 +113,7 @@ const SkillDomainForm: React.FC = () => {
         setLoading(false);
       }
     }
+
     fetchData();
   }, [user?.uid]);
 
@@ -213,7 +221,7 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Badge className={getBadgeColor(item.status)}>
-                          {item.status.toUpperCase()}
+                          {item?.status?.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>

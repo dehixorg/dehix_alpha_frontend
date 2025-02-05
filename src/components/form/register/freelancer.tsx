@@ -20,6 +20,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -215,7 +216,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -317,8 +318,14 @@ function FreelancerRegisterForm({
     };
     try {
       await axiosInstance.post('/register/freelancer', formData);
-      toast({ title: 'Account created successfully!' });
-      setIsModalOpen(true);
+      toast({
+        title: 'Account created successfully!',
+        description: 'Redirecting to login page...',
+      });
+
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
@@ -334,6 +341,7 @@ function FreelancerRegisterForm({
     }
   };
 
+  const router = useRouter();
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">

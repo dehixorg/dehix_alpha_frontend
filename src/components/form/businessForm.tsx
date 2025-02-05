@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   // FormDescription,
   FormField,
   FormItem,
@@ -295,9 +296,11 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                         placeholder="Enter your email"
                         type="email"
                         {...field}
+                        readOnly
                       />
                     </FormControl>
                     <FormMessage />
+                    <FormDescription>Non editable field</FormDescription>
                   </FormItem>
                 )}
               />
@@ -315,9 +318,11 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                         placeholder="Enter your phone number"
                         type="tel"
                         {...field}
+                        readOnly
                       />
                     </FormControl>
                     <FormMessage />
+                    <FormDescription>Non editable field</FormDescription>
                   </FormItem>
                 )}
               />
