@@ -77,7 +77,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/business/${user_id}`);
+        const response = await axiosInstance.get(`/business`);
         setUser(response.data);
       } catch (error) {
         console.error('API Error:', error);
