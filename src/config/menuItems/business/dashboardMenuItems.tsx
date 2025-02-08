@@ -8,7 +8,6 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
-
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -16,14 +15,15 @@ import { MenuItem } from '@/components/menu/sidebarMenu';
 export const menuItemsTop: MenuItem[] = [
   {
     href: '#',
-    icon:<Image
-    src="/dehix.png"  // Path to your image in the public folder
-    alt="Icon"
-    width={16}  // Set the desired width
-    height={16}  // Set the desired height
-    className="transition-all group-hover:scale-110"
-  />
-,  
+    icon: (
+      <Image
+        src="/dehix.png" // Path to your image in the public folder
+        alt="Icon"
+        width={16} // Set the desired width
+        height={16} // Set the desired height
+        className="transition-all group-hover:scale-110"
+      />
+    ),
     label: 'Dehix',
   },
   {
@@ -64,14 +64,15 @@ export const menuItemsBottom: MenuItem[] = [
 export const notesMenu: MenuItem[] = [
   {
     href: '#',
-    icon:<Image
-    src="/dehix.png"  // Path to your image in the public folder
-    alt="Icon"
-    width={16}  // Set the desired width
-    height={16}  // Set the desired height
-    className="transition-all group-hover:scale-110"
-  />
-,  
+    icon: (
+      <Image
+        src="/dehix.png" // Path to your image in the public folder
+        alt="Icon"
+        width={16} // Set the desired width
+        height={16} // Set the desired height
+        className="transition-all group-hover:scale-110"
+      />
+    ),
     label: 'Dehix',
   },
   {
