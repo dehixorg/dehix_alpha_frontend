@@ -216,7 +216,6 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
