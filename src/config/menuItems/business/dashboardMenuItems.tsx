@@ -1,6 +1,5 @@
 import {
   Archive,
-  Boxes,
   Home,
   MessageSquare,
   Settings,
@@ -10,12 +9,21 @@ import {
   Users,
 } from 'lucide-react';
 
+import Image from 'next/image';
+
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
   {
     href: '#',
-    icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
+    icon:<Image
+    src="/dehix.png"  // Path to your image in the public folder
+    alt="Icon"
+    width={16}  // Set the desired width
+    height={16}  // Set the desired height
+    className="transition-all group-hover:scale-110"
+  />
+,  
     label: 'Dehix',
   },
   {
@@ -56,7 +64,14 @@ export const menuItemsBottom: MenuItem[] = [
 export const notesMenu: MenuItem[] = [
   {
     href: '#',
-    icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
+    icon:<Image
+    src="/dehix.png"  // Path to your image in the public folder
+    alt="Icon"
+    width={16}  // Set the desired width
+    height={16}  // Set the desired height
+    className="transition-all group-hover:scale-110"
+  />
+,  
     label: 'Dehix',
   },
   {

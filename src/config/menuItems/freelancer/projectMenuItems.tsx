@@ -10,12 +10,21 @@ import {
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
+import Image from 'next/image';
+
 export const menuItemsTop: MenuItem[] = [
   {
-    href: '#',
-    icon: <Boxes className="h-4 w-4 transition-all group-hover:scale-110" />,
-    label: 'Dehix',
-  },
+      href: '#',
+      icon:<Image
+      src="/dehix.png"  // Path to your image in the public folder
+      alt="Icon"
+      width={16}  // Set the desired width
+      height={16}  // Set the desired height
+      className="transition-all group-hover:scale-110"
+    />
+  ,  
+      label: 'Dehix',
+    },
   {
     href: '/dashboard/freelancer',
     icon: <HomeIcon className="h-5 w-5" />,
