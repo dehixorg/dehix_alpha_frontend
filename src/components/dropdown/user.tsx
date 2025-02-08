@@ -41,7 +41,7 @@ const UserDropdownMenu: React.FC<UserDropdownMenuProps> = ({ email, type }) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <Link
-            href={`/settings/${type === 'freelancer' ? 'personal-info' : 'business-info'}`}
+            href={`/settings/${type === Type.FREELANCER ? 'personal-info' : 'business-info'}`}
           >
             Settings
           </Link>
