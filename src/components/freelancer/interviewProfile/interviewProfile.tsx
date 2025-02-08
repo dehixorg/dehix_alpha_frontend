@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2 } from 'lucide-react';
+import { Plus, Edit2, ListFilter } from 'lucide-react';
 
 import { toast } from '../../ui/use-toast';
 
@@ -23,13 +23,17 @@ import DomainDialog from '@/components/dialogs/domainDialog';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
+import { RootState } from '@/lib/store';
+import { useSelector } from 'react-redux';
+
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Skill {
-  label: string;
+  talentName: string;
 }
 
 interface Domain {
-  label: string;
+  talentName: string;
 }
 interface SkillFormData {
   name: string;
@@ -105,26 +109,42 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const [docId, setDocId] = useState<string>();
   const [docType, setDocType] = useState<string>();
 
+  const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
+    'All',
+  );
+
+  const user = useSelector((state: RootState) => state.user);
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get('/skills');
-        setSkills(skillsResponse.data.data);
-
-        const domainsResponse = await axiosInstance.get('/domain');
-        setDomains(domainsResponse.data.data);
-
-        const freelancerSkillsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/skill`,
+        const freelancerSkillsResponse = await axiosInstance.get(`/freelancer/${freelancerId}/skill`);
+        const freelancerDomainsResponse = await axiosInstance.get(`/freelancer/${freelancerId}/domain`);
+      
+        const skillData = freelancerSkillsResponse.data.data[0].skills;
+        const domainData = freelancerDomainsResponse.data.data[0].domain;
+        console.log(skillData);
+        
+        setSkillData(skillData);
+        setDomainData(domainData);
+        console.log(domainData);
+        
+        console.log("FI");
+        
+        const skillsDomainResponse = await axiosInstance.get(`/freelancer/${user.uid}/dehix-talent`);
+        console.log(skillsDomainResponse);
+        
+        const updatedSkills = skillsDomainResponse.data.data.skills.filter(
+          (skill:any) => !skillData.some((existingSkill:any) => existingSkill.name === skill.talentName)
         );
-        setSkillData(freelancerSkillsResponse.data.data[0].skills);
-
-        const freelancerDomainsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/domain`,
+        setSkills(updatedSkills);
+      
+        const updatedDomains = skillsDomainResponse.data.data.domains.filter(
+          (domain:any) => !domainData.some((existingDomain:any) => existingDomain.name === domain.talentName)
         );
-        setDomainData(freelancerDomainsResponse.data.data[0].domain);
-      } catch (error) {
+        setDomains(updatedDomains);
+      }catch (error) {
         console.error('Error fetching data:', error);
         toast({
           variant: 'destructive',
@@ -311,6 +331,16 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     setOpenDomainDialog(true);
   };
 
+  const filteredData = () => {
+    if (filter === 'All') {
+      return [...skillData, ...domainData];
+    } else if (filter === 'Skills') {
+      return skillData;
+    } else if (filter === 'Domain') {
+      return domainData;
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-8 ml-5">
@@ -320,18 +350,51 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           and provide your experience levels.
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-4 p-2 sm:px-6 sm:py-0 md:gap-8 lg:flex-row xl:flex-row pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
-        {/* Skills Table */}
-        <div className="mb-8 w-full sm:w-1/2 sm:pr-4 relative border border-gray-200 rounded-lg p-4">
+      <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
+        <div className='w-1/5'>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 gap-1 w-auto text-sm">
+                <ListFilter className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only">Filter</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={filter === 'All'}
+                onSelect={() => setFilter('All')}
+              >
+                All
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filter === 'Skills'}
+                onSelect={() => setFilter('Skills')}
+              >
+                Skills
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filter === 'Domain'}
+                onSelect={() => setFilter('Domain')}
+              >
+                Domain
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="w-full relative border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Skills</h2>
-            <Button
-              onClick={() => {
-                setOpenSkillDialog(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Skill
-            </Button>
+            <h2 className="text-xs md:text-xl font-semibold w-1/2">Skills & Domains</h2>
+            <div className='flex justify-end items-center  w-1/2'> 
+              <Button onClick={() => setOpenSkillDialog(true)} className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm">
+                <Plus className=" mr-1 md:mr-2 h-4 w-4" /> <span className='hidden  md:block mr-1'>Add</span> Skill
+              </Button>
+              <Button onClick={() => setOpenDomainDialog(true)} className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm">
+                <Plus className=" mr-1 md:mr-2 h-4 w-4" /> <span className='hidden md:block mr-1'>Add</span> Domain
+              </Button>
+            </div>
             <SkillDialog
               open={openSkillDialog}
               onClose={() => setOpenSkillDialog(false)}
@@ -341,73 +404,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
               defaultValues={editingSkill || undefined}
               loading={loading}
             />
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Skill</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading
-                ? [...Array(4)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : skillData.map((skill) => (
-                    <TableRow key={skill._id}>
-                      <TableCell>{skill.name}</TableCell>
-                      <TableCell>{skill.level}</TableCell>
-                      <TableCell>
-                        {skill.experience > 0 ? skill.experience + 'years' : ''}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getBadgeColor(skill.interviewStatus)}>
-                          {skill.interviewStatus.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <ButtonIcon
-                          icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() =>
-                            handleSkillDomainDialog(skill, 'skill')
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Domain Table */}
-        <div className="mb-8 w-full sm:w-1/2 sm:pl-4 relative border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Domains</h2>
-            <Button
-              onClick={() => {
-                setEditingDomain(null);
-                setOpenDomainDialog(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Domain
-            </Button>
             <DomainDialog
               open={openDomainDialog}
               onClose={() => setOpenDomainDialog(false)}
@@ -419,59 +415,56 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             />
           </div>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Domain</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Experience</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+            <TableHeader >
+              <TableRow className='hover:bg-[#09090B]'>
+                <TableHead className="">Item</TableHead>
+                <TableHead className="">Level</TableHead>
+                <TableHead className="">Experience</TableHead>
+                <TableHead className="">Status</TableHead>
+                <TableHead className="">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : domainData.map((domain) => (
-                    <TableRow key={domain._id}>
-                      <TableCell>{domain.name}</TableCell>
-                      <TableCell>{domain.level}</TableCell>
-                      <TableCell>
-                        {domain.experience.length > 0
-                          ? domain.experience + 'years'
-                          : ''}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={getBadgeColor(domain.interviewStatus)}
-                        >
-                          {domain.interviewStatus.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <ButtonIcon
-                          icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() =>
-                            handleSkillDomainDialog(domain, 'domain')
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  <TableRow key={index}>
+                  <TableCell className="">
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="">
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="">
+                    <Skeleton className="h-6 w-24" />
+                  </TableCell>
+                  <TableCell className="">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                  </TableCell>
+                  <TableCell className="">
+                      <Skeleton className="w-8 h-8 p-2 rounded-md" />
+                  </TableCell>
+                </TableRow>
+                ))
+                : filteredData()!.map((item) => (
+                  <TableRow key={item._id}>
+                    <TableCell className="">{item.name}</TableCell>
+                    <TableCell className="">{item.level}</TableCell>
+                    <TableCell className="">
+                      {typeof item.experience === 'number' && item.experience > 0 ? item.experience + ' years' : ''}
+                    </TableCell>
+                    <TableCell className="">
+                      <Badge className={getBadgeColor(item.interviewStatus)}>
+                        {item.interviewStatus.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="">
+                      <ButtonIcon
+                        icon={<Edit2 className="w-4 h-4" />}
+                        onClick={() => handleSkillDomainDialog(item, item.experience ? 'skill' : 'domain')} // Pass type to handler
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </div>

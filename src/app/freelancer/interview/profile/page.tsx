@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { Search } from 'lucide-react';
+import { ListFilter, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -14,6 +14,7 @@ import {
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
 import { RootState } from '@/lib/store';
+
 
 export default function ProfilePage() {
   const user = useSelector((state: RootState) => state.user);

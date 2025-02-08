@@ -5,6 +5,8 @@ import {
   Users2,
   History,
   Settings,
+  Briefcase,
+  UserPlus,
 } from 'lucide-react';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -29,6 +31,16 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/interview/current',
     icon: <ListVideo className="h-5 w-5" />,
     label: 'Current',
+  },
+  {
+    href: '/freelancer/interview/bids',
+    icon: <Briefcase  className="h-5 w-5" />,
+    label: 'Bids',
+  },
+  {
+    href: '/freelancer/interview/start-interviewing',
+    icon: <UserPlus  className="h-5 w-5" />,
+    label: 'Become Interviewer',
   },
   {
     href: '/freelancer/interview/history',
