@@ -340,7 +340,6 @@ function FreelancerRegisterForm({
     }
   };
 
-  const router = useRouter();
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">

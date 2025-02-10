@@ -12,11 +12,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Type } from '@/utils/enum';
+import { Type } from '@/utils/enum'; // Assuming Type is an enum
 
 interface UserDropdownMenuProps {
   email: string;
-  type: Type;
+  type: Type; // Assuming Type is an enum
 }
 
 const UserDropdownMenu: React.FC<UserDropdownMenuProps> = ({ email, type }) => {
