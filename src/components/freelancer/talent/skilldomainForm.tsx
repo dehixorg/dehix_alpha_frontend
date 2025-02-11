@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { Button } from '@/components/ui/button';
 
 interface Skill {
   _id: string;
@@ -104,6 +105,8 @@ const SkillDomainForm: React.FC = () => {
         setSkills(filteredSkills);
         setDomains(filteredDomains);
         setSkillDomainData(formattedTalentData);
+        console.log('hi');
+        console.log(formattedTalentData);
         setStatusVisibility(
           formattedTalentData.map((item) => item.activeStatus),
         );
@@ -220,9 +223,13 @@ const SkillDomainForm: React.FC = () => {
                         ${item.monthlyPay}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getBadgeColor(item.status)}>
+                        {item.status.toUpperCase() === StatusEnum.PENDING ? (
+                          <Button>Verify</Button>
+                        ):(
+                          <Badge className={getBadgeColor(item.status)}>
                           {item?.status?.toUpperCase()}
                         </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Switch
@@ -255,6 +262,8 @@ const SkillDomainForm: React.FC = () => {
                   </TableRow>
                 )}
               </TableBody>
+            
+  
             </Table>
           </Card>
         </div>
