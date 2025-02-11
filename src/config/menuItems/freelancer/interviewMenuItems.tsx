@@ -6,13 +6,22 @@ import {
   History,
   Settings,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
   {
-    href: '/freelancer/interview',
-    icon: <Boxes className="h-5 w-5" />,
+    href: '#',
+    icon: (
+      <Image
+        src="/dehix.png" // Path to your image in the public folder
+        alt="Icon"
+        width={16} // Set the desired width
+        height={16} // Set the desired height
+        className="transition-all group-hover:scale-110"
+      />
+    ),
     label: 'Dehix',
   },
   {

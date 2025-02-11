@@ -10,7 +10,9 @@ const FreelancerList: React.FC<FreelancerListProps> = ({ freelancers }) => {
   return (
     <div className="mt-4 p-4  lg:ml-10 space-y-4 w-full">
       {freelancers.length === 0 ? (
-        <p className="text-center text-xl flex justify-center items-center h-[55vh] font-semibold">No talent found</p>
+        <p className="text-center text-xl flex justify-center items-center h-[55vh] font-semibold">
+          No talent found
+        </p>
       ) : (
         freelancers.map((freelancer: any, index: number) => (
           <FreelancerCard

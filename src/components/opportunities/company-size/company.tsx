@@ -59,7 +59,9 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               id="lowerLimit"
               type="number"
               value={lowerLimit}
-              onChange={(e) => validateAndSetLimits(e.target.value, higherLimit)}
+              onChange={(e) =>
+                validateAndSetLimits(e.target.value, higherLimit)
+              }
               className="w-20 mt-1"
               placeholder="0"
             />
