@@ -106,7 +106,10 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                           </SelectItem>
                         ))
                       ) : (
-                        <p className="p-2">No verified skills. <span className='text-blue-500'>Get verified !</span></p>
+                        <p className="p-2">
+                          No verified skills.{' '}
+                          <span className="text-blue-500">Get verified !</span>
+                        </p>
                       )}
                     </SelectContent>
                   </Select>

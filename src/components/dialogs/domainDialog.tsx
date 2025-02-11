@@ -99,18 +99,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                       <SelectValue placeholder="Select a domain" />
                     </SelectTrigger>
                     <SelectContent>
-                      {
-                        domainOptions.length > 0 ?
-                          domainOptions.map((domain, idx) => (
-                            <SelectItem key={idx} value={domain.talentName}>
-                              {domain.talentName}
-                            </SelectItem>
-                          ))
-                          :
-                          (
-                            <p className="p-2">No verified Domain. <span className='text-blue-500'>Get verified !</span></p>
-                          )
-                      }
+                      {domainOptions.length > 0 ? (
+                        domainOptions.map((domain, idx) => (
+                          <SelectItem key={idx} value={domain.talentName}>
+                            {domain.talentName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <p className="p-2">
+                          No verified Domain.{' '}
+                          <span className="text-blue-500">Get verified !</span>
+                        </p>
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.name && (

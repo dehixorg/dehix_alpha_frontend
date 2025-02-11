@@ -15,7 +15,6 @@ import {
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
 import { RootState } from '@/lib/store';
 
-
 export default function ProfilePage() {
   const user = useSelector((state: RootState) => state.user);
   return (

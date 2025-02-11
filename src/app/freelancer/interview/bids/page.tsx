@@ -12,7 +12,6 @@ import ProjectInterviews from '@/components/freelancer/projectInterview/ProjectI
 import Header from '@/components/header/header';
 import Bids from '@/components/freelancer/bids/Bids';
 
-
 export default function ProfilePage() {
   const user = useSelector((state: RootState) => state.user);
   return (
@@ -22,7 +21,7 @@ export default function ProfilePage() {
         menuItemsBottom={menuItemsBottom}
         active="Bids"
       />
-      <div className="flex flex-col sm:pl-14 w-full">
+      <div className="flex flex-col sm:pl-14 w-full mb-5">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -33,15 +32,14 @@ export default function ProfilePage() {
             { label: 'Bids', link: '#' },
           ]}
         />
-        <div className="ml-10 mt-6">
-          <h1 className="text-3xl font-bold">Interview Bid's</h1>
+        <div className="ml-10 mt-6 mb-10">
+          <h1 className="text-3xl font-bold">Interview Bid&apos;s</h1>
           <p className="text-gray-400 mt-2">
             Select your bids strategically and secure your interview
           </p>
         </div>
-        <Bids />
+        <Bids userId={user.uid} />
       </div>
-
     </div>
   );
 }
