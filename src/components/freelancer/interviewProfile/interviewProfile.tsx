@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Edit2, ListFilter } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { toast } from '../../ui/use-toast';
 
@@ -24,9 +25,14 @@ import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
-import { useSelector } from 'react-redux';
-
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Skill {
   talentName: string;
@@ -119,32 +125,45 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     async function fetchData() {
       setLoading(true);
       try {
-        const freelancerSkillsResponse = await axiosInstance.get(`/freelancer/${freelancerId}/skill`);
-        const freelancerDomainsResponse = await axiosInstance.get(`/freelancer/${freelancerId}/domain`);
-      
+        const freelancerSkillsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/skill`,
+        );
+        const freelancerDomainsResponse = await axiosInstance.get(
+          `/freelancer/${freelancerId}/domain`,
+        );
+
         const skillData = freelancerSkillsResponse.data.data[0].skills;
         const domainData = freelancerDomainsResponse.data.data[0].domain;
         console.log(skillData);
-        
+
         setSkillData(skillData);
         setDomainData(domainData);
         console.log(domainData);
-        
-        console.log("FI");
-        
-        const skillsDomainResponse = await axiosInstance.get(`/freelancer/${user.uid}/dehix-talent`);
+
+        console.log('FI');
+
+        const skillsDomainResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/dehix-talent`,
+        );
         console.log(skillsDomainResponse);
-        
+
         const updatedSkills = skillsDomainResponse.data.data.skills.filter(
-          (skill:any) => !skillData.some((existingSkill:any) => existingSkill.name === skill.talentName)
+          (skill: any) =>
+            !skillData.some(
+              (existingSkill: any) => existingSkill.name === skill.talentName,
+            ),
         );
         setSkills(updatedSkills);
-      
+
         const updatedDomains = skillsDomainResponse.data.data.domains.filter(
-          (domain:any) => !domainData.some((existingDomain:any) => existingDomain.name === domain.talentName)
+          (domain: any) =>
+            !domainData.some(
+              (existingDomain: any) =>
+                existingDomain.name === domain.talentName,
+            ),
         );
         setDomains(updatedDomains);
-      }catch (error) {
+      } catch (error) {
         console.error('Error fetching data:', error);
         toast({
           variant: 'destructive',
@@ -351,10 +370,14 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         </p>
       </div>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
-        <div className='w-1/5'>
+        <div className="w-1/5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1 w-auto text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 w-auto text-sm"
+              >
                 <ListFilter className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only">Filter</span>
               </Button>
@@ -386,13 +409,23 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
 
         <div className="w-full relative border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs md:text-xl font-semibold w-1/2">Skills & Domains</h2>
-            <div className='flex justify-end items-center  w-1/2'> 
-              <Button onClick={() => setOpenSkillDialog(true)} className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm">
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" /> <span className='hidden  md:block mr-1'>Add</span> Skill
+            <h2 className="text-xs md:text-xl font-semibold w-1/2">
+              Skills & Domains
+            </h2>
+            <div className="flex justify-end items-center  w-1/2">
+              <Button
+                onClick={() => setOpenSkillDialog(true)}
+                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
+              >
+                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
+                <span className="hidden  md:block mr-1">Add</span> Skill
               </Button>
-              <Button onClick={() => setOpenDomainDialog(true)} className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm">
-                <Plus className=" mr-1 md:mr-2 h-4 w-4" /> <span className='hidden md:block mr-1'>Add</span> Domain
+              <Button
+                onClick={() => setOpenDomainDialog(true)}
+                className="mr-2 md:px-4 md:py-2 py-1 px-1.5 text-xs md:text-sm"
+              >
+                <Plus className=" mr-1 md:mr-2 h-4 w-4" />{' '}
+                <span className="hidden md:block mr-1">Add</span> Domain
               </Button>
             </div>
             <SkillDialog
@@ -415,8 +448,8 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             />
           </div>
           <Table>
-            <TableHeader >
-              <TableRow className='hover:bg-[#09090B]'>
+            <TableHeader>
+              <TableRow className="hover:bg-[#09090B]">
                 <TableHead className="">Item</TableHead>
                 <TableHead className="">Level</TableHead>
                 <TableHead className="">Experience</TableHead>
@@ -427,44 +460,52 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                  <TableRow key={index}>
-                  <TableCell className="">
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell className="">
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell className="">
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell className="">
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                  </TableCell>
-                  <TableCell className="">
-                      <Skeleton className="w-8 h-8 p-2 rounded-md" />
-                  </TableCell>
-                </TableRow>
-                ))
+                    <TableRow key={index}>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="w-8 h-8 p-2 rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 : filteredData()!.map((item) => (
-                  <TableRow key={item._id}>
-                    <TableCell className="">{item.name}</TableCell>
-                    <TableCell className="">{item.level}</TableCell>
-                    <TableCell className="">
-                      {typeof item.experience === 'number' && item.experience > 0 ? item.experience + ' years' : ''}
-                    </TableCell>
-                    <TableCell className="">
-                      <Badge className={getBadgeColor(item.interviewStatus)}>
-                        {item.interviewStatus.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="">
-                      <ButtonIcon
-                        icon={<Edit2 className="w-4 h-4" />}
-                        onClick={() => handleSkillDomainDialog(item, item.experience ? 'skill' : 'domain')} // Pass type to handler
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    <TableRow key={item._id}>
+                      <TableCell className="">{item.name}</TableCell>
+                      <TableCell className="">{item.level}</TableCell>
+                      <TableCell className="">
+                        {typeof item.experience === 'number' &&
+                        item.experience > 0
+                          ? item.experience + ' years'
+                          : ''}
+                      </TableCell>
+                      <TableCell className="">
+                        <Badge className={getBadgeColor(item.interviewStatus)}>
+                          {item.interviewStatus.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="">
+                        <ButtonIcon
+                          icon={<Edit2 className="w-4 h-4" />}
+                          onClick={() =>
+                            handleSkillDomainDialog(
+                              item,
+                              item.experience ? 'skill' : 'domain',
+                            )
+                          } // Pass type to handler
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>
