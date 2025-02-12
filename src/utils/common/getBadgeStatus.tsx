@@ -1,5 +1,5 @@
 export const getBadgeColor = (status: string) => {
-  const normalizedStatus = status.toLowerCase();
+  const normalizedStatus = status?.toLowerCase();
 
   switch (normalizedStatus) {
     case 'active':
