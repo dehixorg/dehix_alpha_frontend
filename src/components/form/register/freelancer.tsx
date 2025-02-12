@@ -20,7 +20,6 @@ import {
   UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
