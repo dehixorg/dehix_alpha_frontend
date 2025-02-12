@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -41,7 +42,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-
 interface Step {
   id: number;
   title: string;
@@ -170,7 +170,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
   const steps = [
     {
       title: 'Account Details',
