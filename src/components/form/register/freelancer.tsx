@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  Loader2,
   LoaderCircle,
   Rocket,
   Shield,
@@ -266,6 +267,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
+  const [Isverified, setIsVerified] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -326,7 +328,33 @@ function FreelancerRegisterForm({
         'workExperience',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        const { userName } = form.getValues();
+        setIsVerified(true);
+        try {
+          const username = JSON.stringify(userName);
+          const response = await axiosInstance.get(
+            `/public/username?username=${username}&isFreelancer=true`,
+          );
+
+          toast({
+            variant: 'destructive',
+            title: 'User Already Exists',
+            description:
+              'This username is already taken. Please choose another one.',
+          });
+        } catch (error: any) {
+          if (error.response && error.response.status === 404) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'API Error',
+              description: 'There was an error while checking the username.',
+            });
+          }
+        } finally {
+          setIsVerified(false);
+        }
       } else {
         toast({
           variant: 'destructive',
@@ -384,7 +412,7 @@ function FreelancerRegisterForm({
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
-      setIsLoading(false);
+      setTimeout(() => setIsVerified(false), 100);
     }
   };
 
@@ -504,10 +532,17 @@ function FreelancerRegisterForm({
                 <Button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex items-center justify-center"
+                  disabled={Isverified}
                 >
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {Isverified ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
