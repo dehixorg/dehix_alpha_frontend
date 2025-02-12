@@ -32,7 +32,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
-import Projects from '@/app/freelancer/settings/projects/page';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
