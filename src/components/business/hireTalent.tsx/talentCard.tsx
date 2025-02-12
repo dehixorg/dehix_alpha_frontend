@@ -163,7 +163,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
-          `/business/${user.uid}/hire-dehixtalent`,
+          `/business/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 

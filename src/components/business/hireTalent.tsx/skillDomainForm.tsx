@@ -100,7 +100,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
       // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
-          `/business/${user.uid}/hire-dehixtalent`,
+          `/business/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 
@@ -220,7 +220,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   ) => {
     try {
       const response = await axiosInstance.patch(
-        `/business/${user.uid}/hire-dehixtalent/${hireDehixTalentId}`,
+        `/business/hire-dehixtalent/${hireDehixTalentId}`,
         { visible: value },
       );
 

@@ -87,7 +87,7 @@ export default function ConsultancyPage() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/business/${user.uid}`,
+          `/project/business`,
         );
         setResponseData(response.data.data);
 

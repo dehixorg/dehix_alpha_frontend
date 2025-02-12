@@ -176,6 +176,7 @@ export function CreateProjectBusinessForm() {
           (skill: Domain) => ({
             value: skill.label, // Set the value to label
             label: skill.label, // Set the label to label
+            domain_id:skill._id,
           }),
         );
         setDomains(transformedDomain);
@@ -227,10 +228,10 @@ export function CreateProjectBusinessForm() {
         domains: currDomains,
       });
 
-      const response = await axiosInstance.post(`/project/${user.uid}`, {
+      const response = await axiosInstance.post(`/project/business`, {
         ...data,
         role: '',
-        projectType: '',
+        projectType: 'FREELANCE',
         skillsRequired: currSkills,
         domains: currDomains,
       });
@@ -417,15 +418,10 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select domain" />
-                            </SelectTrigger>
-                          </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select domain" />
+                          </SelectTrigger>
                           <SelectContent>
                             {domains.map((domain: any, index: number) => (
                               <SelectItem key={index} value={domain.label}>
@@ -435,6 +431,7 @@ export function CreateProjectBusinessForm() {
                           </SelectContent>
                         </Select>
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}
