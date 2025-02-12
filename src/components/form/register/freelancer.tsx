@@ -41,7 +41,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-
 interface Step {
   id: number;
   title: string;
@@ -170,7 +169,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
   const steps = [
     {
       title: 'Account Details',
