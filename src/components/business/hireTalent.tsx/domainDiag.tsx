@@ -90,18 +90,15 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/business/hire-dehixtalent`,
-        {
-          domainId: data.domainId, // This should now be set
-          domainName: data.label,
-          businessId: user.uid,
-          experience: data.experience,
-          description: data.description,
-          status: data.status,
-          visible: data.visible,
-        },
-      );
+      const response = await axiosInstance.post(`/business/hire-dehixtalent`, {
+        domainId: data.domainId, // This should now be set
+        domainName: data.label,
+        businessId: user.uid,
+        experience: data.experience,
+        description: data.description,
+        status: data.status,
+        visible: data.visible,
+      });
 
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID

@@ -12,7 +12,6 @@ import {
   menuItemsTop,
   notesMenu,
 } from '@/config/menuItems/business/dashboardMenuItems';
-
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 

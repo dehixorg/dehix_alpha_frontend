@@ -84,18 +84,15 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/business/hire-dehixtalent`,
-        {
-          skillId: data.skillId, // This should now be set
-          skillName: data.label,
-          businessId: user.uid,
-          experience: data.experience,
-          description: data.description,
-          status: data.status,
-          visible: data.visible,
-        },
-      );
+      const response = await axiosInstance.post(`/business/hire-dehixtalent`, {
+        skillId: data.skillId, // This should now be set
+        skillName: data.label,
+        businessId: user.uid,
+        experience: data.experience,
+        description: data.description,
+        status: data.status,
+        visible: data.visible,
+      });
 
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID

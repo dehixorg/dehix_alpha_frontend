@@ -176,7 +176,7 @@ export function CreateProjectBusinessForm() {
           (skill: Domain) => ({
             value: skill.label, // Set the value to label
             label: skill.label, // Set the label to label
-            domain_id:skill._id,
+            domain_id: skill._id,
           }),
         );
         setDomains(transformedDomain);
@@ -418,7 +418,10 @@ export function CreateProjectBusinessForm() {
                     <FormItem className="mb-4">
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select domain" />
                           </SelectTrigger>

@@ -152,9 +152,7 @@ const Market: React.FC = () => {
   const fetchData = useCallback(
     async (appliedFilters: FilterState) => {
       try {
-        const freelancerDetails = await axiosInstance.get(
-          `/freelancer`,
-        );
+        const freelancerDetails = await axiosInstance.get(`/freelancer`);
         const queryString = constructQueryString(appliedFilters);
         const getJobs = await axiosInstance.get(
           `/project/freelancer?${queryString}`,

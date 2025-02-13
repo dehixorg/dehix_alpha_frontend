@@ -43,7 +43,7 @@ const BusinessProfile: React.FC = () => {
     if (business_id) {
       const fetchData = async () => {
         try {
-          const response = await axiosInstance.get(`/business`);
+          const response = await axiosInstance.get(`/business/${business_id}`);
           setProfileData(response.data);
         } catch (error) {
           console.error('Error fetching profile data:', error);

@@ -42,11 +42,9 @@ export default function Dashboard() {
       try {
         if (user?.uid) {
           // Optional chaining to ensure `user` is defined
-          const response = await axiosInstance.get(
-            `/project/business`,
-          );
+          const response = await axiosInstance.get(`/project/business`);
           console.log(response);
-          
+
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {

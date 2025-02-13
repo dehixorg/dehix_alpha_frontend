@@ -115,14 +115,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
-        const freelancerSkillsResponse = await axiosInstance.get(
-          `/freelancer/skill`,
-        );
+        const freelancerSkillsResponse =
+          await axiosInstance.get(`/freelancer/skill`);
         setSkillData(freelancerSkillsResponse.data.data[0].skills);
 
-        const freelancerDomainsResponse = await axiosInstance.get(
-          `/freelancer/domain`,
-        );
+        const freelancerDomainsResponse =
+          await axiosInstance.get(`/freelancer/domain`);
         setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -169,10 +167,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           interviewStatus: defaultStatus,
         };
 
-        const response = await axiosInstance.put(
-          `/freelancer/skill`,
-          payload,
-        );
+        const response = await axiosInstance.put(`/freelancer/skill`, payload);
 
         if (response.status === 200) {
           // After a successful response (status 200), update local state
@@ -191,10 +186,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         }
       } else {
         // Add new skill
-        const response = await axiosInstance.put(
-          `/freelancer/skill`,
-          payload,
-        );
+        const response = await axiosInstance.put(`/freelancer/skill`, payload);
 
         if (response.status === 200) {
           // After a successful response (status 200), update local state

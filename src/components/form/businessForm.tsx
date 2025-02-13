@@ -115,7 +115,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/business`);
+        const response = await axiosInstance.get(`/business/${user_id}`);
         setUser(response.data);
         if (response?.data?.kyc?.status) {
           setKycStatus(response?.data?.kyc?.status);
@@ -316,7 +316,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                   <FormItem>
                     <FormControl>
                       <Input
-                      disabled={true}
+                        disabled={true}
                         placeholder="Enter your phone number"
                         type="tel"
                         {...field}
