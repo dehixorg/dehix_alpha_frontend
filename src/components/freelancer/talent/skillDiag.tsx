@@ -42,6 +42,7 @@ interface SkillDomainData {
   monthlyPay: string;
   activeStatus: boolean;
   status: StatusEnum;
+  type:string;
 }
 
 // Define the props for the SkillDialog component

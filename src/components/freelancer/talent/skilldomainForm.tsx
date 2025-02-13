@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { Button } from '@/components/ui/button';
+import VerifyDialog from './verifyDialog';
 
 interface Skill {
   _id: string;
@@ -39,6 +39,7 @@ interface SkillDomainData {
   label: string;
   experience: string;
   monthlyPay: string;
+  type: string;
   status: StatusEnum;
   activeStatus: boolean;
 }
@@ -74,7 +75,8 @@ const SkillDomainForm: React.FC = () => {
             `/freelancer/${user.uid}/dehix-talent`,
           );
         }
-
+        console.log(talentResponse);
+        
         const talentData = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data?.data
           : Object.values(talentResponse.data?.data || {});
@@ -87,8 +89,8 @@ const SkillDomainForm: React.FC = () => {
 
         const filteredDomains = Array.isArray(domainsArray)
           ? domainsArray.filter(
-              (domain: any) => !existingIds.includes(domain._id),
-            )
+            (domain: any) => !existingIds.includes(domain._id),
+          )
           : [];
 
         const flattenedTalentData = talentData.flat();
@@ -100,13 +102,13 @@ const SkillDomainForm: React.FC = () => {
           monthlyPay: item.monthlyPay || 'N/A',
           status: item.status,
           activeStatus: item.activeStatus,
+          type:item.type,
         }));
 
         setSkills(filteredSkills);
         setDomains(filteredDomains);
         setSkillDomainData(formattedTalentData);
-        console.log('hi');
-        console.log(formattedTalentData);
+    
         setStatusVisibility(
           formattedTalentData.map((item) => item.activeStatus),
         );
@@ -224,9 +226,13 @@ const SkillDomainForm: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {item.status.toUpperCase() === StatusEnum.PENDING ? (
-                          <Button>Verify</Button>
+                          <VerifyDialog
+                            talentType={item.type}
+                            talentId={item.uid}
+                            userId={user.uid}
+                          />
                         ):(
-                          <Badge className={getBadgeColor(item.status)}>
+                        <Badge className={getBadgeColor(item.status)}>
                           {item?.status?.toUpperCase()}
                         </Badge>
                         )}
@@ -262,8 +268,8 @@ const SkillDomainForm: React.FC = () => {
                   </TableRow>
                 )}
               </TableBody>
-            
-  
+
+
             </Table>
           </Card>
         </div>
