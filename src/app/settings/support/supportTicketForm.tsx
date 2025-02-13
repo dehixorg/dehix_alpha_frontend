@@ -64,11 +64,10 @@ const TicketForm = () => {
     const fetchTickets = async () => {
       try {
         const response = await axiosInstance.get('/ticket');
-        const currentFreelancerId = loggedInUserId; // Assuming loggedInUserId is the current freelancer's ID
 
         // Filter tickets based on the current freelancer's ID
         const filteredTickets = response.data.data.filter(
-          (ticket: Ticket) => ticket._id === currentFreelancerId,
+          (ticket: Ticket) => ticket.customerID === user?.uid,
         );
 
         // Set the state with the filtered tickets
