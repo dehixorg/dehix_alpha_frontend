@@ -79,9 +79,12 @@ export function ProjectCard({
         <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
           <span className="flex h-2 w-2 rounded-full" />
           <p className="text-sm text-muted-foreground">
-            {project.description.length > 40
-              ? `${project.description.slice(0, 40)}...`
-              : project.description}
+            {
+              project.description?.length > 40
+                ? `${project.description.slice(0, 40)}...`
+                : project.description || 'No description available'
+            }
+
           </p>
         </div>
         <div>
@@ -96,7 +99,7 @@ export function ProjectCard({
           </p>
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {project.skillsRequired.map((skill, index) => (
+            {project.techUsed.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
                 {skill}
               </Badge>

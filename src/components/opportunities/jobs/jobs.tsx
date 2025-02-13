@@ -87,7 +87,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
   const notInterestedProject = async (_id: string) => {
     await axiosInstance.put(
-      `/freelancer/${user.uid}/${_id}/not_interested_project`,
+      `/freelancer/${_id}/not_interested_project`,
     );
     onRemove(_id);
   };

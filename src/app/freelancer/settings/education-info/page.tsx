@@ -25,7 +25,7 @@ export default function Education() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer`);
+        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
         setEducationInfo(Object.values(response.data?.education));
       } catch (error) {
         console.error('API Error:', error);
