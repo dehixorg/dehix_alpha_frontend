@@ -23,7 +23,7 @@ export default function Projects() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        const response = await axiosInstance.get(`/freelancer`);
         setProjects(Object.values(response.data?.projects));
       } catch (error) {
         console.error('API Error:', error);

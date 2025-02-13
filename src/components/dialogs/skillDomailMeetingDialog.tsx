@@ -116,7 +116,7 @@ export function SkillDomainMeetingDialog({
     async function fetchData() {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user?.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
+          `/freelancer/doc_id/${doc_id}?doc_type=${doc_type}`,
         );
         setInterviewer(response?.data?.data);
         console.log(interviewer);

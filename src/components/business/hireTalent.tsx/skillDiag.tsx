@@ -77,7 +77,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       experience: '',
       description: '',
       visible: false,
-      status: 'added',
+      status: 'ADDED',
     },
   });
 

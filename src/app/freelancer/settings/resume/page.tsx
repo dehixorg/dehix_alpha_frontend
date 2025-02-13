@@ -21,7 +21,7 @@ export default function Resume() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        // const response = await axiosInstance.get(`/freelancer/${user.uid}`); // If this line is uncommented or in use, REMOVE `user.uid` from the URL if it's not needed.
       } catch (error) {
         console.error('API Error:', error);
       }

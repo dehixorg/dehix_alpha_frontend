@@ -105,7 +105,7 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Link href={`/${type}/project/${project._id}`} className="w-full">
+        <Link href={`/${type.toLocaleLowerCase()}/project/${project._id}`} className="w-full">
           <Button
             className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >

@@ -23,7 +23,7 @@ export default function ProfessionalInfo() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        const response = await axiosInstance.get(`/freelancer`);
         setExperiences(Object.values(response.data?.professionalInfo));
       } catch (error) {
         console.error('API Error:', error);

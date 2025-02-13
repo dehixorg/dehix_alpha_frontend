@@ -96,7 +96,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
+        `/freelancer/dehix-talent`,
         {
           talentId: data.skillId,
           talentName: data.label,

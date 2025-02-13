@@ -116,12 +116,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         setDomains(domainsResponse.data.data);
 
         const freelancerSkillsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/skill`,
+          `/freelancer/skill`,
         );
         setSkillData(freelancerSkillsResponse.data.data[0].skills);
 
         const freelancerDomainsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/domain`,
+          `/freelancer/domain`,
         );
         setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
@@ -170,7 +170,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         };
 
         const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/skill`,
+          `/freelancer/skill`,
           payload,
         );
 
@@ -192,7 +192,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
       } else {
         // Add new skill
         const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/skill`,
+          `/freelancer/skill`,
           payload,
         );
 
@@ -250,7 +250,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         };
 
         const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/domain`,
+          `/freelancer/domain`,
           updatedDomain,
         );
 

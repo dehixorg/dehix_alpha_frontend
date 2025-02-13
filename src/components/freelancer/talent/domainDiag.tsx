@@ -99,7 +99,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
+        `/freelancers/dehix-talent`,
         {
           talentId: data.domainId,
           talentName: data.label,

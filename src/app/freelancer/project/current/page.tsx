@@ -50,7 +50,7 @@ export default function CurrentProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=ACTIVE`,
+          `/freelancer/project?status=ACTIVE`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {

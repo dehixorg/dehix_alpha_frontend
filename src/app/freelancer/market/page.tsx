@@ -153,11 +153,11 @@ const Market: React.FC = () => {
     async (appliedFilters: FilterState) => {
       try {
         const freelancerDetails = await axiosInstance.get(
-          `/freelancer/${user.uid}`,
+          `/freelancer`,
         );
         const queryString = constructQueryString(appliedFilters);
         const getJobs = await axiosInstance.get(
-          `/project/freelancer/${user.uid}?${queryString}`,
+          `/project/freelancer?${queryString}`,
         );
 
         const jobs = getJobs?.data?.data;

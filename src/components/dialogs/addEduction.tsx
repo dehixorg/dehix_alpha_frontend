@@ -104,7 +104,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         comments: '',
       };
       await axiosInstance.post(
-        `/freelancer/${user.uid}/education`,
+        `/freelancer/education`,
         formattedData,
       );
       onFormSubmit();

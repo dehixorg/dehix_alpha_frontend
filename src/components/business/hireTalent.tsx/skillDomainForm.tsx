@@ -199,7 +199,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   const onSubmitSkill = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'added', visible: false },
+      { ...data, status: 'ADDED', visible: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };
@@ -207,7 +207,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   const onSubmitDomain = (data: SkillDomainData) => {
     setSkillDomainData([
       ...skillDomainData,
-      { ...data, status: 'added', visible: false },
+      { ...data, status: 'ADDED', visible: false },
     ]);
     setStatusVisibility([...statusVisibility, false]);
   };

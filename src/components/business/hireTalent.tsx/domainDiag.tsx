@@ -83,7 +83,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       experience: '',
       description: '',
       visible: false,
-      status: 'added',
+      status: 'ADDED',
     },
   });
 
@@ -91,7 +91,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.post(
-        `/business/${user.uid}/hire-dehixtalent`,
+        `/business/hire-dehixtalent`,
         {
           domainId: data.domainId, // This should now be set
           domainName: data.label,
