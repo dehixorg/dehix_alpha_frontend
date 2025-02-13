@@ -164,7 +164,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                                 </td>
                                 <td className="border-b px-4 py-2">
                                   {skills?.length === 0 || !skills ? (
-                                    // If there are no skills, show "N/A"
                                     'N/A'
                                   ) : (
                                     <>
@@ -289,82 +288,6 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                             </Link>
                           </div>
                         </div>
-
-                        {/* <div className="w-full text-sm text-white rounded-md mt-2">
-                          <div className="w-full">
-                            <div className="flex items-center">
-                              <Select
-                                onValueChange={(value) => setTmpSkill(value)}
-                                value={tmpSkill || ''}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={
-                                      tmpSkill ? tmpSkill : 'Select skill'
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {skillDomainData
-                                    .filter(
-                                      (skill: any) =>
-                                        !currSkills.some(
-                                          (s: any) => s.name === skill.label,
-                                        ),
-                                    )
-                                    .map((skill: any, index: number) => (
-                                      <SelectItem
-                                        key={index}
-                                        value={skill.label}
-                                      >
-                                        {skill.label}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="outline"
-                                type="button"
-                                size="icon"
-                                className="ml-2"
-                                onClick={() => {
-                                  handleAddSkill();
-                                  setTmpSkill('');
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-4">
-                              {currSkills.map((skill: any, index: number) => (
-                                <Badge
-                                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                                  key={index}
-                                >
-                                  {skill.name}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteSkill(skill.name)
-                                    }
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          </div>
-                          </div>
-
-                          <div className="w-full text-center mt-2">
-                          <div >
-                            <Button className="w-full text-sm text-black rounded-md">
-                              Save
-                            </Button>
-                          </div>
-                        </div> */}
                       </div>
                     </SheetContent>
                   </Sheet>
