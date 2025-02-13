@@ -244,11 +244,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
       }
     } catch (error: any) {
       console.error('Error fetching user data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
+      if (error.response && error.response.status === 404) {
+        // Do Nothing
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      }
     }
   }, [
     user?.uid,
@@ -305,7 +309,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       } catch (error: any) {
         console.error('Error fetching talent data', error);
         if (error.response && error.response.status === 404) {
-          setHasMore(false);
+          setHasMore(false); // No more data to fetch
         } else {
           toast({
             variant: 'destructive',
