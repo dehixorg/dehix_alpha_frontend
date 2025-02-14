@@ -115,7 +115,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post(`/freelancer/${user.uid}/experience`, {
+      await axiosInstance.post(`/freelancer/experience`, {
         company: data.company || '',
         jobTitle: data.jobTitle || '',
         workDescription: data.workDescription || '',

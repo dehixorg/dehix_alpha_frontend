@@ -68,7 +68,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/${user.uid}/oracle?doc_type=education`,
+        `/verification/oracle?doc_type=education`,
       );
       const data = response.data.data;
       setEducationData(data);

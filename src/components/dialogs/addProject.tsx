@@ -176,7 +176,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         .map((tech) => tech.trim())
         .filter((tech) => tech !== '');
 
-      await axiosInstance.post(`/freelancer/${user.uid}/project`, {
+      await axiosInstance.post(`/freelancer/project`, {
         ...data,
         techUsed: techUsedArray,
         verified: false,

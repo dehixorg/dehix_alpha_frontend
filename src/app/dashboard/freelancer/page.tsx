@@ -79,7 +79,7 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=${status}`,
+        `/freelancer/project?status=${status}`,
       );
       if (response.status == 200 && response?.data?.data) {
         setProjects(response.data.data);
@@ -95,10 +95,10 @@ export default function Dashboard() {
     setLoadingStats(true);
     try {
       const activeCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=ACTIVE`,
+        `/freelancer/project?status=ACTIVE`,
       );
       const pendingCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=PENDING`,
+        `/freelancer/project?status=PENDING`,
       );
 
       if (
