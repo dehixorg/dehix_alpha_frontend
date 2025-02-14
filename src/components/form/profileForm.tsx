@@ -108,6 +108,15 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [lastAddedItems, setLastAddedItems] = useState<{
+    skills: { name: string }[];
+    projectsDomains: { name: string }[];
+    domains: { name: string }[];
+  }>({
+    skills: [],
+    projectsDomains: [],
+    domains: [],
+  });
   const [customSkill, setCustomSkill] = useState({
     label: '',
     description: '',
@@ -152,6 +161,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        skills: [...prev.skills, { name: tmpSkill }],
+      }));
+
       setTmpSkill('');
     }
   };
@@ -317,6 +331,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        domains: [...prev.domains, { name: tmpDomain }],
+      }));
       setTmpDomain('');
     }
   };
@@ -339,6 +357,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        projectsDomains: [...prev.projectsDomains, { name: tmpProjectDomains }],
+      }));
       setTmpProjectDomains('');
     }
   };
@@ -368,6 +390,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
+
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -483,6 +506,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         ...restData,
         skills: currSkills,
         domain: currDomains,
+        projectDomain: currProjectDomains,
         description: data.description,
         kyc,
       });
@@ -529,7 +553,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-10 grid-cols-2 mt-4"
+          className="grid gap-10 grid-cols-1 sm:grid-cols-2 mt-4"
         >
           <FormField
             control={form.control}
@@ -589,12 +613,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem className="col-span-2">
+              <FormItem className="sm:col-span-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Enter description" {...field} />
@@ -603,7 +626,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="phone"
@@ -1113,11 +1135,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-          <Separator className="col-span-2 mt-0" />
-          <Button type="submit" className="col-span-2">
+          <Separator className="sm:col-span-2 mt-0" />
+          <Button type="submit" className="sm:col-span-2">
             Update profile
           </Button>
-
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}
