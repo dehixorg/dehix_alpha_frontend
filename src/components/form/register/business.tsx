@@ -13,7 +13,7 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -126,6 +126,7 @@ const businessRegisterSchema = z
     position: z.string().min(1, 'Position is required'),
     email: z.string().email('Invalid email address'),
     phone: z.string().min(1, 'Phone number is required'),
+    referralCode: z.string().optional(),
     linkedin: z
       .string()
       .url('Invalid URL')
@@ -202,7 +203,7 @@ function BusinessRegisterForm({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const router = useRouter();
-
+  const searchParams = useSearchParams();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -221,6 +222,7 @@ function BusinessRegisterForm({
       linkedin: '',
       personalWebsite: '',
       password: '',
+      referralCode: '',
     },
     mode: 'all',
   });
@@ -287,6 +289,12 @@ function BusinessRegisterForm({
 
   const onSubmit = async (data: BusinessRegisterFormValues) => {
     setIsLoading(true);
+    const referralCodeFromQuery = searchParams.get('referral');
+    console.log(referralCodeFromQuery);
+
+    const referralCodeFromForm = data.referralCode;
+
+    const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -305,8 +313,11 @@ function BusinessRegisterForm({
       verified: '',
       isVerified: false,
     };
+    const url = referralCode
+      ? `/register/business?referralCode=${referralCode}`
+      : '/register/business';
     try {
-      await axiosInstance.post('/register/business', formData);
+      await axiosInstance.post(url, formData);
       toast({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',

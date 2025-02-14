@@ -31,7 +31,6 @@ const useShare = () => {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
-        console.log('Content shared successfully');
       } catch (error) {
         console.error('Error sharing content:', error);
       }
@@ -43,7 +42,11 @@ const useShare = () => {
   return share;
 };
 
-export default function DropdownProfile() {
+interface DropdownProfileProps {
+  setConnects?: (value: number | null) => void;
+}
+
+export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -73,6 +76,9 @@ export default function DropdownProfile() {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
+        if (setConnects) {
+          setConnects(response.data?.connects); // Example value
+        }
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
