@@ -50,9 +50,10 @@ export default function CurrentProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=ACTIVE`,
-        ); // Fetch data from API
-        setProjects(response.data.data); // Store all projects initially
+          `/freelancer/project?status=ACTIVE`,
+        );
+
+        setProjects(response.data.data.projects); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       }
@@ -102,7 +103,7 @@ export default function CurrentProject() {
               <p className="text-gray-500">No projects available</p>
             </div>
           ) : (
-            projects.map((project, index: number) => (
+            Object.values(projects || {}).map((project, index: number) => (
               <ProjectCard key={index} project={project} />
             ))
           )}

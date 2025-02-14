@@ -69,7 +69,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/${user.uid}/oracle?doc_type=project`,
+        `/verification/oracle?doc_type=project`,
       );
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>

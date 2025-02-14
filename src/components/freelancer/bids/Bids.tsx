@@ -158,29 +158,31 @@ const BidsPage = ({ userId }: { userId?: string }) => {
     <div className="w-[84vw] mx-auto ">
       {loading ? (
         <SkeletonLoader />
-      ) : (
-        bidsData?.length > 0 ? (
-          <Accordion type="single" collapsible defaultValue={bidsData?.[0]?._id}>
-            {bidsData.map((interview) => (
-              <AccordionItem key={interview?._id} value={interview?._id || ''}>
-                <AccordionTrigger className="text-xl w-full font-semibold hover:no-underline">
-                  <div className="flex justify-between items-center w-full mx-3">
-                    <div>{interview?.talentId?.label || 'No Talent Label'}</div>
-                    <div>{Object.keys(interview?.interviewBids || {}).length} Bids</div>
+      ) : bidsData?.length > 0 ? (
+        <Accordion type="single" collapsible defaultValue={bidsData?.[0]?._id}>
+          {bidsData.map((interview) => (
+            <AccordionItem key={interview?._id} value={interview?._id || ''}>
+              <AccordionTrigger className="text-xl w-full font-semibold hover:no-underline">
+                <div className="flex justify-between items-center w-full mx-3">
+                  <div>{interview?.talentId?.label || 'No Talent Label'}</div>
+                  <div>
+                    {Object.keys(interview?.interviewBids || {}).length} Bids
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <BidList interview={interview} setConfirmAction={setConfirmAction} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : (
-          <div className="text-center text-lg font-semibold mt-4">
-            No bids available
-          </div>
-        )
-        
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <BidList
+                  interview={interview}
+                  setConfirmAction={setConfirmAction}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      ) : (
+        <div className="text-center text-lg font-semibold mt-4">
+          No bids available
+        </div>
       )}
 
       {confirmAction && (

@@ -44,7 +44,7 @@ interface SkillDomainData {
   monthlyPay: string;
   activeStatus: boolean;
   status: StatusEnum;
-  type:string;
+  type: string;
 }
 
 // Define the props for the DomainDialog component
@@ -99,18 +99,15 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
-        {
-          talentId: data.domainId,
-          talentName: data.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'DOMAIN',
-        },
-      );
+      const response = await axiosInstance.post(`/freelancers/dehix-talent`, {
+        talentId: data.domainId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'DOMAIN',
+      });
 
       if (response.status === 200) {
         const newTalent = response.data.data; // Adjust based on your response structure

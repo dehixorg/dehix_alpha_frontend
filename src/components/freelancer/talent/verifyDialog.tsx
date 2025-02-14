@@ -62,9 +62,9 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       talentId: talentId,
       interviewDate: localDate.toISOString(), // Using the adjusted date
       description: (event.target as any).description.value,
-    };  
+    };
     console.log(formData);
-    
+
     try {
       const response = await axiosInstance.post(
         `/interview/${userId}`,
@@ -95,7 +95,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-black"
         >
           Verify
         </Button>
@@ -108,19 +108,31 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor="talentType"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Type
             </label>
-            <Input value={talentType} disabled className="bg-muted" />
+            <Input
+              id="talentType"
+              value={talentType}
+              disabled
+              className="bg-muted"
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor="interviewDate"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Interview Date
             </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
+                  id="interviewDate"
                   variant="outline"
                   className={cn(
                     'w-full justify-start text-left font-normal',
@@ -144,10 +156,14 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor="description"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               Description
             </label>
             <Textarea
+              id="description"
               name="description"
               placeholder="Enter interview description"
               className="min-h-[100px] resize-none"

@@ -103,10 +103,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         verificationUpdateTime: data.verificationUpdateTime || new Date(),
         comments: '',
       };
-      await axiosInstance.post(
-        `/freelancer/${user.uid}/education`,
-        formattedData,
-      );
+      await axiosInstance.post(`/freelancer/education`, formattedData);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

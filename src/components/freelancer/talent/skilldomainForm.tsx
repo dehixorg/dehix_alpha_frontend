@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
+import VerifyDialog from './verifyDialog';
 
 import { Card } from '@/components/ui/card';
 import {
@@ -22,7 +23,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import VerifyDialog from './verifyDialog';
 
 interface Skill {
   _id: string;
@@ -76,7 +76,7 @@ const SkillDomainForm: React.FC = () => {
           );
         }
         console.log(talentResponse);
-        
+
         const talentData = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data?.data
           : Object.values(talentResponse.data?.data || {});
@@ -89,8 +89,8 @@ const SkillDomainForm: React.FC = () => {
 
         const filteredDomains = Array.isArray(domainsArray)
           ? domainsArray.filter(
-            (domain: any) => !existingIds.includes(domain._id),
-          )
+              (domain: any) => !existingIds.includes(domain._id),
+            )
           : [];
 
         const flattenedTalentData = talentData.flat();
@@ -102,13 +102,13 @@ const SkillDomainForm: React.FC = () => {
           monthlyPay: item.monthlyPay || 'N/A',
           status: item.status,
           activeStatus: item.activeStatus,
-          type:item.type,
+          type: item.type,
         }));
 
         setSkills(filteredSkills);
         setDomains(filteredDomains);
         setSkillDomainData(formattedTalentData);
-    
+
         setStatusVisibility(
           formattedTalentData.map((item) => item.activeStatus),
         );
@@ -145,7 +145,7 @@ const SkillDomainForm: React.FC = () => {
   ) => {
     try {
       const response = await axiosInstance.put(
-        `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
+        `/freelancer/dehix-talent/${dehixTalentId}`,
         { activeStatus: value },
       );
 
@@ -231,10 +231,10 @@ const SkillDomainForm: React.FC = () => {
                             talentId={item.uid}
                             userId={user.uid}
                           />
-                        ):(
-                        <Badge className={getBadgeColor(item.status)}>
-                          {item?.status?.toUpperCase()}
-                        </Badge>
+                        ) : (
+                          <Badge className={getBadgeColor(item.status)}>
+                            {item?.status?.toUpperCase()}
+                          </Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -268,8 +268,6 @@ const SkillDomainForm: React.FC = () => {
                   </TableRow>
                 )}
               </TableBody>
-
-
             </Table>
           </Card>
         </div>
