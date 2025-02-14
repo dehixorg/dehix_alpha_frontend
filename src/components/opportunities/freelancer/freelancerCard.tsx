@@ -64,7 +64,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
 
   return (
     <div className=" sm:mx-10 mb-3 max-w-3xl">
-      <Card className="flex justify-between mt-5 shadow-2xl shadow-lg shadow-gray-500/20 mt-2 ">
+      <Card className="flex justify-between mt-5 shadow-2xl  shadow-gray-500/20  ">
         <div className="flex flex-col justify-between p-4">
           <CardHeader>
             <div className="flex flex-col item-center gap-4">
@@ -147,7 +147,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         <div className="text-lg font-bold items-center justify-center mt-2">
                           {name}
                         </div>
-                        <Card className="w-full shadow-2xl shadow-lg shadow-gray-500/20 mt-4">
+                        <Card className="w-full  shadow-lg shadow-gray-500/20 mt-4">
                           <table className="min-w-full table-auto border-collapse ">
                             <tbody>
                               <tr>
