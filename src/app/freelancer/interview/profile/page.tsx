@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { Search } from 'lucide-react';
+import { ListFilter, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import DropdownProfile from '@/components/shared/DropdownProfile';
