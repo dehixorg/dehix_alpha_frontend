@@ -41,7 +41,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-
 interface Step {
   id: number;
   title: string;
@@ -139,10 +138,45 @@ const profileFormSchema = z
       .string()
       .min(10, { message: 'Phone number must be at least 10 digits.' })
       .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
-    githubLink: z.string().url().optional(),
+    githubLink: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value ||
+          /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9_-]+\/?$/.test(value),
+        {
+          message:
+            'GitHub URL must start with "https://github.com/" or "www.github.com/" and have a valid username',
+        },
+      ),
     resume: z.string().url().optional(),
-    linkedin: z.string().url().optional(),
-    personalWebsite: z.string().url().or(z.literal('')).optional(), // Allow empty string or valid URL
+    linkedin: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value ||
+          /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/.test(value),
+        {
+          message:
+            'LinkedIn URL must start with "https://www.linkedin.com/in/" and have a valid username',
+        },
+      ),
+    personalWebsite: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value ||
+          /^(https?:\/\/|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*[a-zA-Z0-9].*$/.test(
+            value,
+          ),
+        {
+          message:
+            'Invalid website URL. Must start with "www." or "https://" and contain letters',
+        },
+      ), // Allow empty string or valid URL
     password: z
       .string()
       .min(6, { message: 'Password must be at least 6 characters.' }),
@@ -156,7 +190,24 @@ const profileFormSchema = z
       .number()
       .min(0, 'Work experience must be at least 0 years')
       .max(60, 'Work experience must not exceed 60 years'),
-    dob: z.string().optional(),
+    dob: z
+      .string()
+      .optional()
+      .refine(
+        (value) => {
+          if (!value) return true; // Allow empty (optional) field
+
+          const dobDate = new Date(value);
+          const today = new Date();
+          const minDate = new Date();
+          minDate.setFullYear(today.getFullYear() - 16); // Subtract 16 years
+
+          return dobDate <= minDate;
+        },
+        {
+          message: 'You must be at least 16 years old',
+        },
+      ),
     confirmPassword: z
       .string()
       .min(6, 'Confirm Password must be at least 6 characters long'),
@@ -170,7 +221,6 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
   const steps = [
     {
       title: 'Account Details',
@@ -323,9 +373,7 @@ function FreelancerRegisterForm({
         description: 'Redirecting to login page...',
       });
 
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 1500);
+      setIsModalOpen(true);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';

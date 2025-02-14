@@ -32,7 +32,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
-import Projects from '@/app/freelancer/settings/projects/page';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -43,9 +42,9 @@ export default function Dashboard() {
       try {
         if (user?.uid) {
           // Optional chaining to ensure `user` is defined
-          const response = await axiosInstance.get(
-            `/project/business/${user.uid}`,
-          );
+          const response = await axiosInstance.get(`/project/business`);
+          console.log(response);
+
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {

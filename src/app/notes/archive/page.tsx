@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
-import { LabelType, Note, NoteType } from '@/utils/types/note';
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -13,10 +12,7 @@ import {
   menuItemsTop,
   notesMenu,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
-import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 
 const Page = () => {
