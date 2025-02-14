@@ -44,12 +44,11 @@ const Header: React.FC<HeaderProps> = ({
     try {
       setLoading(true);
       const data = localStorage.getItem('DHX_CONNECTS');
-      const parsedData = data ? Number(data) : 0;
+      const parsedData = data ? parseInt(data) : 0;
       if (!isNaN(parsedData)) {
         setConnects(parsedData);
       } else {
         console.error('Invalid number in localStorage:', data);
-        setConnects(0);
       }
     } catch (error) {
       console.error('Error fetching connects:', error);
