@@ -76,9 +76,9 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
-        localStorage.setItem("DHX_CONNECTS",response.data.data?.connects);
-        if(setConnects){
-          setConnects(response.data.data?.connects ?? 0); 
+        localStorage.setItem('DHX_CONNECTS', response.data.data?.connects);
+        if (setConnects) {
+          setConnects(response.data.data?.connects ?? 0);
         }
         setReferralCode(fetchCode);
       } catch (error) {

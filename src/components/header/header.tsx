@@ -56,7 +56,6 @@ const Header: React.FC<HeaderProps> = ({
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     if (user?.uid) {
@@ -66,7 +65,8 @@ const Header: React.FC<HeaderProps> = ({
 
   const formatConnects = (num: number) => {
     if (!num) return '0'; // Covers null, undefined, and 0
-    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1_000_000)
+      return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
     if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     return num.toString();
   };
