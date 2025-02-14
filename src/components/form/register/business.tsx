@@ -130,13 +130,28 @@ const businessRegisterSchema = z
       .url('Invalid URL')
       .optional()
       .refine(
-        (value) => !value || value.startsWith('https://www.linkedin.com/in/'),
+        (value) =>
+          !value ||
+          /^https:\/\/www\.linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/.test(value),
         {
           message:
-            'LinkedIn URL must start with "https://www.linkedin.com/in/"',
+            'LinkedIn URL must start with "https://www.linkedin.com/in/" and have a valid username',
         },
       ),
-    personalWebsite: z.string().url('Invalid URL').optional(),
+    personalWebsite: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value ||
+          /^(https?:\/\/|www\.)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}.*[a-zA-Z0-9].*$/.test(
+            value,
+          ),
+        {
+          message:
+            'Invalid website URL. Must start with "www." or "https://" and contain letters',
+        },
+      ),
     password: z.string().min(8, 'Password must be at least 8 characters long'),
     confirmPassword: z
       .string()
