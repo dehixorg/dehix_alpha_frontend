@@ -266,6 +266,7 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
   const togglePasswordVisibility = () => {
@@ -371,8 +372,10 @@ function FreelancerRegisterForm({
         title: 'Account created successfully!',
         description: 'Redirecting to login page...',
       });
-
       setIsModalOpen(true);
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Edit2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { toast } from '../../ui/use-toast';
 
@@ -24,7 +25,6 @@ import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
 import { RootState } from '@/lib/store';
-import { useSelector } from 'react-redux';
 
 interface Skill {
   label: string;

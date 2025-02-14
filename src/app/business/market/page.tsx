@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -15,7 +16,6 @@ import MarketHeader from '@/components/business/market/MarketHeader';
 import FilterSidebar from '@/components/business/market/FilterSideBar';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import MobileFilterModal from '@/components/business/market/MobileFilterModal';
-import { Loader2 } from 'lucide-react';
 
 interface FilterState {
   location: string[];

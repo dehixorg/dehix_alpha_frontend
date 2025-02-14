@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
@@ -16,7 +17,6 @@ import JobCard from '@/components/opportunities/jobs/jobs';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2 } from 'lucide-react';
 
 interface FilterState {
   projects: string[];
