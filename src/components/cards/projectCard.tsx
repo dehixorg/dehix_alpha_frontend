@@ -99,7 +99,7 @@ export function ProjectCard({
           </p>
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {project.techUsed.map((skill, index) => (
+            {project.skillsRequired.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
                 {skill}
               </Badge>
