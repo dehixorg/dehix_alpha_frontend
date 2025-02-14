@@ -35,23 +35,35 @@ export default function Login() {
       axiosInstance
         .get(`/public/user_email?user=${email}`)
         .then(async (response) => {
-          setPhone(response.data.phone);
-          if (response.data.phoneVerify) {
-            const userCredential: UserCredential = await loginUser(email, pass);
-            const { user, claims } = await getUserData(userCredential);
-            dispatch(
-              setUser({
-                ...user,
-                type: claims.type,
-              }),
-            );
-            router.replace(`/dashboard/${claims.type}`);
+          try {
+            setPhone(response.data.phone);
+            if (response.data.phoneVerify) {
+              const userCredential: UserCredential = await loginUser(
+                email,
+                pass,
+              );
+              const { user, claims } = await getUserData(userCredential);
+              dispatch(
+                setUser({
+                  ...user,
+                  type: claims.type,
+                }),
+              );
+              router.replace(`/dashboard/${claims.type}`);
+              toast({
+                title: 'Login Successful',
+                description: 'You have successfully logged in.',
+              }); // Success toast
+            } else {
+              setIsModalOpen(true);
+            }
+          } catch (error: any) {
             toast({
-              title: 'Login Successful',
-              description: 'You have successfully logged in.',
-            }); // Success toast
-          } else {
-            setIsModalOpen(true);
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Invalid Email or Password. Please try again.',
+            }); // Error toast
+            console.error(error.message);
           }
         });
     } catch (error: any) {
