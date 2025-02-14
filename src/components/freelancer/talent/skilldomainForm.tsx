@@ -140,7 +140,7 @@ const SkillDomainForm: React.FC = () => {
   ) => {
     try {
       const response = await axiosInstance.patch(
-        `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
+        `/freelancer/dehix-talent/${dehixTalentId}`,
         { activeStatus: value },
       );
 
