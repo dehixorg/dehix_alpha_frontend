@@ -86,9 +86,7 @@ export default function ConsultancyPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/business/${user.uid}`,
-        );
+        const response = await axiosInstance.get(`/project/business`);
         setResponseData(response.data.data);
 
         const skillsResponse = await axiosInstance.get('/skills');

@@ -90,7 +90,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id }) => {
       const { Location } = postResponse.data?.data || {};
       if (!Location) throw new Error('Failed to upload the resume.');
 
-      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
+      const putResponse = await axiosInstance.put(`/freelancer`, {
         resume: Location,
       });
 

@@ -479,7 +479,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/freelancer/${user_id}`, {
+      await axiosInstance.put(`/freelancer`, {
         ...restData,
         skills: currSkills,
         domain: currDomains,

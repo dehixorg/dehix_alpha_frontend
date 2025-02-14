@@ -23,6 +23,8 @@ import DomainDialog from '@/components/dialogs/domainDialog';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import SkillDialog from '@/components/dialogs/skillDialog';
 import SkillDomainMeetingDialog from '@/components/dialogs/skillDomailMeetingDialog';
+import { RootState } from '@/lib/store';
+import { useSelector } from 'react-redux';
 
 interface Skill {
   label: string;
@@ -89,6 +91,7 @@ const DomainSchema = z.object({
 const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   freelancerId,
 }) => {
+  const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillData, setSkillData] = useState<SkillData[]>([]);
@@ -116,12 +119,12 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         setDomains(domainsResponse.data.data);
 
         const freelancerSkillsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/skill`,
+          `/freelancer/${user.uid}/skill`,
         );
         setSkillData(freelancerSkillsResponse.data.data[0].skills);
 
         const freelancerDomainsResponse = await axiosInstance.get(
-          `/freelancer/${freelancerId}/domain`,
+          `/freelancer/${user.uid}/domain`,
         );
         setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
@@ -169,10 +172,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
           interviewStatus: defaultStatus,
         };
 
-        const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/skill`,
-          payload,
-        );
+        const response = await axiosInstance.put(`/freelancer/skill`, payload);
 
         if (response.status === 200) {
           // After a successful response (status 200), update local state
@@ -191,10 +191,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         }
       } else {
         // Add new skill
-        const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/skill`,
-          payload,
-        );
+        const response = await axiosInstance.put(`/freelancer/skill`, payload);
 
         if (response.status === 200) {
           // After a successful response (status 200), update local state
@@ -250,7 +247,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         };
 
         const response = await axiosInstance.put(
-          `/freelancer/${freelancerId}/domain`,
+          `/freelancer/domain`,
           updatedDomain,
         );
 

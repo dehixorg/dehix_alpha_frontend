@@ -96,7 +96,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         const { user, claims } = await getUserData(userCredential);
 
         // Update phone verification status in mongoDb and firebase
-        await axiosInstance.put(`/${claims.type}/${userCredential.user.uid}`, {
+        await axiosInstance.put(`/${claims.type}`, {
           phone: phoneNumber,
           phoneVerify: true,
         });
