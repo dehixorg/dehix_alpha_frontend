@@ -91,9 +91,7 @@ const ProfilePictureUpload = ({
       dispatch(setUser({ ...user, photoURL: Location }));
       // Adjust the endpoint and payload field based on entityType
       const updateEndpoint =
-        entityType === Type.FREELANCER
-          ? `/freelancer/${user.uid}`
-          : `/business/${user_id}`;
+        entityType === Type.FREELANCER ? `/freelancer` : `/business`;
 
       const putResponse = await axiosInstance.put(updateEndpoint, {
         profilePic: Location,

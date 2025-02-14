@@ -50,7 +50,7 @@ export default function RejectedProject() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=REJECTED`,
+          `/freelancer/project?status=REJECTED`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
