@@ -118,12 +118,14 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
 
-        const freelancerSkillsResponse =
-          await axiosInstance.get(`/freelancer/${user.uid}/skill`);
+        const freelancerSkillsResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/skill`,
+        );
         setSkillData(freelancerSkillsResponse.data.data[0].skills);
 
-        const freelancerDomainsResponse =
-          await axiosInstance.get(`/freelancer/${user.uid}/domain`);
+        const freelancerDomainsResponse = await axiosInstance.get(
+          `/freelancer/${user.uid}/domain`,
+        );
         setDomainData(freelancerDomainsResponse.data.data[0].domain);
       } catch (error) {
         console.error('Error fetching data:', error);

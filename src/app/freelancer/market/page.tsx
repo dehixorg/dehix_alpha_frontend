@@ -288,11 +288,11 @@ const Market: React.FC = () => {
         </div>
 
         {/* Right Content Scroll */}
-        {isgetJobLoading ?
-          <div className='mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full flex justify-center items-center h-[60vh]'>
-            <Loader2 size={40} className=' text-white animate-spin ' />
+        {isgetJobLoading ? (
+          <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full flex justify-center items-center h-[60vh]">
+            <Loader2 size={40} className=" text-white animate-spin " />
           </div>
-          :
+        ) : (
           <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
             <ScrollArea className="h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
               {jobs.map((job: Project, index: number) => (
@@ -312,7 +312,7 @@ const Market: React.FC = () => {
               ))}
             </ScrollArea>
           </div>
-        }
+        )}
       </div>
 
       {/* Modal for Filters */}

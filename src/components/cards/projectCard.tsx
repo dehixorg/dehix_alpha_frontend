@@ -79,12 +79,9 @@ export function ProjectCard({
         <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
           <span className="flex h-2 w-2 rounded-full" />
           <p className="text-sm text-muted-foreground">
-            {
-              project.description?.length > 40
-                ? `${project.description.slice(0, 40)}...`
-                : project.description || 'No description available'
-            }
-
+            {project.description?.length > 40
+              ? `${project.description.slice(0, 40)}...`
+              : project.description || 'No description available'}
           </p>
         </div>
         <div>
