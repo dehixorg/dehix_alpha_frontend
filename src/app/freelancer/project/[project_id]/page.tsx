@@ -143,7 +143,9 @@ export default function Dashboard() {
                 startDate={project.createdAt}
                 endDate={project.end}
                 projectDomain={project.projectDomain}
+                projectId={project._id}
                 skills={project.skillsRequired}
+                userRole="Freelancer"
               />
             </div>
           </div>
