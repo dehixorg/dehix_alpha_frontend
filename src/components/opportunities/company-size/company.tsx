@@ -4,7 +4,6 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
 
 interface CompanyCardProps {
   heading: string;
@@ -12,50 +11,36 @@ interface CompanyCardProps {
 }
 
 const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
-  const { toast } = useToast();
+  const [lowerLimit, setLowerLimit] = React.useState<string>('');
+  const [higherLimit, setHigherLimit] = React.useState<string>('');
+  const [error, setError] = React.useState<string>('');
 
-  const [lowerLimit, setLowerLimit] = React.useState<number>(0);
-  const [higherLimit, setHigherLimit] = React.useState<number>(10);
+  const validateAndSetLimits = (lower: string, higher: string) => {
+    const lowerValue = lower ? Number(lower) : 0;
+    const higherValue = higher ? Number(higher) : 0;
 
-  const validateAndSetLimits = (lower: number, higher: number) => {
-    if (lower < 0 || higher < 0) {
-      toast({
-        title: 'Invalid Input',
-        description: 'Experience cannot be negative.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (higher > 30) {
-      toast({
-        title: 'Invalid Input',
-        description: 'Maximum experience cannot exceed 30 years.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (lower > higher && higher !== 0) {
-      toast({
-        title: 'Invalid Range',
-        description: 'Minimum cannot be greater than Maximum.',
-        variant: 'destructive',
-      });
+    if (lowerValue < 0 || higherValue < 0) {
+      setError('Experience cannot be negative.');
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
+    if (higherValue > 30) {
+      setError('Maximum experience cannot exceed 30 years.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (lowerValue > higherValue && higher !== '') {
+      setError('Please enter the maximum experience first');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    setError('');
     setLowerLimit(lower);
     setHigherLimit(higher);
-    setLimits(`${lower}-${higher}`);
-  };
-
-  const handleLowerLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newLowerLimit = Number(e.target.value);
-    validateAndSetLimits(newLowerLimit, higherLimit);
-  };
-
-  const handleHigherLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newHigherLimit = Number(e.target.value);
-    validateAndSetLimits(lowerLimit, newHigherLimit);
+    setLimits(`${lower || 0}-${higher || 0}`);
   };
 
   return (
@@ -74,8 +59,11 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               id="lowerLimit"
               type="number"
               value={lowerLimit}
-              onChange={handleLowerLimitChange}
+              onChange={(e) =>
+                validateAndSetLimits(e.target.value, higherLimit)
+              }
               className="w-20 mt-1"
+              placeholder="0"
             />
           </div>
 
@@ -88,11 +76,15 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               id="higherLimit"
               type="number"
               value={higherLimit}
-              onChange={handleHigherLimitChange}
+              onChange={(e) => validateAndSetLimits(lowerLimit, e.target.value)}
               className="w-20 mt-1"
+              placeholder="30"
             />
           </div>
         </div>
+
+        {/* Validation message below inputs */}
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </CardContent>
     </Card>
   );

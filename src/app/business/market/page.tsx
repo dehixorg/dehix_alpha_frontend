@@ -46,8 +46,6 @@ const Market: React.FC = () => {
     selectedValues: string | string[],
   ) => {
     let transformedValues: string | string[] = selectedValues;
-    console.log(filterType);
-    console.log(selectedValues);
 
     const values = Array.isArray(selectedValues)
       ? selectedValues
@@ -103,7 +101,6 @@ const Market: React.FC = () => {
       setIsDataLoading(true);
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
-      console.log(response);
 
       setFreelancers(response.data.data);
     } catch (error) {

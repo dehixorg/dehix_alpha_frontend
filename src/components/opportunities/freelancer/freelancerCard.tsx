@@ -147,7 +147,7 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                         <div className="text-lg font-bold items-center justify-center mt-2">
                           {name}
                         </div>
-                        <Card className="w-full shadow-2xl shadow-lg shadow-gray-500/20 mt-4">
+                        <Card className="w-full  shadow-lg shadow-gray-500/20 mt-4">
                           <table className="min-w-full table-auto border-collapse ">
                             <tbody>
                               <tr>
