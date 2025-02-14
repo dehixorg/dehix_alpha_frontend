@@ -37,21 +37,27 @@ const Header: React.FC<HeaderProps> = ({
   searchPlaceholder = 'Search...',
 }) => {
   const user = useSelector((state: RootState) => state.user);
-  const [connects, setConnects] = useState<number | null>(null);
+  const [connects, setConnects] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
   const fetchConnects = async (id: string) => {
     try {
       setLoading(true);
       const data = localStorage.getItem('DHX_CONNECTS');
-      const parsedData = data ? parseInt(data, 10) : 0;
-      setConnects(isNaN(parsedData) ? 0 : parsedData);
+      const parsedData = data ? Number(data) : 0;
+      if (!isNaN(parsedData)) {
+        setConnects(parsedData);
+      } else {
+        console.error('Invalid number in localStorage:', data);
+        setConnects(0);
+      }
     } catch (error) {
       console.error('Error fetching connects:', error);
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     if (user?.uid) {
@@ -60,14 +66,9 @@ const Header: React.FC<HeaderProps> = ({
   }, [user?.uid]);
 
   const formatConnects = (num: number) => {
-    if (num >= 1000000)
-      return Number.isInteger(num / 1000000)
-        ? `${num / 1000000}M`
-        : `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000)
-      return Number.isInteger(num / 1000)
-        ? `${num / 1000}K`
-        : `${(num / 1000).toFixed(1)}K`;
+    if (!num) return '0'; // Covers null, undefined, and 0
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
     return num.toString();
   };
 
@@ -91,12 +92,13 @@ const Header: React.FC<HeaderProps> = ({
         />
       </div>
 
+      {/* Wallet/Connects Icon */}
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
             <WalletIcon />
             {loading ? (
-              <span className="absolute -top-1 -right-2  text-white font-semibold rounded-full px-1 animate-spin shadow-md">
+              <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
                 <Loader2 size={16} />
               </span>
             ) : (
@@ -110,7 +112,7 @@ const Header: React.FC<HeaderProps> = ({
         </HoverCardTrigger>
         <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
           {connects !== null
-            ? `${connects} rewards Available`
+            ? `${formatConnects(connects)} rewards Available`
             : 'No rewards yet!'}
         </HoverCardContent>
       </HoverCard>
