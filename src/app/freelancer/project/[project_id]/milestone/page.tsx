@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { PackageOpen } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -12,7 +13,6 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Milestone, Story } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { PackageOpen } from 'lucide-react';
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
