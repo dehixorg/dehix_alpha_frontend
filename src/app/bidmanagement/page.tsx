@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
 //import { useParams } from 'react-router-dom';
 interface Project {
   _id: string;
@@ -100,6 +101,11 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
+      toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Something went wrong.Please try again.',
+            }); // Error toast
       console.error('Error updating bid status:', error);
     }
   };

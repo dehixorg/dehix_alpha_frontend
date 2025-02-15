@@ -54,6 +54,7 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { toast } from '@/hooks/use-toast';
 
 function formatChatTimestamp(timestamp: string) {
   const date = new Date(timestamp);
@@ -168,6 +169,11 @@ export function CardsChat({ conversation }: CardsChatProps) {
           setPrimaryUser(response.data);
         } catch (error) {
           console.error('Error fetching primary user:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong.Please try again.',
+          }); // Error toast
         }
       }
     };

@@ -122,6 +122,11 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     };
 

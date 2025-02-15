@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RootState } from '@/lib/store';
+import { toast } from '@/hooks/use-toast';
 
 interface Interviewer {
   _id: string;
@@ -109,6 +110,11 @@ export function SkillDomainMeetingDialog({
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   };
 
@@ -122,6 +128,11 @@ export function SkillDomainMeetingDialog({
         console.log(interviewer);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'Something went wrong.Please try again.',
+                }); // Error toast
       }
     }
     fetchData();

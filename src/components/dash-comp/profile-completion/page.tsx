@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/use-toast';
 
 interface UserProfile {
   _id: string;
@@ -48,6 +49,11 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
         setCompletionPercentage(percentage);
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     };
 

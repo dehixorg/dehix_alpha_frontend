@@ -133,7 +133,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       fetchMilestones();
     } catch (error) {
       toast({
-        description: 'Task not update , plz try again .',
+        description: 'Task not update , please try again .',
         duration: 3000,
       });
     }

@@ -12,6 +12,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { HireDehixTalentStatusEnum } from '@/utils/enum';
+import { toast } from '@/components/ui/use-toast';
 
 interface ProfileData {
   _id: string;
@@ -47,6 +48,11 @@ const BusinessProfile: React.FC = () => {
           setProfileData(response.data);
         } catch (error) {
           console.error('Error fetching profile data:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong.Please try again.',
+          }); // Error toast
         }
       };
       fetchData();

@@ -31,6 +31,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 interface EducationProps {
   _id: string;
@@ -84,10 +85,18 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await axiosInstance.put(`/verification/${_id}/oracle?doc_type=education`, {
-      comments: data.comment,
-      verification_status: data.type,
-    });
+   try {
+     await axiosInstance.put(`/verification/${_id}/oracle?doc_type=education`, {
+       comments: data.comment,
+       verification_status: data.type,
+     });
+   } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Something went wrong.Please try again.',
+    }); // Error toast
+   }
     // Update status based on selection
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);

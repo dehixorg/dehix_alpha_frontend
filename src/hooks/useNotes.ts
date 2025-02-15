@@ -76,6 +76,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       fetchNotes();
     } catch (error) {
       showError('Failed to delete the note.');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
     setIsDeleting(false);
   };
@@ -102,6 +107,11 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       await fetchNotes();
     } catch (error) {
       showError(`Failed to update the note banner.`);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.log(error);
     }
   };

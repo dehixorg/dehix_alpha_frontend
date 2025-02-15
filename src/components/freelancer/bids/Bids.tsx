@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { toast } from '@/components/ui/use-toast';
 
 type InterviewBid = {
   _id?: string;
@@ -79,6 +80,11 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         setBidsData(response?.data?.data || []);
       } catch (error) {
         console.error('Error fetching interview bids', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }
@@ -149,6 +155,11 @@ const BidsPage = ({ userId }: { userId?: string }) => {
       );
     } catch (error) {
       console.error('Error updating interview bid:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
 
     setConfirmAction(null);

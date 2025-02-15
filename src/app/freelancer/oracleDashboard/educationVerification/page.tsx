@@ -27,6 +27,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface EducationData {
@@ -78,6 +79,11 @@ export default function ProfessionalInfo() {
       setEducationData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   }, [user.uid]);
 

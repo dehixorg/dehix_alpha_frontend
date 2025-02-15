@@ -17,6 +17,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -77,6 +78,11 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false); // Set loading to false after data is fetched
       }

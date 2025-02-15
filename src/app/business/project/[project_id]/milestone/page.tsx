@@ -49,6 +49,11 @@ const Page = () => {
       setMilestones(fetchedMilestones);
       setLoading(false);
     } catch (error) {
+      toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Something went wrong.Please try again.',
+            }); // Error toast
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }

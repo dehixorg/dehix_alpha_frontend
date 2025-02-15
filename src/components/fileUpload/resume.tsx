@@ -108,10 +108,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id }) => {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Upload failed',
-        description:
-          error instanceof Error ? error.message : 'Please try again.',
-      });
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     } finally {
       setIsUploading(false);
     }

@@ -26,6 +26,7 @@ import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDial
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -85,6 +86,11 @@ export default function Dashboard() {
         setProjects(response.data.data);
       }
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.error('API Error:', error);
     } finally {
       setLoading(false);
@@ -115,6 +121,11 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('API Error for project stats:', error);
+      toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Something went wrong.Please try again.',
+            }); // Error toast
     } finally {
       setLoadingStats(false);
     }

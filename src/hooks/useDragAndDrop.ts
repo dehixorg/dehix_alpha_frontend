@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Note } from '@/utils/types/note';
+import { toast } from '@/components/ui/use-toast';
 
 const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -54,12 +55,27 @@ const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
             console.log('Notes order updated successfully:', response.data);
           } else {
             console.error('Failed to update note order:', response.statusText);
+            toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Something went wrong.Please try again.',
+            }); // Error toast
           }
         } catch (error: any) {
           console.error('Error updating note order:', error.message);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong.Please try again.',
+          }); // Error toast
         }
       } else {
         console.error('User ID is missing. Cannot update note order.');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     }
 

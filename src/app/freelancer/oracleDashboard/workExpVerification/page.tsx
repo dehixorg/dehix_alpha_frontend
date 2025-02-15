@@ -28,6 +28,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
@@ -79,6 +80,11 @@ export default function ProfessionalInfo() {
       );
       setJobData(flattenedData);
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.log(error, 'error in getting verification data');
     }
   }, [user.uid]);

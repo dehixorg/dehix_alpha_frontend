@@ -99,9 +99,10 @@ export function ProjectProfileDetailCard({
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
-        title: 'some thing went',
-        description: 'Something went wrong try after some time.',
-      });
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   };
 
@@ -113,6 +114,11 @@ export function ProjectProfileDetailCard({
         setBidProfiles(profileIds);
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     }
     fetchData();
