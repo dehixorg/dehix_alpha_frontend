@@ -36,9 +36,7 @@ export default function BusinessProfile() {
     if (business_id) {
       const fetchBusinessDetails = async () => {
         try {
-          const response = await axiosInstance.get(
-            `/public/business/${business_id}`,
-          );
+          const response = await axiosInstance.get(`/public/business`);
           if (response.status === 200) {
             setUser(response.data);
           }

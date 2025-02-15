@@ -115,7 +115,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post(`/freelancer/${user.uid}/experience`, {
+      await axiosInstance.post(`/freelancer/experience`, {
         company: data.company || '',
         jobTitle: data.jobTitle || '',
         workDescription: data.workDescription || '',
@@ -125,7 +125,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         referencePersonContact: data.referencePersonContact || '',
         githubRepoLink: data.githubRepoLink || '',
         oracleAssigned: null, // Assuming no assignment
-        verificationStatus: 'Pending',
+        verificationStatus: 'ADDED',
         verificationUpdateTime: new Date().toISOString(),
         comments: data.comments || '',
       });

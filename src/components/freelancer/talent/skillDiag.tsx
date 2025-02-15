@@ -42,6 +42,7 @@ interface SkillDomainData {
   monthlyPay: string;
   activeStatus: boolean;
   status: StatusEnum;
+  type: string;
 }
 
 // Define the props for the SkillDialog component
@@ -95,18 +96,15 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
-        {
-          talentId: data.skillId,
-          talentName: data.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'SKILL',
-        },
-      );
+      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
+        talentId: data.skillId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'SKILL',
+      });
 
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID

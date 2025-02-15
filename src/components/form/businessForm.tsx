@@ -203,7 +203,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/business/${user_id}`, {
+      await axiosInstance.put(`/business`, {
         ...restData,
         kyc,
       });
@@ -293,6 +293,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                   <FormItem>
                     <FormControl>
                       <Input
+                        disabled={true}
                         placeholder="Enter your email"
                         type="email"
                         {...field}
@@ -315,6 +316,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                   <FormItem>
                     <FormControl>
                       <Input
+                        disabled={true}
                         placeholder="Enter your phone number"
                         type="tel"
                         {...field}
