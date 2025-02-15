@@ -245,27 +245,26 @@ function BusinessRegisterForm({
         const { userName } = form.getValues();
         try {
           setIsVerified(true);
-          const username = JSON.stringify(userName);
+          const username = userName;
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
-
-          toast({
-            variant: 'destructive',
-            title: 'User Already Exists',
-            description:
-              'This username is already taken. Please choose another one.',
-          });
-        } catch (error: any) {
-          if (error.response && error.response.status === 404) {
+          if (response.data.duplicate === false) {
             setCurrentStep(currentStep + 1);
           } else {
             toast({
               variant: 'destructive',
-              title: 'API Error',
-              description: 'There was an error while checking the username.',
+              title: 'User Already Exists',
+              description:
+                'This username is already taken. Please choose another one.',
             });
           }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'API Error',
+            description: 'There was an error while checking the username.',
+          });
         } finally {
           setIsVerified(false);
         }
