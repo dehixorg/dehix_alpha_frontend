@@ -57,7 +57,7 @@ export default function CurrentProject() {
         );
         console.log(response);
 
-        setProjects(response.data.data.projects); // Store all projects initially
+        setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
       } finally {
