@@ -13,6 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
 import { Separator } from '@/components/ui/separator';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -35,9 +42,9 @@ export default function Dashboard() {
       try {
         if (user?.uid) {
           // Optional chaining to ensure `user` is defined
-          const response = await axiosInstance.get(
-            `/project/business/${user.uid}`,
-          );
+          const response = await axiosInstance.get(`/project/business`);
+          console.log(response);
+
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {
@@ -113,42 +120,90 @@ export default function Dashboard() {
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Current Projects {`(${pendingProjects.length})`}
             </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {pendingProjects.length > 0 ? (
-                pendingProjects.map((project: any, index: number) => (
-                  <ProjectCard
-                    key={index}
-                    cardClassName="min-w-[45%]"
-                    project={project}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-10 w-[100%] ">
-                  <PackageOpen className="mx-auto text-gray-500" size="100" />
-                  <p className="text-gray-500">No projects available</p>
-                </div>
-              )}
+            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
+              <Carousel className="w-full relative">
+                <CarouselContent className="flex mt-3 gap-4">
+                  {pendingProjects.length > 0 ? (
+                    pendingProjects.map((project: any, index: number) => (
+                      <CarouselItem
+                        key={index}
+                        className="md:basis-1/2 lg:basis-1/2"
+                      >
+                        <ProjectCard
+                          key={index}
+                          cardClassName="min-w-[45%]"
+                          project={project}
+                        />
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 w-[100%] ">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
+                      <p className="text-gray-500">No projects available</p>
+                    </div>
+                  )}
+                </CarouselContent>
+                {pendingProjects.length > 2 && (
+                  <>
+                    <div className="flex">
+                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Previous
+                      </CarouselPrevious>
+                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Next
+                      </CarouselNext>
+                    </div>
+                  </>
+                )}
+              </Carousel>
             </div>
 
             <Separator className="my-1" />
+
             <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
               Completed Projects {`(${completedProjects.length})`}
             </h2>
-            <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-              {completedProjects.length > 0 ? (
-                completedProjects.map((project: any, index: number) => (
-                  <ProjectCard
-                    key={index}
-                    cardClassName="min-w-[45%]"
-                    project={project}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-10 w-[100%] ">
-                  <PackageOpen className="mx-auto text-gray-500" size="100" />
-                  <p className="text-gray-500">No projects available</p>
-                </div>
-              )}
+            <div className="flex relative gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
+              <Carousel className="w-full relative pt-9">
+                <CarouselContent className="flex gap-4">
+                  {completedProjects.length > 2 ? (
+                    completedProjects.map((project: any, index: number) => (
+                      <CarouselItem
+                        key={index}
+                        className="md:basis-1/2 lg:basis-1/2"
+                      >
+                        <ProjectCard
+                          cardClassName="min-w-full"
+                          project={project}
+                        />
+                      </CarouselItem>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 w-full">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
+                      <p className="text-gray-500">No projects available</p>
+                    </div>
+                  )}
+                </CarouselContent>
+                {completedProjects.length > 2 && (
+                  <>
+                    <div className="flex">
+                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Previous
+                      </CarouselPrevious>
+                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                        Next
+                      </CarouselNext>
+                    </div>
+                  </>
+                )}
+              </Carousel>
             </div>
           </div>
           <div className="space-y-6">

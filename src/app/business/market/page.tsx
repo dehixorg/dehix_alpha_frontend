@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
@@ -30,6 +31,7 @@ const Market: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<any[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
     location: [],
@@ -45,25 +47,23 @@ const Market: React.FC = () => {
   ) => {
     let transformedValues: string | string[] = selectedValues;
 
-    if (filterType === 'experience') {
-      const values = Array.isArray(selectedValues)
-        ? selectedValues
-        : [selectedValues];
+    const values = Array.isArray(selectedValues)
+      ? selectedValues
+      : [selectedValues];
 
-      transformedValues = values.flatMap((value) => {
-        // Check for experience ranges like "0-2", "3-6", "7+" and split them
-        if (value.includes('-')) {
-          const [start, end] = value.split('-').map(Number);
-          return Array.from({ length: end - start + 1 }, (_, i) =>
-            (start + i).toString(),
-          );
-        }
-        if (value === '7+') {
-          return ['7', '8', '9', '10']; // Return as strings
-        }
-        return [value];
-      });
-    }
+    transformedValues = values.flatMap((value) => {
+      // Check for experience ranges like "0-2", "3-6", "7+" and split them
+      if (value.includes('-')) {
+        const [start, end] = value.split('-').map(Number);
+        return Array.from({ length: end - start + 1 }, (_, i) =>
+          (start + i).toString(),
+        );
+      }
+      if (value === '7+') {
+        return ['7', '8', '9', '10']; // Return as strings
+      }
+      return [value];
+    });
 
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -98,11 +98,15 @@ const Market: React.FC = () => {
 
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
+      setIsDataLoading(true);
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
+
       setFreelancers(response.data.data);
     } catch (error) {
       console.error('API Error:', error);
+    } finally {
+      setIsDataLoading(false);
     }
   }, []);
 
@@ -162,7 +166,13 @@ const Market: React.FC = () => {
             handleApply={handleApply}
             handleReset={handleReset}
           />
-          <FreelancerList freelancers={freelancers} />
+          {isDataLoading ? (
+            <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full flex justify-center items-center h-[60vh]">
+              <Loader2 size={40} className=" text-white animate-spin " />
+            </div>
+          ) : (
+            <FreelancerList freelancers={freelancers} />
+          )}
         </div>
       </div>
       <MobileFilterModal

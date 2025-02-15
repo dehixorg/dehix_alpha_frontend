@@ -79,7 +79,7 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=${status}`,
+        `/freelancer/project?status=${status}`,
       );
       if (response.status == 200 && response?.data?.data) {
         setProjects(response.data.data);
@@ -95,10 +95,10 @@ export default function Dashboard() {
     setLoadingStats(true);
     try {
       const activeCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=ACTIVE`,
+        `/freelancer/project?status=ACTIVE`,
       );
       const pendingCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=PENDING`,
+        `/freelancer/project?status=PENDING`,
       );
 
       if (
@@ -220,16 +220,32 @@ export default function Dashboard() {
                   </TabsList>
                 </div>
                 <TabsContent value={StatusEnum.ACTIVE}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="active"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="pending"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="completed"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="rejected"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
               </Tabs>
             </div>
