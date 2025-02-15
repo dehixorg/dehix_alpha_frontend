@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, LoaderCircle, MessageCircle, MessageSquare, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-
+import {CardsChat} from '@/components/shared/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
+import { ChatList } from '@/components/shared/chatList';
 import { Separator } from '@/components/ui/separator';
 import {
   Dehix_Talent_Card_Pagination,
@@ -33,6 +34,8 @@ import {
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { RootState } from '@/lib/store';
+import { DocumentData } from 'firebase/firestore';
+import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 
 interface DehixTalent {
   freelancer_id: any;
@@ -44,7 +47,21 @@ interface DehixTalent {
   status: HireDehixTalentStatusEnum;
   activeStatus: boolean;
 }
+interface Conversation extends DocumentData {
+  id: string;
+  participants: string[];
+  timestamp?: string;
+  lastMessage?: any;
+}
 
+const dummyConversations: Conversation[] = [
+  {
+    id: 'dummy1',
+    participants: ['User A', 'User B'],
+    timestamp: '2025-02-09T12:00:00Z',
+    lastMessage: { text: 'Hello! This is a test conversation.' },
+  },
+];
 interface Talent {
   freelancer_id: string;
   Name: string;
@@ -102,9 +119,44 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
-
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+ const [activeConversation, setActiveConversation] = useState<Conversation>(
+    conversations[0],
+  );
+  const [chatOpen, setChatOpen] = useState(false);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  useEffect(() => {
+      let unsubscribe: (() => void) | undefined;
+  
+      const fetchConversations = async () => {
+        setLoading(true);
+        unsubscribe = await subscribeToUserConversations(
+          'conversations',
+          user.uid,
+          (data) => {
+            setConversations(data as Conversation[]);
+            setLoading(false);
+          },
+        );
+      };
+  
+      fetchConversations();
+  
+      // Cleanup on component unmount
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }, [ user.uid]);
+
+    useEffect(() => {
+      if (!activeConversation && conversations.length > 0) {
+        setActiveConversation(conversations[0]);
+      }
+    }, [conversations, activeConversation]);
+    
+    
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
@@ -432,6 +484,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 {' '}
                                 {talent.Name}
                               </div>
+                              <Button className="w-full text-sm text-black rounded-md" onClick={() => setChatOpen(true)}>
+  <MessageCircle className="w-6 h-6 text-gray-600" />
+</Button>
                             </div>
                           </div>
                         </div>
@@ -587,6 +642,82 @@ const TalentCard: React.FC<TalentCardProps> = ({
                               </Button>
                             </div>
                           </div>
+                          <div className="mt-2">
+                          <div className="mt-2">
+                          {/* <div
+        className="flex w-full cursor-pointer justify-center p-2 border rounded-lg hover:bg-gray-100"
+        onClick={() => setShowChat((prev) => !prev)}
+      >
+        <MessageCircle className="w-6 h-6 text-gray-600" />
+      </div>
+      
+      {showChat && (
+        <div className="absolute top-full left-0 w-full mt-2 bg-white shadow-lg rounded-lg">
+          {loading ? (
+            <div className="flex justify-center p-4">
+              <LoaderCircle className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : conversations.length > 0 ? (
+            <>
+              <ChatList
+                conversations={conversations}
+                active={activeConversation || undefined}
+                setConversation={setActiveConversation}
+              />
+              {activeConversation && <CardsChat conversation={activeConversation} />}
+            </>
+          ) : (
+            <div className="p-4 text-center text-gray-500">No conversations found</div>
+          )}
+        </div>
+      )} */}
+<Sheet open={chatOpen} onOpenChange={setChatOpen}>
+  <SheetContent
+    side="right"
+    className="overflow-y-auto no-scrollbar max-h-[100vh]"
+  >
+    <SheetHeader>
+      <SheetTitle className="text-center text-lg font-bold py-4">
+        Chat
+      </SheetTitle>
+    </SheetHeader>
+
+    <div className="grid gap-4 py-2">
+      <div className="w-full text-center">
+        <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
+          <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
+          <AvatarFallback>Unable to load</AvatarFallback>
+        </Avatar>
+        <div className="text-lg font-bold">{talent.Name}</div>
+      </div>
+    </div>
+
+    {/* Chat List */}
+    {loading ? (
+      <div className="flex justify-center p-4">
+        <LoaderCircle className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    ) : conversations.length > 0 ? (
+      <>
+        <ChatList
+          conversations={conversations}
+          active={activeConversation || undefined}
+          setConversation={setActiveConversation}
+        />
+        {activeConversation && <CardsChat conversation={activeConversation} />}
+      </>
+    ) : (
+      <div className="p-4 text-center text-gray-500">No conversations found </div>
+    )}
+  </SheetContent>
+</Sheet>
+
+
+</div>
+
+
+                          </div>
+              
                         </div>
                       </SheetContent>
                     </Sheet>
