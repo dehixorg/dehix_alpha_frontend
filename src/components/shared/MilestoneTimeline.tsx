@@ -107,7 +107,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           {milestones && (
             <div ref={scrollRef} className="hidden md:block ">
               {/* Timeline Line */}
-              <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg transform -translate-y-1/2"></div>
+              <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg bg-gray-500 transform -translate-y-1/2"></div>
 
               {/* Scrolling Timeline */}
               <div className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-scroll px-4 py-6  no-scrollbar">

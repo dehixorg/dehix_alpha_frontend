@@ -100,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({
             ) : (
               connects !== null && (
                 <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
-                  {formatConnects(connects)}
+                  {/* {formatConnects(connects)} */}
                 </span>
               )
             )}

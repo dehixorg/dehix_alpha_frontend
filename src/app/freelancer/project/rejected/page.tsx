@@ -1,5 +1,5 @@
 'use client';
-import { PackageOpen } from 'lucide-react';
+import { Loader2, PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -45,16 +45,19 @@ interface Project {
 export default function RejectedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const response = await axiosInstance.get(
-          `/freelancer/project?status=REJECTED`,
+          `/freelancer/${user.uid}/project?status=REJECTED`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -92,21 +95,27 @@ export default function RejectedProject() {
             for future submissions.
           </p>
         </div>
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <Loader2 size={40} className="animate-spin" />
+          </div>
+        ) : (
+          <main
+            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
-          {projects.length === 0 ? (
-            <div className="col-span-full text-center mt-20 w-full">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">No projects available</p>
-            </div>
-          ) : (
-            projects.map((project, index: number) => (
-              <ProjectCard key={index} project={project} />
-            ))
-          )}
-        </main>
+          >
+            {projects.length === 0 ? (
+              <div className="col-span-full text-center mt-20 w-full">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">No projects available</p>
+              </div>
+            ) : (
+              projects.map((project, index: number) => (
+                <ProjectCard key={index} project={project} />
+              ))
+            )}
+          </main>
+        )}
       </div>
     </div>
   );
