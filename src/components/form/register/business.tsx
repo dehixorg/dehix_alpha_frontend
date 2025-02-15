@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  Loader2,
   LoaderCircle,
   Rocket,
   Shield,
@@ -241,7 +242,32 @@ function BusinessRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        const { userName } = form.getValues();
+        try {
+          setIsVerified(true);
+          const username = userName;
+          const response = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${username}&is_business=true`,
+          );
+          if (response.data.duplicate === false) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'User Already Exists',
+              description:
+                'This username is already taken. Please choose another one.',
+            });
+          }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'API Error',
+            description: 'There was an error while checking the username.',
+          });
+        } finally {
+          setIsVerified(false);
+        }
       } else {
         toast({
           variant: 'destructive',
@@ -257,15 +283,6 @@ function BusinessRegisterForm({
         'linkedin',
         'personalWebsite',
       ]);
-      if (isValid) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Validation Error',
-          description: 'Please fill in all required fields before proceeding.',
-        });
-      }
     }
   };
 
@@ -426,10 +443,17 @@ function BusinessRegisterForm({
                 <Button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex items-center justify-center"
+                  disabled={Isverified}
                 >
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {Isverified ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
