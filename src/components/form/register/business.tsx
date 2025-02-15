@@ -247,7 +247,7 @@ function BusinessRegisterForm({
           setIsVerified(true);
           const username = JSON.stringify(userName);
           const response = await axiosInstance.get(
-            `/public/username?username=${username}&isBusiness=true`,
+            `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
 
           toast({

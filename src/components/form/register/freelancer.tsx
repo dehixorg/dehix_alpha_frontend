@@ -336,7 +336,7 @@ function FreelancerRegisterForm({
         try {
           const username = JSON.stringify(userName);
           const response = await axiosInstance.get(
-            `/public/username?username=${username}&isFreelancer=true`,
+            `/public/username/check-duplicate?username=${username}&is_freelancer=true`,
           );
 
           toast({
