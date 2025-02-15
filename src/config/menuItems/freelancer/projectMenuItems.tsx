@@ -51,11 +51,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <CircleX className="h-5 w-5" />,
     label: 'Rejected Projects',
   },
-  {
-    href: '/freelancer/project/milestone',
-    icon: <Milestone />,
-    label: 'Milestone',
-  },
 ];
 
 export const menuItemsBottom: MenuItem[] = [

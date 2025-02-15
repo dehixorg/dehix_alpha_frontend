@@ -68,7 +68,7 @@
     --cyan-foreground: 180, 100%, 50%;
     --line-color-light: 0 0% 0% / 20%;
     --line-color-dark: 0 0% 100% / 20%;
-    --dot-bg-color: #fffefe;
+    --dot-bg-color: #ffffff;
     --dot-border-color: #f5f5f5;
     --dot-hover-bg-color: #ffffff;
     --dot-hover-border-color: #11a0ff;
@@ -93,5 +93,49 @@
   .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+  }
+}
+@layer utilities {
+  .line-bg {
+    background-color: hsl(var(--line-color-light));
+  }
+
+  .dark .line-bg {
+    background-color: hsl(var(--line-color-dark));
+  }
+
+  .border-line-bg {
+    border-color: hsl(var(--line-color-light));
+  }
+
+  .dark .border-line-bg {
+    border-color: hsl(var(--line-color-dark));
+  }
+}
+
+@layer utilities {
+  .dynamic-bg {
+    background-color: var(--background);
+  }
+
+  .dynamic-text {
+    color: var(--foreground);
+  }
+
+  .dynamic-card {
+    background: linear-gradient(
+      135deg,
+      rgba(240, 240, 240, 0.8),
+      rgba(240, 240, 240, 0.6)
+    );
+    color: var(--foreground);
+  }
+
+  .dark .dynamic-card {
+    background: rgba(26, 191, 241, 0.2);
+    color: #f5f5f5;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
   }
 }
