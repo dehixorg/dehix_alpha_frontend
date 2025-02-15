@@ -47,8 +47,6 @@ const Header: React.FC<HeaderProps> = ({
       const parsedData = data ? parseInt(data) : 0;
       if (!isNaN(parsedData)) {
         setConnects(parsedData);
-      } else {
-        console.error('Invalid number in localStorage:', data);
       }
     } catch (error) {
       console.error('Error fetching connects:', error);
@@ -64,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
   }, [user?.uid]);
 
   const formatConnects = (num: number) => {
-    if (!num) return '0'; // Covers null, undefined, and 0
+    if (!num) return '0';
     if (num >= 1_000_000)
       return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
     if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
@@ -91,7 +89,6 @@ const Header: React.FC<HeaderProps> = ({
         />
       </div>
 
-      {/* Wallet/Connects Icon */}
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
