@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PlusCircle, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
@@ -26,12 +26,47 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     field: keyof WorkExperience,
     value: string,
   ) => {
+    if (
+      (field === 'startDate' || field === 'endDate') &&
+      value &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+      console.error('Invalid date format. Expected yyyy-MM-dd.');
+      return;
+    }
+
     const updatedWorkExperience = [...workExperienceData];
     updatedWorkExperience[index] = {
       ...updatedWorkExperience[index],
       [field]: value,
     };
     setWorkExperienceData(updatedWorkExperience);
+  };
+  //
+  useEffect(() => {
+    console.log(
+      'Updated Work Experience Data in SummaryInfo:',
+      workExperienceData,
+    );
+  }, [workExperienceData]);
+
+  useEffect(() => {
+    if (workExperienceData.length > 0) {
+      const latestJobTitle =
+        workExperienceData[workExperienceData.length - 1].jobTitle;
+      if (latestJobTitle) {
+        console.log('Confirmed updated job title:', latestJobTitle);
+        generateAISuggestion(latestJobTitle);
+      }
+    }
+  }, [workExperienceData]);
+  // This runs whenever workExperienceData changes
+
+  const generateAISuggestion = (jobTitle: string) => {
+    // Call your AI API or function to generate suggestions
+    console.log('Fetching AI suggestions for:', jobTitle);
+    // Example: Fetching data from OpenAI API
+    // fetchAIResponse(jobTitle).then(response => console.log(response));
   };
 
   const handleAddWorkExperience = () => {
@@ -56,8 +91,8 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
 
   return (
     <div>
-      <div className="space-y-1.5 text-center">
-        <h2 className="text-2xl">Work Experience</h2>
+      <div className="space-y-1.5 ml-5 mb-5">
+        <h2 className="text-2xl font-normal">Work Experience</h2>
         <p className="text-sm text-gray-500">
           Add your work experience details.
         </p>
@@ -139,7 +174,7 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
               <Label htmlFor={`description-${index}`}>Description</Label>
               <textarea
                 id={`description-${index}`}
-                className="block w-full p-2 border-gray-300 rounded-md shadow-sm sm:text-sm"
+                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm sm:text-sm"
                 rows={4}
                 value={work.description}
                 onChange={(e) =>
@@ -155,7 +190,7 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddWorkExperience}
-          className="text-center text-white bg-gray"
+          className="text-center dark:text-black  light:bg-black"
         >
           <PlusCircle />
         </Button>

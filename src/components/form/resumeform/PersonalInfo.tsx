@@ -61,7 +61,7 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
 
   return (
     <div>
-      <div className="space-y-1.5 text-center">
+      <div className="space-y-1.5 ml-5 mb-5">
         <h2 className="text-2xl">Personal Info</h2>
         <p className="text-sm text-gray-500">Tell us about yourself.</p>
       </div>
@@ -188,7 +188,7 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddPersonalInfo}
-          className="text-center bg-gray hover:bg-gray-600 text-white"
+          className="text-center  dark:text-black  light:bg-black"
         >
           <PlusCircle />
         </Button>

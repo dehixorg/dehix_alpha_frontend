@@ -10,8 +10,11 @@ import { EducationInfo } from '../form/resumeform/EducationInfo';
 import { SkillInfo } from '../form/resumeform/SkillInfo';
 import { WorkExperienceInfo } from '../form/resumeform/WorkExperienceInfo';
 import { SummaryInfo } from '../form/resumeform/SummaryInfo';
+import { AchievementInfo } from '../form/resumeform/Achievement.';
 
-import { ResumePreview } from './ResumePreview';
+import { ResumePreview1 } from './ResumePreview1';
+import { ResumePreview2 } from './ResumePreview2';
+import { AtsScore } from './atsScore';
 
 import {
   menuItemsBottom,
@@ -22,21 +25,39 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 
 export default function ResumeEditor() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
+  const [showAtsScore, setShowAtsScore] = useState(false);
   const [educationData, setEducationData] = useState([
     {
-      degree: 'B.Tech in Computer Science',
+      degree: 'Bachelor of Science in Computer Science',
+      school: 'ABC University',
+      startDate: '2023-12-31',
+      endDate: '2023-12-31', //grade
+    },
+    {
+      degree: 'Master of Science in Software Engineering',
       school: 'XYZ University',
-      startDate: '2015',
-      endDate: '2019',
+      startDate: '2023-12-31',
+      endDate: '2023-12-31',
     },
   ]);
   const [workExperienceData, setWorkExperienceData] = useState([
     {
-      jobTitle: 'Software Engineer',
-      company: 'Tech Solutions',
-      startDate: '2019',
-      endDate: 'Present',
-      description: 'Developed scalable web applications.',
+      jobTitle: 'Software Developer',
+      company: 'TechCorp Solutions',
+      startDate: '2023-12-31',
+      endDate: '2023-12-31',
+      description:
+        'Developed scalable web applications and optimized system performance.',
+    },
+    {
+      jobTitle: 'Senior Developer',
+      company: 'Innovatech',
+      startDate: '2023-12-31',
+      endDate: '2023-12-31',
+      description:
+        'Led a team of developers to build cloud-based enterprise software.',
     },
   ]);
   const [personalData, setPersonalData] = useState([
@@ -53,13 +74,32 @@ export default function ResumeEditor() {
   ]);
   const [projectData, setProjectData] = useState([
     {
-      title: 'Project A',
-      description: 'A brief description of Project A.',
+      title: 'AI-Powered Resume Builder',
+      description:
+        'Developed a full-stack web application using React.js, Node.js, and MongoDB. Integrated OpenAI GPT-4 API to generate resume content dynamically based on user inputs. Implemented authentication and data storage with Firebase.',
+    },
+    {
+      title: 'E-Commerce Platform with Real-Time Analytics',
+      description:
+        'Built a scalable e-commerce platform using Next.js and PostgreSQL. Implemented real-time analytics dashboards with Socket.IO and Chart.js to track user behavior and sales trends. Deployed the application on AWS.',
+    },
+    {
+      title: 'IoT-Based Smart Home Automation System',
+      description:
+        'Designed and implemented an IoT solution for smart home automation using Raspberry Pi, Python, and MQTT protocol. Developed a mobile app with Flutter for remote control and monitoring of home devices.',
     },
   ]);
   const [skillData, setSkillData] = useState([
+    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
+    { skillName: 'Communication and team collaboration' },
+    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
+    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
+    { skillName: 'Communication and team collaboration' },
+  ]);
+  const [achievementData, setAchievementData] = useState([
+    { achievementName: 'Winner of SIH' },
     {
-      skillName: 'JavaScript',
+      achievementName: 'Represented India on the national level in Bug Bounty',
     },
   ]);
   const [summaryData, setSummaryData] = useState([
@@ -67,7 +107,66 @@ export default function ResumeEditor() {
   ]);
   const [selectedColor, setSelectedColor] = useState('#000000');
 
+  const resumeData = `
+  ${personalData[0]?.firstName || ''} ${personalData[0]?.lastName || ''}
+  ${summaryData.join(' ')}
+
+  Work Experience:
+  ${workExperienceData.map((exp) => `${exp.jobTitle} at ${exp.company}. ${exp.description}`).join('\n')}
+
+  Education:
+  ${educationData.map((edu) => `${edu.degree} from ${edu.school}`).join('\n')}
+
+  Skills: ${skillData.map((skill) => skill.skillName).join(', ')}
+  Achievements: ${achievementData.map((ach) => ach.achievementName).join(', ')}
+  Projects:
+  ${projectData.map((proj) => `${proj.title}: ${proj.description}`).join('\n')}
+`.trim();
+
+  const renderContent = () => {
+    return (
+      <div className="relative">
+        {showAtsScore ? (
+          <AtsScore
+            name={
+              `${personalData[0]?.firstName} ${personalData[0]?.lastName}`.trim() ||
+              'Your Name'
+            }
+            resumeText={resumeData}
+            jobKeywords={['React', 'JavaScript', 'Developer']} // Pass keywords if needed
+          />
+        ) : (
+          <>
+            {/* Navigation Buttons at the Top-Right */}
+            <div className="absolute top-0 right-0 flex mb-5 p-2 space-x-2">
+              <Button
+                onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+                disabled={currentStep === 0}
+                className="p-2"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={() =>
+                  setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
+                }
+                disabled={currentStep === steps.length - 1}
+                className="p-2"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Render the Current Step Content */}
+            {steps[currentStep]}
+          </>
+        )}
+      </div>
+    );
+  };
+
   const resumeRef = useRef<HTMLDivElement | null>(null);
+
   const steps = [
     <PersonalInfo
       key="personal"
@@ -89,38 +188,60 @@ export default function ResumeEditor() {
       projectData={projectData}
       setProjectData={setProjectData}
     />,
-    <SkillInfo key="skill" skillData={skillData} setSkillData={setSkillData} />,
+    <SkillInfo
+      key="skill"
+      skillData={skillData}
+      setSkillData={setSkillData}
+      projectData={projectData}
+    />,
+    <AchievementInfo
+      key="achievement"
+      achievementData={achievementData}
+      setAchievementData={setAchievementData}
+    />,
     <SummaryInfo
       key="summary"
       summaryData={summaryData}
       setSummaryData={setSummaryData}
+      workExperienceData={workExperienceData}
     />,
   ];
 
-  const handlePrevious = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
-  };
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  const handleTemplateChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedTemplate(page === 1 ? 'ResumePreview1' : 'ResumePreview2');
   };
 
   const downloadPDF = async () => {
     const element = resumeRef.current;
     if (element) {
-      const canvas = await html2canvas(element, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      // Ensure the .resumeContent element is available and cast it to HTMLElement
+      const resumeContentElement = element.querySelector(
+        '.resumeContent',
+      ) as HTMLElement;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('Resume.pdf');
+      if (resumeContentElement) {
+        // Render only the content inside the resume container (exclude buttons and color options)
+        const canvas = await html2canvas(resumeContentElement, { scale: 2 }); // Ensure scale is set to 2 for better resolution
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdf = new jsPDF('portrait', 'mm', 'a4');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        // Add the image to the PDF at full size
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('Resume.pdf');
+      } else {
+        console.error('No .resumeContent element found.');
+      }
+    } else {
+      console.error('Resume element is not available.');
     }
   };
 
-  const colorOptions = ['#000000', '#31572c', '#0077b6', '#9d0208', '#fb8500'];
+  const colorOptions = ['#000000', '#31572c', '#1e40af', '#9d0208', '#fb8500'];
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -143,72 +264,83 @@ export default function ResumeEditor() {
             { label: 'Resume Editor', link: '#' },
           ]}
         />
-
-        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid lg:grid-cols-5 xl:grid-cols-4">
-          <div className="lg:col-span-2 ml-3">
-            <h1 className="text-2xl font-bold mt-5">Design your Resume</h1>
+        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
+          {/* Left section - Form */}
+          <div className="p-6">
+            <h1 className="text-2xl font-bold">Design your Resume</h1>
             <p className="text-sm text-muted-foreground mb-5">
               Follow the steps below to create your resume.
             </p>
-            {/* left section */}
-            <div className="shadow-md rounded-md p-3">{steps[currentStep]}</div>
+
+            <div className="mt-5">{renderContent()}</div>
           </div>
 
-          {/* right section */}
-          <div
-            ref={resumeRef}
-            className="lg:col-span-2 xl:col-span-2 flex-1 shadow-md rounded-md p-3 border-gray-200"
-          >
-            <ResumePreview
-              educationData={educationData}
-              workExperienceData={workExperienceData}
-              personalData={personalData}
-              projectData={projectData}
-              skillData={skillData}
-              headingColor={selectedColor}
-              summaryData={summaryData}
-            />
-          </div>
-        </main>
-
-        <section className="flex justify-start gap-3 py-4 px-6">
-          {colorOptions.map((color, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedColor(color)}
-              className="w-8 h-8 rounded-full cursor-pointer"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-        </section>
-
-        {/* Footer */}
-        <footer className="w-full border-t px-3 py-5">
-          <div className="max-w-7xl mx-auto flex flex-wrap justify-between gap-3">
-            <div className="flex items-center gap-3">
+          {/* Right section - Resume Preview */}
+          <div ref={resumeRef} className="p-6 " style={{ minHeight: '1100px' }}>
+            <div className="flex justify-end gap-3 mb-4">
               <Button
-                onClick={handlePrevious}
-                disabled={currentStep === 0}
+                onClick={() => setShowAtsScore(!showAtsScore)}
                 className="p-2"
               >
-                <ChevronLeft className="w-5 h-5" />
+                {showAtsScore ? 'Hide ATS Score' : 'Check ATS Score'}
               </Button>
-              <Button
-                onClick={handleNext}
-                disabled={currentStep === steps.length - 1}
-                className="p-2"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="flex items-center">
               <Button onClick={downloadPDF} className="p-2">
                 Download PDF
               </Button>
             </div>
+            <section className="flex justify-start gap-3">
+              {colorOptions.map((color, index) => (
+                <div
+                  key={index}
+                  onClick={() => setSelectedColor(color)}
+                  className="w-8 h-8 rounded-full cursor-pointer"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </section>
+
+            <div className="resumeContent ">
+              {selectedTemplate === 'ResumePreview1' ? (
+                <ResumePreview1
+                  educationData={educationData}
+                  workExperienceData={workExperienceData}
+                  personalData={personalData}
+                  projectData={projectData}
+                  skillData={skillData}
+                  achievementData={achievementData}
+                  headingColor={selectedColor}
+                  summaryData={summaryData}
+                />
+              ) : (
+                <ResumePreview2
+                  educationData={educationData}
+                  workExperienceData={workExperienceData}
+                  personalData={personalData}
+                  projectData={projectData}
+                  skillData={skillData}
+                  achievementData={achievementData}
+                  headingColor={selectedColor}
+                  summaryData={summaryData}
+                />
+              )}
+            </div>
+
+            <div className="flex justify-center gap-3">
+              <Button
+                onClick={() => handleTemplateChange(1)}
+                className={`p-2 ${selectedTemplate === 'ResumePreview1' ? 'dark:bg-white text-black' : 'bg-gray-500 text-white'}`}
+              >
+                Template 1
+              </Button>
+              <Button
+                onClick={() => handleTemplateChange(2)}
+                className={`p-2 ${selectedTemplate === 'ResumePreview2' ? 'dark:bg-white text-black' : 'bg-gray-500 text-white'}`}
+              >
+                Template 2
+              </Button>
+            </div>
           </div>
-        </footer>
+        </main>
       </div>
     </div>
   );
