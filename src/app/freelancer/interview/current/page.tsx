@@ -175,9 +175,11 @@ export default function CurrentPage() {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const [skillData, setSkillData] = useState([]);
-  const [domainData, setDomainData] = useState([]);
-  const [projectData, setProjectData] = useState([]);
+  const [skillData, setSkillData] = useState<any>([]);
+  const [domainData, setDomainData] = useState<any>([]);
+  const [projectSkill, setProjectSkill] = useState<any>([]);
+  const [projectDomain, setProjectDomain] = useState<any>([]);
+
   const [isLoading, setIsloading] = useState(false);
 
   useEffect(() => {
@@ -194,26 +196,44 @@ export default function CurrentPage() {
           '/interview/current-interview',
           {
             params: {
-              intervieweeId: user?.uid,
+              intervieweeId: user.uid,
             },
           },
         );
-        let interviewData = response.data?.data.dehixTalent ?? [];
 
-        if (!Array.isArray(interviewData)) {
-          interviewData = [interviewData];
-        }
+        const interviewData = response.data?.data.dehixTalent ?? [];
+        const projectData = response.data?.data.projects ?? [];
 
-        const skillArray = interviewData.filter(
+        // Normalize both interviewData and projectData into arrays if not already
+        const normalizedInterviewData = Array.isArray(interviewData)
+          ? interviewData
+          : [interviewData];
+
+        const normalizedProjectData = Array.isArray(projectData)
+          ? projectData
+          : [projectData];
+
+        // Split interviewData into SKILL and DOMAIN
+        const skillArray = normalizedInterviewData.filter(
           (item: any) => item?.talentType === 'SKILL',
         );
-        const domainArray = interviewData.filter(
+        const domainArray = normalizedInterviewData.filter(
           (item: any) => item?.talentType === 'DOMAIN',
         );
 
+        // Split projectData into SKILL and DOMAIN
+        const projectSkillArray = normalizedProjectData.filter(
+          (item: any) => item?.talentType === 'SKILL',
+        );
+        const projectDomainArray = normalizedProjectData.filter(
+          (item: any) => item?.talentType === 'DOMAIN',
+        );
+
+        // Set state
         setSkillData(skillArray ?? []);
         setDomainData(domainArray ?? []);
-        setProjectData(response.data?.data.projects);
+        setProjectSkill(projectSkillArray ?? []);
+        setProjectDomain(projectDomainArray ?? []);
       } catch (err) {
         console.error('Failed to load data. Please try again.', err);
         setSkillData([]);
@@ -415,9 +435,7 @@ export default function CurrentPage() {
               <>
                 <DehixInterviews
                   skillData={skillData}
-                  setSkillData={setSkillData}
                   domainData={domainData}
-                  setDomainData={setDomainData}
                   searchQuery={searchQuery}
                   isTableView={isTableView}
                   filter={filter}
@@ -425,7 +443,9 @@ export default function CurrentPage() {
                 <Projects
                   searchQuery={searchQuery}
                   isTableView={isTableView}
-                  projectData={projectData}
+                  skillData={projectSkill}
+                  domainData={projectDomain}
+                  filter={filter}
                 />
               </>
             )}

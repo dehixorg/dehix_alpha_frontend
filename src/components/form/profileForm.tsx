@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -106,9 +106,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [lastAddedItems, setLastAddedItems] = useState<{
+  const [, setLastAddedItems] = useState<{
     skills: { name: string }[];
     projectsDomains: { name: string }[];
     domains: { name: string }[];
@@ -129,9 +129,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     label: '',
     description: '',
   });
-  const [dialogType, setDialogType] = useState<
-    'skill' | 'domain' | 'projectDomain' | null
-  >(null);
+  const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
+    null,
+  );
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
 
   const form = useForm<ProfileFormValues>({
@@ -426,7 +426,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     };
 
     fetchData();
-  }, [user_id]);
+  }, [user_id, form]);
 
   useEffect(() => {
     form.reset({
@@ -487,13 +487,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         uploadedUrls.liveCaptureUrl = response.data.data.Location;
       }
 
-      const {
-        aadharOrGovtId,
-        frontImageUrl,
-        backImageUrl,
-        liveCaptureUrl,
-        ...restData
-      } = data;
+      const { aadharOrGovtId, ...restData } = data;
+
       const kyc = {
         aadharOrGovtId,
         frontImageUrl: uploadedUrls.frontImageUrl,
@@ -547,7 +542,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          user_id={user.uid}
           profile={user.profilePic}
           entityType={Type.FREELANCER}
         />
@@ -1126,11 +1120,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <FormField
             control={form.control}
             name="resume"
-            render={({ field }) => (
+            render={() => (
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload user_id={user._id} />
+                  <ResumeUpload />
                 </div>
               </FormItem>
             )}

@@ -15,7 +15,7 @@ import { RootState } from '@/lib/store';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh, setRefresh] = useState(false);
+  const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
 
   useEffect(() => {

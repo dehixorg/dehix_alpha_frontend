@@ -1,10 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Milestone,
-  MilestoneStatus,
-  PaymentStatus,
-} from '@/utils/types/Milestone';
+import { Milestone, MilestoneStatus } from '@/utils/types/Milestone';
 
 export const useFormState = ({
   setErrors,

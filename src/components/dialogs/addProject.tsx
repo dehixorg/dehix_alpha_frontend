@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -27,7 +26,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
 import {
   Select,
   SelectContent,
@@ -85,7 +83,6 @@ interface Skill {
 }
 
 export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');

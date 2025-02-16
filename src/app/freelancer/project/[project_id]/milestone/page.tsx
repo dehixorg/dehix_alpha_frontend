@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { PackageOpen } from 'lucide-react';
 
@@ -20,7 +20,7 @@ const Page = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMilestones = async () => {
+  const fetchMilestones = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/milestones`, {
         params: { projectId: project_id },
@@ -39,7 +39,7 @@ const Page = () => {
 
           return {
             ...milestone,
-            stories: storiesForMilestone || [], // Use empty array if no stories
+            stories: storiesForMilestone || [],
           };
         },
       );
@@ -50,7 +50,7 @@ const Page = () => {
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
-  };
+  }, [project_id]);
 
   const handleStorySubmit = async (
     e: React.FormEvent,
@@ -85,7 +85,7 @@ const Page = () => {
     };
 
     try {
-      const response = await axiosInstance.put(
+      await axiosInstance.put(
         `/milestones/${updateMilestone._id}`,
         milestoneData,
       );
@@ -97,12 +97,6 @@ const Page = () => {
           : 'Story added successfully!',
         duration: 3000,
       });
-
-      const updatedMilestones = milestones.map((milestone) =>
-        milestone._id === updateMilestone._id
-          ? { ...milestone, stories: updatedStories }
-          : milestone,
-      );
 
       fetchMilestones();
     } catch (error) {
@@ -121,7 +115,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchMilestones();
-  }, []);
+  }, [fetchMilestones]);
 
   return (
     <div className="flex min-h-screen h-auto w-full flex-col bg-muted/40">
@@ -155,7 +149,6 @@ const Page = () => {
               <MilestoneTimeline
                 milestones={milestones}
                 handleStorySubmit={handleStorySubmit}
-                milestoneId={milestones[0]._id}
                 fetchMilestones={fetchMilestones}
                 isFreelancer={true}
               />

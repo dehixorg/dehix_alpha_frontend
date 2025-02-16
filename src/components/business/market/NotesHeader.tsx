@@ -1,11 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
 
-import Breadcrumb from '@/components/shared/breadcrumbList';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

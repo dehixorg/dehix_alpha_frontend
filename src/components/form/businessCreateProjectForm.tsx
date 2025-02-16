@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
@@ -29,7 +28,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
@@ -112,8 +110,6 @@ interface projectDomain {
 }
 
 export function CreateProjectBusinessForm() {
-  const user = useSelector((state: RootState) => state.user);
-
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');

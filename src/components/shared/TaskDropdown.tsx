@@ -1,13 +1,5 @@
 import { useSelector } from 'react-redux';
-import {
-  MoreVertical,
-  CheckCircle,
-  Edit,
-  Eye,
-  DollarSign,
-  UserCheck,
-  UserPlus,
-} from 'lucide-react';
+import { MoreVertical, CheckCircle, Edit, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -51,7 +43,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
     const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
 
     try {
-      const response = await axiosInstance.patch(url, payload);
+      await axiosInstance.patch(url, payload);
 
       setShowPermissionDialog(false);
       toast({

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { Plus } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 
@@ -60,17 +59,17 @@ export function SkillDomainMeetingDialog({
   const [attendees, setAttendees] = useState<string[]>(['']);
   const [interviewer, setInterviewer] = useState<Interviewer[]>([]);
 
-  const handleRequest = (meetingData: object) => {
+  const handleRequest = async (meetingData: object) => {
     const query = Object.fromEntries(searchParams.entries());
     if (query.code) {
-      handleCreateMeet(meetingData, query.code);
+      await handleCreateMeet(meetingData, query.code);
     } else {
       handleAuth();
     }
   };
 
-  const handleCreateMeet = (meetingData: object, code: string) => {
-    const response = axiosInstance.post(`/meeting`, meetingData, {
+  const handleCreateMeet = async (meetingData: object, code: string) => {
+    await axiosInstance.post(`/meeting`, meetingData, {
       params: {
         code: code, // Add the query string here
       },
@@ -119,13 +118,12 @@ export function SkillDomainMeetingDialog({
           `/freelancer/${user.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
         );
         setInterviewer(response?.data?.data);
-        console.log(interviewer);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     }
     fetchData();
-  }, [doc_id]);
+  }, [doc_id, doc_type, user.uid]);
 
   // Helper function to handle both date and time change
   const handleDateTimeChange = (

@@ -25,13 +25,9 @@ const DehixInterviews = ({
   filter,
   isTableView,
   searchQuery,
-  setDomainData,
-  setSkillData,
   skillData,
   domainData,
 }: any) => {
-  // talentType
-
   const filteredData = () => {
     const data =
       filter === 'All'

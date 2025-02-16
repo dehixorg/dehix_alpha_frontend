@@ -1,8 +1,7 @@
 import React from 'react';
-import { Calendar, Github, ExternalLink, Wrench } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface ProfessionalExperienceProps {

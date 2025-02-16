@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Boxes,
   Briefcase,
   HomeIcon,
   Package,

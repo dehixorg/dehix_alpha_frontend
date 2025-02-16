@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Briefcase,
-  Building2,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -19,7 +18,6 @@ import {
   Rocket,
   Shield,
   User,
-  UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -223,23 +221,23 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = [
-    {
-      title: 'Account Details',
-      description: 'Basic information',
-      icon: <UserCircle className="w-6 h-6" />,
-    },
-    {
-      title: 'Company Info',
-      description: 'About your business',
-      icon: <Building2 className="w-6 h-6" />,
-    },
-    {
-      title: 'Verification',
-      description: 'Contact details',
-      icon: <Shield className="w-6 h-6" />,
-    },
-  ];
+  // const steps = [
+  //   {
+  //     title: 'Account Details',
+  //     description: 'Basic information',
+  //     icon: <UserCircle className="w-6 h-6" />,
+  //   },
+  //   {
+  //     title: 'Company Info',
+  //     description: 'About your business',
+  //     icon: <Building2 className="w-6 h-6" />,
+  //   },
+  //   {
+  //     title: 'Verification',
+  //     description: 'Contact details',
+  //     icon: <Shield className="w-6 h-6" />,
+  //   },
+  // ];
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -270,7 +268,6 @@ function FreelancerRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
-  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
