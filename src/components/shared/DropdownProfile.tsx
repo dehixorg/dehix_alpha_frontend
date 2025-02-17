@@ -94,7 +94,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       console.warn('User ID is not available. Skipping API call.');
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, [user?.uid, user.type, setConnects]);
 
   const handleLogout = () => {
     dispatch(clearUser());

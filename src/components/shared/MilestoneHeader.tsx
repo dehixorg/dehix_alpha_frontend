@@ -2,12 +2,7 @@ import React, { useState } from 'react';
 
 import { Badge } from '../ui/badge';
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { getStatusBadge } from '@/utils/statusBadge';
 
 interface Milestone {

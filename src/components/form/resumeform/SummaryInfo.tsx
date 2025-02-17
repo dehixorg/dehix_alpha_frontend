@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+// import { useForm } from 'react-hook-form';
 import { X, PlusCircle, CheckCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,11 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   summaryData,
   setSummaryData,
 }) => {
-  const form = useForm({
-    defaultValues: {
-      summary: '',
-    },
-  });
+  // const form = useForm({
+  //   defaultValues: {
+  //     summary: '',
+  //   },
+  // });
 
   const handleInputChange = (index: number, value: string) => {
     const updatedSummaryData = [...summaryData];

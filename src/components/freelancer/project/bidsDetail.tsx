@@ -79,11 +79,25 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   }, [id]);
 
+  const fetchBid = React.useCallback(
+    async (profileId: string) => {
+      try {
+        const response = await axiosInstance.get(
+          `/bid/project/${id}/profile/${profileId}/bid`,
+        );
+        setBids(response.data?.data || []);
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [id],
+  );
+
   useEffect(() => {
     if (profileId) {
       fetchBid(profileId);
     }
-  }, [profileId]);
+  }, [profileId, fetchBid]);
 
   const handleUpdateStatus = async (bidId: string, status: string) => {
     try {
@@ -100,17 +114,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       setError('Failed to update bid status.');
     } finally {
       setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
-    }
-  };
-
-  const fetchBid = async (profileId: string) => {
-    try {
-      const response = await axiosInstance.get(
-        `/bid/project/${id}/profile/${profileId}/bid`,
-      );
-      setBids(response.data?.data || []);
-    } catch (e) {
-      console.error(e);
     }
   };
 

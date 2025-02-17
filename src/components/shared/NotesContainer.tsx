@@ -52,22 +52,14 @@ const NotesContainer = ({
     {
       label: 'Edit',
       icon: <EditIcon size={15} className="text-white-500" />,
-      onClick: (
-        noteId: string | undefined,
-        notes: Note[],
-        setNotes: (notes: Note[]) => void,
-      ) => {
+      onClick: (noteId: string | undefined, notes: Note[]) => {
         setSelectedNote(notes.find((note) => note._id === noteId) || null);
       },
     },
     {
       label: 'Delete',
       icon: <Trash2Icon size={15} className="text-white-500" />,
-      onClick: (
-        noteId: string | undefined,
-        notes: Note[],
-        setNotes: (notes: Note[]) => void,
-      ) => {
+      onClick: (noteId: string | undefined, notes: Note[]) => {
         setIsDeleting(true);
         setSelectedDeleteNote(
           notes.find((note) => note._id === noteId) || null,
@@ -77,22 +69,14 @@ const NotesContainer = ({
     {
       label: 'Recycle',
       icon: <RecycleIcon size={15} className="text-white-500" />,
-      onClick: (
-        noteId: string | undefined,
-        notes: Note[],
-        setNotes: (notes: Note[]) => void,
-      ) => {
+      onClick: (noteId: string | undefined) => {
         handleUpdateNoteType(noteId, NoteType.TRASH);
       },
     },
     {
       label: 'Label',
       icon: <TagIcon size={15} className="text-white-500" />,
-      onClick: (
-        noteId: string | undefined,
-        notes: Note[],
-        setNotes: (notes: Note[]) => void,
-      ) => {
+      onClick: (noteId: string | undefined, notes: Note[]) => {
         setSelectedTypeNote(notes.find((note) => note._id === noteId) || null);
       },
     },

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {

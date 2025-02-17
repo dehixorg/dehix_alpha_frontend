@@ -15,13 +15,11 @@ import { Milestone, Story } from '@/utils/types/Milestone';
 
 const StoriesAccordion = ({
   milestone,
-  milestoneId,
   fetchMilestones,
   handleStorySubmit,
   isFreelancer = false,
 }: {
   milestone: Milestone;
-  milestoneId: string;
   fetchMilestones: any;
   handleStorySubmit: any;
   isFreelancer: boolean;

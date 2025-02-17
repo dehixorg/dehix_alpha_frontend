@@ -276,7 +276,7 @@ function BusinessRegisterForm({
         });
       }
     } else if (currentStep === 1) {
-      const isValid = await form.trigger([
+      await form.trigger([
         'companyName',
         'companySize',
         'position',
@@ -322,6 +322,9 @@ function BusinessRegisterForm({
         description: 'Your business account has been created.',
       });
       setIsModalOpen(true);
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       console.error('API Error:', error);
       toast({

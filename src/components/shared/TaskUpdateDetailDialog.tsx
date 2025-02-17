@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import {
   Dialog,
@@ -115,7 +115,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     }
     const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
     try {
-      const response = await axiosInstance.patch(url, {
+      await axiosInstance.patch(url, {
         milestoneId,
         storyId,
         taskId,

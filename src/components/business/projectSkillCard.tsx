@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Calendar, Tag, Code2, Plus } from 'lucide-react';
+import { Mail, Plus } from 'lucide-react';
 
 import { Separator } from '../ui/separator';
 import DateRange from '../cards/dateRange';

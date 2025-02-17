@@ -108,7 +108,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         setError('Failed to verify OTP. Please check the OTP.');
       }
     });
-  }, [confirmationResult, otp, dispatch, router]);
+  }, [confirmationResult, otp, dispatch, router, phoneNumber]);
 
   useEffect(() => {
     const hasEnteredAllDigits = otp.length === 6;

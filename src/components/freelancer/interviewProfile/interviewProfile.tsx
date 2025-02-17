@@ -133,18 +133,13 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
 
         const skillData = freelancerSkillsResponse.data.data[0].skills;
         const domainData = freelancerDomainsResponse.data.data[0].domain;
-        console.log(skillData);
 
         setSkillData(skillData);
         setDomainData(domainData);
-        console.log(domainData);
-
-        console.log('FI');
 
         const skillsDomainResponse = await axiosInstance.get(
           `/freelancer/${user.uid}/dehix-talent`,
         );
-        console.log(skillsDomainResponse);
 
         const updatedSkills = skillsDomainResponse.data.data.skills.filter(
           (skill: any) =>
@@ -174,7 +169,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
       }
     }
     fetchData();
-  }, [freelancerId]);
+  }, [freelancerId, user?.uid]);
 
   const { reset: resetSkill } = useForm<SkillFormData>({
     resolver: zodResolver(SkillSchema),

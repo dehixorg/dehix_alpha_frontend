@@ -1,11 +1,10 @@
 //chatlist.tsx
 
-import React, { useState, useEffect, ComponentProps } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
 import { MessageSquare } from 'lucide-react'; // Import an icon from lucide-react
 
-import { Badge } from '../ui/badge'; // Assuming Badge is available at this path
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,7 +36,7 @@ export function ChatList({
   >({});
 
   // Function to update the last updated time for each conversation
-  const updateLastUpdated = () => {
+  const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
 
     conversations.forEach((conversation) => {
@@ -48,7 +47,7 @@ export function ChatList({
     });
 
     setLastUpdatedTimes(updatedTimes);
-  };
+  }, [conversations]);
 
   // Update lastUpdated every minute
   useEffect(() => {
@@ -57,7 +56,7 @@ export function ChatList({
 
     // Cleanup the interval on component unmount
     return () => clearInterval(intervalId);
-  }, [conversations]);
+  }, [updateLastUpdated]);
 
   return (
     <Card className="p-4">
@@ -132,16 +131,16 @@ export function ChatList({
 }
 
 // Function to determine badge variant based on label
-function getBadgeVariantFromLabel(
-  label: string,
-): ComponentProps<typeof Badge>['variant'] {
-  if (['a'].includes(label.toLowerCase())) {
-    return 'default';
-  }
+// function getBadgeVariantFromLabel(
+//   label: string,
+// ): ComponentProps<typeof Badge>['variant'] {
+//   if (['a'].includes(label.toLowerCase())) {
+//     return 'default';
+//   }
 
-  if (['Project'].includes(label.toLowerCase())) {
-    return 'outline';
-  }
+//   if (['Project'].includes(label.toLowerCase())) {
+//     return 'outline';
+//   }
 
-  return 'secondary';
-}
+//   return 'secondary';
+// }

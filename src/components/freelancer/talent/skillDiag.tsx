@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
 import {
@@ -26,7 +25,6 @@ import {
 import { Input } from '@/components/ui/input'; // Import the Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-import { RootState } from '@/lib/store';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
@@ -72,7 +70,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
   onSubmitSkill,
   setSkills,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {

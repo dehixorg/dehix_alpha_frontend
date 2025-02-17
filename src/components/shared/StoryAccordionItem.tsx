@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, ChevronsUpDown, Plus, Milestone, X, Check } from 'lucide-react';
+import { Copy, ChevronsUpDown, Plus, X, Check } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -56,15 +56,6 @@ import {
 } from '@/components/ui/command';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Task } from '@/utils/types/Milestone';
-
-interface Story {
-  _id?: string;
-  title: string;
-  summary: string;
-  storyStatus: string;
-  importantUrls: { urlName: string; url: string }[];
-  tasks: { _id: string; title: string; summary: string; taskStatus: string }[];
-}
 
 interface TaskDetailsDialogProps {
   task: Task | null;
@@ -276,8 +267,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               <Carousel className="w-[85vw] md:w-full relative mt-4">
                 <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
                   {story.tasks.map((task: any) => {
-                    const { text: taskStatusText, className: taskBadgeStyle } =
-                      getStatusBadge(task.taskStatus);
+                    const { className: taskBadgeStyle } = getStatusBadge(
+                      task.taskStatus,
+                    );
 
                     return (
                       <CarouselItem
