@@ -56,9 +56,11 @@ export function ProjectCard({
   type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
+  console.log(project);
+
   const { text, className } = getStatusBadge(project.status);
   return (
-    <Card className={cn('flex flex-col', cardClassName)} {...props}>
+    <Card className={cn('flex flex-col h-[400px]', cardClassName)} {...props}>
       <CardHeader>
         <CardTitle className="flex">
           {project.projectName}&nbsp;
@@ -96,7 +98,7 @@ export function ProjectCard({
           </p>
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {project.skillsRequired.map((skill, index) => (
+            {project?.skillsRequired?.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
                 {skill}
               </Badge>

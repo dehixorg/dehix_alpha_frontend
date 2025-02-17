@@ -43,7 +43,7 @@ const useShare = () => {
 };
 
 interface DropdownProfileProps {
-  setConnects?: (value: number | null) => void;
+  setConnects?: (value: number) => void;
 }
 
 export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
@@ -76,8 +76,9 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
+        localStorage.setItem('DHX_CONNECTS', response.data.data?.connects);
         if (setConnects) {
-          setConnects(response.data?.connects); // Example value
+          setConnects(response.data.data?.connects ?? 0);
         }
         setReferralCode(fetchCode);
       } catch (error) {

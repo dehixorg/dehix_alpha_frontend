@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { PackageOpen } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -89,8 +90,6 @@ const Page = () => {
         milestoneData,
       );
 
-      const newMilestone = response.data;
-
       toast({
         title: 'Success',
         description: isTask
@@ -131,7 +130,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 md:py-0 sm:py-4 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -162,7 +161,10 @@ const Page = () => {
               />
             ) : (
               <div className="flex justify-center items-center h-[50vh]">
-                No milestones found.
+                <div className="col-span-full text-center mt-20 w-full">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No Milestone created</p>
+                </div>
               </div>
             )}
           </div>
