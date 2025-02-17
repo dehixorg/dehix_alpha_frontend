@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
 //import { useParams } from 'react-router-dom';
 interface Project {
   _id: string;
@@ -46,6 +47,12 @@ const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
+  const errorToast = {
+  variant: 'destructive',
+  title: 'Error',
+  description: 'Something went wrong. Please try again.',
+};
+
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -81,6 +88,7 @@ const BidsPage = () => {
 
         setBidsArray(pendingBids);
       } catch (error) {
+        toast(errorToast);
         console.error('Error fetching bids:', error);
       }
     };
@@ -100,6 +108,7 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
+    toast(errorToast);
       console.error('Error updating bid status:', error);
     }
   };

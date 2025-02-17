@@ -19,6 +19,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
@@ -69,6 +70,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         setUserData(response.data);
       } catch (error) {
         setError('Error fetching user data.');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }
@@ -112,11 +118,31 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     } catch (error) {
       console.error(`Error updating bid status for ${bidId}:`, error);
       setError('Failed to update bid status.');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     } finally {
       setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
     }
   };
 
+  const fetchBid = async (profileId: string) => {
+    try {
+      const response = await axiosInstance.get(
+        `/bid/project/${id}/profile/${profileId}/bid`,
+      );
+      setBids(response.data?.data || []);
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
+    }
+  };
   return (
     <div className="max-w-5xl mx-auto p-4">
       <div className="mb-8 mt-4">

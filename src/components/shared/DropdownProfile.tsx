@@ -25,6 +25,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/hooks/use-toast';
 
 const useShare = () => {
   const share = async (title: string, text: string, url: string) => {
@@ -83,6 +84,11 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }

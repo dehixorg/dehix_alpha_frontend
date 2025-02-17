@@ -32,6 +32,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -48,6 +49,11 @@ export default function Dashboard() {
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };

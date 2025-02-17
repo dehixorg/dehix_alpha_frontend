@@ -24,6 +24,7 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
@@ -74,6 +75,11 @@ export default function ProfessionalInfo() {
       );
       setProjectData(flattenedData);
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.log(error, 'error in getting verification data');
     }
   }, []);

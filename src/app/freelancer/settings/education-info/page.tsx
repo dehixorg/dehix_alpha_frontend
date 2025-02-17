@@ -12,6 +12,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -28,6 +29,11 @@ export default function Education() {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
         setEducationInfo(Object.values(response.data?.education));
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };

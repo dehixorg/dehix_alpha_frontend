@@ -42,6 +42,7 @@ import { Separator } from '@/components/ui/separator';
 import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   label: string;
@@ -95,6 +96,11 @@ export default function ConsultancyPage() {
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -152,6 +158,11 @@ export default function ConsultancyPage() {
       form.reset();
       setIsDialogOpen(false);
     } catch (error) {
+      toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: 'Something went wrong.Please try again.',
+            }); // Error toast
       console.error('Error:', error);
     }
   };

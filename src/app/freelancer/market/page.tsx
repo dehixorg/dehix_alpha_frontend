@@ -17,6 +17,7 @@ import JobCard from '@/components/opportunities/jobs/jobs';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/components/ui/use-toast';
 
 interface FilterState {
   projects: string[];
@@ -147,6 +148,11 @@ const Market: React.FC = () => {
         setProjects(projectData);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setIsJobLoading(false);
       }
@@ -175,6 +181,11 @@ const Market: React.FC = () => {
         }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Something went wrong.Please try again.',
+              }); // Error toast
       }
     },
     [user.uid],

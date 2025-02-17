@@ -37,6 +37,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface AddTaskDialogProps {
   isDialogOpen: boolean;
@@ -112,6 +113,11 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         setFilteredFreelancers(response.data.freelancers.freelancerData);
       } catch (error) {
         console.error('Failed to fetch freelancers:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setIsLoading(false);
       }

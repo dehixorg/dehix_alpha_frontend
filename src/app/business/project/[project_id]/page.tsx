@@ -83,6 +83,11 @@ export default function Dashboard() {
           setProject(projectData);
         }
       } catch (error) {
+        toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Something went wrong.Please try again.',
+              }); // Error toast
         console.error('API Error:', error);
       }
     };

@@ -38,6 +38,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
+import { toast } from '@/components/ui/use-toast';
 
 // interface Interview {
 //   reference: string;
@@ -235,6 +236,11 @@ export default function CurrentPage() {
         setProjectSkill(projectSkillArray ?? []);
         setProjectDomain(projectDomainArray ?? []);
       } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('Failed to load data. Please try again.', err);
         setSkillData([]);
         setDomainData([]);

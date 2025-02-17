@@ -12,6 +12,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
@@ -26,6 +27,11 @@ export default function Projects() {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
         setProjects(Object.values(response.data?.projects));
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };

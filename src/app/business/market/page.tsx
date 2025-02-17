@@ -16,6 +16,7 @@ import MarketHeader from '@/components/business/market/MarketHeader';
 import FilterSidebar from '@/components/business/market/FilterSideBar';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import MobileFilterModal from '@/components/business/market/MobileFilterModal';
+import { toast } from '@/components/ui/use-toast';
 
 interface FilterState {
   location: string[];
@@ -32,6 +33,11 @@ const Market: React.FC = () => {
   const [domains, setDomains] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const errorToast = {
+  variant: 'destructive',
+  title: 'Error',
+  description: 'Something went wrong. Please try again.',
+};
 
   const [filters, setFilters] = useState<FilterState>({
     location: [],
@@ -104,6 +110,7 @@ const Market: React.FC = () => {
 
       setFreelancers(response.data.data);
     } catch (error) {
+      toast(errorToast);
       console.error('API Error:', error);
     } finally {
       setIsDataLoading(false);
@@ -125,6 +132,7 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
       } catch (error) {
+        toast(errorToast);
         console.error('Error fetching data:', error);
       }
     }

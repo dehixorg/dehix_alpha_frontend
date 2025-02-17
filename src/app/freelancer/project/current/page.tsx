@@ -13,6 +13,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -58,6 +60,11 @@ export default function CurrentProject() {
 
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       } finally {
         setIsLoading(false);
