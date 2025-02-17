@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 // import dummyData from '@/dummydata.json';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -49,8 +47,6 @@ interface JobData {
 
 export default function ProfessionalInfo() {
   const [JobData, setJobData] = useState<JobData[]>([]);
-
-  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -87,7 +83,7 @@ export default function ProfessionalInfo() {
       }); // Error toast
       console.log(error, 'error in getting verification data');
     }
-  }, [user.uid]);
+  }, []);
 
   useEffect(() => {
     fetchData();

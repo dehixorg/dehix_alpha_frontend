@@ -13,8 +13,8 @@ export default function SignUp() {
         <ThemeToggle />
       </div>
 
-      <div className="flex items-center justify-center py-8 sm:py-12">
-        <div className="mx-auto w-3/4 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-center py-20 sm:py-12">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6">
             <FreelancerRegisterForm />
             <div className="mt-4 text-center text-xs sm:text-sm">
@@ -23,6 +23,16 @@ export default function SignUp() {
                 <Link href="/auth/login">Sign in</Link>
               </Button>
             </div>
+            <p className="px-2 text-center text-xs text-muted-foreground sm:px-8 sm:text-sm">
+              By clicking continue, you agree to our{' '}
+              <Button variant="link" className="p-0" asChild>
+                <Link href="/terms">Terms of Service</Link>
+              </Button>{' '}
+              and{' '}
+              <Button variant="link" className="p-0" asChild>
+                <Link href="/privacy">Privacy Policy.</Link>
+              </Button>
+            </p>
           </div>
         </div>
       </div>

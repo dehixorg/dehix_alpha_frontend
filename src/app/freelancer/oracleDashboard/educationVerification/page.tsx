@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,6 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 // import dummyData from '@/dummydata.json';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -45,8 +43,6 @@ interface EducationData {
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
   const [educationdata, setEducationData] = useState<EducationData[]>([]);
-
-  const user = useSelector((state: RootState) => state.user);
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -85,7 +81,7 @@ export default function ProfessionalInfo() {
         description: 'Something went wrong.Please try again.',
       }); // Error toast
     }
-  }, [user.uid]);
+  }, []);
 
   // Log the requesterId state after it updates
   // useEffect(() => {

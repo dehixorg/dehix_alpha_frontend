@@ -13,11 +13,10 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Milestone, Story } from '@/utils/types/Milestone';
+import { Milestone } from '@/utils/types/Milestone';
 
 interface MilestoneTimelineProps {
   milestones: Milestone[];
-  milestoneId: string | undefined;
   fetchMilestones: any;
   handleStorySubmit: any;
   isFreelancer?: boolean;
@@ -35,13 +34,11 @@ export const truncateDescription = (
 
 const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
   milestones,
-  milestoneId,
   fetchMilestones,
   handleStorySubmit,
   isFreelancer = false,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedStories, setSelectedStories] = useState<Story[] | undefined>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
 
   useEffect(() => {
@@ -80,7 +77,6 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
 
   const handleStorySelect = (milestone: any, index: number) => {
     if (index < 0 || index >= milestones.length) return;
-    setSelectedStories(milestone.stories);
     setSelectedIndex(index);
   };
 
@@ -107,7 +103,7 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           {milestones && (
             <div ref={scrollRef} className="hidden md:block ">
               {/* Timeline Line */}
-              <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg transform -translate-y-1/2"></div>
+              <div className="absolute overflow-hidden left-0 right-0 top-1/2 h-1 line-bg bg-gray-500 transform -translate-y-1/2"></div>
 
               {/* Scrolling Timeline */}
               <div className="relative cursor-pointer flex items-center whitespace-nowrap overflow-x-auto overflow-y-scroll px-4 py-6  no-scrollbar">
@@ -232,7 +228,6 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
         <div className="mt-10">
           <StoriesAccordion
             milestone={milestones[selectedIndex]}
-            milestoneId={milestoneId ?? ''}
             fetchMilestones={fetchMilestones}
             handleStorySubmit={handleStorySubmit}
             isFreelancer={isFreelancer}

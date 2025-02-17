@@ -20,11 +20,9 @@ const allowedImageFormats = [
 const maxImageSize = 1 * 1024 * 1024; // 1MB
 
 const ProfilePictureUpload = ({
-  user_id,
   profile,
   entityType,
 }: {
-  user_id: string;
   profile: string;
   entityType: Type.BUSINESS | Type.FREELANCER; // Specify possible values for entityType
 }) => {

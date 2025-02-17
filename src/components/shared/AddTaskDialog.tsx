@@ -34,7 +34,6 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
 } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
@@ -127,7 +126,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     if (isDialogOpen) {
       fetchFreelancers();
     }
-  }, [isDialogOpen]);
+  }, [isDialogOpen, project_id]);
 
   const handleSearch = (query: string) => {
     const lowerCaseQuery = query.toLowerCase();

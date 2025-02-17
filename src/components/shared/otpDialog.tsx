@@ -114,7 +114,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         }); // Error toast
       }
     });
-  }, [confirmationResult, otp, dispatch, router]);
+  }, [confirmationResult, otp, dispatch, router, phoneNumber]);
 
   useEffect(() => {
     const hasEnteredAllDigits = otp.length === 6;

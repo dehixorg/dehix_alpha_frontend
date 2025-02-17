@@ -1,6 +1,7 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { PackageOpen } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -19,7 +20,7 @@ const Page = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMilestones = async () => {
+  const fetchMilestones = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/milestones`, {
         params: { projectId: project_id },
@@ -38,7 +39,7 @@ const Page = () => {
 
           return {
             ...milestone,
-            stories: storiesForMilestone || [], // Use empty array if no stories
+            stories: storiesForMilestone || [],
           };
         },
       );
@@ -54,7 +55,7 @@ const Page = () => {
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
-  };
+  }, [project_id]);
 
   const handleStorySubmit = async (
     e: React.FormEvent,
@@ -89,12 +90,10 @@ const Page = () => {
     };
 
     try {
-      const response = await axiosInstance.put(
+      await axiosInstance.put(
         `/milestones/${updateMilestone._id}`,
         milestoneData,
       );
-
-      const newMilestone = response.data;
 
       toast({
         title: 'Success',
@@ -103,12 +102,6 @@ const Page = () => {
           : 'Story added successfully!',
         duration: 3000,
       });
-
-      const updatedMilestones = milestones.map((milestone) =>
-        milestone._id === updateMilestone._id
-          ? { ...milestone, stories: updatedStories }
-          : milestone,
-      );
 
       fetchMilestones();
     } catch (error) {
@@ -127,7 +120,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchMilestones();
-  }, []);
+  }, [fetchMilestones]);
 
   return (
     <div className="flex min-h-screen h-auto w-full flex-col bg-muted/40">
@@ -136,7 +129,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 md:py-0 sm:py-4 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -161,13 +154,15 @@ const Page = () => {
               <MilestoneTimeline
                 milestones={milestones}
                 handleStorySubmit={handleStorySubmit}
-                milestoneId={milestones[0]._id}
                 fetchMilestones={fetchMilestones}
                 isFreelancer={true}
               />
             ) : (
               <div className="flex justify-center items-center h-[50vh]">
-                No milestones found.
+                <div className="col-span-full text-center mt-20 w-full">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500">No Milestone created</p>
+                </div>
               </div>
             )}
           </div>

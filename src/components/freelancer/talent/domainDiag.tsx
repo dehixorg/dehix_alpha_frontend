@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
 import {
@@ -24,7 +23,6 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input'; // Import ShadCN Input component
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -75,7 +73,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   onSubmitDomain,
   setDomains,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
   const [loading, setLoading] = useState(false);
   const {

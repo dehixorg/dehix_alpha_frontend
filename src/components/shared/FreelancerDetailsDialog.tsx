@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   Dialog,
@@ -70,13 +71,16 @@ const FreelancerDetailsDialog: React.FC<FreelancerDetailsDialogProps> = ({
             </DialogHeader>
 
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src={
                   freelancerDetails?.profilePic ||
                   'https://img.freepik.com/premium-photo/flat-icon-design_1258715-221692.jpg?semt=ais_hybrid'
                 }
                 alt="Profile of freelancer"
-                className="w-20 h-20 rounded-full border-2 border-gray-300 mb-3"
+                width={80}
+                height={80}
+                className="rounded-full border-2 border-gray-300 mb-3 object-cover"
+                unoptimized
               />
               <h2 className="text-lg font-semibold">{`${freelancerDetails?.firstName} ${freelancerDetails?.lastName}`}</h2>
               <p className="text-sm text-gray-500">{freelancerDetails?.role}</p>

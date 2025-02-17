@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/use-toast';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh, setRefresh] = useState(false);
+  const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
 
   useEffect(() => {

@@ -1,20 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Calendar,
-  DollarSign,
-  User,
-  Briefcase,
-  Code,
-  CheckCircle,
-  XCircle,
-  Clock,
-} from 'lucide-react';
 
 import SkeletonLoader from './SkeletonLoader';
 import BidList from './BidList';
 
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
@@ -22,9 +11,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,

@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -27,7 +26,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
 
 const experienceFormSchema = z
   .object({
@@ -75,7 +73,6 @@ interface AddExperienceProps {
 export const AddExperience: React.FC<AddExperienceProps> = ({
   onFormSubmit,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),

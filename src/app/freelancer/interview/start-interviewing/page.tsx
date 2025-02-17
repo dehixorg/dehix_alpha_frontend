@@ -1,14 +1,11 @@
 'use client';
 import * as React from 'react';
-import { useSelector } from 'react-redux';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
-import { RootState } from '@/lib/store';
-import ProjectInterviews from '@/components/freelancer/projectInterview/ProjectInterviews';
 import Header from '@/components/header/header';
 
 export default function ProfilePage() {

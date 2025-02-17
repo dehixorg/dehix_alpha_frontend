@@ -77,14 +77,10 @@ interface SkillDomainData {
   status: string;
   visible: boolean;
 }
-interface SkillDomainFormProps {
-  skillFilter: (skills: Skill[]) => void;
-  domainFilter: (domains: Domain[]) => void;
-}
 
 const SHEET_SIDES = ['left'] as const;
 
-type SheetSide = (typeof SHEET_SIDES)[number];
+// type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
   skillFilter,

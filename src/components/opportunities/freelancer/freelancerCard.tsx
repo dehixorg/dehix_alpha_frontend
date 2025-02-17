@@ -1,7 +1,6 @@
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
+import { Avatar, AvatarImage } from '@radix-ui/react-avatar';
 import Link from 'next/link';
-import { Plus, X } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,13 +12,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 interface FreelancerCardProps {
   name: string;
   skills: string[];
@@ -34,7 +26,7 @@ interface FreelancerCardProps {
 
 const SHEET_SIDES = ['left'] as const;
 
-type SheetSide = (typeof SHEET_SIDES)[number];
+// type SheetSide = (typeof SHEET_SIDES)[number];
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
   name,
@@ -47,20 +39,18 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
   Github,
   LinkedIn,
 }) => {
-  const [tmpSkill, setTmpSkill] = React.useState<string>('');
-  const [currSkills, setCurrSkills] = React.useState<{ name: string }[]>([]);
-  const skillDomainData: { label: string }[] = [];
+  // const skillDomainData: { label: string }[] = [];
   const [isExpanded, setIsExpanded] = React.useState(false);
 
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill) => skill.name === tmpSkill)) {
-      setCurrSkills([...currSkills, { name: tmpSkill }]);
-    }
-  };
+  // const handleAddSkill = () => {
+  //   if (tmpSkill && !currSkills.some((skill) => skill.name === tmpSkill)) {
+  //     setCurrSkills([...currSkills, { name: tmpSkill }]);
+  //   }
+  // };
 
-  const handleDeleteSkill = (skillName: string) => {
-    setCurrSkills(currSkills.filter((skill) => skill.name !== skillName));
-  };
+  // const handleDeleteSkill = (skillName: string) => {
+  //   setCurrSkills(currSkills.filter((skill) => skill.name !== skillName));
+  // };
 
   return (
     <div className=" sm:mx-10 mb-3 max-w-3xl">

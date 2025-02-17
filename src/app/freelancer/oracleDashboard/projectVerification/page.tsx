@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,6 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 // import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -48,7 +46,6 @@ interface ProjectData {
 
 export default function ProfessionalInfo() {
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
-  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -85,10 +82,12 @@ export default function ProfessionalInfo() {
       }); // Error toast
       console.log(error, 'error in getting verification data');
     }
-  }, [user.uid]);
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
     updatedData[index].verificationStatus = newStatus;

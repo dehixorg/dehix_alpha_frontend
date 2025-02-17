@@ -40,8 +40,8 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
 
   return (
     <div>
-      <div className="space-y-1.5 text-center">
-        <h2 className="text-2xl">General Info</h2>
+      <div className="space-y-1.5 ml-5 mb-5">
+        <h2 className="text-2xl">Project Info</h2>
         <p className="text-sm text-gray-500">
           This will not appear on your resume.
         </p>
@@ -64,12 +64,7 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
             </div>
 
             <div>
-              <Label
-                htmlFor={`project-title-${index}`}
-                className="block text-sm font-medium text-gray-500"
-              >
-                Project Name
-              </Label>
+              <Label htmlFor={`project-title-${index}`}>Project Name</Label>
               <Input
                 id={`project-title-${index}`}
                 name="title"
@@ -83,12 +78,10 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
             </div>
 
             <div>
-              <Label
-                htmlFor={`project-description-${index}`}
-                className="block text-sm font-medium text-gray-500"
-              >
-                Description
+              <Label htmlFor={`project-description-${index}`}>
+                Describe what this project is for.
               </Label>
+
               <Input
                 id={`project-description-${index}`}
                 name="description"
@@ -99,9 +92,6 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
                 placeholder="A project for learning purposes"
                 className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
               />
-              <p className="text-sm text-gray-500">
-                Describe what this project is for.
-              </p>
             </div>
           </div>
         ))}
@@ -110,7 +100,7 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddProject}
-          className="text-center justify-items-center text-white bg-gray"
+          className="text-center justify-items-center dark:text-black  light:bg-black"
         >
           <PlusCircle />
         </Button>
