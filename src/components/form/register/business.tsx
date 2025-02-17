@@ -59,7 +59,7 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto sm:py-6 mb-4 sm:mb-8">
+    <div className="w-full max-w-5xl mx-auto py-4  sm:py-6 mb-10 sm:mb-8">
       <div className="text-center space-y-2 sm:space-y-4">
         <h1 className="text-3xl font-bold">
           Create Your Business <span className="block">Account</span>
@@ -173,7 +173,7 @@ export default function BusinessRegisterPage() {
     <div className="flex w-full items-center justify-center">
       <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
         <Stepper currentStep={currentStep} />
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full ">
           <div className="w-full max-w-4xl">
             <BusinessRegisterForm
               currentStep={currentStep}
@@ -337,7 +337,10 @@ function BusinessRegisterForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full max-w-3xl mx-auto"
+      >
         <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="grid gap-4 sm:gap-6 w-full">
             {/* First Step */}
