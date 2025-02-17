@@ -47,6 +47,12 @@ const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
+  const errorToast = {
+  variant: 'destructive',
+  title: 'Error',
+  description: 'Something went wrong. Please try again.',
+};
+
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -82,6 +88,7 @@ const BidsPage = () => {
 
         setBidsArray(pendingBids);
       } catch (error) {
+        toast(errorToast);
         console.error('Error fetching bids:', error);
       }
     };
@@ -101,11 +108,7 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
-      toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Something went wrong.Please try again.',
-            }); // Error toast
+    toast(errorToast);
       console.error('Error updating bid status:', error);
     }
   };
