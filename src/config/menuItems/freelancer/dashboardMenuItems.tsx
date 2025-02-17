@@ -1,5 +1,4 @@
 import {
-  Boxes,
   Home,
   LineChart,
   Settings,

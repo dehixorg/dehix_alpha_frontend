@@ -36,7 +36,7 @@ const MilestoneForm: React.FC<MilestoneFormProps> = ({
     e.preventDefault();
     if (validateForm()) {
       try {
-        const response = await axiosInstance.post('/milestones', {
+        await axiosInstance.post('/milestones', {
           ...formData,
           userId,
           projectId,

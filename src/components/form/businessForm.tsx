@@ -188,13 +188,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         uploadedUrls.liveCaptureUrl = response.data.data.Location;
       }
 
-      const {
-        aadharOrGovtId,
-        frontImageUrl,
-        backImageUrl,
-        liveCaptureUrl,
-        ...restData
-      } = data;
+      const { aadharOrGovtId, ...restData } = data;
       const kyc = {
         aadharOrGovtId,
         frontImageUrl: uploadedUrls.frontImageUrl,
@@ -246,7 +240,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          user_id={user._id}
           profile={user.profilePic}
           entityType={Type.BUSINESS}
         />

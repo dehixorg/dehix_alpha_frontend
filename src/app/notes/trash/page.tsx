@@ -11,7 +11,6 @@ import {
   menuItemsTop,
   notesMenu,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 

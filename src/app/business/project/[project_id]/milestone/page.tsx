@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -22,7 +22,7 @@ const Page = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMilestones = async () => {
+  const fetchMilestones = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/milestones`, {
         params: { projectId: project_id },
@@ -52,7 +52,7 @@ const Page = () => {
       console.error('Error fetching milestones:', error);
       setLoading(false);
     }
-  };
+  }, [project_id]);
 
   const handleStorySubmit = async (
     e: React.FormEvent,
@@ -87,12 +87,10 @@ const Page = () => {
     };
 
     try {
-      const response = await axiosInstance.put(
+      await axiosInstance.put(
         `/milestones/${updateMilestone._id}`,
         milestoneData,
       );
-
-      const newMilestone = response.data;
 
       toast({
         title: 'Success',
@@ -101,12 +99,6 @@ const Page = () => {
           : 'Story added successfully!',
         duration: 3000,
       });
-
-      const updatedMilestones = milestones.map((milestone) =>
-        milestone._id === updateMilestone._id
-          ? { ...milestone, stories: updatedStories }
-          : milestone,
-      );
 
       fetchMilestones();
     } catch (error) {
@@ -125,7 +117,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchMilestones();
-  }, []);
+  }, [fetchMilestones]);
 
   return (
     <div className="flex min-h-screen h-auto w-full flex-col bg-muted/40">
@@ -166,7 +158,6 @@ const Page = () => {
               <MilestoneTimeline
                 fetchMilestones={fetchMilestones}
                 milestones={milestones}
-                milestoneId={milestones[0]._id}
                 handleStorySubmit={handleStorySubmit}
               />
             ) : (

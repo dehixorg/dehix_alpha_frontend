@@ -1,12 +1,5 @@
-import React, { useState } from 'react';
-import {
-  Briefcase,
-  Calendar,
-  DollarSign,
-  Github,
-  ListFilter,
-  Verified,
-} from 'lucide-react';
+import React from 'react';
+import { Briefcase, Calendar, DollarSign } from 'lucide-react';
 
 import {
   Card,
@@ -19,14 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Table,
   TableBody,
   TableCell,
@@ -34,24 +19,29 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-const Projects = ({ isTableView, searchQuery, projectData }: any) => {
-  const [selectedFilter, setSelectedFilter] = useState('ALL');
-  const uniqueProjectTypes = Array.from(
-    new Set(projectData.map((project: any) => project.projectType)),
-  );
-  const projectTypes = ['ALL', ...uniqueProjectTypes];
-
+const Projects = ({
+  filter,
+  isTableView,
+  searchQuery,
+  skillData,
+  domainData,
+}: any) => {
   const filteredData = () => {
-    return projectData.filter((project: any) => {
-      const matchesType =
-        selectedFilter === 'ALL' || project.projectType === selectedFilter;
-      const matchesSearch =
-        !searchQuery ||
-        project.projectName.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesType && matchesSearch;
-    });
+    const data =
+      filter === 'All'
+        ? [...skillData, ...domainData]
+        : filter === 'Skills'
+          ? skillData
+          : filter === 'Domain'
+            ? domainData
+            : [];
+
+    return searchQuery
+      ? data.filter(({ talentType }: any) =>
+          talentType?.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : data;
   };
 
   const getRemainingDays = (dateString: string | undefined): string => {
@@ -70,29 +60,6 @@ const Projects = ({ isTableView, searchQuery, projectData }: any) => {
     <div className="p-6 w-full">
       <div className="mb-8 ml-0 md:ml-5 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Project interview</h1>
-        <div>
-          {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-7 gap-1 w-auto text-sm">
-                                <ListFilter className="h-3.5 w-3.5" />
-                                <span className="sr-only sm:not-sr-only">Filter</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {projectTypes.map((it, idx) => (
-                                <DropdownMenuCheckboxItem
-                                    key={idx}
-                                    checked={selectedFilter === it}
-                                    onSelect={() => setSelectedFilter(it)}
-                                >
-                                    {it}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu> */}
-        </div>
       </div>
       <div className=" p-0 md:p-6 flex flex-col gap-4  sm:px-6 sm:py-0 md:gap-8  pt-2 pl-0 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8  relative">
         <div>

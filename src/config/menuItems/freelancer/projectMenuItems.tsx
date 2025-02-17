@@ -1,12 +1,10 @@
 import {
-  Boxes,
   HomeIcon,
   FileCheck,
   Pointer,
   FolderDot,
   CircleX,
   Settings,
-  Milestone,
 } from 'lucide-react';
 import Image from 'next/image';
 

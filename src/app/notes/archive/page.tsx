@@ -24,7 +24,7 @@ const Page = () => {
   useEffect(() => {
     if (!userId) return;
     fetchNotes();
-  }, [userId]);
+  }, [userId, fetchNotes]);
 
   return (
     <section className="flex min-h-screen w-full flex-col bg-muted/40">

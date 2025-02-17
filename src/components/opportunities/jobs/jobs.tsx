@@ -59,11 +59,6 @@ const JobCard: React.FC<JobCardProps> = ({
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
 
-  React.useEffect(() => {
-    setIsClient(true);
-    fetchBidData(); // Fetch data on mount
-  }, []);
-
   // Fetch bid data from the API
   const fetchBidData = React.useCallback(async () => {
     try {
@@ -74,6 +69,11 @@ const JobCard: React.FC<JobCardProps> = ({
       console.error('API Error:', error);
     }
   }, [user.uid]);
+
+  React.useEffect(() => {
+    setIsClient(true);
+    fetchBidData(); // Fetch data on mount
+  }, [fetchBidData]);
 
   if (!isClient) {
     return null;

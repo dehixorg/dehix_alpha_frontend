@@ -14,23 +14,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/app/AuthContext';
 
-const allowedFileFormats = [
-  'image/png',
-  'image/jpeg',
-  'image/gif',
-  'application/pdf',
-];
+// const allowedFileFormats = [
+//   'image/png',
+//   'image/jpeg',
+//   'image/gif',
+//   'application/pdf',
+// ];
+
 const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
 
 interface Ticket {
@@ -58,7 +51,6 @@ const TicketForm = () => {
   const [viewMode, setViewMode] = useState<string>('card');
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const loggedInUserId = localStorage.getItem('userId') || ''; // Get userId from localStorage
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -82,7 +74,7 @@ const TicketForm = () => {
     };
 
     fetchTickets();
-  }, []);
+  }, [user?.uid]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];

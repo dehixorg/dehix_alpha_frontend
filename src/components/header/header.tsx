@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({
   const [connects, setConnects] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchConnects = async (id: string) => {
+  const fetchConnects = async () => {
     try {
       setLoading(true);
       const data = localStorage.getItem('DHX_CONNECTS');
@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({
 
   useEffect(() => {
     if (user?.uid) {
-      fetchConnects(user.uid);
+      fetchConnects();
     }
   }, [user?.uid]);
 
@@ -100,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({
             ) : (
               connects !== null && (
                 <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
-                  {/* {formatConnects(connects)} */}
+                  {formatConnects(connects)}
                 </span>
               )
             )}

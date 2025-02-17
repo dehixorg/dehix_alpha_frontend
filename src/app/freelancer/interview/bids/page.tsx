@@ -8,7 +8,6 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { RootState } from '@/lib/store';
-import ProjectInterviews from '@/components/freelancer/projectInterview/ProjectInterviews';
 import Header from '@/components/header/header';
 import Bids from '@/components/freelancer/bids/Bids';
 
