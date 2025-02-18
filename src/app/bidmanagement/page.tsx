@@ -6,7 +6,7 @@ import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-//import { useParams } from 'react-router-dom';
+
 interface Project {
   _id: string;
   projectName: string;
@@ -34,6 +34,7 @@ interface Project {
   createdAt: string;
   updatedAt: string;
 }
+
 interface Bid {
   _id: string;
   bid_status: string;
@@ -43,16 +44,16 @@ interface Bid {
   domain_id: string;
 }
 
-const BidsPage = () => {
-  const user = useSelector((state: RootState) => state.user);
-  const [projectIds, setProjectIds] = useState<any>([]);
-  const [bidsArray, setBidsArray] = useState<any[]>([]);
-  const errorToast = {
-  variant: 'destructive',
+const errorToast = {
+  variant: 'destructive' as const,
   title: 'Error',
   description: 'Something went wrong. Please try again.',
 };
 
+const BidsPage = () => {
+  const user = useSelector((state: RootState) => state.user);
+  const [projectIds, setProjectIds] = useState<any>([]);
+  const [bidsArray, setBidsArray] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -70,6 +71,7 @@ const BidsPage = () => {
 
     fetchProjectIds();
   }, [user.uid]);
+
   useEffect(() => {
     const fetchBidsForProjects = async () => {
       try {
@@ -93,7 +95,9 @@ const BidsPage = () => {
       }
     };
 
-    fetchBidsForProjects();
+    if (projectIds.length) {
+      fetchBidsForProjects();
+    }
   }, [projectIds]);
 
   const handleAction = async (bidId: string, actionType: string) => {
@@ -108,14 +112,14 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
-    toast(errorToast);
+      toast(errorToast);
       console.error('Error updating bid status:', error);
     }
   };
 
   return (
     <div className="bids-page max-w-6xl mx-auto p-8">
-      <h1 className="text-3xl font-bold  mb-8">Manage Bids</h1>
+      <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
       {bidsArray.length ? (
         <AppliedBids bids={bidsArray} onAction={handleAction} />
       ) : (

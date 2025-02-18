@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
+// import jsPDF from 'jspdf';
 
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 interface ResumePreviewProps {

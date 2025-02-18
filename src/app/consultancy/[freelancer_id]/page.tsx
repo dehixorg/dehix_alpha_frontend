@@ -159,10 +159,10 @@ export default function ConsultancyPage() {
       setIsDialogOpen(false);
     } catch (error) {
       toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Something went wrong.Please try again.',
-            }); // Error toast
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.error('Error:', error);
     }
   };
