@@ -79,13 +79,12 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
             <div className="relative">
               <div
                 className={`w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-                ${
-                  currentStep > step.id
+                ${currentStep > step.id
                     ? 'bg-primary border-primary'
                     : currentStep === step.id
                       ? 'border-primary bg-background text-primary'
                       : 'border-muted bg-background text-muted'
-                }`}
+                  }`}
               >
                 {currentStep > step.id ? (
                   <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-background" />
@@ -112,6 +111,17 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
         ))}
       </div>
     </div>
+  );
+};
+
+const getAgeWorkExperienceDifference = (today: any, dobDate: any) => {
+  return (
+    today.getFullYear() -
+    dobDate.getFullYear() -
+    (today <
+      new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate())
+      ? 1
+      : 0)
   );
 };
 
@@ -215,7 +225,22 @@ const profileFormSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'], // Associate the error with the `confirmPassword` field
     message: 'Passwords do not match',
-  });
+  })
+  .refine(
+    (data) => {
+      if (!data.dob) return true; // Skip check if DOB is not provided
+
+      const dobDate = new Date(data.dob);
+      const today = new Date();
+      const age = getAgeWorkExperienceDifference(today, dobDate);
+
+      return data.workExperience <= age;
+    },
+    {
+      path: ['workExperience'],
+      message: 'Work experience cannot be greater than your age',
+    },
+  );
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
