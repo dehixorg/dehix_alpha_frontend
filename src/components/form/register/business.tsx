@@ -249,6 +249,8 @@ function BusinessRegisterForm({
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
+          console.log(response);
+
           if (response.data.duplicate === false) {
             setCurrentStep(currentStep + 1);
           } else {
@@ -276,13 +278,23 @@ function BusinessRegisterForm({
         });
       }
     } else if (currentStep === 1) {
-      await form.trigger([
+      const isValid = await form.trigger([
         'companyName',
         'companySize',
         'position',
         'linkedin',
         'personalWebsite',
       ]);
+
+      if (isValid) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: 'Please fill in all required fields before proceeding.',
+        });
+      }
     }
   };
 
@@ -330,7 +342,9 @@ function BusinessRegisterForm({
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        description: `Error: ${
+          error.response?.data.message || 'Something went wrong!'
+        }`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {

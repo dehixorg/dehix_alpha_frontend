@@ -372,7 +372,6 @@ function FreelancerRegisterForm({
 
   const onSubmit = async (data: ProfileFormValues) => {
     const referralCodeFromQuery = searchParams.get('referral');
-    console.log(referralCodeFromQuery);
 
     const referralCodeFromForm = data.referralCode;
 
@@ -430,7 +429,7 @@ function FreelancerRegisterForm({
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
-      setTimeout(() => setIsVerified(false), 100);
+      setTimeout(() => setIsLoading(false), 100);
     }
   };
 
