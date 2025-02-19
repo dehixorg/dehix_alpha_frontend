@@ -249,7 +249,6 @@ function BusinessRegisterForm({
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
-          console.log(response);
 
           if (response.data.duplicate === false) {
             setCurrentStep(currentStep + 1);
