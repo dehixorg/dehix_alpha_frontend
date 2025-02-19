@@ -52,9 +52,12 @@ const TicketForm = () => {
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+
   useEffect(() => {
     const fetchTickets = async () => {
       try {
+        setIsDataLoading(true);
         const response = await axiosInstance.get(`/ticket?customerID=${user?.uid}`);
 
         // Filter tickets based on the current freelancer's ID
@@ -70,6 +73,8 @@ const TicketForm = () => {
           title: 'Error',
           description: 'An error occurred while fetching tickets.',
         });
+      } finally {
+        setIsDataLoading(false);
       }
     };
 
@@ -517,164 +522,172 @@ const TicketForm = () => {
       </Dialog>
 
       {/* Display Tickets in Card View */}
-      {viewMode === 'cards' ? (
-        // Card View
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {tickets.length > 0 ? (
-            tickets.map((ticket) => (
-              <Card
-                key={ticket._id}
-                className="p-4 shadow-md rounded-lg border"
-              >
-                {/* Ticket Subject */}
-                <h2 className="text-lg font-semibold">{ticket.subject}</h2>
-
-                {/* Ticket ID with Copy Button */}
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-sm text-gray-600">{ticket._id}</span>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleCopyId(ticket._id)}
-                    size="icon"
-                    className="p-1"
-                  >
-                    <CopyIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Ticket Description */}
-                <p className="text-sm text-gray-600 mt-2">
-                  <strong>Description:</strong> {ticket.description}
-                </p>
-
-                {/* Ticket Status */}
-                <p className="text-sm font-medium mt-2">
-                  <strong>Status:</strong> {ticket.status}
-                </p>
-
-                {/* Ticket Files */}
-                {ticket.filesAttached && (
-                  <div className="mt-3">
-                    <p className="text-sm font-medium">Attached File:</p>
-                    {ticket.filesAttached.match(/\.(jpeg|jpg|gif|png)$/) ? (
-                      <Image
-                        src={ticket.filesAttached}
-                        alt="Attached file"
-                        width={80}
-                        height={80}
-                        className="rounded-md object-cover mt-2"
-                      />
-                    ) : (
-                      <a
-                        href={ticket.filesAttached}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline text-sm"
-                      >
-                        View/Download File
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="mt-4 flex justify-between items-center">
-                  <Button onClick={() => openEditDialog(ticket)} size="sm">
-                    Edit
-                  </Button>
-                  <Button onClick={() => openDetailDialog(ticket)} size="sm">
-                    Open Ticket
-                  </Button>
-                </div>
-              </Card>
-            ))
-          ) : (
-            <p className="text-center text-gray-500">No tickets available.</p>
-          )}
-        </div>
-      ) : (
-        // Table View
-        <div className="overflow-x-auto mt-6">
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr className="bg-white text-black">
-                <th className="px-4 py-2 text-left">Subject</th>
-                <th className="px-4 py-2 text-left">Ticket ID</th>
-                <th className="px-4 py-2 text-left">Description</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left"></th>
-              </tr>
-            </thead>
-            <tbody>
+      {
+        isDataLoading ? (
+          <div className="flex justify-center  items-center h-[60vh]">
+            <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+          </div>
+        ) :
+          viewMode === 'cards' ? (
+            // Card View
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {tickets.length > 0 ? (
                 tickets.map((ticket) => (
-                  <tr key={ticket._id}>
-                    <td className="px-4 py-2 text-sm border-gray-300">
-                      {ticket.subject.length > 45 ? (
-                        <>
-                          {ticket.description.substring(0, 45)}{' '}
-                          <span
-                            onClick={() => alert(ticket.subject)}
-                            className="text-white-500 cursor-pointer"
-                          >
-                            ...
-                          </span>
-                        </>
-                      ) : (
-                        ticket.subject
-                      )}
-                    </td>
-                    <td className="px-4 py-2">{ticket._id}</td>
-                    <td className="px-4 py-2 text-sm border-gray-300">
-                      {ticket.description.length > 45 ? (
-                        <>
-                          {ticket.description.substring(0, 45)}{' '}
-                          <span
-                            onClick={() => alert(ticket.description)}
-                            className="text-white-500 cursor-pointer"
-                          >
-                            ...
-                          </span>
-                        </>
-                      ) : (
-                        ticket.description
-                      )}
-                    </td>
-                    <td className="px-4 py-2">{ticket.status}</td>
-                    <td className="px-4 py-2 flex justify-between">
+                  <Card
+                    key={ticket._id}
+                    className="p-4 shadow-md rounded-lg border"
+                  >
+                    {/* Ticket Subject */}
+                    <h2 className="text-lg font-semibold">{ticket.subject}</h2>
+
+                    {/* Ticket ID with Copy Button */}
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-sm text-gray-600">{ticket._id}</span>
                       <Button
-                        onClick={() => openEditDialog(ticket)}
-                        size="sm"
-                        className="mr-2 mt-2"
                         variant="outline"
+                        onClick={() => handleCopyId(ticket._id)}
+                        size="icon"
+                        className="p-1"
                       >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Ticket Description */}
+                    <p className="text-sm text-gray-600 mt-2">
+                      <strong>Description:</strong> {ticket.description}
+                    </p>
+
+                    {/* Ticket Status */}
+                    <p className="text-sm font-medium mt-2">
+                      <strong>Status:</strong> {ticket.status}
+                    </p>
+
+                    {/* Ticket Files */}
+                    {ticket.filesAttached && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium">Attached File:</p>
+                        {ticket.filesAttached.match(/\.(jpeg|jpg|gif|png)$/) ? (
+                          <Image
+                            src={ticket.filesAttached}
+                            alt="Attached file"
+                            width={80}
+                            height={80}
+                            className="rounded-md object-cover mt-2"
+                          />
+                        ) : (
+                          <a
+                            href={ticket.filesAttached}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline text-sm"
+                          >
+                            View/Download File
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="mt-4 flex justify-between items-center">
+                      <Button onClick={() => openEditDialog(ticket)} size="sm">
                         Edit
                       </Button>
-                      <Button
-                        onClick={() => openDetailDialog(ticket)}
-                        size="sm"
-                        className="ml-2 mt-2"
-                        variant="outline"
-                      >
+                      <Button onClick={() => openDetailDialog(ticket)} size="sm">
                         Open Ticket
                       </Button>
-                    </td>
-                  </tr>
+                    </div>
+                  </Card>
                 ))
               ) : (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-2 text-center text-gray-500"
-                  >
-                    No tickets available.
-                  </td>
-                </tr>
+                <p className="text-center text-gray-500">No tickets available.</p>
               )}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          ) : (
+            // Table View
+            <div className="overflow-x-auto mt-6">
+              <table className="min-w-full table-auto">
+                <thead>
+                  <tr className="bg-white text-black">
+                    <th className="px-4 py-2 text-left">Subject</th>
+                    <th className="px-4 py-2 text-left">Ticket ID</th>
+                    <th className="px-4 py-2 text-left">Description</th>
+                    <th className="px-4 py-2 text-left">Status</th>
+                    <th className="px-4 py-2 text-left"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.length > 0 ? (
+                    tickets.map((ticket) => (
+                      <tr key={ticket._id}>
+                        <td className="px-4 py-2 text-sm border-gray-300">
+                          {ticket.subject.length > 45 ? (
+                            <>
+                              {ticket.description.substring(0, 45)}{' '}
+                              <span
+                                onClick={() => alert(ticket.subject)}
+                                className="text-white-500 cursor-pointer"
+                              >
+                                ...
+                              </span>
+                            </>
+                          ) : (
+                            ticket.subject
+                          )}
+                        </td>
+                        <td className="px-4 py-2">{ticket._id}</td>
+                        <td className="px-4 py-2 text-sm border-gray-300">
+                          {ticket.description.length > 45 ? (
+                            <>
+                              {ticket.description.substring(0, 45)}{' '}
+                              <span
+                                onClick={() => alert(ticket.description)}
+                                className="text-white-500 cursor-pointer"
+                              >
+                                ...
+                              </span>
+                            </>
+                          ) : (
+                            ticket.description
+                          )}
+                        </td>
+                        <td className="px-4 py-2">{ticket.status}</td>
+                        <td className="px-4 py-2 flex justify-between">
+                          <Button
+                            onClick={() => openEditDialog(ticket)}
+                            size="sm"
+                            className="mr-2 mt-2"
+                            variant="outline"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            onClick={() => openDetailDialog(ticket)}
+                            size="sm"
+                            className="ml-2 mt-2"
+                            variant="outline"
+                          >
+                            Open Ticket
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-2 text-center text-gray-500"
+                      >
+                        No tickets available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )
+
+      }
     </div>
   );
 };
