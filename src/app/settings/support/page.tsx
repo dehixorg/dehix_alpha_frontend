@@ -50,19 +50,21 @@ const HomePage = () => {
             items={
               userType === 'freelancer'
                 ? [
-                    { label: 'Freelancer', link: '/dashboard/freelancer' },
-                    { label: 'Support', link: '#' },
-                  ]
+                  { label: 'Freelancer', link: '/dashboard/freelancer' },
+                  { label: 'Support', link: '#' },
+                ]
                 : userType === 'business'
                   ? [
-                      { label: 'Business', link: '/dashboard/business' },
-                      { label: 'Support', link: '#' },
-                    ]
+                    { label: 'Business', link: '/dashboard/business' },
+                    { label: 'Support', link: '#' },
+                  ]
                   : [{ label: 'Loading...', link: '#' }]
             }
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <DropdownProfile />
+            <div className='flex justify-end w-full'>
+              <DropdownProfile />
+            </div>
           </div>
         </header>
 
