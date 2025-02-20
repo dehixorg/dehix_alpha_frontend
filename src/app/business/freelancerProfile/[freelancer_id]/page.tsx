@@ -88,7 +88,6 @@ export default function FreelancerProfile() {
           if (response.status === 200) {
             setUser(response.data);
           }
-          console.log(response);
         } catch (error) {
           console.error('Error fetching freelancer details', error);
           toast({

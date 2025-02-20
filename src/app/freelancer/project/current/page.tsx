@@ -13,7 +13,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
-import { CreateMilestoneDialog } from '@/components/shared/CreateMilestoneDialog';
 import { toast } from '@/components/ui/use-toast';
 
 interface Project {
@@ -56,7 +55,6 @@ export default function CurrentProject() {
         const response = await axiosInstance.get(
           `/freelancer/${user.uid}/project?status=ACTIVE`,
         );
-        console.log(response);
 
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {

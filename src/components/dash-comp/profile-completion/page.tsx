@@ -38,9 +38,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
     const fetchUserProfile = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${userId}`);
-        console.log(`Response: ${response}`);
         const data = response.data;
-        console.log(`data: ${data}`);
         setUserProfile(data);
 
         // Calculate the completion percentage based on the fetched data
@@ -79,7 +77,6 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
     return (completedFields / totalFields) * 100;
   };
-  console.log(userProfile);
 
   if (!userProfile) {
     return (

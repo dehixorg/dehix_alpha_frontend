@@ -87,18 +87,21 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-   try {
-     await axiosInstance.put(`/verification/${_id}/oracle?doc_type=experience`, {
-       comments: data.comment,
-       verification_status: data.type,
-     });
-   } catch (error) {
-    toast({
-      variant: 'destructive',
-      title: 'Error',
-      description: 'Something went wrong.Please try again.',
-    }); // Error toast
-   }
+    try {
+      await axiosInstance.put(
+        `/verification/${_id}/oracle?doc_type=experience`,
+        {
+          comments: data.comment,
+          verification_status: data.type,
+        },
+      );
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
+    }
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     onCommentUpdate(data.comment || '');

@@ -182,10 +182,10 @@ const Market: React.FC = () => {
       } catch (error) {
         console.error('API Error:', error);
         toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Something went wrong.Please try again.',
-              }); // Error toast
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     },
     [user.uid],

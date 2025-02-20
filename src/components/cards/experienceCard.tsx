@@ -38,6 +38,16 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
   verificationStatus,
   comments,
 }) => {
+  const getBadgeStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-500 hover:bg-yellow-600';
+      case 'verified':
+        return 'bg-green-500 hover:bg-green-600';
+      default:
+        return 'bg-blue-500 hover:bg-blue-600';
+    }
+  };
   return (
     <Card className="w-full mx-auto md:max-w-2xl">
       <CardHeader>
@@ -56,13 +66,13 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {verificationStatus === 'pending' ? (
-          <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
-        ) : verificationStatus === 'verified' ? (
-          <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
-        ) : (
-          <Badge className="bg-blue-500 hover:bg-blue-600">ADDED</Badge>
-        )}
+        <Badge
+          className={`px-3 py-1 text-xs font-bold rounded-full border transition ${getBadgeStyle(
+            verificationStatus,
+          )}`}
+        >
+          {verificationStatus.toUpperCase()}
+        </Badge>
 
         <p className="text-gray-300 pt-4">{workDescription}</p>
 

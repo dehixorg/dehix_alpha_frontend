@@ -25,7 +25,6 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 
 export default function ResumeEditor() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
   const [showAtsScore, setShowAtsScore] = useState(false);
   const [educationData, setEducationData] = useState([
@@ -208,7 +207,6 @@ export default function ResumeEditor() {
   ];
 
   const handleTemplateChange = (page: number) => {
-    setCurrentPage(page);
     setSelectedTemplate(page === 1 ? 'ResumePreview1' : 'ResumePreview2');
   };
 

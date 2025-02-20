@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowLeft,
@@ -40,6 +40,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
+import DateOfBirthPicker from '@/components/shared/DateOfBirthPicker';
+
 interface Step {
   id: number;
   title: string;
@@ -112,6 +114,17 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
         ))}
       </div>
     </div>
+  );
+};
+
+const getAgeWorkExperienceDifference = (today: any, dobDate: any) => {
+  return (
+    today.getFullYear() -
+    dobDate.getFullYear() -
+    (today <
+    new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate())
+      ? 1
+      : 0)
   );
 };
 
@@ -215,7 +228,22 @@ const profileFormSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'], // Associate the error with the `confirmPassword` field
     message: 'Passwords do not match',
-  });
+  })
+  .refine(
+    (data) => {
+      if (!data.dob) return true; // Skip check if DOB is not provided
+
+      const dobDate = new Date(data.dob);
+      const today = new Date();
+      const age = getAgeWorkExperienceDifference(today, dobDate);
+
+      return data.workExperience <= age;
+    },
+    {
+      path: ['workExperience'],
+      message: 'Work experience cannot be greater than your age',
+    },
+  );
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
@@ -372,7 +400,6 @@ function FreelancerRegisterForm({
 
   const onSubmit = async (data: ProfileFormValues) => {
     const referralCodeFromQuery = searchParams.get('referral');
-    console.log(referralCodeFromQuery);
 
     const referralCodeFromForm = data.referralCode;
 
@@ -430,7 +457,7 @@ function FreelancerRegisterForm({
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
-      setTimeout(() => setIsVerified(false), 100);
+      setTimeout(() => setIsLoading(false), 100);
     }
   };
 
@@ -473,13 +500,14 @@ function FreelancerRegisterForm({
                   placeholder="john.doe@techinnovators.com"
                   type="email"
                 />
-                <TextInput
-                  control={form.control}
-                  name="dob"
-                  label="Date of Birth"
-                  type="date"
-                  className="w-full"
-                />
+                <div className="flex flex-col gap-2 mt-1">
+                  <Label className="text-sm font-medium">Date of Birth</Label>
+                  <Controller
+                    control={form.control}
+                    name="dob"
+                    render={({ field }) => <DateOfBirthPicker field={field} />}
+                  />
+                </div>
               </div>
 
               {/* Password and Confirm Password */}
