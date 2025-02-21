@@ -118,7 +118,7 @@ const BidsPage = () => {
   };
 
   return (
-    <div className="bids-page max-w-6xl mx-auto p-8">
+    <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
       <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
       {bidsArray.length ? (
         <AppliedBids bids={bidsArray} onAction={handleAction} />
