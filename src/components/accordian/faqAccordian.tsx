@@ -9,7 +9,7 @@ import {
 
 const questions = [
   {
-    question: 'How can I start freelancing on your platform?',
+    question: 'How can I start freelancing on our platform?',
     answer:
       'To start freelancing, you can create an account and set up your profile. Once done, you can browse available projects or create your own listings.',
   },

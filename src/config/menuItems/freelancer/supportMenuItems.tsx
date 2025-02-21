@@ -17,7 +17,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/dashboard/business',
+    href: '/dashboard/freelancer',
     icon: <Home className="h-5 w-5" />, // Consistent use of Home component here
     label: 'Home',
   },

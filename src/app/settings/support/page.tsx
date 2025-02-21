@@ -18,11 +18,32 @@ import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { RootState } from '@/lib/store';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import { toast } from '@/components/ui/use-toast';
 
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [userType, setUserType] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+  const characterLimit = 500;
+
   const menuItemsBottom = useMenuItemsBottom();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { id, value } = e.target;
+
+    if (id === 'message' && value.length > characterLimit) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
 
   useEffect(() => {
     if (user?.type) {
@@ -32,6 +53,18 @@ const HomePage = () => {
       setUserType(storedUserType || null);
     }
   }, [user]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: 'Message sent successfully!',
+      description: 'Thanks for connecting! We will connect soon.',
+      duration: 1500,
+    });
+
+    setFormData({ name: '', email: '', message: '' });
+  };
+
   return (
     <div className="">
       <SidebarMenu
@@ -50,19 +83,19 @@ const HomePage = () => {
             items={
               userType === 'freelancer'
                 ? [
-                  { label: 'Freelancer', link: '/dashboard/freelancer' },
-                  { label: 'Support', link: '#' },
-                ]
-                : userType === 'business'
-                  ? [
-                    { label: 'Business', link: '/dashboard/business' },
+                    { label: 'Freelancer', link: '/dashboard/freelancer' },
                     { label: 'Support', link: '#' },
                   ]
+                : userType === 'business'
+                  ? [
+                      { label: 'Business', link: '/dashboard/business' },
+                      { label: 'Support', link: '#' },
+                    ]
                   : [{ label: 'Loading...', link: '#' }]
             }
           />
           <div className="relative ml-auto flex-1 md:grow-0">
-            <div className='flex justify-end w-full'>
+            <div className="flex justify-end w-full">
               <DropdownProfile />
             </div>
           </div>
@@ -90,10 +123,13 @@ const HomePage = () => {
           <section id="Contact" className="px-4 py-20 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className=" sm:text-3xl">Get in Touch</h2>
-              <p className="mt-4 text-white md:text-xl">
+              <p className="mt-4 md:text-xl">
                 Have a project in mind? Let&apos;s discuss how we can help.
               </p>
-              <form className="mt-8 space-y-4 text-left">
+              <form
+                onSubmit={handleSubmit}
+                className="mt-8 space-y-4 text-left"
+              >
                 <div>
                   <label
                     className="block text-base font-medium "
@@ -106,6 +142,9 @@ const HomePage = () => {
                     id="name"
                     placeholder="Enter your name"
                     type="text"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
                   />
                 </div>
                 <div>
@@ -120,6 +159,9 @@ const HomePage = () => {
                     id="email"
                     placeholder="Enter your email"
                     type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
                 <div>
@@ -132,8 +174,14 @@ const HomePage = () => {
                   <Textarea
                     className="mt-2 w-full rounded-md px-4 py-3  focus:outline-none focus:ring-2 focus:ring-[#00ffff]"
                     id="message"
+                    required
                     placeholder="Enter your message"
+                    value={formData.message}
+                    onChange={handleChange}
                   />
+                  <p className="text-right text-sm text-gray-500">
+                    {formData.message.length}/{characterLimit} characters
+                  </p>
                 </div>
                 <Button
                   type="submit"
