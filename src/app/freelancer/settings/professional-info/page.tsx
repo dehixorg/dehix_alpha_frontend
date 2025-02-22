@@ -57,6 +57,7 @@ export default function ProfessionalInfo() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Professional Info"
           breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Professional Info', link: '#' },
           ]}

@@ -83,10 +83,10 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Search Bar */}
       <div className="relative ml-auto flex-1 md:grow-0">
-        <Search
+        {/* <Search
           className="w-full md:w-[200px] lg:w-[336px]"
           placeholder={searchPlaceholder}
-        />
+        /> */}
       </div>
 
       <HoverCard>

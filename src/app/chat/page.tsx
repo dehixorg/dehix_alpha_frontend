@@ -86,13 +86,7 @@ const HomePage = () => {
           }
           activeMenu="Chats"
           breadcrumbItems={[
-            {
-              label: (user.type ?? '').replace(/\b\w/g, (char: string) =>
-                char.toUpperCase(),
-              ),
-
-              link: '#',
-            },
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Chats', link: '/dashboard/chats' },
           ]}
           searchPlaceholder="Search..."
