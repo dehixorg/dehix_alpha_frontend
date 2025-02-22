@@ -46,7 +46,7 @@ export default function HistoryPage() {
         menuItemsBottom={menuItemsBottom}
         active="History"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 w-full">
+      <div className="flex flex-col sm:gap-4 mb-8 sm:py-0 sm:pl-14 w-full">
         <Header
           breadcrumbItems={breadcrumbItems}
           menuItemsTop={menuItemsTop}

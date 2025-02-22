@@ -17,7 +17,7 @@ export default function ProfilePage() {
         menuItemsBottom={menuItemsBottom}
         active="ScheduleInterviews"
       />
-      <div className="flex flex-col sm:py-0 sm:gap-2 sm:pl-14 w-full">
+      <div className="flex mb-8 flex-col sm:py-0 sm:gap-2 sm:pl-14 w-full">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

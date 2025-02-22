@@ -82,7 +82,7 @@ export default function BusinessProfile() {
         active="Business Profile"
       />
 
-      <div className="flex flex-1 flex-col sm:pl-14">
+      <div className="flex mb-8 flex-1 flex-col sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
