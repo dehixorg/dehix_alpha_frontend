@@ -26,6 +26,12 @@ interface FilterState {
   experience: string[];
 }
 
+const errorToast = {
+  variant: 'destructive' as const,
+  title: 'Error',
+  description: 'Something went wrong. Please try again.',
+};
+
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -34,10 +40,10 @@ const Market: React.FC = () => {
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const errorToast = {
-    variant: 'destructive',
-    title: 'Error',
-    description: 'Something went wrong. Please try again.',
-  };
+  variant: 'destructive',
+  title: 'Error',
+  description: 'Something went wrong. Please try again.',
+};
 
   const [filters, setFilters] = useState<FilterState>({
     location: [],
@@ -110,7 +116,11 @@ const Market: React.FC = () => {
 
       setFreelancers(response.data.data);
     } catch (error) {
-      toast(errorToast);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
       console.error('API Error:', error);
     } finally {
       setIsDataLoading(false);
@@ -132,7 +142,11 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
       } catch (error) {
-        toast(errorToast);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('Error fetching data:', error);
       }
     }

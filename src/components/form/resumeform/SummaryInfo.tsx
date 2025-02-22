@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { X, PlusCircle, CheckCircle, Loader } from 'lucide-react';
+// import { useForm } from 'react-hook-form';
+import { X, PlusCircle, Loader } from 'lucide-react';
 
 import { generateAIResponse } from '@/services/aiService';
 import { Button } from '@/components/ui/button';
@@ -31,11 +31,11 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   const [completed, setCompleted] = useState(false); // To keep button highlighted after loading
   const [aiResponse, setAiResponse] = useState<string>(''); // AI-generated response
 
-  const form = useForm({
-    defaultValues: {
-      summary: '',
-    },
-  });
+  // const form = useForm({
+  //   defaultValues: {
+  //     summary: '',
+  //   },
+  // });
 
   const handleInputChange = (index: number, value: string) => {
     const updatedSummaryData = [...summaryData];

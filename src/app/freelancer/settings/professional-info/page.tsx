@@ -13,26 +13,32 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const handleFormSubmit = () => {
     setRefresh((prev) => !prev);
   };
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setExperiences(Object.values(response.data?.professionalInfo));
+        setExperiences(Object.values(response.data?.data.professionalInfo));
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -51,7 +57,7 @@ export default function ProfessionalInfo() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Professional Info"
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Settings', link: '#' },
             { label: 'Professional Info', link: '#' },
           ]}
         />
@@ -59,12 +65,42 @@ export default function ProfessionalInfo() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {experiences.map((exp: any, index: number) => (
-            <ExperienceCard key={index} {...exp} />
-          ))}
-          <AddExperience onFormSubmit={handleFormSubmit} />
+          {isLoading ? (
+            <CardSkeleton />
+          ) : (
+            <>
+              {experiences.map((exp: any, index: number) => (
+                <ExperienceCard key={index} {...exp} />
+              ))}
+              <AddExperience onFormSubmit={handleFormSubmit} />
+            </>
+          )}
         </main>
       </div>
     </div>
   );
 }
+
+const CardSkeleton = () => {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Card key={index} className="w-full mx-auto md:max-w-2xl p-4 bg-muted ">
+          <CardContent className="space-y-4">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-6 w-16 rounded-md" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full rounded-md" />
+            <div className="flex flex-col space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="h-6 w-40" />
+          </CardContent>
+        </Card>
+      ))}
+      <Skeleton className="h-10 w-10 rounded-md" />
+    </>
+  );
+};

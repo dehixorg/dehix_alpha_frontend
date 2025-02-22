@@ -390,7 +390,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
-
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -406,19 +405,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setKycStatus(userResponse?.data?.data?.kyc?.status);
 
         form.reset({
-          firstName: userResponse.data.firstName || '',
-          lastName: userResponse.data.lastName || '',
-          username: userResponse.data.userName || '',
-          email: userResponse.data.email || '',
-          phone: userResponse.data.phone || '',
-          role: userResponse.data.role || '',
-          personalWebsite: userResponse.data.personalWebsite || '',
-          resume: userResponse.data.resume || '',
-          description: userResponse.data.description || '',
-          aadharOrGovtId: userResponse.data.kyc.aadharOrGovtId || '',
-          frontImageUrl: userResponse.data.kyc.frontImageUrl || '',
-          backImageUrl: userResponse.data.kyc.backImageUrl || '',
-          liveCaptureUrl: userResponse.data.kyc.liveCapture || '',
+          firstName: userResponse.data.data.firstName || '',
+          lastName: userResponse.data.data.lastName || '',
+          username: userResponse.data.data.userName || '',
+          email: userResponse.data.data.email || '',
+          phone: userResponse.data.data.phone || '',
+          role: userResponse.data.data.role || '',
+          personalWebsite: userResponse.data.data.personalWebsite || '',
+          resume: userResponse.data.data.resume || '',
+          description: userResponse.data.data.description || '',
+          aadharOrGovtId: userResponse.data.data.kyc?.aadharOrGovtId || '',
+          frontImageUrl: userResponse.data.data.kyc?.frontImageUrl || '',
+          backImageUrl: userResponse.data.data.kyc?.backImageUrl || '',
+          liveCaptureUrl: userResponse.data.data.kyc?.liveCapture || '',
         });
       } catch (error) {
         console.error('API Error:', error);

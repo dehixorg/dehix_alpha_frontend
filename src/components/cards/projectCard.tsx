@@ -56,8 +56,6 @@ export function ProjectCard({
   type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
-  console.log(project);
-
   const { text, className } = getStatusBadge(project.status);
   return (
     <Card className={cn('flex flex-col h-[400px]', cardClassName)} {...props}>

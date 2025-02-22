@@ -128,21 +128,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   };
 
-  const fetchBid = async (profileId: string) => {
-    try {
-      const response = await axiosInstance.get(
-        `/bid/project/${id}/profile/${profileId}/bid`,
-      );
-      setBids(response.data?.data || []);
-    } catch (e) {
-      console.error(e);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
-    }
-  };
   return (
     <div className="max-w-5xl mx-auto p-4">
       <div className="mb-8 mt-4">
