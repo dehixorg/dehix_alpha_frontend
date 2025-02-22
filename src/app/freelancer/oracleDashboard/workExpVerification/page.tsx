@@ -119,7 +119,7 @@ export default function ProfessionalInfo() {
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
               { label: 'Oracle', link: '#' },
-              
+
               {
                 label: 'Experience Verification',
                 link: '#',
