@@ -82,14 +82,16 @@ const Header: React.FC<HeaderProps> = ({
       <Breadcrumb items={breadcrumbItems} />
 
       {/* Search Bar */}
-      <div className="relative ml-auto flex-1 md:grow-0">
+      {/* <div className="relative ml-auto flex-1 md:grow-0">
         <Search
           className="w-full md:w-[200px] lg:w-[336px]"
           placeholder={searchPlaceholder}
         />
-      </div>
+      </div> */}
 
+      
       <HoverCard>
+      <div className="relative ml-auto flex-1 md:grow-0">
         <HoverCardTrigger asChild>
           <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
             <WalletIcon />
@@ -111,6 +113,7 @@ const Header: React.FC<HeaderProps> = ({
             ? `${formatConnects(connects)} rewards Available`
             : 'No rewards yet!'}
         </HoverCardContent>
+        </div>
       </HoverCard>
 
       {/* Notification Button */}
