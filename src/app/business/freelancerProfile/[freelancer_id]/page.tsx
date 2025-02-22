@@ -140,8 +140,8 @@ export default function FreelancerProfile() {
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'HireTalent', link: '/business/talent' },
-            { label: 'Freelancer Profile', link: '/dashboard/business' },
+            { label: 'Business Marketplace', link: '/business/market' },
+            { label: 'Freelancer Profile', link: '/business/market' },
             {
               label: `${user?.firstName}  ${user?.lastName} `,
               link: `/dashboard/business/${freelancer_id}`,

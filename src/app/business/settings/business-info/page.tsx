@@ -26,6 +26,7 @@ export default function PersonalInfo() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Personal Info"
           breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },
             { label: 'Business Info', link: '#' },
           ]}

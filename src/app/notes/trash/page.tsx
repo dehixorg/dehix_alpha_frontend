@@ -38,6 +38,7 @@ const TrashPage = () => {
             menuItemsBottom={menuItemsBottom}
             activeMenu="Trash"
             breadcrumbItems={[
+              { label: 'Business', link: '/dashboard/business' },
               { label: 'Notes', link: '/notes' },
               { label: 'Trash', link: '/trash' },
             ]}
