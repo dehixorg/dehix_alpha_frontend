@@ -300,7 +300,6 @@ function BusinessRegisterForm({
   const onSubmit = async (data: BusinessRegisterFormValues) => {
     setIsLoading(true);
     const referralCodeFromQuery = searchParams.get('referral');
-    console.log(referralCodeFromQuery);
 
     const referralCodeFromForm = data.referralCode;
 
@@ -510,12 +509,22 @@ function BusinessRegisterForm({
                   )}
                 />
               </div>
-              <TextInput
-                control={form.control}
-                name="position"
-                label="Position"
-                placeholder="CTO"
-              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="position"
+                  label="Position"
+                  placeholder="CTO"
+                />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
+                  className="w-full"
+                />
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   control={form.control}
