@@ -44,7 +44,11 @@ interface Bid {
   domain_id: string;
 }
 
-const errorToast: { variant: 'destructive'; title: string; description: string } = {
+const errorToast: {
+  variant: 'destructive';
+  title: string;
+  description: string;
+} = {
   variant: 'destructive',
   title: 'Error',
   description: 'Something went wrong. Please try again.',
