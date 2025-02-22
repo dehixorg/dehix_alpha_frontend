@@ -27,7 +27,7 @@ export default function ProfilePage() {
           activeMenu="Dashboard"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Interview', link: '#' },
+            { label: 'Interview', link: '/freelancer/interview/profile' },
             { label: 'Bids', link: '#' },
           ]}
         />

@@ -36,18 +36,17 @@ export default function ProfilePage() {
               items={[
                 { label: 'Freelancer', link: '/dashboard/freelancer' },
                 { label: 'Interview', link: '#' },
-                { label: 'Profile', link: '#' },
               ]}
               className="hidden sm:flex-1 sm:flex sm:items-center"
             />
           </div>
           <div className="relative flex items-center gap-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search..."
               className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            />
+            /> */}
             <DropdownProfile />
           </div>
         </header>

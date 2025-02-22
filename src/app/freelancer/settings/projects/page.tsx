@@ -51,7 +51,8 @@ export default function Projects() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Settings', link: '#' },
             { label: 'Projects', link: '#' },
           ]}
         />
