@@ -34,10 +34,10 @@ const Market: React.FC = () => {
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const errorToast = {
-  variant: 'destructive',
-  title: 'Error',
-  description: 'Something went wrong. Please try again.',
-};
+    variant: 'destructive',
+    title: 'Error',
+    description: 'Something went wrong. Please try again.',
+  };
 
   const [filters, setFilters] = useState<FilterState>({
     location: [],

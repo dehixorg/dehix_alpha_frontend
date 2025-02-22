@@ -105,7 +105,6 @@ const ScheduleInterviewDialog: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        
 
         let errorMessage: string =
           'Failed to add project. Please try again later.';

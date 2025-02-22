@@ -48,11 +48,10 @@ const BidsPage = () => {
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
   const errorToast = {
-  variant: 'destructive',
-  title: 'Error',
-  description: 'Something went wrong. Please try again.',
-};
-
+    variant: 'destructive',
+    title: 'Error',
+    description: 'Something went wrong. Please try again.',
+  };
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -108,7 +107,7 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
-    toast(errorToast);
+      toast(errorToast);
       console.error('Error updating bid status:', error);
     }
   };

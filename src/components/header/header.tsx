@@ -89,30 +89,29 @@ const Header: React.FC<HeaderProps> = ({
         />
       </div> */}
 
-      
       <HoverCard>
-      <div className="relative ml-auto flex-1 md:grow-0">
-        <HoverCardTrigger asChild>
-          <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-            <WalletIcon />
-            {loading ? (
-              <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
-                <Loader2 size={16} />
-              </span>
-            ) : (
-              connects !== null && (
-                <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
-                  {formatConnects(connects)}
+        <div className="relative ml-auto flex-1 md:grow-0">
+          <HoverCardTrigger asChild>
+            <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+              <WalletIcon />
+              {loading ? (
+                <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
+                  <Loader2 size={16} />
                 </span>
-              )
-            )}
-          </div>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
-          {connects !== null
-            ? `${formatConnects(connects)} rewards Available`
-            : 'No rewards yet!'}
-        </HoverCardContent>
+              ) : (
+                connects !== null && (
+                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
+                    {formatConnects(connects)}
+                  </span>
+                )
+              )}
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
+            {connects !== null
+              ? `${formatConnects(connects)} rewards Available`
+              : 'No rewards yet!'}
+          </HoverCardContent>
         </div>
       </HoverCard>
 
