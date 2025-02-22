@@ -177,7 +177,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="ml-12">
+      <div className="ml-12 mb-8">
         <MarketHeader />
         <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 -ml-12 md:ml-6 lg:ml-6">
           <FilterSidebar
