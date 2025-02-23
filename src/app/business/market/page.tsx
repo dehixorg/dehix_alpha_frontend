@@ -26,12 +26,6 @@ interface FilterState {
   experience: string[];
 }
 
-const errorToast = {
-  variant: 'destructive' as const,
-  title: 'Error',
-  description: 'Something went wrong. Please try again.',
-};
-
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -39,11 +33,6 @@ const Market: React.FC = () => {
   const [domains, setDomains] = useState<string[]>([]);
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
-  const errorToast = {
-    variant: 'destructive',
-    title: 'Error',
-    description: 'Something went wrong. Please try again.',
-  };
 
   const [filters, setFilters] = useState<FilterState>({
     location: [],
