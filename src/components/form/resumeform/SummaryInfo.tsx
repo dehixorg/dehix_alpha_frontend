@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // import { useForm } from 'react-hook-form';
 import { X, PlusCircle, Loader } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -35,8 +36,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
     setSummaryData(updatedSummaryData);
   };
 
-  useEffect(() => {
-  }, [workExperienceData]); // Logs data every time it updates
+  useEffect(() => {}, [workExperienceData]); // Logs data every time it updates
 
   const handleAddSummary = () => {
     setSummaryData([...summaryData, '']);

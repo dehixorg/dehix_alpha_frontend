@@ -26,53 +26,56 @@ export default function Login() {
   const [phone, setPhone] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isEmailLoginLoading, setIsEmailLoginLoading] = useState<boolean>(false);
-  const [isGoogleLoginLoading, setIsGoogleLoginLoading] = useState<boolean>(false);
-  
+  const [isEmailLoginLoading, setIsEmailLoginLoading] =
+    useState<boolean>(false);
+  const [isGoogleLoginLoading, setIsGoogleLoginLoading] =
+    useState<boolean>(false);
 
-    const handleLogin = async (e: React.FormEvent): Promise<void> => {
-      e.preventDefault();
-      setIsEmailLoginLoading(true);
-    
-      try {
-        const response = await axiosInstance.get(`/public/user_email?user=${email}`);
-        setPhone(response.data.phone);
-    
-        if (response.data.phoneVerify) {
-          try {
-            const userCredential: UserCredential = await loginUser(email, pass);
-            const { user, claims } = await getUserData(userCredential);
-    
-            dispatch(setUser({ ...user, type: claims.type }));
-            router.replace(`/dashboard/${claims.type}`);
-    
-            toast({
-              title: 'Login Successful',
-              description: 'You have successfully logged in.',
-            });
-          } catch (error: any) {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Invalid Email or Password. Please try again.',
-            });
-            console.error(error.message);
-          }
-        } else {
-          setIsModalOpen(true);
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setIsEmailLoginLoading(true);
+
+    try {
+      const response = await axiosInstance.get(
+        `/public/user_email?user=${email}`,
+      );
+      setPhone(response.data.phone);
+
+      if (response.data.phoneVerify) {
+        try {
+          const userCredential: UserCredential = await loginUser(email, pass);
+          const { user, claims } = await getUserData(userCredential);
+
+          dispatch(setUser({ ...user, type: claims.type }));
+          router.replace(`/dashboard/${claims.type}`);
+
+          toast({
+            title: 'Login Successful',
+            description: 'You have successfully logged in.',
+          });
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Invalid Email or Password. Please try again.',
+          });
+          console.error(error.message);
         }
-      } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Invalid Email or Password. Please try again.',
-        });
-        console.error(error.message);
-      } finally {
-        setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
+      } else {
+        setIsModalOpen(true);
       }
-    };
-    
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Invalid Email or Password. Please try again.',
+      });
+      console.error(error.message);
+    } finally {
+      setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
+    }
+  };
+
   const handleGoogle = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsGoogleLoginLoading(true);
@@ -158,7 +161,11 @@ export default function Login() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isEmailLoginLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isEmailLoginLoading}
+              >
                 {isEmailLoginLoading ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />{' '}
