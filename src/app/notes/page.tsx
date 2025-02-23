@@ -93,7 +93,8 @@ const Notes = () => {
             activeMenu="Notes"
             breadcrumbItems={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Notes', link: '/notes' }]}
+              { label: 'Notes', link: '/notes' },
+            ]}
           />
         </div>
         {/* Main content area */}
