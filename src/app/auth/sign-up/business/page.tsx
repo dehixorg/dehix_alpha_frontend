@@ -12,7 +12,7 @@ export default function SignUp() {
       <div className="absolute left-4 top-4 sm:left-10 sm:top-10">
         <ThemeToggle />
       </div>
-      <div className="flex items-center justify-center py-8 sm:py-12">
+      <div className="flex items-center justify-center py-20 sm:py-12">
         <div className="mx-auto w-full  px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6">
             <BusinessRegisterForm />

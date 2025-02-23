@@ -26,7 +26,6 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 import { EmojiPicker } from '../emojiPicker';
-import { Textarea } from '../ui/textarea';
 import {
   Tooltip,
   TooltipContent,
@@ -54,6 +53,7 @@ import {
 } from '@/utils/common/firestoreUtils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { toast } from '@/hooks/use-toast';
 
 function formatChatTimestamp(timestamp: string) {
   const date = new Date(timestamp);
@@ -109,7 +109,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [clickedMessageId, setClickedMessageId] = useState<string | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
@@ -125,7 +124,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
     conversation: Conversation,
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
-    replyTo?: string,
   ) {
     try {
       setIsSending(true);
@@ -168,6 +166,11 @@ export function CardsChat({ conversation }: CardsChatProps) {
           setPrimaryUser(response.data);
         } catch (error) {
           console.error('Error fetching primary user:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Something went wrong.Please try again.',
+          }); // Error toast
         }
       }
     };
@@ -423,7 +426,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           : 'bg-muted',
                       )}
                       onClick={() => {
-                        setClickedMessageId(message.id); // Set the clicked message ID
                         if (message.replyTo) {
                           const replyMessage = messages.find(
                             (msg) => msg.id === message.replyTo,
@@ -567,12 +569,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                   replyTo: replyToMessageId || null,
                 };
 
-                sendMessage(
-                  conversation,
-                  newMessage,
-                  setInput,
-                  replyToMessageId,
-                );
+                sendMessage(conversation, newMessage, setInput);
                 setReplyToMessageId('');
               }}
               className="flex flex-col bg-primary-foreground shadow-md w-full border rounded-[10%] "
@@ -615,12 +612,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
                           timestamp: new Date().toISOString(),
                           replyTo: replyToMessageId,
                         };
-                        sendMessage(
-                          conversation,
-                          newMessage,
-                          setInput,
-                          replyToMessageId,
-                        );
+                        sendMessage(conversation, newMessage, setInput);
                         setReplyToMessageId('');
                       }
                     }

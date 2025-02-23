@@ -1,5 +1,5 @@
 'use client';
-import { PackageOpen } from 'lucide-react';
+import { Loader2, PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
@@ -13,6 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -45,16 +46,24 @@ interface Project {
 export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=Pending`,
+          `/freelancer/${user.uid}/project?status=PENDING`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -68,7 +77,7 @@ export default function AppliedProject() {
         menuItemsBottom={menuItemsBottom}
         active="Under Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -92,21 +101,27 @@ export default function AppliedProject() {
             before final approval.
           </p>
         </div>
-        <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <Loader2 size={40} className="animate-spin" />
+          </div>
+        ) : (
+          <main
+            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-        >
-          {projects.length === 0 ? (
-            <div className="col-span-full text-center mt-20 w-full">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">No projects available</p>
-            </div>
-          ) : (
-            projects.map((project, index: number) => (
-              <ProjectCard key={index} project={project} type={user.type} />
-            ))
-          )}
-        </main>
+          >
+            {projects.length === 0 ? (
+              <div className="col-span-full text-center mt-20 w-full">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500">No projects available</p>
+              </div>
+            ) : (
+              projects.map((project, index: number) => (
+                <ProjectCard key={index} project={project} type={user.type} />
+              ))
+            )}
+          </main>
+        )}
       </div>
     </div>
   );

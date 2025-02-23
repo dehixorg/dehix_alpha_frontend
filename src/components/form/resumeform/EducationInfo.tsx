@@ -46,7 +46,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
 
   return (
     <div>
-      <div className={cn('space-y-1.5 text-center')}>
+      <div className={cn('space-y-1.5 mb-5 ml-5')}>
         <h2 className={cn('text-2xl')}>Education Info</h2>
         <p className={cn('text-sm text-gray-500')}>
           Add details about your educational background.
@@ -72,12 +72,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
             </div>
 
             <div>
-              <Label
-                htmlFor={`degree-${index}`}
-                className={cn('block text-sm font-medium text-gray-500')}
-              >
-                Degree
-              </Label>
+              <Label htmlFor={`degree-${index}`}>Degree</Label>
               <Input
                 id={`degree-${index}`}
                 type="text"
@@ -93,12 +88,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
             </div>
 
             <div>
-              <Label
-                htmlFor={`school-${index}`}
-                className={cn('block text-sm font-medium text-gray-500')}
-              >
-                School/University
-              </Label>
+              <Label htmlFor={`school-${index}`}>School/University</Label>
               <Input
                 id={`school-${index}`}
                 type="text"
@@ -115,12 +105,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
 
             <div className={cn('grid grid-cols-2 gap-3')}>
               <div>
-                <Label
-                  htmlFor={`startDate-${index}`}
-                  className={cn('block text-sm font-medium text-gray-500')}
-                >
-                  Start Date
-                </Label>
+                <Label htmlFor={`startDate-${index}`}>Start Date</Label>
                 <Input
                   id={`startDate-${index}`}
                   type="date"
@@ -134,12 +119,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
                 />
               </div>
               <div>
-                <Label
-                  htmlFor={`endDate-${index}`}
-                  className={cn('block text-sm font-medium text-gray-500')}
-                >
-                  End Date
-                </Label>
+                <Label htmlFor={`endDate-${index}`}>End Date</Label>
                 <Input
                   id={`endDate-${index}`}
                   type="date"
@@ -160,7 +140,9 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
       <div className={cn('flex justify-center mt-4')}>
         <Button
           onClick={handleAddEducation}
-          className={cn('text-center justify-items-center text-white bg-gray')}
+          className={cn(
+            'text-center justify-items-center dark:text-black  light:bg-black',
+          )}
         >
           <PlusCircle />
         </Button>

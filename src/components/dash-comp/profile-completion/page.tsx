@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -12,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/use-toast';
 
 interface UserProfile {
   _id: string;
@@ -38,9 +38,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
     const fetchUserProfile = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${userId}`);
-        console.log(`Response: ${response}`);
         const data = response.data;
-        console.log(`data: ${data}`);
         setUserProfile(data);
 
         // Calculate the completion percentage based on the fetched data
@@ -48,6 +46,11 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
         setCompletionPercentage(percentage);
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     };
 
@@ -74,7 +77,6 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
     return (completedFields / totalFields) * 100;
   };
-  console.log(userProfile);
 
   if (!userProfile) {
     return (

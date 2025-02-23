@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import { toast } from '../ui/use-toast';
 
@@ -28,7 +27,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
 
 const FormSchema = z
   .object({
@@ -59,7 +57,6 @@ interface AddEducationProps {
 }
 
 export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
-  const user = useSelector((state: RootState) => state.user);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -103,10 +100,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         verificationUpdateTime: data.verificationUpdateTime || new Date(),
         comments: '',
       };
-      await axiosInstance.post(
-        `/freelancer/${user.uid}/education`,
-        formattedData,
-      );
+      await axiosInstance.post(`/freelancer/education`, formattedData);
       onFormSubmit();
       setIsDialogOpen(false);
       toast({

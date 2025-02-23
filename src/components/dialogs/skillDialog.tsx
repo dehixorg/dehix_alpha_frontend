@@ -32,7 +32,7 @@ interface SkillDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: SkillFormData) => Promise<void>;
-  skillOptions: Array<{ label: string }>;
+  skillOptions: Array<{ talentName: string }>;
   levels: string[];
   defaultValues?: SkillFormData;
   loading: boolean;
@@ -99,11 +99,18 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                       <SelectValue placeholder="Select a skill" />
                     </SelectTrigger>
                     <SelectContent>
-                      {skillOptions.map((skill, idx) => (
-                        <SelectItem key={idx} value={skill.label}>
-                          {skill.label}
-                        </SelectItem>
-                      ))}
+                      {skillOptions.length > 0 ? (
+                        skillOptions.map((skill, idx) => (
+                          <SelectItem key={idx} value={skill.talentName}>
+                            {skill.talentName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <p className="p-2">
+                          No verified skills.{' '}
+                          <span className="text-blue-500">Get verified !</span>
+                        </p>
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.name && (

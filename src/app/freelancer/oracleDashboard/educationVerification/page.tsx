@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -23,10 +22,10 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 // import dummyData from '@/dummydata.json';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface EducationData {
@@ -44,8 +43,6 @@ interface EducationData {
 export default function ProfessionalInfo() {
   // Initialize state with education data from dummydata.json
   const [educationdata, setEducationData] = useState<EducationData[]>([]);
-
-  const user = useSelector((state: RootState) => state.user);
 
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -68,7 +65,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/${user.uid}/oracle?doc_type=education`,
+        `/verification/oracle?doc_type=education`,
       );
       const data = response.data.data;
       setEducationData(data);
@@ -78,8 +75,13 @@ export default function ProfessionalInfo() {
       setEducationData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
-  }, [user.uid]);
+  }, []);
 
   // Log the requesterId state after it updates
   // useEffect(() => {
@@ -109,7 +111,7 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="Education Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}

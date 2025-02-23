@@ -1,8 +1,7 @@
 import React from 'react';
-import { Calendar, Github, ExternalLink, Wrench } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface ProfessionalExperienceProps {
@@ -19,6 +18,14 @@ interface ProfessionalExperienceProps {
 const ProfessionalExperience: React.FC<ProfessionalExperienceProps> = ({
   professionalInfo,
 }) => {
+  const formatDate = (dateString: any) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <section className="mt-8">
       <h2 className="text-2xl font-semibold mb-4">Professional Experience</h2>
@@ -31,28 +38,28 @@ const ProfessionalExperience: React.FC<ProfessionalExperienceProps> = ({
                   key={index}
                   className="w-[90vw] md:w-[calc(50%-1rem)] flex-shrink-0"
                 >
-                  <Card className="shadow-lg rounded-lg p-5 hover:shadow-xl transition-shadow">
-                    <h3 className="text-xl font-semibold">{item.jobTitle}</h3>
-                    <p className="text-md font-medium">{item.company}</p>
-                    <p className="text-sm font-medium mt-2">
+                  <Card className="p-6 rounded-lg ">
+                    <h3 className="text-2xl font-bold mb-1">{item.jobTitle}</h3>
+                    <p className="text-lg text-gray-300">{item.company}</p>
+                    <p className="text-sm text-gray-400 mt-2">
                       {item.workDescription}
                     </p>
-                    <div className="text-sm italic mt-2 flex gap-2 justify-normal items-center">
-                      <p className="mb-2">
-                        <Calendar className="w-4 h-4" />{' '}
-                      </p>
-                      <p className="mb-2">
-                        {item.workFrom} {'- ' + item.workTo}
-                      </p>
+
+                    <div className="flex items-center gap-2 text-sm text-gray-400 mt-4">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {formatDate(item.workFrom)} - {formatDate(item.workTo)}
+                      </span>
                     </div>
+
                     {item.githubRepoLink && (
-                      <p className="text-sm mt-2">
+                      <p className="text-sm mt-3">
                         GitHub:{' '}
                         <a
                           href={item.githubRepoLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline text-indigo-600"
+                          className="underline text-blue-400 hover:text-blue-300"
                         >
                           {item.githubRepoLink.split('/').pop()}
                         </a>

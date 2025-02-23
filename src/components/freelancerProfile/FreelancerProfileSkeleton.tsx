@@ -6,7 +6,7 @@ const FreelancerProfileSkeleton = () => {
   return (
     <div className="p-3 relative sm:pl-6">
       <Skeleton className="h-10 w-40 mb-4" />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Skeleton className="h-14 w-full rounded-lg" />
         <main className="mt-8">
           <section className="flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6">

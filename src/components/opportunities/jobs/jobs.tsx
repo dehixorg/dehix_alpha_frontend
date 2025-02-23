@@ -17,6 +17,7 @@ import ProfileCard from '@/components/opportunities/jobs/profileCard';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
+import { toast } from '@/components/ui/use-toast';
 
 interface Profile {
   _id?: string;
@@ -59,11 +60,6 @@ const JobCard: React.FC<JobCardProps> = ({
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
 
-  React.useEffect(() => {
-    setIsClient(true);
-    fetchBidData(); // Fetch data on mount
-  }, []);
-
   // Fetch bid data from the API
   const fetchBidData = React.useCallback(async () => {
     try {
@@ -72,8 +68,18 @@ const JobCard: React.FC<JobCardProps> = ({
       setBidProfiles(profileIds);
     } catch (error) {
       console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   }, [user.uid]);
+
+  React.useEffect(() => {
+    setIsClient(true);
+    fetchBidData(); // Fetch data on mount
+  }, [fetchBidData]);
 
   if (!isClient) {
     return null;
@@ -86,9 +92,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const isDescriptionLong = description.length > charLimit;
 
   const notInterestedProject = async (_id: string) => {
-    await axiosInstance.put(
-      `/freelancer/${user.uid}/${_id}/not_interested_project`,
-    );
+    await axiosInstance.put(`/freelancer/${_id}/not_interested_project`);
     onRemove(_id);
   };
 

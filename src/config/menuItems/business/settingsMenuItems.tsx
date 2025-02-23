@@ -1,4 +1,4 @@
-import { Boxes, HomeIcon, User } from 'lucide-react';
+import { HomeIcon, User } from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';

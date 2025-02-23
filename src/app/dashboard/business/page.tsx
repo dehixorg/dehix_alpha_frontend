@@ -32,6 +32,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -42,12 +43,16 @@ export default function Dashboard() {
       try {
         if (user?.uid) {
           // Optional chaining to ensure `user` is defined
-          const response = await axiosInstance.get(
-            `/project/business/${user.uid}`,
-          );
+          const response = await axiosInstance.get(`/project/business`);
+
           setResponseData(response.data.data); // Store response data in state
         }
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -68,15 +73,12 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active="Dashboard"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
-            { label: 'Business', link: '#' },
-          ]}
+          breadcrumbItems={[{ label: 'Business', link: '#' }]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">

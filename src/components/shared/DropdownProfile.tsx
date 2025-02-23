@@ -25,13 +25,13 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/hooks/use-toast';
 
 const useShare = () => {
   const share = async (title: string, text: string, url: string) => {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
-        console.log('Content shared successfully');
       } catch (error) {
         console.error('Error sharing content:', error);
       }
@@ -43,7 +43,11 @@ const useShare = () => {
   return share;
 };
 
-export default function DropdownProfile() {
+interface DropdownProfileProps {
+  setConnects?: (value: number) => void;
+}
+
+export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -73,9 +77,18 @@ export default function DropdownProfile() {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
+        localStorage.setItem('DHX_CONNECTS', response.data.data?.connects);
+        if (setConnects) {
+          setConnects(response.data.data?.connects ?? 0);
+        }
         setReferralCode(fetchCode);
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }
@@ -87,7 +100,7 @@ export default function DropdownProfile() {
       console.warn('User ID is not available. Skipping API call.');
       setLoading(false);
     }
-  }, [user?.uid]);
+  }, [user?.uid, user.type, setConnects]);
 
   const handleLogout = () => {
     dispatch(clearUser());

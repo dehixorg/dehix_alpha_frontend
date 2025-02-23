@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
-import { LabelType, Note, NoteType } from '@/utils/types/note';
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -13,10 +12,7 @@ import {
   menuItemsTop,
   notesMenu,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { axiosInstance } from '@/lib/axiosinstance';
 import useFetchNotes from '@/hooks/useFetchNotes';
-import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 
 const Page = () => {
@@ -28,7 +24,7 @@ const Page = () => {
   useEffect(() => {
     if (!userId) return;
     fetchNotes();
-  }, [userId]);
+  }, [userId, fetchNotes]);
 
   return (
     <section className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -38,12 +34,13 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active="Archive"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Archive"
           breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
             { label: 'Notes', link: '/notes' },
             { label: 'Archive', link: '/archive' },
           ]}

@@ -1,9 +1,7 @@
-import { useSelector } from 'react-redux';
-import { HeartHandshake, Boxes, Home } from 'lucide-react'; // Use Home from lucide-react
+import { HeartHandshake, Home } from 'lucide-react'; // Use Home from lucide-react
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
-import { RootState } from '@/lib/store';
 export const menuItemsTop: MenuItem[] = [
   {
     href: '#',
@@ -19,7 +17,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Dehix',
   },
   {
-    href: '/dashboard/business',
+    href: '/dashboard/freelancer',
     icon: <Home className="h-5 w-5" />, // Consistent use of Home component here
     label: 'Home',
   },
@@ -30,11 +28,7 @@ export const menuItemsTop: MenuItem[] = [
   },
 ];
 
-const getUserType = (state: RootState) => state.user.type; // Assuming you have a user slice in Redux
-
 export function useMenuItemsBottom() {
-  const userType = useSelector(getUserType);
-
   // Return empty array or nothing if you don't want the bottom Home item
   return [];
 }

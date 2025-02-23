@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -27,7 +26,35 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
+
+const validateWorkDates = (
+  data: { workFrom?: string; workTo?: string },
+  ctx: any,
+) => {
+  const workFromDate = data.workFrom ? new Date(data.workFrom) : null;
+  const workToDate = data.workTo ? new Date(data.workTo) : null;
+
+  if (workFromDate && workToDate) {
+    if (workFromDate > workToDate) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Work From date cannot be after Work To date.',
+        path: ['workFrom'],
+      });
+    }
+
+    const oneMonthLater = new Date(workFromDate);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+    if (workToDate < oneMonthLater) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Work To date must be at least 1 month after Work From date.',
+        path: ['workTo'],
+      });
+    }
+  }
+};
 
 const experienceFormSchema = z
   .object({
@@ -46,25 +73,17 @@ const experienceFormSchema = z
       .min(1, { message: 'Reference Person Contact is required.' }),
     githubRepoLink: z
       .string()
-      .url({ message: 'GitHub Repositry link must be a valid URL.' })
+      .trim()
+      .transform((val) => (val === '' ? undefined : val))
       .optional()
-      .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
-        message: 'GitHub repository URL must start with https://github.com/',
+      .refine((url) => !url || url.startsWith('https://github.com/'), {
+        message: 'GitHub URL must start with https://github.com/',
       }),
     comments: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      if (data.workFrom && data.workTo) {
-        return new Date(data.workFrom) <= new Date(data.workTo);
-      }
-      return true;
-    },
-    {
-      message: 'Work From date must be before Work To date',
-      path: ['workTo'],
-    },
-  );
+  .superRefine((data, ctx) => {
+    validateWorkDates(data, ctx);
+  });
 
 type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 
@@ -75,7 +94,6 @@ interface AddExperienceProps {
 export const AddExperience: React.FC<AddExperienceProps> = ({
   onFormSubmit,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
@@ -115,7 +133,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
     try {
-      await axiosInstance.post(`/freelancer/${user.uid}/experience`, {
+      await axiosInstance.post(`/freelancer/experience`, {
         company: data.company || '',
         jobTitle: data.jobTitle || '',
         workDescription: data.workDescription || '',

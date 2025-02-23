@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -24,10 +23,10 @@ import {
 } from '@/config/menuItems/freelancer/oracleMenuItems';
 // import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 // import dummyData from '@/dummydata.json';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface JobData {
@@ -48,8 +47,6 @@ interface JobData {
 
 export default function ProfessionalInfo() {
   const [JobData, setJobData] = useState<JobData[]>([]);
-
-  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -71,7 +68,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/${user.uid}/oracle?doc_type=experience`,
+        `/verification/oracle?doc_type=experience`,
       );
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
@@ -79,9 +76,14 @@ export default function ProfessionalInfo() {
       );
       setJobData(flattenedData);
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.log(error, 'error in getting verification data');
     }
-  }, [user.uid]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -106,7 +108,7 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="Experience Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}

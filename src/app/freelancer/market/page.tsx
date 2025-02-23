@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Loader2 } from 'lucide-react';
 
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
@@ -16,6 +17,7 @@ import JobCard from '@/components/opportunities/jobs/jobs';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/components/ui/use-toast';
 
 interface FilterState {
   projects: string[];
@@ -93,6 +95,7 @@ const Market: React.FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const [isgetJobLoading, setIsJobLoading] = useState(false);
 
   const handleFilterChange = (filterType: any, selectedValues: any) => {
     setFilters((prevFilters) => ({
@@ -126,6 +129,7 @@ const Market: React.FC = () => {
   useEffect(() => {
     async function fetchData() {
       try {
+        setIsJobLoading(true);
         // Fetch skills
         const skillsResponse = await axiosInstance.get('/skills');
         const skillLabels = skillsResponse.data.data.map(
@@ -144,6 +148,13 @@ const Market: React.FC = () => {
         setProjects(projectData);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
+      } finally {
+        setIsJobLoading(false);
       }
     }
     fetchData();
@@ -152,9 +163,7 @@ const Market: React.FC = () => {
   const fetchData = useCallback(
     async (appliedFilters: FilterState) => {
       try {
-        const freelancerDetails = await axiosInstance.get(
-          `/freelancer/${user.uid}`,
-        );
+        const freelancerDetails = await axiosInstance.get(`/freelancer`);
         const queryString = constructQueryString(appliedFilters);
         const getJobs = await axiosInstance.get(
           `/project/freelancer/${user.uid}?${queryString}`,
@@ -172,6 +181,11 @@ const Market: React.FC = () => {
         }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     },
     [user.uid],
@@ -210,7 +224,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -285,25 +299,31 @@ const Market: React.FC = () => {
         </div>
 
         {/* Right Content Scroll */}
-        <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
-          <ScrollArea className="h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
-            {jobs.map((job: Project, index: number) => (
-              <JobCard
-                key={index}
-                id={job._id}
-                companyId={job.companyId}
-                projectName={job.projectName}
-                description={job.description}
-                companyName={job.companyName}
-                email={job.email}
-                skillsRequired={job.skillsRequired}
-                status={job.status}
-                profiles={job.profiles || []}
-                onRemove={handleRemoveJob}
-              />
-            ))}
-          </ScrollArea>
-        </div>
+        {isgetJobLoading ? (
+          <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full flex justify-center items-center h-[60vh]">
+            <Loader2 size={40} className=" text-white animate-spin " />
+          </div>
+        ) : (
+          <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full">
+            <ScrollArea className="h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
+              {jobs.map((job: Project, index: number) => (
+                <JobCard
+                  key={index}
+                  id={job._id}
+                  companyId={job.companyId}
+                  projectName={job.projectName}
+                  description={job.description}
+                  companyName={job.companyName}
+                  email={job.email}
+                  skillsRequired={job.skillsRequired}
+                  status={job.status}
+                  profiles={job.profiles || []}
+                  onRemove={handleRemoveJob}
+                />
+              ))}
+            </ScrollArea>
+          </div>
+        )}
       </div>
 
       {/* Modal for Filters */}

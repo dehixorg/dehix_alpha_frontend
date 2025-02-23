@@ -7,12 +7,13 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  Loader2,
   LoaderCircle,
   Rocket,
   Shield,
   User,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -58,7 +59,7 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto sm:py-6 mb-4 sm:mb-8">
+    <div className="w-full max-w-5xl mx-auto py-4  sm:py-6 mb-10 sm:mb-8">
       <div className="text-center space-y-2 sm:space-y-4">
         <h1 className="text-3xl font-bold">
           Create Your Business <span className="block">Account</span>
@@ -125,6 +126,7 @@ const businessRegisterSchema = z
     position: z.string().min(1, 'Position is required'),
     email: z.string().email('Invalid email address'),
     phone: z.string().min(1, 'Phone number is required'),
+    referralCode: z.string().optional(),
     linkedin: z
       .string()
       .url('Invalid URL')
@@ -171,7 +173,7 @@ export default function BusinessRegisterPage() {
     <div className="flex w-full items-center justify-center">
       <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
         <Stepper currentStep={currentStep} />
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full ">
           <div className="w-full max-w-4xl">
             <BusinessRegisterForm
               currentStep={currentStep}
@@ -201,7 +203,7 @@ function BusinessRegisterForm({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const router = useRouter();
-
+  const searchParams = useSearchParams();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -220,6 +222,7 @@ function BusinessRegisterForm({
       linkedin: '',
       personalWebsite: '',
       password: '',
+      referralCode: '',
     },
     mode: 'all',
   });
@@ -239,7 +242,33 @@ function BusinessRegisterForm({
         'confirmPassword',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        const { userName } = form.getValues();
+        try {
+          setIsVerified(true);
+          const username = userName;
+          const response = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${username}&is_business=true`,
+          );
+
+          if (response.data.duplicate === false) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'User Already Exists',
+              description:
+                'This username is already taken. Please choose another one.',
+            });
+          }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'API Error',
+            description: 'There was an error while checking the username.',
+          });
+        } finally {
+          setIsVerified(false);
+        }
       } else {
         toast({
           variant: 'destructive',
@@ -255,6 +284,7 @@ function BusinessRegisterForm({
         'linkedin',
         'personalWebsite',
       ]);
+
       if (isValid) {
         setCurrentStep(currentStep + 1);
       } else {
@@ -269,6 +299,11 @@ function BusinessRegisterForm({
 
   const onSubmit = async (data: BusinessRegisterFormValues) => {
     setIsLoading(true);
+    const referralCodeFromQuery = searchParams.get('referral');
+
+    const referralCodeFromForm = data.referralCode;
+
+    const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -287,19 +322,27 @@ function BusinessRegisterForm({
       verified: '',
       isVerified: false,
     };
+    const url = referralCode
+      ? `/register/business?referralCode=${referralCode}`
+      : '/register/business';
     try {
-      await axiosInstance.post('/register/business', formData);
+      await axiosInstance.post(url, formData);
       toast({
         title: 'Account created successfully!',
         description: 'Your business account has been created.',
       });
       setIsModalOpen(true);
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${error.response?.data || 'Something went wrong!'}`,
+        description: `Error: ${
+          error.response?.data.message || 'Something went wrong!'
+        }`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
@@ -309,7 +352,10 @@ function BusinessRegisterForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full max-w-3xl mx-auto"
+      >
         <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="grid gap-4 sm:gap-6 w-full">
             {/* First Step */}
@@ -415,10 +461,17 @@ function BusinessRegisterForm({
                 <Button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex items-center justify-center"
+                  disabled={Isverified}
                 >
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {Isverified ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -456,12 +509,22 @@ function BusinessRegisterForm({
                   )}
                 />
               </div>
-              <TextInput
-                control={form.control}
-                name="position"
-                label="Position"
-                placeholder="CTO"
-              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextInput
+                  control={form.control}
+                  name="position"
+                  label="Position"
+                  placeholder="CTO"
+                />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
+                  className="w-full"
+                />
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   control={form.control}

@@ -77,14 +77,10 @@ interface SkillDomainData {
   status: string;
   visible: boolean;
 }
-interface SkillDomainFormProps {
-  skillFilter: (skills: Skill[]) => void;
-  domainFilter: (domains: Domain[]) => void;
-}
 
 const SHEET_SIDES = ['left'] as const;
 
-type SheetSide = (typeof SHEET_SIDES)[number];
+// type SheetSide = (typeof SHEET_SIDES)[number];
 
 const TalentCard: React.FC<TalentCardProps> = ({
   skillFilter,
@@ -163,7 +159,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       // Fetch the skill/domain data for the specific freelancer
       if (user?.uid) {
         const hireTalentResponse = await axiosInstance.get(
-          `/business/${user.uid}/hire-dehixtalent`,
+          `/business/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
 

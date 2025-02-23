@@ -1,10 +1,10 @@
 import {
-  Boxes,
   Home,
   ListVideo,
   Users2,
   History,
   Settings,
+  Briefcase,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -38,6 +38,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/interview/current',
     icon: <ListVideo className="h-5 w-5" />,
     label: 'Current',
+  },
+  {
+    href: '/freelancer/interview/bids',
+    icon: <Briefcase className="h-5 w-5" />,
+    label: 'Bids',
   },
   {
     href: '/freelancer/interview/history',

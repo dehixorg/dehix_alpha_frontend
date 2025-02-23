@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -106,8 +106,17 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [, setLastAddedItems] = useState<{
+    skills: { name: string }[];
+    projectsDomains: { name: string }[];
+    domains: { name: string }[];
+  }>({
+    skills: [],
+    projectsDomains: [],
+    domains: [],
+  });
   const [customSkill, setCustomSkill] = useState({
     label: '',
     description: '',
@@ -120,9 +129,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     label: '',
     description: '',
   });
-  const [dialogType, setDialogType] = useState<
-    'skill' | 'domain' | 'projectDomain' | null
-  >(null);
+  const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
+    null,
+  );
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
 
   const form = useForm<ProfileFormValues>({
@@ -152,6 +161,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        skills: [...prev.skills, { name: tmpSkill }],
+      }));
+
       setTmpSkill('');
     }
   };
@@ -317,6 +331,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        domains: [...prev.domains, { name: tmpDomain }],
+      }));
       setTmpDomain('');
     }
   };
@@ -339,6 +357,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           interviewerRating: 0,
         },
       ]);
+      setLastAddedItems((prev) => ({
+        ...prev,
+        projectsDomains: [...prev.projectsDomains, { name: tmpProjectDomains }],
+      }));
       setTmpProjectDomains('');
     }
   };
@@ -383,27 +405,32 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setKycStatus(userResponse?.data?.data?.kyc?.status);
 
         form.reset({
-          firstName: userResponse.data.firstName || '',
-          lastName: userResponse.data.lastName || '',
-          username: userResponse.data.userName || '',
-          email: userResponse.data.email || '',
-          phone: userResponse.data.phone || '',
-          role: userResponse.data.role || '',
-          personalWebsite: userResponse.data.personalWebsite || '',
-          resume: userResponse.data.resume || '',
-          description: userResponse.data.description || '',
-          aadharOrGovtId: userResponse.data.kyc.aadharOrGovtId || '',
-          frontImageUrl: userResponse.data.kyc.frontImageUrl || '',
-          backImageUrl: userResponse.data.kyc.backImageUrl || '',
-          liveCaptureUrl: userResponse.data.kyc.liveCapture || '',
+          firstName: userResponse.data.data.firstName || '',
+          lastName: userResponse.data.data.lastName || '',
+          username: userResponse.data.data.userName || '',
+          email: userResponse.data.data.email || '',
+          phone: userResponse.data.data.phone || '',
+          role: userResponse.data.data.role || '',
+          personalWebsite: userResponse.data.data.personalWebsite || '',
+          resume: userResponse.data.data.resume || '',
+          description: userResponse.data.data.description || '',
+          aadharOrGovtId: userResponse.data.data.kyc?.aadharOrGovtId || '',
+          frontImageUrl: userResponse.data.data.kyc?.frontImageUrl || '',
+          backImageUrl: userResponse.data.data.kyc?.backImageUrl || '',
+          liveCaptureUrl: userResponse.data.data.kyc?.liveCapture || '',
         });
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     };
 
     fetchData();
-  }, [user_id]);
+  }, [user_id, form]);
 
   useEffect(() => {
     form.reset({
@@ -464,13 +491,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         uploadedUrls.liveCaptureUrl = response.data.data.Location;
       }
 
-      const {
-        aadharOrGovtId,
-        frontImageUrl,
-        backImageUrl,
-        liveCaptureUrl,
-        ...restData
-      } = data;
+      const { aadharOrGovtId, ...restData } = data;
+
       const kyc = {
         aadharOrGovtId,
         frontImageUrl: uploadedUrls.frontImageUrl,
@@ -479,10 +501,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/freelancer/${user_id}`, {
+      await axiosInstance.put(`/freelancer`, {
         ...restData,
         skills: currSkills,
         domain: currDomains,
+        projectDomain: currProjectDomains,
         description: data.description,
         kyc,
       });
@@ -523,13 +546,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          user_id={user.uid}
           profile={user.profilePic}
           entityType={Type.FREELANCER}
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-10 grid-cols-2 mt-4"
+          className="grid gap-10 grid-cols-1 sm:grid-cols-2 mt-4"
         >
           <FormField
             control={form.control}
@@ -589,12 +611,11 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem className="col-span-2">
+              <FormItem className="sm:col-span-2">
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Enter description" {...field} />
@@ -603,7 +624,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="phone"
@@ -1104,20 +1124,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <FormField
             control={form.control}
             name="resume"
-            render={({ field }) => (
+            render={() => (
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload user_id={user._id} />
+                  <ResumeUpload />
                 </div>
               </FormItem>
             )}
           />
-          <Separator className="col-span-2 mt-0" />
-          <Button type="submit" className="col-span-2">
+          <Separator className="sm:col-span-2 mt-0" />
+          <Button type="submit" className="sm:col-span-2">
             Update profile
           </Button>
-
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}

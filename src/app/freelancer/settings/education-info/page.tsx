@@ -12,6 +12,7 @@ import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { AddEducation } from '@/components/dialogs/addEduction';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Education() {
   const user = useSelector((state: RootState) => state.user);
@@ -28,6 +29,11 @@ export default function Education() {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
         setEducationInfo(Object.values(response.data?.education));
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -60,7 +66,7 @@ export default function Education() {
         menuItemsBottom={menuItemsBottom}
         active="Education"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
 import {
@@ -24,7 +23,6 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input'; // Import ShadCN Input component
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -44,6 +42,7 @@ interface SkillDomainData {
   monthlyPay: string;
   activeStatus: boolean;
   status: StatusEnum;
+  type: string;
 }
 
 // Define the props for the DomainDialog component
@@ -74,7 +73,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   onSubmitDomain,
   setDomains,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
   const [loading, setLoading] = useState(false);
   const {
@@ -98,18 +96,15 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
-        {
-          talentId: data.domainId,
-          talentName: data.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'DOMAIN',
-        },
-      );
+      const response = await axiosInstance.post(`/freelancers/dehix-talent`, {
+        talentId: data.domainId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'DOMAIN',
+      });
 
       if (response.status === 200) {
         const newTalent = response.data.data; // Adjust based on your response structure

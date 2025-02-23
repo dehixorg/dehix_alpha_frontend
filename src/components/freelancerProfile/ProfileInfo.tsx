@@ -3,12 +3,10 @@ import {
   LinkedinIcon,
   GithubIcon,
   Globe,
-  UserCheck,
-  Clock,
-  RefreshCw,
   ShieldAlert,
   LucideVerified,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   HoverCard,
@@ -57,10 +55,12 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
 
   return (
     <section className="flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6">
-      <img
+      <Image
         src={user?.profilePic || 'https://via.placeholder.com/150'}
         alt="Profile"
-        className="w-36 h-36 rounded-full border-4 border-indigo-500"
+        width={144}
+        height={144}
+        className="rounded-full border-4 border-indigo-500 object-cover"
       />
       <div className="text-center md:text-left">
         <div className="flex justify-center items-center gap-3">

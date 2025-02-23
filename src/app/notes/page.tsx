@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -13,7 +12,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
-import { axiosInstance } from '@/lib/axiosinstance'; // Adjust the import as per your project structure
+import { axiosInstance } from '@/lib/axiosinstance';
 import { LabelType, Note, NoteType } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
@@ -86,13 +85,16 @@ const Notes = () => {
         active="Notes"
       />
 
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <div>
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu="Notes"
-            breadcrumbItems={[{ label: 'Notes', link: '/notes' }]}
+            breadcrumbItems={[
+              { label: 'Business', link: '/dashboard/business' },
+              { label: 'Notes', link: '/notes' },
+            ]}
           />
         </div>
         {/* Main content area */}

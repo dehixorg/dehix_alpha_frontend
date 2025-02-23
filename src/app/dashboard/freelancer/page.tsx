@@ -26,6 +26,7 @@ import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDial
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -79,12 +80,17 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=${status}`,
+        `/freelancer/project?status=${status}`,
       );
       if (response.status == 200 && response?.data?.data) {
         setProjects(response.data.data);
       }
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.error('API Error:', error);
     } finally {
       setLoading(false);
@@ -95,10 +101,10 @@ export default function Dashboard() {
     setLoadingStats(true);
     try {
       const activeCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=ACTIVE`,
+        `/freelancer/project?status=ACTIVE`,
       );
       const pendingCountResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}/project?status=PENDING`,
+        `/freelancer/project?status=PENDING`,
       );
 
       if (
@@ -115,6 +121,11 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('API Error for project stats:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     } finally {
       setLoadingStats(false);
     }
@@ -138,13 +149,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen  w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Dashboard"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -220,16 +231,32 @@ export default function Dashboard() {
                   </TabsList>
                 </div>
                 <TabsContent value={StatusEnum.ACTIVE}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="active"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="pending"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="completed"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
-                  <ProjectTableCard projects={projects} loading={loading} />
+                  <ProjectTableCard
+                    type="rejected"
+                    projects={projects}
+                    loading={loading}
+                  />
                 </TabsContent>
               </Tabs>
             </div>

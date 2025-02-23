@@ -4,7 +4,7 @@ import { CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Carousel,
   CarouselContent,
@@ -83,6 +83,11 @@ export default function Dashboard() {
           setProject(projectData);
         }
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -144,7 +149,7 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -175,7 +180,9 @@ export default function Dashboard() {
                         endDate={project.end}
                         projectDomain={project.projectDomain}
                         skills={project.skillsRequired}
+                        projectId={project._id}
                         handleCompleteProject={handleCompleteProject}
+                        userRole="Business"
                       />
                     </div>
                     <div>

@@ -37,6 +37,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/components/ui/use-toast';
 
 interface WorkExpProps {
   _id: string;
@@ -86,10 +87,21 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   }, [status]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await axiosInstance.put(`/verification/${_id}/oracle?doc_type=experience`, {
-      comments: data.comment,
-      verification_status: data.type,
-    });
+    try {
+      await axiosInstance.put(
+        `/verification/${_id}/oracle?doc_type=experience`,
+        {
+          comments: data.comment,
+          verification_status: data.type,
+        },
+      );
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
+    }
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     onCommentUpdate(data.comment || '');

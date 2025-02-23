@@ -11,11 +11,12 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
+import { toast } from '@/components/ui/use-toast';
 // import { axiosInstance } from '@/lib/axiosinstance';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh, setRefresh] = useState(false);
+  const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
 
   useEffect(() => {
@@ -23,6 +24,11 @@ export default function Resume() {
       try {
         // const response = await axiosInstance.get(`/freelancer/${user.uid}`);
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -41,7 +47,7 @@ export default function Resume() {
         menuItemsBottom={menuItemsBottom}
         active="Resume"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

@@ -30,7 +30,7 @@ interface Domain {
 export default function Talent() {
   const [skillFilter, setSkillFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [skillDomainFormProps, setskillDomainFormProps] = useState<any>();
+  const [skillDomainFormProps] = useState<any>();
 
   const [filterSkill, setFilterSkill] = useState<Skill[]>([]);
   const [filterDomain, setFilterDomain] = useState<Domain[]>([]);
@@ -43,7 +43,7 @@ export default function Talent() {
         active="Dehix Talent"
       />
 
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 mb-8 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

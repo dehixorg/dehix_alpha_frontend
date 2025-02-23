@@ -34,6 +34,7 @@ import { auth } from '@/config/firebaseConfig';
 import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/hooks/use-toast';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -96,7 +97,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         const { user, claims } = await getUserData(userCredential);
 
         // Update phone verification status in mongoDb and firebase
-        await axiosInstance.put(`/${claims.type}/${userCredential.user.uid}`, {
+        await axiosInstance.put(`/${claims.type}`, {
           phone: phoneNumber,
           phoneVerify: true,
         });
@@ -106,9 +107,14 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
       } catch (error) {
         console.log(error);
         setError('Failed to verify OTP. Please check the OTP.');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     });
-  }, [confirmationResult, otp, dispatch, router]);
+  }, [confirmationResult, otp, dispatch, router, phoneNumber]);
 
   useEffect(() => {
     const hasEnteredAllDigits = otp.length === 6;

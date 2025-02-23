@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { Plus } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 
@@ -26,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RootState } from '@/lib/store';
+import { toast } from '@/hooks/use-toast';
 
 interface Interviewer {
   _id: string;
@@ -60,17 +60,17 @@ export function SkillDomainMeetingDialog({
   const [attendees, setAttendees] = useState<string[]>(['']);
   const [interviewer, setInterviewer] = useState<Interviewer[]>([]);
 
-  const handleRequest = (meetingData: object) => {
+  const handleRequest = async (meetingData: object) => {
     const query = Object.fromEntries(searchParams.entries());
     if (query.code) {
-      handleCreateMeet(meetingData, query.code);
+      await handleCreateMeet(meetingData, query.code);
     } else {
       handleAuth();
     }
   };
 
-  const handleCreateMeet = (meetingData: object, code: string) => {
-    const response = axiosInstance.post(`/meeting`, meetingData, {
+  const handleCreateMeet = async (meetingData: object, code: string) => {
+    await axiosInstance.post(`/meeting`, meetingData, {
       params: {
         code: code, // Add the query string here
       },
@@ -109,6 +109,11 @@ export function SkillDomainMeetingDialog({
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   };
 
@@ -116,16 +121,20 @@ export function SkillDomainMeetingDialog({
     async function fetchData() {
       try {
         const response = await axiosInstance.get(
-          `/freelancer/${user?.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
+          `/freelancer/${user.uid}/doc_id/${doc_id}?doc_type=${doc_type}`,
         );
         setInterviewer(response?.data?.data);
-        console.log(interviewer);
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     }
     fetchData();
-  }, [doc_id]);
+  }, [doc_id, doc_type, user.uid]);
 
   // Helper function to handle both date and time change
   const handleDateTimeChange = (

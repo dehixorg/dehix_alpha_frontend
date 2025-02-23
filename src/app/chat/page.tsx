@@ -76,7 +76,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
             user.type === 'business' ? businessMenuItemsTop : menuItemsTop
@@ -86,13 +86,7 @@ const HomePage = () => {
           }
           activeMenu="Chats"
           breadcrumbItems={[
-            {
-              label: (user.type ?? '').replace(/\b\w/g, (char: string) =>
-                char.toUpperCase(),
-              ),
-
-              link: '#',
-            },
+            { label: 'Business', link: '/dashboard/business' },
             { label: 'Chats', link: '/dashboard/chats' },
           ]}
           searchPlaceholder="Search..."

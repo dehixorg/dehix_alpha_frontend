@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import SkillDialog from './skillDiag';
 import DomainDialog from './domainDiag';
+import VerifyDialog from './verifyDialog';
 
 import { Card } from '@/components/ui/card';
 import {
@@ -22,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   _id: string;
@@ -38,6 +40,7 @@ interface SkillDomainData {
   label: string;
   experience: string;
   monthlyPay: string;
+  type: string;
   status: StatusEnum;
   activeStatus: boolean;
 }
@@ -73,6 +76,7 @@ const SkillDomainForm: React.FC = () => {
             `/freelancer/${user.uid}/dehix-talent`,
           );
         }
+        console.log(talentResponse);
 
         const talentData = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data?.data
@@ -99,16 +103,23 @@ const SkillDomainForm: React.FC = () => {
           monthlyPay: item.monthlyPay || 'N/A',
           status: item.status,
           activeStatus: item.activeStatus,
+          type: item.type,
         }));
 
         setSkills(filteredSkills);
         setDomains(filteredDomains);
         setSkillDomainData(formattedTalentData);
+
         setStatusVisibility(
           formattedTalentData.map((item) => item.activeStatus),
         );
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }
@@ -139,8 +150,8 @@ const SkillDomainForm: React.FC = () => {
     dehixTalentId: string,
   ) => {
     try {
-      const response = await axiosInstance.patch(
-        `/freelancer/${user.uid}/dehix-talent/${dehixTalentId}`,
+      const response = await axiosInstance.put(
+        `/freelancer/dehix-talent/${dehixTalentId}`,
         { activeStatus: value },
       );
 
@@ -151,6 +162,11 @@ const SkillDomainForm: React.FC = () => {
       }
     } catch (error) {
       console.error('Error updating visibility:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   };
 
@@ -220,9 +236,17 @@ const SkillDomainForm: React.FC = () => {
                         ${item.monthlyPay}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getBadgeColor(item.status)}>
-                          {item?.status?.toUpperCase()}
-                        </Badge>
+                        {item.status.toUpperCase() === StatusEnum.PENDING ? (
+                          <VerifyDialog
+                            talentType={item.type}
+                            talentId={item.uid}
+                            userId={user.uid}
+                          />
+                        ) : (
+                          <Badge className={getBadgeColor(item.status)}>
+                            {item?.status?.toUpperCase()}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Switch

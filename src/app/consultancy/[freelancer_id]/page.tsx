@@ -42,6 +42,7 @@ import { Separator } from '@/components/ui/separator';
 import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
+import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   label: string;
@@ -86,9 +87,7 @@ export default function ConsultancyPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(
-          `/project/business/${user.uid}`,
-        );
+        const response = await axiosInstance.get(`/project/business`);
         setResponseData(response.data.data);
 
         const skillsResponse = await axiosInstance.get('/skills');
@@ -97,6 +96,11 @@ export default function ConsultancyPage() {
         const domainsResponse = await axiosInstance.get('/domain');
         setDomains(domainsResponse.data.data);
       } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -154,6 +158,11 @@ export default function ConsultancyPage() {
       form.reset();
       setIsDialogOpen(false);
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.error('Error:', error);
     }
   };
@@ -165,7 +174,7 @@ export default function ConsultancyPage() {
         menuItemsBottom={menuItemsBottom}
         active="Consultancy Info"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

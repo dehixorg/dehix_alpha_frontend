@@ -12,11 +12,7 @@ const allowedResumeFormats = [
 ];
 const maxResumeSize = 5 * 1024 * 1024; // 5MB in bytes
 
-interface ResumeUploadProps {
-  user_id: string;
-}
-
-const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id }) => {
+const ResumeUpload: React.FC = () => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -90,7 +86,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id }) => {
       const { Location } = postResponse.data?.data || {};
       if (!Location) throw new Error('Failed to upload the resume.');
 
-      const putResponse = await axiosInstance.put(`/freelancer/${user_id}`, {
+      const putResponse = await axiosInstance.put(`/freelancer`, {
         resume: Location,
       });
 
@@ -108,10 +104,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ user_id }) => {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Upload failed',
-        description:
-          error instanceof Error ? error.message : 'Please try again.',
-      });
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     } finally {
       setIsUploading(false);
     }

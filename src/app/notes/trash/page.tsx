@@ -11,7 +11,6 @@ import {
   menuItemsTop,
   notesMenu,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
 
@@ -32,13 +31,14 @@ const TrashPage = () => {
         menuItemsBottom={menuItemsBottom}
         active="Trash"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <div>
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu="Trash"
             breadcrumbItems={[
+              { label: 'Business', link: '/dashboard/business' },
               { label: 'Notes', link: '/notes' },
               { label: 'Trash', link: '/trash' },
             ]}

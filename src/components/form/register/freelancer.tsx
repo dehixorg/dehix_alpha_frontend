@@ -1,26 +1,25 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowLeft,
   ArrowRight,
   Briefcase,
-  Building2,
   CheckCircle2,
   Eye,
   EyeOff,
+  Loader2,
   LoaderCircle,
   Rocket,
   Shield,
   User,
-  UserCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import countries from '../../../country-codes.json';
 
@@ -41,6 +40,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
+import DateOfBirthPicker from '@/components/shared/DateOfBirthPicker';
+
 interface Step {
   id: number;
   title: string;
@@ -59,7 +60,7 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-4 sm:mb-8">
+    <div className="w-full max-w-5xl mx-auto py-4 sm:py-6 mb-10 sm:mb-8">
       <div className="text-center space-y-2 sm:space-y-4">
         <h1 className="text-3xl font-bold">
           Create Your Freelancer <span className="block">Account</span>
@@ -113,6 +114,17 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
         ))}
       </div>
     </div>
+  );
+};
+
+const getAgeWorkExperienceDifference = (today: any, dobDate: any) => {
+  return (
+    today.getFullYear() -
+    dobDate.getFullYear() -
+    (today <
+    new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate())
+      ? 1
+      : 0)
   );
 };
 
@@ -186,12 +198,13 @@ const profileFormSchema = z
       .refine((value) => value >= 0, {
         message: 'Price must be a non-negative number.',
       }),
+    referralCode: z.string().optional(),
     workExperience: z
       .number()
       .min(0, 'Work experience must be at least 0 years')
       .max(60, 'Work experience must not exceed 60 years'),
     dob: z
-      .string()
+      .union([z.string(), z.date()])
       .optional()
       .refine(
         (value) => {
@@ -215,38 +228,58 @@ const profileFormSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'], // Associate the error with the `confirmPassword` field
     message: 'Passwords do not match',
-  });
+  })
+  .refine(
+    (data) => {
+      if (!data.dob) return true; // Skip check if DOB is not provided
+
+      const dobDate = new Date(data.dob);
+      const today = new Date();
+      const age = getAgeWorkExperienceDifference(today, dobDate);
+
+      return data.workExperience <= age;
+    },
+    {
+      path: ['workExperience'],
+      message: 'Work experience cannot be greater than your age',
+    },
+  );
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = [
-    {
-      title: 'Account Details',
-      description: 'Basic information',
-      icon: <UserCircle className="w-6 h-6" />,
-    },
-    {
-      title: 'Company Info',
-      description: 'About your business',
-      icon: <Building2 className="w-6 h-6" />,
-    },
-    {
-      title: 'Verification',
-      description: 'Contact details',
-      icon: <Shield className="w-6 h-6" />,
-    },
-  ];
+  // const steps = [
+  //   {
+  //     title: 'Account Details',
+  //     description: 'Basic information',
+  //     icon: <UserCircle className="w-6 h-6" />,
+  //   },
+  //   {
+  //     title: 'Company Info',
+  //     description: 'About your business',
+  //     icon: <Building2 className="w-6 h-6" />,
+  //   },
+  //   {
+  //     title: 'Verification',
+  //     description: 'Contact details',
+  //     icon: <Shield className="w-6 h-6" />,
+  //   },
+  // ];
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      <Stepper currentStep={currentStep} />
-      {/* Form content goes here */}
-      <FreelancerRegisterForm
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-      />
+    <div className="flex w-full items-center justify-center">
+      <div className="w-full max-w-5xl px-4 sm:px-6 lg:px-4">
+        <Stepper currentStep={currentStep} />
+        <div className="flex justify-center w-full">
+          <div className="w-full max-w-4xl">
+            <FreelancerRegisterForm
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -266,8 +299,9 @@ function FreelancerRegisterForm({
   const [phone, setPhone] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
-  const formRef = useRef<HTMLFormElement>(null);
-
+  const [Isverified, setIsVerified] = useState<boolean>(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -287,6 +321,7 @@ function FreelancerRegisterForm({
       password: '',
       perHourPrice: 0,
       workExperience: 0,
+      referralCode: '',
       dob: '',
     },
     mode: 'all',
@@ -326,7 +361,33 @@ function FreelancerRegisterForm({
         'workExperience',
       ]);
       if (isValid) {
-        setCurrentStep(currentStep + 1);
+        const { userName } = form.getValues();
+        setIsVerified(true);
+        try {
+          const username = userName;
+          const response = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${username}&is_freelancer=true`,
+          );
+
+          if (response.data.duplicate === false) {
+            setCurrentStep(currentStep + 1);
+          } else {
+            toast({
+              variant: 'destructive',
+              title: 'User Already Exists',
+              description:
+                'This username is already taken. Please choose another one.',
+            });
+          }
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'API Error',
+            description: 'There was an error while checking the username.',
+          });
+        } finally {
+          setIsVerified(false);
+        }
       } else {
         toast({
           variant: 'destructive',
@@ -338,6 +399,12 @@ function FreelancerRegisterForm({
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
+    const referralCodeFromQuery = searchParams.get('referral');
+
+    const referralCodeFromForm = data.referralCode;
+
+    const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
+
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -365,14 +432,20 @@ function FreelancerRegisterForm({
       // oracleStatus: 'notApplied',
       dob: data.dob ? new Date(data.dob).toISOString() : null,
     };
+    const url = referralCode
+      ? `/register/freelancer?referralCode=${referralCode}`
+      : '/register/freelancer';
+
     try {
-      await axiosInstance.post('/register/freelancer', formData);
+      await axiosInstance.post(url, formData);
       toast({
         title: 'Account created successfully!',
         description: 'Redirecting to login page...',
       });
-
       setIsModalOpen(true);
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
@@ -384,16 +457,19 @@ function FreelancerRegisterForm({
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
-      setIsLoading(false);
+      setTimeout(() => setIsLoading(false), 100);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full max-w-3xl mx-auto"
+      >
         <div className="w-full p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="grid gap-4 sm:gap-6 w-full">
-            {/* FirstStep */}
+            {/* First Step */}
             <div
               className={cn('grid gap-4', currentStep === 0 ? '' : 'hidden')}
             >
@@ -424,15 +500,16 @@ function FreelancerRegisterForm({
                   placeholder="john.doe@techinnovators.com"
                   type="email"
                 />
-
-                <TextInput
-                  control={form.control}
-                  name="dob"
-                  label="Date of Birth"
-                  type="date"
-                  className="w-full"
-                />
+                <div className="flex flex-col gap-2 mt-1">
+                  <Label className="text-sm font-medium">Date of Birth</Label>
+                  <Controller
+                    control={form.control}
+                    name="dob"
+                    render={({ field }) => <DateOfBirthPicker field={field} />}
+                  />
+                </div>
               </div>
+
               {/* Password and Confirm Password */}
               <div className="space-y-2">
                 <Label>Password</Label>
@@ -467,6 +544,7 @@ function FreelancerRegisterForm({
                   )}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label>Confirm Password</Label>
                 <FormField
@@ -500,14 +578,22 @@ function FreelancerRegisterForm({
                   )}
                 />
               </div>
+
               <div className="flex gap-2 justify-end mt-4">
                 <Button
                   type="button"
                   onClick={handleNextStep}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex items-center justify-center"
+                  disabled={Isverified}
                 >
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {Isverified ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      Next
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -584,6 +670,14 @@ function FreelancerRegisterForm({
                   placeholder="0"
                   className="w-full"
                 />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
+                  className="w-full"
+                />
               </div>
 
               <div className="flex gap-2 justify-between mt-4">
@@ -606,6 +700,7 @@ function FreelancerRegisterForm({
               </div>
             </div>
 
+            {/* Final Step */}
             <div
               className={cn('grid gap-4', currentStep === 2 ? '' : 'hidden')}
             >
@@ -617,6 +712,7 @@ function FreelancerRegisterForm({
                   code={code}
                 />
               </div>
+
               <div className="flex items-center gap-2 mt-4">
                 <input
                   type="checkbox"
@@ -632,6 +728,7 @@ function FreelancerRegisterForm({
                   </a>
                 </label>
               </div>
+
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
                 <Button
                   type="button"

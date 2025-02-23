@@ -17,6 +17,7 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 interface Project {
   _id: string;
@@ -77,6 +78,11 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false); // Set loading to false after data is fetched
       }
@@ -105,7 +111,7 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <CollapsibleSidebarMenu
             menuItemsTop={menuItemsTop}
@@ -143,7 +149,9 @@ export default function Dashboard() {
                 startDate={project.createdAt}
                 endDate={project.end}
                 projectDomain={project.projectDomain}
+                projectId={project._id}
                 skills={project.skillsRequired}
+                userRole="Freelancer"
               />
             </div>
           </div>

@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
-//import { useParams } from 'react-router-dom';
+import { toast } from '@/components/ui/use-toast';
+
 interface Project {
   _id: string;
   projectName: string;
@@ -33,6 +34,7 @@ interface Project {
   createdAt: string;
   updatedAt: string;
 }
+
 interface Bid {
   _id: string;
   bid_status: string;
@@ -46,12 +48,21 @@ const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
+  const errorToast: {
+    variant: 'destructive';
+    title: string;
+    description: string;
+  } = {
+    variant: 'destructive',
+    title: 'Error',
+    description: 'Something went wrong. Please try again.',
+  };
 
   useEffect(() => {
     const fetchProjectIds = async () => {
       try {
         const response = await axiosInstance.get(
-          `/project/business/${user.uid}/?status=Pending`,
+          `/project/business/?status=Pending`,
         );
 
         const ids = response.data.data.map((project: Project) => project._id);
@@ -63,6 +74,7 @@ const BidsPage = () => {
 
     fetchProjectIds();
   }, [user.uid]);
+
   useEffect(() => {
     const fetchBidsForProjects = async () => {
       try {
@@ -81,11 +93,14 @@ const BidsPage = () => {
 
         setBidsArray(pendingBids);
       } catch (error) {
+        toast(errorToast);
         console.error('Error fetching bids:', error);
       }
     };
 
-    fetchBidsForProjects();
+    if (projectIds.length) {
+      fetchBidsForProjects();
+    }
   }, [projectIds]);
 
   const handleAction = async (bidId: string, actionType: string) => {
@@ -100,13 +115,14 @@ const BidsPage = () => {
         bid_status: updatedStatus,
       });
     } catch (error) {
+      toast(errorToast);
       console.error('Error updating bid status:', error);
     }
   };
 
   return (
-    <div className="bids-page max-w-6xl mx-auto p-8">
-      <h1 className="text-3xl font-bold  mb-8">Manage Bids</h1>
+    <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
+      <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
       {bidsArray.length ? (
         <AppliedBids bids={bidsArray} onAction={handleAction} />
       ) : (

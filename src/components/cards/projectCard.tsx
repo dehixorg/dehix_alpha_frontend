@@ -58,7 +58,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
   return (
-    <Card className={cn('flex flex-col', cardClassName)} {...props}>
+    <Card className={cn('flex flex-col h-[400px]', cardClassName)} {...props}>
       <CardHeader>
         <CardTitle className="flex">
           {project.projectName}&nbsp;
@@ -79,9 +79,9 @@ export function ProjectCard({
         <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
           <span className="flex h-2 w-2 rounded-full" />
           <p className="text-sm text-muted-foreground">
-            {project.description.length > 40
+            {project.description?.length > 40
               ? `${project.description.slice(0, 40)}...`
-              : project.description}
+              : project.description || 'No description available'}
           </p>
         </div>
         <div>
@@ -96,7 +96,7 @@ export function ProjectCard({
           </p>
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {project.skillsRequired.map((skill, index) => (
+            {project?.skillsRequired?.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
                 {skill}
               </Badge>
@@ -105,7 +105,10 @@ export function ProjectCard({
         </div>
       </CardContent>
       <CardFooter>
-        <Link href={`/${type}/project/${project._id}`} className="w-full">
+        <Link
+          href={`/${type.toLocaleLowerCase()}/project/${project._id}`}
+          className="w-full"
+        >
           <Button
             className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >

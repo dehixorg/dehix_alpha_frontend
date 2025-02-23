@@ -2,13 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-.scrollbar-hidden {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
+@keyframes loopScroll {
+  from {
+    transform: translateX(0);
+  }
 
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, and Opera */
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 @layer base {
@@ -35,6 +36,12 @@
     --radius: 0.5rem;
     --cyan: 180, 100%, 50%;
     --cyan-foreground: 180, 100%, 43%;
+    --line-color-light: 0 0% 0% / 90%;
+    --line-color-dark: 0 0% 100% / 20%;
+    --dot-bg-color: #ffffff;
+    --dot-border-color: #000000;
+    --dot-hover-bg-color: #000000;
+    --dot-hover-border-color: #11a0ff;
   }
 
   .dark {
@@ -59,6 +66,12 @@
     --ring: 240 4.9% 83.9%;
     --cyan: 180, 100%, 43%;
     --cyan-foreground: 180, 100%, 50%;
+    --line-color-light: 0 0% 0% / 20%;
+    --line-color-dark: 0 0% 100% / 20%;
+    --dot-bg-color: #ffffff;
+    --dot-border-color: #f5f5f5;
+    --dot-hover-bg-color: #ffffff;
+    --dot-hover-border-color: #11a0ff;
   }
 }
 
@@ -66,13 +79,13 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -80,5 +93,49 @@
   .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+  }
+}
+@layer utilities {
+  .line-bg {
+    background-color: hsl(var(--line-color-light));
+  }
+
+  .dark .line-bg {
+    background-color: hsl(var(--line-color-dark));
+  }
+
+  .border-line-bg {
+    border-color: hsl(var(--line-color-light));
+  }
+
+  .dark .border-line-bg {
+    border-color: hsl(var(--line-color-dark));
+  }
+}
+
+@layer utilities {
+  .dynamic-bg {
+    background-color: var(--background);
+  }
+
+  .dynamic-text {
+    color: var(--foreground);
+  }
+
+  .dynamic-card {
+    background: linear-gradient(
+      135deg,
+      rgba(240, 240, 240, 0.8),
+      rgba(240, 240, 240, 0.6)
+    );
+    color: var(--foreground);
+  }
+
+  .dark .dynamic-card {
+    background: rgba(173, 177, 179, 0.74);
+    color: #f5f5f5;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
   }
 }

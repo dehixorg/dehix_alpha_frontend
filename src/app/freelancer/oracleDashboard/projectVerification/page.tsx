@@ -1,7 +1,6 @@
 'use client';
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
@@ -22,10 +21,10 @@ import {
 import DropdownProfile from '@/components/shared/DropdownProfile';
 // import dummyData from '@/dummydata.json';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { toast } from '@/components/ui/use-toast';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface ProjectData {
@@ -47,7 +46,6 @@ interface ProjectData {
 
 export default function ProfessionalInfo() {
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
-  const user = useSelector((state: RootState) => state.user);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -69,7 +67,7 @@ export default function ProfessionalInfo() {
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/${user.uid}/oracle?doc_type=project`,
+        `/verification/oracle?doc_type=project`,
       );
       setProjectData(response.data.data);
       const flattenedData = await response.data.data.flatMap((entry: any) =>
@@ -77,12 +75,19 @@ export default function ProfessionalInfo() {
       );
       setProjectData(flattenedData);
     } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
       console.log(error, 'error in getting verification data');
     }
-  }, [user.uid]);
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
     updatedData[index].verificationStatus = newStatus;
@@ -102,7 +107,7 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
         active="Project Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
           {/* CollapsibleSidebarMenu and Breadcrumb components */}
           <CollapsibleSidebarMenu

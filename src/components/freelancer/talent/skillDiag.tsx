@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import Link from 'next/link';
 
 import {
@@ -26,7 +25,6 @@ import {
 import { Input } from '@/components/ui/input'; // Import the Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-import { RootState } from '@/lib/store';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
@@ -42,6 +40,7 @@ interface SkillDomainData {
   monthlyPay: string;
   activeStatus: boolean;
   status: StatusEnum;
+  type: string;
 }
 
 // Define the props for the SkillDialog component
@@ -71,7 +70,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
   onSubmitSkill,
   setSkills,
 }) => {
-  const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -95,18 +93,15 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/dehix-talent`,
-        {
-          talentId: data.skillId,
-          talentName: data.label,
-          experience: data.experience,
-          monthlyPay: data.monthlyPay,
-          activeStatus: data.activeStatus,
-          status: data.status,
-          type: 'SKILL',
-        },
-      );
+      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
+        talentId: data.skillId,
+        talentName: data.label,
+        experience: data.experience,
+        monthlyPay: data.monthlyPay,
+        activeStatus: data.activeStatus,
+        status: data.status,
+        type: 'SKILL',
+      });
 
       if (response.status === 200) {
         // Assuming the response contains the newly created talent data including UID

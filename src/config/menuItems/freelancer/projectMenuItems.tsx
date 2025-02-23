@@ -1,5 +1,4 @@
 import {
-  Boxes,
   HomeIcon,
   FileCheck,
   Pointer,

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
 import { Plus, X } from 'lucide-react';
 
 import { Card } from '../ui/card';
@@ -29,7 +28,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 
 const profileFormSchema = z.object({
@@ -112,8 +110,6 @@ interface projectDomain {
 }
 
 export function CreateProjectBusinessForm() {
-  const user = useSelector((state: RootState) => state.user);
-
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -176,6 +172,7 @@ export function CreateProjectBusinessForm() {
           (skill: Domain) => ({
             value: skill.label, // Set the value to label
             label: skill.label, // Set the label to label
+            domain_id: skill._id,
           }),
         );
         setDomains(transformedDomain);
@@ -191,6 +188,11 @@ export function CreateProjectBusinessForm() {
         setSkills(transformedSkills);
       } catch (error) {
         console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       }
     };
     fetchData();
@@ -227,10 +229,10 @@ export function CreateProjectBusinessForm() {
         domains: currDomains,
       });
 
-      const response = await axiosInstance.post(`/project/${user.uid}`, {
+      const response = await axiosInstance.post(`/project/business`, {
         ...data,
         role: '',
-        projectType: '',
+        projectType: 'FREELANCE',
         skillsRequired: currSkills,
         domains: currDomains,
       });
@@ -421,11 +423,9 @@ export function CreateProjectBusinessForm() {
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select domain" />
-                            </SelectTrigger>
-                          </FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select domain" />
+                          </SelectTrigger>
                           <SelectContent>
                             {domains.map((domain: any, index: number) => (
                               <SelectItem key={index} value={domain.label}>
@@ -435,6 +435,7 @@ export function CreateProjectBusinessForm() {
                           </SelectContent>
                         </Select>
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}

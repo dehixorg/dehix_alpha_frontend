@@ -16,6 +16,7 @@ import dayjs from 'dayjs';
 import { Plus } from 'lucide-react';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { toast } from '@/hooks/use-toast';
 
 interface MeetingDialogProps {
   isOpen: boolean;
@@ -84,6 +85,11 @@ export function MeetingDialog({ isOpen, onClose }: MeetingDialogProps) {
       }
     } catch (error) {
       console.error('Error fetching Google Auth URL:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong.Please try again.',
+      }); // Error toast
     }
   };
 
