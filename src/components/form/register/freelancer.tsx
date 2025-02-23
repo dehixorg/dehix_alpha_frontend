@@ -204,7 +204,7 @@ const profileFormSchema = z
       .min(0, 'Work experience must be at least 0 years')
       .max(60, 'Work experience must not exceed 60 years'),
     dob: z
-      .string()
+      .union([z.string(), z.date()])
       .optional()
       .refine(
         (value) => {
