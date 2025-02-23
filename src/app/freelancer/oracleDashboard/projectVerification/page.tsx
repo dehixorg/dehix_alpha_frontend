@@ -118,6 +118,7 @@ export default function ProfessionalInfo() {
           <Breadcrumb
             items={[
               { label: 'Freelancer', link: '/dashboard/freelancer' },
+              { label: 'Oracle', link: '#' },
               {
                 label: 'Project Verification',
                 link: '#',
