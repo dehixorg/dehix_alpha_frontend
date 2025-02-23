@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // import { useForm } from 'react-hook-form';
 import { X, PlusCircle, Loader } from 'lucide-react';
-
-import { generateAIResponse } from '@/services/aiService';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -27,15 +25,9 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   setSummaryData,
   workExperienceData,
 }) => {
-  const [loading, setLoading] = useState(false); // Loading state for AI generation
-  const [completed, setCompleted] = useState(false); // To keep button highlighted after loading
-  const [aiResponse, setAiResponse] = useState<string>(''); // AI-generated response
-
-  // const form = useForm({
-  //   defaultValues: {
-  //     summary: '',
-  //   },
-  // });
+  // const [loading, setLoading] = useState(false);
+  // const [completed, setCompleted] = useState(false);
+  // const [aiResponse, setAiResponse] = useState<string>('');
 
   const handleInputChange = (index: number, value: string) => {
     const updatedSummaryData = [...summaryData];
@@ -44,7 +36,6 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   };
 
   useEffect(() => {
-    console.log('Updated Work Experience Data:', workExperienceData);
   }, [workExperienceData]); // Logs data every time it updates
 
   const handleAddSummary = () => {
@@ -55,34 +46,30 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
     const updatedSummaryData = summaryData.filter((_, i) => i !== index);
     setSummaryData(updatedSummaryData);
   };
-  console.log('Current Project Data:', workExperienceData);
 
-  const generateFromAI = async () => {
-    console.log('Current Work Experience Data:', workExperienceData);
+  // const generateFromAI = async () => {
+  //   console.log('Current Work Experience Data:', workExperienceData);
 
-    // Ensure jobTitle is correctly extracted
-    const jobTitle = workExperienceData?.[0]?.jobTitle || 'Unknown Job Title';
-    console.log('Extracted Job Title:', jobTitle);
+  // Ensure jobTitle is correctly extracted
+  // const jobTitle = workExperienceData?.[0]?.jobTitle || 'Unknown Job Title';
 
-    // Construct prompt dynamically
-    const PROMPT = promptTemplate.replace('{jobTitle}', jobTitle);
-    const result = await generateAIResponse(PROMPT);
-    console.log('Generated Prompt:', PROMPT);
-    setAiResponse(result);
-    setLoading(true);
-    setCompleted(false);
+  //   const PROMPT = promptTemplate.replace('{jobTitle}', jobTitle);
+  //   const result = await generateAIResponse(PROMPT);
+  //   setAiResponse(result);
+  //   setLoading(true);
+  //   setCompleted(false);
 
-    try {
-      const result = await generateAIResponse(PROMPT);
-      console.log('AI Response:', result);
-      setAiResponse(result);
-      setCompleted(true);
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const result = await generateAIResponse(PROMPT);
+  //     console.log('AI Response:', result);
+  //     setAiResponse(result);
+  //     setCompleted(true);
+  //   } catch (error) {
+  //     console.error('Error generating AI response:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div>
@@ -91,7 +78,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
         <p className="text-sm text-gray-500">
           Write a short introduction for your resume.
         </p>
-        <Button
+        {/* <Button
           onClick={generateFromAI}
           disabled={loading} // Disable the button while loading
           className={`relative overflow-hidden group rounded-lg p-2 border-2 ${
@@ -107,7 +94,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
           ) : (
             'Generate From AI'
           )}
-        </Button>
+        </Button> */}
       </div>
 
       <form className="space-y-5">
@@ -152,7 +139,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
       </div>
 
       {/* AI Response Section */}
-      {/* AI Response Section */}
+      {/*     
       {aiResponse && (
         <div className="mt-8">
           <h3 className="text-lg font-semibold text-center mb-4">
@@ -187,7 +174,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
             }
           })()}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

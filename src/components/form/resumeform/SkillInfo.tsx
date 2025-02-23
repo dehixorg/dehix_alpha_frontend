@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { generateAIResponse } from '@/services/aiService'; // AI service for generating responses
 
 interface Skill {
   skillName: string;
@@ -44,36 +43,36 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
     const updatedSkills = skillData.filter((_, i) => i !== index);
     setSkillData(updatedSkills);
   };
-  const generateSkillsFromAI = async () => {
-    if (!projectData || projectData.length === 0) {
-      console.error('No project data available for AI generation.');
-      return;
-    }
+  // const generateSkillsFromAI = async () => {
+  //   if (!projectData || projectData.length === 0) {
+  //     console.error('No project data available for AI generation.');
+  //     return;
+  //   }
 
-    const projectTitles = projectData
-      .map((project) => project.title)
-      .join(', ');
-    const prompt = promptTemplate.replace('{projectTitles}', projectTitles);
+  //   const projectTitles = projectData
+  //     .map((project) => project.title)
+  //     .join(', ');
+  //   const prompt = promptTemplate.replace('{projectTitles}', projectTitles);
 
-    setLoading(true);
-    setAiResponse('');
+  //   setLoading(true);
+  //   setAiResponse('');
 
-    try {
-      const result = await generateAIResponse(prompt);
-      setAiResponse(result);
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const result = await generateAIResponse(prompt);
+  //     setAiResponse(result);
+  //   } catch (error) {
+  //     console.error('Error generating AI response:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div>
       <div className="space-y-1.5 ml-5 mb-5">
         <h2 className="text-2xl">Skills</h2>
         <p className="text-sm text-gray-500">What are you good at?</p>
-        <Button
+        {/* <Button
           onClick={generateSkillsFromAI}
           disabled={loading} // Disable the button while loading
           className={`relative overflow-hidden group rounded-lg p-2 border-2 ${
@@ -87,7 +86,7 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
           ) : (
             'Generate Skills from AI'
           )}
-        </Button>
+        </Button> */}
       </div>
 
       <form className="space-y-5 mt-5">
