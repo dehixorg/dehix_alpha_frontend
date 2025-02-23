@@ -1,9 +1,7 @@
 import React from 'react';
-import { Search } from 'lucide-react';
 
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 
 const MarketHeader: React.FC = () => {
   return (
