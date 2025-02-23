@@ -44,16 +44,19 @@ interface Bid {
   domain_id: string;
 }
 
-const errorToast = {
-  variant: 'destructive' as const,
-  title: 'Error',
-  description: 'Something went wrong. Please try again.',
-};
-
 const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
+  const errorToast: {
+    variant: 'destructive';
+    title: string;
+    description: string;
+  } = {
+    variant: 'destructive',
+    title: 'Error',
+    description: 'Something went wrong. Please try again.',
+  };
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -118,7 +121,7 @@ const BidsPage = () => {
   };
 
   return (
-    <div className="bids-page max-w-6xl mx-auto p-8">
+    <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
       <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
       {bidsArray.length ? (
         <AppliedBids bids={bidsArray} onAction={handleAction} />

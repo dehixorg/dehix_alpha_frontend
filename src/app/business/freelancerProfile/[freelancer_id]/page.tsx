@@ -133,15 +133,15 @@ export default function FreelancerProfile() {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4  sm:pl-14">
+      <div className="flex flex-col sm:gap-4 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'HireTalent', link: '/business/talent' },
-            { label: 'Freelancer Profile', link: '/dashboard/business' },
+            { label: 'Business Marketplace', link: '/business/market' },
+            { label: 'Freelancer Profile', link: '/business/market' },
             {
               label: `${user?.firstName}  ${user?.lastName} `,
               link: `/dashboard/business/${freelancer_id}`,

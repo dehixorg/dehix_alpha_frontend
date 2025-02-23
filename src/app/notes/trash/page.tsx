@@ -31,14 +31,14 @@ const TrashPage = () => {
         menuItemsBottom={menuItemsBottom}
         active="Trash"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <div>
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
             activeMenu="Trash"
             breadcrumbItems={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
+{ label: 'Freelancer', link: '/dashboard/freelancer' },
               { label: 'Notes', link: '/notes' },
               { label: 'Trash', link: '/trash' },
             ]}

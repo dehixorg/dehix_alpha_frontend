@@ -26,12 +26,6 @@ interface FilterState {
   experience: string[];
 }
 
-const errorToast = {
-  variant: 'destructive' as const,
-  title: 'Error',
-  description: 'Something went wrong. Please try again.',
-};
-
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const [showFilters, setShowFilters] = useState(false);
@@ -111,7 +105,11 @@ const Market: React.FC = () => {
 
       setFreelancers(response.data.data);
     } catch (error) {
-      toast(errorToast);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
       console.error('API Error:', error);
     } finally {
       setIsDataLoading(false);
@@ -133,7 +131,11 @@ const Market: React.FC = () => {
         );
         setDomains(domainLabels);
       } catch (error) {
-        toast(errorToast);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('Error fetching data:', error);
       }
     }
@@ -164,7 +166,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="ml-12">
+      <div className="ml-12 mb-8">
         <MarketHeader />
         <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 -ml-12 md:ml-6 lg:ml-6">
           <FilterSidebar

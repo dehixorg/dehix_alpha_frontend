@@ -77,7 +77,7 @@ export default function AppliedProject() {
         menuItemsBottom={menuItemsBottom}
         active="Under Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

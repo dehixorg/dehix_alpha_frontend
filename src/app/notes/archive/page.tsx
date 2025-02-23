@@ -34,13 +34,13 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active="Archive"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Archive"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
+{ label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Notes', link: '/notes' },
             { label: 'Archive', link: '/archive' },
           ]}
