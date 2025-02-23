@@ -48,7 +48,6 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
       impact: analysis.impactScore,
       sections: analysis.sectionsScore,
     });
-
   };
 
   const chartData = {
