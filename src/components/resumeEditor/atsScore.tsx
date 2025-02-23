@@ -49,9 +49,6 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
       sections: analysis.sectionsScore,
     });
 
-    if (analysis.spellingMistakes.length > 0) {
-      console.warn('Spelling Mistakes:', analysis.spellingMistakes);
-    }
   };
 
   const chartData = {
