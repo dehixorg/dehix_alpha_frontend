@@ -328,16 +328,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
     setDocType(type);
   };
 
-  const handleEditSkill = (skill: SkillData) => {
-    setEditingSkill(skill);
-    setOpenSkillDialog(true);
-  };
-
-  const handleEditDomain = (domain: DomainData) => {
-    setEditingDomain(domain);
-    setOpenDomainDialog(true);
-  };
-
   const filteredData = () => {
     if (filter === 'All') {
       return [...skillData, ...domainData];
