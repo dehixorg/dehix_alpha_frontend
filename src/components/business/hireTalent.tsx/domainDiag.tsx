@@ -113,6 +113,12 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
         });
+        const currentConnects =
+          Number(localStorage.getItem('DHX_CONNECTS')) || 0;
+        const updatedConnects = Math.max(0, currentConnects - 100);
+
+        localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+        window.dispatchEvent(new Event('connectsUpdated'));
       }
     } catch (error) {
       console.error('Error submitting domain data', error);

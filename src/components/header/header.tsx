@@ -57,6 +57,12 @@ const Header: React.FC<HeaderProps> = ({
     if (user?.uid) {
       fetchConnects();
     }
+    const updateConnects = () => fetchConnects();
+    window.addEventListener('connectsUpdated', updateConnects);
+
+    return () => {
+      window.removeEventListener('connectsUpdated', updateConnects);
+    };
   }, [user?.uid]);
 
   const formatConnects = (num: number) => {
@@ -90,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({
       <HoverCard>
         <div className="relative ml-auto flex-1 md:grow-0">
           <HoverCardTrigger asChild>
-            <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
+            <div className="relative flex items-center justify-end md:justify-center cursor-pointer hover:scale-105 transition-transform">
               <WalletIcon />
               {loading ? (
                 <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">

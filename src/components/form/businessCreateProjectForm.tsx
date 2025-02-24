@@ -3,8 +3,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { Card } from '../ui/card';
+import ConnectsDialog from '../shared/ConnectsDialog';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
+import { RootState } from '@/lib/store';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -62,6 +65,7 @@ const profileFormSchema = z.object({
           }),
         skills: z.array(z.string()),
         experience: z.string(),
+        domain_id: z.string(),
         minConnect: z.string(),
         rate: z //condition for rate
           .string()
@@ -90,6 +94,7 @@ const defaultValues: Partial<ProfileFormValues> = {
       minConnect: '',
       rate: '',
       description: '',
+      domain_id: '',
     },
   ],
 };
@@ -110,33 +115,43 @@ interface projectDomain {
 }
 
 export function CreateProjectBusinessForm() {
+  const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
 
   const [domains, setDomains] = useState<any>([]);
-  const [currDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+  const [tmpDomain, setTmpDomain] = useState<any>('');
 
   const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
 
   const [loading, setLoading] = useState(false);
+  const [isDialofOpen, setIsDialogOpen] = useState(false);
 
   const handleAddProjectDomain = () => {
     if (
       tmpProjectDomains &&
-      !currProjectDomains.some((domain: any) => domain === tmpProjectDomains)
+      !currProjectDomains.some((d: any) => d === tmpProjectDomains)
     ) {
-      setCurrProjectDomains([...currProjectDomains, tmpProjectDomains]);
+      const updatedDomains = [...currProjectDomains, tmpProjectDomains];
+
+      setCurrProjectDomains(updatedDomains);
       setTmpProjectDomains('');
+
+      form.setValue('projectDomain', updatedDomains);
     }
   };
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
-    setCurrProjectDomains(
-      currProjectDomains.filter((domain: any) => domain !== domainToDelete),
+    const updatedDomains = currProjectDomains.filter(
+      (domain: any) => domain !== domainToDelete,
     );
+
+    setCurrProjectDomains(updatedDomains);
+    form.setValue('projectDomain', updatedDomains);
   };
 
   const handleAddSkill = () => {
@@ -154,10 +169,6 @@ export function CreateProjectBusinessForm() {
     const fetchData = async () => {
       try {
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
-        console.log(
-          'projectDomain API Response get:',
-          projectDomainResponse.data.data,
-        );
         const transformedProjectDomain = projectDomainResponse.data.data.map(
           (skill: projectDomain) => ({
             value: skill.label, // Set the value to label
@@ -167,7 +178,6 @@ export function CreateProjectBusinessForm() {
         setProjectDomains(transformedProjectDomain);
 
         const domainResponse = await axiosInstance.get('/domain');
-        console.log('Domain API Response get:', domainResponse.data.data);
         const transformedDomain = domainResponse.data.data.map(
           (skill: Domain) => ({
             value: skill.label, // Set the value to label
@@ -175,10 +185,10 @@ export function CreateProjectBusinessForm() {
             domain_id: skill._id,
           }),
         );
+
         setDomains(transformedDomain);
 
         const skillsResponse = await axiosInstance.get('/skills');
-        console.log('Skills API Response get:', skillsResponse.data.data);
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
             value: skill.label, // Set the value to label
@@ -221,27 +231,25 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      console.log('Form body:', {
-        ...data,
-        role: '',
-        projectType: '',
-        skillsRequired: currSkills,
-        domains: currDomains,
-      });
-
       const response = await axiosInstance.post(`/project/business`, {
         ...data,
         role: '',
         projectType: 'FREELANCE',
         skillsRequired: currSkills,
         domains: currDomains,
+        companyId: user.uid,
+        companyName: user.userName,
       });
-      console.log('API Response:', response.data);
-
       toast({
         title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
+      const updatedConnects = (
+        parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - 100
+      ).toString();
+      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+
+      window.dispatchEvent(new Event('connectsUpdated'));
     } catch (error) {
       console.error('API Error:', error);
       toast({
@@ -420,7 +428,19 @@ export function CreateProjectBusinessForm() {
                       <FormLabel>Profile Domain</FormLabel>
                       <FormControl>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            const selectedDomain = domains.find(
+                              (d: any) => d.label === value,
+                            );
+                            form.setValue(
+                              `profiles.${index}.domain`,
+                              selectedDomain?.label || '',
+                            );
+                            form.setValue(
+                              `profiles.${index}.domain_id`,
+                              selectedDomain?.domain_id || '',
+                            );
+                          }}
                           defaultValue={field.value}
                         >
                           <SelectTrigger>
@@ -435,7 +455,6 @@ export function CreateProjectBusinessForm() {
                           </SelectContent>
                         </Select>
                       </FormControl>
-
                       <FormMessage />
                     </FormItem>
                   )}
@@ -606,19 +625,22 @@ export function CreateProjectBusinessForm() {
                   minConnect: '',
                   rate: '',
                   description: '',
+                  domain_id: '',
                 })
               }
             >
               Add Profile
             </Button>
           </div>
-          <Button
-            type="submit"
-            className="lg:col-span-2 xl:col-span-2 mt-4"
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Create Project'}
-          </Button>
+          <div className="lg:col-span-2 xl:col-span-2 mt-4">
+            <ConnectsDialog
+              loading={loading}
+              isValidCheck={form.trigger}
+              onSubmit={form.handleSubmit(onSubmit)}
+              setLoading={setLoading}
+              userId={user.uid}
+            />
+          </div>
         </form>
       </Form>
     </Card>

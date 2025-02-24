@@ -18,7 +18,7 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4  sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
