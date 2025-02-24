@@ -72,6 +72,7 @@ export default function Education() {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Education"
           breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Educational Info', link: '#' },
           ]}

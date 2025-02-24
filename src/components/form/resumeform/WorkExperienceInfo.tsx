@@ -31,7 +31,6 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
       value &&
       !/^\d{4}-\d{2}-\d{2}$/.test(value)
     ) {
-      console.error('Invalid date format. Expected yyyy-MM-dd.');
       return;
     }
 
@@ -50,24 +49,21 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     );
   }, [workExperienceData]);
 
-  useEffect(() => {
-    if (workExperienceData.length > 0) {
-      const latestJobTitle =
-        workExperienceData[workExperienceData.length - 1].jobTitle;
-      if (latestJobTitle) {
-        console.log('Confirmed updated job title:', latestJobTitle);
-        generateAISuggestion(latestJobTitle);
-      }
-    }
-  }, [workExperienceData]);
-  // This runs whenever workExperienceData changes
+  // useEffect(() => {
+  //   if (workExperienceData.length > 0) {
+  //     const latestJobTitle =
+  //       workExperienceData[workExperienceData.length - 1].jobTitle;
+  //     if (latestJobTitle) {
+  //       generateAISuggestion(latestJobTitle);
+  //     }
+  //   }
+  // }, [workExperienceData]);
 
-  const generateAISuggestion = (jobTitle: string) => {
-    // Call your AI API or function to generate suggestions
-    console.log('Fetching AI suggestions for:', jobTitle);
-    // Example: Fetching data from OpenAI API
-    // fetchAIResponse(jobTitle).then(response => console.log(response));
-  };
+  // const generateAISuggestion = (jobTitle: string) => {
+  //   // Call your AI API or function to generate suggestions
+  //   // Example: Fetching data from OpenAI API
+  //   // fetchAIResponse(jobTitle).then(response => console.log(response));
+  // };
 
   const handleAddWorkExperience = () => {
     setWorkExperienceData([

@@ -20,67 +20,65 @@ import OtpLogin from '@/components/shared/otpDialog';
 export default function Login() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  // const [isLoading, setIsLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [pass, setPass] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isEmailLoginLoading, setIsEmailLoginLoading] =
+    useState<boolean>(false);
+  const [isGoogleLoginLoading, setIsGoogleLoginLoading] =
+    useState<boolean>(false);
 
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsEmailLoginLoading(true);
 
     try {
-      axiosInstance
-        .get(`/public/user_email?user=${email}`)
-        .then(async (response) => {
-          try {
-            setPhone(response.data.phone);
-            if (response.data.phoneVerify) {
-              const userCredential: UserCredential = await loginUser(
-                email,
-                pass,
-              );
-              const { user, claims } = await getUserData(userCredential);
-              dispatch(
-                setUser({
-                  ...user,
-                  type: claims.type,
-                }),
-              );
-              router.replace(`/dashboard/${claims.type}`);
-              toast({
-                title: 'Login Successful',
-                description: 'You have successfully logged in.',
-              }); // Success toast
-            } else {
-              setIsModalOpen(true);
-            }
-          } catch (error: any) {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: 'Invalid Email or Password. Please try again.',
-            }); // Error toast
-            console.error(error.message);
-          }
-        });
+      const response = await axiosInstance.get(
+        `/public/user_email?user=${email}`,
+      );
+      setPhone(response.data.phone);
+
+      if (response.data.phoneVerify) {
+        try {
+          const userCredential: UserCredential = await loginUser(email, pass);
+          const { user, claims } = await getUserData(userCredential);
+
+          dispatch(setUser({ ...user, type: claims.type }));
+          router.replace(`/dashboard/${claims.type}`);
+
+          toast({
+            title: 'Login Successful',
+            description: 'You have successfully logged in.',
+          });
+        } catch (error: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Invalid Email or Password. Please try again.',
+          });
+          console.error(error.message);
+        }
+      } else {
+        setIsModalOpen(true);
+      }
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Invalid Email or Password. Please try again.',
-      }); // Error toast
+      });
       console.error(error.message);
     } finally {
-      setIsLoading(false);
+      setIsEmailLoginLoading(false); // Ensures isLoading resets after API call completion
     }
   };
 
   const handleGoogle = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsGoogleLoginLoading(true);
 
     try {
       const userCredential: UserCredential = await loginGoogleUser();
@@ -99,7 +97,7 @@ export default function Login() {
       }); // Error toast
       console.error(error.message);
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoginLoading(false);
     }
   };
 
@@ -163,21 +161,29 @@ export default function Login() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isEmailLoginLoading}
+              >
+                {isEmailLoginLoading ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />{' '}
+                    Logging in...
+                  </>
                 ) : (
-                  <Key className="mr-2 h-4 w-4" />
-                )}{' '}
-                Login
+                  <>
+                    <Key className="mr-2 h-4 w-4" /> Login
+                  </>
+                )}
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isGoogleLoginLoading}
                 onClick={handleGoogle}
               >
-                {isLoading ? (
+                {isGoogleLoginLoading ? (
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Chrome className="mr-2 h-4 w-4" />

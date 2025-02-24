@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,7 @@ interface ProfileProps {
     minConnect?: number;
     rate?: number;
     description?: string;
-    unit?: string; // Added unit field to profile
+    unit?: string;
   };
   projectId: string;
   bidExist: boolean;
@@ -39,35 +40,83 @@ const ProfileCard: React.FC<ProfileProps> = ({
   projectId,
   bidExist,
 }) => {
-  const [amount, setAmount] = React.useState('');
+  const [amount, setAmount] = React.useState<number>(profile.minConnect ?? 0);
   const [descriptionValue, setDescription] = React.useState('');
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false); // Tracks bid submission
+  const [isBidSubmitted, setIsBidSubmitted] = React.useState(false);
+  const [showMore, setShowMore] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const [showMore, setShowMore] = React.useState<boolean>(false);
+  const [userConnects] = React.useState<number>(
+    parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10),
+  );
+  const [isloading, SetIsloading] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    SetIsloading(true);
     try {
       await axiosInstance.post(`/bid`, {
         current_price: amount,
         description: descriptionValue,
         bidder_id: user.uid,
         profile_id: profile._id,
-        project_id: projectId, // Use the current project's ID
+        project_id: projectId,
+        biddingValue: amount,
       });
 
-      setAmount('');
+      setAmount(0);
       setDescription('');
       setDialogOpen(false);
-      setIsBidSubmitted(true); // Mark bid as submitted
+      setIsBidSubmitted(true);
       toast({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
       });
+      const currentConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
+      if (profile.minConnect !== undefined) {
+        const updatedConnects = (currentConnects - amount).toString();
+        localStorage.setItem('DHX_CONNECTS', updatedConnects);
+        window.dispatchEvent(new Event('connectsUpdated'));
+      } else {
+        toast({
+          description: 'profile.minConnect is undefined, skipping update.',
+        });
+      }
     } catch (error) {
       console.error('Error submitting bid:', error);
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again later.',
+      });
+    } finally {
+      SetIsloading(false);
+    }
+  };
+
+  const toggleShowMore = () => setShowMore(!showMore);
+
+  const fetchMoreConnects = async () => {
+    try {
+      await axiosInstance.patch(
+        `/public/connect?userId=${user.uid}&isFreelancer=${true}`,
+      );
+      toast({
+        title: 'Connects Requested',
+        description: 'Your request for more connects has been submitted.',
+      });
+      const currentConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
+      const updatedConnects = Math.max(0, currentConnects - 100);
+      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+
+      window.dispatchEvent(new Event('connectsUpdated'));
+    } catch (error) {
+      console.error('Error requesting connects:', error);
       toast({
         title: 'Something went wrong',
         description: 'Please try again later.',
@@ -75,12 +124,9 @@ const ProfileCard: React.FC<ProfileProps> = ({
     }
   };
 
-  const toggleShowMore = () => setShowMore(!showMore);
-
   return (
     <div className="w-full max-w-5xl p-4 border border-gray-400 border-opacity-30 rounded bg-secondary">
       <div className="flex flex-col sm:flex-row justify-between items-start">
-        {/* Left: Domain and Freelancers Required in the same line */}
         <div className="space-y-2">
           <p className="font-medium text-lg text-foreground mr-2">
             {profile.domain}
@@ -95,7 +141,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
           </div>
         </div>
 
-        {/* Right: Bid Button */}
         <div className="mt-4 sm:mt-0">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -103,71 +148,102 @@ const ProfileCard: React.FC<ProfileProps> = ({
                 size="sm"
                 className="px-5"
                 type="button"
-                disabled={bidExist || isBidSubmitted} // Disable if bid exists or already submitted
+                disabled={bidExist || isBidSubmitted}
               >
                 {isBidSubmitted ? 'Added' : !bidExist ? 'Bid' : 'Applied'}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Bid</DialogTitle>
-                <DialogDescription>
-                  Click on bid if you want to bid for this profile.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit}>
-                <div className="grid gap-4 py-4">
-                  {/* Amount Field with Unit */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-center">
-                      Amount
-                    </Label>
-                    <div className="col-span-3 relative">
-                      {/* Input field */}
-                      <Input
-                        id="amount"
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="w-full pl-2 pr-1" // Space for the unit
-                        required
-                        min={1}
-                        placeholder="Enter amount"
-                      />
-                      {/* Unit inside the field */}
-                      <div className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
-                        {profile.unit || '$'} {/* Default unit is USD */}
+            {userConnects < profile.minConnect! ? (
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Insufficient Connects</DialogTitle>
+                  <DialogDescription>
+                    You don&apos;t have enough connects to create a project.
+                    <br />
+                    Please{' '}
+                    <span
+                      className="text-blue-600 font-bold cursor-pointer"
+                      onClick={fetchMoreConnects}
+                    >
+                      Request Connects
+                    </span>{' '}
+                    to proceed.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            ) : (
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Bid</DialogTitle>
+                  <DialogDescription>
+                    Click on bid if you want to bid for this profile.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="amount" className="text-center">
+                        Amount
+                      </Label>
+                      <div className="col-span-3 relative">
+                        <Input
+                          id="amount"
+                          type="number"
+                          value={amount}
+                          onChange={(e) => setAmount(Number(e.target.value))}
+                          className="w-full pl-2 pr-1"
+                          required
+                          min={profile.minConnect}
+                          placeholder="Enter amount"
+                        />
+                        <div className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                          {profile.unit || '$'}
+                        </div>
                       </div>
                     </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="description" className="text-right block">
+                        Description
+                      </Label>
+                      <Input
+                        id="description"
+                        type="text"
+                        value={descriptionValue}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="col-span-3"
+                        required
+                      />
+                    </div>
                   </div>
-
-                  {/* Description Field */}
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right block">
-                      Description
-                    </Label>
-                    <Input
-                      id="description"
-                      type="text"
-                      value={descriptionValue}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="col-span-3"
-                      required
-                    />
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={bidExist || isBidSubmitted || isloading}
+                    >
+                      {isloading ? (
+                        <Loader2 className="animate-spin w-6 h-6" />
+                      ) : isBidSubmitted ? (
+                        'Added'
+                      ) : (
+                        'Bid'
+                      )}
+                    </Button>
                   </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={bidExist || isBidSubmitted}>
-                    {isBidSubmitted ? 'Added' : 'Bid'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
+                </form>
+              </DialogContent>
+            )}
           </Dialog>
         </div>
       </div>
 
-      {/* Optional Description */}
       {profile.description && (
         <div className="mt-4 text-gray-400">
           {profile.description.length > 50 ? (
