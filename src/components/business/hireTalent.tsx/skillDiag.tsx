@@ -108,6 +108,12 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             title: 'Talent Added',
             description: 'The Hire Talent has been successfully added.',
           });
+          const currentConnects =
+            Number(localStorage.getItem('DHX_CONNECTS')) || 0;
+          const updatedConnects = Math.max(0, currentConnects - 100);
+
+          localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+          window.dispatchEvent(new Event('connectsUpdated'));
         } else {
           throw new Error('Failed to add hire talen');
         }

@@ -43,9 +43,10 @@ export default function Login() {
                 pass,
               );
               const { user, claims } = await getUserData(userCredential);
+              const updatedUser = { ...user, userName: response.data.userName };
               dispatch(
                 setUser({
-                  ...user,
+                  ...updatedUser,
                   type: claims.type,
                 }),
               );
