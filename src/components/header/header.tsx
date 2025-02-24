@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Loader2, WalletIcon } from 'lucide-react';
 
-import { Search } from '../search';
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
@@ -34,7 +33,6 @@ const Header: React.FC<HeaderProps> = ({
   menuItemsBottom,
   activeMenu,
   breadcrumbItems,
-  searchPlaceholder = 'Search...',
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [connects, setConnects] = useState<number>(0);
