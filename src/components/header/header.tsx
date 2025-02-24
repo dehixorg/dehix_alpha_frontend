@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Loader2, WalletIcon } from 'lucide-react';
+
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';

@@ -19,9 +19,10 @@ interface SkillInfoProps {
 export const SkillInfo: React.FC<SkillInfoProps> = ({
   skillData,
   setSkillData,
-  projectData = [],
+  //projectData = [],
 }) => {
   //const [loading, setLoading] = useState(false); // Loading state for AI generation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiResponse, setAiResponse] = useState<string>(''); // AI-generated skills
 
   const handleSkillChange = (index: number, value: string) => {
