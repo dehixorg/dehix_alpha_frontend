@@ -48,11 +48,7 @@ export default function ConnectsDialog({
         localStorage.getItem('DHX_CONNECTS') || '0',
         10,
       );
-<<<<<<< HEAD
       const updatedConnects = Math.max(0, currentConnects + 100);
-=======
-      const updatedConnects = Math.max(0, currentConnects - 100);
->>>>>>> 03d3be1e4cbb9f1498c7120ca11a976d5e8fc4f2
       localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch (error: any) {
