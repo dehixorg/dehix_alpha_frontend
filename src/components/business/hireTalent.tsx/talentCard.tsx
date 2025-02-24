@@ -93,11 +93,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [skills, setSkills] = useState<Skill[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [domains, setDomains] = useState<Domain[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  //const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
 
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -252,6 +256,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   }, [
     user?.uid,
+    skillDomainFormProps,
     skillDomainFormProps?.skillFilter,
     skillDomainFormProps?.domainFilter,
   ]);
@@ -265,14 +270,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
       currSkills.filter((skill: any) => skill.name !== skillToDelete),
     );
   };
-
-  // Function to reset state when filters change
-  const resetAndFetchData = useCallback(() => {
-    setTalents([]);
-    setSkip(0);
-    setHasMore(true);
-    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
-  }, [skillFilter, domainFilter]);
 
   const fetchTalentData = useCallback(
     async (newSkip = skip, reset = false) => {
@@ -320,6 +317,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
     },
     [skip, loading, hasMore],
   );
+
+  // Function to reset state when filters change
+  const resetAndFetchData = useCallback(() => {
+    setTalents([]);
+    setSkip(0);
+    setHasMore(true);
+    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+  }, [skillFilter, domainFilter, fetchTalentData]);
 
   // Reload cards when filter changes
   useEffect(() => {

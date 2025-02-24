@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 // import { useForm } from 'react-hook-form';
-import { X, PlusCircle, Loader } from 'lucide-react';
+import { X, PlusCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
-const promptTemplate = `
-Job Title: {jobTitle} ,depends on job title give me summary for my resume within 3-4 lines in JSON format with field experience Level and summary with experience for fresher ,mid-level and experienced
-`;
+// const promptTemplate = `
+// Job Title: {jobTitle} ,depends on job title give me summary for my resume within 3-4 lines in JSON format with field experience Level and summary with experience for fresher ,mid-level and experienced
+// `;
 
 interface SummaryInfoProps {
   summaryData: string[];

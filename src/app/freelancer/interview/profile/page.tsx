@@ -1,10 +1,8 @@
 'use client';
 import * as React from 'react';
-import { Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
