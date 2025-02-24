@@ -238,7 +238,7 @@ export function CreateProjectBusinessForm() {
         skillsRequired: currSkills,
         domains: currDomains,
         companyId: user.uid,
-        companyName: user.userName,
+        companyName: user.displayName,
       });
       toast({
         title: 'Project Added',
