@@ -2,8 +2,8 @@
 import { Search, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Header from '@/components/header/header';
 
+import Header from '@/components/header/header';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import { CardTitle } from '@/components/ui/card';
 import DropdownProfile from '@/components/shared/DropdownProfile';
@@ -113,14 +113,14 @@ export default function Dashboard() {
         active="Market"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Marketplace', link: '/freelancer/market' },
-              { label: project_id, link: '#' },
+            { label: 'Marketplace', link: '/freelancer/market' },
+            { label: project_id, link: '#' },
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">

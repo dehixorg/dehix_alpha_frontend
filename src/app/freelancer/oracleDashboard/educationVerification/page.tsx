@@ -113,35 +113,35 @@ export default function ProfessionalInfo() {
         active="Education Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-      <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Oracle', link: '#' },
+            { label: 'Oracle', link: '#' },
 
-              {
-                label: 'Education Verification',
-                link: '#',
-              },
+            {
+              label: 'Education Verification',
+              link: '#',
+            },
           ]}
         />
         <div className="mb-8 ml-6 flex justify-between items-center">
-        <div className="mb-8 ml-10">
-          <h1 className="text-3xl font-bold">Education Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Monitor the status of your Education verifications.
-          </p>
-        </div>
-        <Button 
-                  variant="outline"
-                  size="icon"
-                  className="mr-8 mb-12"
-                  onClick={() => setIsDialogOpen(true)}
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
+          <div className="mb-8 ml-10">
+            <h1 className="text-3xl font-bold">Education Verification</h1>
+            <p className="text-gray-400 mt-2">
+              Monitor the status of your Education verifications.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="mr-8 mb-12"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
