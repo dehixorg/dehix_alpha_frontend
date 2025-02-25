@@ -55,21 +55,24 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
 
   return (
     <section className="flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6">
+      <div className="flex items-center gap-12">
       <Image
         src={user?.profilePic || 'https://via.placeholder.com/150'}
         alt="Profile"
         width={144}
         height={144}
-        className="rounded-full border-4 border-indigo-500 object-cover"
+        className="h-40 w-40 ml-6 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300"
       />
-      <div className="text-center md:text-left">
-        <div className="flex justify-center items-center gap-3">
+      <div className="text-left">
+        <div className="flex justify-center items-center gap-2">
           <h2 className="text-2xl font-semibold">
             {`${user?.firstName} ${user?.lastName}`}{' '}
           </h2>
           <p className=" flex justify-center items-center">{render()}</p>
         </div>
         <p>{user?.description || 'No Job Title Provided'}</p>
+        </div>
+        </div>
         <div className="flex mt-2 justify-center md:justify-start items-center gap-8 md:gap-10">
           <HoverCard>
             {user?.linkedin && (
@@ -121,7 +124,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
             )}
           </HoverCard>
         </div>
-      </div>
+      
     </section>
   );
 };

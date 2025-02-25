@@ -17,6 +17,7 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 // import { axiosInstance } from '@/lib/axiosinstance';
 import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import DropdownProfile from '@/components/shared/DropdownProfile';
+import Header from '@/components/header/header';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -109,36 +110,21 @@ export default function ProfessionalInfo() {
         active="Experience Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Experience Verification"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
+      <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
               { label: 'Oracle', link: '#' },
 
               {
                 label: 'Experience Verification',
                 link: '#',
               },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="ml-4"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
-          <DropdownProfile />
-        </header>
+          ]}
+        />
+        <div className="mb-8 ml-8 flex justify-between items-center">
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">Experience Verification</h1>
           <p className="text-gray-400 mt-2">
@@ -146,6 +132,15 @@ export default function ProfessionalInfo() {
             regularly for any new updates or requirements.
           </p>
         </div>
+        <Button 
+                  variant="outline"
+                  size="icon"
+                  className="mr-8 mb-12"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+                </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
