@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 
+import Header from '@/components/header/header';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -23,31 +24,15 @@ export default function ProfilePage() {
         active="Profile"
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-2 sm:static sm:border-0 sm:bg-transparent sm:px-6">
-          <div className="flex items-center gap-4">
-            <CollapsibleSidebarMenu
-              menuItemsTop={menuItemsTop}
-              menuItemsBottom={menuItemsBottom}
-              active="Profile"
-            />
-            <Breadcrumb
-              items={[
-                { label: 'Freelancer', link: '/dashboard/freelancer' },
-                { label: 'Interview', link: '#' },
-              ]}
-              className="hidden sm:flex-1 sm:flex sm:items-center"
-            />
-          </div>
-          <div className="relative flex items-center gap-4">
-            {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full rounded-lg bg-background pl-8 sm:w-[200px] lg:w-[336px]"
-            /> */}
-            <DropdownProfile />
-          </div>
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Interview', link: '#' },
+          ]}
+        />
         <InterviewProfile freelancerId={user?.uid} />
       </div>
     </div>

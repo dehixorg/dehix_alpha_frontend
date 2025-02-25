@@ -138,7 +138,7 @@ const ProjectVerificationCard: React.FC<ProjectProps> = ({
           <div className="mt-2">
             <span className="font-semibold">Tech Used:</span>
             <div className="flex flex-wrap gap-2 mt-1">
-              {techUsed.map((tech, index) => (
+              {(techUsed || []).map((tech, index) => (
                 <Badge key={index} className="uppercase" variant="secondary">
                   {tech}
                 </Badge>

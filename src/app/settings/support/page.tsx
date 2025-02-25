@@ -19,6 +19,7 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 import { RootState } from '@/lib/store';
 import DropdownProfile from '@/components/shared/DropdownProfile';
 import { toast } from '@/components/ui/use-toast';
+import Header from '@/components/header/header';
 
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
@@ -73,33 +74,15 @@ const HomePage = () => {
         active="support"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4  sm:pl-14 mb-8">
-        <header className="sticky  top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="support"
-          />
-          <Breadcrumb
-            items={
-              userType === 'freelancer'
-                ? [
-                    { label: 'Freelancer', link: '/dashboard/freelancer' },
-                    { label: 'Support', link: '#' },
-                  ]
-                : userType === 'business'
-                  ? [
-                      { label: 'Business', link: '/dashboard/business' },
-                      { label: 'Support', link: '#' },
-                    ]
-                  : [{ label: 'Loading...', link: '#' }]
-            }
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <div className="flex justify-end w-full">
-              <DropdownProfile />
-            </div>
-          </div>
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Support', link: '#' },
+          ]}
+        />
 
         {/* Add TicketForm Section Here */}
         <div className="ml-2">
