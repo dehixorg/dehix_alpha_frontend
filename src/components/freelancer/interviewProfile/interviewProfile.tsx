@@ -110,7 +110,10 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   const [openSkillDialog, setOpenSkillDialog] = useState(false);
   const [openDomainDialog, setOpenDomainDialog] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editingSkill, setEditingSkill] = useState<SkillData | null>(null);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editingDomain, setEditingDomain] = useState<DomainData | null>(null);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
   const [docId, setDocId] = useState<string>();
