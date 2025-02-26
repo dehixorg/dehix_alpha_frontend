@@ -53,6 +53,24 @@ const ProfileCard: React.FC<ProfileProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const currentConnects = parseInt(
+      localStorage.getItem('DHX_CONNECTS') || '0',
+      10,
+    );
+
+    if (
+      typeof profile.minConnect !== 'number' ||
+      isNaN(amount) ||
+      isNaN(currentConnects) ||
+      amount > currentConnects
+    ) {
+      toast({
+        description: 'Connects are insufficient',
+      });
+      return; // Prevent API call if validation fails
+    }
+
     SetIsloading(true);
     try {
       await axiosInstance.post(`/bid`, {
@@ -64,6 +82,10 @@ const ProfileCard: React.FC<ProfileProps> = ({
         biddingValue: amount,
       });
 
+      const updatedConnects = (currentConnects - amount).toString();
+      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      window.dispatchEvent(new Event('connectsUpdated'));
+
       setAmount(0);
       setDescription('');
       setDialogOpen(false);
@@ -72,19 +94,6 @@ const ProfileCard: React.FC<ProfileProps> = ({
         title: 'Bid Added',
         description: 'The Bid has been successfully added.',
       });
-      const currentConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
-      );
-      if (profile.minConnect !== undefined) {
-        const updatedConnects = (currentConnects - amount).toString();
-        localStorage.setItem('DHX_CONNECTS', updatedConnects);
-        window.dispatchEvent(new Event('connectsUpdated'));
-      } else {
-        toast({
-          description: 'profile.minConnect is undefined, skipping update.',
-        });
-      }
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({

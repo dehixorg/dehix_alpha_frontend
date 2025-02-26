@@ -15,42 +15,61 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
+interface ConnectsDialogProps {
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+  onSubmit: any;
+  isValidCheck: () => Promise<boolean>;
+  userId: string;
+  buttonText: string;
+  userType: string;
+  requiredConnects: number;
+  data?: any;
+}
+
 export default function ConnectsDialog({
   loading,
   setLoading,
   onSubmit,
   isValidCheck,
   userId,
-}: any) {
+  buttonText,
+  userType,
+  requiredConnects,
+  data,
+}: ConnectsDialogProps) {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [lowConnects, setLowConnects] = useState(false);
 
-  const PROJECT_CREATION_COST = parseInt(
-    process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+  const userConnects = parseInt(
+    localStorage.getItem('DHX_CONNECTS') || '0',
     10,
   );
-  const userConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0');
 
   const fetchMoreConnects = async () => {
     try {
-      const isBusiness = true;
-      await axiosInstance.patch(
-        `/public/connect?userId=${userId}&isBusiness=${isBusiness}`,
-      );
-
+      await axiosInstance.post(`/token-request`, {
+        userId,
+        userType,
+        amount: '100',
+        status: 'PENDING',
+        dateTime: new Date().toISOString(),
+      });
       toast({
         title: 'Success!',
-        description: '100 connects have been added to your wallet.',
+        description: 'Request to add connects has been sent.',
         duration: 3000,
       });
+      const newConnect = {
+        userId: userId,
+        amount: 100,
+        status: 'PENDING',
+        dateTime: new Date().toISOString(),
+      };
 
-      const currentConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
+      window.dispatchEvent(
+        new CustomEvent('newConnectRequest', { detail: newConnect }),
       );
-      const updatedConnects = Math.max(0, currentConnects + 100);
-      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
-      window.dispatchEvent(new Event('connectsUpdated'));
     } catch (error: any) {
       console.error('Error requesting more connects:', error.response);
       toast({
@@ -66,7 +85,7 @@ export default function ConnectsDialog({
     const isValid = await isValidCheck();
     if (!isValid) return;
 
-    if (userConnects < PROJECT_CREATION_COST) {
+    if (userConnects < requiredConnects) {
       setLowConnects(true);
       setOpenConfirm(true);
       return;
@@ -79,7 +98,11 @@ export default function ConnectsDialog({
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      await onSubmit();
+      if (data) {
+        await onSubmit(data);
+      } else {
+        await onSubmit();
+      }
       setOpenConfirm(false);
     } catch (error) {
       console.error('Error deducting connects:', error);
@@ -97,7 +120,7 @@ export default function ConnectsDialog({
         disabled={loading}
         onClick={dialogOpen}
       >
-        {loading ? 'Loading...' : 'Create Project'}
+        {loading ? 'Loading...' : buttonText}
       </Button>
       <Dialog open={openConfirm} onOpenChange={setOpenConfirm}>
         <DialogContent>
@@ -125,12 +148,12 @@ export default function ConnectsDialog({
           ) : (
             <>
               <DialogTitle>Confirm Deduction</DialogTitle>
-              <Input type="text" value={PROJECT_CREATION_COST} disabled />
+              <Input type="text" value={requiredConnects} disabled />
               <DialogDescription>
                 Creating this project will deduct{' '}
                 <span className="font-extrabold">
                   {' '}
-                  {PROJECT_CREATION_COST} connects
+                  {requiredConnects} connects
                 </span>
                 . Do you want to proceed?
               </DialogDescription>
