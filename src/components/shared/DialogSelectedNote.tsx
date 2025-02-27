@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 import {
   Dialog,
@@ -11,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Note } from '@/utils/types/note';
-import Image from 'next/image';
 
 type DialogSelectedNoteProps = {
   note: Note;
@@ -44,15 +44,16 @@ const DialogSelectedNote = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
-        style={{ backgroundColor: note.bgColor || '#ffffff' }}>
-          <div className='absolute inset-3 bg-black opacity-30 z-1'></div>
+      <DialogContent
+        className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
+        style={{ backgroundColor: note.bgColor || '#ffffff' }}
+      >
+        <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
         {/* banner as background */}
         {note.banner && (
           <div className="absolute inset-0 z-0">
             <Image
-              src={note.banner
-              }
+              src={note.banner}
               alt="Note Banner"
               layout="fill"
               objectFit="cover"
@@ -61,8 +62,7 @@ const DialogSelectedNote = ({
             <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
           </div>
         )}
-          
-        
+
         <DialogHeader className="border-b pb-4 relative z-10">
           <DialogTitle className="text-2xl font-semibold">
             {isEditMode ? 'Edit Note' : 'Note Details'}
