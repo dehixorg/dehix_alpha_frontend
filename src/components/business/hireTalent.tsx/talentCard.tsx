@@ -2,13 +2,13 @@
 
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Loader2, Plus, X, Star } from "lucide-react"
+import { Loader2, Plus, X, Star, Check, X as XIcon } from "lucide-react"
 import Link from "next/link"
 import { useSelector } from "react-redux"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { axiosInstance } from "@/lib/axiosinstance"
 import InfiniteScroll from "@/components/ui/infinite-scroll"
 import { toast } from "@/components/ui/use-toast"
@@ -81,6 +81,7 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([])
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([])
   const [bookmarkedTalents, setBookmarkedTalents] = useState<Set<string>>(new Set())
+  const [talentStatus, setTalentStatus] = useState<Record<string, 'pending' | 'accepted' | 'rejected'>>({})
 
   const [currSkills, setCurrSkills] = useState<any>([])
   const [tmpSkill, setTmpSkill] = useState<any>("")
@@ -99,6 +100,46 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
         },
       ])
       setTmpSkill("")
+    }
+  }
+
+  const handleAcceptTalent = async (talentId: string) => {
+    try {
+      setTalentStatus(prev => ({ ...prev, [talentId]: 'accepted' }))
+      // Replace with your API call to accept the talent
+      await axiosInstance.put(`/business/hire-dehixtalent/${talentId}`)
+      toast({
+        title: "Success",
+        description: "Talent has been accepted successfully.",
+      })
+    } catch (error) {
+      console.error("Error accepting talent:", error)
+      setTalentStatus(prev => ({ ...prev, [talentId]: 'pending' }))
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to accept talent. Please try again.",
+      })
+    }
+  }
+
+  const handleRejectTalent = async (talentId: string) => {
+    try {
+      setTalentStatus(prev => ({ ...prev, [talentId]: 'rejected' }))
+      // Replace with your API call to reject the talent
+      await axiosInstance.post(`/business/hire-talent/${talentId}/reject`)
+      toast({
+        title: "Success",
+        description: "Talent has been rejected.",
+      })
+    } catch (error) {
+      console.error("Error rejecting talent:", error)
+      setTalentStatus(prev => ({ ...prev, [talentId]: 'pending' }))
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to reject talent. Please try again.",
+      })
     }
   }
 
@@ -323,6 +364,7 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
         const talentEntry = talent.dehixTalent
         const label = talentEntry.skillName ? "Skill" : "Domain"
         const value = talentEntry.skillName || talentEntry.domainName || "N/A"
+        const status = talentStatus[talentEntry._id] || 'pending'
 
         return (
           <Card key={talentEntry._id} className="w-full sm:w-[350px] lg:w-[450px]">
@@ -362,20 +404,25 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+                  {status !== 'pending' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Status</span>
+                      <Badge variant={status === 'accepted' ? 'default' : 'destructive'}>
+                        {status === 'accepted' ? 'Accepted' : 'Rejected'}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
-                <div className="py-4">
+                <div className="py-0">
                   {SHEET_SIDES.map((View) => (
                     <Sheet key={View}>
                       <SheetTrigger asChild>
-                        <Button className="w-full text-sm  text-black rounded-md">View</Button>
+                        <Button className="w-full text-sm text-black rounded-md">View</Button>
                       </SheetTrigger>
                       <SheetContent side={View} className="overflow-y-auto no-scrollbar max-h-[100vh]">
                         <SheetHeader>
                           <SheetTitle className="text-center text-lg font-bold py-4">View Talent Details</SheetTitle>
-                          {/* <SheetDescription className="py-2">
-                        Some description about the Talents
-                        </SheetDescription> */}
                         </SheetHeader>
 
                         <div className="grid gap-4 py-2">
@@ -495,6 +542,33 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-between pt-0 pb-4">
+              {status === 'pending' ? (
+                <>
+                  <Button 
+                    onClick={() => handleAcceptTalent(talentEntry._id)} 
+                    className="flex-1 mr-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="mr-2 h-4 w-4" /> Accept
+                  </Button>
+                  <Button 
+                    onClick={() => handleRejectTalent(talentEntry._id)} 
+                    variant="destructive" 
+                    className="flex-1 ml-2"
+                  >
+                    <XIcon className="mr-2 h-4 w-4" /> Reject
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={() => setTalentStatus(prev => ({ ...prev, [talentEntry._id]: 'pending' }))} 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  Reset Status
+                </Button>
+              )}
+            </CardFooter>
           </Card>
         )
       })}
@@ -506,4 +580,3 @@ const TalentCard: React.FC<TalentCardProps> = ({ skillFilter, domainFilter, skil
 }
 
 export default TalentCard
-
