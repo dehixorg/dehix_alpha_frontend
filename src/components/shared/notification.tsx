@@ -86,9 +86,9 @@ export const NotificationButton = () => {
           size="icon"
           className="relative rounded-full hover:scale-105 transition-transform"
         >
-          <Bell className="w-8 h-8 relative rounded-full hover:scale-105 transition-transform" />
+          <Bell className="w-6 h-6 relative rounded-full hover:scale-105 transition-transform" />
           {unreadCount > 0 && (
-            <span className="absolute top-1 left-8 flex h-4 w-7 items-center justify-center rounded-full bg-red-500 text-white text-xs transform -translate-x-1/2 -translate-y-1/2">
+            <span className="absolute top-1 left-9 flex h-4 w-7 items-center justify-center rounded-full bg-red-500 text-white text-xs transform -translate-x-1/2 -translate-y-1/2">
               {unreadCount}
             </span>
           )}

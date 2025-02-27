@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
                 size="icon"
                 className="relative rounded-full hover:scale-105 transition-transform"
               >
-                <WalletIcon className="w-8 h-8" />
+                <WalletIcon className="w-6 h-6" />
                 {loading ? (
                   <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
                     <Loader2 size={16} />

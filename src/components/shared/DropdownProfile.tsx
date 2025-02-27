@@ -149,7 +149,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.photoURL} alt="@shadcn" />
               <AvatarFallback>
-                <UserIcon className="w-9 h-9 hover:scale-105 transition-transform" />
+                <UserIcon className="w-5 h-5 hover:scale-105 transition-transform" />
               </AvatarFallback>
             </Avatar>
           </Button>
