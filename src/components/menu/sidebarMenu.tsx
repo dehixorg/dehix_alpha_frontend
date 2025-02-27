@@ -74,44 +74,57 @@
 
 // export default SidebarMenu;
 
+'use client';
 
-"use client"
-
-import type React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import type React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { ThemeToggle } from '../shared/themeToggle';
 
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 export interface MenuItem {
-  href: string
-  icon: React.ReactNode
-  label: string
+  href: string;
+  icon: React.ReactNode;
+  label: string;
   subItems?: {
-    href: string
-    icon: React.ReactNode
-    label: string
-  }[]
+    href: string;
+    icon: React.ReactNode;
+    label: string;
+  }[];
 }
 
 type SidebarMenuProps = {
-  menuItemsTop: MenuItem[]
-  menuItemsBottom: MenuItem[]
-  active: string
-  setActive?: (page: string) => void
-}
+  menuItemsTop: MenuItem[];
+  menuItemsBottom: MenuItem[];
+  active: string;
+  setActive?: (page: string) => void;
+};
 
-const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom, active, setActive = () => null }) => {
-  const pathname = usePathname()
+const SidebarMenu: React.FC<SidebarMenuProps> = ({
+  menuItemsTop,
+  menuItemsBottom,
+  active,
+  setActive = () => null,
+}) => {
+  const pathname = usePathname();
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => pathname === href;
   const isActiveParent = (item: MenuItem) => {
-    if (isActive(item.href)) return true
-    return item.subItems?.some((subItem) => isActive(subItem.href))
-  }
+    if (isActive(item.href)) return true;
+    return item.subItems?.some((subItem) => isActive(subItem.href));
+  };
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
     if (item.subItems) {
@@ -119,12 +132,19 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
         <Popover>
           <PopoverTrigger
             className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-              isActiveParent(item) ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+              isActiveParent(item)
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground'
             } transition-colors md:h-8 md:w-8`}
           >
             {item.icon}
           </PopoverTrigger>
-          <PopoverContent side="right" align="start" className="w-48 p-2" sideOffset={8}>
+          <PopoverContent
+            side="right"
+            align="start"
+            className="w-48 p-2"
+            sideOffset={8}
+          >
             <div className="flex flex-col gap-1">
               {item.subItems.map((subItem, subIndex) => (
                 <Link
@@ -133,8 +153,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
                   onClick={() => setActive(subItem.label)}
                   className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
                     isActive(subItem.href)
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
                   {subItem.icon}
@@ -144,7 +164,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
             </div>
           </PopoverContent>
         </Popover>
-      )
+      );
     }
 
     return (
@@ -155,11 +175,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
               href={item.href}
               onClick={() => setActive(item.label)}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                item.label === active || item.label === "Dehix"
-                  ? item.label === "Dehix"
-                    ? "group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
-                    : "flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
-                  : "flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+                item.label === active || item.label === 'Dehix'
+                  ? item.label === 'Dehix'
+                    ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base'
+                    : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
+                  : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
               }`}
             >
               {item.icon}
@@ -169,8 +189,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
           <TooltipContent side="right">{item.label}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    )
-  }
+    );
+  };
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
@@ -189,8 +209,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ menuItemsTop, menuItemsBottom
         ))}
       </nav>
     </aside>
-  )
-}
+  );
+};
 
-export default SidebarMenu
-
+export default SidebarMenu;
