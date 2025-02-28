@@ -106,7 +106,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [, setLastAddedItems] = useState<{
     skills: { name: string }[];
@@ -425,7 +425,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        }); 
       }
     };
 
@@ -503,6 +503,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       await axiosInstance.put(`/freelancer`, {
         ...restData,
+        resume: data.resume,
         skills: currSkills,
         domain: currDomains,
         projectDomain: currProjectDomains,
@@ -1124,7 +1125,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <FormField
             control={form.control}
             name="resume"
-            render={() => (
+            render={(field) => (
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
@@ -1134,9 +1135,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           />
           <Separator className="sm:col-span-2 mt-0" />
-          <Button type="submit" className="sm:col-span-2">
-            Update profile
+          <Button type="submit" className="sm:col-span-2" disabled={loading}>
+            {loading ? 'Loading...' : 'Update Profile'}
           </Button>
+          
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}

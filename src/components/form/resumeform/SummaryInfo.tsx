@@ -144,12 +144,11 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
           <PlusCircle />
         </Button>
       </div>
-      <div className="flex justify-center mt-4">
+      {/* <div className="flex justify-center mt-4">
         <Button className="text-center bg-green-500 hover:bg-green-600 text-white">
-          {/* <CheckCircle /> */}
           Save
         </Button>
-      </div>
+      </div> */}
 
       {/* AI Response Section */}
       {/* AI Response Section */}
