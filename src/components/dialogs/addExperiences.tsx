@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -100,6 +100,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const currentDate = new Date().toISOString().split('T')[0];
+  const restoredDraft = useRef<any>(null);
 
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
@@ -127,6 +128,12 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
     formSection: 'experience',
     isDialogOpen,
     setIsDialogOpen,
+    onSave: (values) => {
+      restoredDraft.current = { ...values };
+    },
+    onDiscard: () => {
+      restoredDraft.current = null;
+    },
   });
 
   async function onSubmit(data: ExperienceFormValues) {

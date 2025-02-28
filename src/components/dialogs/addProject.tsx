@@ -190,13 +190,35 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     }
 
     const currentData = { ...filteredValues, currSkills };
-    if (JSON.stringify(currentData) === JSON.stringify(restoredDraft.current)) {
+
+    // Deep comparison of currSkills array (ignoring order)
+    const areSkillsEqual = (arr1: any[], arr2: any[]): boolean => {
+      if (arr1.length !== arr2.length) return false;
+
+      const sortedArr1 = [...arr1].sort();
+      const sortedArr2 = [...arr2].sort();
+
+      return JSON.stringify(sortedArr1) === JSON.stringify(sortedArr2);
+    };
+
+    // Compare currSkills explicitly
+    const restoredSkills = restoredDraft.current?.currSkills || [];
+
+    console.log("Current currSkills:", currSkills);
+    console.log("Restored currSkills:", restoredSkills);
+    console.log("Filtered Values:", filteredValues);
+    console.log("Restored Draft Values:", restoredDraft.current ? { ...restoredDraft.current } : { ...filteredValues });
+
+    if (areSkillsEqual(currSkills, restoredSkills) && JSON.stringify({ ...filteredValues }) === JSON.stringify({ ... (restoredDraft.current ? { ...restoredDraft.current } : { ...filteredValues }), currSkills: undefined })) {
+      console.log("No changes detected.");
+      setConfirmExitDialog(false);
+      setIsDialogOpen(false);
       return;
     }
 
-    const existingDraft = JSON.parse(
-      localStorage.getItem('DEHIX_DRAFT') || '{}',
-    );
+    console.log("Changes Detected.");
+
+    const existingDraft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
     existingDraft[formSection] = { ...values, currSkills };
     localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
 
@@ -208,17 +230,18 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const loadDraft = () => {
     const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
     if (draft && draft[formSection]) {
-      const savedData = draft[formSection];
-      form.reset(savedData);
-      setCurrSkills(savedData.currSkills || []);
-      restoredDraft.current = savedData;
-      toast({
-        title: 'Draft Loaded',
-        description: 'Your draft has been restored.',
-      });
+        const savedData = draft[formSection];
+        form.reset(savedData);
+        setCurrSkills(savedData.currSkills || []);
+        restoredDraft.current = savedData;
+        console.log("Loaded Draft Data:", savedData); // Add this line
+        toast({
+            title: 'Draft Loaded',
+            description: 'Your draft has been restored.',
+        });
     }
     setShowDraftDialog(false);
-  };
+};
 
   const discardDraft = () => {
     const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');

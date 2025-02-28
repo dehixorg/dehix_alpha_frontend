@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,6 +62,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const currentDate = new Date().toISOString().split('T')[0];
+  const restoredDraft = useRef<any>(null);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -90,6 +91,12 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     formSection: 'education',
     isDialogOpen,
     setIsDialogOpen,
+    onSave: (values) => {
+      restoredDraft.current = { ...values };
+    },
+    onDiscard: () => {
+      restoredDraft.current = null;
+    },
   });
 
   async function onSubmit(data: any) {
