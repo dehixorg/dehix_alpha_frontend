@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 
 import { toast } from '../ui/use-toast';
+import DraftDialog from '../shared/DraftDialog';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
+import useDraft from '@/hooks/useDraft';
 
 const FormSchema = z
   .object({
@@ -57,6 +59,10 @@ interface AddEducationProps {
 }
 
 export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
+  const [loading, setLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const currentDate = new Date().toISOString().split('T')[0];
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -69,22 +75,22 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
     },
   });
 
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const currentDate = new Date().toISOString().split('T')[0];
-
-  useEffect(() => {
-    if (isDialogOpen) {
-      form.reset({
-        degree: '',
-        universityName: '',
-        fieldOfStudy: '',
-        startDate: '',
-        endDate: '',
-        grade: '',
-      });
-    }
-  }, [isDialogOpen, form]);
+  const {
+    showDraftDialog,
+    setShowDraftDialog,
+    confirmExitDialog,
+    setConfirmExitDialog,
+    loadDraft,
+    discardDraft,
+    handleSaveAndClose,
+    handleDiscardAndClose,
+    handleDialogClose,
+  } = useDraft({
+    form,
+    formSection: 'education',
+    isDialogOpen,
+    setIsDialogOpen,
+  });
 
   async function onSubmit(data: any) {
     setLoading(true);
@@ -96,7 +102,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           : null,
         endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
         oracleAssigned: data.oracleAssigned || '',
-        verificationStatus: data.verificationStatus || 'added',
+        verificationStatus: data.verificationStatus || 'ADDED',
         verificationUpdateTime: data.verificationUpdateTime || new Date(),
         comments: '',
       };
@@ -106,6 +112,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
       toast({
         title: 'Education Added',
         description: 'The education has been successfully added.',
+        duration: 1500,
       });
     } catch (error) {
       console.error('API Error:', error);
@@ -113,6 +120,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to add education. Please try again later.',
+        duration: 1500,
       });
     } finally {
       setLoading(false); // Reset loading state after submission completes
@@ -120,7 +128,13 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) handleDialogClose();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -235,6 +249,30 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
           </form>
         </Form>
       </DialogContent>
+      {confirmExitDialog && (
+        <DraftDialog
+          dialogChange={confirmExitDialog}
+          setDialogChange={setConfirmExitDialog}
+          heading="Save Draft?"
+          desc="Do you want to save your draft before leaving?"
+          handleClose={handleDiscardAndClose}
+          handleSave={handleSaveAndClose}
+          btn1Txt="Don't save"
+          btn2Txt="Yes save"
+        />
+      )}
+      {showDraftDialog && (
+        <DraftDialog
+          dialogChange={showDraftDialog}
+          setDialogChange={setShowDraftDialog}
+          heading="Load Draft?"
+          desc="You have unsaved data. Would you like to restore it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" No, start fresh"
+          btn2Txt="Yes, load draft"
+        />
+      )}
     </Dialog>
   );
 };

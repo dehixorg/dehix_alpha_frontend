@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
+import DraftDialog from '../shared/DraftDialog';
+
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -24,8 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -34,8 +34,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import useDraft from '@/hooks/useDraft';
 
-// Schema for form validation using zod
 const projectFormSchema = z
   .object({
     projectName: z.string().min(1, { message: 'Project name is required.' }),
@@ -87,6 +89,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const formSection = 'projects';
+  const restoredDraft = useRef<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -111,7 +117,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         );
         setSkills(transformedSkills);
       } catch (error) {
-        console.error('API Error:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -141,28 +146,95 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     mode: 'all',
   });
 
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const currentDate = new Date().toISOString().split('T')[0];
+  const {
+    showDraftDialog,
+    setShowDraftDialog,
+    confirmExitDialog,
+    setConfirmExitDialog,
+    handleDiscardAndClose,
+    handleDialogClose,
+  } = useDraft<ProjectFormValues>({
+    form,
+    formSection: 'projects',
+    isDialogOpen,
+    setIsDialogOpen,
+    onSave: (values) => {
+      restoredDraft.current = { ...values, currSkills };
+    },
+    onDiscard: () => {
+      restoredDraft.current = null;
+    },
+  });
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      form.reset({
-        projectName: '',
-        description: '',
-        githubLink: '',
-        start: '',
-        end: '',
-        refer: '',
-        techUsed: '',
-        role: '',
-        projectType: '',
-        verificationStatus: 'ADDED',
-        comments: '',
+  const handleSaveAndClose = () => {
+    const values = form.getValues();
+    const filteredValues = Object.fromEntries(
+      Object.entries(values).filter(
+        ([key, val]) =>
+          key !== 'verificationStatus' &&
+          val !== undefined &&
+          val !== '' &&
+          val !== null,
+      ),
+    );
+    const hasValues = Object.keys(filteredValues).length > 0;
+    const hasSkills = currSkills.length > 0;
+
+    if (!hasValues && !hasSkills) {
+      toast({
+        title: 'No data',
+        description: 'Please fill at least one field before saving.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const currentData = { ...filteredValues, currSkills };
+    if (JSON.stringify(currentData) === JSON.stringify(restoredDraft.current)) {
+      return;
+    }
+
+    const existingDraft = JSON.parse(
+      localStorage.getItem('DEHIX_DRAFT') || '{}',
+    );
+    existingDraft[formSection] = { ...values, currSkills };
+    localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
+
+    restoredDraft.current = currentData;
+    toast({ title: 'Draft Saved', description: 'Your draft has been saved.' });
+    setConfirmExitDialog(false);
+  };
+
+  const loadDraft = () => {
+    const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
+    if (draft && draft[formSection]) {
+      const savedData = draft[formSection];
+      form.reset(savedData);
+      setCurrSkills(savedData.currSkills || []);
+      restoredDraft.current = savedData;
+      toast({
+        title: 'Draft Loaded',
+        description: 'Your draft has been restored.',
       });
     }
-  }, [isDialogOpen, form]);
+    setShowDraftDialog(false);
+  };
 
-  // Submit handler for the form
+  const discardDraft = () => {
+    const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
+    if (draft) {
+      delete draft[formSection];
+      localStorage.setItem('DEHIX_DRAFT', JSON.stringify(draft));
+    }
+    form.reset();
+    setCurrSkills([]); //reset currSkills
+    toast({
+      title: 'Draft Discarded',
+      description: `Your ${formSection} draft has been discarded.`,
+    });
+    setShowDraftDialog(false);
+  };
+
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
     try {
@@ -206,7 +278,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) handleDialogClose();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -313,26 +391,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 </FormItem>
               )}
             />
-            {/*}
-            <FormField
-              control={form.control}
-              name="techUsed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Technologies Used</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter technologies used (comma separated)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the technologies used (comma separated)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
             <FormField
               control={form.control}
               name="techUsed"
@@ -393,7 +451,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="role"
@@ -448,6 +505,30 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           </form>
         </Form>
       </DialogContent>
+      {confirmExitDialog && (
+        <DraftDialog
+          dialogChange={confirmExitDialog}
+          setDialogChange={setConfirmExitDialog}
+          heading="Save Draft?"
+          desc="Do you want to save your draft before leaving?"
+          handleClose={handleDiscardAndClose}
+          handleSave={handleSaveAndClose}
+          btn1Txt="Don't save"
+          btn2Txt="Yes save"
+        />
+      )}
+      {showDraftDialog && (
+        <DraftDialog
+          dialogChange={showDraftDialog}
+          setDialogChange={setShowDraftDialog}
+          heading="Load Draft?"
+          desc="You have unsaved data. Would you like to restore it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" No, start fresh"
+          btn2Txt="Yes, load draft"
+        />
+      )}
     </Dialog>
   );
 };
