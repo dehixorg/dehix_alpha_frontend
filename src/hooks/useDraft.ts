@@ -10,6 +10,7 @@ interface UseDraftProps<T extends Record<string, any>> {
   setIsDialogOpen: (open: boolean) => void;
   onSave?: (values: T) => void;
   onDiscard?: () => void;
+  setCurrSkills?: any;
 }
 
 const useDraft = <T extends Record<string, any>>({
@@ -19,13 +20,14 @@ const useDraft = <T extends Record<string, any>>({
   setIsDialogOpen,
   onSave,
   onDiscard,
+  setCurrSkills,
 }: UseDraftProps<T>) => {
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [confirmExitDialog, setConfirmExitDialog] = useState(false);
   const draftChecked = useRef(false);
   const restoredDraft = useRef<T | null>(null);
 
-  const saveDraft = (values: T) => {
+  const saveDraft = (values: any) => {
     const existingDraft: Record<string, any> = JSON.parse(
       localStorage.getItem('DEHIX_DRAFT') || '{}',
     );
@@ -41,13 +43,12 @@ const useDraft = <T extends Record<string, any>>({
     if (hasValues) {
       existingDraft[formSection] = values;
       localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
-    } else {
-      delete existingDraft[formSection];
-      if (Object.keys(existingDraft).length === 0) {
-        localStorage.removeItem('DEHIX_DRAFT');
-      } else {
-        localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
-      }
+
+      toast({
+        title: 'Draft Saved',
+        description: `Your ${formSection} draft has been saved.`,
+        duration: 1500,
+      });
     }
   };
 
@@ -63,16 +64,44 @@ const useDraft = <T extends Record<string, any>>({
 
   const loadDraft = () => {
     const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
+
     if (draft && draft[formSection]) {
-      form.reset(draft[formSection]);
-      restoredDraft.current = draft[formSection];
-      toast({
-        title: 'Draft Loaded',
-        description: 'Your draft has been restored.',
-        duration: 1500,
+      // Remove undefined values
+      Object.keys(draft[formSection]).forEach((key) => {
+        if (draft[formSection][key] === undefined) {
+          delete draft[formSection][key];
+        }
       });
+
+      // Ignore verificationStatus from projects
+      if (formSection === 'projects') {
+        delete draft[formSection].verificationStatus;
+
+        if (Array.isArray(draft[formSection].techUsed)) {
+          setCurrSkills(draft[formSection].techUsed);
+        }
+      }
+
+      const hasData = Object.entries(draft[formSection]).some(
+        ([, value]) =>
+          value !== '' &&
+          value !== undefined &&
+          !(Array.isArray(value) && value.length === 0),
+      );
+
+      if (hasData) {
+        form.reset(draft[formSection]);
+        restoredDraft.current = draft[formSection];
+
+        toast({
+          title: 'Draft Loaded',
+          description: `Your ${formSection} draft has been restored.`,
+          duration: 1500,
+        });
+      }
+
+      setShowDraftDialog(false);
     }
-    setShowDraftDialog(false);
   };
 
   const discardDraft = () => {
@@ -99,7 +128,7 @@ const useDraft = <T extends Record<string, any>>({
 
   const handleSaveAndClose = () => {
     const formValues = form.getValues();
-    saveDraft(formValues); // Save only when user clicks save.
+    saveDraft(formValues);
     toast({
       title: 'Draft Saved',
       description: 'Your draft has been saved.',
@@ -154,18 +183,26 @@ const useDraft = <T extends Record<string, any>>({
     if (!isDialogOpen) return;
     const currentValues = form.getValues() || {};
     const draftValues = restoredDraft.current || {};
-
+    console.log(restoredDraft.current);
     const trimmedCurrent = trimObject(currentValues);
     const trimmedDraft = trimObject(draftValues);
 
     const hasChanges = Object.entries(trimmedDraft).some(([key, value]) => {
       const currentValue = trimmedCurrent[key];
+
+      if (Array.isArray(value) && Array.isArray(currentValue)) {
+        return JSON.stringify(value) !== JSON.stringify(currentValue);
+      }
+
       return value !== currentValue;
     });
 
     const hasNonEmptyValues = Object.entries(trimmedCurrent).some(
       ([key, value]) =>
-        value !== undefined && value !== '' && trimmedDraft[key] === undefined,
+        key !== 'verificationStatus' &&
+        value !== undefined &&
+        value !== '' &&
+        trimmedDraft[key] === undefined,
     );
 
     if (!hasChanges && !hasNonEmptyValues) {
@@ -192,6 +229,7 @@ const useDraft = <T extends Record<string, any>>({
     handleSaveAndClose,
     handleDiscardAndClose,
     handleDialogClose,
+    saveDraft,
   };
 };
 

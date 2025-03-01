@@ -52,7 +52,9 @@ const projectFormSchema = z
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
-    techUsed: z.string().min(1, { message: 'Technologies used are required.' }),
+    techUsed: z
+      .array(z.string())
+      .min(1, { message: 'At least one technology is required.' }),
     role: z.string().min(1, { message: 'Role is required.' }),
     projectType: z.string().optional(),
     verificationStatus: z.string().optional(),
@@ -86,10 +88,9 @@ interface Skill {
 
 export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [skills, setSkills] = useState<any>([]);
-  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<string[]>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const formSection = 'projects';
   const restoredDraft = useRef<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
@@ -111,8 +112,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         const skillsResponse = await axiosInstance.get('/skills');
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setSkills(transformedSkills);
@@ -121,13 +122,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
       }
     };
     fetchData();
   }, []);
 
-  // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -137,7 +137,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       start: '',
       end: '',
       refer: '',
-      techUsed: '',
+      techUsed: [],
       role: '',
       projectType: '',
       verificationStatus: 'ADDED',
@@ -147,116 +147,28 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   });
 
   const {
+    handleSaveAndClose,
     showDraftDialog,
     setShowDraftDialog,
     confirmExitDialog,
     setConfirmExitDialog,
     handleDiscardAndClose,
     handleDialogClose,
-  } = useDraft<ProjectFormValues>({
+    discardDraft,
+    loadDraft,
+  } = useDraft({
     form,
     formSection: 'projects',
     isDialogOpen,
     setIsDialogOpen,
     onSave: (values) => {
-      restoredDraft.current = { ...values, currSkills };
+      restoredDraft.current = { ...values, techUsed: currSkills };
     },
     onDiscard: () => {
       restoredDraft.current = null;
     },
+    setCurrSkills,
   });
-
-  const handleSaveAndClose = () => {
-    const values = form.getValues();
-    const filteredValues = Object.fromEntries(
-      Object.entries(values).filter(
-        ([key, val]) =>
-          key !== 'verificationStatus' &&
-          val !== undefined &&
-          val !== '' &&
-          val !== null,
-      ),
-    );
-    const hasValues = Object.keys(filteredValues).length > 0;
-    const hasSkills = currSkills.length > 0;
-
-    if (!hasValues && !hasSkills) {
-      toast({
-        title: 'No data',
-        description: 'Please fill at least one field before saving.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const currentData = { ...filteredValues, currSkills };
-
-    // Deep comparison of currSkills array (ignoring order)
-    const areSkillsEqual = (arr1: any[], arr2: any[]): boolean => {
-      if (arr1.length !== arr2.length) return false;
-
-      const sortedArr1 = [...arr1].sort();
-      const sortedArr2 = [...arr2].sort();
-
-      return JSON.stringify(sortedArr1) === JSON.stringify(sortedArr2);
-    };
-
-    // Compare currSkills explicitly
-    const restoredSkills = restoredDraft.current?.currSkills || [];
-
-    console.log("Current currSkills:", currSkills);
-    console.log("Restored currSkills:", restoredSkills);
-    console.log("Filtered Values:", filteredValues);
-    console.log("Restored Draft Values:", restoredDraft.current ? { ...restoredDraft.current } : { ...filteredValues });
-
-    if (areSkillsEqual(currSkills, restoredSkills) && JSON.stringify({ ...filteredValues }) === JSON.stringify({ ... (restoredDraft.current ? { ...restoredDraft.current } : { ...filteredValues }), currSkills: undefined })) {
-      console.log("No changes detected.");
-      setConfirmExitDialog(false);
-      setIsDialogOpen(false);
-      return;
-    }
-
-    console.log("Changes Detected.");
-
-    const existingDraft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
-    existingDraft[formSection] = { ...values, currSkills };
-    localStorage.setItem('DEHIX_DRAFT', JSON.stringify(existingDraft));
-
-    restoredDraft.current = currentData;
-    toast({ title: 'Draft Saved', description: 'Your draft has been saved.' });
-    setConfirmExitDialog(false);
-  };
-
-  const loadDraft = () => {
-    const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
-    if (draft && draft[formSection]) {
-        const savedData = draft[formSection];
-        form.reset(savedData);
-        setCurrSkills(savedData.currSkills || []);
-        restoredDraft.current = savedData;
-        console.log("Loaded Draft Data:", savedData); // Add this line
-        toast({
-            title: 'Draft Loaded',
-            description: 'Your draft has been restored.',
-        });
-    }
-    setShowDraftDialog(false);
-};
-
-  const discardDraft = () => {
-    const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
-    if (draft) {
-      delete draft[formSection];
-      localStorage.setItem('DEHIX_DRAFT', JSON.stringify(draft));
-    }
-    form.reset();
-    setCurrSkills([]); //reset currSkills
-    toast({
-      title: 'Draft Discarded',
-      description: `Your ${formSection} draft has been discarded.`,
-    });
-    setShowDraftDialog(false);
-  };
 
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
@@ -268,14 +180,14 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       //   techUsed: currSkills,
       //   projectType: '',
       // });
-      const techUsedArray = data.techUsed
-        .split(',')
-        .map((tech) => tech.trim())
-        .filter((tech) => tech !== '');
+      // const techUsedArray = data.techUsed
+      //   .split(',')
+      //   .map((tech) => tech.trim())
+      //   .filter((tech) => tech !== '');
 
       await axiosInstance.post(`/freelancer/project`, {
         ...data,
-        techUsed: techUsedArray,
+        techUsed: currSkills,
         verified: false,
         oracleAssigned: '',
         start: data.start ? new Date(data.start).toISOString() : null,
@@ -425,10 +337,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <div className="flex items-center mt-2">
                         <Select
                           onValueChange={(selectedValue) => {
-                            onChange(selectedValue);
+                            onChange([...value, selectedValue]);
                             setTmpSkill(selectedValue);
                           }}
-                          value={value}
+                          value={tmpSkill}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select skill" />

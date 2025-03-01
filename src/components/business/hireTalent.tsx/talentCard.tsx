@@ -254,12 +254,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         });
       }
     }
-  }, [
-    user?.uid,
-    skillDomainFormProps,
-    skillDomainFormProps?.skillFilter,
-    skillDomainFormProps?.domainFilter,
-  ]);
+  }, [user?.uid, skillDomainFormProps]);
 
   useEffect(() => {
     fetchUserData();
@@ -324,7 +319,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
     setSkip(0);
     setHasMore(true);
     fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
-  }, [skillFilter, domainFilter, fetchTalentData]);
+  }, [fetchTalentData]);
 
   // Reload cards when filter changes
   useEffect(() => {
