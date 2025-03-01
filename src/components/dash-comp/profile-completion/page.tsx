@@ -44,7 +44,9 @@ interface CompletionFields {
 const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [completionPercentage, setCompletionPercentage] = useState<number>(0);
-  const [completionFields, setCompletionFields] = useState<CompletionFields>({});
+  const [completionFields, setCompletionFields] = useState<CompletionFields>(
+    {},
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -85,7 +87,9 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
       description: Boolean(profile.description?.trim()),
       skills: Array.isArray(profile.skills) && profile.skills.length > 0,
       domain: Array.isArray(profile.domain) && profile.domain.length > 0,
-      projectDomain: Array.isArray(profile.projectDomain) && profile.projectDomain.length > 0,
+      projectDomain:
+        Array.isArray(profile.projectDomain) &&
+        profile.projectDomain.length > 0,
       kycApplied: Boolean(profile.kyc && profile.kyc.status !== 'NOT_APPLIED'),
       kycVerified: Boolean(profile.kyc && profile.kyc.status === 'VERIFIED'),
     };
@@ -95,28 +99,28 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
     return {
       percentage: (completedFields / totalFields) * 100,
-      fields: fieldsToCheck
+      fields: fieldsToCheck,
     };
   };
 
   const getIncompleteFields = () => {
     if (!completionFields) return [];
-    
+
     const incomplete = Object.entries(completionFields)
       .filter(([_, isComplete]) => !isComplete)
       .map(([field]) => {
         // Convert camelCase to readable text
         const readableField = field
           .replace(/([A-Z])/g, ' $1')
-          .replace(/^./, str => str.toUpperCase());
-        
+          .replace(/^./, (str) => str.toUpperCase());
+
         // Special case for KYC fields
         if (field === 'kycApplied') return 'KYC Application';
         if (field === 'kycVerified') return 'KYC Verification';
-        
+
         return readableField;
       });
-    
+
     return incomplete;
   };
 
@@ -178,7 +182,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
               </span>
             </div>
           </div>
-          
+
           {incompleteFields.length > 0 && completionPercentage < 100 && (
             <div className="mt-2 text-sm text-muted-foreground">
               <p>Missing information:</p>
