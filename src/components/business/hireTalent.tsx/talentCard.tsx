@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Star, Check, X as XIcon } from 'lucide-react';
+import { Loader2, Plus, X, Check, X as XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
+import { SendIcon } from 'lucide-react';
 
 interface DehixTalent {
   freelancer_id: any;
@@ -105,12 +106,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
-  const [bookmarkedTalents, setBookmarkedTalents] = useState<Set<string>>(
-    new Set(),
-  );
-  const [talentStatus, setTalentStatus] = useState<
-    Record<string, 'pending' | 'accepted' | 'rejected'>
-  >({});
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
 
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -132,42 +128,33 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   };
 
-  const handleAcceptTalent = async (talentId: string) => {
+  const handleInviteTalent = async (talentId: string) => {
     try {
-      setTalentStatus((prev) => ({ ...prev, [talentId]: 'accepted' }));
-      // Replace with your API call to accept the talent
-      await axiosInstance.put(`/business/hire-dehixtalent/${talentId}`);
-      toast({
-        title: 'Success',
-        description: 'Talent has been accepted successfully.',
+      // Toggle invite status
+      setInvitedTalents((prev) => {
+        const newInvited = new Set(prev);
+        if (newInvited.has(talentId)) {
+          newInvited.delete(talentId);
+        } else {
+          newInvited.add(talentId);
+          // Here you would make API call to send invitation
+          // For example: await axiosInstance.post(`/business/invite-talent/${talentId}`);
+        }
+        return newInvited;
       });
-    } catch (error) {
-      console.error('Error accepting talent:', error);
-      setTalentStatus((prev) => ({ ...prev, [talentId]: 'pending' }));
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to accept talent. Please try again.',
-      });
-    }
-  };
 
-  const handleRejectTalent = async (talentId: string) => {
-    try {
-      setTalentStatus((prev) => ({ ...prev, [talentId]: 'rejected' }));
-      // Replace with your API call to reject the talent
-      await axiosInstance.post(`/business/hire-talent/${talentId}/reject`);
-      toast({
-        title: 'Success',
-        description: 'Talent has been rejected.',
-      });
+      if (!invitedTalents.has(talentId)) {
+        toast({
+          title: 'Success',
+          description: 'Invitation sent successfully.',
+        });
+      }
     } catch (error) {
-      console.error('Error rejecting talent:', error);
-      setTalentStatus((prev) => ({ ...prev, [talentId]: 'pending' }));
+      console.error('Error inviting talent:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to reject talent. Please try again.',
+        description: 'Failed to send invitation. Please try again.',
       });
     }
   };
@@ -374,18 +361,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
     [skip, loading, hasMore],
   );
 
-  const toggleBookmark = (talentId: string) => {
-    setBookmarkedTalents((prev) => {
-      const newBookmarked = new Set(prev);
-      if (newBookmarked.has(talentId)) {
-        newBookmarked.delete(talentId);
-      } else {
-        newBookmarked.add(talentId);
-      }
-      return newBookmarked;
-    });
-  };
-
   // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
@@ -424,7 +399,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const talentEntry = talent.dehixTalent;
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
-        const status = talentStatus[talentEntry._id] || 'pending';
+        const isInvited = invitedTalents.has(talentEntry._id);
 
         return (
           <Card
@@ -443,16 +418,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 </p>
               </div>
               <button
-                onClick={() => toggleBookmark(talentEntry._id)}
+                onClick={() => handleInviteTalent(talentEntry._id)}
                 className="ml-auto"
               >
-                <Star
-                  className={`h-6 w-6 transition-colors ${
-                    bookmarkedTalents.has(talentEntry._id)
-                      ? 'fill-yellow-400 stroke-yellow-400'
-                      : 'stroke-gray-400 hover:stroke-gray-600'
-                  }`}
-                />
               </button>
             </CardHeader>
             <CardContent>
@@ -472,21 +440,19 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
-                  {status !== 'pending' && (
+                  {isInvited && (
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">Status</span>
-                      <Badge
-                        variant={
-                          status === 'accepted' ? 'default' : 'destructive'
-                        }
-                      >
-                        {status === 'accepted' ? 'Accepted' : 'Rejected'}
-                      </Badge>
+                      <Badge variant="default">Invited</Badge>
                     </div>
                   )}
                 </div>
 
-                <div className="py-0">
+                
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col justify-between pt-0 pb-4">
+            <div className="py-3 w-full">
                   {SHEET_SIDES.map((View) => (
                     <Sheet key={View}>
                       <SheetTrigger asChild>
@@ -679,39 +645,17 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     </Sheet>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between pt-0 pb-4">
-              {status === 'pending' ? (
-                <>
-                  <Button
-                    onClick={() => handleAcceptTalent(talentEntry._id)}
-                    className="flex-1 mr-2 bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="mr-2 h-4 w-4" /> Accept
-                  </Button>
-                  <Button
-                    onClick={() => handleRejectTalent(talentEntry._id)}
-                    variant="destructive"
-                    className="flex-1 ml-2"
-                  >
-                    <XIcon className="mr-2 h-4 w-4" /> Reject
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={() =>
-                    setTalentStatus((prev) => ({
-                      ...prev,
-                      [talentEntry._id]: 'pending',
-                    }))
-                  }
-                  variant="outline"
-                  className="w-full"
-                >
-                  Reset Status
-                </Button>
-              )}
+              <Button
+                onClick={() => handleInviteTalent(talentEntry._id)}
+                className={`w-full ${
+                  isInvited 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-primary hover:bg-primary/90'
+                }`}
+              >
+                <SendIcon className="mr-2 h-4 w-4" />
+                {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
+              </Button>
             </CardFooter>
           </Card>
         );

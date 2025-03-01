@@ -148,18 +148,18 @@ export const menuItemsTop: MenuItem[] = [
         icon: <Users2 className="h-4 w-4" />,
       },
       {
-        label: 'Bookmarks',
-        href: '/business/talent/bookmarks',
+        label: 'Invites',
+        href: '/business/market/invited',
         icon: <BookMarked className="h-4 w-4" />,
       },
       {
         label: 'Accepted',
-        href: '/business/talent/accepted',
+        href: '/business/market/accepted',
         icon: <CheckCircle2 className="h-4 w-4" />,
       },
       {
         label: 'Rejected',
-        href: '/business/talent/rejected',
+        href: '/business/market/rejected',
         icon: <XCircle className="h-4 w-4" />,
       },
     ],

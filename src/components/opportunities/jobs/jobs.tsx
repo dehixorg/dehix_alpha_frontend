@@ -40,6 +40,7 @@ interface JobCardProps {
   status: string | undefined;
   profiles: Profile[];
   onRemove: (id: string) => void;
+  onInvite?: (id: string) => void;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
@@ -53,6 +54,7 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   profiles,
   onRemove,
+  onInvite
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [isClient, setIsClient] = React.useState(false);
@@ -71,7 +73,7 @@ const JobCard: React.FC<JobCardProps> = ({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
+        description: 'Something went wrong. Please try again.',
       }); // Error toast
     }
   }, [user.uid]);
@@ -96,11 +98,23 @@ const JobCard: React.FC<JobCardProps> = ({
     onRemove(_id);
   };
 
+  // Safely handle invite
+  const handleInviteClick = () => {
+    if (onInvite) {
+      onInvite(id);
+    } else {
+      toast({
+        title: "Invitation sent",
+        description: "Your invitation has been sent successfully",
+      });
+    }
+  };
+
   return (
     <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-2xl font-bold text-foreground">
-          <div className="flex items-center justify-between text-gray-600 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-gray-600 gap-2">
             <div className="flex items-center dark:text-white">
               <Link href={`/freelancer/market/${companyId}`} passHref>
                 <span>{projectName}</span>
@@ -110,14 +124,23 @@ const JobCard: React.FC<JobCardProps> = ({
             </div>
 
             {/* Action Buttons in Header */}
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
               {/* View Button */}
               <Link href={`/freelancer/project/${id}`} passHref>
                 <Button variant="outline" className="dark:text-white">
                   <Eye className="w-5 h-5" /> {/* Eye icon for "View" */}
-                  <span>&nbsp;View</span>
+                  <span className="hidden sm:inline">&nbsp;View</span>
                 </Button>
               </Link>
+
+              {/* Invite Button */}
+              <Button 
+                onClick={handleInviteClick}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+                size="sm"
+              >
+                <span>Invite</span>
+              </Button>
 
               {/* Not Interested Button */}
               <Button
@@ -126,7 +149,7 @@ const JobCard: React.FC<JobCardProps> = ({
               >
                 <XCircle className="w-5 h-5" />
                 {/* XCircle icon for "Not Interested" */}
-                <span>&nbsp;Not Interested</span>
+                <span className="hidden sm:inline">&nbsp;Not Interested</span>
               </Button>
             </div>
           </div>
