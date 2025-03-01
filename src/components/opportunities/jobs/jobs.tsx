@@ -54,7 +54,7 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   profiles,
   onRemove,
-  onInvite
+  onInvite,
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [isClient, setIsClient] = React.useState(false);
@@ -104,8 +104,8 @@ const JobCard: React.FC<JobCardProps> = ({
       onInvite(id);
     } else {
       toast({
-        title: "Invitation sent",
-        description: "Your invitation has been sent successfully",
+        title: 'Invitation sent',
+        description: 'Your invitation has been sent successfully',
       });
     }
   };
@@ -134,7 +134,7 @@ const JobCard: React.FC<JobCardProps> = ({
               </Link>
 
               {/* Invite Button */}
-              <Button 
+              <Button
                 onClick={handleInviteClick}
                 className="bg-blue-500 hover:bg-blue-600 text-white"
                 size="sm"

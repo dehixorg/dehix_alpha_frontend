@@ -1,16 +1,4 @@
-"use client"
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+'use client';
 import {
   BookMarked,
   CheckCircle2,
@@ -21,10 +9,18 @@ import {
   XCircle,
   Home,
   Settings,
-  HelpCircle
-} from "lucide-react";
-import React, { ReactNode, useState } from "react";
-import SidebarMenu, { MenuItem } from "@/components/menu/sidebarMenu"; // Adjust the import path as needed
+  HelpCircle,
+} from 'lucide-react';
+import React, { ReactNode, useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu'; // Adjust the import path as needed
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -36,8 +32,7 @@ interface TalentLayoutProps {
 }
 
 const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
-  const [activePage, setActivePage] = useState("Talent");
-
+  const [activePage, setActivePage] = useState('Talent');
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -48,7 +43,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
         active={activePage}
         setActive={setActivePage}
       />
-      
+
       {/* Adjust main content to account for sidebar */}
       <div className="ml-14 flex flex-col min-h-screen">
         {/* Header */}
@@ -67,25 +62,41 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
         <div className="container px-4 py-4">
           <Tabs defaultValue={activeTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview" className="flex items-center gap-2" asChild>
+              <TabsTrigger
+                value="overview"
+                className="flex items-center gap-2"
+                asChild
+              >
                 <a href="/business/talent">
                   <Users2 className="h-4 w-4" />
                   <span>Overview</span>
                 </a>
               </TabsTrigger>
-              <TabsTrigger value="invited" className="flex items-center gap-2" asChild>
+              <TabsTrigger
+                value="invited"
+                className="flex items-center gap-2"
+                asChild
+              >
                 <a href="/business/market/invited">
                   <BookMarked className="h-4 w-4" />
                   <span>Invites</span>
                 </a>
               </TabsTrigger>
-              <TabsTrigger value="accepted" className="flex items-center gap-2" asChild>
+              <TabsTrigger
+                value="accepted"
+                className="flex items-center gap-2"
+                asChild
+              >
                 <a href="/business/market/accepted">
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Accepted</span>
                 </a>
               </TabsTrigger>
-              <TabsTrigger value="rejected" className="flex items-center gap-2" asChild>
+              <TabsTrigger
+                value="rejected"
+                className="flex items-center gap-2"
+                asChild
+              >
                 <a href="/business/market/rejected">
                   <XCircle className="h-4 w-4" />
                   <span>Rejected</span>
@@ -119,37 +130,49 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                       />
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-2">
                     <Label>Skills</Label>
                     <div className="space-y-1">
-                      {["React", "TypeScript", "NextJS", "UI/UX"].map((skill) => (
-                        <div key={skill} className="flex items-center space-x-2">
-                          <Switch id={`skill-${skill}`} />
-                          <Label htmlFor={`skill-${skill}`} className="font-normal">{skill}</Label>
-                        </div>
-                      ))}
+                      {['React', 'TypeScript', 'NextJS', 'UI/UX'].map(
+                        (skill) => (
+                          <div
+                            key={skill}
+                            className="flex items-center space-x-2"
+                          >
+                            <Switch id={`skill-${skill}`} />
+                            <Label
+                              htmlFor={`skill-${skill}`}
+                              className="font-normal"
+                            >
+                              {skill}
+                            </Label>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-2">
                     <Label>Experience</Label>
                     <div className="space-y-1">
-                      {["Junior", "Mid-level", "Senior", "Lead"].map((exp) => (
+                      {['Junior', 'Mid-level', 'Senior', 'Lead'].map((exp) => (
                         <div key={exp} className="flex items-center space-x-2">
                           <Switch id={`exp-${exp}`} />
-                          <Label htmlFor={`exp-${exp}`} className="font-normal">{exp}</Label>
+                          <Label htmlFor={`exp-${exp}`} className="font-normal">
+                            {exp}
+                          </Label>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="space-y-2">
                     <Label>Location</Label>
                     <div className="relative">
@@ -157,7 +180,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                       <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-between pt-4">
                     <Button variant="outline">Reset</Button>
                     <Button>Apply Filters</Button>
@@ -165,11 +188,9 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                 </CardContent>
               </Card>
             </aside>
-            
+
             {/* Profile Cards */}
-            <div className="col-span-9">
-              {children}
-            </div>
+            <div className="col-span-9">{children}</div>
           </div>
         </div>
       </div>

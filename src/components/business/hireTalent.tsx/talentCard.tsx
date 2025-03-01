@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Check, X as XIcon } from 'lucide-react';
+import { Loader2, Plus, X, Check, X as XIcon, SendIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -40,7 +40,6 @@ import {
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
-import { SendIcon } from 'lucide-react';
 
 interface DehixTalent {
   freelancer_id: any;
@@ -420,8 +419,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
               <button
                 onClick={() => handleInviteTalent(talentEntry._id)}
                 className="ml-auto"
-              >
-              </button>
+              ></button>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -447,209 +445,200 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     </div>
                   )}
                 </div>
-
-                
               </div>
             </CardContent>
             <CardFooter className="flex-col justify-between pt-0 pb-4">
-            <div className="py-3 w-full">
-                  {SHEET_SIDES.map((View) => (
-                    <Sheet key={View}>
-                      <SheetTrigger asChild>
-                        <Button className="w-full text-sm text-black rounded-md">
-                          View
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent
-                        side={View}
-                        className="overflow-y-auto no-scrollbar max-h-[100vh]"
-                      >
-                        <SheetHeader>
-                          <SheetTitle className="text-center text-lg font-bold py-4">
-                            View Talent Details
-                          </SheetTitle>
-                        </SheetHeader>
+              <div className="py-3 w-full">
+                {SHEET_SIDES.map((View) => (
+                  <Sheet key={View}>
+                    <SheetTrigger asChild>
+                      <Button className="w-full text-sm text-black rounded-md">
+                        View
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent
+                      side={View}
+                      className="overflow-y-auto no-scrollbar max-h-[100vh]"
+                    >
+                      <SheetHeader>
+                        <SheetTitle className="text-center text-lg font-bold py-4">
+                          View Talent Details
+                        </SheetTitle>
+                      </SheetHeader>
 
-                        <div className="grid gap-4 py-2">
-                          <div className="w-full text-center">
-                            <div className="items-center">
-                              <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
-                                <AvatarImage
-                                  src={
-                                    talent.profilePic || '/default-avatar.png'
+                      <div className="grid gap-4 py-2">
+                        <div className="w-full text-center">
+                          <div className="items-center">
+                            <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
+                              <AvatarImage
+                                src={talent.profilePic || '/default-avatar.png'}
+                              />
+                              <AvatarFallback>Unable to load</AvatarFallback>
+                            </Avatar>
+                            <div className="text-lg font-bold">
+                              {' '}
+                              {talent.Name}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <table className="min-w-full table-auto border-collapse ">
+                        <tbody>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Username
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talent.userName || 'N/A'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Skill
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talentEntry.skillName || 'N/A'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Domain
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talentEntry.domainName || 'N/A'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Experience
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talentEntry.experience} years
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Monthly Pay
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              ${talentEntry.monthlyPay}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              Github
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talent.Github || 'N/A'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="border-b px-4 py-2 font-medium">
+                              LinkedIn
+                            </td>
+                            <td className="border-b px-4 py-2">
+                              {talent.LinkedIn || 'N/A'}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <div>
+                        <div className="w-full text-center mt-2">
+                          <Link
+                            href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                            passHref
+                          >
+                            <Button className="w-full text-sm py-1 px-2  text-black rounded-md">
+                              Expand
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+
+                      <Separator />
+                      <div className="w-full mt-4 mb-6">
+                        <div className="w-full">
+                          <div className="flex items-center mt-2">
+                            <Select
+                              onValueChange={(value) => setTmpSkill(value)}
+                              value={tmpSkill || ''}
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  placeholder={
+                                    tmpSkill ? tmpSkill : 'Select skill'
                                   }
                                 />
-                                <AvatarFallback>Unable to load</AvatarFallback>
-                              </Avatar>
-                              <div className="text-lg font-bold">
-                                {' '}
-                                {talent.Name}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <table className="min-w-full table-auto border-collapse ">
-                          <tbody>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Username
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.userName || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Skill
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.skillName || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Domain
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.domainName || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Experience
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.experience} years
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Monthly Pay
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                ${talentEntry.monthlyPay}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Github
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.Github || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                LinkedIn
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.LinkedIn || 'N/A'}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-
-                        <div>
-                          <div className="w-full text-center mt-2">
-                            <Link
-                              href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                              passHref
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skillDomainData
+                                  .filter(
+                                    (skill: any) =>
+                                      !currSkills.some(
+                                        (s: any) => s.name === skill.label,
+                                      ),
+                                  )
+                                  .map((skill: any, index: number) => (
+                                    <SelectItem key={index} value={skill.label}>
+                                      {skill.label}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              size="icon"
+                              className="ml-2"
+                              onClick={() => {
+                                handleAddSkill();
+                                setTmpSkill('');
+                              }}
                             >
-                              <Button className="w-full text-sm py-1 px-2  text-black rounded-md">
-                                Expand
-                              </Button>
-                            </Link>
+                              <Plus className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </div>
-
-                        <Separator />
-                        <div className="w-full mt-4 mb-6">
-                          <div className="w-full">
-                            <div className="flex items-center mt-2">
-                              <Select
-                                onValueChange={(value) => setTmpSkill(value)}
-                                value={tmpSkill || ''}
+                          <div className="flex flex-wrap gap-2 mt-5">
+                            {currSkills.map((skill: any, index: number) => (
+                              <Badge
+                                className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                                key={index}
                               >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={
-                                      tmpSkill ? tmpSkill : 'Select skill'
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {skillDomainData
-                                    .filter(
-                                      (skill: any) =>
-                                        !currSkills.some(
-                                          (s: any) => s.name === skill.label,
-                                        ),
-                                    )
-                                    .map((skill: any, index: number) => (
-                                      <SelectItem
-                                        key={index}
-                                        value={skill.label}
-                                      >
-                                        {skill.label}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="outline"
-                                type="button"
-                                size="icon"
-                                className="ml-2"
-                                onClick={() => {
-                                  handleAddSkill();
-                                  setTmpSkill('');
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-5">
-                              {currSkills.map((skill: any, index: number) => (
-                                <Badge
-                                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                                  key={index}
+                                {skill.name}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(skill.name)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
                                 >
-                                  {skill.name}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteSkill(skill.name)
-                                    }
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="mt-2">
-                            <div className="w-full text-center">
-                              <Button
-                                className="w-full text-sm py-1 px-2  text-black rounded-md"
-                                type="submit"
-                              >
-                                Save
-                              </Button>
-                            </div>
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </Badge>
+                            ))}
                           </div>
                         </div>
-                      </SheetContent>
-                    </Sheet>
-                  ))}
-                </div>
+
+                        <div className="mt-2">
+                          <div className="w-full text-center">
+                            <Button
+                              className="w-full text-sm py-1 px-2  text-black rounded-md"
+                              type="submit"
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                ))}
+              </div>
               <Button
                 onClick={() => handleInviteTalent(talentEntry._id)}
                 className={`w-full ${
-                  isInvited 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
+                  isInvited
+                    ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-primary hover:bg-primary/90'
                 }`}
               >
