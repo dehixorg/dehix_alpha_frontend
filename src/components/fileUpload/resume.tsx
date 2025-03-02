@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X, UploadCloud, Image as ImageIcon } from 'lucide-react';
-
+import { X, UploadCloud, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
-
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -10,21 +8,22 @@ const allowedResumeFormats = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
-const maxResumeSize = 5 * 1024 * 1024; // 5MB in bytes
+const maxResumeSize = 5 * 1024 * 1024; // 5MB
 
 const ResumeUpload: React.FC = () => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [resumePreviewURL, setResumePreviewURL] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const truncateFileName = (fileName: string) => {
+  const truncateFileName = (fileName?: string) => {
+    if (!fileName) return ''; // Handle undefined values
     const maxLength = 20;
-    const extension = fileName.substring(fileName.lastIndexOf('.'));
-    if (fileName.length > maxLength) {
-      return `${fileName.substring(0, maxLength - extension.length)}...${extension}`;
-    }
-    return fileName;
+    const extension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : ''; // Handle files without extension
+    return fileName.length > maxLength
+      ? `${fileName.substring(0, maxLength - extension.length)}...${extension}`
+      : fileName;
   };
 
   const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +32,15 @@ const ResumeUpload: React.FC = () => {
       if (allowedResumeFormats.includes(file.type)) {
         if (file.size <= maxResumeSize) {
           setSelectedResume(file);
+          setUploadedFileName(file.name);
+
+          // Create a preview URL only for PDFs
+          if (file.type === 'application/pdf') {
+            const fileURL = URL.createObjectURL(file);
+            setResumePreviewURL(fileURL);
+          } else {
+            setResumePreviewURL(null);
+          }
         } else {
           toast({
             variant: 'destructive',
@@ -50,16 +58,9 @@ const ResumeUpload: React.FC = () => {
     }
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) handleResumeChange({ target: { files: [file] } } as any);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) =>
+  const handleUploadClick = async (e: React.FormEvent) => {
     e.preventDefault();
 
-  const handleUploadClick = async () => {
     if (!selectedResume) {
       toast({
         variant: 'destructive',
@@ -74,16 +75,14 @@ const ResumeUpload: React.FC = () => {
 
     try {
       setIsUploading(true);
-
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
-      const { Location } = postResponse.data?.data || {};
+      const { Location } = postResponse.data.data;
+      
       if (!Location) throw new Error('Failed to upload the resume.');
 
       const putResponse = await axiosInstance.put(`/freelancer`, {
@@ -91,13 +90,9 @@ const ResumeUpload: React.FC = () => {
       });
 
       if (putResponse.status === 200) {
-        setSelectedResume(null);
+        
         setUploadedFileName(selectedResume.name);
-
-        toast({
-          title: 'Success',
-          description: 'Resume uploaded successfully!',
-        });
+        toast({ title: 'Success', description: 'Resume uploaded successfully!' });
       } else {
         throw new Error('Failed to update resume.');
       }
@@ -105,8 +100,8 @@ const ResumeUpload: React.FC = () => {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+        description: 'Something went wrong. Please try again.',
+      });
     } finally {
       setIsUploading(false);
     }
@@ -114,30 +109,42 @@ const ResumeUpload: React.FC = () => {
 
   const handleCancelClick = () => {
     setSelectedResume(null);
+    setResumePreviewURL(null);
+    setUploadedFileName(null);
   };
 
   return (
     <div className="upload-form max-w-md mx-auto rounded shadow-md p-4">
       <div className="space-y-6 flex flex-col items-center">
-        {/* Drag-and-Drop and Click-to-Upload Area */}
         <div
           className="flex flex-col items-center justify-center border-dashed border-2 border-gray-400 rounded-lg p-6 w-full cursor-pointer"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
           onClick={() => fileInputRef.current?.click()}
         >
           {selectedResume ? (
-            <div className="w-full flex justify-center items-center gap-4 text-gray-700 text-center">
-              <p className="truncate">
-                {truncateFileName(selectedResume.name)}
-              </p>
-              <button
-                className="bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
-                onClick={handleCancelClick}
-                aria-label="Remove file"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="w-full flex flex-col items-center gap-4 text-gray-700 text-center">
+              <div className="flex flex-1 gap-6">
+                <p className="truncate">{truncateFileName(selectedResume.name)}</p>
+                <button
+                  className="bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                  onClick={handleCancelClick}
+                  aria-label="Remove file"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Preview Section */}
+              {resumePreviewURL ? (
+                <iframe
+                  src={resumePreviewURL}
+                  title="Resume Preview"
+                  className="w-full h-40 border rounded"
+                />
+              ) : (
+                <div className="flex items-center space-x-2 p-2 bg-gray-100 rounded">
+                  <FileText className="text-gray-500 w-6 h-6" />
+                  <span className="text-gray-600 text-sm">{truncateFileName(selectedResume.name)}</span>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -146,7 +153,6 @@ const ResumeUpload: React.FC = () => {
                 Drag and drop your resume here or click to upload
               </p>
               <div className="flex items-center mt-2">
-                <ImageIcon className="text-gray-500 w-5 h-5 mr-1" />
                 <span className="text-gray-600 text-xs md:text-sm">
                   Supported formats: PDF, DOCX.
                 </span>
@@ -162,21 +168,15 @@ const ResumeUpload: React.FC = () => {
           )}
         </div>
 
-        {/* Upload Button */}
         {selectedResume && (
-          <Button
-            onClick={handleUploadClick}
-            className="w-full"
-            disabled={isUploading}
-          >
+          <Button onClick={handleUploadClick} className="w-full" disabled={isUploading}>
             {isUploading ? 'Uploading...' : 'Upload Resume'}
           </Button>
         )}
 
-        {/* Display Uploaded File Name */}
         {uploadedFileName && (
           <p className="text-center text-gray-600">
-            Uploaded: <strong>{truncateFileName(uploadedFileName)}</strong>
+            Uploaded: <strong>{truncateFileName(uploadedFileName || '')}</strong>
           </p>
         )}
       </div>
