@@ -214,7 +214,7 @@ const ProfileCard: React.FC<ProfileProps> = ({
                           placeholder="Enter amount"
                         />
                         <div className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
-                          {profile.unit || '$'}
+                          {profile.unit || 'connects'}
                         </div>
                       </div>
                     </div>
