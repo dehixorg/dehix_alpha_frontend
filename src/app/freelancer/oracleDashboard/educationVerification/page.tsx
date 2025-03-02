@@ -25,6 +25,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
@@ -112,40 +113,35 @@ export default function ProfessionalInfo() {
         active="Education Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Education Verification"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Education Verification',
-                link: '#',
-              },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Oracle', link: '#' },
 
+            {
+              label: 'Education Verification',
+              link: '#',
+            },
+          ]}
+        />
+        <div className="mb-8 ml-6 flex justify-between items-center">
+          <div className="mb-8 ml-10">
+            <h1 className="text-3xl font-bold">Education Verification</h1>
+            <p className="text-gray-400 mt-2">
+              Monitor the status of your Education verifications.
+            </p>
+          </div>
           <Button
             variant="outline"
             size="icon"
-            className="ml-4"
+            className="mr-8 mb-12"
             onClick={() => setIsDialogOpen(true)}
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownProfile />
-        </header>
-        <div className="mb-8 ml-10">
-          <h1 className="text-3xl font-bold">Education Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Monitor the status of your Education verifications.
-          </p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -1,11 +1,14 @@
 'use client';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+
+// Define Toast variant type
+type ToastVariant = 'destructive' | 'default' | null | undefined;
 
 interface Project {
   _id: string;
@@ -48,15 +51,15 @@ const BidsPage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [projectIds, setProjectIds] = useState<any>([]);
   const [bidsArray, setBidsArray] = useState<any[]>([]);
-  const errorToast: {
-    variant: 'destructive';
-    title: string;
-    description: string;
-  } = {
-    variant: 'destructive',
-    title: 'Error',
-    description: 'Something went wrong. Please try again.',
-  };
+
+  const errorToast = useMemo(
+    () => ({
+      variant: 'destructive' as ToastVariant, // Explicitly typing it
+      title: 'Error',
+      description: 'Something went wrong. Please try again.',
+    }),
+    [],
+  );
 
   useEffect(() => {
     const fetchProjectIds = async () => {
@@ -101,7 +104,7 @@ const BidsPage = () => {
     if (projectIds.length) {
       fetchBidsForProjects();
     }
-  }, [projectIds]);
+  }, [projectIds, errorToast]);
 
   const handleAction = async (bidId: string, actionType: string) => {
     let updatedStatus;

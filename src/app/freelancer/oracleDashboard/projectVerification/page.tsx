@@ -2,8 +2,8 @@
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
-import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
+import Header from '@/components/header/header';
 import {
   Dialog,
   DialogContent,
@@ -13,14 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 // import dummyData from '@/dummydata.json';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -108,41 +105,34 @@ export default function ProfessionalInfo() {
         active="Project Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4  sm:border-0  sm:px-6">
-          {/* CollapsibleSidebarMenu and Breadcrumb components */}
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Project Verification"
-          />
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              {
-                label: 'Project Verification',
-                link: '#',
-              },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Oracle', link: '#' },
+            {
+              label: 'Project Verification',
+              link: '#',
+            },
+          ]}
+        />
+        <div className="mb-8 ml-6 flex justify-between items-center">
+          <div className="mb-8 ml-10">
+            <h1 className="text-3xl font-bold">Project Verification</h1>
+            <p className="text-gray-400 mt-2">
+              Monitor the status of your project verifications.
+            </p>
           </div>
-
           <Button
             variant="outline"
             size="icon"
-            className="ml-4"
+            className="mr-8 mb-12"
             onClick={() => setIsDialogOpen(true)}
           >
             <Filter className="h-4 w-4" />
           </Button>
-          <DropdownProfile />
-        </header>
-        <div className="mb-8 ml-10">
-          <h1 className="text-3xl font-bold">Project Verification</h1>
-          <p className="text-gray-400 mt-2">
-            Monitor the status of your project verifications.
-          </p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

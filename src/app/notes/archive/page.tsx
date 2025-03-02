@@ -40,7 +40,7 @@ const Page = () => {
           menuItemsBottom={menuItemsBottom}
           activeMenu="Archive"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Notes', link: '/notes' },
             { label: 'Archive', link: '/archive' },
           ]}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, X, Loader } from 'lucide-react';
+import { PlusCircle, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,17 +16,13 @@ interface SkillInfoProps {
   projectData: { title: string; description: string }[]; // Add project data for AI skill generation
 }
 
-const promptTemplate = `
-Given these project titles: {projectTitles}, Given these project titles: {projectTitles}, extract the key technical skills and tools involved in the projects. List them as one-word items, separated by commas. Avoid vague terms like "real-time" and focus on specific technologies or programming skills.
-
-`;
-
 export const SkillInfo: React.FC<SkillInfoProps> = ({
   skillData,
   setSkillData,
-  projectData = [],
+  //projectData = [],
 }) => {
-  const [loading, setLoading] = useState(false); // Loading state for AI generation
+  //const [loading, setLoading] = useState(false); // Loading state for AI generation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [aiResponse, setAiResponse] = useState<string>(''); // AI-generated skills
 
   const handleSkillChange = (index: number, value: string) => {

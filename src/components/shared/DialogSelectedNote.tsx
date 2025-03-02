@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 import {
   Dialog,
@@ -43,8 +44,26 @@ const DialogSelectedNote = ({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] p-6 rounded-lg shadow-lg">
-        <DialogHeader className="border-b pb-4">
+      <DialogContent
+        className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
+        style={{ backgroundColor: note.bgColor || '#ffffff' }}
+      >
+        <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
+        {/* banner as background */}
+        {note.banner && (
+          <div className="absolute inset-0 z-0">
+            <Image
+              src={note.banner}
+              alt="Note Banner"
+              layout="fill"
+              objectFit="cover"
+              className="rounded-lg"
+            />
+            <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
+          </div>
+        )}
+
+        <DialogHeader className="border-b pb-4 relative z-10">
           <DialogTitle className="text-2xl font-semibold">
             {isEditMode ? 'Edit Note' : 'Note Details'}
           </DialogTitle>
@@ -54,7 +73,7 @@ const DialogSelectedNote = ({
         {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
         {isEditMode ? (
-          <div className="mt-6">
+          <div className="mt-6 relative z-10">
             <div className="mb-4">
               <label htmlFor="title" className="block text-sm font-semibold">
                 Title
@@ -100,7 +119,7 @@ const DialogSelectedNote = ({
             </div>
           </div>
         ) : (
-          <div className="mt-6">
+          <div className="mt-6 relative z-10">
             <div className="mb-4">
               <p className="text-sm font-bold">Title:</p>
               <p className="text-black-300 mt-1">{note.title}</p>
@@ -116,7 +135,7 @@ const DialogSelectedNote = ({
           </div>
         )}
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 relative z-10 text-white">
           {isEditMode ? (
             <>
               <Button
