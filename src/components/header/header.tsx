@@ -6,6 +6,7 @@ import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
+import { Button } from '../ui/button';
 import {
   HoverCard,
   HoverCardContent,

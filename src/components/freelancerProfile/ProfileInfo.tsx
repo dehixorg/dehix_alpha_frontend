@@ -55,72 +55,74 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
 
   return (
     <section className="flex flex-col md:flex-row items-center gap-6 rounded-2xl p-6">
-      <Image
-        src={user?.profilePic || 'https://via.placeholder.com/150'}
-        alt="Profile"
-        width={144}
-        height={144}
-        className="rounded-full border-4 border-indigo-500 object-cover"
-      />
-      <div className="text-center md:text-left">
-        <div className="flex justify-center items-center gap-3">
-          <h2 className="text-2xl font-semibold">
-            {`${user?.firstName} ${user?.lastName}`}{' '}
-          </h2>
-          <p className=" flex justify-center items-center">{render()}</p>
+      <div className="flex items-center gap-12">
+        <Image
+          src={user?.profilePic || 'https://via.placeholder.com/150'}
+          alt="Profile"
+          width={144}
+          height={144}
+          className="h-40 w-40 ml-6 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300"
+        />
+        <div className="text-left">
+          <div className="flex justify-center items-center gap-2">
+            <h2 className="text-2xl font-semibold">
+              {`${user?.firstName} ${user?.lastName}`}{' '}
+            </h2>
+            <p className=" flex justify-center items-center">{render()}</p>
+          </div>
+          <p>{user?.description || 'No Job Title Provided'}</p>
         </div>
-        <p>{user?.description || 'No Job Title Provided'}</p>
-        <div className="flex mt-2 justify-center md:justify-start items-center gap-8 md:gap-10">
-          <HoverCard>
-            {user?.linkedin && (
-              <>
-                <a href={user.linkedin}>
-                  <HoverCardTrigger asChild>
-                    <LinkedinIcon
-                      className="cursor-pointer hover:text-gray-400"
-                      size={20}
-                    />
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
-                    <p>LinkedIn</p>
-                  </HoverCardContent>
-                </a>
-              </>
-            )}
-          </HoverCard>
-          <HoverCard>
-            {user?.githubLink && (
-              <>
-                <a href={user.githubLink}>
-                  <HoverCardTrigger asChild>
-                    <GithubIcon
-                      className="cursor-pointer hover:text-gray-400"
-                      size={20}
-                    />
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
-                    <p>Github</p>
-                  </HoverCardContent>
-                </a>
-              </>
-            )}
-          </HoverCard>
-          <HoverCard>
-            {user?.personalWebsite && (
-              <a href={user.personalWebsite}>
+      </div>
+      <div className="flex mt-2 justify-center md:justify-start items-center gap-8 md:gap-10">
+        <HoverCard>
+          {user?.linkedin && (
+            <>
+              <a href={user.linkedin}>
                 <HoverCardTrigger asChild>
-                  <Globe
-                    className="cursor-pointer hover:text-gray-500"
+                  <LinkedinIcon
+                    className="cursor-pointer hover:text-gray-400"
                     size={20}
                   />
                 </HoverCardTrigger>
                 <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
-                  <p>Portfolio</p>
+                  <p>LinkedIn</p>
                 </HoverCardContent>
               </a>
-            )}
-          </HoverCard>
-        </div>
+            </>
+          )}
+        </HoverCard>
+        <HoverCard>
+          {user?.githubLink && (
+            <>
+              <a href={user.githubLink}>
+                <HoverCardTrigger asChild>
+                  <GithubIcon
+                    className="cursor-pointer hover:text-gray-400"
+                    size={20}
+                  />
+                </HoverCardTrigger>
+                <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+                  <p>Github</p>
+                </HoverCardContent>
+              </a>
+            </>
+          )}
+        </HoverCard>
+        <HoverCard>
+          {user?.personalWebsite && (
+            <a href={user.personalWebsite}>
+              <HoverCardTrigger asChild>
+                <Globe
+                  className="cursor-pointer hover:text-gray-500"
+                  size={20}
+                />
+              </HoverCardTrigger>
+              <HoverCardContent className="w-auto h-auto py-1 cursor-pointer">
+                <p>Portfolio</p>
+              </HoverCardContent>
+            </a>
+          )}
+        </HoverCard>
       </div>
     </section>
   );

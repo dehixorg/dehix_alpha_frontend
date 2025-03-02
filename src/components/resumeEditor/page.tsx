@@ -48,7 +48,7 @@ export default function ResumeEditor() {
       startDate: '2023-12-31',
       endDate: '2023-12-31',
       description:
-        'Developed scalable web applications and optimized system performance.',
+        'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
     },
     {
       jobTitle: 'Senior Developer',
@@ -56,26 +56,26 @@ export default function ResumeEditor() {
       startDate: '2023-12-31',
       endDate: '2023-12-31',
       description:
-        'Led a team of developers to build cloud-based enterprise software.',
+        'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
     },
   ]);
   const [personalData, setPersonalData] = useState([
     {
-      firstName: 'rxxx',
-      lastName: 'chxxxx',
+      firstName: 'John',
+      lastName: 'Doe',
       city: 'New York',
       country: 'USA',
       phoneNumber: '123-456-7890',
       email: '123.doe@example.com',
-      github: 'github.com/rixx',
-      linkedin: 'linkedin.com/in/rixx',
+      github: 'github.com/john',
+      linkedin: 'linkedin.com/in/john',
     },
   ]);
   const [projectData, setProjectData] = useState([
     {
       title: 'AI-Powered Resume Builder',
       description:
-        'Developed a full-stack web application using React.js, Node.js, and MongoDB. Integrated OpenAI GPT-4 API to generate resume content dynamically based on user inputs. Implemented authentication and data storage with Firebase.',
+        'Developed a full-stack platform integrating OpenAI’s GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.',
     },
     {
       title: 'E-Commerce Platform with Real-Time Analytics',
@@ -89,20 +89,30 @@ export default function ResumeEditor() {
     },
   ]);
   const [skillData, setSkillData] = useState([
-    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
-    { skillName: 'Communication and team collaboration' },
-    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
-    { skillName: 'SQL Server, T-SQL, Kibana, Eclipse Birt, ETL' },
-    { skillName: 'Communication and team collaboration' },
+    {
+      skillName:
+        'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines',
+    },
+    {
+      skillName:
+        'Strategic Communication & Cross-Functional Team Collaboration',
+    },
+    { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
+    { skillName: 'Full-Stack Web Development' },
+    { skillName: 'Agile Software Development & DevOps Integration' },
   ]);
   const [achievementData, setAchievementData] = useState([
-    { achievementName: 'Winner of SIH' },
     {
-      achievementName: 'Represented India on the national level in Bug Bounty',
+      achievementName:
+        'Published Research on AI-Powered Automation in a Peer-Reviewed Journal',
+    },
+    {
+      achievementName:
+        'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
     },
   ]);
   const [summaryData, setSummaryData] = useState([
-    'Passionate about delivering innovative solutions while maintaining a focus on performance, security, and user experience.',
+    'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
   ]);
   const [selectedColor, setSelectedColor] = useState('#000000');
 
@@ -326,13 +336,13 @@ export default function ResumeEditor() {
             <div className="flex justify-center gap-3">
               <Button
                 onClick={() => handleTemplateChange(1)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview1' ? 'dark:bg-white text-black' : 'bg-gray-500 text-white'}`}
+                className={`p-2 ${selectedTemplate === 'ResumePreview1' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
               >
                 Template 1
               </Button>
               <Button
                 onClick={() => handleTemplateChange(2)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview2' ? 'dark:bg-white text-black' : 'bg-gray-500 text-white'}`}
+                className={`p-2 ${selectedTemplate === 'ResumePreview2' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
               >
                 Template 2
               </Button>
