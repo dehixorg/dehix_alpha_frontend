@@ -7,6 +7,7 @@ import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
+import { Button } from '../ui/button';
 import {
   HoverCard,
   HoverCardContent,
@@ -91,18 +92,24 @@ const Header: React.FC<HeaderProps> = ({
         <div className="relative ml-auto flex-1 md:grow-0">
           <HoverCardTrigger asChild>
             <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-              <WalletIcon />
-              {loading ? (
-                <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
-                  <Loader2 size={16} />
-                </span>
-              ) : (
-                connects !== null && (
-                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
-                    {formatConnects(connects)}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative rounded-full hover:scale-105 transition-transform"
+              >
+                <WalletIcon className="w-6 h-6" />
+                {loading ? (
+                  <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
+                    <Loader2 size={16} />
                   </span>
-                )
-              )}
+                ) : (
+                  connects !== null && (
+                    <span className="absolute top-1 left-full flex h-4 w-7 items-center justify-center rounded-full bg-red-500 text-white text-xs transform -translate-x-1/2 -translate-y-1/2">
+                      {formatConnects(connects)}
+                    </span>
+                  )
+                )}
+              </Button>
             </div>
           </HoverCardTrigger>
           <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
