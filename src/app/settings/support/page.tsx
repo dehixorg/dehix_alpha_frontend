@@ -14,16 +14,13 @@ import {
   useMenuItemsBottom,
 } from '@/config/menuItems/freelancer/supportMenuItems';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { RootState } from '@/lib/store';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
-  const [userType, setUserType] = useState<string | null>(null);
+  const [, setUserType] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',

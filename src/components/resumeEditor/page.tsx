@@ -48,7 +48,7 @@ export default function ResumeEditor() {
       startDate: '2023-12-31',
       endDate: '2023-12-31',
       description:
-      'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
+        'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
     },
     {
       jobTitle: 'Senior Developer',
@@ -56,7 +56,7 @@ export default function ResumeEditor() {
       startDate: '2023-12-31',
       endDate: '2023-12-31',
       description:
-      'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
+        'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
     },
   ]);
   const [personalData, setPersonalData] = useState([
@@ -75,7 +75,7 @@ export default function ResumeEditor() {
     {
       title: 'AI-Powered Resume Builder',
       description:
-      'Developed a full-stack platform integrating OpenAI’s GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.',
+        'Developed a full-stack platform integrating OpenAI’s GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.',
     },
     {
       title: 'E-Commerce Platform with Real-Time Analytics',
@@ -89,15 +89,27 @@ export default function ResumeEditor() {
     },
   ]);
   const [skillData, setSkillData] = useState([
-    { skillName: 'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines' },
-  { skillName: 'Strategic Communication & Cross-Functional Team Collaboration' },
-  { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
-  { skillName: 'Full-Stack Web Development' },
-  { skillName: 'Agile Software Development & DevOps Integration' },
+    {
+      skillName:
+        'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines',
+    },
+    {
+      skillName:
+        'Strategic Communication & Cross-Functional Team Collaboration',
+    },
+    { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
+    { skillName: 'Full-Stack Web Development' },
+    { skillName: 'Agile Software Development & DevOps Integration' },
   ]);
   const [achievementData, setAchievementData] = useState([
-    { achievementName: 'Published Research on AI-Powered Automation in a Peer-Reviewed Journal' },
-  { achievementName: 'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference' },
+    {
+      achievementName:
+        'Published Research on AI-Powered Automation in a Peer-Reviewed Journal',
+    },
+    {
+      achievementName:
+        'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
+    },
   ]);
   const [summaryData, setSummaryData] = useState([
     'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',

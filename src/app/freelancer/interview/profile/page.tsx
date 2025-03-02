@@ -3,10 +3,7 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 
 import Header from '@/components/header/header';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,

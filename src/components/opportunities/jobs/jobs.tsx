@@ -97,7 +97,7 @@ const JobCard: React.FC<JobCardProps> = ({
   };
 
   return (
-    <Card className="sm:mx-10 max-w-3xl hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
+    <Card className="sm:mx-10 max-w-3xl mb-8 hover:border-gray-600 hover:shadow-lg transition-shadow rounded-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg sm:text-2xl font-bold text-foreground">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-gray-600 gap-2">

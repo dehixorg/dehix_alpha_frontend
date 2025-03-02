@@ -2,7 +2,6 @@
 import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
-import { Search } from '@/components/search';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,10 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 // import { axiosInstance } from '@/lib/axiosinstance';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import Header from '@/components/header/header';
 import {
   menuItemsBottom,

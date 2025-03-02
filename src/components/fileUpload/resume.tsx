@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { X, UploadCloud, FileText } from 'lucide-react';
+
 import { Button } from '../ui/button';
+
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -20,7 +22,9 @@ const ResumeUpload: React.FC = () => {
   const truncateFileName = (fileName?: string) => {
     if (!fileName) return ''; // Handle undefined values
     const maxLength = 20;
-    const extension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : ''; // Handle files without extension
+    const extension = fileName.includes('.')
+      ? fileName.substring(fileName.lastIndexOf('.'))
+      : ''; // Handle files without extension
     return fileName.length > maxLength
       ? `${fileName.substring(0, maxLength - extension.length)}...${extension}`
       : fileName;
@@ -78,11 +82,11 @@ const ResumeUpload: React.FC = () => {
       const postResponse = await axiosInstance.post(
         '/register/upload-image',
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        { headers: { 'Content-Type': 'multipart/form-data' } },
       );
 
       const { Location } = postResponse.data.data;
-      
+
       if (!Location) throw new Error('Failed to upload the resume.');
 
       const putResponse = await axiosInstance.put(`/freelancer`, {
@@ -90,9 +94,11 @@ const ResumeUpload: React.FC = () => {
       });
 
       if (putResponse.status === 200) {
-        
         setUploadedFileName(selectedResume.name);
-        toast({ title: 'Success', description: 'Resume uploaded successfully!' });
+        toast({
+          title: 'Success',
+          description: 'Resume uploaded successfully!',
+        });
       } else {
         throw new Error('Failed to update resume.');
       }
@@ -123,7 +129,9 @@ const ResumeUpload: React.FC = () => {
           {selectedResume ? (
             <div className="w-full flex flex-col items-center gap-4 text-gray-700 text-center">
               <div className="flex flex-1 gap-6">
-                <p className="truncate">{truncateFileName(selectedResume.name)}</p>
+                <p className="truncate">
+                  {truncateFileName(selectedResume.name)}
+                </p>
                 <button
                   className="bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
                   onClick={handleCancelClick}
@@ -142,7 +150,9 @@ const ResumeUpload: React.FC = () => {
               ) : (
                 <div className="flex items-center space-x-2 p-2 bg-gray-100 rounded">
                   <FileText className="text-gray-500 w-6 h-6" />
-                  <span className="text-gray-600 text-sm">{truncateFileName(selectedResume.name)}</span>
+                  <span className="text-gray-600 text-sm">
+                    {truncateFileName(selectedResume.name)}
+                  </span>
                 </div>
               )}
             </div>
@@ -169,14 +179,19 @@ const ResumeUpload: React.FC = () => {
         </div>
 
         {selectedResume && (
-          <Button onClick={handleUploadClick} className="w-full" disabled={isUploading}>
+          <Button
+            onClick={handleUploadClick}
+            className="w-full"
+            disabled={isUploading}
+          >
             {isUploading ? 'Uploading...' : 'Upload Resume'}
           </Button>
         )}
 
         {uploadedFileName && (
           <p className="text-center text-gray-600">
-            Uploaded: <strong>{truncateFileName(uploadedFileName || '')}</strong>
+            Uploaded:{' '}
+            <strong>{truncateFileName(uploadedFileName || '')}</strong>
           </p>
         )}
       </div>

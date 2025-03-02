@@ -1,17 +1,13 @@
 'use client';
-import { Search, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Header from '@/components/header/header';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import { CardTitle } from '@/components/ui/card';
-import DropdownProfile from '@/components/shared/DropdownProfile';
-import { Input } from '@/components/ui/input';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import { ProjectProfileDetailCard } from '@/components/freelancer/project/projectProfileDetailCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
 import {
   menuItemsTop,
   menuItemsBottom,

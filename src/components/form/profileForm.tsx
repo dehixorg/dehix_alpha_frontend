@@ -425,7 +425,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); 
+        });
       }
     };
 
@@ -1138,7 +1138,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <Button type="submit" className="sm:col-span-2" disabled={loading}>
             {loading ? 'Loading...' : 'Update Profile'}
           </Button>
-          
+
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}
