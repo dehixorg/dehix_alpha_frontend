@@ -96,7 +96,7 @@ const DialogSelectedNote = ({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Enter note content"
-                className="mt-2 p-2 bg-opacity-50 bg-white border rounded-md w-full text-sm text-opacity-100  resize-none"
+                className="mt-2 p-2 bg-opacity-50 bg-white border  no-scrollbar rounded-md w-full text-sm text-opacity-100  resize-none"
                 rows={5}
               />
             </div>
@@ -116,20 +116,26 @@ const DialogSelectedNote = ({
             </div>
           </div>
         ) : (
-          <div className="mt-6 relative z-10">
+          <div className="mt-6 relative z-10 w-full max-w-2xl">
             <div className="mb-4">
               <p className="text-sm font-bold">Title:</p>
               <p className="text-black-300 mt-1">{note.title}</p>
             </div>
             <div className="mb-4">
               <p className="text-sm font-bold">Content:</p>
-              <p className="text-black-300 mt-1">{note.content}</p>
+              <div
+                className={`text-black-300 mt-1 no-scrollbar p-2 ${note.content.length > 300 ? 'max-h-52 overflow-y-auto' : ''
+                  }`}
+              >
+                {note.content}
+              </div>
             </div>
             <div className="mb-4">
               <p className="text-sm font-bold">Entity ID:</p>
               <p className="text-black-300 mt-1">{entityID}</p>
             </div>
           </div>
+
         )}
 
         <DialogFooter className="mt-6 relative z-10 text-white">
