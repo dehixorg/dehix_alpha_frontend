@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Plus, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
+import DraftDialog from '../shared/DraftDialog';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,22 +33,20 @@ import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
+import useDraft from '@/hooks/useDraft';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
     message: 'Project Name must be at least 2 characters.',
   }),
-
   email: z
     .string({
       required_error: 'Email is required.',
     })
     .email({ message: 'Please enter a valid email address.' }),
-
   projectDomain: z
     .array(z.string().min(1, { message: 'Project domain cannot be empty.' }))
     .min(1, { message: 'At least one project domain is required.' }),
-
   urls: z
     .array(
       z.object({
@@ -55,29 +54,24 @@ const profileFormSchema = z.object({
       }),
     )
     .optional(),
-
   description: z
     .string()
     .min(4, { message: 'Description must be at least 4 characters long.' })
     .max(160, { message: 'Description cannot exceed 160 characters.' })
     .optional(),
-
   profiles: z
     .array(
       z.object({
         domain: z.string().min(1, { message: 'Domain is required.' }),
-
         freelancersRequired: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
             message:
               'Number of freelancers required should be a positive number.',
           }),
-
         skills: z
           .array(z.string().min(1, { message: 'Skill name cannot be empty.' }))
           .min(1, { message: 'At least one skill is required.' }),
-
         experience: z
           .string()
           .refine(
@@ -89,15 +83,12 @@ const profileFormSchema = z.object({
               message: 'Experience must be a number between 0 and 40.',
             },
           ),
-
         domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
-
         minConnect: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
             message: 'Minimum connect must be at least 1.',
           }),
-
         rate: z
           .string()
           .refine(
@@ -106,7 +97,6 @@ const profileFormSchema = z.object({
               message: 'Per hour rate should be a valid non-negative number.',
             },
           ),
-
         description: z
           .string()
           .min(4, {
@@ -124,6 +114,7 @@ const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
   email: '', //default field for email
   projectDomain: [],
+  urls: [],
   description: '',
   profiles: [
     {
@@ -154,6 +145,8 @@ interface projectDomain {
   label: string;
 }
 
+const FORM_DRAFT_KEY = 'DEHIX-BUSINESS-DRAFT';
+
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any>([]);
@@ -168,6 +161,9 @@ export function CreateProjectBusinessForm() {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
 
   const [loading, setLoading] = useState(false);
+  const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
+
+  const { hasOtherValues, hasProfiles } = useDraft({});
 
   const handleAddProjectDomain = () => {
     if (
@@ -192,24 +188,136 @@ export function CreateProjectBusinessForm() {
     form.setValue('projectDomain', updatedDomains);
   };
 
-  const handleAddSkill = (index: number) => {
-    if (tmpSkill && !currSkills.includes(tmpSkill)) {
-      const updatedSkills = [...currSkills, tmpSkill];
-      setCurrSkills(updatedSkills);
-      setTmpSkill('');
+  const saveDraft = () => {
+    const formValues = form.getValues();
+    const isOtherValid = hasOtherValues(formValues);
+    const isProfileValid = hasProfiles(formValues.profiles);
 
-      form.setValue(`profiles.${index}.skills`, updatedSkills);
+    console.log(formValues);
+
+    if (!isOtherValid && !isProfileValid) {
+      toast({
+        variant: 'destructive',
+        title: 'Empty Draft',
+        description: 'Cannot save an empty draft.',
+      });
+      return;
+    }
+
+    const DraftProfile = formValues.profiles?.map(
+      (profile: any, index: number) => ({
+        ...profile,
+        skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
+      }),
+    );
+
+    const DraftData = {
+      ...formValues,
+      profiles: DraftProfile,
+    };
+
+    localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
+    toast({
+      title: 'Draft Saved',
+      description: 'Your form data has been saved as a draft.',
+    });
+  };
+
+  const loadDraft = () => {
+    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        form.reset(parsedDraft);
+
+        setCurrProjectDomains(parsedDraft.projectDomain || []);
+        setCurrDomains(
+          parsedDraft.profiles?.map((profile: any) => profile.domain) || [],
+        );
+
+        setCurrSkills(
+          parsedDraft.profiles?.map((profile: any) =>
+            Array.isArray(profile.skills) ? profile.skills : [],
+          ) || [],
+        );
+
+        toast({
+          title: 'Draft loaded',
+          description: 'Your saved draft has been loaded.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error loading draft',
+          description: 'There was a problem loading your draft.',
+          variant: 'destructive',
+        });
+      }
+    }
+    setShowLoadDraftDialog(false);
+  };
+
+  const discardDraft = () => {
+    localStorage.removeItem(FORM_DRAFT_KEY);
+    setShowLoadDraftDialog(false);
+    toast({
+      title: 'Draft discarded',
+      description: 'Your saved draft has been discarded.',
+    });
+  };
+
+  const handleAddSkill = (profileIndex: number) => {
+    if (tmpSkill.trim() !== '') {
+      setCurrSkills((prevSkills: any) => {
+        const updatedSkills = [...prevSkills];
+
+        // Ensure array exists for profile index
+        if (!updatedSkills[profileIndex]) {
+          updatedSkills[profileIndex] = [];
+        }
+
+        // Push skill without duplicates for that index only
+        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
+          updatedSkills[profileIndex].push(tmpSkill);
+        }
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+
+        return updatedSkills;
+      });
+
+      setTmpSkill('');
     }
   };
 
-  const handleDeleteSkill = (index: number, skillToDelete: string) => {
-    const updatedSkills = currSkills.filter(
-      (skill: any) => skill !== skillToDelete,
-    );
-    setCurrSkills(updatedSkills);
+  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
+    setCurrSkills((prevSkills: any) => {
+      const updatedSkills = [...prevSkills];
 
-    form.setValue(`profiles.${index}.skills`, updatedSkills);
+      if (updatedSkills[profileIndex]) {
+        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
+          (skill: string) => skill !== skillToDelete,
+        );
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+      }
+
+      return updatedSkills;
+    });
   };
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
+        setShowLoadDraftDialog(true);
+      }
+    }
+  }, [hasProfiles, hasOtherValues]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -283,14 +391,19 @@ export function CreateProjectBusinessForm() {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
+      const uniqueSkills = Array.from(
+        new Set(currSkills.flat().filter((skill: any) => skill !== undefined)),
+      );
+
       await axiosInstance.post(`/project/business`, {
         ...data,
         role: '',
         projectType: 'FREELANCE',
-        skillsRequired: currSkills,
+        skillsRequired: uniqueSkills,
         domains: currDomains,
         companyId: user.uid,
         companyName: user.displayName,
+        url: data.urls,
       });
       toast({
         title: 'Project Added',
@@ -305,7 +418,9 @@ export function CreateProjectBusinessForm() {
       const updatedConnects = (
         parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - connectsCost
       ).toString();
+
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      localStorage.removeItem(FORM_DRAFT_KEY);
 
       window.dispatchEvent(new Event('connectsUpdated'));
     } catch (error) {
@@ -318,7 +433,9 @@ export function CreateProjectBusinessForm() {
     } finally {
       setLoading(false);
     }
-    form.reset(defaultValues); //add reset after form is submit
+    form.reset(defaultValues);
+    setCurrProjectDomains([]);
+    setCurrSkills([]);
   }
 
   return (
@@ -592,23 +709,25 @@ export function CreateProjectBusinessForm() {
                             </Button>
                           </div>
                           <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                                key={index}
-                              >
-                                {skill}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleDeleteSkill(index, skill)
-                                  }
-                                  className="ml-2 text-red-500 hover:text-red-700"
+                            {currSkills[index]?.map(
+                              (skill: any, index: number) => (
+                                <Badge
+                                  className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                                  key={index}
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {skill}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteSkill(index, skill)
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ),
+                            )}
                           </div>
                         </div>
                       </FormControl>
@@ -697,26 +816,36 @@ export function CreateProjectBusinessForm() {
                 </Button>
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() =>
-                appendProfile({
-                  domain: '',
-                  freelancersRequired: '',
-                  skills: [],
-                  experience: '',
-                  minConnect: '',
-                  rate: '',
-                  description: '',
-                  domain_id: '',
-                })
-              }
-            >
-              Add Profile
-            </Button>
+            <div className="flex justify-between items-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() =>
+                  appendProfile({
+                    domain: '',
+                    freelancersRequired: '',
+                    skills: [],
+                    experience: '',
+                    minConnect: '',
+                    rate: '',
+                    description: '',
+                    domain_id: '',
+                  })
+                }
+              >
+                Add Profile
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={saveDraft}
+              >
+                <Save />
+              </Button>
+            </div>
           </div>
           <div className="lg:col-span-2 xl:col-span-2 mt-4">
             <ConnectsDialog
@@ -735,6 +864,18 @@ export function CreateProjectBusinessForm() {
           </div>
         </form>
       </Form>
+      {showLoadDraftDialog && (
+        <DraftDialog
+          dialogChange={showLoadDraftDialog}
+          setDialogChange={setShowLoadDraftDialog}
+          heading="Load Draft?"
+          desc="A saved draft was found. Do you want to load it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" Discard"
+          btn2Txt="Load Draft"
+        />
+      )}
     </Card>
   );
 }
