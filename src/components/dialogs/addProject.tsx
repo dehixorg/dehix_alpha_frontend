@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
 
 import {
   Dialog,
@@ -83,44 +83,13 @@ interface Skill {
 }
 
 export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
+  const [step, setStep] = useState<number>(1);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
-
-  const handleAddSkill = () => {
-    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
-      setCurrSkills([...currSkills, tmpSkill]);
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const skillsResponse = await axiosInstance.get('/skills');
-        const transformedSkills = skillsResponse.data.data.map(
-          (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
-          }),
-        );
-        setSkills(transformedSkills);
-      } catch (error) {
-        console.error('API Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
-      }
-    };
-    fetchData();
-  }, []);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
 
   // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
@@ -141,11 +110,96 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     mode: 'all',
   });
 
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const currentDate = new Date().toISOString().split('T')[0];
+  // Field validation for Step 1
+  const validateStep1 = () => {
+    const { projectName, description, start, end, techUsed } = form.getValues();
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    // Check if required fields are filled
+    if (!projectName || !description || !start || !end) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing fields',
+        description: 'Please fill all required fields in Step 1.',
+      });
+      return false;
+    }
+
+    // Validate date relationship
+    if (startDate >= endDate) {
+      form.setError('end', {
+        type: 'manual',
+        message: 'Start Date must be before End Date',
+      });
+      return false;
+    }
+
+    // Check if at least one skill is added
+    if (currSkills.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Skills required',
+        description: 'Please add at least one skill.',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const nextStep = () => {
+    if (step === 1) {
+      if (validateStep1()) {
+        setStep(2);
+      }
+    }
+  };
+
+  const prevStep = () => {
+    if (step === 2) {
+      setStep(1);
+    }
+  };
+
+  const handleAddSkill = () => {
+    if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
+      setCurrSkills([...currSkills, tmpSkill]);
+      setTmpSkill('');
+    }
+  };
+
+  const handleDeleteSkill = (skillToDelete: string) => {
+    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const skillsResponse = await axiosInstance.get('/skills');
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label,
+            label: skill.label,
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (isDialogOpen) {
+      setStep(1);
+      setCurrSkills([]);
       form.reset({
         projectName: '',
         description: '',
@@ -166,27 +220,20 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
     try {
-      // Convert comma-separated techUsed string into an array
-      // console.log('Form body:', {
-      //   ...data,
-      //   role: '',
-      //   techUsed: currSkills,
-      //   projectType: '',
-      // });
-      const techUsedArray = data.techUsed
-        .split(',')
-        .map((tech) => tech.trim())
-        .filter((tech) => tech !== '');
-
+      // Join currSkills array into comma-separated string for form submission
+      const techUsedString = currSkills.join(', ');
+      
+      // Submit with the skills from our state
       await axiosInstance.post(`/freelancer/project`, {
         ...data,
-        techUsed: techUsedArray,
+        techUsed: currSkills,
         verified: false,
         oracleAssigned: '',
         start: data.start ? new Date(data.start).toISOString() : null,
         end: data.end ? new Date(data.end).toISOString() : null,
         verificationUpdateTime: new Date().toISOString(),
       });
+      
       onFormSubmit();
       setIsDialogOpen(false);
       toast({
@@ -201,7 +248,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         description: 'Failed to add project. Please try again later.',
       });
     } finally {
-      setLoading(false); // Reset loading state after submission completes
+      setLoading(false);
     }
   }
 
@@ -215,235 +262,260 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
       <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
         <DialogHeader>
-          <DialogTitle>Add Project</DialogTitle>
+          <DialogTitle>Add Project - Step {step} of 2</DialogTitle>
           <DialogDescription>
-            Fill in the details of your project below.
+            {step === 1 
+              ? 'Fill in the basic details of your project.' 
+              : 'Fill in the additional project details.'}
           </DialogDescription>
         </DialogHeader>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="projectName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project name" {...field} />
-                  </FormControl>
-                  <FormDescription>Enter the project name</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project description" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the project description
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="githubLink"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>GitHub Repo Link</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter GitHub repository link"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the GitHub repository link (optional)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="start"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" max={currentDate} {...field} />
-                  </FormControl>
-                  <FormDescription>Select the start date</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="end"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormDescription>Select the end date</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="refer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reference</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project reference" {...field} />
-                  </FormControl>
-                  <FormDescription>Enter the project reference</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/*}
-            <FormField
-              control={form.control}
-              name="techUsed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Technologies Used</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter technologies used (comma separated)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the technologies used (comma separated)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
-            <FormField
-              control={form.control}
-              name="techUsed"
-              render={({ field: { onChange, value } }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Skills</FormLabel>
-                  <FormControl>
-                    <div>
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={(selectedValue) => {
-                            onChange(selectedValue);
-                            setTmpSkill(selectedValue);
-                          }}
-                          value={value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select skill" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {skills.map((skill: any, index: number) => (
-                              <SelectItem key={index} value={skill.label}>
-                                {skill.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          onClick={handleAddSkill}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap mt-5">
-                        {currSkills.map((skill: any, index: number) => (
-                          <Badge
-                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
-                            key={index}
-                          >
-                            {skill}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteSkill(skill)}
-                              className="ml-2 text-red-500 hover:text-red-700"
+            {/* Step 1: Basic Project Information */}
+            {step === 1 && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="projectName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter project name" {...field} />
+                      </FormControl>
+                      <FormDescription>Enter the project name</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter project description" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the project description
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="start"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" max={currentDate} {...field} />
+                      </FormControl>
+                      <FormDescription>Select the start date</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="end"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormDescription>Select the end date</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="techUsed"
+                  render={({ field: { onChange, value } }) => (
+                    <FormItem className="mb-4">
+                      <FormLabel>Skills</FormLabel>
+                      <FormControl>
+                        <div>
+                          <div className="flex items-center mt-2">
+                            <Select
+                              onValueChange={(selectedValue) => {
+                                onChange(selectedValue);
+                                setTmpSkill(selectedValue);
+                              }}
+                              value={value}
                             >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select skill" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {skills.map((skill: any, index: number) => (
+                                  <SelectItem key={index} value={skill.label}>
+                                    {skill.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              size="icon"
+                              className="ml-2"
+                              onClick={handleAddSkill}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap mt-5">
+                            {currSkills.map((skill: any, index: number) => (
+                              <Badge
+                                className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
+                                key={index}
+                              >
+                                {skill}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(skill)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
 
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter role" {...field} />
-                  </FormControl>
-                  <FormDescription>Enter the role</FormDescription>
-                  <FormMessage />
-                </FormItem>
+            {/* Step 2: Additional Project Information */}
+            {step === 2 && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="githubLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GitHub Repo Link</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter GitHub repository link"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the GitHub repository link (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="refer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reference</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter project reference" {...field} />
+                      </FormControl>
+                      <FormDescription>Enter the project reference</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter role" {...field} />
+                      </FormControl>
+                      <FormDescription>Enter the role</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="projectType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter project type" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the project type (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="comments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comments</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter any comments" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter any comments (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
+            <DialogFooter className="flex justify-between">
+              {step === 2 ? (
+                <>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={prevStep}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Loading...' : 'Add Project'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div></div> {/* Empty div to create space */}
+                  <Button 
+                    type="button" 
+                    onClick={nextStep}
+                  >
+                    Next
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="projectType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Type</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project type" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the project type (optional)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="comments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Comments</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter any comments" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Enter any comments (optional)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Loading...' : 'Add Project'}
-              </Button>
             </DialogFooter>
           </form>
         </Form>
