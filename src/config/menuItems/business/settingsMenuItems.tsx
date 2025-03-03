@@ -12,7 +12,7 @@ export const menuItemsTop: MenuItem[] = [
         alt="Icon"
         width={16} // Set the desired width
         height={16} // Set the desired height
-        className="transition-all group-hover:scale-110"
+        className="transition-all group-hover:scale-110 invert dark:invert-0"
       />
     ),
     label: 'Dehix',
