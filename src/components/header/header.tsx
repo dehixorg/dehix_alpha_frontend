@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Loader2, WalletIcon } from 'lucide-react';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
+import { Button } from '../ui/button';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '../ui/hover-card';
+import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
 
@@ -36,11 +37,9 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [connects, setConnects] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(false);
 
   const fetchConnects = async () => {
     try {
-      setLoading(true);
       const data = localStorage.getItem('DHX_CONNECTS');
       const parsedData = data ? parseInt(data) : 0;
       if (!isNaN(parsedData)) {
@@ -48,8 +47,6 @@ const Header: React.FC<HeaderProps> = ({
       }
     } catch (error) {
       console.error('Error fetching connects:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -57,6 +54,12 @@ const Header: React.FC<HeaderProps> = ({
     if (user?.uid) {
       fetchConnects();
     }
+    const updateConnects = () => fetchConnects();
+    window.addEventListener('connectsUpdated', updateConnects);
+
+    return () => {
+      window.removeEventListener('connectsUpdated', updateConnects);
+    };
   }, [user?.uid]);
 
   const formatConnects = (num: number) => {
@@ -90,20 +93,7 @@ const Header: React.FC<HeaderProps> = ({
       <HoverCard>
         <div className="relative ml-auto flex-1 md:grow-0">
           <HoverCardTrigger asChild>
-            <div className="relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform">
-              <WalletIcon />
-              {loading ? (
-                <span className="absolute -top-1 -right-2 text-white font-semibold rounded-full px-1 animate-spin shadow-md">
-                  <Loader2 size={16} />
-                </span>
-              ) : (
-                connects !== null && (
-                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
-                    {formatConnects(connects)}
-                  </span>
-                )
-              )}
-            </div>
+            <DisplayConnectsDialog userId={user.uid} connects={connects} />
           </HoverCardTrigger>
           <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
             {connects !== null

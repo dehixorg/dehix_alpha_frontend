@@ -52,7 +52,7 @@ export const menuItemsTop: MenuItem[] = [
   {
     href: '/freelancer/settings/resume',
     icon: <ImagePlus className="h-5 w-5" />,
-    label: 'Resume',
+    label: 'Portfolio',
   },
 ];
 

@@ -10,7 +10,6 @@ import {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -25,6 +24,7 @@ import {
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
 
 // Define the type for a domain
 interface Domain {
@@ -75,6 +75,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
     formState: { errors },
     reset,
     setValue,
+    getValues,
+    trigger,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
@@ -113,6 +115,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
         });
+
+        const connectsCost = parseInt(
+          process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+          10,
+        );
+
+        const currentConnects =
+          Number(localStorage.getItem('DHX_CONNECTS')) || 0;
+        const updatedConnects = Math.max(0, currentConnects - connectsCost);
+
+        localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+        window.dispatchEvent(new Event('connectsUpdated'));
       }
     } catch (error) {
       console.error('Error submitting domain data', error);
@@ -218,11 +232,20 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           {errors.description && (
             <p className="text-red-600">{errors.description.message}</p>
           )}
-          <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Submit'}
-            </Button>
-          </DialogFooter>
+          <ConnectsDialog
+            loading={loading}
+            setLoading={setLoading}
+            onSubmit={onSubmit}
+            isValidCheck={trigger}
+            userId={user.uid}
+            buttonText={'Submit'}
+            userType={'BUSINESS'}
+            requiredConnects={parseInt(
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              10,
+            )}
+            data={getValues()}
+          />
         </form>
       </DialogContent>
     </Dialog>
