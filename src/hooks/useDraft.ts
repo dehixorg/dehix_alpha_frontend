@@ -1,21 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { toast } from './use-toast';
 
 interface UseDraftProps<T extends Record<string, any>> {
-  form: ReturnType<typeof useForm<T>>;
-  formSection: string;
-  isDialogOpen: boolean;
-  setIsDialogOpen: (open: boolean) => void;
-  onSave?: (values: T) => void;
+  form?: ReturnType<typeof useForm<T>>;
+  formSection?: string | null | undefined;
+  isDialogOpen?: boolean;
+  setIsDialogOpen?: (open: boolean) => void;
+  onSave?: (values: T | undefined) => void;
   onDiscard?: () => void;
   setCurrSkills?: any;
 }
 
 const useDraft = <T extends Record<string, any>>({
   form,
-  formSection,
+  formSection = '',
   isDialogOpen,
   setIsDialogOpen,
   onSave,
@@ -25,9 +25,11 @@ const useDraft = <T extends Record<string, any>>({
   const [showDraftDialog, setShowDraftDialog] = useState(false);
   const [confirmExitDialog, setConfirmExitDialog] = useState(false);
   const draftChecked = useRef(false);
-  const restoredDraft = useRef<T | null>(null);
+  const restoredDraft = useRef<T | null | undefined>(null);
 
   const saveDraft = (values: any) => {
+    if (!formSection) return; // Prevent undefined indexing
+
     const existingDraft: Record<string, any> = JSON.parse(
       localStorage.getItem('DEHIX_DRAFT') || '{}',
     );
@@ -53,7 +55,7 @@ const useDraft = <T extends Record<string, any>>({
   };
 
   useEffect(() => {
-    if (isDialogOpen && !draftChecked.current) {
+    if (isDialogOpen && !draftChecked.current && formSection) {
       const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
       if (draft && draft[formSection]) {
         setShowDraftDialog(true);
@@ -63,17 +65,17 @@ const useDraft = <T extends Record<string, any>>({
   }, [isDialogOpen, formSection]);
 
   const loadDraft = () => {
+    if (!formSection) return;
+
     const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
 
     if (draft && draft[formSection]) {
-      // Remove undefined values
       Object.keys(draft[formSection]).forEach((key) => {
         if (draft[formSection][key] === undefined) {
           delete draft[formSection][key];
         }
       });
 
-      // Ignore verificationStatus from projects
       if (formSection === 'projects') {
         delete draft[formSection].verificationStatus;
 
@@ -89,7 +91,7 @@ const useDraft = <T extends Record<string, any>>({
           !(Array.isArray(value) && value.length === 0),
       );
 
-      if (hasData) {
+      if (hasData && form) {
         form.reset(draft[formSection]);
         restoredDraft.current = draft[formSection];
 
@@ -105,6 +107,8 @@ const useDraft = <T extends Record<string, any>>({
   };
 
   const discardDraft = () => {
+    if (!formSection) return;
+
     const draft = JSON.parse(localStorage.getItem('DEHIX_DRAFT') || '{}');
     if (draft) {
       delete draft[formSection];
@@ -114,7 +118,7 @@ const useDraft = <T extends Record<string, any>>({
         localStorage.setItem('DEHIX_DRAFT', JSON.stringify(draft));
       }
     }
-    form.reset();
+    form?.reset();
     toast({
       title: 'Draft Discarded',
       description: `Your ${formSection} draft has been discarded.`,
@@ -127,7 +131,9 @@ const useDraft = <T extends Record<string, any>>({
   };
 
   const handleSaveAndClose = () => {
-    const formValues = form.getValues();
+    if (!formSection) return;
+
+    const formValues = form?.getValues();
     saveDraft(formValues);
     toast({
       title: 'Draft Saved',
@@ -138,13 +144,17 @@ const useDraft = <T extends Record<string, any>>({
     restoredDraft.current = formValues;
 
     setConfirmExitDialog(false);
-    setIsDialogOpen(false);
+    if (setIsDialogOpen) {
+      setIsDialogOpen(false);
+    }
     if (onSave) {
       onSave(formValues);
     }
   };
 
   const handleDiscardAndClose = () => {
+    if (!formSection) return;
+
     const existingDraft: Record<string, any> = JSON.parse(
       localStorage.getItem('DEHIX_DRAFT') || '{}',
     );
@@ -163,7 +173,9 @@ const useDraft = <T extends Record<string, any>>({
       duration: 1500,
     });
     setConfirmExitDialog(false);
-    setIsDialogOpen(false);
+    if (setIsDialogOpen) {
+      setIsDialogOpen(false);
+    }
     if (onDiscard) {
       onDiscard();
     }
@@ -180,10 +192,10 @@ const useDraft = <T extends Record<string, any>>({
   };
 
   const handleDialogClose = () => {
-    if (!isDialogOpen) return;
-    const currentValues = form.getValues() || {};
+    if (!isDialogOpen || !formSection) return;
+
+    const currentValues = form?.getValues() || {};
     const draftValues = restoredDraft.current || {};
-    console.log(restoredDraft.current);
     const trimmedCurrent = trimObject(currentValues);
     const trimmedDraft = trimObject(draftValues);
 
@@ -205,7 +217,7 @@ const useDraft = <T extends Record<string, any>>({
         trimmedDraft[key] === undefined,
     );
 
-    if (!hasChanges && !hasNonEmptyValues) {
+    if (!hasChanges && !hasNonEmptyValues && setIsDialogOpen) {
       setIsDialogOpen(false);
       return;
     }
@@ -215,9 +227,36 @@ const useDraft = <T extends Record<string, any>>({
     ) {
       setConfirmExitDialog(true);
     } else {
-      setIsDialogOpen(false);
+      if (setIsDialogOpen) {
+        setIsDialogOpen(false);
+      }
     }
   };
+
+  const hasOtherValues = useCallback((formValues: any) => {
+    return Object.entries(formValues).some(
+      ([key, value]) =>
+        key !== 'profiles' &&
+        ((Array.isArray(value) &&
+          value.length > 0 &&
+          (key === 'urls'
+            ? value.some((item: any) => item?.value?.trim() !== '')
+            : true)) ||
+          (typeof value === 'string' && value.trim() !== '') ||
+          (typeof value === 'number' && !isNaN(value))),
+    );
+  }, []);
+
+  const hasProfiles = useCallback((profiles: any[] | undefined) => {
+    return profiles?.some((profile: any) =>
+      Object.values(profile).some(
+        (value) =>
+          (Array.isArray(value) && value.length > 0) ||
+          (typeof value === 'string' && value.trim() !== '') ||
+          (typeof value === 'number' && !isNaN(value)),
+      ),
+    );
+  }, []);
 
   return {
     showDraftDialog,
@@ -230,6 +269,8 @@ const useDraft = <T extends Record<string, any>>({
     handleDiscardAndClose,
     handleDialogClose,
     saveDraft,
+    hasOtherValues,
+    hasProfiles,
   };
 };
 
