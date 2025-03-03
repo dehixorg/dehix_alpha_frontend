@@ -98,7 +98,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
-  
+
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
     defaultValues: {
@@ -117,8 +117,9 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
 
   // Validate Step 1 fields before proceeding to Step 2
   const validateStep1 = () => {
-    const { company, jobTitle, workDescription, workFrom, workTo } = form.getValues();
-    
+    const { company, jobTitle, workDescription, workFrom, workTo } =
+      form.getValues();
+
     // Check if required fields are filled
     if (!company || !jobTitle || !workDescription || !workFrom || !workTo) {
       toast({
@@ -128,11 +129,11 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       });
       return false;
     }
-    
+
     // Validate dates
     const workFromDate = new Date(workFrom);
     const workToDate = new Date(workTo);
-    
+
     if (workFromDate > workToDate) {
       form.setError('workFrom', {
         type: 'manual',
@@ -140,10 +141,10 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       });
       return false;
     }
-    
+
     const oneMonthLater = new Date(workFromDate);
     oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-    
+
     if (workToDate < oneMonthLater) {
       form.setError('workTo', {
         type: 'manual',
@@ -151,7 +152,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       });
       return false;
     }
-    
+
     return true;
   };
 
@@ -233,8 +234,8 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
         <DialogHeader>
           <DialogTitle>Add Experience - Step {step} of 2</DialogTitle>
           <DialogDescription>
-            {step === 1 
-              ? 'Fill in the basic details of your work experience.' 
+            {step === 1
+              ? 'Fill in the basic details of your work experience.'
               : 'Fill in the reference and additional details.'}
           </DialogDescription>
         </DialogHeader>
@@ -278,9 +279,14 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                     <FormItem>
                       <FormLabel>Work Description</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter work description" {...field} />
+                        <Input
+                          placeholder="Enter work description"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormDescription>Enter the work description</FormDescription>
+                      <FormDescription>
+                        Enter the work description
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -315,7 +321,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 />
               </>
             )}
-            
+
             {/* Step 2: Reference and Additional Information */}
             {step === 2 && (
               <>
@@ -394,15 +400,11 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
                 />
               </>
             )}
-            
+
             <DialogFooter className="flex justify-between">
               {step === 2 ? (
                 <>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={prevStep}
-                  >
+                  <Button type="button" variant="outline" onClick={prevStep}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                   </Button>
@@ -413,10 +415,7 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
               ) : (
                 <>
                   <div></div> {/* Empty div to create space */}
-                  <Button 
-                    type="button" 
-                    onClick={nextStep}
-                  >
+                  <Button type="button" onClick={nextStep}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>

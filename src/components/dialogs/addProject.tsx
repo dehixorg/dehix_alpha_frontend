@@ -115,7 +115,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     const { projectName, description, start, end, techUsed } = form.getValues();
     const startDate = new Date(start);
     const endDate = new Date(end);
-    
+
     // Check if required fields are filled
     if (!projectName || !description || !start || !end) {
       toast({
@@ -222,7 +222,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     try {
       // Join currSkills array into comma-separated string for form submission
       const techUsedString = currSkills.join(', ');
-      
+
       // Submit with the skills from our state
       await axiosInstance.post(`/freelancer/project`, {
         ...data,
@@ -233,7 +233,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         end: data.end ? new Date(data.end).toISOString() : null,
         verificationUpdateTime: new Date().toISOString(),
       });
-      
+
       onFormSubmit();
       setIsDialogOpen(false);
       toast({
@@ -264,12 +264,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         <DialogHeader>
           <DialogTitle>Add Project - Step {step} of 2</DialogTitle>
           <DialogDescription>
-            {step === 1 
-              ? 'Fill in the basic details of your project.' 
+            {step === 1
+              ? 'Fill in the basic details of your project.'
               : 'Fill in the additional project details.'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Step 1: Basic Project Information */}
@@ -289,7 +289,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="description"
@@ -297,7 +297,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project description" {...field} />
+                        <Input
+                          placeholder="Enter project description"
+                          {...field}
+                        />
                       </FormControl>
                       <FormDescription>
                         Enter the project description
@@ -306,7 +309,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="start"
@@ -321,7 +324,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="end"
@@ -336,7 +339,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="techUsed"
@@ -422,7 +425,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="refer"
@@ -430,14 +433,19 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Reference</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter project reference" {...field} />
+                        <Input
+                          placeholder="Enter project reference"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormDescription>Enter the project reference</FormDescription>
+                      <FormDescription>
+                        Enter the project reference
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="role"
@@ -452,7 +460,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="projectType"
@@ -469,7 +477,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="comments"
@@ -492,11 +500,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             <DialogFooter className="flex justify-between">
               {step === 2 ? (
                 <>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={prevStep}
-                  >
+                  <Button type="button" variant="outline" onClick={prevStep}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                   </Button>
@@ -507,10 +511,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
               ) : (
                 <>
                   <div></div> {/* Empty div to create space */}
-                  <Button 
-                    type="button" 
-                    onClick={nextStep}
-                  >
+                  <Button type="button" onClick={nextStep}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
