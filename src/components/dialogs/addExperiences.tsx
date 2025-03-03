@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
+
+import DraftDialog from '../shared/DraftDialog';
 
 import {
   Dialog,
@@ -26,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import useDraft from '@/hooks/useDraft';
 
 const validateWorkDates = (
   data: { workFrom?: string; workTo?: string },
@@ -94,7 +97,11 @@ interface AddExperienceProps {
 export const AddExperience: React.FC<AddExperienceProps> = ({
   onFormSubmit,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const currentDate = new Date().toISOString().split('T')[0];
+  const restoredDraft = useRef<any>(null);
+
   const form = useForm<ExperienceFormValues>({
     resolver: zodResolver(experienceFormSchema),
     defaultValues: {
@@ -103,32 +110,31 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
       workDescription: '',
       workFrom: '',
       workTo: '',
-      referencePersonName: '',
-      referencePersonContact: '',
-      githubRepoLink: '',
-      comments: '',
     },
-    mode: 'all',
   });
 
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const currentDate = new Date().toISOString().split('T')[0];
-
-  useEffect(() => {
-    if (isDialogOpen) {
-      form.reset({
-        company: '',
-        jobTitle: '',
-        workDescription: '',
-        workFrom: '',
-        workTo: '',
-        referencePersonName: '',
-        referencePersonContact: '',
-        githubRepoLink: '',
-        comments: '',
-      });
-    }
-  }, [isDialogOpen, form]);
+  const {
+    showDraftDialog,
+    setShowDraftDialog,
+    confirmExitDialog,
+    setConfirmExitDialog,
+    loadDraft,
+    discardDraft,
+    handleSaveAndClose,
+    handleDiscardAndClose,
+    handleDialogClose,
+  } = useDraft({
+    form,
+    formSection: 'experience',
+    isDialogOpen,
+    setIsDialogOpen,
+    onSave: (values) => {
+      restoredDraft.current = { ...values };
+    },
+    onDiscard: () => {
+      restoredDraft.current = null;
+    },
+  });
 
   async function onSubmit(data: ExperienceFormValues) {
     setIsSubmitting(true);
@@ -166,7 +172,13 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) handleDialogClose();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -333,6 +345,30 @@ export const AddExperience: React.FC<AddExperienceProps> = ({
           </form>
         </Form>
       </DialogContent>
+      {confirmExitDialog && (
+        <DraftDialog
+          dialogChange={confirmExitDialog}
+          setDialogChange={setConfirmExitDialog}
+          heading="Save Draft?"
+          desc="Do you want to save your draft before leaving?"
+          handleClose={handleDiscardAndClose}
+          handleSave={handleSaveAndClose}
+          btn1Txt="Don't save"
+          btn2Txt="Yes save"
+        />
+      )}
+      {showDraftDialog && (
+        <DraftDialog
+          dialogChange={showDraftDialog}
+          setDialogChange={setShowDraftDialog}
+          heading="Load Draft?"
+          desc="You have unsaved data. Would you like to restore it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" No, start fresh"
+          btn2Txt="Yes, load draft"
+        />
+      )}
     </Dialog>
   );
 };

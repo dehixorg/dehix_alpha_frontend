@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 
+import DraftDialog from '../shared/DraftDialog';
+
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -24,8 +25,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -34,8 +34,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import useDraft from '@/hooks/useDraft';
 
-// Schema for form validation using zod
 const projectFormSchema = z
   .object({
     projectName: z.string().min(1, { message: 'Project name is required.' }),
@@ -50,7 +52,9 @@ const projectFormSchema = z
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
-    techUsed: z.string().min(1, { message: 'Technologies used are required.' }),
+    techUsed: z
+      .array(z.string())
+      .min(1, { message: 'At least one technology is required.' }),
     role: z.string().min(1, { message: 'Role is required.' }),
     projectType: z.string().optional(),
     verificationStatus: z.string().optional(),
@@ -84,9 +88,12 @@ interface Skill {
 
 export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [skills, setSkills] = useState<any>([]);
-  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<string[]>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const restoredDraft = useRef<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const currentDate = new Date().toISOString().split('T')[0];
 
   const handleAddSkill = () => {
     if (tmpSkill && !currSkills.some((skill: any) => skill === tmpSkill)) {
@@ -105,24 +112,22 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         const skillsResponse = await axiosInstance.get('/skills');
         const transformedSkills = skillsResponse.data.data.map(
           (skill: Skill) => ({
-            value: skill.label, // Set the value to label
-            label: skill.label, // Set the label to label
+            value: skill.label,
+            label: skill.label,
           }),
         );
         setSkills(transformedSkills);
       } catch (error) {
-        console.error('API Error:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
       }
     };
     fetchData();
   }, []);
 
-  // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -132,7 +137,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       start: '',
       end: '',
       refer: '',
-      techUsed: '',
+      techUsed: [],
       role: '',
       projectType: '',
       verificationStatus: 'ADDED',
@@ -141,28 +146,30 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     mode: 'all',
   });
 
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const currentDate = new Date().toISOString().split('T')[0];
+  const {
+    handleSaveAndClose,
+    showDraftDialog,
+    setShowDraftDialog,
+    confirmExitDialog,
+    setConfirmExitDialog,
+    handleDiscardAndClose,
+    handleDialogClose,
+    discardDraft,
+    loadDraft,
+  } = useDraft({
+    form,
+    formSection: 'projects',
+    isDialogOpen,
+    setIsDialogOpen,
+    onSave: (values) => {
+      restoredDraft.current = { ...values, techUsed: currSkills };
+    },
+    onDiscard: () => {
+      restoredDraft.current = null;
+    },
+    setCurrSkills,
+  });
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      form.reset({
-        projectName: '',
-        description: '',
-        githubLink: '',
-        start: '',
-        end: '',
-        refer: '',
-        techUsed: '',
-        role: '',
-        projectType: '',
-        verificationStatus: 'ADDED',
-        comments: '',
-      });
-    }
-  }, [isDialogOpen, form]);
-
-  // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
     try {
@@ -173,14 +180,14 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       //   techUsed: currSkills,
       //   projectType: '',
       // });
-      const techUsedArray = data.techUsed
-        .split(',')
-        .map((tech) => tech.trim())
-        .filter((tech) => tech !== '');
+      // const techUsedArray = data.techUsed
+      //   .split(',')
+      //   .map((tech) => tech.trim())
+      //   .filter((tech) => tech !== '');
 
       await axiosInstance.post(`/freelancer/project`, {
         ...data,
-        techUsed: techUsedArray,
+        techUsed: currSkills,
         verified: false,
         oracleAssigned: '',
         start: data.start ? new Date(data.start).toISOString() : null,
@@ -206,7 +213,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) handleDialogClose();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="my-auto">
           <Plus className="h-4 w-4" />
@@ -313,26 +326,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 </FormItem>
               )}
             />
-            {/*}
-            <FormField
-              control={form.control}
-              name="techUsed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Technologies Used</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter technologies used (comma separated)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Enter the technologies used (comma separated)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
             <FormField
               control={form.control}
               name="techUsed"
@@ -344,10 +337,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <div className="flex items-center mt-2">
                         <Select
                           onValueChange={(selectedValue) => {
-                            onChange(selectedValue);
+                            onChange([...value, selectedValue]);
                             setTmpSkill(selectedValue);
                           }}
-                          value={value}
+                          value={tmpSkill}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select skill" />
@@ -393,7 +386,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="role"
@@ -448,6 +440,30 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           </form>
         </Form>
       </DialogContent>
+      {confirmExitDialog && (
+        <DraftDialog
+          dialogChange={confirmExitDialog}
+          setDialogChange={setConfirmExitDialog}
+          heading="Save Draft?"
+          desc="Do you want to save your draft before leaving?"
+          handleClose={handleDiscardAndClose}
+          handleSave={handleSaveAndClose}
+          btn1Txt="Don't save"
+          btn2Txt="Yes save"
+        />
+      )}
+      {showDraftDialog && (
+        <DraftDialog
+          dialogChange={showDraftDialog}
+          setDialogChange={setShowDraftDialog}
+          heading="Load Draft?"
+          desc="You have unsaved data. Would you like to restore it?"
+          handleClose={discardDraft}
+          handleSave={loadDraft}
+          btn1Txt=" No, start fresh"
+          btn2Txt="Yes, load draft"
+        />
+      )}
     </Dialog>
   );
 };
