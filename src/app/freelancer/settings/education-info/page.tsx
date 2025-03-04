@@ -27,7 +27,7 @@ export default function Education() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setEducationInfo(Object.values(response.data?.education));
+        setEducationInfo(Object.values(response.data.data.education));
       } catch (error) {
         toast({
           variant: 'destructive',
