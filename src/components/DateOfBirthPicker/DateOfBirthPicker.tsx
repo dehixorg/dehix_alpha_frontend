@@ -2,7 +2,7 @@
 
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import MonthSelector from './MonthSelector';
 import YearSelector from './YearSelector';
@@ -10,11 +10,7 @@ import ConfirmButton from './ConfirmButton';
 
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl } from '@/components/ui/form';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -23,25 +19,10 @@ const DateOfBirthPicker = ({ field }: any) => {
   const minAgeDate = new Date(today.setFullYear(today.getFullYear() - 16));
   const selectedDate = field.value ? new Date(field.value) : undefined;
 
-  const [openCalendar, setOpenCalendar] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(
-    selectedDate?.getMonth() ?? minAgeDate.getMonth(),
-  );
-  const [selectedYear, setSelectedYear] = useState(
-    selectedDate?.getFullYear() ?? minAgeDate.getFullYear(),
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        setOpenDialog(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const [selectedMonth, setSelectedMonth] = useState(selectedDate?.getMonth() ?? minAgeDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(selectedDate?.getFullYear() ?? minAgeDate.getFullYear());
+  const [openCalendar, setOpenCalendar] = useState(false);
 
   const handleConfirm = () => {
     setOpenDialog(false);
@@ -53,28 +34,18 @@ const DateOfBirthPicker = ({ field }: any) => {
       <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
         <PopoverTrigger asChild>
           <FormControl>
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                className={`w-full justify-start text-left font-normal ${selectedDate ? '' : 'text-muted-foreground'}`}
-              >
-                {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-              <p className="text-xs text-muted-foreground mt-1 hidden md:flex">
-                Press <span className="font-bold mx-1"> Ctrl + D </span> to open
-                year selector
-              </p>
-              <p
-                onClick={() => setOpenDialog(true)}
-                className="text-xs text-muted-foreground mt-1 md:hidden"
-              >
-                <span className="text-blue-500">Tap here</span> to select a year
-              </p>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className={`w-full justify-start text-left font-normal ${selectedDate ? '' : 'text-muted-foreground'}`}
+              onClick={() => setOpenDialog(true)}
+            >
+              {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            </Button>
           </FormControl>
         </PopoverTrigger>
+
         <PopoverContent className="w-auto p-0">
           <Calendar
             mode="single"
@@ -91,16 +62,10 @@ const DateOfBirthPicker = ({ field }: any) => {
       </Popover>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="max-w-md rounded-lg bg-[#111] shadow-xl p-6">
+        <DialogContent className="max-w-sm rounded-lg bg-[#111] mx-1 shadow-xl p-6">
           <h2 className="text-lg text-white mb-4">Select Month & Year</h2>
-          <MonthSelector
-            selectedMonth={selectedMonth}
-            onSelect={setSelectedMonth}
-          />
-          <YearSelector
-            selectedYear={selectedYear}
-            onSelect={setSelectedYear}
-          />
+          <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
+          <YearSelector selectedYear={selectedYear} onSelect={setSelectedYear} />
           <ConfirmButton onConfirm={handleConfirm} />
         </DialogContent>
       </Dialog>
