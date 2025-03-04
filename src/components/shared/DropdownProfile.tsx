@@ -77,9 +77,13 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
-        localStorage.setItem('DHX_CONNECTS', response.data.data?.connects);
+        const connects =
+          response.data?.data?.connects ?? response.data?.connects ?? 0;
+
+        localStorage.setItem('DHX_CONNECTS', connects.toString());
+
         if (setConnects) {
-          setConnects(response.data.data?.connects ?? 0);
+          setConnects(connects);
         }
         setReferralCode(fetchCode);
       } catch (error) {
@@ -144,12 +148,12 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           <Button
             variant="outline"
             size="icon"
-            className="overflow-hidden rounded-full"
+            className="overflow-hidden rounded-full hover:scale-105 transition-transform"
           >
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.photoURL} alt="@shadcn" />
               <AvatarFallback>
-                <UserIcon size={16} />
+                <UserIcon className="w-5 h-5 hover:scale-105 transition-transform" />
               </AvatarFallback>
             </Avatar>
           </Button>

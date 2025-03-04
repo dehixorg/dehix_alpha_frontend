@@ -10,7 +10,6 @@ import {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -25,6 +24,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
+import ConnectsDialog from '@/components/shared/ConnectsDialog';
 
 interface Skill {
   _id: string;
@@ -69,6 +69,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     formState: { errors },
     reset,
     setValue,
+    getValues,
+    trigger,
   } = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
@@ -108,6 +110,18 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             title: 'Talent Added',
             description: 'The Hire Talent has been successfully added.',
           });
+
+          const connectsCost = parseInt(
+            process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+            10,
+          );
+
+          const currentConnects =
+            Number(localStorage.getItem('DHX_CONNECTS')) || 0;
+          const updatedConnects = Math.max(0, currentConnects - connectsCost);
+
+          localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+          window.dispatchEvent(new Event('connectsUpdated'));
         } else {
           throw new Error('Failed to add hire talen');
         }
@@ -153,7 +167,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                     const selectedDomain = skills.find(
                       (skill) => skill.label === selectedLabel,
                     );
-
                     // Set label and domainId in form
                     field.onChange(selectedLabel); // Set label
                     setValue('skillId', selectedDomain?._id || ''); // Set domainId
@@ -216,11 +229,20 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           {errors.description && (
             <p className="text-red-600">{errors.description.message}</p>
           )}
-          <DialogFooter className="mt-3">
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Loading...' : 'Submit'}
-            </Button>
-          </DialogFooter>
+          <ConnectsDialog
+            loading={loading}
+            setLoading={setLoading}
+            onSubmit={onSubmit}
+            isValidCheck={trigger}
+            userId={user.uid}
+            buttonText={'Submit'}
+            userType={'BUSINESS'}
+            requiredConnects={parseInt(
+              process.env.NEXT_PUBLIC__APP_HIRE_TALENT_COST || '0',
+              10,
+            )}
+            data={getValues()}
+          />
         </form>
       </DialogContent>
     </Dialog>

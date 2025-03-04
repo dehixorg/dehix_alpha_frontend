@@ -18,26 +18,36 @@ export default function Projects() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
   const [projects, setProjects] = useState<any>([]);
+
   const handleFormSubmit = () => {
     setRefresh((prev) => !prev);
   };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setProjects(Object.values(response.data?.projects));
+        const response = await axiosInstance.get(`/freelancer/${user.uid}/project`);
+
+        // Check if the response and projects data exist before setting the state
+        if (response?.data?.projects) {
+          setProjects(Object.values(response.data.projects));
+        } else {
+          // If no projects, set projects to an empty array to avoid errors
+          setProjects([]);
+        }
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid, refresh]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -60,9 +70,13 @@ export default function Projects() {
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {projects.map((project: any, index: number) => (
-            <ProjectCard key={index} {...project} />
-          ))}
+          {projects.length > 0 ? (
+            projects.map((project: any, index: number) => (
+              <ProjectCard key={index} {...project} />
+            ))
+          ) : (
+            <p>No projects found.</p> // Optionally show a message if there are no projects
+          )}
           <AddProject onFormSubmit={handleFormSubmit} />
         </main>
       </div>
