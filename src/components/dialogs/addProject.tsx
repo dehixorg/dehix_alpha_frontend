@@ -260,7 +260,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
         <DialogHeader>
           <DialogTitle>Add Project - Step {step} of 2</DialogTitle>
           <DialogDescription>
