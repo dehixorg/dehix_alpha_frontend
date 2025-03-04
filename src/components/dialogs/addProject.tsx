@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 import {
   Dialog,
@@ -34,7 +35,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useParams } from 'next/navigation';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -91,7 +91,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
-  const {freelancer_id}= useParams<{freelancer_id: string}>();
+  const { freelancer_id } = useParams<{ freelancer_id: string }>();
   // Form setup with react-hook-form and zodResolver
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -178,12 +178,11 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     const fetchData = async () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
-        const transformedSkills = skillsResponse?.data?.data?.map(
-          (skill: Skill) => ({
+        const transformedSkills =
+          skillsResponse?.data?.data?.map((skill: Skill) => ({
             value: skill.label,
             label: skill.label,
-          }),
-        ) || [];        
+          })) || [];
         setSkills(transformedSkills);
       } catch (error) {
         console.error('API Error:', error);

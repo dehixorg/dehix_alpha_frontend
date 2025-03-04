@@ -26,7 +26,9 @@ export default function Projects() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/freelancer/${user.uid}/project`);
+        const response = await axiosInstance.get(
+          `/freelancer/${user.uid}/project`,
+        );
 
         // Check if the response and projects data exist before setting the state
         if (response?.data?.projects) {
