@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, UploadCloud, FileText } from 'lucide-react';
 
 import { Button } from '../ui/button';
@@ -112,6 +112,21 @@ const ResumeUpload: React.FC = () => {
       setIsUploading(false);
     }
   };
+  useEffect(() => {
+    const fetchResume = async () => {
+      try {
+        const response = await axiosInstance.get('/freelancer'); // API to get user profile
+        if (response.data.resume) {
+          setUploadedFileName(response.data.resume); // Set the stored resume URL
+          setResumePreviewURL(response.data.resume); // Set the preview URL
+        }
+      } catch (error) {
+        console.error('Error fetching resume:', error);
+      }
+    };
+  
+    fetchResume();
+  }, []);
 
   const handleCancelClick = () => {
     setSelectedResume(null);
