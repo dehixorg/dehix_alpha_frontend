@@ -121,7 +121,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
+          // description: 'Something went wrong.Please try again.',
         });
       }
     };
