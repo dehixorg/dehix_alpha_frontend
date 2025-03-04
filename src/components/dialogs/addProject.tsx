@@ -177,12 +177,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     const fetchData = async () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
-        const transformedSkills = skillsResponse.data.data.map(
+        const transformedSkills = skillsResponse?.data?.data?.map(
           (skill: Skill) => ({
             value: skill.label,
             label: skill.label,
           }),
-        );
+        ) || [];        
         setSkills(transformedSkills);
       } catch (error) {
         console.error('API Error:', error);
