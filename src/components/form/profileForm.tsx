@@ -1125,7 +1125,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <FormField
             control={form.control}
             name="resume"
-            render={(field) => (
+            render={() => (
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
