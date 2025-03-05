@@ -247,7 +247,11 @@ export const subscribeToUserNotifications = (
   callback: (notifications: DocumentData[]) => void,
 ) => {
   const notificationsRef = collection(db, 'notifications');
-  const q = query(notificationsRef, where('userId', 'array-contains', userId));
+  const q = query(
+    notificationsRef,
+    where('userId', '==', userId),
+    orderBy('timestamp', 'desc'),
+  );
 
   // Real-time listener
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
