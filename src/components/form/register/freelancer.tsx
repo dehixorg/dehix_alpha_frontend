@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-import DateOfBirthPicker from '@/components/shared/DateOfBirthPicker';
+import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
 
 interface Step {
   id: number;
@@ -141,11 +141,11 @@ const profileFormSchema = z
       .email({ message: 'Email must be a valid email address.' }),
     userName: z
       .string()
-      .min(3, { message: 'Username must be at least 3 characters long' })
+      .min(4, { message: 'Username must be at least 4 characters long' })
       .max(20, { message: 'Username must be less than 20 characters long' })
-      .regex(/^[a-zA-Z0-9_]+$/, {
-        message: 'Username can only contain letters, numbers, and underscores',
-      }), // Adjust regex as needed
+      .regex(/^[a-zA-Z0-9]{4}[a-zA-Z0-9_]*$/, {
+        message: 'Underscore allowed only after 4 letters/numbers',
+      }),
     phone: z
       .string()
       .min(10, { message: 'Phone number must be at least 10 digits.' })

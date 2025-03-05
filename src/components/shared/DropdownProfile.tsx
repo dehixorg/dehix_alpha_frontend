@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 
+import { truncateDescription } from './MilestoneTimeline';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,7 +78,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       setLoading(true);
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
-        const fetchCode = response.data?.referral?.referralCode || '';
+        const fetchCode = response.data.data?.referral?.referralCode || '';
         const connects =
           response.data?.data?.connects ?? response.data?.connects ?? 0;
 
@@ -123,7 +125,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   // Generate referral link
   const referralLink = referralCode
-    ? `${process.env.NEXT_PUBLIC__APP_DEHIX_URL}auth/sign-up/freelancer?referral=${referralCode}`
+    ? `${process.env.NEXT_PUBLIC__BASE_URL}auth/sign-up/freelancer?referral=${referralCode}`
     : '';
 
   // Handle Copy to Clipboard
@@ -222,7 +224,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
                     className="flex-1 max-w-full break-words sm:truncate"
                     title={referralLink} // Tooltip for the full link
                   >
-                    {referralLink}
+                    {truncateDescription(referralLink, 60)}
                   </a>
                   <Button
                     variant="ghost"
