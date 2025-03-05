@@ -69,7 +69,7 @@ export default function ProfessionalInfo() {
       );
       setJobData(response.data.data);
       const flattenedData = response.data.data.flatMap((entry: any) =>
-        Object.values(entry.professionalInfo),
+        Object.values(entry),
       );
       setJobData(flattenedData);
     } catch (error) {

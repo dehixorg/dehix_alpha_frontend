@@ -66,25 +66,32 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/verification/oracle?doc_type=project`,
       );
+  
       setProjectData(response.data.data);
-      const flattenedData = await response.data.data.flatMap((entry: any) =>
-        Object.values(entry.projects),
-      );
+  
+      const flattenedData = response.data.data.flatMap((entry: any) => {
+        return Object.values(entry); 
+      });
+      // Set the flattened data
       setProjectData(flattenedData);
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
+        description: 'Something went wrong. Please try again.',
       }); // Error toast
       console.log(error, 'error in getting verification data');
     }
   }, []);
-
+  
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+  
+  
+  
 
+  
   const updateProjectStatus = (index: number, newStatus: string) => {
     const updatedData = [...projectData];
     updatedData[index].verificationStatus = newStatus;
