@@ -46,7 +46,7 @@ const DialogSelectedNote = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
         className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
-        style={{ backgroundColor: note.bgColor || '#ffffff' }}
+        style={{ backgroundColor:  `${note.bgColor}B3` || '#ffffff' }}
       >
         {/* banner as background */}
         {note.banner && (
@@ -152,7 +152,7 @@ const DialogSelectedNote = ({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={onClose} className="mr-2">
+              <Button variant="outline" onClick={onClose} className="mr-2 text-black dark:text-white">
                 Close
               </Button>
               <Button onClick={() => setIsEditMode(true)}>Edit</Button>
