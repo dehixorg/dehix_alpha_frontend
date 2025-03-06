@@ -96,12 +96,15 @@ const TalentCard: React.FC<TalentCardProps> = ({
 }) => {
   const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
-  const [skip, setSkip] = useState(0);
+  const skipRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [skills, setSkills] = useState<Skill[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [domains, setDomains] = useState<Domain[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
@@ -289,11 +292,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         });
       }
     }
-  }, [
-    user?.uid,
-    skillDomainFormProps?.skillFilter,
-    skillDomainFormProps?.domainFilter,
-  ]);
+  }, [user?.uid, skillDomainFormProps]);
 
   useEffect(() => {
     fetchUserData();
@@ -305,17 +304,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
     );
   };
 
-  // Function to reset state when filters change
-  const resetAndFetchData = useCallback(() => {
-    setTalents([]);
-    setSkip(0);
-    setHasMore(true);
-    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
-  }, [skillFilter, domainFilter]);
-
   const fetchTalentData = useCallback(
-    async (newSkip = skip, reset = false) => {
-      if (isRequestInProgress.current || loading || !hasMore) return;
+    async (newSkip = skipRef.current, reset = false) => {
+      if (isRequestInProgress.current) return;
 
       try {
         isRequestInProgress.current = true;
@@ -325,19 +316,19 @@ const TalentCard: React.FC<TalentCardProps> = ({
           `freelancer/dehixtalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
         );
 
-        if (response.data.data.length < Dehix_Talent_Card_Pagination.BATCH) {
+        const fetchedData = response?.data?.data || [];
+
+        if (fetchedData.length < Dehix_Talent_Card_Pagination.BATCH) {
           setHasMore(false);
-          setTalents((prev) =>
-            reset ? response.data.data : [...prev, ...response.data.data],
-          );
-          return;
         }
 
         if (response?.data?.data) {
           setTalents((prev) =>
-            reset ? response.data.data : [...prev, ...response.data.data],
+            reset ? fetchedData : [...prev, ...fetchedData],
           );
-          setSkip(newSkip + Dehix_Talent_Card_Pagination.BATCH);
+          skipRef.current = reset
+            ? Dehix_Talent_Card_Pagination.BATCH
+            : skipRef.current + Dehix_Talent_Card_Pagination.BATCH;
         } else {
           throw new Error('Fail to fetch data');
         }
@@ -357,13 +348,21 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = false;
       }
     },
-    [skip, loading, hasMore],
+    [],
   );
+
+  // Function to reset state when filters change
+  const resetAndFetchData = useCallback(() => {
+    setTalents([]);
+    skipRef.current = 0;
+    setHasMore(true);
+    fetchTalentData(0, true); // Pass 0 as the skip value to start from the beginning
+  }, [fetchTalentData]);
 
   // Reload cards when filter changes
   useEffect(() => {
     resetAndFetchData();
-  }, [skillFilter, domainFilter, resetAndFetchData]);
+  }, [resetAndFetchData]);
 
   // Apply the filters to the talents
   useEffect(() => {

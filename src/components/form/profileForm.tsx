@@ -85,12 +85,12 @@ const profileFormSchema = z.object({
     .optional(),
 
   liveCaptureUrl: z
-    .union([
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
+  .union([
+    typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
+    z.string().url(),
+    z.null(),
+  ])
+  .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -106,7 +106,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [projectDomains, setProjectDomains] = useState<any>([]);
   const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
-  const [, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [, setLastAddedItems] = useState<{
     skills: { name: string }[];
@@ -177,6 +177,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customSkillData = {
       label: customSkill.label,
+      interviewInfo: customSkill.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
       status: StatusEnum.ACTIVE,
@@ -224,6 +225,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customDomainData = {
       label: customDomain.label,
+      interviewInfo: customSkill.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
       status: StatusEnum.ACTIVE,
@@ -425,7 +427,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
       }
     };
 
@@ -451,6 +453,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
       const uploadedUrls = {
         frontImageUrl: data.frontImageUrl,
@@ -461,7 +464,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       if (data.frontImageUrl instanceof File) {
         const frontFormData = new FormData();
         frontFormData.append('frontImageUrl', data.frontImageUrl);
-
+  
         const response = await axiosInstance.post(
           '/register/upload-image',
           frontFormData,
@@ -472,7 +475,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       if (data.backImageUrl instanceof File) {
         const backFormData = new FormData();
         backFormData.append('backImageUrl', data.backImageUrl);
-
+  
         const response = await axiosInstance.post(
           '/register/upload-image',
           backFormData,
@@ -490,9 +493,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         );
         uploadedUrls.liveCaptureUrl = response.data.data.Location;
       }
-
+  
       const { aadharOrGovtId, ...restData } = data;
-
+  
       const kyc = {
         aadharOrGovtId,
         frontImageUrl: uploadedUrls.frontImageUrl,
@@ -500,16 +503,24 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         liveCaptureUrl: uploadedUrls.liveCaptureUrl,
         status: 'APPLIED',
       };
-
+  
+      const updatedSkills = currSkills.map((skill: any) => ({
+        ...skill,
+        interviewInfo: skill.interviewInfo || '',
+        interviewerRating: skill.interviewerRating || 0,
+        interviewStatus: skill.interviewStatus || 'PENDING',
+      }));
+  
       await axiosInstance.put(`/freelancer`, {
         ...restData,
-        skills: currSkills,
+        resume: data.resume,
+        skills: updatedSkills,
         domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
         kyc,
       });
-
+  
       setUser({
         ...user,
         firstName: data.firstName,
@@ -520,7 +531,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         role: data.role,
         personalWebsite: data.personalWebsite,
         resume: data.resume,
-        skills: currSkills,
+        skills: updatedSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
         aadharOrGovtId: data.aadharOrGovtId,
@@ -539,6 +550,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         title: 'Error',
         description: 'Failed to update profile. Please try again later.',
       });
+    }finally{
+      setLoading(false);
     }
   }
 
@@ -1124,19 +1137,20 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           <FormField
             control={form.control}
             name="resume"
-            render={() => (
+            render={(field) => (
               <FormItem className="flex flex-col items-start ">
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload />
+                  <ResumeUpload   />
                 </div>
               </FormItem>
             )}
           />
           <Separator className="sm:col-span-2 mt-0" />
-          <Button type="submit" className="sm:col-span-2">
-            Update profile
+          <Button type="submit" className="sm:col-span-2" disabled={loading}>
+            {loading ? 'Loading...' : 'Update Profile'}
           </Button>
+
           {isDialogOpen && (
             <Dialog
               open={isDialogOpen}
