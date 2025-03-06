@@ -32,6 +32,7 @@ interface NoteCardProps {
   onChangeBanner: (noteId: string | undefined, banner: string) => void;
   navItems: Array<{
     label: string;
+    icon: any;
     onClick: (
       noteId: string | undefined,
       notes: Note[],
@@ -109,7 +110,7 @@ const NoteCard = ({
         </CardContent>
       </div>
 
-      <div className="relative">
+      <div className="relative group">
         <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-4 justify-center">
           {isTrash ? (
             <>
@@ -127,24 +128,26 @@ const NoteCard = ({
           ) : !isArchive ? (
             <ArchiveRestoreIcon
               size={15}
-              className="text-black"
+              className="text-black cursor-pointer"
               onClick={() => onUpdateNoteType(note._id, NoteType.ARCHIVE)}
             />
           ) : (
             <ArchiveRestoreIcon
               size={15}
-              className="text-black"
+              className="text-black cursor-pointer"
               onClick={() => onUpdateNoteType(note._id, NoteType.NOTE)}
             />
           )}
+
           <BannerChangerPopover
             handleChangeBanner={(banner) => onChangeBanner(note._id, banner)}
           />
+
           {!isTrash && (
             <DropdownNavNotes
-              noteId={note._id}
               navItems={navItems.map((item) => ({
                 ...item,
+                icon: item.icon,
                 onClick: () => item.onClick(note._id, notes, setNotes),
               }))}
             />
