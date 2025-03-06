@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
+      if (firebaseUser && navigator.onLine) {
         const accessToken = await firebaseUser.getIdToken();
         const claims = await firebaseUser.getIdTokenResult();
         const userData = { ...firebaseUser, type: claims.claims.type };
