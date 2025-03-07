@@ -247,11 +247,7 @@ export const subscribeToUserNotifications = (
   callback: (notifications: DocumentData[]) => void,
 ) => {
   const notificationsRef = collection(db, 'notifications');
-  const q = query(
-    notificationsRef,
-    where('userId', '==', userId),
-    orderBy('timestamp', 'desc'),
-  );
+  const q = query(notificationsRef, where('userId', 'array-contains', userId));
 
   // Real-time listener
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -274,7 +270,11 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 
   try {
     const notificationsRef = collection(db, 'notifications');
-    const q = query(notificationsRef, where('userId', 'array-contains', userId));
+    const q = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('isRead', '==', false),
+    );
     const querySnapshot = await getDocs(q);
 
     // Loop through all the unread notifications and add them to the batch for updating
