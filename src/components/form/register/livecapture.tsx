@@ -54,9 +54,9 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         // Set canvas size to video size
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg");
+        const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
 
         // Convert to a file and save it in form
