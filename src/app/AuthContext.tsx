@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data } = await axiosInstance.post('/public/refresh-token', {
         refreshToken,
       });
-      console.log("API Refresh Token 🔥");
+      console.log("API Refresh Token ");
       setLocalStorageItem('token', data.accessToken);
       initializeAxiosWithToken(data.accessToken);
       return data.accessToken;
