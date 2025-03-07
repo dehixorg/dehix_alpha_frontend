@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
 import { setUser, clearUser } from '@/lib/userSlice';
-import { initializeAxiosWithToken, axiosInstance } from '@/lib/axiosinstance';
+import { initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { auth } from '@/config/firebaseConfig';
 
 interface AuthContextProps {
@@ -28,28 +28,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
-  const refreshAccessTokenApi = async () => {
-    const refreshToken = getLocalStorageItem('token');
-    if (!refreshToken) return;
-
-    try {
-      const { data } = await axiosInstance.post('/public/refresh-token', {
-        refreshToken,
-      });
-      console.log("API Refresh Token ");
-      setLocalStorageItem('token', data.accessToken);
-      initializeAxiosWithToken(data.accessToken);
-      return data.accessToken;
-    } catch (error) {
-      console.error('Refresh Token Failed:', error);
-      removeLocalStorageItem('user');
-      removeLocalStorageItem('token');
-      setUserState(null);
-      dispatch(clearUser());
-      router.push('/auth/login');
-    }
-  };
-
   useEffect(() => {
     const storedUser = getLocalStorageItem('user');
     const storedToken = getLocalStorageItem('token');
@@ -62,24 +40,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         dispatch(setUser(parsedUser));
       } catch (error) {
         console.error('Failed to parse user:', error);
+        removeLocalStorageItem('user');
+        removeLocalStorageItem('token');
       }
     }
 
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const accessToken = await firebaseUser.getIdToken();
-          const userData = { ...firebaseUser };
-          setLocalStorageItem('user', JSON.stringify(userData));
-          setLocalStorageItem('token', accessToken);
-          setUserState(userData);
-          initializeAxiosWithToken(accessToken);
-          dispatch(setUser(userData));
-
-          const interval = setInterval(refreshAccessTokenApi, 58 * 60 * 1000);
-          return () => clearInterval(interval);
+          if (accessToken) {
+            setLocalStorageItem('user', JSON.stringify(firebaseUser));
+            setLocalStorageItem('token', accessToken);
+            setUserState(firebaseUser);
+            initializeAxiosWithToken(accessToken);
+            dispatch(setUser(firebaseUser));
+          }
         } catch (error) {
-          console.error('User Authentication Error:', error);
+          console.error('Token Refresh Error:', error);
         }
       } else {
         removeLocalStorageItem('user');
