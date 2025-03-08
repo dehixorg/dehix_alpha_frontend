@@ -124,7 +124,7 @@ const ResumeUpload: React.FC = () => {
         console.error('Error fetching resume:', error);
       }
     };
-  
+
     fetchResume();
   }, []);
 

@@ -25,7 +25,7 @@ export default function Projects() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setProjects(Object.values(response.data?.projects));
+        setProjects(Object.values(response?.data?.data?.projects));
       } catch (error) {
         toast({
           variant: 'destructive',

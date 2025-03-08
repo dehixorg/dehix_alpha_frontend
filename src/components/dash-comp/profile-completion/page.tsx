@@ -107,7 +107,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
     if (!completionFields) return [];
 
     const incomplete = Object.entries(completionFields)
-      .filter(([_, isComplete]) => !isComplete)
+      .filter(([, isComplete]) => !isComplete)
       .map(([field]) => {
         // Convert camelCase to readable text
         const readableField = field

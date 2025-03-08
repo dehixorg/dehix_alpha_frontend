@@ -63,6 +63,8 @@ const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
           }
         } catch (error: any) {
           console.error('Error updating note order:', error.message);
+          console.log(error);
+
           toast({
             variant: 'destructive',
             title: 'Error',
