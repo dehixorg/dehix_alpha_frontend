@@ -25,17 +25,19 @@ export default function Projects() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+
   
-        // Check if response.data?.projects is valid before using Object.values()
+  
         const projectsData = response.data?.projects;
   
         if (!projectsData || typeof projectsData !== 'object') {
           console.warn('No projects data found, setting empty array.');
-          setProjects([]); // Empty array set kar diya taaki error na aaye
+          setProjects([]); 
           return;
         }
   
-        setProjects(Object.values(projectsData));
+        setProjects(Object.values(response?.data?.data?.projects));
+
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -43,7 +45,7 @@ export default function Projects() {
           description: 'Something went wrong. Please try again.',
         });
         console.error('API Error:', error);
-        setProjects([]); // UI break hone se bachega
+        setProjects([]); 
       }
     };
   

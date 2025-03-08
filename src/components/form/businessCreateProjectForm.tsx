@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -147,6 +148,11 @@ interface projectDomain {
 
 const FORM_DRAFT_KEY = 'DEHIX-BUSINESS-DRAFT';
 
+enum FormSteps {
+  ProjectInfo = 'ProjectInfo',
+  ProfileInfo = 'ProfileInfo',
+}
+
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
   const [skills, setSkills] = useState<any>([]);
@@ -162,6 +168,11 @@ export function CreateProjectBusinessForm() {
 
   const [loading, setLoading] = useState(false);
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
+
+  const [currentStep, setCurrentStep] = useState<FormSteps>(
+    FormSteps.ProjectInfo,
+  );
+  const [activeProfile, setActiveProfile] = useState(0);
 
   const { hasOtherValues, hasProfiles } = useDraft({});
 
@@ -438,6 +449,481 @@ export function CreateProjectBusinessForm() {
     setCurrSkills([]);
   }
 
+  const nextStep = async () => {
+    const isValid = await form.trigger([
+      'urls',
+      'projectDomain',
+      'description',
+      'email',
+      'projectName',
+    ]);
+
+    if (!isValid) return;
+
+    if (currentStep === FormSteps.ProjectInfo) {
+      setCurrentStep(FormSteps.ProfileInfo);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep === FormSteps.ProfileInfo) {
+      setCurrentStep(FormSteps.ProjectInfo);
+    }
+  };
+
+  const removeProfileByIndex = (indexToRemove: number) => {
+    if (profileFields.length === 1) {
+      return;
+    }
+
+    form.unregister(`profiles.${indexToRemove}`);
+
+    if (activeProfile >= indexToRemove) {
+      setActiveProfile((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const ProfileTabs = () => (
+    <ScrollArea>
+      <div className="flex gap-2 mb-4">
+        {profileFields.map((_, index) => (
+          <Button
+            key={index}
+            type="button"
+            size="sm"
+            variant={activeProfile === index ? 'default' : 'outline'}
+            onClick={() => setActiveProfile(index)}
+            className={`px-4 py-2 ${
+              activeProfile === index
+                ? 'bg-blue-600 text-white hover:text-black'
+                : ''
+            }`}
+          >
+            Profile {index + 1}
+          </Button>
+        ))}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
+  );
+
+  const renderProjectInfoStep = () => (
+    <>
+      <FormField
+        control={form.control}
+        name="projectName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Project Name</FormLabel>
+            <FormControl>
+              <Input placeholder="Enter your Project Name" {...field} />
+            </FormControl>
+            <FormDescription>Enter your Project name</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Contact Email</FormLabel>
+            <FormControl>
+              <Input placeholder="Enter your email" {...field} />
+            </FormControl>
+            <FormDescription>Enter your email</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="projectDomain"
+        render={() => (
+          <FormItem className="col-span-2">
+            <FormLabel>Project Domain</FormLabel>
+            <FormControl>
+              <div>
+                <div className="flex items-center mt-2">
+                  <Select
+                    onValueChange={(value) => setTmpProjectDomains(value)}
+                    value={tmpProjectDomains || ''}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          tmpProjectDomains
+                            ? tmpProjectDomains
+                            : 'Select project domain'
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectDomains
+                        .filter(
+                          (projectDomains: any) =>
+                            !currProjectDomains.some(
+                              (d: any) => d.name === projectDomains.label,
+                            ),
+                        )
+                        .map((projectDomains: any, index: number) => (
+                          <SelectItem key={index} value={projectDomains.label}>
+                            {projectDomains.label}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    size="icon"
+                    className="ml-2"
+                    onClick={handleAddProjectDomain}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap mt-5">
+                  {currProjectDomains.map((domain: any, index: number) => (
+                    <Badge
+                      className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                      key={index}
+                    >
+                      {domain}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProjectDomain(domain)}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem className="col-span-2">
+            <FormLabel>Profile Description</FormLabel>
+            <FormControl>
+              <Textarea placeholder="Enter description" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <div className="lg:col-span-2 xl:col-span-2">
+        {urlFields.map((field, index) => (
+          <FormField
+            control={form.control}
+            key={field.id}
+            name={`urls.${index}.value`}
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <div className="flex-1">
+                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
+                    URLs
+                  </FormLabel>
+                  <FormDescription
+                    className={`${index !== 0 ? 'sr-only' : ''} mb-2`}
+                  >
+                    Enter URL of your account
+                  </FormDescription>
+                  <FormControl>
+                    <div className="flex justify-center items-center  gap-3 mb-2">
+                      <Input {...field} />
+                      {index >= 0 && (
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="icon"
+                          className="ml-2"
+                          onClick={() => removeUrl(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage className="my-2.5" />
+                </div>
+              </FormItem>
+            )}
+          />
+        ))}
+        <Button
+          className="mt-2"
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => appendUrl({ value: '' })}
+        >
+          Add URL
+        </Button>
+      </div>
+    </>
+  );
+
+  const renderProfileInfoStep = () => (
+    <div className="lg:col-span-2 xl:col-span-2">
+      <div className="my-4">
+        <ProfileTabs />
+      </div>
+      {profileFields.map((field, index) =>
+        index === activeProfile ? (
+          <div key={index} className="border p-4 mb-4 rounded-md relative">
+            <X
+              onClick={() => removeProfileByIndex(index)}
+              className="w-5 hover:text-red-600 h-5 absolute right-2 top-1 cursor-pointer"
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.domain`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Profile Domain</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedDomain = domains.find(
+                          (d: any) => d.label === value,
+                        );
+                        form.setValue(
+                          `profiles.${index}.domain`,
+                          selectedDomain?.label || '',
+                        );
+                        form.setValue(
+                          `profiles.${index}.domain_id`,
+                          selectedDomain?.domain_id || '',
+                        );
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select domain" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {domains.map((domain: any, i: number) => (
+                          <SelectItem key={i} value={domain.label}>
+                            {domain.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.freelancersRequired`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Number of Freelancers Required</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Enter number"
+                      min={1}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.skills`}
+              render={() => (
+                <FormItem className="mb-4">
+                  <FormLabel>Skills</FormLabel>
+                  <FormControl>
+                    <div>
+                      <div className="flex items-center mt-2">
+                        <Select
+                          onValueChange={(value) => setTmpSkill(value)}
+                          value={tmpSkill || ''}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select skill" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {skills.map((skill: any, i: number) => (
+                              <SelectItem key={i} value={skill.label}>
+                                {skill.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="icon"
+                          className="ml-2"
+                          onClick={() => handleAddSkill(index)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap mt-5">
+                        {currSkills[index]?.map((skill: any, i: number) => (
+                          <Badge
+                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                            key={i}
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSkill(index, skill)}
+                              className="ml-2 text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.experience`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Experience</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Enter experience"
+                      min={0}
+                      max={60}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.minConnect`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Min Connect</FormLabel>
+                  <FormDescription>
+                    Minimum number of connects for the project
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter Min Connects (Recommended: 10)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.rate`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Per Hour Rate</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Enter rate"
+                      min={0}
+                      max={200}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`profiles.${index}.description`}
+              render={({ field }) => (
+                <FormItem className="mb-4">
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => removeProfile(index)}
+            >
+              Remove Profile
+            </Button>
+          </div>
+        ) : null,
+      )}
+      <div className="flex justify-between items-center">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-2"
+          onClick={() =>
+            appendProfile({
+              domain: '',
+              freelancersRequired: '',
+              skills: [],
+              experience: '',
+              minConnect: '',
+              rate: '',
+              description: '',
+              domain_id: '',
+            })
+          }
+        >
+          Add Profile
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={saveDraft}>
+          <Save />
+        </Button>
+      </div>
+      <div className="lg:col-span-2 xl:col-span-2 mt-4">
+        <ConnectsDialog
+          loading={loading}
+          isValidCheck={form.trigger}
+          onSubmit={form.handleSubmit(onSubmit)}
+          setLoading={setLoading}
+          userId={user.uid}
+          buttonText={'Create Project'}
+          userType={'BUSINESS'}
+          requiredConnects={parseInt(
+            process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+            10,
+          )}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <Card className="p-10">
       <Form {...form}>
@@ -445,422 +931,22 @@ export function CreateProjectBusinessForm() {
           onSubmit={form.handleSubmit(onSubmit)}
           className="gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-2"
         >
-          <FormField
-            control={form.control}
-            name="projectName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your Project Name" {...field} />
-                </FormControl>
-                <FormDescription>Enter your Project name</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contact Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your email" {...field} />
-                </FormControl>
-                <FormDescription>Enter your email</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="projectDomain"
-            render={() => (
-              <FormItem className="col-span-2">
-                <FormLabel>Project Domain</FormLabel>
-                <FormControl>
-                  <div>
-                    <div className="flex items-center mt-2">
-                      <Select
-                        onValueChange={(value) => setTmpProjectDomains(value)}
-                        value={tmpProjectDomains || ''}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              tmpProjectDomains
-                                ? tmpProjectDomains
-                                : 'Select project domain'
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {projectDomains
-                            .filter(
-                              (projectDomains: any) =>
-                                !currProjectDomains.some(
-                                  (d: any) => d.name === projectDomains.label,
-                                ),
-                            )
-                            .map((projectDomains: any, index: number) => (
-                              <SelectItem
-                                key={index}
-                                value={projectDomains.label}
-                              >
-                                {projectDomains.label}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="outline"
-                        type="button"
-                        size="icon"
-                        className="ml-2"
-                        onClick={handleAddProjectDomain}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap mt-5">
-                      {currProjectDomains.map((domain: any, index: number) => (
-                        <Badge
-                          className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                          key={index}
-                        >
-                          {domain}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteProjectDomain(domain)}
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
+          {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel>Profile Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Enter description" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="w-full mt-4 flex col-span-2 justify-end">
+            {currentStep === FormSteps.ProjectInfo && (
+              <Button type="button" variant="outline" onClick={nextStep}>
+                Next
+              </Button>
             )}
-          />
-          <div className="lg:col-span-2 xl:col-span-2">
-            {urlFields.map((field, index) => (
-              <FormField
-                control={form.control}
-                key={field.id} // Ensure proper list key handling
-                name={`urls.${index}.value`}
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                        URLs
-                      </FormLabel>
-                      <FormDescription
-                        className={`${index !== 0 ? 'sr-only' : ''} mb-2`}
-                      >
-                        Enter URL of your account
-                      </FormDescription>
-                      <FormControl>
-                        <div className="flex justify-center items-center  gap-3 mb-2">
-                          <Input {...field} />
-                          {index >= 0 && (
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={() => removeUrl(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage className="my-2.5" />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            ))}
-            <Button
-              className="mt-2"
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => appendUrl({ value: '' })}
-            >
-              Add URL
-            </Button>
           </div>
-
-          <div className="lg:col-span-2 xl:col-span-2">
-            {profileFields.map((field, index) => (
-              <div key={index} className="border p-4 mb-4 rounded-md relative">
-                <X
-                  onClick={() => removeProfile(index)}
-                  className="w-5 hover:text-red-600 h-5 absolute right-2 top-1 cursor-pointer"
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.domain`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Profile Domain</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={(value) => {
-                            const selectedDomain = domains.find(
-                              (d: any) => d.label === value,
-                            );
-                            form.setValue(
-                              `profiles.${index}.domain`,
-                              selectedDomain?.label || '',
-                            );
-                            form.setValue(
-                              `profiles.${index}.domain_id`,
-                              selectedDomain?.domain_id || '',
-                            );
-                          }}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select domain" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {domains.map((domain: any, index: number) => (
-                              <SelectItem key={index} value={domain.label}>
-                                {domain.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.freelancersRequired`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Number of Freelancers Required</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter number"
-                          min={1}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.skills`}
-                  render={() => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Skills</FormLabel>
-                      <FormControl>
-                        <div>
-                          <div className="flex items-center mt-2">
-                            <Select
-                              onValueChange={(value) => setTmpSkill(value)}
-                              value={tmpSkill || ''}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select skill" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {skills.map((skill: any, index: number) => (
-                                  <SelectItem key={index} value={skill.label}>
-                                    {skill.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={() => handleAddSkill(index)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap mt-5">
-                            {currSkills[index]?.map(
-                              (skill: any, index: number) => (
-                                <Badge
-                                  className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                                  key={index}
-                                >
-                                  {skill}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteSkill(index, skill)
-                                    }
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </Badge>
-                              ),
-                            )}
-                          </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.experience`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Experience</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter experience"
-                          min={0}
-                          max={60}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.minConnect`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Min Connect</FormLabel>
-                      <FormDescription>
-                        Minimum number of connects for the project
-                      </FormDescription>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter Min Connects (Recommended: 10)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.rate`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Per Hour Rate</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter rate"
-                          min={0}
-                          max={200}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name={`profiles.${index}.description`}
-                  render={({ field }) => (
-                    <FormItem className="mb-4">
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => removeProfile(index)}
-                >
-                  Remove Profile
-                </Button>
-              </div>
-            ))}
-            <div className="flex justify-between items-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() =>
-                  appendProfile({
-                    domain: '',
-                    freelancersRequired: '',
-                    skills: [],
-                    experience: '',
-                    minConnect: '',
-                    rate: '',
-                    description: '',
-                    domain_id: '',
-                  })
-                }
-              >
-                Add Profile
+          <div className="w-full mt-4 flex col-span-2 justify-start">
+            {currentStep === FormSteps.ProfileInfo && (
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Prev
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={saveDraft}
-              >
-                <Save />
-              </Button>
-            </div>
-          </div>
-          <div className="lg:col-span-2 xl:col-span-2 mt-4">
-            <ConnectsDialog
-              loading={loading}
-              isValidCheck={form.trigger}
-              onSubmit={form.handleSubmit(onSubmit)}
-              setLoading={setLoading}
-              userId={user.uid}
-              buttonText={'Create Project'}
-              userType={'BUSINESS'}
-              requiredConnects={parseInt(
-                process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
-                10,
-              )}
-            />
+            )}
           </div>
         </form>
       </Form>

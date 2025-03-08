@@ -27,17 +27,19 @@ export default function Education() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+
   
-        // Check if response.data.education is valid before using Object.values()
         const educationData = response.data?.education;
   
         if (!educationData || typeof educationData !== 'object') {
           console.warn('No education data found, setting empty array.');
-          setEducationInfo([]); // Empty array set kar diya taaki error na aaye
+          setEducationInfo([]); 
           return;
         }
   
-        setEducationInfo(Object.values(educationData));
+     
+        setEducationInfo(Object.values(response.data.data.education));
+
       } catch (error) {
         toast({
           variant: 'destructive',
