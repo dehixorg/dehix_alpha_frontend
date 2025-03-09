@@ -54,9 +54,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const userData = { ...firebaseUser, type: claims.claims.type };
             setLocalStorageItem('user', JSON.stringify(userData));
             setLocalStorageItem('token', accessToken);
-            setUserState(firebaseUser);
+            setUserState(userData);
             initializeAxiosWithToken(accessToken);
-            dispatch(setUser(firebaseUser));
+            dispatch(setUser(userData));
           }
         } catch (error) {
           console.error('Token Refresh Error:', error);
