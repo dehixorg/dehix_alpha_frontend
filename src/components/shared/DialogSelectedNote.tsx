@@ -46,7 +46,7 @@ const DialogSelectedNote = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
         className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
-        style={{ backgroundColor:  `${note.bgColor}B3` || '#ffffff' }}
+        style={{ backgroundColor: `${note.bgColor}B3` || '#ffffff' }}
       >
         {/* banner as background */}
         {note.banner && (
@@ -124,8 +124,9 @@ const DialogSelectedNote = ({
             <div className="mb-4">
               <p className="text-sm font-bold">Content:</p>
               <div
-                className={`text-black-300 mt-1 no-scrollbar p-2 ${note.content.length > 300 ? 'max-h-52 overflow-y-auto' : ''
-                  }`}
+                className={`text-black-300 mt-1 no-scrollbar p-2 ${
+                  note.content.length > 300 ? 'max-h-52 overflow-y-auto' : ''
+                }`}
               >
                 {note.content}
               </div>
@@ -135,7 +136,6 @@ const DialogSelectedNote = ({
               <p className="text-black-300 mt-1">{entityID}</p>
             </div>
           </div>
-
         )}
 
         <DialogFooter className="mt-6 relative z-10 text-white">
@@ -152,7 +152,11 @@ const DialogSelectedNote = ({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={onClose} className="mr-2 text-black dark:text-white">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="mr-2 text-black dark:text-white"
+              >
                 Close
               </Button>
               <Button onClick={() => setIsEditMode(true)}>Edit</Button>

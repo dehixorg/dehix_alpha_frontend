@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useNetwork } from "@/hooks/useNetwork";
-import { useToast } from "@/components/ui/use-toast";
-import { Toaster } from "@/components/ui/toaster";
-import { WifiOff } from "lucide-react";
+import { useEffect } from 'react';
+import { WifiOff } from 'lucide-react';
+
+import { useNetwork } from '@/hooks/useNetwork';
+import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 export default function NetworkProvider({
   children,
@@ -23,15 +24,15 @@ export default function NetworkProvider({
             <span>Internet Disconnected</span>
           </div>
         ) as any,
-        description: "Please check your connection.",
-        variant: "destructive",
+        description: 'Please check your connection.',
+        variant: 'destructive',
         duration: Infinity,
       });
 
-      document.body.style.pointerEvents = "none";
+      document.body.style.pointerEvents = 'none';
     } else {
-      dismiss(); 
-      document.body.style.pointerEvents = "auto";
+      dismiss();
+      document.body.style.pointerEvents = 'auto';
     }
   }, [isOnline]);
 
