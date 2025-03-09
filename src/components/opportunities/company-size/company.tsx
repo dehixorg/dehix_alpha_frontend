@@ -49,7 +49,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
         <CardTitle className="text-lg">{heading}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex space-x-4 p-2">
+        <div className="grid grid-cols-2 gap-4">
           {/* Lower limit input */}
           <div className="flex flex-col">
             <Label htmlFor="lowerLimit" className="text-sm">
@@ -62,7 +62,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               onChange={(e) =>
                 validateAndSetLimits(e.target.value, higherLimit)
               }
-              className="w-20 mt-1"
+              className="mt-1 w-full"
               placeholder="0"
             />
           </div>
@@ -77,7 +77,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ heading, setLimits }) => {
               type="number"
               value={higherLimit}
               onChange={(e) => validateAndSetLimits(lowerLimit, e.target.value)}
-              className="w-20 mt-1"
+              className="mt-1 w-full"
               placeholder="30"
             />
           </div>
