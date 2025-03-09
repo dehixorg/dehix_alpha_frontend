@@ -50,7 +50,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const accessToken = await firebaseUser.getIdToken();
           if (accessToken) {
-            setLocalStorageItem('user', JSON.stringify(firebaseUser));
+            const claims = await firebaseUser.getIdTokenResult();
+            const userData = { ...firebaseUser, type: claims.claims.type };
+            setLocalStorageItem('user', JSON.stringify(userData));
             setLocalStorageItem('token', accessToken);
             setUserState(firebaseUser);
             initializeAxiosWithToken(accessToken);
