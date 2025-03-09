@@ -27,23 +27,33 @@ export default function Education() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-<<<<<<< HEAD
-        setEducationInfo(Object.values(response?.data?.data?.education));
-=======
+
+  
+        const educationData = response.data?.education;
+  
+        if (!educationData || typeof educationData !== 'object') {
+          console.warn('No education data found, setting empty array.');
+          setEducationInfo([]); 
+          return;
+        }
+  
+     
         setEducationInfo(Object.values(response.data.data.education));
->>>>>>> 297144280b09370939c52f1f87e71c541d6b0b10
+
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
+        setEducationInfo([]); // Ensure UI doesn't break
       }
     };
-
+  
     fetchData();
   }, [user.uid, refresh]);
+  
 
   // const handleDelete = (index: number) => {
   //   const updatedEducation = education.filter((_, i) => i !== index);

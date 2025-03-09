@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
-      if (firebaseUser) {
+      if (firebaseUser && navigator.onLine) {
         try {
           const accessToken = await firebaseUser.getIdToken();
           if (accessToken) {
