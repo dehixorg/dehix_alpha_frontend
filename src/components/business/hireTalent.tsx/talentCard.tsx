@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Check, X as XIcon, SendIcon, Expand } from 'lucide-react';
+import { Loader2, Plus, X, Check, X as XIcon, SendIcon, Expand} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Github, Linkedin } from 'lucide-react'; // Import icons
@@ -53,6 +53,23 @@ import {
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
+
+interface Education {
+  _id: string;
+  degree: string;
+  universityName: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate: string;
+  grade: string;
+}
+interface Projects {
+  _id: string;
+  projectName: string;
+  githubLink: string;
+  techUsed: string[];
+  role: string;
+}
 
 interface Education {
   _id: string;
@@ -497,8 +514,22 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         className="overflow-y-auto no-scrollbar max-h-[100vh]"
                       >
                         <SheetHeader>
-                          <SheetTitle className="text-center text-lg font-bold py-4">
-                            View Talent Details
+                          <SheetTitle className="flex items-center justify-between text-lg font-bold py-4">
+                            <span className="text-center flex-1">
+                              View Talent Details
+                            </span>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link
+                                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                                  passHref
+                                >
+                                  <Expand className="w-6 h-6 cursor-pointer text-gray-600 " />
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">Expand</TooltipContent>
+                            </Tooltip>
                           </SheetTitle>
                           {/* <SheetDescription className="py-2">
                             Some description about the Talents
@@ -520,6 +551,39 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 {' '}
                                 {talent.Name}
                               </div>
+                              <div className="flex items-center justify-center gap-4 mt-4">
+                                {/* GitHub */}
+                                <a
+                                  href={talent.Github || '#'}
+                                  target={talent.Github ? '_blank' : '_self'}
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.Github
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
+                                >
+                                  <Github
+                                    className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
+                                  />
+                                </a>
+
+                                {/* LinkedIn */}
+                                <a
+                                  href={talent.LinkedIn || '#'}
+                                  target={talent.LinkedIn ? '_blank' : '_self'}
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.LinkedIn
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
+                                >
+                                  <Linkedin
+                                    className={`w-5 h-5 ${talent.LinkedIn ? 'text-blue-500' : 'text-gray-500'}`}
+                                  />
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -534,69 +598,127 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                 {talent.userName || 'N/A'}
                               </td>
                             </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Skill
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.skillName || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Domain
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.domainName || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Experience
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talentEntry.experience} years
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Monthly Pay
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                ${talentEntry.monthlyPay}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                Github
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.Github || 'N/A'}
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="border-b px-4 py-2 font-medium">
-                                LinkedIn
-                              </td>
-                              <td className="border-b px-4 py-2">
-                                {talent.LinkedIn || 'N/A'}
-                              </td>
-                            </tr>
                           </tbody>
                         </table>
+                        <Accordion type="multiple" className="w-full">
+                          {/* Education Accordion */}
+                          <AccordionItem value="education">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Education
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {education && Object.values(education).length > 0
+                                ? Object.values(education).map((edu: any) => (
+                                    <div
+                                      key={edu._id}
+                                      className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                    >
+                                      <p className="text-sm font-semibold">
+                                        {edu.degree}
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        {edu.universityName}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {edu.fieldOfStudy}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(
+                                          edu.startDate,
+                                        ).toLocaleDateString()}{' '}
+                                        -{' '}
+                                        {new Date(
+                                          edu.endDate,
+                                        ).toLocaleDateString()}
+                                      </p>
+                                      <p className="text-xs text-gray-700">
+                                        Grade: {edu.grade}
+                                      </p>
+                                    </div>
+                                  ))
+                                : 'No education details available.'}
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="projects">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Projects
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {projects &&
+                              Object.values(projects).length > 0 ? (
+                                Object.values(projects).map((project: any) => (
+                                  <div
+                                    key={project._id}
+                                    className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                  >
+                                    <p className="text-sm font-semibold">
+                                      {project.projectName}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      Role: {project.role}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Tech Used:{' '}
+                                      {project.techUsed.length > 0
+                                        ? project.techUsed.join(', ')
+                                        : 'N/A'}
+                                    </p>
+                                    {project.githubLink && (
+                                      <a
+                                        href={project.githubLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                                      >
+                                        <Github className="w-4 h-4" />
+                                        View on GitHub
+                                      </a>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  No projects available.
+                                </p>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                          {/* Skills Accordion */}
+                          <AccordionItem value="skills">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Skills
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.skillName
+                                ? talentEntry.skillName
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
 
-                        <div>
-                          <div className="w-full text-center mt-2">
-                            <Link
-                              href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                              passHref
-                            >
-                              <Button className="w-full text-sm py-1 px-2  text-black rounded-md">
-                                Expand
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
+                          {/* Domain Accordion */}
+                          <AccordionItem value="domain">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Domain
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.domainName
+                                ? talentEntry.domainName
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Experience Accordion */}
+                          <AccordionItem value="experience">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Experience
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.experience
+                                ? `${talentEntry.experience} years`
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
 
                         <Separator />
                         <div className="w-full mt-4 mb-6">
