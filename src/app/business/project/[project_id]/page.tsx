@@ -149,7 +149,7 @@ export default function Dashboard() {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-4 md:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -157,7 +157,7 @@ export default function Dashboard() {
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
-            { label: project_id, link: '#' },
+            { label: project.projectName, link: '#' },
           ]}
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
@@ -189,12 +189,12 @@ export default function Dashboard() {
                       <CardHeader className="pl-0 ">
                         <CardTitle className="pb-4">Profiles</CardTitle>
                       </CardHeader>
-                      <Carousel className="w-1/2 relative pt-3">
+                      <Carousel className="w-full relative pt-3">
                         <CarouselContent className="flex mt-3 gap-4">
                           {project.profiles?.map((profile, index) => (
                             <CarouselItem
                               key={index}
-                              className="flex shrink-0 w-1/3"
+                              className="flex shrink-1 w-1/3 md:basis-1/2 lg:basis-1/2"
                             >
                               <ProjectSkillCard
                                 domainName={profile.domain}
