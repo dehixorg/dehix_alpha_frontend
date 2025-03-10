@@ -8,6 +8,7 @@ import { AuthProvider } from './AuthContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
+import NetworkProvider from '@/utils/NetworkProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,7 +34,9 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <TooltipProvider>{children}</TooltipProvider>
+              <TooltipProvider>
+                <NetworkProvider>{children}</NetworkProvider>
+              </TooltipProvider>
               <Toaster />
             </ThemeProvider>
           </AuthProvider>

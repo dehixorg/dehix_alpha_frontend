@@ -10,7 +10,11 @@ import ConfirmButton from './ConfirmButton';
 
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -20,8 +24,12 @@ const DateOfBirthPicker = ({ field }: any) => {
   const selectedDate = field.value ? new Date(field.value) : undefined;
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(selectedDate?.getMonth() ?? minAgeDate.getMonth());
-  const [selectedYear, setSelectedYear] = useState(selectedDate?.getFullYear() ?? minAgeDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(
+    selectedDate?.getMonth() ?? minAgeDate.getMonth(),
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    selectedDate?.getFullYear() ?? minAgeDate.getFullYear(),
+  );
   const [openCalendar, setOpenCalendar] = useState(false);
 
   const handleConfirm = () => {
@@ -64,8 +72,14 @@ const DateOfBirthPicker = ({ field }: any) => {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-sm rounded-lg bg-[#111] mx-1 shadow-xl p-6">
           <h2 className="text-lg text-white mb-4">Select Month & Year</h2>
-          <MonthSelector selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
-          <YearSelector selectedYear={selectedYear} onSelect={setSelectedYear} />
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            onSelect={setSelectedMonth}
+          />
+          <YearSelector
+            selectedYear={selectedYear}
+            onSelect={setSelectedYear}
+          />
           <ConfirmButton onConfirm={handleConfirm} />
         </DialogContent>
       </Dialog>

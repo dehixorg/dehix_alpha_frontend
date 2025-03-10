@@ -148,7 +148,7 @@ export const AddEducation: React.FC<AddEducationProps> = ({ onFormSubmit }) => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen">
+      <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
         <DialogHeader>
           <DialogTitle>Add Education</DialogTitle>
           <DialogDescription>Add your relevant Education.</DialogDescription>
