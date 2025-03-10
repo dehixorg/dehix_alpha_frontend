@@ -2,9 +2,10 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Check, X as XIcon, SendIcon } from 'lucide-react';
+import { Loader2, Plus, X, SendIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -87,28 +88,27 @@ interface SkillDomainData {
 
 const SHEET_SIDES = ['left'] as const;
 
-// type SheetSide = (typeof SHEET_SIDES)[number];
-
 const TalentCard: React.FC<TalentCardProps> = ({
   skillFilter,
   domainFilter,
   skillDomainFormProps,
 }) => {
+  const router = useRouter();
   const [filteredTalents, setFilteredTalents] = useState<Talent[]>([]);
   const [talents, setTalents] = useState<Talent[]>([]);
   const skipRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const isRequestInProgress = useRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [skills, setSkills] = useState<Skill[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [domains, setDomains] = useState<Domain[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
+  const [inviteLoading, setInviteLoading] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -130,35 +130,85 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   };
 
+  // Fetch already invited talents on component mount
+  useEffect(() => {
+    const fetchInvitedTalents = async () => {
+      try {
+        const response = await axiosInstance.get(
+          '/business/hire-dehixtalent/invited',
+        );
+        if (response?.data?.data) {
+          const invitedIds = new Set<string>(
+            response.data.data.map((talent: { _id: string }) => talent._id),
+          );
+          setInvitedTalents(invitedIds);
+        }
+      } catch (error) {
+        console.error('Error fetching invited talents:', error);
+        // Don't show error toast here as it's just initial state loading
+      }
+    };
+
+    fetchInvitedTalents();
+  }, []);
+
   const handleInviteTalent = async (talentId: string) => {
     try {
-      // Toggle invite status
-      setInvitedTalents((prev) => {
-        const newInvited = new Set(prev);
-        if (newInvited.has(talentId)) {
-          newInvited.delete(talentId);
-        } else {
-          newInvited.add(talentId);
-          // Here you would make API call to send invitation
-          // For example: await axiosInstance.post(`/business/invite-talent/${talentId}`);
-        }
-        return newInvited;
-      });
+      setInviteLoading((prev) => ({ ...prev, [talentId]: true }));
 
-      if (!invitedTalents.has(talentId)) {
+      if (invitedTalents.has(talentId)) {
+        // Cancel invitation
+        await axiosInstance.delete(
+          `/business/hire-dehixtalent/${talentId}/invite`,
+        );
+
+        setInvitedTalents((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(talentId);
+          return newSet;
+        });
+
+        toast({
+          title: 'Success',
+          description: 'Invitation cancelled successfully.',
+        });
+      } else {
+        // Send invitation using the PUT API
+        await axiosInstance.put(
+          `/business/hire-dehixtalent/${talentId}/invite`,
+          {
+            freelancerId: user.uid, // Replace with the actual freelancer's ID if different
+            dehixTalentId: talentId, // Replace with the actual talent ID if different
+          },
+        );
+
+        setInvitedTalents((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(talentId);
+          return newSet;
+        });
+
         toast({
           title: 'Success',
           description: 'Invitation sent successfully.',
         });
       }
-    } catch (error) {
-      console.error('Error inviting talent:', error);
+    } catch (error: any) {
+      console.error('Error managing invitation:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to send invitation. Please try again.',
+        description:
+          error.response?.data?.message ||
+          'Failed to process invitation. Please try again.',
       });
+    } finally {
+      setInviteLoading((prev) => ({ ...prev, [talentId]: false }));
     }
+  };
+
+  const navigateToInvitedPage = () => {
+    router.push('/business/invited-talents');
   };
 
   useEffect(() => {
@@ -183,6 +233,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
     fetchSkillsAndDomains();
   }, []);
+
   const fetchUserData = useCallback(async () => {
     try {
       const skillsResponse = await axiosInstance.get('/skills');
@@ -288,7 +339,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong. Please try again.',
+          description:
+            error.response?.data?.message ||
+            'Something went wrong. Please try again.',
         });
       }
     }
@@ -340,7 +393,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
           toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Something went wrong. Please try again.',
+            description:
+              error.response?.data?.message ||
+              'Something went wrong. Please try again.',
           });
         }
       } finally {
@@ -392,270 +447,293 @@ const TalentCard: React.FC<TalentCardProps> = ({
   }, [skillFilter, domainFilter, talents]);
 
   return (
-    <div className="flex flex-wrap justify-center gap-4">
-      {filteredTalents.map((talent) => {
-        const talentEntry = talent.dehixTalent;
-        const label = talentEntry.skillName ? 'Skill' : 'Domain';
-        const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
-        const isInvited = invitedTalents.has(talentEntry._id);
+    <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={navigateToInvitedPage}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <SendIcon className="h-4 w-4" />
+          View Invited Talents
+        </Button>
+      </div>
 
-        return (
-          <Card
-            key={talentEntry._id}
-            className="w-full sm:w-[350px] lg:w-[450px]"
-          >
-            <CardHeader className="flex flex-row items-center gap-4">
-              <Avatar className="h-14 w-14">
-                <AvatarImage src={talent.profilePic || '/default-avatar.png'} />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {talent.userName}
-                </p>
-              </div>
-              <button
-                onClick={() => handleInviteTalent(talentEntry._id)}
-                className="ml-auto"
-              ></button>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <div className="flex justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{label}</span>
-                    <Badge>{value}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Experience</span>
-                    <Badge>{talentEntry.experience} years</Badge>
-                  </div>
+      <div className="flex flex-wrap justify-center gap-4">
+        {filteredTalents.map((talent) => {
+          const talentEntry = talent.dehixTalent;
+          const label = talentEntry.skillName ? 'Skill' : 'Domain';
+          const value =
+            talentEntry.skillName || talentEntry.domainName || 'N/A';
+          const isInvited = invitedTalents.has(talentEntry._id);
+          const isLoading = inviteLoading[talentEntry._id] || false;
+
+          return (
+            <Card
+              key={talentEntry._id}
+              className="w-full sm:w-[350px] lg:w-[450px]"
+            >
+              <CardHeader className="flex flex-row items-center gap-4">
+                <Avatar className="h-14 w-14">
+                  <AvatarImage
+                    src={talent.profilePic || '/default-avatar.png'}
+                  />
+                  <AvatarFallback>
+                    {talent.Name ? talent.Name.slice(0, 2).toUpperCase() : 'JD'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <CardTitle>{talent.Name || 'Unknown'}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {talent.userName}
+                  </p>
                 </div>
-                <div className="flex justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Monthly Pay</span>
-                    <Badge>${talentEntry.monthlyPay}</Badge>
-                  </div>
-                  {isInvited && (
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <div className="flex justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">Status</span>
-                      <Badge variant="default">Invited</Badge>
+                      <span className="text-sm font-semibold">{label}</span>
+                      <Badge>{value}</Badge>
                     </div>
-                  )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Experience</span>
+                      <Badge>{talentEntry.experience} years</Badge>
+                    </div>
+                  </div>
+                  <div className="flex justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Monthly Pay</span>
+                      <Badge>${talentEntry.monthlyPay}</Badge>
+                    </div>
+                    {isInvited && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">Status</span>
+                        <Badge variant="default">Invited</Badge>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col justify-between pt-0 pb-4">
-              <div className="py-3 w-full">
-                {SHEET_SIDES.map((View) => (
-                  <Sheet key={View}>
-                    <SheetTrigger asChild>
-                      <Button className="w-full text-sm text-black rounded-md">
-                        View
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent
-                      side={View}
-                      className="overflow-y-auto no-scrollbar max-h-[100vh]"
-                    >
-                      <SheetHeader>
-                        <SheetTitle className="text-center text-lg font-bold py-4">
-                          View Talent Details
-                        </SheetTitle>
-                      </SheetHeader>
+              </CardContent>
+              <CardFooter className="flex-col justify-between pt-0 pb-4">
+                <div className="py-3 w-full">
+                  {SHEET_SIDES.map((View) => (
+                    <Sheet key={View}>
+                      <SheetTrigger asChild>
+                        <Button className="w-full text-sm text-black rounded-md">
+                          View
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent
+                        side={View}
+                        className="overflow-y-auto no-scrollbar max-h-[100vh]"
+                      >
+                        <SheetHeader>
+                          <SheetTitle className="text-center text-lg font-bold py-4">
+                            View Talent Details
+                          </SheetTitle>
+                        </SheetHeader>
 
-                      <div className="grid gap-4 py-2">
-                        <div className="w-full text-center">
-                          <div className="items-center">
-                            <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
-                              <AvatarImage
-                                src={talent.profilePic || '/default-avatar.png'}
-                              />
-                              <AvatarFallback>Unable to load</AvatarFallback>
-                            </Avatar>
-                            <div className="text-lg font-bold">
-                              {' '}
-                              {talent.Name}
+                        <div className="grid gap-4 py-2">
+                          <div className="w-full text-center">
+                            <div className="items-center">
+                              <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
+                                <AvatarImage
+                                  src={
+                                    talent.profilePic || '/default-avatar.png'
+                                  }
+                                />
+                                <AvatarFallback>Unable to load</AvatarFallback>
+                              </Avatar>
+                              <div className="text-lg font-bold">
+                                {' '}
+                                {talent.Name}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <table className="min-w-full table-auto border-collapse ">
-                        <tbody>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Username
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talent.userName || 'N/A'}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Skill
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talentEntry.skillName || 'N/A'}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Domain
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talentEntry.domainName || 'N/A'}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Experience
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talentEntry.experience} years
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Monthly Pay
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              ${talentEntry.monthlyPay}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              Github
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talent.Github || 'N/A'}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="border-b px-4 py-2 font-medium">
-                              LinkedIn
-                            </td>
-                            <td className="border-b px-4 py-2">
-                              {talent.LinkedIn || 'N/A'}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                        <table className="min-w-full table-auto border-collapse ">
+                          <tbody>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Username
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talent.userName || 'N/A'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Skill
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talentEntry.skillName || 'N/A'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Domain
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talentEntry.domainName || 'N/A'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Experience
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talentEntry.experience} years
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Monthly Pay
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                ${talentEntry.monthlyPay}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Github
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talent.Github || 'N/A'}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                LinkedIn
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talent.LinkedIn || 'N/A'}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
 
-                      <div>
-                        <div className="w-full text-center mt-2">
-                          <Link
-                            href={`/business/freelancerProfile/${talent.freelancer_id}`}
-                            passHref
-                          >
-                            <Button className="w-full text-sm py-1 px-2  text-black rounded-md">
-                              Expand
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-
-                      <Separator />
-                      <div className="w-full mt-4 mb-6">
-                        <div className="w-full">
-                          <div className="flex items-center mt-2">
-                            <Select
-                              onValueChange={(value) => setTmpSkill(value)}
-                              value={tmpSkill || ''}
+                        <div>
+                          <div className="w-full text-center mt-2">
+                            <Link
+                              href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                              passHref
                             >
-                              <SelectTrigger>
-                                <SelectValue
-                                  placeholder={
-                                    tmpSkill ? tmpSkill : 'Select skill'
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {skillDomainData
-                                  .filter(
-                                    (skill: any) =>
-                                      !currSkills.some(
-                                        (s: any) => s.name === skill.label,
-                                      ),
-                                  )
-                                  .map((skill: any, index: number) => (
-                                    <SelectItem key={index} value={skill.label}>
-                                      {skill.label}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="outline"
-                              type="button"
-                              size="icon"
-                              className="ml-2"
-                              onClick={() => {
-                                handleAddSkill();
-                                setTmpSkill('');
-                              }}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
+                              <Button className="w-full text-sm py-1 px-2  text-black rounded-md">
+                                Expand
+                              </Button>
+                            </Link>
                           </div>
-                          <div className="flex flex-wrap gap-2 mt-5">
-                            {currSkills.map((skill: any, index: number) => (
-                              <Badge
-                                className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                                key={index}
+                        </div>
+
+                        <Separator />
+                        <div className="w-full mt-4 mb-6">
+                          <div className="w-full">
+                            <div className="flex items-center mt-2">
+                              <Select
+                                onValueChange={(value) => setTmpSkill(value)}
+                                value={tmpSkill || ''}
                               >
-                                {skill.name}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSkill(skill.name)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={
+                                      tmpSkill ? tmpSkill : 'Select skill'
+                                    }
+                                  />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {skillDomainData
+                                    .filter(
+                                      (skill: any) =>
+                                        !currSkills.some(
+                                          (s: any) => s.name === skill.label,
+                                        ),
+                                    )
+                                    .map((skill: any, index: number) => (
+                                      <SelectItem
+                                        key={index}
+                                        value={skill.label}
+                                      >
+                                        {skill.label}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="outline"
+                                type="button"
+                                size="icon"
+                                className="ml-2"
+                                onClick={() => {
+                                  handleAddSkill();
+                                  setTmpSkill('');
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-5">
+                              {currSkills.map((skill: any, index: number) => (
+                                <Badge
+                                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                                  key={index}
                                 >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </Badge>
-                            ))}
+                                  {skill.name}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteSkill(skill.name)
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="mt-2">
-                          <div className="w-full text-center">
-                            <Button
-                              className="w-full text-sm py-1 px-2  text-black rounded-md"
-                              type="submit"
-                            >
-                              Save
-                            </Button>
+                          <div className="mt-2">
+                            <div className="w-full text-center">
+                              <Button
+                                className="w-full text-sm py-1 px-2  text-black rounded-md"
+                                type="submit"
+                              >
+                                Save
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                ))}
-              </div>
-              <Button
-                onClick={() => handleInviteTalent(talentEntry._id)}
-                className={`w-full ${
-                  isInvited
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-primary hover:bg-primary/90'
-                }`}
-              >
-                <SendIcon className="mr-2 h-4 w-4" />
-                {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
-              </Button>
-            </CardFooter>
-          </Card>
-        );
-      })}
-      <InfiniteScroll
-        hasMore={hasMore}
-        isLoading={loading}
-        next={fetchTalentData}
-        threshold={1}
-      >
-        {loading && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
-      </InfiniteScroll>
+                      </SheetContent>
+                    </Sheet>
+                  ))}
+                </div>
+                <Button
+                  onClick={() => handleInviteTalent(talentEntry._id)}
+                  className={`w-full ${isInvited ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <SendIcon className="mr-2 h-4 w-4" />
+                  )}
+                  {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
+        <InfiniteScroll
+          hasMore={hasMore}
+          isLoading={loading}
+          next={fetchTalentData}
+          threshold={1}
+        >
+          {loading && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
+        </InfiniteScroll>
+      </div>
     </div>
   );
 };

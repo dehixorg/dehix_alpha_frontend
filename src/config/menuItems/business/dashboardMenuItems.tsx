@@ -108,6 +108,9 @@ import {
   Trash2,
   Users2,
   XCircle,
+  CircleX,
+  CircleCheck,
+  Send,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -217,5 +220,28 @@ export const notesMenu: MenuItem[] = [
     href: '/notes/trash',
     icon: <Trash2 className="h-5 w-5" />,
     label: 'Trash',
+  },
+];
+
+export const ManageTalentMenu: MenuItem[] = [
+  {
+    href: '/dashboard/business',
+    icon: <Home className="h-5 w-5" />,
+    label: 'Home',
+  },
+  {
+    href: '/business/market/invited',
+    icon: <Send className="h-5 w-5" />,
+    label: 'Invited',
+  },
+  {
+    href: 'business/market/accepted',
+    icon: <CircleCheck className="h-5 w-5" />,
+    label: 'Accepted',
+  },
+  {
+    href: '/business/market/rejected',
+    icon: <CircleX className="h-5 w-5" />,
+    label: 'Rejected',
   },
 ];
