@@ -1,9 +1,9 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import CompanyCard from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
-import { X } from 'lucide-react';
 
 interface FilterState {
   location: string[];
@@ -41,7 +41,7 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
           <div className="bg-black relative rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
             <X
               onClick={handleModalToggle}
-              className='absolute cursor-pointer top-1 right-6'
+              className="absolute cursor-pointer top-1 right-6"
             />
             <div className="overflow-y-auto p-4 flex-grow">
               <div className="border-b border-gray-300 pb-4 ">
