@@ -151,10 +151,10 @@ export default function Dashboard() {
                 {pendingProjects.length > 2 && (
                   <>
                     <div className="flex">
-                      <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                      <CarouselPrevious className="absolute left-0 -top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                         Previous
                       </CarouselPrevious>
-                      <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                      <CarouselNext className="absolute right-0 -top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
                         Next
                       </CarouselNext>
                     </div>

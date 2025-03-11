@@ -264,7 +264,7 @@ const ScheduleInterviewDialog: React.FC = () => {
                             max={50}
                             step="0.1" // Allow decimals
                             onChange={(e) =>
-                              field.onChange(parseInt(e.target.value, 10))
+                              field.onChange(parseFloat(e.target.value) || 0)
                             }
                           />
                           <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
@@ -388,7 +388,7 @@ const ScheduleInterviewDialog: React.FC = () => {
                             max={50}
                             step={0.1} // Allow decimals
                             onChange={(e) =>
-                              field.onChange(parseInt(e.target.value, 10))
+                              field.onChange(parseFloat(e.target.value) || 0)
                             }
                           />
                           <span className="absolute right-10 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">

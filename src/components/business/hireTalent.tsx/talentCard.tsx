@@ -1,11 +1,29 @@
 'use client';
 
+<<<<<<< HEAD
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2, Plus, X, Check, X as XIcon, SendIcon } from 'lucide-react';
+=======
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Loader2, Plus, X, Expand } from 'lucide-react';
+>>>>>>> c33d46948666fd88ac65fae751229264b018e36e
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { Github, Linkedin } from 'lucide-react'; // Import icons
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -41,6 +59,23 @@ import {
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
 
+interface Education {
+  _id: string;
+  degree: string;
+  universityName: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate: string;
+  grade: string;
+}
+interface Projects {
+  _id: string;
+  projectName: string;
+  githubLink: string;
+  techUsed: string[];
+  role: string;
+}
+
 interface DehixTalent {
   freelancer_id: any;
   _id: string;
@@ -60,6 +95,8 @@ interface Talent {
   dehixTalent: DehixTalent;
   Github: any;
   LinkedIn: any;
+  education?: Record<string, Education>;
+  projects?: Record<string, Projects>;
 }
 interface Skill {
   _id: string;
@@ -323,6 +360,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
 
         if (response?.data?.data) {
+          console.log(response.data.data);
           setTalents((prev) =>
             reset ? fetchedData : [...prev, ...fetchedData],
           );
@@ -395,6 +433,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
     <div className="flex flex-wrap justify-center gap-4">
       {filteredTalents.map((talent) => {
         const talentEntry = talent.dehixTalent;
+        const education = talent.education;
+        const projects = talent.projects;
+        console.log(education);
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
         const isInvited = invitedTalents.has(talentEntry._id);
@@ -437,12 +478,317 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+<<<<<<< HEAD
                   {isInvited && (
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">Status</span>
                       <Badge variant="default">Invited</Badge>
                     </div>
                   )}
+=======
+                </div>
+
+                <div className="py-4">
+                  {SHEET_SIDES.map((View) => (
+                    <Sheet key={View}>
+                      <SheetTrigger asChild>
+                        <Button className="w-full text-sm  text-black rounded-md">
+                          View
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent
+                        side={View}
+                        className="overflow-y-auto no-scrollbar max-h-[100vh]"
+                      >
+                        <SheetHeader>
+                          <SheetTitle className="flex items-center justify-between text-lg font-bold py-4">
+                            <span className="text-center flex-1">
+                              View Talent Details
+                            </span>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link
+                                  href={`/business/freelancerProfile/${talent.freelancer_id}`}
+                                  passHref
+                                >
+                                  <Expand className="w-6 h-6 cursor-pointer text-gray-600 " />
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">Expand</TooltipContent>
+                            </Tooltip>
+                          </SheetTitle>
+                          {/* <SheetDescription className="py-2">
+                        Some description about the Talents
+                        </SheetDescription> */}
+                        </SheetHeader>
+
+                        <div className="grid gap-4 py-2">
+                          <div className="w-full text-center">
+                            <div className="items-center">
+                              <Avatar className="h-20 w-20 mx-auto mb-4 rounded-full border-4 border-white hover:border-white transition-all duration-300">
+                                <AvatarImage
+                                  src={
+                                    talent.profilePic || '/default-avatar.png'
+                                  }
+                                />
+                                <AvatarFallback>Unable to load</AvatarFallback>
+                              </Avatar>
+                              <div className="text-lg font-bold">
+                                {' '}
+                                {talent.Name}
+                              </div>
+                              <div className="flex items-center justify-center gap-4 mt-4">
+                                {/* GitHub */}
+                                <a
+                                  href={talent.Github || '#'}
+                                  target={talent.Github ? '_blank' : '_self'}
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.Github
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
+                                >
+                                  <Github
+                                    className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
+                                  />
+                                </a>
+
+                                {/* LinkedIn */}
+                                <a
+                                  href={talent.LinkedIn || '#'}
+                                  target={talent.LinkedIn ? '_blank' : '_self'}
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.LinkedIn
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
+                                >
+                                  <Linkedin
+                                    className={`w-5 h-5 ${talent.LinkedIn ? 'text-blue-500' : 'text-gray-500'}`}
+                                  />
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <table className="min-w-full table-auto border-collapse ">
+                          <tbody>
+                            <tr>
+                              <td className="border-b px-4 py-2 font-medium">
+                                Username
+                              </td>
+                              <td className="border-b px-4 py-2">
+                                {talent.userName || 'N/A'}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <Accordion type="multiple" className="w-full">
+                          {/* Education Accordion */}
+                          <AccordionItem value="education">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Education
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {education && Object.values(education).length > 0
+                                ? Object.values(education).map((edu: any) => (
+                                    <div
+                                      key={edu._id}
+                                      className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                    >
+                                      <p className="text-sm font-semibold">
+                                        {edu.degree}
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        {edu.universityName}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {edu.fieldOfStudy}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(
+                                          edu.startDate,
+                                        ).toLocaleDateString()}{' '}
+                                        -{' '}
+                                        {new Date(
+                                          edu.endDate,
+                                        ).toLocaleDateString()}
+                                      </p>
+                                      <p className="text-xs text-gray-700">
+                                        Grade: {edu.grade}
+                                      </p>
+                                    </div>
+                                  ))
+                                : 'No education details available.'}
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="projects">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Projects
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {projects &&
+                              Object.values(projects).length > 0 ? (
+                                Object.values(projects).map((project: any) => (
+                                  <div
+                                    key={project._id}
+                                    className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                  >
+                                    <p className="text-sm font-semibold">
+                                      {project.projectName}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      Role: {project.role}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Tech Used:{' '}
+                                      {project.techUsed.length > 0
+                                        ? project.techUsed.join(', ')
+                                        : 'N/A'}
+                                    </p>
+                                    {project.githubLink && (
+                                      <a
+                                        href={project.githubLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
+                                      >
+                                        <Github className="w-4 h-4" />
+                                        View on GitHub
+                                      </a>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  No projects available.
+                                </p>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                          {/* Skills Accordion */}
+                          <AccordionItem value="skills">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Skills
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.skillName
+                                ? talentEntry.skillName
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Domain Accordion */}
+                          <AccordionItem value="domain">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Domain
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.domainName
+                                ? talentEntry.domainName
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          {/* Experience Accordion */}
+                          <AccordionItem value="experience">
+                            <AccordionTrigger className="w-full flex justify-between px-4 py-2 !no-underline focus:ring-0 focus:outline-none">
+                              Experience
+                            </AccordionTrigger>
+                            <AccordionContent className="p-4 transition-all duration-300">
+                              {talentEntry.experience
+                                ? `${talentEntry.experience} years`
+                                : 'N/A'}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
+                        <Separator />
+                        <div className="w-full mt-4 mb-6">
+                          <div className="w-full">
+                            <div className="flex items-center mt-2">
+                              <Select
+                                onValueChange={(value) => setTmpSkill(value)}
+                                value={tmpSkill || ''}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue
+                                    placeholder={
+                                      tmpSkill ? tmpSkill : 'Select skill'
+                                    }
+                                  />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {skillDomainData
+                                    .filter(
+                                      (skill: any) =>
+                                        !currSkills.some(
+                                          (s: any) => s.name === skill.label,
+                                        ),
+                                    )
+                                    .map((skill: any, index: number) => (
+                                      <SelectItem
+                                        key={index}
+                                        value={skill.label}
+                                      >
+                                        {skill.label}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="outline"
+                                type="button"
+                                size="icon"
+                                className="ml-2"
+                                onClick={() => {
+                                  handleAddSkill();
+                                  setTmpSkill('');
+                                }}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-5">
+                              {currSkills.map((skill: any, index: number) => (
+                                <Badge
+                                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                                  key={index}
+                                >
+                                  {skill.name}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteSkill(skill.name)
+                                    }
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="mt-2">
+                            <div className="w-full text-center">
+                              <Button
+                                className="w-full text-sm py-1 px-2  text-black rounded-md"
+                                type="submit"
+                              >
+                                Save
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  ))}
+>>>>>>> c33d46948666fd88ac65fae751229264b018e36e
                 </div>
               </div>
             </CardContent>

@@ -66,9 +66,7 @@ export default function ProfessionalInfo() {
       );
       const data = response.data.data;
       setEducationData(data);
-      const flattenedData = data.flatMap((entry: any) =>
-        Object.values(entry.education),
-      );
+      const flattenedData = data.flatMap((entry: any) => Object.values(entry));
       setEducationData(flattenedData);
     } catch (error) {
       console.log(error, 'error in getting verification data');

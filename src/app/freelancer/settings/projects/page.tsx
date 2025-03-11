@@ -25,19 +25,30 @@ export default function Projects() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setProjects(Object.values(response.data?.projects));
+
+        const projectsData = response.data?.projects;
+
+        if (!projectsData || typeof projectsData !== 'object') {
+          console.warn('No projects data found, setting empty array.');
+          setProjects([]);
+          return;
+        }
+
+        setProjects(Object.values(response?.data?.data?.projects));
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
+        setProjects([]);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid, refresh]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu

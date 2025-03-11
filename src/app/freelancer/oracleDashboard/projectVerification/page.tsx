@@ -81,7 +81,7 @@ export default function ProfessionalInfo() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
+        description: 'Something went wrong. Please try again.',
       }); // Error toast
       console.log(error, 'error in getting verification data');
     }
