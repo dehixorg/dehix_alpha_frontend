@@ -1,23 +1,26 @@
 import {
   Archive,
+  BookMarked,
+  CheckCircle2,
   Home,
   MessageSquare,
   Settings,
   ShoppingCart,
   StickyNote,
   Trash2,
-  Users,
+  Users2,
+  XCircle,
 } from 'lucide-react';
 import Image from 'next/image';
 
-import { MenuItem } from '@/components/menu/sidebarMenu';
+import type { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const menuItemsTop: MenuItem[] = [
   {
     href: '#',
     icon: (
       <Image
-        src="/dehix.png" // Path to your image in the public folder
+        src="/dehix.png"
         alt="Icon"
         width={16} // Set the desired width
         height={16} // Set the desired height
@@ -38,8 +41,30 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/business/talent',
-    icon: <Users className="h-5 w-5" />,
+    icon: <Users2 className="h-5 w-5" />,
     label: 'Dehix Talent',
+    subItems: [
+      {
+        label: 'Overview',
+        href: '/business/talent',
+        icon: <Users2 className="h-4 w-4" />,
+      },
+      {
+        label: 'Invites',
+        href: '/business/market/invited',
+        icon: <BookMarked className="h-4 w-4" />,
+      },
+      {
+        label: 'Accepted',
+        href: '/business/market/accepted',
+        icon: <CheckCircle2 className="h-4 w-4" />,
+      },
+      {
+        label: 'Rejected',
+        href: '/business/market/rejected',
+        icon: <XCircle className="h-4 w-4" />,
+      },
+    ],
   },
   {
     href: '/chat',
@@ -66,7 +91,7 @@ export const notesMenu: MenuItem[] = [
     href: '#',
     icon: (
       <Image
-        src="/dehix.png" // Path to your image in the public folder
+        src="/dehix.png"
         alt="Icon"
         width={16} // Set the desired width
         height={16} // Set the desired height

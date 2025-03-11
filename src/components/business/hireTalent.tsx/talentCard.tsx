@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Expand } from 'lucide-react';
+import type React from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Loader2, Plus, X, Check, X as XIcon, SendIcon, Expand} from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Github, Linkedin } from 'lucide-react'; // Import icons
@@ -20,14 +21,20 @@ import {
 } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
 import { Separator } from '@/components/ui/separator';
 import {
   Dehix_Talent_Card_Pagination,
-  HireDehixTalentStatusEnum,
+  type HireDehixTalentStatusEnum,
 } from '@/utils/enum';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +52,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import { RootState } from '@/lib/store';
+import type { RootState } from '@/lib/store';
+
+interface Education {
+  _id: string;
+  degree: string;
+  universityName: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate: string;
+  grade: string;
+}
+interface Projects {
+  _id: string;
+  projectName: string;
+  githubLink: string;
+  techUsed: string[];
+  role: string;
+}
 
 interface Education {
   _id: string;
@@ -130,10 +154,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [domains, setDomains] = useState<Domain[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  //const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
 
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
@@ -152,6 +176,37 @@ const TalentCard: React.FC<TalentCardProps> = ({
         },
       ]);
       setTmpSkill('');
+    }
+  };
+
+  const handleInviteTalent = async (talentId: string) => {
+    try {
+      // Toggle invite status
+      setInvitedTalents((prev) => {
+        const newInvited = new Set(prev);
+        if (newInvited.has(talentId)) {
+          newInvited.delete(talentId);
+        } else {
+          newInvited.add(talentId);
+          // Here you would make API call to send invitation
+          // For example: await axiosInstance.post(`/business/invite-talent/${talentId}`);
+        }
+        return newInvited;
+      });
+
+      if (!invitedTalents.has(talentId)) {
+        toast({
+          title: 'Success',
+          description: 'Invitation sent successfully.',
+        });
+      }
+    } catch (error) {
+      console.error('Error inviting talent:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to send invitation. Please try again.',
+      });
     }
   };
 
@@ -306,9 +361,13 @@ const TalentCard: React.FC<TalentCardProps> = ({
         isRequestInProgress.current = true;
         setLoading(true);
 
-        const response = await axiosInstance.get(
-          `freelancer/dehixtalent?limit=${Dehix_Talent_Card_Pagination.BATCH}&skip=${newSkip}`,
-        );
+        const response = await axiosInstance.get('freelancer/dehixtalent', {
+          params: {
+            limit: Dehix_Talent_Card_Pagination.BATCH,
+            skip: newSkip,
+          },
+        });
+        
 
         const fetchedData = response?.data?.data || [];
 
@@ -395,6 +454,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         console.log(education);
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
+        const isInvited = invitedTalents.has(talentEntry._id);
 
         return (
           <Card
@@ -412,6 +472,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   {talent.userName}
                 </p>
               </div>
+              <button
+                onClick={() => handleInviteTalent(talentEntry._id)}
+                className="ml-auto"
+              ></button>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -430,6 +494,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
                     <span className="text-sm font-semibold">Monthly Pay</span>
                     <Badge>${talentEntry.monthlyPay}</Badge>
                   </div>
+                  {isInvited && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Status</span>
+                      <Badge variant="default">Invited</Badge>
+                    </div>
+                  )}
                 </div>
 
                 <div className="py-4">
@@ -439,8 +509,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         <Button className="w-full text-sm  text-black rounded-md">
                           View
                         </Button>
-                      </SheetTrigger>
-                      <SheetContent
+                      </SheetTrigger><SheetContent
                         side={View}
                         className="overflow-y-auto no-scrollbar max-h-[100vh]"
                       >
@@ -463,8 +532,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </Tooltip>
                           </SheetTitle>
                           {/* <SheetDescription className="py-2">
-                        Some description about the Talents
-                        </SheetDescription> */}
+                            Some description about the Talents
+                          </SheetDescription> */}
                         </SheetHeader>
 
                         <div className="grid gap-4 py-2">
@@ -675,10 +744,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                         ),
                                     )
                                     .map((skill: any, index: number) => (
-                                      <SelectItem
-                                        key={index}
-                                        value={skill.label}
-                                      >
+                                      <SelectItem key={index} value={skill.label}>
                                         {skill.label}
                                       </SelectItem>
                                     ))}
@@ -706,9 +772,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   {skill.name}
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      handleDeleteSkill(skill.name)
-                                    }
+                                    onClick={() => handleDeleteSkill(skill.name)}
                                     className="ml-2 text-red-500 hover:text-red-700"
                                   >
                                     <X className="h-4 w-4" />
@@ -735,6 +799,18 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 </div>
               </div>
             </CardContent>
+            <CardFooter>
+              <Button
+                onClick={() => handleInviteTalent(talentEntry._id)}
+                className={`w-full ${isInvited
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-primary hover:bg-primary/90'
+                  }`}
+              >
+                <SendIcon className="mr-2 h-4 w-4" />
+                {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
+              </Button>
+            </CardFooter>
           </Card>
         );
       })}
