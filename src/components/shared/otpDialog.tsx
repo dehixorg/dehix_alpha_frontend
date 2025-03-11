@@ -60,7 +60,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
   const [isPending, startTransition] = useTransition();
   const [otpSent, setOtpSent] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [phone, setPhone] = useState(phoneNumber || '');
+  const [phone, setPhone] = useState(phoneNumber);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -199,7 +199,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         <DialogContent>
           <DialogHeader>
             <p className="text-sm text-center text-gray-500">
-              OTP sent to <strong>{phone.substring(0, 3)} {phone.substring(3)}</strong>
+              OTP sent to <strong>{(phone || phoneNumber).substring(0, 3)} {(phone || phoneNumber).substring(3)}</strong>
             </p>
             <button
               className="text-blue-600 text-sm underline mt-1"
