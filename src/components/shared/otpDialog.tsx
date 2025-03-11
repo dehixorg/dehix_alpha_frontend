@@ -35,6 +35,7 @@ import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
+import PhoneChangeModal from './PhoneChangeModal';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -57,6 +58,9 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     useState<ConfirmationResult | null>(null);
 
   const [isPending, startTransition] = useTransition();
+  const [otpSent, setOtpSent] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [phone, setPhone] = useState(phoneNumber || '');
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -65,6 +69,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     }
     return () => clearTimeout(timer);
   }, [resendCountdown]);
+
   useEffect(() => {
     const recaptchaVerifier = new RecaptchaVerifier(
       auth,
@@ -95,10 +100,9 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
           await confirmationResult?.confirm(otp);
 
         const { user, claims } = await getUserData(userCredential);
-
         // Update phone verification status in mongoDb and firebase
         await axiosInstance.put(`/${claims.type}`, {
-          phone: phoneNumber,
+          phone: phone,
           phoneVerify: true,
         });
 
@@ -124,31 +128,24 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
   }, [otp, verifyOtp]);
 
   const requestOtp = useCallback(
-    async (e?: FormEvent<HTMLFormElement>) => {
-      e?.preventDefault();
-
-      setResendCountdown(60);
-
+    async () => {
       startTransition(async () => {
         setError('');
-
+        setResendCountdown(60);
         if (!recaptchaVerifier) {
           return setError('RecaptchaVerifier is not initialized.');
         }
-
         try {
           const confirmationResult = await signInWithPhoneNumber(
             auth,
-            phoneNumber,
+            phone,
             recaptchaVerifier,
           );
-
           setConfirmationResult(confirmationResult);
           setSuccess('OTP sent successfully.');
         } catch (err: any) {
-          console.log(err);
+          console.error(err);
           setResendCountdown(0);
-
           if (err.code === 'auth/invalid-phone-number') {
             setError('Invalid phone number. Please check the number.');
           } else if (err.code === 'auth/too-many-requests') {
@@ -159,8 +156,14 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         }
       });
     },
-    [recaptchaVerifier, phoneNumber],
+    [recaptchaVerifier, phone],
   );
+
+  const handlePhoneChange = (newPhone: string) => {
+    setPhone(newPhone);
+    requestOtp();
+    setShowModal(false);
+  };
 
   useEffect(() => {
     if (isModalOpen) {
@@ -195,11 +198,21 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
+            <p className="text-sm text-center text-gray-500">
+              OTP sent to <strong>{phone.substring(0, 3)} {phone.substring(3)}</strong>
+            </p>
+            <button
+              className="text-blue-600 text-sm underline mt-1"
+              onClick={() => setShowModal(true)}
+            >
+              Not your number? Change it
+            </button>
             <DialogTitle>Enter OTP</DialogTitle>
             <DialogDescription>
               Please enter the OTP sent to your phone number.
             </DialogDescription>
           </DialogHeader>
+
           <div className="flex flex-col justify-center items-center">
             <InputOTP
               maxLength={6}
@@ -218,6 +231,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
+
             <Button
               disabled={isPending || resendCountdown > 0}
               className="mt-5"
@@ -228,6 +242,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
                   ? 'Sending OTP'
                   : 'Send OTP'}
             </Button>
+
             <div className="p-10 text-center">
               {error && <p className="text-red-500">{error}</p>}
               {success && <p className="text-green-500">{success}</p>}
@@ -236,6 +251,14 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <PhoneChangeModal
+        open={showModal}
+        setOpen={setShowModal}
+        onSubmit={handlePhoneChange}
+        setPhone={setPhone}
+      />
+
       <div id="recaptcha-container" />
     </>
   );
