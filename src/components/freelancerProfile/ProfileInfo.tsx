@@ -13,10 +13,9 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import { UserProfile } from '@/app/business/freelancerProfile/[freelancer_id]/page';
 
 interface ProfileInfoProps {
-  user: UserProfile;
+  user: any;
 }
 
 const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {

@@ -13,7 +13,7 @@ import {
   Shield,
   User,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -202,7 +202,6 @@ function BusinessRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [Isverified, setIsVerified] = useState<boolean>(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);

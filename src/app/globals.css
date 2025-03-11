@@ -12,6 +12,19 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-bar {
+  animation: shimmer 2s infinite linear;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

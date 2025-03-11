@@ -13,7 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 
-interface UserProfile {
+export interface UserProfile {
   _id: string;
   firstName: string;
   lastName: string;

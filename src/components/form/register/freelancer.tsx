@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { Controller, useForm } from 'react-hook-form';
@@ -301,7 +301,6 @@ function FreelancerRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };

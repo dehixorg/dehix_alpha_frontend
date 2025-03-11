@@ -69,13 +69,15 @@ export default function ProfessionalInfo() {
       const result = response.data.data;
 
       const flattenedData = result.flatMap((entry: any) =>
-        entry.result?.projects ? Object.values(entry.result.projects).map((project: any) => ({
-          ...project,
-          verifier_id: entry.verifier_id,
-          verifier_username: entry.verifier_username,
-        })) : []
-      );      
-  
+        entry.result?.projects
+          ? Object.values(entry.result.projects).map((project: any) => ({
+              ...project,
+              verifier_id: entry.verifier_id,
+              verifier_username: entry.verifier_username,
+            }))
+          : [],
+      );
+
       setProjectData(flattenedData);
     } catch (error) {
       toast({
