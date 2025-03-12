@@ -193,7 +193,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
   //         title: 'Success',
   //         description: 'Invitation sent successfully.',
   //       });
-      
+
   //   } catch (error: any) {
   //     console.error('Error managing invitation:', error);
   //     toast({
@@ -210,11 +210,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
 
   const handleInviteTalent = async (freelancerId: string, talentId: string) => {
     try {
-      console.log("*************" + talentId);
-  
+      console.log('*************' + talentId);
+
       // Show loading state
       setInviteLoading((prev) => ({ ...prev, [talentId]: true }));
-  
+
       // Check if both freelancerId and talentId are valid
       if (!freelancerId || !talentId) {
         toast({
@@ -224,7 +224,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         });
         return;
       }
-  
+
       // Send invitation using the PUT API
       const r = await axiosInstance.put(
         `/business/hire-dehixtalent/${talentId}/invite`, // Ensure the endpoint is correct
@@ -234,20 +234,19 @@ const TalentCard: React.FC<TalentCardProps> = ({
         },
       );
       console.log(r);
-  
+
       // Update the state of invited talents
       setInvitedTalents((prev) => {
         const newSet = new Set(prev);
         newSet.add(talentId);
         return newSet;
       });
-  
+
       // Success toast
       toast({
         title: 'Success',
         description: `Invitation sent successfully to talent with ID: ${talentId}.`,
       });
-  
     } catch (error: any) {
       console.error('Error managing invitation:', error);
       toast({
@@ -263,7 +262,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   };
 
-  
   const navigateToInvitedPage = () => {
     router.push('/business/market/invited');
   };
@@ -769,7 +767,12 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   ))}
                 </div>
                 <Button
-                  onClick={() => handleInviteTalent(talent.freelancer_id,talent.dehixTalent._id)}
+                  onClick={() =>
+                    handleInviteTalent(
+                      talent.freelancer_id,
+                      talent.dehixTalent._id,
+                    )
+                  }
                   className={`w-full ${isInvited ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
                   disabled={isLoading}
                 >
