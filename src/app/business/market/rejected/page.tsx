@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  User,
-  MapPin,
-  Calendar,
-  ExternalLink,
-  XCircle,
-  RefreshCw,
-} from 'lucide-react';
+import { User, MapPin, ExternalLink, XCircle, RefreshCw } from 'lucide-react';
 
 import TalentLayout from '@/components/marketComponents/TalentLayout';
 import {

@@ -7,9 +7,6 @@ import {
   Search,
   Users2,
   XCircle,
-  Home,
-  Settings,
-  HelpCircle,
 } from 'lucide-react';
 import React, { ReactNode, useState } from 'react';
 
@@ -20,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SidebarMenu, { MenuItem } from '@/components/menu/sidebarMenu'; // Adjust the import path as needed
+import SidebarMenu from '@/components/menu/sidebarMenu'; // Adjust the import path as needed
 import {
   menuItemsBottom,
   menuItemsTop,

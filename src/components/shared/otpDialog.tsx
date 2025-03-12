@@ -16,6 +16,8 @@ import React, {
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 
+import PhoneChangeModal from './PhoneChangeModal';
+
 import { Button } from '@/components/ui/button';
 import {
   InputOTP,
@@ -35,7 +37,6 @@ import { setUser } from '@/lib/userSlice';
 import { getUserData } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
-import PhoneChangeModal from './PhoneChangeModal';
 
 interface OtpLoginProps {
   phoneNumber: string;
@@ -127,37 +128,34 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     }
   }, [otp, verifyOtp]);
 
-  const requestOtp = useCallback(
-    async () => {
-      startTransition(async () => {
-        setError('');
-        setResendCountdown(60);
-        if (!recaptchaVerifier) {
-          return setError('RecaptchaVerifier is not initialized.');
+  const requestOtp = useCallback(async () => {
+    startTransition(async () => {
+      setError('');
+      setResendCountdown(60);
+      if (!recaptchaVerifier) {
+        return setError('RecaptchaVerifier is not initialized.');
+      }
+      try {
+        const confirmationResult = await signInWithPhoneNumber(
+          auth,
+          phone,
+          recaptchaVerifier,
+        );
+        setConfirmationResult(confirmationResult);
+        setSuccess('OTP sent successfully.');
+      } catch (err: any) {
+        console.error(err);
+        setResendCountdown(0);
+        if (err.code === 'auth/invalid-phone-number') {
+          setError('Invalid phone number. Please check the number.');
+        } else if (err.code === 'auth/too-many-requests') {
+          setError('Too many requests. Please try again later.');
+        } else {
+          setError('Failed to send OTP. Please try again.');
         }
-        try {
-          const confirmationResult = await signInWithPhoneNumber(
-            auth,
-            phone,
-            recaptchaVerifier,
-          );
-          setConfirmationResult(confirmationResult);
-          setSuccess('OTP sent successfully.');
-        } catch (err: any) {
-          console.error(err);
-          setResendCountdown(0);
-          if (err.code === 'auth/invalid-phone-number') {
-            setError('Invalid phone number. Please check the number.');
-          } else if (err.code === 'auth/too-many-requests') {
-            setError('Too many requests. Please try again later.');
-          } else {
-            setError('Failed to send OTP. Please try again.');
-          }
-        }
-      });
-    },
-    [recaptchaVerifier, phone],
-  );
+      }
+    });
+  }, [recaptchaVerifier, phone]);
 
   const handlePhoneChange = (newPhone: string) => {
     setPhone(newPhone);
@@ -199,7 +197,11 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         <DialogContent>
           <DialogHeader>
             <p className="text-sm text-center text-gray-500">
-              OTP sent to <strong>{(phone || phoneNumber).substring(0, 3)} {(phone || phoneNumber).substring(3)}</strong>
+              OTP sent to{' '}
+              <strong>
+                {(phone || phoneNumber).substring(0, 3)}{' '}
+                {(phone || phoneNumber).substring(3)}
+              </strong>
             </p>
             <button
               className="text-blue-600 text-sm underline mt-1"

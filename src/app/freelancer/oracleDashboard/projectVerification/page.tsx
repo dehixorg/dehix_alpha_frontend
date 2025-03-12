@@ -66,13 +66,18 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/verification/oracle?doc_type=project`,
       );
+      const result = response.data.data;
 
-      setProjectData(response.data.data);
+      const flattenedData = result.flatMap((entry: any) =>
+        entry.result?.projects
+          ? Object.values(entry.result.projects).map((project: any) => ({
+              ...project,
+              verifier_id: entry.verifier_id,
+              verifier_username: entry.verifier_username,
+            }))
+          : [],
+      );
 
-      const flattenedData = response.data.data.flatMap((entry: any) => {
-        return Object.values(entry);
-      });
-      // Set the flattened data
       setProjectData(flattenedData);
     } catch (error) {
       toast({

@@ -84,21 +84,25 @@ const Market: React.FC = () => {
 
   const constructQueryString = (filters: FilterState) => {
     const queryParts: string[] = [];
-    
+
     if (Array.isArray(filters.experience) && filters.experience.length > 0) {
-      const sortedExperience = filters.experience.map(Number).sort((a, b) => a - b);
+      const sortedExperience = filters.experience
+        .map(Number)
+        .sort((a, b) => a - b);
       const from = sortedExperience[0];
       const to = sortedExperience[sortedExperience.length - 1];
-    
+
       if (from !== undefined) queryParts.push(`workExperienceFrom=${from}`);
       if (to !== undefined) queryParts.push(`workExperienceTo=${to}`);
     }
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (key === 'experience') return;
-  
+
       if (Array.isArray(value) && value.length > 0) {
-        const cleanedValues = value.filter((v) => v !== undefined && v !== null && v !== '');
+        const cleanedValues = value.filter(
+          (v) => v !== undefined && v !== null && v !== '',
+        );
         if (cleanedValues.length > 0) {
           queryParts.push(`${key}=${cleanedValues.join(',')}`);
         }
@@ -107,7 +111,6 @@ const Market: React.FC = () => {
 
     return queryParts.join('&');
   };
-  
 
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {

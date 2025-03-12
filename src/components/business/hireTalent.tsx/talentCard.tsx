@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, Check, X as XIcon, SendIcon, Expand} from 'lucide-react';
+import { Loader2, Plus, X, SendIcon, Expand } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Github, Linkedin } from 'lucide-react'; // Import icons
@@ -16,7 +16,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -367,7 +366,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
             skip: newSkip,
           },
         });
-        
 
         const fetchedData = response?.data?.data || [];
 
@@ -509,7 +507,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         <Button className="w-full text-sm  text-black rounded-md">
                           View
                         </Button>
-                      </SheetTrigger><SheetContent
+                      </SheetTrigger>
+                      <SheetContent
                         side={View}
                         className="overflow-y-auto no-scrollbar max-h-[100vh]"
                       >
@@ -744,7 +743,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                         ),
                                     )
                                     .map((skill: any, index: number) => (
-                                      <SelectItem key={index} value={skill.label}>
+                                      <SelectItem
+                                        key={index}
+                                        value={skill.label}
+                                      >
                                         {skill.label}
                                       </SelectItem>
                                     ))}
@@ -772,7 +774,9 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   {skill.name}
                                   <button
                                     type="button"
-                                    onClick={() => handleDeleteSkill(skill.name)}
+                                    onClick={() =>
+                                      handleDeleteSkill(skill.name)
+                                    }
                                     className="ml-2 text-red-500 hover:text-red-700"
                                   >
                                     <X className="h-4 w-4" />
@@ -802,10 +806,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
             <CardFooter>
               <Button
                 onClick={() => handleInviteTalent(talentEntry._id)}
-                className={`w-full ${isInvited
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-primary hover:bg-primary/90'
-                  }`}
+                className={`w-full ${
+                  isInvited
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-primary hover:bg-primary/90'
+                }`}
               >
                 <SendIcon className="mr-2 h-4 w-4" />
                 {isInvited ? 'Cancel Invitation' : 'Invite to Project'}

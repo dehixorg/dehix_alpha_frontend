@@ -1,16 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/business/dashboardMenuItems';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import Header from '@/components/header/header';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   X,
   Briefcase,
@@ -22,6 +12,17 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+
+import { toast } from '@/components/ui/use-toast';
+import { axiosInstance } from '@/lib/axiosinstance';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import Header from '@/components/header/header';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Skill {
   _id: string;
