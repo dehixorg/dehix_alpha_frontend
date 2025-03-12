@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2, ListFilter } from 'lucide-react';
+import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { toast } from '../../ui/use-toast';
@@ -33,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface Skill {
   talentName: string;
@@ -435,58 +436,68 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 <TableHead className="">Level</TableHead>
                 <TableHead className="">Experience</TableHead>
                 <TableHead className="">Status</TableHead>
-                <TableHead className="">Actions</TableHead>
+                <TableHead className="">
+                  <div className='flex gap-2 items-center'>
+                    Actions
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Info className="w-4 h-4 text-muted-foreground  cursor-pointer" />
+                      </PopoverTrigger>
+                      <PopoverContent className="text-sm w-fit  border rounded p-2 shadow">
+                        This will be available in the next phase.
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-24" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="h-6 w-20 rounded-full" />
-                      </TableCell>
-                      <TableCell className="">
-                        <Skeleton className="w-8 h-8 p-2 rounded-md" />
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <TableRow key={index}>
+                    <TableCell className="">
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="">
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="">
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell className="">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </TableCell>
+                    <TableCell className="">
+                      <Skeleton className="w-8 h-8 p-2 rounded-md" />
+                    </TableCell>
+                  </TableRow>
+                ))
                 : filteredData()!.map((item) => (
-                    <TableRow key={item._id}>
-                      <TableCell className="">{item.name}</TableCell>
-                      <TableCell className="">{item.level}</TableCell>
-                      <TableCell className="">
-                        {typeof item.experience === 'number' &&
+                  <TableRow key={item._id}>
+                    <TableCell className="">{item.name}</TableCell>
+                    <TableCell className="">{item.level}</TableCell>
+                    <TableCell className="">
+                      {typeof item.experience === 'number' &&
                         item.experience > 0
-                          ? item.experience + ' years'
-                          : ''}
-                      </TableCell>
-                      <TableCell className="">
-                        <Badge className={getBadgeColor(item.interviewStatus)}>
-                          {item.interviewStatus.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="">
-                        <ButtonIcon
-                          icon={<Edit2 className="w-4 h-4" />}
-                          onClick={() =>
-                            handleSkillDomainDialog(
-                              item,
-                              item.experience ? 'skill' : 'domain',
-                            )
-                          } // Pass type to handler
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        ? item.experience + ' years'
+                        : ''}
+                    </TableCell>
+                    <TableCell className="">
+                      <Badge className={getBadgeColor(item.interviewStatus)}>
+                        {item?.interviewStatus?.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="flex items-center gap-2">
+                      <ButtonIcon
+                        icon={<Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />}
+                        disabled
+                        onClick={() =>
+                          handleSkillDomainDialog(item, item.experience ? 'SKILL' : 'DOMAIN')
+                        }
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </div>
