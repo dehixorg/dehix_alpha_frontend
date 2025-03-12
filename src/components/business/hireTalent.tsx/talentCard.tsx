@@ -152,47 +152,102 @@ const TalentCard: React.FC<TalentCardProps> = ({
     fetchInvitedTalents();
   }, []);
 
-  const handleInviteTalent = async (talentId: string) => {
+  // const handleInviteTalent = async (freelancerId:string,talentId: string) => {
+  //   try {
+  //     console.log("*************"+talentId);
+  //     setInviteLoading((prev) => ({ ...prev, [talentId]: true }));
+
+  //     // if (invitedTalents.has(talentId)) {
+  //     //   // Cancel invitation
+  //     //   await axiosInstance.delete(
+  //     //     `/business/hire-dehixtalent/${talentId}/invite`,
+  //     //   );
+
+  //     //   setInvitedTalents((prev) => {
+  //     //     const newSet = new Set(prev);
+  //     //     newSet.delete(talentId);
+  //     //     return newSet;
+  //     //   });
+
+  //     //   toast({
+  //     //     title: 'Success',
+  //     //     description: 'Invitation cancelled successfully.',
+  //     //   });
+  //     // }
+  //       // Send invitation using the PUT API
+  //      const r= await axiosInstance.put(
+  //         `/business/hire-dehixtalent/${talentId}/invite`,
+  //         {
+  //           freelancerId: freelancerId, // Replace with the actual freelancer's ID if different
+  //           dehixTalentId: talentId, // Replace with the actual talent ID if different
+  //         },
+  //       );
+  //       console.log(r);
+  //       setInvitedTalents((prev) => {
+  //         const newSet = new Set(prev);
+  //         newSet.add(talentId);
+  //         return newSet;
+  //       });
+
+  //       toast({
+  //         title: 'Success',
+  //         description: 'Invitation sent successfully.',
+  //       });
+      
+  //   } catch (error: any) {
+  //     console.error('Error managing invitation:', error);
+  //     toast({
+  //       variant: 'destructive',
+  //       title: 'Error',
+  //       description:
+  //         error.response?.data?.message ||
+  //         'Failed to process invitation. Please try again.',
+  //     });
+  //   } finally {
+  //     setInviteLoading((prev) => ({ ...prev, [talentId]: false }));
+  //   }
+  // };
+
+  const handleInviteTalent = async (freelancerId: string, talentId: string) => {
     try {
+      console.log("*************" + talentId);
+  
+      // Show loading state
       setInviteLoading((prev) => ({ ...prev, [talentId]: true }));
-
-      if (invitedTalents.has(talentId)) {
-        // Cancel invitation
-        await axiosInstance.delete(
-          `/business/hire-dehixtalent/${talentId}/invite`,
-        );
-
-        setInvitedTalents((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(talentId);
-          return newSet;
-        });
-
+  
+      // Check if both freelancerId and talentId are valid
+      if (!freelancerId || !talentId) {
         toast({
-          title: 'Success',
-          description: 'Invitation cancelled successfully.',
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Both freelancer and talent IDs are required.',
         });
-      } else {
-        // Send invitation using the PUT API
-        await axiosInstance.put(
-          `/business/hire-dehixtalent/${talentId}/invite`,
-          {
-            freelancerId: user.uid, // Replace with the actual freelancer's ID if different
-            dehixTalentId: talentId, // Replace with the actual talent ID if different
-          },
-        );
-
-        setInvitedTalents((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(talentId);
-          return newSet;
-        });
-
-        toast({
-          title: 'Success',
-          description: 'Invitation sent successfully.',
-        });
+        return;
       }
+  
+      // Send invitation using the PUT API
+      const r = await axiosInstance.put(
+        `/business/hire-dehixtalent/${talentId}/invite`, // Ensure the endpoint is correct
+        {
+          freelancerId: freelancerId,
+          dehixTalentId: talentId, // Ensure this matches backend expectations
+        },
+      );
+      console.log(r);
+  
+      // Update the state of invited talents
+      setInvitedTalents((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(talentId);
+        return newSet;
+      });
+  
+      // Success toast
+      toast({
+        title: 'Success',
+        description: `Invitation sent successfully to talent with ID: ${talentId}.`,
+      });
+  
     } catch (error: any) {
       console.error('Error managing invitation:', error);
       toast({
@@ -203,12 +258,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
           'Failed to process invitation. Please try again.',
       });
     } finally {
+      // Hide loading state
       setInviteLoading((prev) => ({ ...prev, [talentId]: false }));
     }
   };
 
+  
   const navigateToInvitedPage = () => {
-    router.push('/business/invited-talents');
+    router.push('/business/market/invited');
   };
 
   useEffect(() => {
@@ -255,6 +312,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           `/business/hire-dehixtalent`,
         );
         const hireTalentData = hireTalentResponse.data?.data || {};
+        // console.log(hireTalentData);
 
         // Filter and map user data
         const fetchedFilterSkills = hireTalentData
@@ -443,6 +501,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         return false;
       }
     });
+    console.log(filtered);
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
 
@@ -467,7 +526,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             talentEntry.skillName || talentEntry.domainName || 'N/A';
           const isInvited = invitedTalents.has(talentEntry._id);
           const isLoading = inviteLoading[talentEntry._id] || false;
-
+          console.log(talent);
           return (
             <Card
               key={talentEntry._id}
@@ -710,7 +769,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   ))}
                 </div>
                 <Button
-                  onClick={() => handleInviteTalent(talentEntry._id)}
+                  onClick={() => handleInviteTalent(talent.freelancer_id,talent.dehixTalent._id)}
                   className={`w-full ${isInvited ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
                   disabled={isLoading}
                 >
