@@ -33,7 +33,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
-import {  StatusEnum } from '@/utils/freelancer/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -417,8 +417,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-     
-
       const { ...restData } = data;
 
       const updatedSkills = currSkills.map((skill: any) => ({

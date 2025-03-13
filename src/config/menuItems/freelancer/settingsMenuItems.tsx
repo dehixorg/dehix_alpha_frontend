@@ -5,7 +5,7 @@ import {
   ImagePlus,
   Package,
   User,
-  Verified
+  Verified,
 } from 'lucide-react';
 import Image from 'next/image';
 

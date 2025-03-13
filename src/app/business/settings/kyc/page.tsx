@@ -6,7 +6,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
+} from '@/config/menuItems/business/settingsMenuItems';
 import Header from '@/components/header/header';
 import { KYCForm } from '@/components/form/kycBusinessForm';
 
@@ -20,18 +20,18 @@ export default function PersonalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="kyc"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Personal Info"
           breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },
             { label: 'kyc', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
           <KYCForm user_id={user.uid} />
         </main>
       </div>

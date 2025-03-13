@@ -51,7 +51,8 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export default function kycForm({ user_id }: { user_id: string }) {
+export default function KYCForm({ user_id }: { user_id: string }) {
+  // Corrected name
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
   const [user, setUser] = useState<any>(null);
@@ -187,54 +188,58 @@ export default function kycForm({ user_id }: { user_id: string }) {
 
   return (
     <Card className="p-8 md:p-10 shadow-md relative rounded-lg">
-    <Form {...form}>
-      <div className="flex flex-col items-center mb-6">
-        <div className="mt-2 absolute top-2 right-2">
-          <Badge
-            className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
-          >
-            KYC Status: {kycStatus?.toLowerCase()}
-          </Badge>
+      <Form {...form}>
+        <div className="flex flex-col items-center mb-6">
+          <div className="mt-2 absolute top-2 right-2">
+            <Badge
+              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
+            >
+              KYC Status: {kycStatus?.toLowerCase()}
+            </Badge>
+          </div>
         </div>
-      </div>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 mt-4"
-      >
-        <Separator className="col-span-2" />
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 mt-4"
+        >
+          <Separator className="col-span-2" />
 
-        <FormField
-          control={form.control}
-          name="aadharOrGovtId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-semibold">Aadhar or Govt Id</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your Aadhar Id"
-                  {...field}
-                  className="border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="frontImageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-semibold">Document Front Img</FormLabel>
-              <FormControl>
-                <div className="flex items-center gap-4">
-                  {field.value && typeof field.value === 'string' ? (
-                    <>
-                      <Image
-                        src={field.value}
-                        alt="Front Document"
-                        width={128}
-                        height={128}
+          <FormField
+            control={form.control}
+            name="aadharOrGovtId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold">
+                  Aadhar or Govt Id
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Aadhar Id"
+                    {...field}
+                    className="border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="frontImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold">
+                  Document Front Img
+                </FormLabel>
+                <FormControl>
+                  <div className="flex items-center gap-4">
+                    {field.value && typeof field.value === 'string' ? (
+                      <>
+                        <Image
+                          src={field.value}
+                          alt="Front Document"
+                          width={128}
+                          height={128}
                           className="rounded-md object-cover border"
                         />
                         <Button
@@ -272,7 +277,9 @@ export default function kycForm({ user_id }: { user_id: string }) {
             name="backImageUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold">Document Back Img</FormLabel>
+                <FormLabel className="font-semibold">
+                  Document Back Img
+                </FormLabel>
                 <FormControl>
                   <div className="flex items-center gap-4">
                     {field.value && typeof field.value === 'string' ? (
