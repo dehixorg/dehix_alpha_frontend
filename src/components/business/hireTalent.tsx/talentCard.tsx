@@ -178,27 +178,22 @@ const TalentCard: React.FC<TalentCardProps> = ({
     }
   };
 
-  const handleInviteTalent = async (talentId: string) => {
+  const handleInviteTalent = async (
+    FreelancerId: string, DehixTalentId: string
+  ) => {
     try {
-      // Toggle invite status
-      setInvitedTalents((prev) => {
-        const newInvited = new Set(prev);
-        if (newInvited.has(talentId)) {
-          newInvited.delete(talentId);
-        } else {
-          newInvited.add(talentId);
-          // Here you would make API call to send invitation
-          // For example: await axiosInstance.post(`/business/invite-talent/${talentId}`);
-        }
-        return newInvited;
+      const payload = {
+        freelancerId: FreelancerId,
+        dehixTalentId: 'c07f33f7-9c8e-41b8-b0bb-07828039d5a5',
+      };
+      const response = await axiosInstance.put(
+        `/business/hire-dehixtalent/${'c07f33f7-9c8e-41b8-b0bb-07828039d5a5'}/invite`,
+        payload
+      );
+      toast({
+        title: 'Success',
+        description: 'Invitation sent successfully.',
       });
-
-      if (!invitedTalents.has(talentId)) {
-        toast({
-          title: 'Success',
-          description: 'Invitation sent successfully.',
-        });
-      }
     } catch (error) {
       console.error('Error inviting talent:', error);
       toast({
@@ -208,6 +203,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
       });
     }
   };
+
 
   useEffect(() => {
     const fetchSkillsAndDomains = async () => {
@@ -453,6 +449,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
         const isInvited = invitedTalents.has(talentEntry._id);
+        console.log(talent);
 
         return (
           <Card
@@ -471,7 +468,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 </p>
               </div>
               <button
-                onClick={() => handleInviteTalent(talentEntry._id)}
+                onClick={() => handleInviteTalent(talent.freelancer_id, talent.dehixTalent._id)}
                 className="ml-auto"
               ></button>
             </CardHeader>
@@ -556,11 +553,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   href={talent.Github || '#'}
                                   target={talent.Github ? '_blank' : '_self'}
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${
-                                    talent.Github
-                                      ? 'text-blue-500 hover:text-blue-700'
-                                      : 'text-gray-500 cursor-default'
-                                  }`}
+                                  className={`flex items-center gap-2 transition-all ${talent.Github
+                                    ? 'text-blue-500 hover:text-blue-700'
+                                    : 'text-gray-500 cursor-default'
+                                    }`}
                                 >
                                   <Github
                                     className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
@@ -572,11 +568,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   href={talent.LinkedIn || '#'}
                                   target={talent.LinkedIn ? '_blank' : '_self'}
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${
-                                    talent.LinkedIn
-                                      ? 'text-blue-500 hover:text-blue-700'
-                                      : 'text-gray-500 cursor-default'
-                                  }`}
+                                  className={`flex items-center gap-2 transition-all ${talent.LinkedIn
+                                    ? 'text-blue-500 hover:text-blue-700'
+                                    : 'text-gray-500 cursor-default'
+                                    }`}
                                 >
                                   <Linkedin
                                     className={`w-5 h-5 ${talent.LinkedIn ? 'text-blue-500' : 'text-gray-500'}`}
@@ -608,33 +603,33 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             <AccordionContent className="p-4 transition-all duration-300">
                               {education && Object.values(education).length > 0
                                 ? Object.values(education).map((edu: any) => (
-                                    <div
-                                      key={edu._id}
-                                      className="mb-2 p-2 border border-gray-300 rounded-lg"
-                                    >
-                                      <p className="text-sm font-semibold">
-                                        {edu.degree}
-                                      </p>
-                                      <p className="text-xs text-gray-600">
-                                        {edu.universityName}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {edu.fieldOfStudy}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        {new Date(
-                                          edu.startDate,
-                                        ).toLocaleDateString()}{' '}
-                                        -{' '}
-                                        {new Date(
-                                          edu.endDate,
-                                        ).toLocaleDateString()}
-                                      </p>
-                                      <p className="text-xs text-gray-700">
-                                        Grade: {edu.grade}
-                                      </p>
-                                    </div>
-                                  ))
+                                  <div
+                                    key={edu._id}
+                                    className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                  >
+                                    <p className="text-sm font-semibold">
+                                      {edu.degree}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      {edu.universityName}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {edu.fieldOfStudy}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {new Date(
+                                        edu.startDate,
+                                      ).toLocaleDateString()}{' '}
+                                      -{' '}
+                                      {new Date(
+                                        edu.endDate,
+                                      ).toLocaleDateString()}
+                                    </p>
+                                    <p className="text-xs text-gray-700">
+                                      Grade: {edu.grade}
+                                    </p>
+                                  </div>
+                                ))
                                 : 'No education details available.'}
                             </AccordionContent>
                           </AccordionItem>
@@ -644,7 +639,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </AccordionTrigger>
                             <AccordionContent className="p-4 transition-all duration-300">
                               {projects &&
-                              Object.values(projects).length > 0 ? (
+                                Object.values(projects).length > 0 ? (
                                 Object.values(projects).map((project: any) => (
                                   <div
                                     key={project._id}
@@ -805,12 +800,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
             </CardContent>
             <CardFooter>
               <Button
-                onClick={() => handleInviteTalent(talentEntry._id)}
-                className={`w-full ${
-                  isInvited
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-primary hover:bg-primary/90'
-                }`}
+                onClick={() => handleInviteTalent(talent.freelancer_id, talent.dehixTalent._id)}
+                className={`w-full ${isInvited
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-primary hover:bg-primary/90'
+                  }`}
               >
                 <SendIcon className="mr-2 h-4 w-4" />
                 {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
