@@ -52,7 +52,6 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function KYCForm({ user_id }: { user_id: string }) {
-  // Corrected name
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
   const [user, setUser] = useState<any>(null);
@@ -155,7 +154,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/freelancer`, {
+      await axiosInstance.put(`/freelancer/kyc`, {
         kyc,
       });
 
@@ -189,12 +188,13 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   return (
     <Card className="p-8 md:p-10 shadow-md relative rounded-lg">
       <Form {...form}>
-        <div className="flex flex-col items-center mb-6">
-          <div className="mt-2 absolute top-2 right-2">
+        <div className="flex flex-col  mb-6">
+          <div>
+            KYC Status{' '}
             <Badge
               className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
             >
-              KYC Status: {kycStatus?.toLowerCase()}
+              {kycStatus.toLowerCase()}
             </Badge>
           </div>
         </div>

@@ -8,7 +8,7 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
-import { KYCForm } from '@/components/form/kycBusinessForm';
+import KYCForm from '@/components/form/kycFreelancerForm';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -19,6 +19,7 @@ export default function PersonalInfo() {
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="kyc"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

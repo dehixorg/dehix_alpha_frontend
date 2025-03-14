@@ -31,6 +31,31 @@ export default function Login() {
   const [isGoogleLoginLoading, setIsGoogleLoginLoading] =
     useState<boolean>(false);
 
+  const fetchKYCDetails = async (userId: string, userType: string) => {
+    try {
+      let endpoint = '';
+
+      if (userType.toLowerCase() === 'business') {
+        endpoint = `/business/kyc`;
+      } else if (userType.toLowerCase() === 'freelancer') {
+        endpoint = `/freelancer/${userId}/kyc`;
+      }
+
+      const userResponse = await axiosInstance.get(endpoint);
+      const status = userResponse.data.status || null;
+
+      return status;
+    } catch (error) {
+      console.error('KYC Fetch Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch KYC data. Please try again.',
+      });
+      return null;
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsEmailLoginLoading(true);
@@ -46,7 +71,19 @@ export default function Login() {
           const userCredential: UserCredential = await loginUser(email, pass);
           const { user, claims } = await getUserData(userCredential);
 
-          dispatch(setUser({ ...user, type: claims.type }));
+          const result = await fetchKYCDetails(user.uid, claims.type);
+
+          if (result) {
+            dispatch(
+              setUser({
+                ...user,
+                type: claims.type,
+                kycStatus: result,
+              }),
+            );
+          } else {
+            dispatch(setUser({ ...user, type: claims.type }));
+          }
           router.replace(`/dashboard/${claims.type}`);
 
           toast({
@@ -85,6 +122,7 @@ export default function Login() {
       const { user, claims } = await getUserData(userCredential);
       dispatch(setUser({ ...user, type: claims.type }));
       router.replace(`/dashboard/${claims.type}`);
+
       toast({
         title: 'Login Successful',
         description: 'You have successfully logged in with Google.',

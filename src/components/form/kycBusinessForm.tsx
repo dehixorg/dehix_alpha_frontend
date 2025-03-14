@@ -69,6 +69,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/business/${user_id}`);
+
         setUser(response.data);
         if (response?.data?.kyc?.status) {
           setKycStatus(response?.data?.kyc?.status);
@@ -142,7 +143,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/business`, {
+      await axiosInstance.put(`/business/kyc`, {
         ...user,
         kyc,
       });
