@@ -33,7 +33,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Skill {
   talentName: string;
@@ -437,7 +441,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 <TableHead className="">Experience</TableHead>
                 <TableHead className="">Status</TableHead>
                 <TableHead className="">
-                  <div className='flex gap-2 items-center'>
+                  <div className="flex gap-2 items-center">
                     Actions
                     <Popover>
                       <PopoverTrigger asChild>
@@ -454,50 +458,55 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
             <TableBody>
               {loading
                 ? [...Array(4)].map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="">
-                      <Skeleton className="h-6 w-24" />
-                    </TableCell>
-                    <TableCell className="">
-                      <Skeleton className="h-6 w-24" />
-                    </TableCell>
-                    <TableCell className="">
-                      <Skeleton className="h-6 w-24" />
-                    </TableCell>
-                    <TableCell className="">
-                      <Skeleton className="h-6 w-20 rounded-full" />
-                    </TableCell>
-                    <TableCell className="">
-                      <Skeleton className="w-8 h-8 p-2 rounded-md" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                    <TableRow key={index}>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-24" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                      </TableCell>
+                      <TableCell className="">
+                        <Skeleton className="w-8 h-8 p-2 rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 : filteredData()!.map((item) => (
-                  <TableRow key={item._id}>
-                    <TableCell className="">{item.name}</TableCell>
-                    <TableCell className="">{item.level}</TableCell>
-                    <TableCell className="">
-                      {typeof item.experience === 'number' &&
+                    <TableRow key={item._id}>
+                      <TableCell className="">{item.name}</TableCell>
+                      <TableCell className="">{item.level}</TableCell>
+                      <TableCell className="">
+                        {typeof item.experience === 'number' &&
                         item.experience > 0
-                        ? item.experience + ' years'
-                        : ''}
-                    </TableCell>
-                    <TableCell className="">
-                      <Badge className={getBadgeColor(item.interviewStatus)}>
-                        {item?.interviewStatus?.toUpperCase()}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="flex items-center gap-2">
-                      <ButtonIcon
-                        icon={<Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />}
-                        disabled
-                        onClick={() =>
-                          handleSkillDomainDialog(item, item.experience ? 'SKILL' : 'DOMAIN')
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          ? item.experience + ' years'
+                          : ''}
+                      </TableCell>
+                      <TableCell className="">
+                        <Badge className={getBadgeColor(item.interviewStatus)}>
+                          {item?.interviewStatus?.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="flex items-center gap-2">
+                        <ButtonIcon
+                          icon={
+                            <Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />
+                          }
+                          disabled
+                          onClick={() =>
+                            handleSkillDomainDialog(
+                              item,
+                              item.experience ? 'SKILL' : 'DOMAIN',
+                            )
+                          }
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </div>

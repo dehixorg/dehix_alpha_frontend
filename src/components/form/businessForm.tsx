@@ -2,32 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import Image from 'next/image';
+import { useDispatch } from 'react-redux';
 
 import ProfilePictureUpload from '../fileUpload/profilePicture';
-
-import LiveCaptureField from './register/livecapture';
+import { Label } from '../ui/label';
 
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
   FormDescription,
-  // FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Type } from '@/utils/enum';
 import { Separator } from '@/components/ui/separator';
-import { kycBadgeColors } from '@/utils/freelancer/enum';
+import { setUser } from '@/lib/userSlice';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -45,7 +40,7 @@ const profileFormSchema = z.object({
   companyName: z.string().optional(),
   companySize: z.string().optional(),
   position: z.string().optional(),
-  linkedIn: z
+  linkedin: z
     .string()
     .url({ message: 'Must be a valid URL.' })
     .refine(
@@ -58,39 +53,14 @@ const profileFormSchema = z.object({
     )
     .optional(),
   website: z.string().url({ message: 'Must be a valid URL.' }).optional(),
-  aadharOrGovtId: z.string().optional(),
-  frontImageUrl: z
-    .union([
-      // Ensure File is only validated on the client-side
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
-
-  backImageUrl: z
-    .union([
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
-
-  liveCaptureUrl: z
-    .union([
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function BusinessForm({ user_id }: { user_id: string }) {
-  const [user, setUser] = useState<any>({});
+  const [userInfo, setUserInfo] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(false);
-  const [kycStatus, setKycStatus] = useState<string>('PENDING');
+  const dispatch = useDispatch();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -102,12 +72,8 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       companyName: '',
       companySize: '',
       position: '',
-      linkedIn: '',
+      linkedin: '',
       website: '',
-      aadharOrGovtId: '',
-      frontImageUrl: '',
-      backImageUrl: '',
-      liveCaptureUrl: '',
     },
     mode: 'all',
   });
@@ -116,17 +82,14 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/business/${user_id}`);
-        setUser(response.data);
-        if (response?.data?.kyc?.status) {
-          setKycStatus(response?.data?.kyc?.status);
-        }
+        setUserInfo(response.data);
       } catch (error) {
         console.error('API Error:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
       }
     };
 
@@ -135,80 +98,27 @@ export function BusinessForm({ user_id }: { user_id: string }) {
 
   useEffect(() => {
     form.reset({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      companyName: user?.companyName || '',
-      companySize: user?.companySize || '',
-      position: user?.position || '',
-      linkedIn: user?.linkedin || '',
-      website: user?.personalWebsite || '',
-      aadharOrGovtId: user?.kyc?.aadharOrGovtId || '',
-      frontImageUrl: user?.kyc?.frontImageUrl || '',
-      backImageUrl: user?.kyc?.backImageUrl || '',
-      liveCaptureUrl: user?.kyc?.liveCaptureUrl || '',
+      firstName: userInfo?.firstName || '',
+      lastName: userInfo?.lastName || '',
+      email: userInfo?.email || '',
+      phone: userInfo?.phone || '',
+      companyName: userInfo?.companyName || '',
+      companySize: userInfo?.companySize || '',
+      position: userInfo?.position || '',
+      linkedin: userInfo?.linkedin || '',
+      website: userInfo?.personalWebsite || '',
     });
-  }, [user, form]);
+  }, [userInfo, form]);
 
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      const uploadedUrls = {
-        frontImageUrl: data.frontImageUrl,
-        backImageUrl: data.backImageUrl,
-        liveCaptureUrl: data.liveCaptureUrl,
-      };
-      // Append files to the form data
-      if (data.frontImageUrl instanceof File) {
-        const frontFormData = new FormData();
-        frontFormData.append('frontImageUrl', data.frontImageUrl);
-
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          frontFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.frontImageUrl = response.data.data.Location;
-      }
-      if (data.backImageUrl instanceof File) {
-        const backFormData = new FormData();
-        backFormData.append('backImageUrl', data.backImageUrl);
-
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          backFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.backImageUrl = response.data.data.Location;
-      }
-      if (data.liveCaptureUrl instanceof File) {
-        const liveFormData = new FormData();
-        liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          liveFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.liveCaptureUrl = response.data.data.Location;
-      }
-
-      const { aadharOrGovtId, ...restData } = data;
-      const kyc = {
-        aadharOrGovtId,
-        frontImageUrl: uploadedUrls.frontImageUrl,
-        backImageUrl: uploadedUrls.backImageUrl,
-        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
-        status: 'APPLIED',
-      };
-
-      await axiosInstance.put(`/business`, {
-        ...restData,
-        kyc,
+      const res = await axiosInstance.put(`/business`, {
+        ...data,
       });
 
-      setUser({
-        ...user,
+      setUserInfo({
+        ...userInfo,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -216,19 +126,31 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         companyName: data.companyName,
         companySize: data.companySize,
         position: data.position,
-        linkedin: data.linkedIn,
+        linkedin: data.linkedin,
         personalWebsite: data.website,
-        aadharOrGovtId: data.aadharOrGovtId,
-        frontImageUrl: data.frontImageUrl,
-        backImageUrl: data.backImageUrl,
-        liveCaptureUrl: data.liveCaptureUrl,
       });
 
-      // You can update other fields here as needed
-      toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
-      });
+      if (res.status === 200) {
+        const updatedUser = {
+          ...userInfo,
+          ...data,
+        };
+
+        dispatch(setUser(updatedUser));
+        setUserInfo(updatedUser);
+
+        toast({
+          title: 'Profile Updated',
+          description: 'Your profile has been successfully updated.',
+        });
+      } else {
+        console.error('Unexpected status code:', res.status);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to update profile. Unexpected server response.',
+        });
+      }
     } catch (error) {
       console.error('API Error:', error);
       toast({
@@ -237,7 +159,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
         description: 'Failed to update profile. Please try again later.',
       });
     } finally {
-      setLoading(false); // Always reset loading state
+      setLoading(false);
     }
   }
 
@@ -245,7 +167,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
     <Card className="p-10">
       <Form {...form}>
         <ProfilePictureUpload
-          profile={user.profilePic}
+          profile={userInfo.profilePic}
           entityType={Type.BUSINESS}
         />
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
@@ -384,7 +306,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               <Label>LinkedIn URL</Label>
               <FormField
                 control={form.control}
-                name="linkedIn"
+                name="linkedin"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
@@ -421,131 +343,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <Separator className="col-span-2" />
-          <div>
-            KYC Status{' '}
-            <Badge
-              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
-            >
-              {kycStatus.toLowerCase()}
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="aadharOrGovtId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Aadhar or Govt Id</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your Aadhar Id" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="frontImageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Document Front Img</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-4">
-                        {field.value && typeof field.value === 'string' ? (
-                          <>
-                            <Image
-                              src={field.value}
-                              alt="Front Document"
-                              width={128}
-                              height={128}
-                              className="rounded-md object-cover"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => field.onChange('')}
-                              className="ml-auto"
-                            >
-                              Change Image
-                            </Button>
-                          </>
-                        ) : (
-                          <Input
-                            type="file"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                field.onChange(file);
-                              }
-                            }}
-                            onBlur={field.onBlur}
-                          />
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="backImageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Document Back Img</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-4">
-                        {field.value && typeof field.value === 'string' ? (
-                          <>
-                            <Image
-                              src={field.value}
-                              alt="Back Document"
-                              width={128}
-                              height={128}
-                              className="rounded-md object-cover"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => field.onChange('')}
-                              className="ml-auto"
-                            >
-                              Change Image
-                            </Button>
-                          </>
-                        ) : (
-                          <Input
-                            type="file"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                field.onChange(file);
-                              }
-                            }}
-                            onBlur={field.onBlur}
-                          />
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="space-y-2">
-              <LiveCaptureField form={form} />
-            </div>
-          </div>
-
           <Button className="w-full" type="submit" disabled={loading}>
             {loading ? 'Loading...' : 'Save changes'}
           </Button>

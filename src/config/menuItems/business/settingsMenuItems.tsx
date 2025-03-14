@@ -23,7 +23,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Home',
   },
   {
-    href: '/settings/business-info',
+    href: '/business/settings/business-info',
     icon: <User className="h-5 w-5" />,
     label: 'Business Info',
   },

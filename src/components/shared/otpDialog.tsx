@@ -6,13 +6,7 @@ import {
   signInWithPhoneNumber,
   UserCredential,
 } from 'firebase/auth';
-import React, {
-  FormEvent,
-  useEffect,
-  useState,
-  useTransition,
-  useCallback,
-} from 'react';
+import React, { useEffect, useState, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 
@@ -59,7 +53,6 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
     useState<ConfirmationResult | null>(null);
 
   const [isPending, startTransition] = useTransition();
-  const [otpSent, setOtpSent] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [phone, setPhone] = useState(phoneNumber);
 
@@ -119,7 +112,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         }); // Error toast
       }
     });
-  }, [confirmationResult, otp, dispatch, router, phoneNumber]);
+  }, [confirmationResult, otp, dispatch, router, phone]);
 
   useEffect(() => {
     const hasEnteredAllDigits = otp.length === 6;

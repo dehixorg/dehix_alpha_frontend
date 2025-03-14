@@ -5,11 +5,7 @@ import { useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-  notesMenu,
-} from '@/config/menuItems/business/dashboardMenuItems';
+import { notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import NotesRender from '@/components/shared/NotesRender';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -17,6 +13,7 @@ import { LabelType, Note, NoteType } from '@/utils/types/note';
 import { toast } from '@/components/ui/use-toast';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
+import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 const Notes = () => {
   // Get userId from Redux
@@ -88,7 +85,7 @@ const Notes = () => {
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <div>
           <Header
-            menuItemsTop={menuItemsTop}
+            menuItemsTop={notesMenu}
             menuItemsBottom={menuItemsBottom}
             activeMenu="Notes"
             breadcrumbItems={[
