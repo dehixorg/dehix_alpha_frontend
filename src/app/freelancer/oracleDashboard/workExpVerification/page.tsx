@@ -68,7 +68,7 @@ export default function ProfessionalInfo() {
         `/verification/oracle?doc_type=experience`,
       );
       const result = response.data.data;
-      
+
       const flattenedData = result.flatMap((entry: any) =>
         entry.result?.projects
           ? Object.values(entry.result.projects).map((project: any) => ({
