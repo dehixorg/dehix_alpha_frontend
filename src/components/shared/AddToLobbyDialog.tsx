@@ -3,7 +3,6 @@ import { Loader2, Plus, X } from 'lucide-react';
 
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,

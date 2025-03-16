@@ -82,7 +82,6 @@ const FreelancerProfile = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [visibleProjects, setVisibleProjects] = useState(3);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
@@ -362,23 +361,21 @@ const FreelancerProfile = () => {
                   {profileData &&
                   profileData.projects &&
                   profileData.projects.length > 0 ? (
-                    profileData.projects
-                      .slice(0, visibleProjects)
-                      .map((project) => (
-                        <div
-                          key={project._id}
-                          className="border-b border-border pb-4 last:border-b-0"
-                        >
-                          <div className="flex justify-between items-start">
-                            <h3
-                              className="font-medium text-foreground hover:text-primary cursor-pointer"
-                              onClick={() => setSelectedProject(project)}
-                            >
-                              {project.projectName}
-                            </h3>
-                          </div>
+                    profileData.projects.slice(0, 3).map((project) => (
+                      <div
+                        key={project._id}
+                        className="border-b border-border pb-4 last:border-b-0"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3
+                            className="font-medium text-foreground hover:text-primary cursor-pointer"
+                            onClick={() => setSelectedProject(project)}
+                          >
+                            {project.projectName}
+                          </h3>
                         </div>
-                      ))
+                      </div>
+                    ))
                   ) : (
                     <p className="text-muted-foreground italic">
                       No projects added

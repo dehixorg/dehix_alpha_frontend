@@ -2,10 +2,9 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, Plus, X, SendIcon, Expand } from 'lucide-react';
+import { Loader2, SendIcon, Expand, Github, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
-import { Github, Linkedin } from 'lucide-react'; // Import icons
 
 import {
   Accordion,
@@ -20,17 +19,10 @@ import {
 } from '@/components/ui/tooltip';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { axiosInstance } from '@/lib/axiosinstance';
 import InfiniteScroll from '@/components/ui/infinite-scroll';
 import { toast } from '@/components/ui/use-toast';
-import { Separator } from '@/components/ui/separator';
 import {
   Dehix_Talent_Card_Pagination,
   type HireDehixTalentStatusEnum,
@@ -43,13 +35,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
 import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
