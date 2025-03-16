@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/select';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import type { RootState } from '@/lib/store';
+import AddToLobbyDialog from '@/components/shared/AddToLobbyDialog';
 
 interface Education {
   _id: string;
@@ -157,12 +158,16 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
-
+  const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
+  const [isDialogOpen, setIsDialogOpen] = useState<any>(false);
+  const [isLoading, setIsLoading] = useState<any>(false);
 
   const handleAddSkill = () => {
+    console.log(tmpSkill);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
+
       setCurrSkills([
         ...currSkills,
         {
@@ -175,32 +180,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
         },
       ]);
       setTmpSkill('');
-    }
-  };
-
-  const handleInviteTalent = async (
-    FreelancerId: string, DehixTalentId: string
-  ) => {
-    try {
-      const payload = {
-        freelancerId: FreelancerId,
-        dehixTalentId: 'c07f33f7-9c8e-41b8-b0bb-07828039d5a5',
-      };
-      const response = await axiosInstance.put(
-        `/business/hire-dehixtalent/${'c07f33f7-9c8e-41b8-b0bb-07828039d5a5'}/invite`,
-        payload
-      );
-      toast({
-        title: 'Success',
-        description: 'Invitation sent successfully.',
-      });
-    } catch (error) {
-      console.error('Error inviting talent:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to send invitation. Please try again.',
-      });
     }
   };
 
@@ -276,8 +255,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
             description: item.description || 'N/A',
             status: item.status,
             visible: item.visible,
+            talentId: item.skillId || item.domainId
           }),
         );
+        console.log(formattedHireTalentData);
 
         setSkillDomainData(formattedHireTalentData);
         setStatusVisibility(
@@ -370,7 +351,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
         }
 
         if (response?.data?.data) {
-          console.log(response.data.data);
           setTalents((prev) =>
             reset ? fetchedData : [...prev, ...fetchedData],
           );
@@ -439,17 +419,67 @@ const TalentCard: React.FC<TalentCardProps> = ({
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
 
+
+  const handleAddToLobby = async (freelancerId: string) => {
+    const matchedTalentIds: string[] = [];
+    const matchedTalentUids: string[] = [];
+
+    currSkills.forEach((skill: any) => {
+      const matched: any = skillDomainData.find((item: any) => item.label === skill.name);
+      if (matched?.talentId && matched?.uid) {
+        matchedTalentIds.push(matched.talentId);
+        matchedTalentUids.push(matched.uid);
+      }
+    });
+
+    if (matchedTalentIds.length === 0 || matchedTalentUids.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Skills Selected',
+        description: 'Please add some skills before adding to lobby.',
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.put(
+        `business/hire-dehixtalent/add_into_lobby`,
+        {
+          freelancerId,
+          dehixTalentId: matchedTalentIds,
+          hireDehixTalent_id: matchedTalentUids,
+        }
+      );
+
+      if (response.status === 200) {
+        toast({
+          title: 'Success',
+          description: 'Freelancer added to lobby',
+        });
+        setCurrSkills([]);
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   return (
-    <div className="flex flex-wrap justify-center gap-4">
+    <div className="flex flex-wrap mt-4 justify-center gap-4">
       {filteredTalents.map((talent) => {
         const talentEntry = talent.dehixTalent;
         const education = talent.education;
         const projects = talent.projects;
-        console.log(education);
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
         const isInvited = invitedTalents.has(talentEntry._id);
-        console.log(talent);
+        console.log(talent.freelancer_id);
 
         return (
           <Card
@@ -467,10 +497,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   {talent.userName}
                 </p>
               </div>
-              <button
-                onClick={() => handleInviteTalent(talent.freelancer_id, talent.dehixTalent._id)}
-                className="ml-auto"
-              ></button>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -501,7 +527,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                   {SHEET_SIDES.map((View) => (
                     <Sheet key={View}>
                       <SheetTrigger asChild>
-                        <Button className="w-full text-sm  text-black rounded-md">
+                        <Button className="w-full text-sm  rounded-md">
                           View
                         </Button>
                       </SheetTrigger>
@@ -713,103 +739,52 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </AccordionContent>
                           </AccordionItem>
                         </Accordion>
-
-                        <Separator />
-                        <div className="w-full mt-4 mb-6">
-                          <div className="w-full">
-                            <div className="flex items-center mt-2">
-                              <Select
-                                onValueChange={(value) => setTmpSkill(value)}
-                                value={tmpSkill || ''}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder={
-                                      tmpSkill ? tmpSkill : 'Select skill'
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {skillDomainData
-                                    .filter(
-                                      (skill: any) =>
-                                        !currSkills.some(
-                                          (s: any) => s.name === skill.label,
-                                        ),
-                                    )
-                                    .map((skill: any, index: number) => (
-                                      <SelectItem
-                                        key={index}
-                                        value={skill.label}
-                                      >
-                                        {skill.label}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="outline"
-                                type="button"
-                                size="icon"
-                                className="ml-2"
-                                onClick={() => {
-                                  handleAddSkill();
-                                  setTmpSkill('');
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-5">
-                              {currSkills.map((skill: any, index: number) => (
-                                <Badge
-                                  className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                                  key={index}
-                                >
-                                  {skill.name}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteSkill(skill.name)
-                                    }
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="mt-2">
-                            <div className="w-full text-center">
-                              <Button
-                                className="w-full text-sm py-1 px-2  text-black rounded-md"
-                                type="submit"
-                              >
-                                Save
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                        <Button
+                          onClick={() => {
+                            setIsDialogOpen(true)
+                            setSelectedTalent(talent);
+                          }}
+                          className={`w-full mt-4 ${isInvited
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-primary hover:bg-primary/90'
+                            }`}
+                        >
+                          <SendIcon className="mr-2 h-4 w-4" />
+                          Add to Lobby
+                        </Button>
                       </SheetContent>
                     </Sheet>
                   ))}
                 </div>
+                <Button
+                  onClick={() => {
+                    setIsDialogOpen(true)
+                    setSelectedTalent(talent)
+                  }}
+                  className={`w-full ${isInvited
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-primary hover:bg-primary/90'
+                    }`}
+                >
+                  <SendIcon className="mr-2 h-4 w-4" />
+                  Add to Lobby
+                </Button>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button
-                onClick={() => handleInviteTalent(talent.freelancer_id, talent.dehixTalent._id)}
-                className={`w-full ${isInvited
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-primary hover:bg-primary/90'
-                  }`}
-              >
-                <SendIcon className="mr-2 h-4 w-4" />
-                {isInvited ? 'Cancel Invitation' : 'Invite to Project'}
-              </Button>
-            </CardFooter>
+            {selectedTalent && (
+              <AddToLobbyDialog
+                skillDomainData={skillDomainData}
+                currSkills={currSkills}
+                handleAddSkill={handleAddSkill}
+                handleDeleteSkill={handleDeleteSkill}
+                handleAddToLobby={handleAddToLobby}
+                talent={selectedTalent}
+                tmpSkill={tmpSkill}
+                setTmpSkill={setTmpSkill}
+                open={isDialogOpen}
+                setOpen={setIsDialogOpen}
+                isLoading={isLoading}
+              />)}
           </Card>
         );
       })}

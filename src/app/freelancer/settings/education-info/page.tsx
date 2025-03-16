@@ -75,6 +75,7 @@ export default function Education() {
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Education"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

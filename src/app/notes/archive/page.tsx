@@ -7,13 +7,10 @@ import { Loader2 } from 'lucide-react';
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-  notesMenu,
-} from '@/config/menuItems/business/dashboardMenuItems';
+import { notesMenu } from '@/config/menuItems/business/dashboardMenuItems';
 import useFetchNotes from '@/hooks/useFetchNotes';
 import Header from '@/components/header/header';
+import { menuItemsBottom } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 const Page = () => {
   const user = useSelector((state: any) => state.user);
@@ -36,7 +33,7 @@ const Page = () => {
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
-          menuItemsTop={menuItemsTop}
+          menuItemsTop={notesMenu}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Archive"
           breadcrumbItems={[

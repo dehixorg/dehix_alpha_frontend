@@ -79,6 +79,8 @@
 import type React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { Verified } from 'lucide-react';
 
 import { ThemeToggle } from '../shared/themeToggle';
 
@@ -93,6 +95,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { RootState } from '@/lib/store';
 
 export interface MenuItem {
   href: string;
@@ -110,6 +113,7 @@ type SidebarMenuProps = {
   menuItemsBottom: MenuItem[];
   active: string;
   setActive?: (page: string) => void;
+  isKycCheck?: boolean;
 };
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
@@ -117,14 +121,29 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   menuItemsBottom,
   active,
   setActive = () => null,
+  isKycCheck,
 }) => {
   const pathname = usePathname();
+
+  const user = useSelector((state: RootState) => state.user);
 
   const isActive = (href: string) => pathname === href;
   const isActiveParent = (item: MenuItem) => {
     if (isActive(item.href)) return true;
     return item.subItems?.some((subItem) => isActive(subItem.href));
   };
+
+  const finalMenuItemsTop = [...menuItemsTop];
+  if (
+    isKycCheck &&
+    user?.kycStatus !== 'ACTIVE'
+  ) {
+    finalMenuItemsTop.splice(3, 0, {
+      href: `/${user?.type?.toLowerCase()}/settings/kyc`,
+      icon: <Verified className="h-5 w-5" />,
+      label: 'kyc',
+    });
+  }
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
     if (item.subItems) {
@@ -195,7 +214,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
       <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
-        {menuItemsTop.map((item, index) => (
+        {finalMenuItemsTop.map((item, index) => (
           <MenuIcon key={index} item={item} />
         ))}
       </nav>

@@ -89,9 +89,9 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         <FormItem>
           <FormLabel>Live Capture</FormLabel>
           <FormControl>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col md:justify-start md:items-start sm:justify-center items-center gap-2">
               {/* Live Capture Buttons */}
-              <div className="flex gap-2">
+              <div className="flex s gap-2">
                 {/* Captured Image Preview */}
                 {(capturedImage || field.value) && (
                   <div className="flex flex-col items-center">

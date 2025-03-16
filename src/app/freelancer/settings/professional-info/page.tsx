@@ -64,6 +64,7 @@ export default function ProfessionalInfo() {
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Professional Info"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

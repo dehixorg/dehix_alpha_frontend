@@ -3,12 +3,12 @@ import { useSelector } from 'react-redux';
 
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { ProfileForm } from '@/components/form/profileForm';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
+import KYCForm from '@/components/form/kycFreelancerForm';
 
 export default function PersonalInfo() {
   const user = useSelector((state: RootState) => state.user);
@@ -18,7 +18,7 @@ export default function PersonalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Personal Info"
+        active="kyc"
         isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
@@ -29,11 +29,11 @@ export default function PersonalInfo() {
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
-            { label: 'Personal Info', link: '#' },
+            { label: 'kyc', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start  sm:px-6 sm:py-0 md:gap-8">
-          <ProfileForm user_id={user.uid} />
+        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
+          <KYCForm user_id={user.uid} />
         </main>
       </div>
     </div>

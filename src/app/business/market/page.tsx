@@ -170,20 +170,15 @@ const Market: React.FC = () => {
   };
 
   return (
-    <section className="p-3 relative sm:pl-6">
+    <section className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <CollapsibleSidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Market"
-      />
-      <div className="ml-12 mb-8">
+      <div className="flex flex-col sm:gap-4  sm:pl-14 mb-8">
         <MarketHeader />
-        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 -ml-12 md:ml-6 lg:ml-6">
+        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 md:ml-6 lg:ml-6">
           <FilterSidebar
             filters={filters}
             domains={domains}
