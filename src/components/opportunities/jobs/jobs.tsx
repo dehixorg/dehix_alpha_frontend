@@ -40,6 +40,7 @@ interface JobCardProps {
   status: string | undefined;
   profiles: Profile[];
   onRemove: (id: string) => void;
+  onInvite?: (id: string) => void;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
@@ -53,6 +54,7 @@ const JobCard: React.FC<JobCardProps> = ({
   status,
   profiles,
   onRemove,
+  onInvite,
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [isClient, setIsClient] = React.useState(false);
@@ -71,7 +73,7 @@ const JobCard: React.FC<JobCardProps> = ({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
+        description: 'Something went wrong. Please try again.',
       }); // Error toast
     }
   }, [user.uid]);
@@ -94,6 +96,18 @@ const JobCard: React.FC<JobCardProps> = ({
   const notInterestedProject = async (_id: string) => {
     await axiosInstance.put(`/freelancer/${_id}/not_interested_project`);
     onRemove(_id);
+  };
+
+  // Safely handle invite
+  const handleInviteClick = () => {
+    if (onInvite) {
+      onInvite(id);
+    } else {
+      toast({
+        title: 'Invitation sent',
+        description: 'Your invitation has been sent successfully',
+      });
+    }
   };
 
   return (
@@ -124,6 +138,15 @@ const JobCard: React.FC<JobCardProps> = ({
                   <span>View</span>
                 </Button>
               </Link>
+
+              {/* Invite Button */}
+              <Button
+                onClick={handleInviteClick}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+                size="sm"
+              >
+                <span>Invite</span>
+              </Button>
 
               {/* Not Interested Button */}
               <Button

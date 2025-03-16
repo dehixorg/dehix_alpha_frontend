@@ -17,13 +17,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 
@@ -175,7 +168,7 @@ export function SkillDomainMeetingDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="interviewer" className="text-right">
               Interviewer
             </Label>
@@ -197,7 +190,7 @@ export function SkillDomainMeetingDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="summary" className="text-right">

@@ -26,7 +26,7 @@ const DialogSelectedNote = ({
 }: DialogSelectedNoteProps) => {
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content || '');
-  const [entityID, setEntityID] = useState(note.entityID || '');
+  const [entityID] = useState(note.entityID || '');
   const [error, setError] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -46,9 +46,8 @@ const DialogSelectedNote = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
         className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
-        style={{ backgroundColor: note.bgColor || '#ffffff' }}
+        style={{ backgroundColor: `${note.bgColor}B3` || '#ffffff' }}
       >
-        <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
         {/* banner as background */}
         {note.banner && (
           <div className="absolute inset-0 z-0">
@@ -59,7 +58,6 @@ const DialogSelectedNote = ({
               objectFit="cover"
               className="rounded-lg"
             />
-            <div className="absolute inset-3 bg-black opacity-30 z-1"></div>
           </div>
         )}
 
@@ -85,7 +83,7 @@ const DialogSelectedNote = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter note title"
-                className="mt-2 p-2 border rounded-md w-full text-sm"
+                className="mt-2 p-2 border bg-opacity-50 bg-white rounded-md w-full text-sm text-opacity-100"
               />
             </div>
 
@@ -98,7 +96,7 @@ const DialogSelectedNote = ({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Enter note content"
-                className="mt-2 p-2 border rounded-md w-full text-sm"
+                className="mt-2 p-2 bg-opacity-50 bg-white border  no-scrollbar rounded-md w-full text-sm text-opacity-100  resize-none"
                 rows={5}
               />
             </div>
@@ -112,21 +110,26 @@ const DialogSelectedNote = ({
                 type="text"
                 disabled={true}
                 value={entityID}
-                onChange={(e) => setEntityID(e.target.value)}
                 placeholder="Entity ID"
-                className="mt-2 p-2 border rounded-md w-full text-sm"
+                className="mt-2 p-2 border bg-opacity-50 bg-white rounded-md w-full text-sm text-opacity-100"
               />
             </div>
           </div>
         ) : (
-          <div className="mt-6 relative z-10">
+          <div className="mt-6 relative z-10 w-full max-w-2xl">
             <div className="mb-4">
               <p className="text-sm font-bold">Title:</p>
               <p className="text-black-300 mt-1">{note.title}</p>
             </div>
             <div className="mb-4">
               <p className="text-sm font-bold">Content:</p>
-              <p className="text-black-300 mt-1">{note.content}</p>
+              <div
+                className={`text-black-300 mt-1 no-scrollbar p-2 ${
+                  note.content.length > 300 ? 'max-h-52 overflow-y-auto' : ''
+                }`}
+              >
+                {note.content}
+              </div>
             </div>
             <div className="mb-4">
               <p className="text-sm font-bold">Entity ID:</p>
@@ -149,7 +152,11 @@ const DialogSelectedNote = ({
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={onClose} className="mr-2">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="mr-2 text-black dark:text-white"
+              >
                 Close
               </Button>
               <Button onClick={() => setIsEditMode(true)}>Edit</Button>

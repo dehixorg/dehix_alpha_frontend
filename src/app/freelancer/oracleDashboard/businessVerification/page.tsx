@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Filter, PackageOpen } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -17,16 +17,15 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
-import dummyData from '@/dummydata.json'; // Import your JSON data here
+import { StatusEnum } from '@/utils/freelancer/enum';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 
 export default function ProfessionalInfo() {
-  const [dummyBusinessData] = useState(
-    dummyData.dashboardFreelancerOracleBusiness,
-  );
-
+  const [businessdata, setBusinessData] = useState<any[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -35,27 +34,56 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  // const filteredData = dummyBusinessData.filter((data) => {
-  //   if (filter === 'all') {
-  //     return true;
-  //   }
-  //   return (
-  //     data.status === filter ||
-  //     (filter === 'current' && data.status === 'pending')
-  //   );
-  // });
+  const filteredData = businessdata.filter((data) => {
+    if (filter === 'all') return true;
+    if (filter === 'current')
+      return data.verificationStatus === StatusEnum.PENDING;
+    return data.verificationStatus === filter;
+  });
 
-  // const updateBusinessStatus = (index: number, newStatus: string) => {
-  //   const updatedData = [...dummyBusinessData];
-  //   updatedData[index].status = newStatus;
-  //   setDummyBusinessData(updatedData); // Assuming you set this in state
-  // };
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/verification/oracle?doc_type=business`,
+      );
+      const result = response.data.data;
 
-  // const updateCommentStatus = (index: number, newComment: string) => {
-  //   const updatedData = [...dummyBusinessData];
-  //   updatedData[index].comments = newComment;
-  //   setDummyBusinessData(updatedData);
-  // };
+      const flattenedData = result.flatMap((entry: any) =>
+        entry.result?.projects
+          ? Object.values(entry.result.projects).map((project: any) => ({
+              ...project,
+              verifier_id: entry.verifier_id,
+              verifier_username: entry.verifier_username,
+            }))
+          : [],
+      );
+
+      setBusinessData(flattenedData);
+    } catch (error) {
+      console.error('Error in getting verification data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const updateBusinessStatus = (index: number, newStatus: string) => {
+    const updatedData = [...businessdata];
+    updatedData[index].status = newStatus;
+    setBusinessData(updatedData);
+  };
+
+  const updateCommentStatus = (index: number, newComment: string) => {
+    const updatedData = [...businessdata];
+    updatedData[index].comments = newComment;
+    setBusinessData(updatedData);
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -72,14 +100,11 @@ export default function ProfessionalInfo() {
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Oracle', link: '#' },
-            {
-              label: 'Business Verification',
-              link: '#',
-            },
+            { label: 'Business Verification', link: '#' },
           ]}
         />
-        <div className="mb-8 ml-8 flex justify-between items-center">
-          <div className="mb-8 ml-10">
+        <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+          <div>
             <h1 className="text-3xl font-bold">Business Verification</h1>
             <p className="text-gray-400 mt-2">
               Monitor the status of your Business verifications.
@@ -94,13 +119,13 @@ export default function ProfessionalInfo() {
             <Filter className="h-4 w-4" />
           </Button>
         </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Filter Education Status</DialogTitle>
+              <DialogTitle>Filter Business Verification</DialogTitle>
             </DialogHeader>
             <RadioGroup
-              defaultValue="all"
               value={filter}
               onValueChange={(value: FilterOption) => handleFilterChange(value)}
               className="space-y-2"
@@ -129,41 +154,44 @@ export default function ProfessionalInfo() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+            grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
-          {/* {filteredData.map((data, index) => (
-            <BusinessVerificationCard
-              key={index}
-              firstName={data.firstName}
-              lastName={data.lastName}
-              email={data.email}
-              phone={data.phone}
-              companyName={data.companyName}
-              companySize={data.companySize}
-              referenceEmail={data.referenceEmail}
-              websiteLink={data.websiteLink}
-              linkedInLink={data.linkedInLink}
-              githubLink={data.githubLink}
-              comments={data.comments}
-              status={data.status} // Pass the status to the card component
-              onStatusUpdate={(newStatus) =>
-                updateBusinessStatus(index, newStatus)
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(index, newComment)
-              }
-            />
-          ))} */}
-          {dummyBusinessData.length == 0 ? (
-            <div className="text-center w-[90vw] px-auto mt-20 py-10">
+          {filteredData.length > 0 ? (
+            filteredData.map((data, index) => (
+              <BusinessVerificationCard
+                key={index}
+                _id={data._id}
+                firstName={data.firstName}
+                lastName={data.lastName}
+                email={data.email}
+                phone={data.phone}
+                companyName={data.companyName}
+                companySize={data.companySize}
+                referenceEmail={data.referenceEmail}
+                websiteLink={data.websiteLink}
+                linkedInLink={data.linkedInLink}
+                githubLink={data.githubLink}
+                comments={data.comments}
+                status={data.status}
+                onStatusUpdate={(newStatus) =>
+                  updateBusinessStatus(index, newStatus)
+                }
+                onCommentUpdate={(newComment) =>
+                  updateCommentStatus(index, newComment)
+                }
+              />
+            ))
+          ) : (
+            <div className="text-center w-full col-span-full mt-20 py-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
               <p className="text-gray-500">
-                No Business verification for you now.
+                No Business verification records found.
               </p>
             </div>
-          ) : null}
+          )}
         </main>
       </div>
     </div>

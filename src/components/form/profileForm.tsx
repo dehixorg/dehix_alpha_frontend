@@ -4,14 +4,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogOverlay } from '@radix-ui/react-dialog';
-import Image from 'next/image';
 
 import { Card } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
-
-import LiveCaptureField from './register/livecapture';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
@@ -36,7 +33,7 @@ import {
   SelectContent,
 } from '@/components/ui/select';
 import { Type } from '@/utils/enum';
-import { kycBadgeColors, StatusEnum } from '@/utils/freelancer/enum';
+import { StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
@@ -66,31 +63,6 @@ const profileFormSchema = z.object({
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
-  aadharOrGovtId: z.string().optional(),
-  frontImageUrl: z
-    .union([
-      // Ensure File is only validated on the client-side
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
-
-  backImageUrl: z
-    .union([
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
-
-  liveCaptureUrl: z
-    .union([
-      typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
-      z.string().url(),
-      z.null(),
-    ])
-    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -132,7 +104,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
     null,
   );
-  const [kycStatus, setKycStatus] = useState<string>('PENDING');
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -177,6 +148,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customSkillData = {
       label: customSkill.label,
+      interviewInfo: customSkill.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
       status: StatusEnum.ACTIVE,
@@ -224,6 +196,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
     }
     const customDomainData = {
       label: customDomain.label,
+      interviewInfo: customSkill.description,
       createdBy: Type.FREELANCER,
       createdById: user_id,
       status: StatusEnum.ACTIVE,
@@ -402,7 +375,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setCurrSkills(userResponse.data.data.skills);
         setCurrDomains(userResponse.data.data.domain);
         setCurrProjectDomains(userResponse.data.data.projectDomain);
-        setKycStatus(userResponse?.data?.data?.kyc?.status);
 
         form.reset({
           firstName: userResponse.data.data.firstName || '',
@@ -414,10 +386,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           personalWebsite: userResponse.data.data.personalWebsite || '',
           resume: userResponse.data.data.resume || '',
           description: userResponse.data.data.description || '',
-          aadharOrGovtId: userResponse.data.data.kyc?.aadharOrGovtId || '',
-          frontImageUrl: userResponse.data.data.kyc?.frontImageUrl || '',
-          backImageUrl: userResponse.data.data.kyc?.backImageUrl || '',
-          liveCaptureUrl: userResponse.data.data.kyc?.liveCapture || '',
         });
       } catch (error) {
         console.error('API Error:', error);
@@ -443,72 +411,28 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       personalWebsite: user?.personalWebsite || '',
       resume: user?.resume || '',
       description: user?.description || '',
-      aadharOrGovtId: user?.kyc?.aadharOrGovtId || '',
-      frontImageUrl: user?.kyc?.frontImageUrl || '',
-      backImageUrl: user?.kyc?.backImageUrl || '',
-      liveCaptureUrl: user?.kyc?.liveCaptureUrl || '',
     });
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
+    setLoading(true);
     try {
-      const uploadedUrls = {
-        frontImageUrl: data.frontImageUrl,
-        backImageUrl: data.backImageUrl,
-        liveCaptureUrl: data.liveCaptureUrl,
-      };
-      // Append files to the form data
-      if (data.frontImageUrl instanceof File) {
-        const frontFormData = new FormData();
-        frontFormData.append('frontImageUrl', data.frontImageUrl);
+      const { ...restData } = data;
 
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          frontFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.frontImageUrl = response.data.data.Location;
-      }
-      if (data.backImageUrl instanceof File) {
-        const backFormData = new FormData();
-        backFormData.append('backImageUrl', data.backImageUrl);
-
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          backFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.backImageUrl = response.data.data.Location;
-      }
-      if (data.liveCaptureUrl instanceof File) {
-        const liveFormData = new FormData();
-        liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          liveFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        uploadedUrls.liveCaptureUrl = response.data.data.Location;
-      }
-
-      const { aadharOrGovtId, ...restData } = data;
-
-      const kyc = {
-        aadharOrGovtId,
-        frontImageUrl: uploadedUrls.frontImageUrl,
-        backImageUrl: uploadedUrls.backImageUrl,
-        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
-        status: 'APPLIED',
-      };
+      const updatedSkills = currSkills.map((skill: any) => ({
+        ...skill,
+        interviewInfo: skill.interviewInfo || '',
+        interviewerRating: skill.interviewerRating || 0,
+        interviewStatus: skill.interviewStatus || 'PENDING',
+      }));
 
       await axiosInstance.put(`/freelancer`, {
         ...restData,
         resume: data.resume,
-        skills: currSkills,
+        skills: updatedSkills,
         domain: currDomains,
         projectDomain: currProjectDomains,
         description: data.description,
-        kyc,
       });
 
       setUser({
@@ -521,13 +445,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         role: data.role,
         personalWebsite: data.personalWebsite,
         resume: data.resume,
-        skills: currSkills,
+        skills: updatedSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
-        aadharOrGovtId: data.aadharOrGovtId,
-        frontImageUrl: uploadedUrls.frontImageUrl,
-        backImageUrl: uploadedUrls.backImageUrl,
-        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
       });
       toast({
         title: 'Profile Updated',
@@ -540,6 +460,8 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         title: 'Error',
         description: 'Failed to update profile. Please try again later.',
       });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -678,124 +600,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
-          <Separator className="col-span-2" />
-          <div>
-            KYC Status{' '}
-            <Badge
-              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
-            >
-              {kycStatus?.toLowerCase()}
-            </Badge>
-          </div>
-          <div></div>
-          <FormField
-            control={form.control}
-            name="aadharOrGovtId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Aadhar or Govt Id</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your Aadhar Id" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="frontImageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Front Img</FormLabel>
-                <FormControl>
-                  <div className="flex items-center gap-4">
-                    {field.value && typeof field.value === 'string' ? (
-                      <>
-                        <Image
-                          src={field.value}
-                          alt="Front Document"
-                          width={128}
-                          height={128}
-                          className="rounded-md object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.onChange('')}
-                          className="ml-auto"
-                        >
-                          Change Image
-                        </Button>
-                      </>
-                    ) : (
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
-                        }}
-                        onBlur={field.onBlur}
-                      />
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="backImageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Back Img</FormLabel>
-                <FormControl>
-                  <div className="flex items-center gap-4">
-                    {field.value && typeof field.value === 'string' ? (
-                      <>
-                        <Image
-                          src={field.value}
-                          alt="Back Document"
-                          width={128}
-                          height={128}
-                          className="rounded-md object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.onChange('')}
-                          className="ml-auto"
-                        >
-                          Change Image
-                        </Button>
-                      </>
-                    ) : (
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
-                        }}
-                        onBlur={field.onBlur}
-                      />
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <LiveCaptureField form={form} />
-
           <Separator className="col-span-2" />
           <div className="sm:col-span-2">
             <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
@@ -1122,22 +926,30 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <Separator className="col-span-2 mt-0" />
-          <FormField
-            control={form.control}
-            name="resume"
-            render={(field) => (
-              <FormItem className="flex flex-col items-start ">
-                <FormLabel className="ml-2">Upload Resume</FormLabel>
-                <div className="w-full sm:w-auto sm:mr-26">
-                  <ResumeUpload />
-                </div>
-              </FormItem>
-            )}
-          />
-          <Separator className="sm:col-span-2 mt-0" />
-          <Button type="submit" className="sm:col-span-2" disabled={loading}>
-            {loading ? 'Loading...' : 'Update Profile'}
-          </Button>
+          <div className="col-span-2">
+            <FormField
+              control={form.control}
+              name="resume"
+              render={() => (
+                <FormItem className="flex flex-col items-start ">
+                  <FormLabel className="ml-2">Upload Resume</FormLabel>
+                  <div className="w-full sm:w-auto sm:mr-26">
+                    <ResumeUpload />
+                  </div>
+                </FormItem>
+              )}
+            />
+            <Separator className="sm:col-span-2 mt-0" />
+          </div>
+          <div className="col-span-2">
+            <Button
+              type="submit"
+              className="sm:col-span-2 w-full"
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Update Profile'}
+            </Button>
+          </div>
 
           {isDialogOpen && (
             <Dialog

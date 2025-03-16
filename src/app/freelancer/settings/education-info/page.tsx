@@ -27,14 +27,24 @@ export default function Education() {
     const fetchData = async () => {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setEducationInfo(Object.values(response.data?.education));
+
+        const educationData = response.data?.education;
+
+        if (!educationData || typeof educationData !== 'object') {
+          console.warn('No education data found, setting empty array.');
+          setEducationInfo([]);
+          return;
+        }
+
+        setEducationInfo(Object.values(response.data.data.education));
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
+        setEducationInfo([]); // Ensure UI doesn't break
       }
     };
 
@@ -65,6 +75,7 @@ export default function Education() {
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Education"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

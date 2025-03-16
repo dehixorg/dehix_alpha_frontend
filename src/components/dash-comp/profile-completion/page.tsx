@@ -13,7 +13,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 
-interface UserProfile {
+export interface UserProfile {
   _id: string;
   firstName: string;
   lastName: string;
@@ -107,7 +107,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
     if (!completionFields) return [];
 
     const incomplete = Object.entries(completionFields)
-      .filter(([_, isComplete]) => !isComplete)
+      .filter(([, isComplete]) => !isComplete)
       .map(([field]) => {
         // Convert camelCase to readable text
         const readableField = field

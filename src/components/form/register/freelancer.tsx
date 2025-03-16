@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { Controller, useForm } from 'react-hook-form';
@@ -40,7 +40,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
-import DateOfBirthPicker from '@/components/shared/DateOfBirthPicker';
+import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
+import TermsDialog from '@/components/shared/FreelancerTermsDialog';
 
 interface Step {
   id: number;
@@ -141,11 +142,11 @@ const profileFormSchema = z
       .email({ message: 'Email must be a valid email address.' }),
     userName: z
       .string()
-      .min(3, { message: 'Username must be at least 3 characters long' })
+      .min(4, { message: 'Username must be at least 4 characters long' })
       .max(20, { message: 'Username must be less than 20 characters long' })
-      .regex(/^[a-zA-Z0-9_]+$/, {
-        message: 'Username can only contain letters, numbers, and underscores',
-      }), // Adjust regex as needed
+      .regex(/^[a-zA-Z0-9]{4}[a-zA-Z0-9_]*$/, {
+        message: 'Underscore allowed only after 4 letters/numbers',
+      }),
     phone: z
       .string()
       .min(10, { message: 'Phone number must be at least 10 digits.' })
@@ -249,6 +250,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
+
   // const steps = [
   //   {
   //     title: 'Account Details',
@@ -301,7 +303,7 @@ function FreelancerRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const [isTermsDialog, setIsTermsDialog] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -443,9 +445,6 @@ function FreelancerRegisterForm({
         description: 'Redirecting to login page...',
       });
       setIsModalOpen(true);
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Something went wrong!';
@@ -718,15 +717,21 @@ function FreelancerRegisterForm({
                   type="checkbox"
                   id="terms"
                   checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
+                  onChange={() => {
+                    setIsChecked(!isChecked);
+                  }}
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
                   I agree to the{' '}
-                  <a href="/terms" className="text-primary hover:underline">
+                  <span
+                    onClick={() => setIsTermsDialog(true)}
+                    className="text-primary hover:underline"
+                  >
                     Terms and Conditions
-                  </a>
+                  </span>
                 </label>
+                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} />
               </div>
 
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">

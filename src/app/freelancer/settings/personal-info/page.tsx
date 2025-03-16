@@ -19,6 +19,7 @@ export default function PersonalInfo() {
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Personal Info"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

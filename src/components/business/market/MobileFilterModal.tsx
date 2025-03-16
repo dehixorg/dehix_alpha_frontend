@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
@@ -37,7 +38,11 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
     <>
       {showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4 overflow-hidden">
-          <div className="bg-black rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+          <div className="bg-black relative rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col">
+            <X
+              onClick={handleModalToggle}
+              className="absolute cursor-pointer top-1 right-6"
+            />
             <div className="overflow-y-auto p-4 flex-grow">
               <div className="border-b border-gray-300 pb-4 ">
                 <CompanyCard

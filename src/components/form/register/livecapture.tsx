@@ -35,6 +35,9 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
 
       if (videoRef.current) {
         videoRef.current.srcObject = userMediaStream;
+        await new Promise((resolve) => {
+          videoRef.current!.onloadedmetadata = () => resolve(true);
+        });
       }
     } catch (err) {
       console.error('Error accessing camera:', err);
@@ -44,11 +47,16 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
 
   const captureLiveImage = () => {
     if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
       const context = canvasRef.current.getContext('2d');
-      if (context) {
-        context.drawImage(videoRef.current, 0, 0, 640, 480);
-        const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+      if (context && video.videoWidth > 0 && video.videoHeight > 0) {
+        // Set canvas size to video size
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
 
         // Convert to a file and save it in form
@@ -81,9 +89,9 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
         <FormItem>
           <FormLabel>Live Capture</FormLabel>
           <FormControl>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col md:justify-start md:items-start sm:justify-center items-center gap-2">
               {/* Live Capture Buttons */}
-              <div className="flex gap-2">
+              <div className="flex s gap-2">
                 {/* Captured Image Preview */}
                 {(capturedImage || field.value) && (
                   <div className="flex flex-col items-center">

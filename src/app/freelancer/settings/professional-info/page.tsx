@@ -29,27 +29,42 @@ export default function ProfessionalInfo() {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
-        setExperiences(Object.values(response.data?.data.professionalInfo));
+
+        // Check if response.data?.data.professionalInfo is valid before using Object.values()
+        const professionalInfo = response.data?.data?.professionalInfo;
+
+        if (!professionalInfo || typeof professionalInfo !== 'object') {
+          console.warn(
+            'No professional experience data found, setting empty array.',
+          );
+          setExperiences([]); // Empty array set kar diya taaki error na aaye
+          return;
+        }
+
+        setExperiences(Object.values(professionalInfo));
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
+          description: 'Something went wrong. Please try again.',
         });
         console.error('API Error:', error);
+        setExperiences([]); // UI break hone se bachega
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData();
   }, [user.uid, refresh]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Professional Info"
+        isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header

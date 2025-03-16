@@ -18,6 +18,11 @@ const AuthContext = createContext<AuthContextProps>({
   loading: true,
 });
 
+const getLocalStorageItem = (key: string) => localStorage.getItem(key);
+const setLocalStorageItem = (key: string, value: string) =>
+  localStorage.setItem(key, value);
+const removeLocalStorageItem = (key: string) => localStorage.removeItem(key);
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [user, setUserState] = useState<User | null>(null);
@@ -25,37 +30,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    const storedUser = getLocalStorageItem('user');
+    const storedToken = getLocalStorageItem('token');
 
     if (storedUser && storedToken) {
-      const parsedUser = JSON.parse(storedUser);
-      setUserState(parsedUser);
-      initializeAxiosWithToken(storedToken);
-      dispatch(setUser(parsedUser));
-      setLoading(false);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUserState(parsedUser);
+        initializeAxiosWithToken(storedToken);
+        dispatch(setUser(parsedUser));
+      } catch (error) {
+        console.error('Failed to parse user:', error);
+        removeLocalStorageItem('user');
+        removeLocalStorageItem('token');
+      }
     }
 
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        const accessToken = await firebaseUser.getIdToken();
-        const claims = await firebaseUser.getIdTokenResult();
-        const userData = { ...firebaseUser, type: claims.claims.type };
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', accessToken);
-        setUserState(userData);
-        initializeAxiosWithToken(accessToken);
-        dispatch(setUser(userData));
+    const unsubscribe = auth.onIdTokenChanged(async (firebaseUser) => {
+      if (firebaseUser && navigator.onLine) {
+        try {
+          const accessToken = await firebaseUser.getIdToken();
+          if (accessToken) {
+            const claims = await firebaseUser.getIdTokenResult();
+            const userData = { ...firebaseUser, type: claims.claims.type };
+            setLocalStorageItem('user', JSON.stringify(userData));
+            setLocalStorageItem('token', accessToken);
+            setUserState(userData);
+            initializeAxiosWithToken(accessToken);
+            dispatch(setUser(userData));
+          }
+        } catch (error) {
+          console.error('Token Refresh Error:', error);
+        }
       } else {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        removeLocalStorageItem('user');
+        removeLocalStorageItem('token');
         setUserState(null);
         dispatch(clearUser());
         router.replace('/auth/login');
       }
-      setLoading(false);
     });
 
+    setLoading(false);
     return () => unsubscribe();
   }, [dispatch, router]);
 

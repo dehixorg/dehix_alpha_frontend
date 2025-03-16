@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Edit2, ListFilter } from 'lucide-react';
+import { Plus, Edit2, ListFilter, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { toast } from '../../ui/use-toast';
@@ -33,6 +33,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Skill {
   talentName: string;
@@ -435,7 +440,19 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 <TableHead className="">Level</TableHead>
                 <TableHead className="">Experience</TableHead>
                 <TableHead className="">Status</TableHead>
-                <TableHead className="">Actions</TableHead>
+                <TableHead className="">
+                  <div className="flex gap-2 items-center">
+                    Actions
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Info className="w-4 h-4 text-muted-foreground  cursor-pointer" />
+                      </PopoverTrigger>
+                      <PopoverContent className="text-sm w-fit  border rounded p-2 shadow">
+                        This will be available in the next phase.
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -471,18 +488,21 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                       </TableCell>
                       <TableCell className="">
                         <Badge className={getBadgeColor(item.interviewStatus)}>
-                          {item.interviewStatus.toUpperCase()}
+                          {item?.interviewStatus?.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell className="">
+                      <TableCell className="flex items-center gap-2">
                         <ButtonIcon
-                          icon={<Edit2 className="w-4 h-4" />}
+                          icon={
+                            <Edit2 className="w-4 h-4 text-gray-400 cursor-not-allowed" />
+                          }
+                          disabled
                           onClick={() =>
                             handleSkillDomainDialog(
                               item,
-                              item.experience ? 'skill' : 'domain',
+                              item.experience ? 'SKILL' : 'DOMAIN',
                             )
-                          } // Pass type to handler
+                          }
                         />
                       </TableCell>
                     </TableRow>

@@ -43,7 +43,7 @@ export default function Talent() {
         active="Dehix Talent"
       />
 
-      <div className="flex flex-col sm:gap-8 mb-8 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-8  sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -98,7 +98,7 @@ export default function Talent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="lg:h-[73vh] h-[59vh] rounded-lg overflow-y-scroll no-scrollbar">
+            <div className="lg:h-[75vh] h-[59vh] rounded-lg  overflow-y-scroll no-scrollbar">
               <TalentCard
                 skillFilter={skillFilter}
                 domainFilter={domainFilter}
