@@ -79,8 +79,6 @@
 import type React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSelector } from 'react-redux';
-import { Verified } from 'lucide-react';
 
 import { ThemeToggle } from '../shared/themeToggle';
 
@@ -132,18 +130,6 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     if (isActive(item.href)) return true;
     return item.subItems?.some((subItem) => isActive(subItem.href));
   };
-
-  const finalMenuItemsTop = [...menuItemsTop];
-  if (
-    isKycCheck &&
-    user?.kycStatus !== 'ACTIVE'
-  ) {
-    finalMenuItemsTop.splice(3, 0, {
-      href: `/${user?.type?.toLowerCase()}/settings/kyc`,
-      icon: <Verified className="h-5 w-5" />,
-      label: 'kyc',
-    });
-  }
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
     if (item.subItems) {

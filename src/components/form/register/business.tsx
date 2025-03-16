@@ -46,6 +46,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
+import TermsDialog from '@/components/shared/BusinessTermsDialog';
 
 interface StepperProps {
   currentStep: number;
@@ -80,13 +81,12 @@ const Stepper = ({ currentStep = 0 }: StepperProps) => {
             <div className="relative">
               <div
                 className={`w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-                ${
-                  currentStep > step.id
+                ${currentStep > step.id
                     ? 'bg-primary border-primary'
                     : currentStep === step.id
                       ? 'border-primary bg-background text-primary'
                       : 'border-muted bg-background text-muted'
-                }`}
+                  }`}
               >
                 {currentStep > step.id ? (
                   <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-background" />
@@ -202,6 +202,7 @@ function BusinessRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [Isverified, setIsVerified] = useState<boolean>(false);
+  const [isTermsDialog, setIsTermsDialog] = useState(false);
   const searchParams = useSearchParams();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -336,9 +337,8 @@ function BusinessRegisterForm({
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
-        description: `Error: ${
-          error.response?.data.message || 'Something went wrong!'
-        }`,
+        description: `Error: ${error.response?.data.message || 'Something went wrong!'
+          }`,
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
@@ -574,15 +574,18 @@ function BusinessRegisterForm({
                   type="checkbox"
                   id="terms"
                   checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
+                  onChange={() => {
+                    setIsChecked(!isChecked);
+                  }}
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
                   I agree to the{' '}
-                  <a href="/terms" className="text-primary hover:underline">
+                  <span onClick={() => setIsTermsDialog(true)} className="text-primary hover:underline">
                     Terms and Conditions
-                  </a>
+                  </span>
                 </label>
+                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} />
               </div>
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
                 <Button

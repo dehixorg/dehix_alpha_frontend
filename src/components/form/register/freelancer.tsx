@@ -41,6 +41,7 @@ import {
 import { Input } from '@/components/ui/input';
 import OtpLogin from '@/components/shared/otpDialog';
 import DateOfBirthPicker from '@/components/DateOfBirthPicker/DateOfBirthPicker';
+import TermsDialog from '@/components/shared/FreelancerTermsDialog';
 
 interface Step {
   id: number;
@@ -81,13 +82,12 @@ const Stepper: React.FC<StepperProps> = ({ currentStep = 0 }) => {
             <div className="relative">
               <div
                 className={`w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center rounded-full border-2 transition-all duration-300
-                ${
-                  currentStep > step.id
+                ${currentStep > step.id
                     ? 'bg-primary border-primary'
                     : currentStep === step.id
                       ? 'border-primary bg-background text-primary'
                       : 'border-muted bg-background text-muted'
-                }`}
+                  }`}
               >
                 {currentStep > step.id ? (
                   <CheckCircle2 className="w-4 h-4 sm:w-6 sm:h-6 text-background" />
@@ -122,7 +122,7 @@ const getAgeWorkExperienceDifference = (today: any, dobDate: any) => {
     today.getFullYear() -
     dobDate.getFullYear() -
     (today <
-    new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate())
+      new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate())
       ? 1
       : 0)
   );
@@ -249,6 +249,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function FreelancerPage() {
   const [currentStep, setCurrentStep] = useState(0);
+
   // const steps = [
   //   {
   //     title: 'Account Details',
@@ -301,6 +302,7 @@ function FreelancerRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false); // State for checkbox
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
+  const [isTermsDialog, setIsTermsDialog] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -714,15 +716,18 @@ function FreelancerRegisterForm({
                   type="checkbox"
                   id="terms"
                   checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
+                  onChange={() => {
+                    setIsChecked(!isChecked);
+                  }}
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
                   I agree to the{' '}
-                  <a href="/terms" className="text-primary hover:underline">
+                  <span onClick={() => setIsTermsDialog(true)} className="text-primary hover:underline">
                     Terms and Conditions
-                  </a>
+                  </span>
                 </label>
+                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} />
               </div>
 
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">

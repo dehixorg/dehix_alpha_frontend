@@ -1,5 +1,6 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Filter, PackageOpen } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,10 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
+import { StatusEnum } from '@/utils/freelancer/enum';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { toast } from '@/components/ui/use-toast';
+import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
@@ -98,7 +103,17 @@ export default function ProfessionalInfo() {
     updatedData[index].status = newStatus;
     setBusinessData(updatedData); // Assuming you set this in state
   };
+  const updateBusinessStatus = (index: number, newStatus: string) => {
+    const updatedData = [...businessdata];
+    updatedData[index].status = newStatus;
+    setBusinessData(updatedData); // Assuming you set this in state
+  };
 
+  const updateCommentStatus = (index: number, newComment: string) => {
+    const updatedData = [...businessdata];
+    updatedData[index].comments = newComment;
+    setBusinessData(updatedData);
+  };
   const updateCommentStatus = (index: number, newComment: string) => {
     const updatedData = [...businessdata];
     updatedData[index].comments = newComment;
@@ -126,6 +141,8 @@ export default function ProfessionalInfo() {
             },
           ]}
         />
+        <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+          <div className="mb-8">
         <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Business Verification</h1>
@@ -182,8 +199,10 @@ export default function ProfessionalInfo() {
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {filteredData.map((data, index) => (
+          {filteredData.map((data, index) => (
             <BusinessVerificationCard
               key={index}
+              _id={data._id}
               _id={data._id}
               firstName={data.firstName}
               lastName={data.lastName}
@@ -206,12 +225,15 @@ export default function ProfessionalInfo() {
             />
           ))}
           {/* {dummyBusinessData.length == 0 ? (
+          ))}
+          {/* {dummyBusinessData.length == 0 ? (
             <div className="text-center w-[90vw] px-auto mt-20 py-10">
               <PackageOpen className="mx-auto text-gray-500" size="100" />
               <p className="text-gray-500">
                 No Business verification for you now.
               </p>
             </div>
+          ) : null} */}
           ) : null} */}
         </main>
       </div>
