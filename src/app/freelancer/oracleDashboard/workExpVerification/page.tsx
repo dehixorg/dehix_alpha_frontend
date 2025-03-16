@@ -67,9 +67,16 @@ export default function ProfessionalInfo() {
       const response = await axiosInstance.get(
         `/verification/oracle?doc_type=experience`,
       );
-      setJobData(response.data.data);
-      const flattenedData = response.data.data.flatMap((entry: any) =>
-        Object.values(entry),
+      const result = response.data.data;
+      
+      const flattenedData = result.flatMap((entry: any) =>
+        entry.result?.projects
+          ? Object.values(entry.result.projects).map((project: any) => ({
+              ...project,
+              verifier_id: entry.verifier_id,
+              verifier_username: entry.verifier_username,
+            }))
+          : [],
       );
       setJobData(flattenedData);
     } catch (error) {
