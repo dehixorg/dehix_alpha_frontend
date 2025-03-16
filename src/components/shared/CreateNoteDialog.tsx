@@ -82,7 +82,7 @@ export function CreateNoteDialog({ onNoteCreate }: Props) {
             placeholder="Take a note..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[100px]"
+            className="min-h-[100px] resize-none"
           />
           <label className="flex items-center gap-2">
             <input

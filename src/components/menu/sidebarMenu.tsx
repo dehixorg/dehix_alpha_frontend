@@ -136,8 +136,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const finalMenuItemsTop = [...menuItemsTop];
   if (
     isKycCheck &&
-    user?.kycStatus !== 'ACTIVE' &&
-    user?.kycStatus !== undefined
+    user?.kycStatus !== 'ACTIVE'
   ) {
     finalMenuItemsTop.splice(3, 0, {
       href: `/${user?.type?.toLowerCase()}/settings/kyc`,

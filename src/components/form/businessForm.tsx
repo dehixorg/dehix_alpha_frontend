@@ -171,7 +171,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
           entityType={Type.BUSINESS}
         />
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>First Name</Label>
               <FormField
@@ -203,7 +203,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Email</Label>
               <FormField
@@ -226,7 +226,6 @@ export function BusinessForm({ user_id }: { user_id: string }) {
                 )}
               />
             </div>
-
             <div className="space-y-2">
               <Label>Phone</Label>
               <FormField
@@ -251,7 +250,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label>Company Name</Label>
               <FormField
@@ -301,7 +300,7 @@ export function BusinessForm({ user_id }: { user_id: string }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>LinkedIn URL</Label>
               <FormField

@@ -121,8 +121,8 @@ export default function ProfessionalInfo() {
             },
           ]}
         />
-        <div className="mb-8 ml-6 flex justify-between items-center">
-          <div className="mb-8 ml-10">
+        <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+          <div className="mb-8">
             <h1 className="text-3xl font-bold">Education Verification</h1>
             <p className="text-gray-400 mt-2">
               Monitor the status of your Education verifications.
