@@ -65,7 +65,6 @@ const FormSchema = z.object({
 });
 
 const BusinessVerificationCard: React.FC<BusinessProps> = ({
-  _id,
   firstName,
   lastName,
   email,
