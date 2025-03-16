@@ -186,53 +186,55 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-8 md:p-10 shadow-md relative rounded-lg">
+    <Card className="p-4 sm:p-6 md:p-10 shadow-md relative rounded-lg w-full max-w-3xl mx-auto">
       <Form {...form}>
-        <div className="flex flex-col  mb-6">
-          <div>
+        <div className="flex flex-col mb-4 sm:mb-6 text-center sm:text-left">
+          <div className="text-sm sm:text-base font-medium">
             KYC Status{' '}
             <Badge
-              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ' '}`}
+              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ''}`}
             >
               {kycStatus.toLowerCase()}
             </Badge>
           </div>
         </div>
+
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-2 mt-4"
+          className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 md:grid-cols-2"
         >
-          <Separator className="col-span-2" />
+          <Separator className="col-span-1 md:col-span-2" />
 
           <FormField
             control={form.control}
             name="aadharOrGovtId"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">
+              <FormItem className="w-full">
+                <FormLabel className="font-semibold text-sm sm:text-base">
                   Aadhar or Govt Id
                 </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter your Aadhar Id"
                     {...field}
-                    className="border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="frontImageUrl"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">
+              <FormItem className="w-full">
+                <FormLabel className="font-semibold text-sm sm:text-base">
                   Document Front Img
                 </FormLabel>
                 <FormControl>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
                     {field.value && typeof field.value === 'string' ? (
                       <>
                         <Image
@@ -247,7 +249,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                           variant="outline"
                           size="sm"
                           onClick={() => field.onChange('')}
-                          className="ml-auto"
                         >
                           Change Image
                         </Button>
@@ -257,12 +258,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                         type="file"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
+                          if (file) field.onChange(file);
                         }}
                         onBlur={field.onBlur}
-                        className="border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                       />
                     )}
                   </div>
@@ -276,12 +275,12 @@ export default function KYCForm({ user_id }: { user_id: string }) {
             control={form.control}
             name="backImageUrl"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-semibold">
+              <FormItem className="w-full">
+                <FormLabel className="font-semibold text-sm sm:text-base">
                   Document Back Img
                 </FormLabel>
                 <FormControl>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
                     {field.value && typeof field.value === 'string' ? (
                       <>
                         <Image
@@ -296,7 +295,6 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                           variant="outline"
                           size="sm"
                           onClick={() => field.onChange('')}
-                          className="ml-auto"
                         >
                           Change Image
                         </Button>
@@ -306,12 +304,10 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                         type="file"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
+                          if (file) field.onChange(file);
                         }}
                         onBlur={field.onBlur}
-                        className="border rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                       />
                     )}
                   </div>
@@ -321,18 +317,24 @@ export default function KYCForm({ user_id }: { user_id: string }) {
             )}
           />
 
-          <LiveCaptureField form={form} />
+          <div className="col-span-1  md:col-span-2">
+            <LiveCaptureField form={form} />
+          </div>
 
-          <Separator className="col-span-2" />
-          <Button
-            type="submit"
-            className="sm:col-span-2 rounded-md px-6 py-3 font-semibold disabled:opacity-50"
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : 'Update KYC'}
-          </Button>
+          <Separator className="col-span-1 md:col-span-2" />
+
+          <div className="col-span-1 md:col-span-2">
+            <Button
+              type="submit"
+              className="w-full rounded-md px-6 py-3 text-sm font-semibold disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Update KYC'}
+            </Button>
+          </div>
         </form>
       </Form>
     </Card>
+
   );
 }
