@@ -335,6 +335,5 @@ export default function KYCForm({ user_id }: { user_id: string }) {
         </form>
       </Form>
     </Card>
-
   );
 }

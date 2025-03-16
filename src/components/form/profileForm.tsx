@@ -667,10 +667,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               (s: any) => s.name === skill.label,
                             ),
                         ).length === 0 && (
-                            <div className="p-2 text-gray-500 italic text-center">
-                              No matching skills
-                            </div>
-                          )}
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching skills
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                     <Button
@@ -771,10 +771,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               (s: any) => s.name === domains.name,
                             ),
                         ).length === 0 && (
-                            <div className="p-2 text-gray-500 italic text-center">
-                              No matching domains
-                            </div>
-                          )}
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                     <Button
@@ -879,10 +879,10 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                               (s: any) => s.name === projectDomains.name,
                             ),
                         ).length === 0 && (
-                            <div className="p-2 text-gray-500 italic text-center">
-                              No matching domains
-                            </div>
-                          )}
+                          <div className="p-2 text-gray-500 italic text-center">
+                            No matching domains
+                          </div>
+                        )}
                       </SelectContent>
                     </Select>
                     <Button
@@ -926,7 +926,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             </div>
           </div>
           <Separator className="col-span-2 mt-0" />
-          <div className='col-span-2'>
+          <div className="col-span-2">
             <FormField
               control={form.control}
               name="resume"
@@ -941,8 +941,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             />
             <Separator className="sm:col-span-2 mt-0" />
           </div>
-          <div className='col-span-2'>
-            <Button type="submit" className="sm:col-span-2 w-full" disabled={loading}>
+          <div className="col-span-2">
+            <Button
+              type="submit"
+              className="sm:col-span-2 w-full"
+              disabled={loading}
+            >
               {loading ? 'Loading...' : 'Update Profile'}
             </Button>
           </div>

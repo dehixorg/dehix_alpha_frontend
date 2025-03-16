@@ -46,6 +46,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { cn } from '@/lib/utils';
+import TermsDialog from '@/components/shared/BusinessTermsDialog';
 
 interface StepperProps {
   currentStep: number;
@@ -202,6 +203,7 @@ function BusinessRegisterForm({
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [Isverified, setIsVerified] = useState<boolean>(false);
+  const [isTermsDialog, setIsTermsDialog] = useState(false);
   const searchParams = useSearchParams();
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -574,7 +576,12 @@ function BusinessRegisterForm({
                   type="checkbox"
                   id="terms"
                   checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
+                  onChange={() => {
+                    setIsChecked(!isChecked);
+                    if (!isChecked) {
+                      setIsTermsDialog(true);
+                    }
+                  }}
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
@@ -583,6 +590,7 @@ function BusinessRegisterForm({
                     Terms and Conditions
                   </a>
                 </label>
+                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} />
               </div>
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
                 <Button
