@@ -167,7 +167,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const handleAddSkill = () => {
     console.log(tmpSkill);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
-
       setCurrSkills([
         ...currSkills,
         {
@@ -182,7 +181,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
       setTmpSkill('');
     }
   };
-
 
   useEffect(() => {
     const fetchSkillsAndDomains = async () => {
@@ -255,7 +253,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
             description: item.description || 'N/A',
             status: item.status,
             visible: item.visible,
-            talentId: item.skillId || item.domainId
+            talentId: item.skillId || item.domainId,
           }),
         );
         console.log(formattedHireTalentData);
@@ -419,13 +417,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
     setFilteredTalents(filtered);
   }, [skillFilter, domainFilter, talents]);
 
-
   const handleAddToLobby = async (freelancerId: string) => {
     const matchedTalentIds: string[] = [];
     const matchedTalentUids: string[] = [];
 
     currSkills.forEach((skill: any) => {
-      const matched: any = skillDomainData.find((item: any) => item.label === skill.name);
+      const matched: any = skillDomainData.find(
+        (item: any) => item.label === skill.name,
+      );
       if (matched?.talentId && matched?.uid) {
         matchedTalentIds.push(matched.talentId);
         matchedTalentUids.push(matched.uid);
@@ -448,7 +447,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
           freelancerId,
           dehixTalentId: matchedTalentIds,
           hireDehixTalent_id: matchedTalentUids,
-        }
+        },
       );
 
       if (response.status === 200) {
@@ -468,7 +467,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="flex flex-wrap mt-4 justify-center gap-4">
@@ -579,10 +577,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   href={talent.Github || '#'}
                                   target={talent.Github ? '_blank' : '_self'}
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${talent.Github
-                                    ? 'text-blue-500 hover:text-blue-700'
-                                    : 'text-gray-500 cursor-default'
-                                    }`}
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.Github
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
                                 >
                                   <Github
                                     className={`w-5 h-5 ${talent.Github ? 'text-blue-500' : 'text-gray-500'}`}
@@ -594,10 +593,11 @@ const TalentCard: React.FC<TalentCardProps> = ({
                                   href={talent.LinkedIn || '#'}
                                   target={talent.LinkedIn ? '_blank' : '_self'}
                                   rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 transition-all ${talent.LinkedIn
-                                    ? 'text-blue-500 hover:text-blue-700'
-                                    : 'text-gray-500 cursor-default'
-                                    }`}
+                                  className={`flex items-center gap-2 transition-all ${
+                                    talent.LinkedIn
+                                      ? 'text-blue-500 hover:text-blue-700'
+                                      : 'text-gray-500 cursor-default'
+                                  }`}
                                 >
                                   <Linkedin
                                     className={`w-5 h-5 ${talent.LinkedIn ? 'text-blue-500' : 'text-gray-500'}`}
@@ -629,33 +629,33 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             <AccordionContent className="p-4 transition-all duration-300">
                               {education && Object.values(education).length > 0
                                 ? Object.values(education).map((edu: any) => (
-                                  <div
-                                    key={edu._id}
-                                    className="mb-2 p-2 border border-gray-300 rounded-lg"
-                                  >
-                                    <p className="text-sm font-semibold">
-                                      {edu.degree}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                      {edu.universityName}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {edu.fieldOfStudy}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {new Date(
-                                        edu.startDate,
-                                      ).toLocaleDateString()}{' '}
-                                      -{' '}
-                                      {new Date(
-                                        edu.endDate,
-                                      ).toLocaleDateString()}
-                                    </p>
-                                    <p className="text-xs text-gray-700">
-                                      Grade: {edu.grade}
-                                    </p>
-                                  </div>
-                                ))
+                                    <div
+                                      key={edu._id}
+                                      className="mb-2 p-2 border border-gray-300 rounded-lg"
+                                    >
+                                      <p className="text-sm font-semibold">
+                                        {edu.degree}
+                                      </p>
+                                      <p className="text-xs text-gray-600">
+                                        {edu.universityName}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {edu.fieldOfStudy}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(
+                                          edu.startDate,
+                                        ).toLocaleDateString()}{' '}
+                                        -{' '}
+                                        {new Date(
+                                          edu.endDate,
+                                        ).toLocaleDateString()}
+                                      </p>
+                                      <p className="text-xs text-gray-700">
+                                        Grade: {edu.grade}
+                                      </p>
+                                    </div>
+                                  ))
                                 : 'No education details available.'}
                             </AccordionContent>
                           </AccordionItem>
@@ -665,7 +665,7 @@ const TalentCard: React.FC<TalentCardProps> = ({
                             </AccordionTrigger>
                             <AccordionContent className="p-4 transition-all duration-300">
                               {projects &&
-                                Object.values(projects).length > 0 ? (
+                              Object.values(projects).length > 0 ? (
                                 Object.values(projects).map((project: any) => (
                                   <div
                                     key={project._id}
@@ -741,13 +741,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
                         </Accordion>
                         <Button
                           onClick={() => {
-                            setIsDialogOpen(true)
+                            setIsDialogOpen(true);
                             setSelectedTalent(talent);
                           }}
-                          className={`w-full mt-4 ${isInvited
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-primary hover:bg-primary/90'
-                            }`}
+                          className={`w-full mt-4 ${
+                            isInvited
+                              ? 'bg-blue-600 hover:bg-blue-700'
+                              : 'bg-primary hover:bg-primary/90'
+                          }`}
                         >
                           <SendIcon className="mr-2 h-4 w-4" />
                           Add to Lobby
@@ -758,13 +759,14 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 </div>
                 <Button
                   onClick={() => {
-                    setIsDialogOpen(true)
-                    setSelectedTalent(talent)
+                    setIsDialogOpen(true);
+                    setSelectedTalent(talent);
                   }}
-                  className={`w-full ${isInvited
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-primary hover:bg-primary/90'
-                    }`}
+                  className={`w-full ${
+                    isInvited
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-primary hover:bg-primary/90'
+                  }`}
                 >
                   <SendIcon className="mr-2 h-4 w-4" />
                   Add to Lobby
@@ -784,7 +786,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
                 open={isDialogOpen}
                 setOpen={setIsDialogOpen}
                 isLoading={isLoading}
-              />)}
+              />
+            )}
           </Card>
         );
       })}

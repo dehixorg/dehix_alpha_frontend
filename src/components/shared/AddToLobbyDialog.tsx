@@ -1,4 +1,6 @@
 import React from 'react';
+import { Loader2, Plus, X } from 'lucide-react';
+
 import {
   Dialog,
   DialogTrigger,
@@ -6,17 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, X } from 'lucide-react';
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const AddToLobbyDialog = ({
   skillDomainData = [],
@@ -29,7 +30,7 @@ const AddToLobbyDialog = ({
   tmpSkill,
   open,
   setOpen,
-  isLoading
+  isLoading,
 }: any) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -51,7 +52,10 @@ const AddToLobbyDialog = ({
               </SelectTrigger>
               <SelectContent>
                 {skillDomainData
-                  .filter((skill: any) => !currSkills.some((s: any) => s.name === skill.label))
+                  .filter(
+                    (skill: any) =>
+                      !currSkills.some((s: any) => s.name === skill.label),
+                  )
                   .map((skill: any, index: any) => (
                     <SelectItem key={index} value={skill.label}>
                       {skill.label}
@@ -71,7 +75,6 @@ const AddToLobbyDialog = ({
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-
 
           <div className="flex flex-wrap gap-2 mt-4">
             {currSkills.map((skill: any, index: number) => (
@@ -100,7 +103,7 @@ const AddToLobbyDialog = ({
             className="w-full text-sm py-1 px-2 text-black rounded-md"
             type="submit"
           >
-            {isLoading ? <Loader2 className='animate-spin' /> : 'Save'}
+            {isLoading ? <Loader2 className="animate-spin" /> : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>
