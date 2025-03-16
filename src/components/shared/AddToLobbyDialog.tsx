@@ -31,8 +31,6 @@ const AddToLobbyDialog = ({
   setOpen,
   isLoading
 }: any) => {
-  console.log(talent);
-  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-md">
@@ -97,8 +95,6 @@ const AddToLobbyDialog = ({
         <DialogFooter className="mt-4">
           <Button
             onClick={() => {
-              console.log(talent);
-              
               handleAddToLobby(talent.freelancer_id);
             }}
             className="w-full text-sm py-1 px-2 text-black rounded-md"
