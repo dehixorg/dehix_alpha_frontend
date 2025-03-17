@@ -65,8 +65,9 @@ export default function Login() {
         `/public/user_email?user=${email}`,
       );
       setPhone(response.data.phone);
-
-      if (response.data.phoneVerify) {
+      if (!response.data.phoneVerify) {
+        setIsModalOpen(true);
+      } else {
         try {
           const userCredential: UserCredential = await loginUser(email, pass);
           const { user, claims } = await getUserData(userCredential);
@@ -98,8 +99,6 @@ export default function Login() {
           });
           console.error(error.message);
         }
-      } else {
-        setIsModalOpen(true);
       }
     } catch (error: any) {
       toast({

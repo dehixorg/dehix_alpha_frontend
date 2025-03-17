@@ -45,16 +45,15 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [isPending, startTransition] = useTransition();
+  const [showModal, setShowModal] = useState(false);
+  const [phone, setPhone] = useState(phoneNumber);
 
   const [recaptchaVerifier, setRecaptchaVerifier] =
     useState<RecaptchaVerifier | null>(null);
 
   const [confirmationResult, setConfirmationResult] =
     useState<ConfirmationResult | null>(null);
-
-  const [isPending, startTransition] = useTransition();
-  const [showModal, setShowModal] = useState(false);
-  const [phone, setPhone] = useState(phoneNumber);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -129,13 +128,15 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         return setError('RecaptchaVerifier is not initialized.');
       }
       try {
-        const confirmationResult = await signInWithPhoneNumber(
-          auth,
-          phone,
-          recaptchaVerifier,
-        );
-        setConfirmationResult(confirmationResult);
-        setSuccess('OTP sent successfully.');
+        if (phoneNumber.length > 0) {
+          const confirmationResult = await signInWithPhoneNumber(
+            auth,
+            phoneNumber,
+            recaptchaVerifier,
+          );
+          setConfirmationResult(confirmationResult);
+          setSuccess('OTP sent successfully.');
+        }
       } catch (err: any) {
         console.error(err);
         setResendCountdown(0);
@@ -192,8 +193,8 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
             <p className="text-sm text-center text-gray-500">
               OTP sent to{' '}
               <strong>
-                {(phone || phoneNumber).substring(0, 3)}{' '}
-                {(phone || phoneNumber).substring(3)}
+                {(phone || phoneNumber)?.substring(0, 3)}{' '}
+                {(phone || phoneNumber)?.substring(3)}
               </strong>
             </p>
             <button
