@@ -48,7 +48,6 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
   const [isPending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
   const [phone, setPhone] = useState(phoneNumber);
-  console.log('OTP:', phoneNumber);
 
   const [recaptchaVerifier, setRecaptchaVerifier] =
     useState<RecaptchaVerifier | null>(null);
