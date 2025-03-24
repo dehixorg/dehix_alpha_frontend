@@ -149,7 +149,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         }
       }
     });
-  }, [recaptchaVerifier, phone]);
+  }, [recaptchaVerifier, phoneNumber]);
 
   const handlePhoneChange = (newPhone: string) => {
     setPhone(newPhone);

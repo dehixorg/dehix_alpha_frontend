@@ -28,7 +28,7 @@ export default function Education() {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
 
-        const educationData = response.data?.education;
+        const educationData = response.data?.data;
 
         if (!educationData || typeof educationData !== 'object') {
           console.warn('No education data found, setting empty array.');
