@@ -149,7 +149,7 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         }
       }
     });
-  }, [recaptchaVerifier, phone]);
+  }, [phoneNumber, recaptchaVerifier]);
 
   const handlePhoneChange = (newPhone: string) => {
     setPhone(newPhone);
@@ -158,10 +158,10 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
   };
 
   useEffect(() => {
-    if (isModalOpen) {
+    if (isModalOpen && phoneNumber !== '') {
       requestOtp();
     }
-  }, [isModalOpen, requestOtp]);
+  }, [isModalOpen, requestOtp, phoneNumber]);
 
   const loadingIndicator = (
     <div role="status" className="flex justify-center">
