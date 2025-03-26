@@ -11,6 +11,7 @@ import {
   Bold,
   Italic,
   Underline,
+  CheckCheck,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
@@ -92,9 +93,15 @@ type Message = {
 
 interface CardsChatProps {
   conversation: Conversation;
+  conversations?: any;
+  setActiveConversation?: any;
 }
 
-export function CardsChat({ conversation }: CardsChatProps) {
+export function CardsChat({
+  conversation,
+  conversations,
+  setActiveConversation,
+}: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -113,6 +120,8 @@ export function CardsChat({ conversation }: CardsChatProps) {
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false); // Toggle formatting options
+
+  const [openDrawer, setOpenDrawer] = useState(false);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -141,7 +150,6 @@ export function CardsChat({ conversation }: CardsChatProps) {
       );
 
       if (messageId) {
-        console.log('Message sent with ID:', messageId);
         setInput('');
         setIsSending(false);
       } else {
@@ -163,7 +171,7 @@ export function CardsChat({ conversation }: CardsChatProps) {
       if (primaryUid) {
         try {
           const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
-          setPrimaryUser(response.data);
+          setPrimaryUser(response.data.data);
         } catch (error) {
           console.error('Error fetching primary user:', error);
           toast({
@@ -197,6 +205,19 @@ export function CardsChat({ conversation }: CardsChatProps) {
       if (unsubscribeMessages) unsubscribeMessages();
     };
   }, [conversation, user.uid]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setOpenDrawer(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!conversation) {
     return null;
@@ -318,41 +339,41 @@ export function CardsChat({ conversation }: CardsChatProps) {
 
   async function toggleReaction(messageId: string, emoji: string) {
     const currentMessage = messages.find((msg) => msg.id === messageId);
-
-    // Initialize the reactions object if it doesn't exist
     const updatedReactions = { ...currentMessage?.reactions };
 
     // Check if the user has already reacted with a different emoji
-    const userHasReactedWithOtherEmoji = Object.keys(updatedReactions).some(
-      (existingEmoji) =>
-        existingEmoji !== emoji &&
-        updatedReactions[existingEmoji]?.includes(user.uid),
+    const userReaction = Object.keys(updatedReactions).find((existingEmoji) =>
+      updatedReactions[existingEmoji]?.includes(user.uid),
     );
 
-    // If the user has reacted with another emoji, remove it
-    if (userHasReactedWithOtherEmoji) {
-      Object.keys(updatedReactions).forEach((existingEmoji) => {
-        if (
-          existingEmoji !== emoji &&
-          updatedReactions[existingEmoji]?.includes(user.uid)
-        ) {
-          updatedReactions[existingEmoji] = updatedReactions[
-            existingEmoji
-          ].filter((uid: any) => uid !== user.uid);
-          if (updatedReactions[existingEmoji].length === 0) {
-            delete updatedReactions[existingEmoji];
-          }
+    // If the user is reacting with the same emoji, remove it (toggle off)
+    if (userReaction === emoji) {
+      updatedReactions[emoji] = updatedReactions[emoji].filter(
+        (uid: any) => uid !== user.uid,
+      );
+
+      // Remove emoji key if no users remain
+      if (updatedReactions[emoji].length === 0) {
+        delete updatedReactions[emoji];
+      }
+    } else {
+      // Remove the previous reaction (if any)
+      if (userReaction) {
+        updatedReactions[userReaction] = updatedReactions[userReaction].filter(
+          (uid: any) => uid !== user.uid,
+        );
+        if (updatedReactions[userReaction].length === 0) {
+          delete updatedReactions[userReaction];
         }
-      });
-    }
+      }
 
-    // Toggle the current emoji reaction
-    if (!updatedReactions[emoji]) {
-      updatedReactions[emoji] = [];
+      // Add the new reaction
+      if (!updatedReactions[emoji]) {
+        updatedReactions[emoji] = [];
+      }
+      // Add the user's UID to the reaction array
+      updatedReactions[emoji].push(user.uid);
     }
-
-    // Add the user's UID to the reaction array
-    updatedReactions[emoji].push(user.uid);
 
     // Update the Firestore database with the updated reactions
     await updateDataInFirestore(
@@ -364,347 +385,428 @@ export function CardsChat({ conversation }: CardsChatProps) {
     );
   }
 
+  const ChatAvatar = ({ conversation }: { conversation: any }) => {
+    if (
+      !conversation ||
+      typeof conversation !== 'object' ||
+      Array.isArray(conversation) ||
+      !setActiveConversation
+    ) {
+      console.log('Invalid conversation object', conversation);
+      return null;
+    }
+
+    const name = conversation.name || 'Unknown';
+    console.log('Using name:', name);
+
+    return (
+      <Avatar
+        className="w-7 h-7"
+        onClick={() => setActiveConversation(conversation)}
+      >
+        <AvatarImage src="" alt={name} />
+        <AvatarFallback className="text-xs">
+          {name
+            .split(' ')
+            .map((word: any) => word.charAt(0).toUpperCase())
+            .join('')
+            .slice(0, 2)}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   return (
     <>
       {loading ? (
-        <div className="flex justify-center items-center p-5 col-span-2">
+        <div className="flex justify-center items-center p-5 col-span-3">
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-2 min-h-[85vh]  ">
-          <CardHeader className="flex flex-row items-center border ">
-            <div className="flex items-center space-x-4">
-              <Avatar>
-                <AvatarImage src={primaryUser.profilePic} alt="Image" />
-                <AvatarFallback>{primaryUser.userName}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium leading-none">
-                  {primaryUser.userName}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {primaryUser.email}
-                </p>
+        <div className="flex md:block  w-full ">
+          <div className="mr-2 flex flex-col mt-8 gap-4 min-h-[85vh] md:hidden">
+            {conversations.map((conv: any) => (
+              <ChatAvatar key={conv.id} conversation={conv} />
+            ))}
+          </div>
+          <Card className="col-span-3 w-[83vw] lg:w-[92vw] mt-8 min-h-[84vh] border-none shadow-none">
+            <CardHeader className="flex flex-row items-center  bg-[#F3F4F6] dark:bg-[#2D2D2D] text-gray-800 dark:text-white p-2 rounded-t-lg">
+              <div className="flex items-center space-x-3">
+                <Avatar>
+                  <AvatarImage src={primaryUser.profilePic} alt="Image" />
+                  <AvatarFallback>{primaryUser.userName}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
+                    {primaryUser.userName}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {primaryUser.email}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 px-6 pb-4">
-            <div className="flex flex-col-reverse reverse space-y-4 overflow-y-auto h-[60vh]">
-              <div ref={messagesEndRef} />
-              {messages.map((message, index) => {
-                const formattedTimestamp = formatChatTimestamp(
-                  message.timestamp,
-                );
-                const readableTimestamp =
-                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+            </CardHeader>
+            <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#E5E7EB] dark:bg-[#0B1316]">
+              <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[70vh]">
+                <div ref={messagesEndRef} />
+                {messages.map((message, index) => {
+                  const formattedTimestamp = formatChatTimestamp(
+                    message.timestamp,
+                  );
+                  const readableTimestamp =
+                    formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
-                return (
-                  <div
-                    id={message.id}
-                    key={index}
-                    className="flex flex-row relative"
-                    onMouseEnter={() => setHoveredMessageId(message.id)}
-                    onMouseLeave={() => setHoveredMessageId(null)}
-                  >
-                    {message.senderId !== user.uid && (
-                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
-                        <AvatarImage
-                          src={primaryUser.profilePic}
-                          alt={message.senderId}
-                        />
-                        <AvatarFallback>
-                          {message.senderId.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-
+                  return (
                     <div
-                      className={cn(
-                        'flex w-max max-w-[50%] flex-col gap-1 rounded-lg px-3 py-2 text-sm shadow-sm',
-                        message.senderId === user.uid
-                          ? 'ml-auto bg-blue-100 text-black'
-                          : 'bg-muted',
-                      )}
-                      onClick={() => {
-                        if (message.replyTo) {
-                          const replyMessage = messages.find(
-                            (msg) => msg.id === message.replyTo,
-                          );
-                          if (replyMessage) {
-                            const replyMessageElement = document.getElementById(
-                              replyMessage.id,
-                            );
-                            if (replyMessageElement) {
-                              // Add a very light gray highlight with transparency before scrolling
-                              replyMessageElement.classList.add(
-                                'bg-gray-200',
-                                'border-2',
-                                'border-gray-300',
-                                'bg-opacity-50',
-                              );
-
-                              // Scroll to the referred message with smooth behavior
-                              replyMessageElement.scrollIntoView({
-                                behavior: 'smooth',
-                              });
-
-                              // Remove the highlight classes after 2 seconds
-                              setTimeout(() => {
-                                replyMessageElement.classList.remove(
-                                  'bg-gray-200',
-                                  'border-2',
-                                  'border-gray-300',
-                                  'bg-opacity-50',
-                                );
-                              }, 2000); // Highlight removed after 2 seconds
-                            }
-                          }
-                        }
-                      }}
+                      id={message.id}
+                      key={index}
+                      className="flex flex-row relative"
+                      onMouseEnter={() => setHoveredMessageId(message.id)}
+                      onMouseLeave={() => setHoveredMessageId(null)}
                     >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="break-words rounded-lg  w-full ">
-                              {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-gray-100 rounded-lg border-l-4 border-gray-100 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl ">
-                                  <div className="text-sm italic text-gray-400 bg-gray-100 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                                    <span className="font-semibold">
-                                      {messages.find(
-                                        (msg) => msg.id === message.replyTo,
-                                      )?.content || 'Message not found'}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-
-                              {message.content.match(
-                                /\.(jpeg|jpg|gif|png)$/,
-                              ) ? (
-                                <Image
-                                  src={message.content}
-                                  alt="Message Image"
-                                  width={300}
-                                  height={300}
-                                  className="rounded-lg"
-                                />
-                              ) : message.content.match(
-                                  /\.(pdf|doc|docx|ppt|pptx)$/,
-                                ) ? (
-                                <FileAttachment
-                                  fileName={
-                                    message.content.split('/').pop() || 'File'
-                                  }
-                                  fileUrl={message.content}
-                                  fileType={
-                                    message.content.split('.').pop() || 'file'
-                                  }
-                                />
-                              ) : (
-                                // {/* <div className="break-words rounded-lg  w-full"> */}
-                                <ReactMarkdown>{message.content}</ReactMarkdown>
-                                // {/* </div> */}
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p>{readableTimestamp}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      {/* Render reactions inside the message bubble */}
-                      <Reactions
-                        messageId={message.id}
-                        reactions={message.reactions || {}}
-                        toggleReaction={toggleReaction}
-                      />
+                      {message.senderId !== user.uid && (
+                        <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
+                          <AvatarImage
+                            src={primaryUser.profilePic}
+                            alt={message.senderId}
+                          />
+                          <AvatarFallback>
+                            {message.senderId.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
 
                       <div
                         className={cn(
-                          'text-xs mt-1',
+                          'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
                           message.senderId === user.uid
-                            ? 'text-gray-700'
-                            : 'text-muted-foreground',
+                            ? 'ml-auto bg-[#28c24ed8] dark:bg-[#2A4D69] text-white dark:text-gray-200 rounded-tr-none'
+                            : 'bg-[#F3F4F6] dark:bg-[#1E2D3D] text-black dark:text-gray-300 rounded-tl-none',
                         )}
+                        onClick={() => {
+                          if (message.replyTo) {
+                            const replyMessage = messages.find(
+                              (msg) => msg.id === message.replyTo,
+                            );
+                            if (replyMessage) {
+                              const replyMessageElement =
+                                document.getElementById(replyMessage.id);
+                              if (replyMessageElement) {
+                                replyMessageElement.classList.add(
+                                  'bg-gray-200',
+                                  'dark:bg-gray-600',
+                                  'border-2',
+                                  'border-gray-300',
+                                  'dark:border-gray-500',
+                                  'bg-opacity-50',
+                                  'dark:bg-opacity-50',
+                                );
+
+                                replyMessageElement.scrollIntoView({
+                                  behavior: 'smooth',
+                                });
+
+                                setTimeout(() => {
+                                  replyMessageElement.classList.remove(
+                                    'bg-gray-200',
+                                    'dark:bg-gray-600',
+                                    'border-2',
+                                    'border-gray-300',
+                                    'dark:border-gray-500',
+                                    'bg-opacity-50',
+                                    'dark:bg-opacity-50',
+                                  );
+                                }, 2000);
+                              }
+                            }
+                          }
+                        }}
                       >
-                        {formattedTimestamp}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="break-words rounded-lg w-full">
+                                {message.replyTo && (
+                                  <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
+                                    <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
+                                      <span className="font-semibold">
+                                        {messages.find(
+                                          (msg) => msg.id === message.replyTo,
+                                        )?.content || 'Message not found'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {message.content.match(
+                                  /\.(jpeg|jpg|gif|png)$/,
+                                ) ? (
+                                  <Image
+                                    src={message.content || '/placeholder.svg'}
+                                    alt="Message Image"
+                                    width={300}
+                                    height={300}
+                                    className="rounded-lg"
+                                  />
+                                ) : message.content.match(
+                                    /\.(pdf|doc|docx|ppt|pptx)$/,
+                                  ) ? (
+                                  <FileAttachment
+                                    fileName={
+                                      message.content.split('/').pop() || 'File'
+                                    }
+                                    fileUrl={message.content}
+                                    fileType={
+                                      message.content.split('.').pop() || 'file'
+                                    }
+                                  />
+                                ) : (
+                                  <ReactMarkdown className="text-gray-800 dark:text-gray-100">
+                                    {message.content}
+                                  </ReactMarkdown>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" sideOffset={10}>
+                              <p className="  p-1 rounded">
+                                {readableTimestamp}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {/* Render reactions inside the message bubble */}
+                        <Reactions
+                          messageId={message.id}
+                          reactions={message.reactions || {}}
+                          toggleReaction={toggleReaction}
+                        />
+
+                        <div
+                          className={cn(
+                            'text-[10px] mt-1 text-right',
+                            message.senderId === user.uid
+                              ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
+                              : 'text-gray-500 dark:text-gray-400',
+                          )}
+                        >
+                          {formattedTimestamp}
+                          {message.senderId === user.uid && (
+                            <span className="ml-1">
+                              <CheckCheck className="w-4" />
+                            </span>
+                          )}
+                        </div>
                       </div>
+
+                      {hoveredMessageId === message.id && (
+                        <Reply
+                          className="h-4 w-4 text-white absolute cursor-pointer top-0 right-0 z-10 pointer-events-auto"
+                          onClick={() => setReplyToMessageId(message.id)}
+                        />
+                      )}
+
+                      {message.senderId !== user.uid && (
+                        <EmojiPicker
+                          onSelect={(emoji: string) =>
+                            toggleReaction(message.id, emoji)
+                          }
+                        />
+                      )}
                     </div>
-
-                    {hoveredMessageId === message.id && (
-                      <Button
-                        className="absolute  top-0 right-0 h-6 w-6 z-10 pointer-events-auto"
-                        onClick={() => setReplyToMessageId(message.id)}
-                        size="icon"
-                        title="Reply"
-                      >
-                        <Reply className="h-4 w-4 " />
-                      </Button>
-                    )}
-
-                    {message.senderId !== user.uid && (
-                      <EmojiPicker
-                        onSelect={(emoji: string) =>
-                          toggleReaction(message.id, emoji)
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-
-          <CardFooter>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (input.trim().length === 0) return;
-
-                const newMessage: Partial<Message> = {
-                  senderId: user.uid,
-                  content: input,
-                  timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId || null,
-                };
-
-                sendMessage(conversation, newMessage, setInput);
-                setReplyToMessageId('');
-              }}
-              className="flex flex-col bg-primary-foreground shadow-md w-full border rounded-[10%] "
-            >
-              {/* Reply Preview Area */}
-              {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 rounded-[10%] shadow-sm opacity-90 bg-muted transition-opacity duration-300 ">
-                  <div className="text-sm italic text-gray-400 rounded-[10%] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                    <span className="font-semibold">
-                      {messages.find((msg) => msg.id === replyToMessageId)
-                        ?.content || 'Message not found'}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => setReplyToMessageId('')}
-                    className="text-foreground hover:text-gray-500 bg-muted hover:bg-gray-600 h-6 rounded-full"
-                    title="Cancel Reply"
-                  >
-                    <X className="h-4 w-4 text-foreground" />
-                  </Button>
-                </div>
-              )}
-
-              {/* Input area with dynamic height on reply */}
-              <div className="h-20 flex items-center space-x-2 p-2 rounded-[10%] shadow-sm bg-primary-foreground ">
-                <textarea
-                  ref={textAreaRef}
-                  className="flex-1 h-20 resize-none border-none hover:border-none p-2 text-foreground  bg-primary-foreground placeholder:text-gray-500  rounded-[10%]"
-                  placeholder="Type your message..."
-                  value={input}
-                  rows={1}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      if (input.trim().length > 0) {
-                        const newMessage: Partial<Message> = {
-                          senderId: user.uid,
-                          content: input,
-                          timestamp: new Date().toISOString(),
-                          replyTo: replyToMessageId,
-                        };
-                        sendMessage(conversation, newMessage, setInput);
-                        setReplyToMessageId('');
-                      }
-                    }
-                  }}
-                />
-
-                <div className="flex items-center space-x-2">
-                  {/* Text Formatting Icon Button */}
-                  {/* Text Formatting Icon Button */}
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    title="Text Formatting"
-                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                    onClick={toggleFormattingOptions}
-                  >
-                    <Text className="h-4 w-4" />
-                  </Button>
-
-                  {showFormattingOptions && (
-                    <div className="formatting-options">
-                      <Button
-                        size="icon"
-                        type="button"
-                        onClick={handleBold}
-                        title="Bold"
-                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                      >
-                        <Bold className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleitalics}
-                        title="Italics"
-                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                      >
-                        <Italic className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleUnderline}
-                        title="Underline"
-                        className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                      >
-                        <Underline className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    title="Attach File"
-                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                    onClick={() => handleFileUpload()}
-                  >
-                    <Upload className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    title="Send Video"
-                    className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                    onClick={handleCreateMeet}
-                  >
-                    <Video className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <Button
-                  size="icon"
-                  type="submit"
-                  variant="outline"
-                  disabled={inputLength === 0 || isSending}
-                  className="text-foreground hover:text-foreground bg-primary-foreground border-none rounded-full"
-                >
-                  {isSending ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  <span className="sr-only">Send</span>
-                </Button>
+                  );
+                })}
               </div>
-            </form>
-          </CardFooter>
-        </Card>
+            </CardContent>
+            <CardFooter className="bg-gray-200 dark:bg-[#0B1316] rounded-b-lg p-2">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (input.trim().length === 0) return;
+
+                  const newMessage = {
+                    senderId: user.uid,
+                    content: input,
+                    timestamp: new Date().toISOString(),
+                    replyTo: replyToMessageId || null,
+                  };
+
+                  sendMessage(conversation, newMessage, setInput);
+                  setReplyToMessageId('');
+                }}
+                className="flex flex-col w-full mb-2"
+              >
+                {/* Reply Preview Area */}
+                {replyToMessageId && (
+                  <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
+                    <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                      <span className="font-semibold">
+                        {messages
+                          .find((msg) => msg.id === replyToMessageId)
+                          ?.content.replace(/\*/g, '') || 'Message not found'}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={() => setReplyToMessageId('')}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
+                      title="Cancel Reply"
+                      variant="ghost"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="relative bg-[#D1D5DB] dark:bg-[#1A2327] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
+                  <div className="sm:hidden">
+                    <button
+                      onClick={() => setOpenDrawer(!openDrawer)}
+                      className="p-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                    </button>
+                  </div>
+
+                  <div
+                    className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
+                      openDrawer
+                        ? 'translate-y-0 opacity-100'
+                        : 'translate-y-5 opacity-0 pointer-events-none'
+                    }`}
+                  >
+                    <div className="flex justify-around space-x-3">
+                      <button onClick={handleBold} className="p-2">
+                        <Bold className="h-5 w-5" />
+                      </button>
+                      <button onClick={handleitalics} className="p-2">
+                        <Italic className="h-5 w-5" />
+                      </button>
+                      <button onClick={handleUnderline} className="p-2">
+                        <Underline className="h-5 w-5" />
+                      </button>
+                      <button onClick={handleFileUpload} className="p-2">
+                        <Upload className="h-5 w-5" />
+                      </button>
+                      <button onClick={handleCreateMeet} className="p-2">
+                        <Video className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Text Formatting"
+                      className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                      onClick={toggleFormattingOptions}
+                    >
+                      <Text className="h-4 w-4" />
+                    </Button>
+
+                    {showFormattingOptions && (
+                      <div className="formatting-options">
+                        <Button
+                          size="icon"
+                          type="button"
+                          onClick={handleBold}
+                          title="Bold"
+                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                        >
+                          <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          size="icon"
+                          onClick={handleitalics}
+                          title="Italics"
+                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                        >
+                          <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          size="icon"
+                          onClick={handleUnderline}
+                          title="Underline"
+                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                        >
+                          <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {/* Textarea */}
+                  <textarea
+                    ref={textAreaRef}
+                    className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
+                    placeholder="Type message"
+                    value={input}
+                    rows={1}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (input.trim().length > 0) {
+                          setIsSending(true);
+                          setTimeout(() => {
+                            setInput('');
+                            setIsSending(false);
+                          }, 1000);
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    disabled={!input.trim().length || isSending}
+                    className="p-2 flex md:hidden"
+                  >
+                    {isSending ? (
+                      <LoaderCircle className="h-5 w-5 animate-spin " />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </button>
+                  {/* Attach & Send Buttons (Visible on md+) */}
+                  <div className="hidden sm:flex items-center space-x-2 pr-2">
+                    <button onClick={handleFileUpload} className="p-2">
+                      <Upload className="h-5 w-5" />
+                    </button>
+                    <button onClick={handleCreateMeet} className="p-2">
+                      <Video className="h-5 w-5" />
+                    </button>
+                    <button
+                      disabled={!input.trim().length || isSending}
+                      className="p-2"
+                    >
+                      {isSending ? (
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </CardFooter>
+          </Card>
+        </div>
       )}
     </>
   );
 }
+
+const CustomDrawer = ({ open, onClose, children }: any) => {
+  return (
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      onClick={onClose}
+    >
+      <div
+        className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4 rounded-t-2xl shadow-lg transform transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};

@@ -126,3 +126,23 @@ export const notesMenu: MenuItem[] = [
     label: 'Trash',
   },
 ];
+export const chatsMenu: MenuItem[] = [
+  {
+    href: '#',
+    icon: (
+      <Image
+        src="/dehix.png"
+        alt="Icon"
+        width={16}
+        height={16}
+        className="transition-all group-hover:scale-110 invert dark:invert-0"
+      />
+    ),
+    label: 'Dehix',
+  },
+  {
+    href: '/dashboard/business',
+    icon: <Home className="h-5 w-5" />,
+    label: 'Home',
+  },
+];

@@ -83,6 +83,8 @@ import { useSelector } from 'react-redux';
 import { Verified } from 'lucide-react';
 
 import { ThemeToggle } from '../shared/themeToggle';
+import { ChatList } from '../shared/chatList';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 import {
   Tooltip,
@@ -114,6 +116,8 @@ type SidebarMenuProps = {
   active: string;
   setActive?: (page: string) => void;
   isKycCheck?: boolean;
+  conversations?: any[];
+  setActiveConversation?: (conversation: any) => void;
 };
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
@@ -122,6 +126,8 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   active,
   setActive = () => null,
   isKycCheck,
+  conversations,
+  setActiveConversation,
 }) => {
   const pathname = usePathname();
 
@@ -145,6 +151,37 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       label: 'kyc',
     });
   }
+
+  const ChatAvatar = ({ conversation }: { conversation: any }) => {
+    if (
+      !conversation ||
+      typeof conversation !== 'object' ||
+      Array.isArray(conversation) ||
+      !setActiveConversation
+    ) {
+      console.log('Invalid conversation object', conversation);
+      return null;
+    }
+
+    const name = conversation.name || 'Unknown';
+    console.log('Using name:', name);
+
+    return (
+      <Avatar
+        className="w-10 h-10"
+        onClick={() => setActiveConversation(conversation)}
+      >
+        <AvatarImage src="" alt={name} />
+        <AvatarFallback>
+          {name
+            .split(' ')
+            .map((word: any) => word.charAt(0).toUpperCase())
+            .join('')
+            .slice(0, 2)}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
 
   const MenuIcon = ({ item }: { item: MenuItem }) => {
     if (item.subItems) {
@@ -218,6 +255,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
         {finalMenuItemsTop.map((item, index) => (
           <MenuIcon key={index} item={item} />
         ))}
+        {active === 'Chats' &&
+          setActiveConversation &&
+          conversations &&
+          conversations.map((conv) => (
+            <ChatAvatar key={conv.id} conversation={conv} />
+          ))}
       </nav>
 
       <div className="mt-auto mx-auto">

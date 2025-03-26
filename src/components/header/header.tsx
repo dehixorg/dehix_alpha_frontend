@@ -21,6 +21,8 @@ interface HeaderProps {
   activeMenu: string;
   breadcrumbItems: BreadcrumbMenuItem[];
   searchPlaceholder?: string;
+  setActiveConversation?: any;
+  conversations?: any;
 }
 
 interface BreadcrumbMenuItem {

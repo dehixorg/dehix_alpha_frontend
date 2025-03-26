@@ -12,12 +12,12 @@ import {
   menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
-import { ChatList } from '@/components/shared/chatList';
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import {
   menuItemsBottom,
   menuItemsTop,
+  chatsMenu,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Define the Conversation interface to match the expected shape
@@ -69,12 +69,14 @@ const HomePage = () => {
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={
-          user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+          user.type === 'business' ? businessMenuItemsTop : chatsMenu
         }
         menuItemsBottom={
           user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
         }
         active="Chats"
+        conversations={conversations}
+        setActiveConversation={setActiveConversation}
       />
       <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
         <Header
@@ -85,6 +87,8 @@ const HomePage = () => {
             user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
           }
           activeMenu="Chats"
+          conversations={conversations}
+          setActiveConversation={setActiveConversation}
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Chats', link: '/dashboard/chats' },
@@ -98,12 +102,11 @@ const HomePage = () => {
             </div>
           ) : conversations.length > 0 ? (
             <>
-              <ChatList
+              <CardsChat
+                conversation={activeConversation}
                 conversations={conversations}
-                active={activeConversation}
-                setConversation={setActiveConversation}
+                setActiveConversation={setActiveConversation}
               />
-              <CardsChat conversation={activeConversation} />
             </>
           ) : (
             <div className="col-span-3 flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
