@@ -49,7 +49,7 @@ const ExperienceCard: React.FC<ExperienceProps> = ({
     }
   };
   return (
-    <Card className="w-full mx-auto md:max-w-2xl">
+    <Card className="w-full h-full mx-auto md:max-w-2xl">
       <CardHeader>
         <CardTitle className="flex">
           {company}

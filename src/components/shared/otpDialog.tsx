@@ -150,7 +150,6 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
       }
     });
   }, [phoneNumber, recaptchaVerifier]);
-
   const handlePhoneChange = (newPhone: string) => {
     setPhone(newPhone);
     requestOtp();

@@ -141,8 +141,8 @@ const TalentCard: React.FC<TalentCardProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const user = useSelector((state: RootState) => state.user);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
-  const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
-  const [invitedTalents, setInvitedTalents] = useState<Set<string>>(new Set());
+  const [, setStatusVisibility] = useState<boolean[]>([]);
+  const [invitedTalents] = useState<Set<string>>(new Set());
   const [selectedTalent, setSelectedTalent] = useState<any>();
   const [currSkills, setCurrSkills] = useState<any>([]);
   const [tmpSkill, setTmpSkill] = useState<any>('');
