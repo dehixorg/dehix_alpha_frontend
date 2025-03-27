@@ -77,11 +77,12 @@ const HomePage = () => {
         active="Chats"
         conversations={conversations}
         setActiveConversation={setActiveConversation}
+        activeConversation={activeConversation}
       />
       <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={
-            user.type === 'business' ? businessMenuItemsTop : menuItemsTop
+            user.type === 'business' ? businessMenuItemsTop : chatsMenu
           }
           menuItemsBottom={
             user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
@@ -89,6 +90,7 @@ const HomePage = () => {
           activeMenu="Chats"
           conversations={conversations}
           setActiveConversation={setActiveConversation}
+          activeConversation={activeConversation}
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Chats', link: '/dashboard/chats' },

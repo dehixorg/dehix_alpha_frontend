@@ -121,46 +121,22 @@ export function CardsChat({
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false); // Toggle formatting options
 
+  const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  async function sendMessage(
-    conversation: Conversation,
-    message: Partial<Message>,
-    setInput: React.Dispatch<React.SetStateAction<string>>,
-  ) {
-    try {
-      setIsSending(true);
-      const datentime = new Date().toISOString();
-
-      const messageId = await updateConversationWithMessageTransaction(
-        'conversations',
-        conversation?.id,
-        {
-          ...message,
-          timestamp: datentime,
-          replyTo: replyToMessageId || null,
-        },
-        datentime,
-      );
-
-      if (messageId) {
-        setInput('');
-        setIsSending(false);
-      } else {
-        console.error('Failed to send message');
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setOpenDrawer(false);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-    } finally {
-      setIsSending(false);
-    }
-  }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   useEffect(() => {
     const fetchPrimaryUser = async () => {
@@ -206,18 +182,47 @@ export function CardsChat({
     };
   }, [conversation, user.uid]);
 
+
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setOpenDrawer(false);
+    if (messages.length > prevMessagesLength.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages.length]);
+
+  async function sendMessage(
+    conversation: Conversation,
+    message: Partial<Message>,
+    setInput: React.Dispatch<React.SetStateAction<string>>,
+  ) {
+    try {
+      setIsSending(true);
+      const datentime = new Date().toISOString();
+
+      const messageId = await updateConversationWithMessageTransaction(
+        'conversations',
+        conversation?.id,
+        {
+          ...message,
+          timestamp: datentime,
+          replyTo: replyToMessageId || null,
+        },
+        datentime,
+      );
+
+      if (messageId) {
+        setInput('');
+        setIsSending(false);
+      } else {
+        console.error('Failed to send message');
       }
-    };
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSending(false);
+    }
+  }
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   if (!conversation) {
     return null;
@@ -385,37 +390,6 @@ export function CardsChat({
     );
   }
 
-  const ChatAvatar = ({ conversation }: { conversation: any }) => {
-    if (
-      !conversation ||
-      typeof conversation !== 'object' ||
-      Array.isArray(conversation) ||
-      !setActiveConversation
-    ) {
-      console.log('Invalid conversation object', conversation);
-      return null;
-    }
-
-    const name = conversation.name || 'Unknown';
-    console.log('Using name:', name);
-
-    return (
-      <Avatar
-        className="w-7 h-7"
-        onClick={() => setActiveConversation(conversation)}
-      >
-        <AvatarImage src="" alt={name} />
-        <AvatarFallback className="text-xs">
-          {name
-            .split(' ')
-            .map((word: any) => word.charAt(0).toUpperCase())
-            .join('')
-            .slice(0, 2)}
-        </AvatarFallback>
-      </Avatar>
-    );
-  };
-
   return (
     <>
       {loading ? (
@@ -423,76 +397,85 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <div className="flex md:block  w-full ">
-          <div className="mr-2 flex flex-col mt-8 gap-4 min-h-[85vh] md:hidden">
-            {conversations.map((conv: any) => (
-              <ChatAvatar key={conv.id} conversation={conv} />
-            ))}
-          </div>
-          <Card className="col-span-3 w-[83vw] lg:w-[92vw] mt-8 min-h-[84vh] border-none shadow-none">
-            <CardHeader className="flex flex-row items-center  bg-[#F3F4F6] dark:bg-[#2D2D2D] text-gray-800 dark:text-white p-2 rounded-t-lg">
-              <div className="flex items-center space-x-3">
-                <Avatar>
-                  <AvatarImage src={primaryUser.profilePic} alt="Image" />
-                  <AvatarFallback>{primaryUser.userName}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
-                    {primaryUser.userName}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {primaryUser.email}
-                  </p>
-                </div>
+        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-white border-2 shadow-none">
+          <CardHeader className="flex flex-row items-center  bg-[#F3F4F6] dark:bg-[#1A1D21] text-gray-800 dark:text-white p-2 rounded-t-lg">
+            <div className="flex items-center space-x-3">
+              <Avatar>
+                <AvatarImage src={primaryUser.profilePic} alt="Image" />
+                <AvatarFallback>{primaryUser.userName}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
+                  {primaryUser.userName}
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {primaryUser.email}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#E5E7EB] dark:bg-[#0B1316]">
-              <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[70vh]">
-                <div ref={messagesEndRef} />
-                {messages.map((message, index) => {
-                  const formattedTimestamp = formatChatTimestamp(
-                    message.timestamp,
-                  );
-                  const readableTimestamp =
-                    formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#E5E7EB] dark:bg-[#121417]">
+            <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[65vh] md:h-[58vh]">
+              <div ref={messagesEndRef} />
+              {messages.map((message, index) => {
+                const formattedTimestamp = formatChatTimestamp(
+                  message.timestamp,
+                );
+                const readableTimestamp =
+                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
 
-                  return (
+                return (
+                  <div
+                    id={message.id}
+                    key={index}
+                    className="flex flex-row relative"
+                    onMouseEnter={() => setHoveredMessageId(message.id)}
+                    onMouseLeave={() => setHoveredMessageId(null)}
+                  >
+                    {message.senderId !== user.uid && (
+                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
+                        <AvatarImage
+                          src={primaryUser.profilePic}
+                          alt={message.senderId}
+                        />
+                        <AvatarFallback>
+                          {message.senderId.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+
                     <div
-                      id={message.id}
-                      key={index}
-                      className="flex flex-row relative"
-                      onMouseEnter={() => setHoveredMessageId(message.id)}
-                      onMouseLeave={() => setHoveredMessageId(null)}
-                    >
-                      {message.senderId !== user.uid && (
-                        <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
-                          <AvatarImage
-                            src={primaryUser.profilePic}
-                            alt={message.senderId}
-                          />
-                          <AvatarFallback>
-                            {message.senderId.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                      className={cn(
+                        'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
+                        message.senderId === user.uid
+                          ? 'ml-auto bg-[#28c24ed8] dark:bg-[#2A4D69] text-white dark:text-gray-200 rounded-tr-none'
+                          : 'bg-[#F3F4F6] dark:bg-[#1E2D3D] text-black dark:text-gray-300 rounded-tl-none',
                       )}
+                      onClick={() => {
+                        if (message.replyTo) {
+                          const replyMessage = messages.find(
+                            (msg) => msg.id === message.replyTo,
+                          );
+                          if (replyMessage) {
+                            const replyMessageElement =
+                              document.getElementById(replyMessage.id);
+                            if (replyMessageElement) {
+                              replyMessageElement.classList.add(
+                                'bg-gray-200',
+                                'dark:bg-gray-600',
+                                'border-2',
+                                'border-gray-300',
+                                'dark:border-gray-500',
+                                'bg-opacity-50',
+                                'dark:bg-opacity-50',
+                              );
 
-                      <div
-                        className={cn(
-                          'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
-                          message.senderId === user.uid
-                            ? 'ml-auto bg-[#28c24ed8] dark:bg-[#2A4D69] text-white dark:text-gray-200 rounded-tr-none'
-                            : 'bg-[#F3F4F6] dark:bg-[#1E2D3D] text-black dark:text-gray-300 rounded-tl-none',
-                        )}
-                        onClick={() => {
-                          if (message.replyTo) {
-                            const replyMessage = messages.find(
-                              (msg) => msg.id === message.replyTo,
-                            );
-                            if (replyMessage) {
-                              const replyMessageElement =
-                                document.getElementById(replyMessage.id);
-                              if (replyMessageElement) {
-                                replyMessageElement.classList.add(
+                              replyMessageElement.scrollIntoView({
+                                behavior: 'smooth',
+                              });
+
+                              setTimeout(() => {
+                                replyMessageElement.classList.remove(
                                   'bg-gray-200',
                                   'dark:bg-gray-600',
                                   'border-2',
@@ -501,312 +484,284 @@ export function CardsChat({
                                   'bg-opacity-50',
                                   'dark:bg-opacity-50',
                                 );
-
-                                replyMessageElement.scrollIntoView({
-                                  behavior: 'smooth',
-                                });
-
-                                setTimeout(() => {
-                                  replyMessageElement.classList.remove(
-                                    'bg-gray-200',
-                                    'dark:bg-gray-600',
-                                    'border-2',
-                                    'border-gray-300',
-                                    'dark:border-gray-500',
-                                    'bg-opacity-50',
-                                    'dark:bg-opacity-50',
-                                  );
-                                }, 2000);
-                              }
+                              }, 2000);
                             }
                           }
-                        }}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="break-words rounded-lg w-full">
-                                {message.replyTo && (
-                                  <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
-                                    <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                                      <span className="font-semibold">
-                                        {messages.find(
-                                          (msg) => msg.id === message.replyTo,
-                                        )?.content || 'Message not found'}
-                                      </span>
-                                    </div>
+                        }
+                      }}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="break-words rounded-lg w-full">
+                              {message.replyTo && (
+                                <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
+                                  <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
+                                    <span className="font-semibold">
+                                      {messages.find(
+                                        (msg) => msg.id === message.replyTo,
+                                      )?.content || 'Message not found'}
+                                    </span>
                                   </div>
-                                )}
+                                </div>
+                              )}
 
-                                {message.content.match(
-                                  /\.(jpeg|jpg|gif|png)$/,
-                                ) ? (
-                                  <Image
-                                    src={message.content || '/placeholder.svg'}
-                                    alt="Message Image"
-                                    width={300}
-                                    height={300}
-                                    className="rounded-lg"
-                                  />
-                                ) : message.content.match(
-                                    /\.(pdf|doc|docx|ppt|pptx)$/,
-                                  ) ? (
-                                  <FileAttachment
-                                    fileName={
-                                      message.content.split('/').pop() || 'File'
-                                    }
-                                    fileUrl={message.content}
-                                    fileType={
-                                      message.content.split('.').pop() || 'file'
-                                    }
-                                  />
-                                ) : (
-                                  <ReactMarkdown className="text-gray-800 dark:text-gray-100">
-                                    {message.content}
-                                  </ReactMarkdown>
-                                )}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" sideOffset={10}>
-                              <p className="  p-1 rounded">
-                                {readableTimestamp}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        {/* Render reactions inside the message bubble */}
-                        <Reactions
-                          messageId={message.id}
-                          reactions={message.reactions || {}}
-                          toggleReaction={toggleReaction}
-                        />
+                              {message.content.match(
+                                /\.(jpeg|jpg|gif|png)$/,
+                              ) ? (
+                                <Image
+                                  src={message.content || '/placeholder.svg'}
+                                  alt="Message Image"
+                                  width={300}
+                                  height={300}
+                                  className="rounded-lg"
+                                />
+                              ) : message.content.match(
+                                /\.(pdf|doc|docx|ppt|pptx)$/,
+                              ) ? (
+                                <FileAttachment
+                                  fileName={
+                                    message.content.split('/').pop() || 'File'
+                                  }
+                                  fileUrl={message.content}
+                                  fileType={
+                                    message.content.split('.').pop() || 'file'
+                                  }
+                                />
+                              ) : (
+                                <ReactMarkdown className="text-gray-800 dark:text-gray-100">
+                                  {message.content}
+                                </ReactMarkdown>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" sideOffset={10}>
+                            <p className="  p-1 rounded">
+                              {readableTimestamp}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {/* Render reactions inside the message bubble */}
+                      <Reactions
+                        messageId={message.id}
+                        reactions={message.reactions || {}}
+                        toggleReaction={toggleReaction}
+                      />
 
-                        <div
-                          className={cn(
-                            'text-[10px] mt-1 text-right',
-                            message.senderId === user.uid
-                              ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
-                              : 'text-gray-500 dark:text-gray-400',
-                          )}
-                        >
-                          {formattedTimestamp}
-                          {message.senderId === user.uid && (
-                            <span className="ml-1">
-                              <CheckCheck className="w-4" />
-                            </span>
-                          )}
-                        </div>
+                      <div
+                        className={cn(
+                          'text-[10px] mt-1 text-right',
+                          message.senderId === user.uid
+                            ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
+                            : 'text-gray-500 dark:text-gray-400',
+                        )}
+                      >
+                        {formattedTimestamp}
+                        {message.senderId === user.uid && (
+                          <span className="ml-1">
+                            <CheckCheck className="w-4" />
+                          </span>
+                        )}
                       </div>
+                    </div>
 
+                    <div className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}>
                       {hoveredMessageId === message.id && (
                         <Reply
-                          className="h-4 w-4 text-white absolute cursor-pointer top-0 right-0 z-10 pointer-events-auto"
+                          className={`h-4 w-4 text-white absolute cursor-pointer top-0 z-10 pointer-events-auto 
+        ${message.senderId === user.uid ? 'right-2' : '-left-5'}`}
                           onClick={() => setReplyToMessageId(message.id)}
                         />
                       )}
-
-                      {message.senderId !== user.uid && (
-                        <EmojiPicker
-                          onSelect={(emoji: string) =>
-                            toggleReaction(message.id, emoji)
-                          }
-                        />
-                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-            <CardFooter className="bg-gray-200 dark:bg-[#0B1316] rounded-b-lg p-2">
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (input.trim().length === 0) return;
 
-                  const newMessage = {
-                    senderId: user.uid,
-                    content: input,
-                    timestamp: new Date().toISOString(),
-                    replyTo: replyToMessageId || null,
-                  };
 
-                  sendMessage(conversation, newMessage, setInput);
-                  setReplyToMessageId('');
-                }}
-                className="flex flex-col w-full mb-2"
-              >
-                {/* Reply Preview Area */}
-                {replyToMessageId && (
-                  <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
-                    <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                      <span className="font-semibold">
-                        {messages
-                          .find((msg) => msg.id === replyToMessageId)
-                          ?.content.replace(/\*/g, '') || 'Message not found'}
-                      </span>
-                    </div>
-                    <Button
-                      onClick={() => setReplyToMessageId('')}
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
-                      title="Cancel Reply"
-                      variant="ghost"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                <div className="relative bg-[#D1D5DB] dark:bg-[#1A2327] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
-                  <div className="sm:hidden">
-                    <button
-                      onClick={() => setOpenDrawer(!openDrawer)}
-                      className="p-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                    </button>
-                  </div>
-
-                  <div
-                    className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
-                      openDrawer
-                        ? 'translate-y-0 opacity-100'
-                        : 'translate-y-5 opacity-0 pointer-events-none'
-                    }`}
-                  >
-                    <div className="flex justify-around space-x-3">
-                      <button onClick={handleBold} className="p-2">
-                        <Bold className="h-5 w-5" />
-                      </button>
-                      <button onClick={handleitalics} className="p-2">
-                        <Italic className="h-5 w-5" />
-                      </button>
-                      <button onClick={handleUnderline} className="p-2">
-                        <Underline className="h-5 w-5" />
-                      </button>
-                      <button onClick={handleFileUpload} className="p-2">
-                        <Upload className="h-5 w-5" />
-                      </button>
-                      <button onClick={handleCreateMeet} className="p-2">
-                        <Video className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      title="Text Formatting"
-                      className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      onClick={toggleFormattingOptions}
-                    >
-                      <Text className="h-4 w-4" />
-                    </Button>
-
-                    {showFormattingOptions && (
-                      <div className="formatting-options">
-                        <Button
-                          size="icon"
-                          type="button"
-                          onClick={handleBold}
-                          title="Bold"
-                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                        >
-                          <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                        </Button>
-
-                        <Button
-                          type="button"
-                          size="icon"
-                          onClick={handleitalics}
-                          title="Italics"
-                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                        >
-                          <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                        </Button>
-
-                        <Button
-                          type="button"
-                          size="icon"
-                          onClick={handleUnderline}
-                          title="Underline"
-                          className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                        >
-                          <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  {/* Textarea */}
-                  <textarea
-                    ref={textAreaRef}
-                    className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
-                    placeholder="Type message"
-                    value={input}
-                    rows={1}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        if (input.trim().length > 0) {
-                          setIsSending(true);
-                          setTimeout(() => {
-                            setInput('');
-                            setIsSending(false);
-                          }, 1000);
+                    {message.senderId !== user.uid && (
+                      <EmojiPicker
+                        onSelect={(emoji: string) =>
+                          toggleReaction(message.id, emoji)
                         }
-                      }
-                    }}
-                  />
-                  <button
-                    disabled={!input.trim().length || isSending}
-                    className="p-2 flex md:hidden"
-                  >
-                    {isSending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin " />
-                    ) : (
-                      <Send className="h-5 w-5" />
+                      />
                     )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+          <CardFooter className="bg-gray-200 dark:bg-[#121417] rounded-b-lg p-2">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (input.trim().length === 0) return;
+
+                const newMessage = {
+                  senderId: user.uid,
+                  content: input,
+                  timestamp: new Date().toISOString(),
+                  replyTo: replyToMessageId || null,
+                };
+
+                sendMessage(conversation, newMessage, setInput);
+                setReplyToMessageId('');
+              }}
+              className="flex flex-col w-full mb-2"
+            >
+              {/* Reply Preview Area */}
+              {replyToMessageId && (
+                <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
+                  <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                    <span className="font-semibold">
+                      {messages
+                        .find((msg) => msg.id === replyToMessageId)
+                        ?.content.replace(/\*/g, '') || 'Message not found'}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => setReplyToMessageId('')}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
+                    title="Cancel Reply"
+                    variant="ghost"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              <div className="relative bg-[#D1D5DB] dark:bg-[#2A2E35] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
+                <div className="sm:hidden">
+                  <button
+                    onClick={() => setOpenDrawer(!openDrawer)}
+                    className="p-2 text-gray-500 dark:text-gray-400"
+                  >
+                    <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
                   </button>
-                  {/* Attach & Send Buttons (Visible on md+) */}
-                  <div className="hidden sm:flex items-center space-x-2 pr-2">
+                </div>
+
+                <div
+                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${openDrawer
+                    ? 'translate-y-0 opacity-100'
+                    : 'translate-y-5 opacity-0 pointer-events-none'
+                    }`}
+                >
+                  <div className="flex justify-around space-x-3">
+                    <button onClick={handleBold} className="p-2">
+                      <Bold className="h-5 w-5" />
+                    </button>
+                    <button onClick={handleitalics} className="p-2">
+                      <Italic className="h-5 w-5" />
+                    </button>
+                    <button onClick={handleUnderline} className="p-2">
+                      <Underline className="h-5 w-5" />
+                    </button>
                     <button onClick={handleFileUpload} className="p-2">
                       <Upload className="h-5 w-5" />
                     </button>
                     <button onClick={handleCreateMeet} className="p-2">
                       <Video className="h-5 w-5" />
                     </button>
-                    <button
-                      disabled={!input.trim().length || isSending}
-                      className="p-2"
-                    >
-                      {isSending ? (
-                        <LoaderCircle className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                    </button>
                   </div>
                 </div>
-              </form>
-            </CardFooter>
-          </Card>
-        </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Text Formatting"
+                    className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                    onClick={toggleFormattingOptions}
+                  >
+                    <Text className="h-4 w-4" />
+                  </Button>
+
+                  {showFormattingOptions && (
+                    <div className="formatting-options">
+                      <Button
+                        size="icon"
+                        type="button"
+                        onClick={handleBold}
+                        title="Bold"
+                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                      >
+                        <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={handleitalics}
+                        title="Italics"
+                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                      >
+                        <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="icon"
+                        onClick={handleUnderline}
+                        title="Underline"
+                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
+                      >
+                        <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {/* Textarea */}
+                <textarea
+                  ref={textAreaRef}
+                  className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
+                  placeholder="Type message"
+                  value={input}
+                  rows={1}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (input.trim().length > 0) {
+                        setIsSending(true);
+                        setTimeout(() => {
+                          setInput('');
+                          setIsSending(false);
+                        }, 1000);
+                      }
+                    }
+                  }}
+                />
+                <button
+                  disabled={!input.trim().length || isSending}
+                  className="p-2 flex md:hidden"
+                >
+                  {isSending ? (
+                    <LoaderCircle className="h-5 w-5 animate-spin " />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </button>
+                {/* Attach & Send Buttons (Visible on md+) */}
+                <div className="hidden sm:flex items-center space-x-2 pr-2">
+                  <button onClick={handleFileUpload} className="p-2">
+                    <Upload className="h-5 w-5" />
+                  </button>
+                  <button onClick={handleCreateMeet} className="p-2">
+                    <Video className="h-5 w-5" />
+                  </button>
+                  <button
+                    disabled={!input.trim().length || isSending}
+                    className="p-2"
+                  >
+                    {isSending ? (
+                      <LoaderCircle className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </CardFooter>
+        </Card>
       )}
     </>
   );
 }
 
-const CustomDrawer = ({ open, onClose, children }: any) => {
-  return (
-    <div
-      className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      onClick={onClose}
-    >
-      <div
-        className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4 rounded-t-2xl shadow-lg transform transition-transform duration-300 ${open ? 'translate-y-0' : 'translate-y-full'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </div>
-  );
-};
