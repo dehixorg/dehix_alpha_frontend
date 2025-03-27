@@ -397,8 +397,8 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-white border-2 shadow-none">
-          <CardHeader className="flex flex-row items-center  bg-[#F3F4F6] dark:bg-[#1A1D21] text-gray-800 dark:text-white p-2 rounded-t-lg">
+        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-gray-400  dark:border-white border-2 shadow-none">
+          <CardHeader className="flex flex-row items-center  bg-[#ececec] dark:bg-[#333333] text-gray-800 dark:text-white p-2 rounded-t-lg">
             <div className="flex items-center space-x-3">
               <Avatar>
                 <AvatarImage src={primaryUser.profilePic} alt="Image" />
@@ -414,7 +414,7 @@ export function CardsChat({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#E5E7EB] dark:bg-[#121417]">
+          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#ffffff] dark:bg-[#181818]">
             <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[65vh] md:h-[58vh]">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
@@ -448,8 +448,8 @@ export function CardsChat({
                       className={cn(
                         'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
                         message.senderId === user.uid
-                          ? 'ml-auto bg-[#28c24ed8] dark:bg-[#2A4D69] text-white dark:text-gray-200 rounded-tr-none'
-                          : 'bg-[#F3F4F6] dark:bg-[#1E2D3D] text-black dark:text-gray-300 rounded-tl-none',
+                          ? 'ml-auto bg-[#9155bc] dark:bg-[#580d8f] text-white  rounded-tr-none'
+                          : 'bg-[#d9d9d9] dark:bg-[#333333] text-white  rounded-tl-none',
                       )}
                       onClick={() => {
                         if (message.replyTo) {
@@ -529,7 +529,7 @@ export function CardsChat({
                                   }
                                 />
                               ) : (
-                                <ReactMarkdown className="text-gray-800 dark:text-gray-100">
+                                <ReactMarkdown className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}>
                                   {message.content}
                                 </ReactMarkdown>
                               )}
@@ -569,8 +569,8 @@ export function CardsChat({
                     <div className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}>
                       {hoveredMessageId === message.id && (
                         <Reply
-                          className={`h-4 w-4 text-white absolute cursor-pointer top-0 z-10 pointer-events-auto 
-        ${message.senderId === user.uid ? 'right-2' : '-left-5'}`}
+                          className={`h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto 
+        ${message.senderId === user.uid ? 'right-2 text-white ' : '-left-5 text-black'}`}
                           onClick={() => setReplyToMessageId(message.id)}
                         />
                       )}
@@ -589,7 +589,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-gray-200 dark:bg-[#121417] rounded-b-lg p-2">
+          <CardFooter className="bg-[#ffffff] dark:bg-[#181818] rounded-b-lg p-2">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -627,7 +627,7 @@ export function CardsChat({
                   </Button>
                 </div>
               )}
-              <div className="relative bg-[#D1D5DB] dark:bg-[#2A2E35] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
+              <div className="relative bg-[#ececec] dark:bg-[#333333] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
                 <div className="sm:hidden">
                   <button
                     onClick={() => setOpenDrawer(!openDrawer)}
@@ -715,7 +715,7 @@ export function CardsChat({
                   rows={1}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
                       e.preventDefault();
                       if (input.trim().length > 0) {
                         setIsSending(true);
@@ -729,7 +729,7 @@ export function CardsChat({
                 />
                 <button
                   disabled={!input.trim().length || isSending}
-                  className="p-2 flex md:hidden"
+                  className="p-2 flex md:hidden disabled:text-gray-600"
                 >
                   {isSending ? (
                     <LoaderCircle className="h-5 w-5 animate-spin " />
@@ -747,7 +747,7 @@ export function CardsChat({
                   </button>
                   <button
                     disabled={!input.trim().length || isSending}
-                    className="p-2"
+                    className="p-2 disabled:text-gray-600"
                   >
                     {isSending ? (
                       <LoaderCircle className="h-5 w-5 animate-spin" />
