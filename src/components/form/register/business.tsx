@@ -577,7 +577,9 @@ function BusinessRegisterForm({
                   id="terms"
                   checked={isChecked}
                   onChange={() => {
-                    setIsChecked(!isChecked);
+                    if (!isTermsDialog) {
+                      setIsChecked(!isChecked);
+                    }
                   }}
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
@@ -590,7 +592,7 @@ function BusinessRegisterForm({
                     Terms and Conditions
                   </span>
                 </label>
-                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} />
+                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} setIsChecked={setIsChecked} />
               </div>
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
                 <Button
