@@ -21,6 +21,9 @@ interface HeaderProps {
   activeMenu: string;
   breadcrumbItems: BreadcrumbMenuItem[];
   searchPlaceholder?: string;
+  setActiveConversation?: any;
+  conversations?: any;
+  activeConversation?: any;
 }
 
 interface BreadcrumbMenuItem {
@@ -33,6 +36,9 @@ const Header: React.FC<HeaderProps> = ({
   menuItemsBottom,
   activeMenu,
   breadcrumbItems,
+  conversations,
+  activeConversation,
+  setActiveConversation,
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [connects, setConnects] = useState<number>(0);
@@ -76,6 +82,9 @@ const Header: React.FC<HeaderProps> = ({
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active={activeMenu}
+        setActiveConversation={setActiveConversation}
+        conversations={conversations}
+        activeConversation={activeConversation}
       />
 
       {/* Breadcrumb Navigation */}

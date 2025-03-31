@@ -50,7 +50,7 @@ export function FileAttachment({
     fileName.length > 15 ? fileName.substring(14, 28) + '...' : fileName;
 
   return (
-    <div className="flex items-center space-x-3 p-2 bg-primary rounded-md w-full max-w-md">
+    <div className="flex items-center space-x-3 p-2 bg-gray-500 rounded-md w-full max-w-md">
       {/* File Icon */}
       <div className="text-2xl">{getFileIcon(fileType)}</div>
 
@@ -60,7 +60,7 @@ export function FileAttachment({
         <p className="text-sm font-medium truncate">{truncatedFileName}</p>
 
         {/* File Type (Always visible, below the file name) */}
-        <p className="text-xs text-muted-foreground uppercase">{fileType}</p>
+        <p className="text-xs  uppercase">{fileType}</p>
       </div>
 
       {/* Download Button */}

@@ -83,6 +83,8 @@ import { useSelector } from 'react-redux';
 import { Verified } from 'lucide-react';
 
 import { ThemeToggle } from '../shared/themeToggle';
+import { ChatList } from '../shared/chatList';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 import {
   Tooltip,
@@ -114,6 +116,9 @@ type SidebarMenuProps = {
   active: string;
   setActive?: (page: string) => void;
   isKycCheck?: boolean;
+  conversations?: any[];
+  activeConversation?: any;
+  setActiveConversation?: (conversation: any) => void;
 };
 
 const SidebarMenu: React.FC<SidebarMenuProps> = ({
@@ -122,6 +127,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   active,
   setActive = () => null,
   isKycCheck,
+  conversations,
+  setActiveConversation,
+  activeConversation,
 }) => {
   const pathname = usePathname();
 
@@ -146,16 +154,46 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
     });
   }
 
+  const ChatAvatar = ({ conversation }: { conversation: any }) => {
+    if (
+      !conversation ||
+      typeof conversation !== 'object' ||
+      Array.isArray(conversation) ||
+      !setActiveConversation
+    ) {
+      return null;
+    }
+
+    const name = conversation.name || 'Unknown';
+    const isActive = activeConversation?.id === conversation.id;
+
+    return (
+      <Avatar
+        className={`w-10 h-10 cursor-pointer transition-all ${isActive ? "border-2 border-blue-500" : "border-transparent"
+          }`}
+        onClick={() => setActiveConversation(conversation)}
+      >
+        <AvatarImage src="" alt={name} />
+        <AvatarFallback>
+          {name
+            .split(' ')
+            .map((word: any) => word.charAt(0).toUpperCase())
+            .join('')
+            .slice(0, 2)}
+        </AvatarFallback>
+      </Avatar>
+    );
+  };
+
   const MenuIcon = ({ item }: { item: MenuItem }) => {
     if (item.subItems) {
       return (
         <Popover>
           <PopoverTrigger
-            className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-              isActiveParent(item)
+            className={`flex h-9 w-9 items-center justify-center rounded-lg ${isActiveParent(item)
                 ? 'bg-accent text-accent-foreground'
                 : 'text-muted-foreground hover:text-foreground'
-            } transition-colors md:h-8 md:w-8`}
+              } transition-colors md:h-8 md:w-8`}
           >
             {item.icon}
           </PopoverTrigger>
@@ -171,11 +209,10 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                   key={subIndex}
                   href={subItem.href}
                   onClick={() => setActive(subItem.label)}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                    isActive(subItem.href)
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${isActive(subItem.href)
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
+                    }`}
                 >
                   {subItem.icon}
                   {subItem.label}
@@ -194,13 +231,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             <Link
               href={item.href}
               onClick={() => setActive(item.label)}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                item.label === active || item.label === 'Dehix'
+              className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.label === active || item.label === 'Dehix'
                   ? item.label === 'Dehix'
                     ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base'
                     : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
                   : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
-              }`}
+                }`}
             >
               {item.icon}
               <span className="sr-only">{item.label}</span>
@@ -218,6 +254,12 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
         {finalMenuItemsTop.map((item, index) => (
           <MenuIcon key={index} item={item} />
         ))}
+        {active === 'Chats' &&
+          setActiveConversation &&
+          conversations &&
+          conversations.map((conv) => (
+            <ChatAvatar key={conv.id} conversation={conv} />
+          ))}
       </nav>
 
       <div className="mt-auto mx-auto">
