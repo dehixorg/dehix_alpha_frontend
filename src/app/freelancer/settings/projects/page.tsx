@@ -26,7 +26,7 @@ export default function Projects() {
       try {
         const response = await axiosInstance.get(`/freelancer/${user.uid}`);
 
-        const projectsData = response.data?.projects;
+        const projectsData = response.data?.data;
 
         if (!projectsData || typeof projectsData !== 'object') {
           console.warn('No projects data found, setting empty array.');

@@ -362,7 +362,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 <FormField
                   control={form.control}
                   name="techUsed"
-                  render={({ field: { onChange, value } }) => (
+                  render={() => (
                     <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
