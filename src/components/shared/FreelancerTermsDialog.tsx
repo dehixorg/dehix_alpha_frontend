@@ -14,7 +14,11 @@ interface TermsDialogProps {
   setIsChecked: any;
 }
 
-export default function TermsDialog({ open, setOpen, setIsChecked }: TermsDialogProps) {
+export default function TermsDialog({
+  open,
+  setOpen,
+  setIsChecked,
+}: TermsDialogProps) {
   const handleAccept = () => {
     setIsChecked(true);
     setOpen(false);

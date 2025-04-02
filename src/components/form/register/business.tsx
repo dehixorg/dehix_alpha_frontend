@@ -592,7 +592,11 @@ function BusinessRegisterForm({
                     Terms and Conditions
                   </span>
                 </label>
-                <TermsDialog open={isTermsDialog} setOpen={setIsTermsDialog} setIsChecked={setIsChecked} />
+                <TermsDialog
+                  open={isTermsDialog}
+                  setOpen={setIsTermsDialog}
+                  setIsChecked={setIsChecked}
+                />
               </div>
               <div className="flex gap-2 flex-col sm:flex-row justify-between mt-4">
                 <Button
