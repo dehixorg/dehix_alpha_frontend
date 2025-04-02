@@ -11,10 +11,14 @@ import { Button } from '@/components/ui/button';
 interface TermsDialogProps {
   open: boolean;
   setOpen: (value: boolean) => void;
-  setIsChecked: any
+  setIsChecked: any;
 }
 
-export default function TermsDialog({ open, setOpen, setIsChecked }: TermsDialogProps) {
+export default function TermsDialog({
+  open,
+  setOpen,
+  setIsChecked,
+}: TermsDialogProps) {
   const handleAccept = () => {
     setIsChecked(true);
     setOpen(false);

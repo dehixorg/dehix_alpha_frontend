@@ -169,8 +169,9 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
 
     return (
       <Avatar
-        className={`w-10 h-10 cursor-pointer transition-all ${isActive ? "border-2 border-blue-500" : "border-transparent"
-          }`}
+        className={`w-10 h-10 cursor-pointer transition-all ${
+          isActive ? 'border-2 border-blue-500' : 'border-transparent'
+        }`}
         onClick={() => setActiveConversation(conversation)}
       >
         <AvatarImage src="" alt={name} />
@@ -190,10 +191,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       return (
         <Popover>
           <PopoverTrigger
-            className={`flex h-9 w-9 items-center justify-center rounded-lg ${isActiveParent(item)
+            className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              isActiveParent(item)
                 ? 'bg-accent text-accent-foreground'
                 : 'text-muted-foreground hover:text-foreground'
-              } transition-colors md:h-8 md:w-8`}
+            } transition-colors md:h-8 md:w-8`}
           >
             {item.icon}
           </PopoverTrigger>
@@ -209,10 +211,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
                   key={subIndex}
                   href={subItem.href}
                   onClick={() => setActive(subItem.label)}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${isActive(subItem.href)
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
+                    isActive(subItem.href)
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                    }`}
+                  }`}
                 >
                   {subItem.icon}
                   {subItem.label}
@@ -231,12 +234,13 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
             <Link
               href={item.href}
               onClick={() => setActive(item.label)}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg ${item.label === active || item.label === 'Dehix'
+              className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                item.label === active || item.label === 'Dehix'
                   ? item.label === 'Dehix'
                     ? 'group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base'
                     : 'flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
                   : 'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8'
-                }`}
+              }`}
             >
               {item.icon}
               <span className="sr-only">{item.label}</span>
