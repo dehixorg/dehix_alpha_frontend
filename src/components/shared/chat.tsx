@@ -137,7 +137,6 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
   useEffect(() => {
     const fetchPrimaryUser = async () => {
       const primaryUid = conversation.participants.find(
@@ -182,7 +181,6 @@ export function CardsChat({
     };
   }, [conversation, user.uid]);
 
-
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -222,7 +220,6 @@ export function CardsChat({
       setIsSending(false);
     }
   }
-
 
   if (!conversation) {
     return null;
@@ -457,8 +454,9 @@ export function CardsChat({
                             (msg) => msg.id === message.replyTo,
                           );
                           if (replyMessage) {
-                            const replyMessageElement =
-                              document.getElementById(replyMessage.id);
+                            const replyMessageElement = document.getElementById(
+                              replyMessage.id,
+                            );
                             if (replyMessageElement) {
                               replyMessageElement.classList.add(
                                 'bg-gray-200',
@@ -517,8 +515,8 @@ export function CardsChat({
                                   className="rounded-lg"
                                 />
                               ) : message.content.match(
-                                /\.(pdf|doc|docx|ppt|pptx)$/,
-                              ) ? (
+                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                ) ? (
                                 <FileAttachment
                                   fileName={
                                     message.content.split('/').pop() || 'File'
@@ -529,16 +527,16 @@ export function CardsChat({
                                   }
                                 />
                               ) : (
-                                <ReactMarkdown className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}>
+                                <ReactMarkdown
+                                  className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}
+                                >
                                   {message.content}
                                 </ReactMarkdown>
                               )}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" sideOffset={10}>
-                            <p className="  p-1 rounded">
-                              {readableTimestamp}
-                            </p>
+                            <p className="  p-1 rounded">{readableTimestamp}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -566,7 +564,9 @@ export function CardsChat({
                       </div>
                     </div>
 
-                    <div className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}>
+                    <div
+                      className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}
+                    >
                       {hoveredMessageId === message.id && (
                         <Reply
                           className={`h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto 
@@ -575,7 +575,6 @@ export function CardsChat({
                         />
                       )}
                     </div>
-
 
                     {message.senderId !== user.uid && (
                       <EmojiPicker
@@ -638,10 +637,11 @@ export function CardsChat({
                 </div>
 
                 <div
-                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${openDrawer
-                    ? 'translate-y-0 opacity-100'
-                    : 'translate-y-5 opacity-0 pointer-events-none'
-                    }`}
+                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
+                    openDrawer
+                      ? 'translate-y-0 opacity-100'
+                      : 'translate-y-5 opacity-0 pointer-events-none'
+                  }`}
                 >
                   <div className="flex justify-around space-x-3">
                     <button onClick={handleBold} className="p-2">
@@ -764,4 +764,3 @@ export function CardsChat({
     </>
   );
 }
-
