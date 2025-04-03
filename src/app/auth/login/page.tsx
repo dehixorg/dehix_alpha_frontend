@@ -237,7 +237,7 @@ export default function Login() {
           </div>
         </div>
       </div>
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-screen">
         <Image
           src="/bg.png"
           alt="Image"
