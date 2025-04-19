@@ -304,6 +304,7 @@ function FreelancerRegisterForm({
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const [isTermsDialog, setIsTermsDialog] = useState(false);
+  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(null);
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -367,6 +368,11 @@ function FreelancerRegisterForm({
         setIsVerified(true);
         try {
           const username = userName;
+          if (username === lastCheckedUsername) {
+            setCurrentStep(currentStep + 1);
+            return;
+          }
+          
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_freelancer=true`,
           );
@@ -380,6 +386,7 @@ function FreelancerRegisterForm({
               description:
                 'This username is already taken. Please choose another one.',
             });
+            setLastCheckedUsername(username);
           }
         } catch (error: any) {
           toast({
