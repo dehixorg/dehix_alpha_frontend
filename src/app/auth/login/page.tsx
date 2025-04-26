@@ -31,6 +31,7 @@ export default function Login() {
   const [isGoogleLoginLoading, setIsGoogleLoginLoading] =
     useState<boolean>(false);
 
+  const [isForgotEnabled, setIsForgotEnabled] = useState<boolean>(false); // Controls when "Forgot Password" becomes clickable
   const fetchKYCDetails = async (userId: string, userType: string) => {
     try {
       let endpoint = '';
@@ -92,6 +93,7 @@ export default function Login() {
             description: 'You have successfully logged in.',
           });
         } catch (error: any) {
+          setIsForgotEnabled(true); // Enable the "Forgot Password" link after a failed login attempt
           toast({
             variant: 'destructive',
             title: 'Error',
@@ -101,6 +103,7 @@ export default function Login() {
         }
       }
     } catch (error: any) {
+      setIsForgotEnabled(true); // Enable the "Forgot Password" link after a failed login attempt
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -171,12 +174,17 @@ export default function Login() {
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="ml-auto inline-block text-sm underline"
+                  <span
+                    className={`ml-auto inline-block text-sm underline ${
+                      !isForgotEnabled ? 'text-gray-400 pointer-events-none cursor-not-allowed' : ''
+                    }`}
                   >
-                    Forgot your password?
-                  </Link>
+                    {isForgotEnabled ? (
+                      <Link href="/auth/forgot-password">Forgot your password?</Link>
+                    ) : (
+                      'Forgot your password?'
+                    )}
+                  </span>
                 </div>
                 <div className="relative">
                   <Input
