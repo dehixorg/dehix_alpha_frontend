@@ -35,6 +35,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {
@@ -60,6 +61,105 @@ const profileFormSchema = z.object({
     .min(4, { message: 'Description must be at least 4 characters long.' })
     .max(160, { message: 'Description cannot exceed 160 characters.' })
     .optional(),
+  // New budget schema
+  budget: z.object({
+    type: z.enum(['FIXED', 'HOURLY']),
+    fixedAmount: z.string().optional(),
+    hourly: z.object({
+      minRate: z.string().optional(),
+      maxRate: z.string().optional(),
+      estimatedHours: z.string().optional(),
+    }).optional(),
+  }).superRefine((data, ctx) => {
+    if (data.type === 'FIXED') {
+      if (!data.fixedAmount) {
+        ctx.addIssue({
+          path: ['fixedAmount'],
+          code: z.ZodIssueCode.custom,
+          message: 'Fixed amount is required',
+        });
+      } else if (!/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) || parseFloat(data.fixedAmount) <= 0) {
+        ctx.addIssue({
+          path: ['fixedAmount'],
+          code: z.ZodIssueCode.custom,
+          message: 'Enter a valid amount greater than 0',
+        });
+      }
+    }
+
+    if (data.type === 'HOURLY') {
+      if (!data.hourly) {
+        ctx.addIssue({
+          path: ['hourly'],
+          code: z.ZodIssueCode.custom,
+          message: 'Hourly details are required',
+        });
+        return;
+      }
+
+      const { minRate, maxRate, estimatedHours } = data.hourly;
+
+      if (!minRate) {
+        ctx.addIssue({
+          path: ['hourly', 'minRate'],
+          code: z.ZodIssueCode.custom,
+          message: 'Minimum rate is required',
+        });
+      } else if (!/^\d+(\.\d{1,2})?$/.test(minRate) || parseFloat(minRate) <= 0) {
+        ctx.addIssue({
+          path: ['hourly', 'minRate'],
+          code: z.ZodIssueCode.custom,
+          message: 'Enter a valid minimum rate > 0',
+        });
+      }
+
+      if (!maxRate) {
+        ctx.addIssue({
+          path: ['hourly', 'maxRate'],
+          code: z.ZodIssueCode.custom,
+          message: 'Maximum rate is required',
+        });
+      } else if (!/^\d+(\.\d{1,2})?$/.test(maxRate) || parseFloat(maxRate) <= 0) {
+        ctx.addIssue({
+          path: ['hourly', 'maxRate'],
+          code: z.ZodIssueCode.custom,
+          message: 'Enter a valid maximum rate > 0',
+        });
+      }
+
+      if (!estimatedHours) {
+        ctx.addIssue({
+          path: ['hourly', 'estimatedHours'],
+          code: z.ZodIssueCode.custom,
+          message: 'Estimated hours are required',
+        });
+      } else if (!/^\d+$/.test(estimatedHours) || parseInt(estimatedHours) <= 0) {
+        ctx.addIssue({
+          path: ['hourly', 'estimatedHours'],
+          code: z.ZodIssueCode.custom,
+          message: 'Enter a valid number of hours > 0',
+        });
+      }
+
+      // Validate logical relationship between min and max
+      if (
+        minRate &&
+        maxRate &&
+        /^\d+(\.\d{1,2})?$/.test(minRate) &&
+        /^\d+(\.\d{1,2})?$/.test(maxRate)
+      ) {
+        const min = parseFloat(minRate);
+        const max = parseFloat(maxRate);
+        if (max < min) {
+          ctx.addIssue({
+            path: ['hourly', 'maxRate'],
+            code: z.ZodIssueCode.custom,
+            message: 'Maximum rate must be ≥ minimum rate',
+          });
+        }
+      }
+    }
+  }),
   profiles: z
     .array(
       z.object({
@@ -117,6 +217,15 @@ const defaultValues: Partial<ProfileFormValues> = {
   projectDomain: [],
   urls: [],
   description: '',
+  budget: {
+    type: 'FIXED',
+    fixedAmount: '',
+    hourly: {
+      minRate: '',
+      maxRate: '',
+      estimatedHours: '',
+    },
+  },
   profiles: [
     {
       domain: '',
@@ -399,12 +508,36 @@ export function CreateProjectBusinessForm() {
     form.setValue('urls', updatedUrls);
   };
 
+  // Watch budget type to show appropriate fields
+  const budgetType = form.watch('budget.type');
+
+  const getBudgetForAPI = (budgetData: any) => {
+    if (budgetData.type === 'FIXED') {
+      return {
+        type: 'FIXED',
+        fixedAmount: parseFloat(budgetData.fixedAmount)
+      };
+    } else {
+      return {
+        type: 'HOURLY',
+        hourly: {
+          minRate: parseFloat(budgetData.hourly.minRate),
+          maxRate: parseFloat(budgetData.hourly.maxRate),
+          estimatedHours: parseInt(budgetData.hourly.estimatedHours)
+        }
+      };
+    }
+  };
+
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
       const uniqueSkills = Array.from(
         new Set(currSkills.flat().filter((skill: any) => skill !== undefined)),
       );
+
+      // Process budget data for API
+      const budget = getBudgetForAPI(data.budget);
 
       await axiosInstance.post(`/project/business`, {
         ...data,
@@ -415,6 +548,7 @@ export function CreateProjectBusinessForm() {
         companyId: user.uid,
         companyName: user.displayName,
         url: data.urls,
+        budget: budget
       });
       toast({
         title: 'Project Added',
@@ -456,6 +590,7 @@ export function CreateProjectBusinessForm() {
       'description',
       'email',
       'projectName',
+      'budget',
     ]);
 
     if (!isValid) return;
@@ -493,11 +628,10 @@ export function CreateProjectBusinessForm() {
             size="sm"
             variant={activeProfile === index ? 'default' : 'outline'}
             onClick={() => setActiveProfile(index)}
-            className={`px-4 py-2 ${
-              activeProfile === index
-                ? 'bg-blue-600 text-white hover:text-black'
-                : ''
-            }`}
+            className={`px-4 py-2 ${activeProfile === index
+              ? 'bg-blue-600 text-white hover:text-black'
+              : ''
+              }`}
           >
             Profile {index + 1}
           </Button>
@@ -506,6 +640,138 @@ export function CreateProjectBusinessForm() {
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
+
+  const renderBudgetSection = () => (
+    <div className="lg:col-span-2 xl:col-span-2 border p-4 rounded-md mb-4">
+      <h3 className="text-lg font-medium mb-4">Project Budget</h3>
+
+      <FormField
+        control={form.control}
+        name="budget.type"
+        render={({ field }) => (
+          <FormItem className="mb-6">
+            <FormLabel>Budget Type</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="FIXED" id="fixed" />
+                  <label htmlFor="fixed" className="cursor-pointer">Fixed Price</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="HOURLY" id="hourly" />
+                  <label htmlFor="hourly" className="cursor-pointer">Hourly Rate</label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {budgetType === 'FIXED' && (
+        <FormField
+          control={form.control}
+          name="budget.fixedAmount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fixed Budget Amount ($)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Enter fixed amount"
+                  min="1"
+                  step="0.01"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Enter the total fixed price for the project
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {budgetType === 'HOURLY' && (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="budget.hourly.minRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Minimum Rate ($/hour)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Min rate"
+                      min="1"
+                      step="0.01"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="budget.hourly.maxRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maximum Rate ($/hour)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Max rate"
+                      min="1"
+                      step="0.01"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="budget.hourly.estimatedHours"
+            render={({ field }) => (
+              <FormItem className="mt-4">
+                <FormLabel>Estimated Hours</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Estimated number of hours"
+                    min="1"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Estimated total hours required for project completion
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
+
+      {/* ✅ Display the overall budget validation error (from Zod refine) */}
+      {form.formState.errors.budget?.message && (
+        <p className="text-sm text-red-600 mt-4">
+          {form.formState.errors.budget.message}
+        </p>
+      )}
+    </div>
+  );
+
 
   const renderProjectInfoStep = () => (
     <>
@@ -621,6 +887,10 @@ export function CreateProjectBusinessForm() {
           </FormItem>
         )}
       />
+
+      {/* Budget section */}
+      {renderBudgetSection()}
+
       <div className="lg:col-span-2 xl:col-span-2">
         {urlFields.map((field, index) => (
           <FormField
