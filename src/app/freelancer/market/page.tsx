@@ -7,10 +7,7 @@ import { Loader2, X } from 'lucide-react';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
+import { menuItemsBottom, menuItemsTop } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
@@ -73,25 +70,15 @@ export interface Project {
   }[];
 }
 
-interface Skill {
-  _id: string;
-  label: string;
-}
-
-interface Domain {
-  _id: string;
-  label: string;
-}
-
-interface ProjectDomain {
-  _id: string;
-  label: string;
-}
-
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
-  const [showFilters, setShowFilters] = useState(false);
+  const dispatch = useDispatch();
+
   const [isClient, setIsClient] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [openItem, setOpenItem] = useState<string | null>('Filter by Project Domains');
+  const [openSheet, setOpenSheet] = useState(false);
+
   const [filters, setFilters] = useState<FilterState>({
     jobType: [],
     domain: [],
@@ -102,38 +89,79 @@ const Market: React.FC = () => {
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [projectDomains, setProjectDomains] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const [projectDomains, setProjectDomains] = useState<string[]>([]);
+  const [bidProfiles, setBidProfiles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [openItem, setOpenItem] = useState<string | null>(
-    'Filter by Project Domains',
-  );
-  const [openSheet, setOpenSheet] = useState(false);
-  const dispatch = useDispatch();
 
-  // Load drafts once on mount (or you can load in parent component if multiple JobCards)
   useEffect(() => {
-    const fetchProjectDrafts = async () => {
+    setIsClient(true);
+  }, []);
+
+  const fetchBidData = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(`/bid/${user.uid}/bid`);
+      const profileIds = res.data.data.map((bid: any) => bid.profile_id);
+      setBidProfiles(profileIds);
+    } catch (error) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    }
+  }, [user.uid]);
+
+  useEffect(() => {
+    fetchBidData();
+  }, [fetchBidData]);
+
+  useEffect(() => {
+    const fetchDrafts = async () => {
       try {
-        const response = await axiosInstance.get('/freelancer/draft');
-        dispatch(setDraftedProjects(response.data.projectDraft));
-        return response.data.projectDraft || [];
-      } catch (error) {
-        console.error(error);
+        const res = await axiosInstance.get('/freelancer/draft');
+        dispatch(setDraftedProjects(res.data.projectDraft));
+      } catch (err) {
+        console.error(err);
       }
     };
 
-    fetchProjectDrafts();
+    fetchDrafts();
   }, [dispatch]);
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setIsLoading(true);
+        const skillsRes = await axiosInstance.get('/skills');
+        setSkills(skillsRes.data.data.map((s: any) => s.label));
+
+        const domainsRes = await axiosInstance.get('/domain');
+        setDomains(domainsRes.data.data.map((d: any) => d.label));
+
+        const projDomRes = await axiosInstance.get('/projectdomain');
+        setProjectDomains(projDomRes.data.data.map((pd: any) => pd.label));
+      } catch (err) {
+        console.error('Error loading filters', err);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load filter options.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
 
   const handleFilterChange = (
     filterType: keyof FilterState,
     selectedValues: string[],
   ) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [filterType]: selectedValues,
-    }));
+    setFilters((prev) => ({ ...prev, [filterType]: selectedValues }));
   };
 
   const handleReset = () => {
@@ -147,97 +175,35 @@ const Market: React.FC = () => {
   };
 
   const constructQueryString = (filters: FilterState) => {
-    return Object.keys(filters)
-      .map((key) => {
-        const values = filters[key as keyof FilterState];
-        if (values.length > 0) {
-          return `${key}=${values.join(',')}`;
-        }
-        return '';
-      })
-      .filter((part) => part !== '')
+    return Object.entries(filters)
+      .filter(([_, val]) => val.length > 0)
+      .map(([key, val]) => `${key}=${val.join(',')}`)
       .join('&');
   };
 
-  // Fetch filter options (skills, domains, project domains)
-  useEffect(() => {
-    async function fetchFilterOptions() {
-      try {
-        setIsLoading(true);
-
-        // Fetch skills
-        const skillsResponse = await axiosInstance.get('/skills');
-        const skillLabels = skillsResponse.data.data.map(
-          (skill: Skill) => skill.label,
-        );
-        setSkills(skillLabels);
-
-        // Fetch domains
-        const domainsResponse = await axiosInstance.get('/domain');
-        const domainLabels = domainsResponse.data.data.map(
-          (domain: Domain) => domain.label,
-        );
-        setDomains(domainLabels);
-
-        // Fetch project domains
-        const projectDomainsResponse =
-          await axiosInstance.get('/projectdomain');
-        const projectDomainLabels = projectDomainsResponse.data.data.map(
-          (projectDomain: ProjectDomain) => projectDomain.label,
-        );
-        setProjectDomains(projectDomainLabels);
-      } catch (error) {
-        console.error('Error fetching filter options:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load filter options. Please try again.',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchFilterOptions();
-  }, []);
-
-  // Fetch jobs with applied filters
   const fetchJobs = useCallback(
     async (appliedFilters: FilterState) => {
       try {
         setIsLoading(true);
+        const freelancerRes = await axiosInstance.get(`/freelancer`);
+        const freelancerDetails = freelancerRes.data;
 
-        // Get freelancer details to check not interested projects
-        const freelancerResponse = await axiosInstance.get(`/freelancer`);
-        const freelancerDetails = freelancerResponse.data;
+        const query = constructQueryString(appliedFilters);
+        const jobsRes = await axiosInstance.get(`/project/freelancer/${user.uid}?${query}`);
 
-        // Construct query string from filters
-        const queryString = constructQueryString(appliedFilters);
+        const allJobs = jobsRes.data.data || [];
+        const notInterested = freelancerDetails.notInterestedProject || [];
 
-        // Fetch projects/jobs
-        const jobsResponse = await axiosInstance.get(
-          `/project/freelancer/${user.uid}?${queryString}`,
-        );
+        const filteredJobs = allJobs.filter((job: Project) => !notInterested.includes(job._id));
+        setJobs(filteredJobs);
+        console.log(filteredJobs);
 
-        const fetchedJobs = jobsResponse?.data?.data || [];
-
-        // Filter out not interested projects
-        if (freelancerDetails) {
-          const notInterestedProjects =
-            freelancerDetails.notInterestedProject || [];
-          const filteredJobs = fetchedJobs.filter(
-            (job: Project) => !notInterestedProjects.includes(job._id),
-          );
-          setJobs(filteredJobs);
-        } else {
-          setJobs(fetchedJobs);
-        }
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
+      } catch (err) {
+        console.error('Fetch jobs error:', err);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to load job listings. Please try again.',
+          description: 'Failed to load job listings.',
         });
       } finally {
         setIsLoading(false);
@@ -246,49 +212,41 @@ const Market: React.FC = () => {
     [user.uid],
   );
 
+  useEffect(() => {
+    fetchJobs(filters);
+  }, [fetchJobs]);
+
   const handleApply = () => {
     fetchJobs(filters);
   };
 
-  // Initial data fetch
-  useEffect(() => {
-    setIsClient(true);
-    fetchJobs(filters);
-  }, [fetchJobs]);
+  const handleResize = () => {
+    if (window.innerWidth >= 1024) setShowFilters(false);
+  };
 
-  // Handle responsive behavior
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setShowFilters(false);
-      }
-    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleModalToggle = () => {
-    setShowFilters(!showFilters);
+    setShowFilters((prev) => !prev);
   };
 
   const handleRemoveJob = async (id: string) => {
     try {
-      // Mark project as not interested
-      await axiosInstance.put(`/freelancer/${id}/not-interested_project`);
-
-      // Remove from UI
-      setJobs((prevJobs) => prevJobs.filter((job) => job._id !== id));
-
+      await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
+      setJobs((prev) => prev.filter((job) => job._id !== id));
       toast({
         title: 'Success',
-        description: 'Project marked as not interested',
+        description: 'Project marked as not interested.',
       });
-    } catch (error) {
-      console.error('Error marking project as not interested:', error);
+    } catch (err) {
+      console.error('Remove job error:', err);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to update project status. Please try again.',
+        description: 'Failed to update project status.',
       });
     }
   };
@@ -298,17 +256,19 @@ const Market: React.FC = () => {
       await axiosInstance.post(`/project/apply/${id}`);
       toast({
         title: 'Success',
-        description: 'Application submitted successfully',
+        description: 'Application submitted successfully.',
       });
     } catch (error) {
-      console.error('Error applying to project:', error);
+      console.error('Application error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to submit application. Please try again.',
+        description: 'Failed to apply to the project.',
       });
     }
   };
+
+  if (!isClient) return null;
 
   return (
     <div className="flex min-h-screen bg-muted  w-full flex-col  pb-10">
@@ -420,13 +380,16 @@ const Market: React.FC = () => {
                       job={job}
                       onApply={() => handleApplyToJob(job._id)}
                       onNotInterested={() => handleRemoveJob(job._id)}
+                      bidExist={
+                        Array.isArray(job.profiles) &&
+                        job.profiles.some((p:any) => bidProfiles.includes(p._id))
+                      }
+
                     />
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-gray-400">
-                      No projects found matching your filters.
-                    </p>
+                    <p className="text-gray-400">No projects found matching your filters.</p>
                   </div>
                 )}
               </div>

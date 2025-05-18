@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Paperclip,
   Clock,
@@ -9,14 +10,28 @@ import {
   User,
   Briefcase,
   Star,
+  Loader2,
+  Check,
+  Loader,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { RootState } from '@/lib/store';
+import { Textarea } from '../ui/textarea';
 
 // Define interfaces for props
 interface Bid {
@@ -68,6 +83,7 @@ interface ProjectApplicationFormProps {
   isLoading: boolean;
   onSubmit: (coverLetter: string, attachment: File | null) => Promise<void>;
   onCancel: () => void;
+  bidExist?: boolean;
 }
 
 const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
@@ -75,12 +91,61 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   isLoading,
   onSubmit,
   onCancel,
+  bidExist = false,
 }) => {
-
   const [coverLetter, setCoverLetter] = useState<string>('');
   const [attachment, setAttachment] = useState<File | null>(null);
   const [showFullText, setShowFullText] = useState<boolean>(false);
   const maxLength = 100; // Number of characters to show when collapsed
+
+  // Bid dialog and state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isBidSubmitted, setIsBidSubmitted] = useState(false);
+  const [bidAmount, setBidAmount] = useState<number>(0);
+  const [isBidLoading, setIsBidLoading] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+
+  // User and connects state
+  const user = useSelector((state: RootState) => state.user);
+  const [userConnects, setUserConnects] = useState<number>(0);
+  const [bidProfiles, setBidProfiles] = useState<string[]>([]);
+
+  // Load user connects on component mount and fetch existing bids
+  useEffect(() => {
+    const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+    setUserConnects(connects);
+
+    // Listen for connects updates
+    const handleConnectsUpdated = () => {
+      const updatedConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+      setUserConnects(updatedConnects);
+    };
+
+    window.addEventListener('connectsUpdated', handleConnectsUpdated);
+
+    // Fetch existing bids
+    fetchBidData();
+
+    return () => {
+      window.removeEventListener('connectsUpdated', handleConnectsUpdated);
+    };
+  }, [user.uid]);
+
+  // Fetch user's existing bids
+  const fetchBidData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
+      const profileIds = response.data.data.map((bid: any) => bid.profile_id); // Extract profile_ids
+      setBidProfiles(profileIds);
+    } catch (error) {
+      console.error('API Error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+      }); // Error toast
+    }
+  }, [user.uid]);
 
   const toggleText = () => {
     setShowFullText(!showFullText);
@@ -98,8 +163,109 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit(coverLetter, attachment);
+  const handleApplyClick = () => {
+    // If there are profiles, open the bid dialog with the first profile
+    if (project?.profiles && project.profiles.length > 0) {
+      const profile = project.profiles[0];
+      setSelectedProfile(profile);
+      setBidAmount(profile.minConnect || 0);
+      setDialogOpen(true);
+    } else {
+      // If no profiles, proceed with regular submission
+      onSubmit(coverLetter, attachment);
+    }
+  };
+
+  const fetchMoreConnects = async () => {
+    try {
+      await axiosInstance.patch(
+        `/public/connect?userId=${user.uid}&isFreelancer=${true}`,
+      );
+      toast({
+        title: 'Connects Requested',
+        description: 'Your request for more connects has been submitted.',
+      });
+      const currentConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
+      const updatedConnects = Math.max(0, currentConnects + 100);
+      localStorage.setItem('DHX_CONNECTS', updatedConnects.toString());
+
+      window.dispatchEvent(new Event('connectsUpdated'));
+    } catch (error) {
+      console.error('Error requesting connects:', error);
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again later.',
+      });
+    }
+  };
+
+  const handleBidSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedProfile || !selectedProfile._id) {
+      toast({
+        title: 'Error',
+        description: 'No profile selected for bidding',
+      });
+      return;
+    }
+
+    const currentConnects = parseInt(
+      localStorage.getItem('DHX_CONNECTS') || '0',
+      10,
+    );
+
+    if (
+      typeof selectedProfile.minConnect !== 'number' ||
+      isNaN(bidAmount) ||
+      isNaN(currentConnects) ||
+      bidAmount > currentConnects
+    ) {
+      toast({
+        description: 'Connects are insufficient',
+      });
+      return;
+    }
+
+    setIsBidLoading(true);
+    try {
+      await axiosInstance.post(`/bid`, {
+        current_price: bidAmount,
+        description: coverLetter, // Using coverLetter as the description
+        bidder_id: user.uid,
+        profile_id: selectedProfile._id,
+        project_id: project._id,
+        biddingValue: bidAmount,
+      });
+
+      const updatedConnects = (currentConnects - bidAmount).toString();
+      localStorage.setItem('DHX_CONNECTS', updatedConnects);
+      window.dispatchEvent(new Event('connectsUpdated'));
+
+      // If there's an attachment, submit that too
+      if (attachment) {
+        await onSubmit(coverLetter, attachment);
+      }
+
+      setBidAmount(0);
+      setDialogOpen(false);
+      setIsBidSubmitted(true);
+      toast({
+        title: 'Application Submitted',
+        description: 'Your application has been successfully submitted.',
+      });
+    } catch (error) {
+      console.error('Error submitting bid:', error);
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again later.',
+      });
+    } finally {
+      setIsBidLoading(false);
+    }
   };
 
   // Calculate bid summary
@@ -107,11 +273,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const avgBid =
     totalBids > 0
       ? (
-          project?.bids?.reduce(
-            (sum, bid) => sum + (bid?.current_price || 0),
-            0,
-          ) / totalBids
-        ).toFixed(2)
+        project?.bids?.reduce(
+          (sum, bid) => sum + (bid?.current_price || 0),
+          0,
+        ) / totalBids
+      ).toFixed(2)
       : 'N/A';
 
   // Format posted date
@@ -120,13 +286,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   ).toLocaleDateString();
 
   if (isLoading) {
-    return <div className="text-center py-10">Loading project details...</div>;
+    return <div className="text-center py-10"><Loader2 className='animate-spin w-5 h-5' /></div>;
   }
-
-  // Calculate total estimated budget
-  const totalEstimatedBudget =
-    (project?.budget?.hourly?.maxRate || 0) *
-    (project?.budget?.hourly?.estimatedHours || 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -296,6 +457,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
           </CardHeader>
 
           <CardContent className="p-6">
+            {/* Cover Letter */}
             <div className="mb-4">
               <label htmlFor="coverLetter" className="block mb-2 font-medium">
                 Cover Letter
@@ -336,13 +498,92 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </div>
 
             <div className="flex gap-4 mt-4">
-              <Button
-                onClick={handleSubmit}
-                className="w-full md:w-auto px-8"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Submitting...' : 'Apply Now'}
-              </Button>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <Button
+                  onClick={handleApplyClick}
+                  className="w-full md:w-auto px-8"
+                  disabled={isLoading || isBidSubmitted || bidExist || (project?.profiles?.length > 0 && project.profiles.every(p => bidProfiles.includes(p._id || '')))}
+                >
+                  {isLoading ? 'Submitting...' :
+                    bidExist || isBidSubmitted || (project?.profiles?.length > 0 && project.profiles.every(p => bidProfiles.includes(p._id || '')))
+                      ? 'Applied' : 'Apply Now'}
+                </Button>
+
+                {selectedProfile && userConnects < (selectedProfile.minConnect || 0) ? (
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Insufficient Connects</DialogTitle>
+                      <DialogDescription>
+                        You don&apos;t have enough connects to apply for this project.
+                        <br />
+                        Please{' '}
+                        <span
+                          className="text-blue-600 font-bold cursor-pointer"
+                          onClick={fetchMoreConnects}
+                        >
+                          Request Connects
+                        </span>{' '}
+                        to proceed.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDialogOpen(false)}
+                      >
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                ) : (
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Apply for {project.projectName}</DialogTitle>
+                      <DialogDescription>
+                        Submit your bid to apply for this project.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleBidSubmit}>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="bidAmount" className="text-center">
+                            Connects
+                          </Label>
+                          <div className="col-span-3 relative">
+                            <Input
+                              id="bidAmount"
+                              type="number"
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(Number(e.target.value))}
+                              className="w-full pl-2 pr-1"
+                              required
+                              min={selectedProfile?.minConnect}
+                              placeholder="Enter connects amount"
+                            />
+                            <div className="absolute right-8 top-1/2 transform -translate-y-1/2 text-grey-500 pointer-events-none">
+                              connects
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          type="submit"
+                          disabled={bidExist || isBidSubmitted || isBidLoading}
+                        >
+                          {isBidLoading ? (
+                            <Loader2 className="animate-spin w-6 h-6" />
+                          ) : isBidSubmitted ? (
+                            'Applied'
+                          ) : (
+                            'Submit Bid'
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                )}
+              </Dialog>
               <Button
                 onClick={onCancel}
                 variant="outline"
@@ -463,6 +704,25 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                           ))}
                         </div>
                       </div>
+
+                      <Button
+                        size="sm"
+                        className={`w-full mt-4 ${bidProfiles.includes(profile._id || '') ? 'cursor-not-allowed' : ''}`}
+                        onClick={() => {
+                          if (!bidProfiles.includes(profile._id || '')) {
+                            setSelectedProfile(profile);
+                            setBidAmount(profile.minConnect || 0);
+                            setDialogOpen(true);
+                          }
+                        }}
+                        disabled={bidProfiles.includes(profile._id || '') || bidExist || isBidSubmitted}
+                      >
+                        {bidProfiles.includes(profile._id || '') ? (
+                          <span className="flex items-center justify-center">
+                            <Check className="mr-2 h-4 w-4" /> Applied
+                          </span>
+                        ) : 'Apply for this role'}
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}

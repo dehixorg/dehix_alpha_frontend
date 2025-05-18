@@ -14,6 +14,7 @@ import {
 import Breadcrumb from '@/components/shared/breadcrumbList';
 import ProjectApplicationForm from '@/components/shared/ProjectApplicationPage';
 import { axiosInstance } from '@/lib/axiosinstance';
+import Header from '@/components/header/header';
 
 interface Bid {
   _id: string;
@@ -158,24 +159,15 @@ const Page = () => {
         active="Market"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:border-0 sm:px-6">
-          <CollapsibleSidebarMenu
-            menuItemsTop={menuItemsTop}
-            menuItemsBottom={menuItemsBottom}
-            active="Market"
-          />
-
-          <Breadcrumb
-            items={[
-              { label: 'Freelancer', link: '/dashboard/freelancer' },
-              { label: 'Freelancer Market', link: '#' },
-            ]}
-          />
-          <div className="relative ml-auto flex-1 md:grow-0">
-            <Search className="w-full md:w-[200px] lg:w-[336px]" />
-          </div>
-          <DropdownProfile />
-        </header>
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Market"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Marketplace', link: '#' },
+          ]}
+        />
         <main className="w-[85vw] mx-auto text-foreground">
           {project && (
             <ProjectApplicationForm

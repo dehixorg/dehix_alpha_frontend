@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Eye, EyeOff, Send } from 'lucide-react';
+import { Heart, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -33,11 +33,13 @@ interface JobCardProps {
   job: Project;
   onApply: () => void;
   onNotInterested: () => void;
+  bidExist: boolean;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, onApply, onNotInterested }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, onApply, onNotInterested, bidExist }) => {
+
   const [expanded, setExpanded] = useState(false);
-  const [loading, setLoading] = useState(false); // <-- new loading state
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -189,9 +191,17 @@ const JobCard: React.FC<JobCardProps> = ({ job, onApply, onNotInterested }) => {
           isSizeSmall={true}
         />
         <Link href={`/freelancer/market/project/${job._id}/apply`}>
-          <Button size="sm">
-            <Send className="h-4 w-4 mr-1" />
-            Bid
+          <Button
+            type="submit"
+            className=''
+            size="sm"
+            disabled={bidExist}
+          >
+            {bidExist ? (
+              'Applied'
+            ) : (
+              'Bid'
+            )}
           </Button>
         </Link>
       </CardFooter>
