@@ -62,104 +62,120 @@ const profileFormSchema = z.object({
     .max(160, { message: 'Description cannot exceed 160 characters.' })
     .optional(),
   // New budget schema
-  budget: z.object({
-    type: z.enum(['FIXED', 'HOURLY']),
-    fixedAmount: z.string().optional(),
-    hourly: z.object({
-      minRate: z.string().optional(),
-      maxRate: z.string().optional(),
-      estimatedHours: z.string().optional(),
-    }).optional(),
-  }).superRefine((data, ctx) => {
-    if (data.type === 'FIXED') {
-      if (!data.fixedAmount) {
-        ctx.addIssue({
-          path: ['fixedAmount'],
-          code: z.ZodIssueCode.custom,
-          message: 'Fixed amount is required',
-        });
-      } else if (!/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) || parseFloat(data.fixedAmount) <= 0) {
-        ctx.addIssue({
-          path: ['fixedAmount'],
-          code: z.ZodIssueCode.custom,
-          message: 'Enter a valid amount greater than 0',
-        });
-      }
-    }
-
-    if (data.type === 'HOURLY') {
-      if (!data.hourly) {
-        ctx.addIssue({
-          path: ['hourly'],
-          code: z.ZodIssueCode.custom,
-          message: 'Hourly details are required',
-        });
-        return;
-      }
-
-      const { minRate, maxRate, estimatedHours } = data.hourly;
-
-      if (!minRate) {
-        ctx.addIssue({
-          path: ['hourly', 'minRate'],
-          code: z.ZodIssueCode.custom,
-          message: 'Minimum rate is required',
-        });
-      } else if (!/^\d+(\.\d{1,2})?$/.test(minRate) || parseFloat(minRate) <= 0) {
-        ctx.addIssue({
-          path: ['hourly', 'minRate'],
-          code: z.ZodIssueCode.custom,
-          message: 'Enter a valid minimum rate > 0',
-        });
-      }
-
-      if (!maxRate) {
-        ctx.addIssue({
-          path: ['hourly', 'maxRate'],
-          code: z.ZodIssueCode.custom,
-          message: 'Maximum rate is required',
-        });
-      } else if (!/^\d+(\.\d{1,2})?$/.test(maxRate) || parseFloat(maxRate) <= 0) {
-        ctx.addIssue({
-          path: ['hourly', 'maxRate'],
-          code: z.ZodIssueCode.custom,
-          message: 'Enter a valid maximum rate > 0',
-        });
-      }
-
-      if (!estimatedHours) {
-        ctx.addIssue({
-          path: ['hourly', 'estimatedHours'],
-          code: z.ZodIssueCode.custom,
-          message: 'Estimated hours are required',
-        });
-      } else if (!/^\d+$/.test(estimatedHours) || parseInt(estimatedHours) <= 0) {
-        ctx.addIssue({
-          path: ['hourly', 'estimatedHours'],
-          code: z.ZodIssueCode.custom,
-          message: 'Enter a valid number of hours > 0',
-        });
-      }
-
-      // Validate logical relationship between min and max
-      if (
-        minRate &&
-        maxRate &&
-        /^\d+(\.\d{1,2})?$/.test(minRate) &&
-        /^\d+(\.\d{1,2})?$/.test(maxRate)
-      ) {
-        const min = parseFloat(minRate);
-        const max = parseFloat(maxRate);
-        if (max < min) {
+  budget: z
+    .object({
+      type: z.enum(['FIXED', 'HOURLY']),
+      fixedAmount: z.string().optional(),
+      hourly: z
+        .object({
+          minRate: z.string().optional(),
+          maxRate: z.string().optional(),
+          estimatedHours: z.string().optional(),
+        })
+        .optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (data.type === 'FIXED') {
+        if (!data.fixedAmount) {
           ctx.addIssue({
-            path: ['hourly', 'maxRate'],
+            path: ['fixedAmount'],
             code: z.ZodIssueCode.custom,
-            message: 'Maximum rate must be ≥ minimum rate',
+            message: 'Fixed amount is required',
+          });
+        } else if (
+          !/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) ||
+          parseFloat(data.fixedAmount) <= 0
+        ) {
+          ctx.addIssue({
+            path: ['fixedAmount'],
+            code: z.ZodIssueCode.custom,
+            message: 'Enter a valid amount greater than 0',
           });
         }
       }
-    }
-  }),
+
+      if (data.type === 'HOURLY') {
+        if (!data.hourly) {
+          ctx.addIssue({
+            path: ['hourly'],
+            code: z.ZodIssueCode.custom,
+            message: 'Hourly details are required',
+          });
+          return;
+        }
+
+        const { minRate, maxRate, estimatedHours } = data.hourly;
+
+        if (!minRate) {
+          ctx.addIssue({
+            path: ['hourly', 'minRate'],
+            code: z.ZodIssueCode.custom,
+            message: 'Minimum rate is required',
+          });
+        } else if (
+          !/^\d+(\.\d{1,2})?$/.test(minRate) ||
+          parseFloat(minRate) <= 0
+        ) {
+          ctx.addIssue({
+            path: ['hourly', 'minRate'],
+            code: z.ZodIssueCode.custom,
+            message: 'Enter a valid minimum rate > 0',
+          });
+        }
+
+        if (!maxRate) {
+          ctx.addIssue({
+            path: ['hourly', 'maxRate'],
+            code: z.ZodIssueCode.custom,
+            message: 'Maximum rate is required',
+          });
+        } else if (
+          !/^\d+(\.\d{1,2})?$/.test(maxRate) ||
+          parseFloat(maxRate) <= 0
+        ) {
+          ctx.addIssue({
+            path: ['hourly', 'maxRate'],
+            code: z.ZodIssueCode.custom,
+            message: 'Enter a valid maximum rate > 0',
+          });
+        }
+
+        if (!estimatedHours) {
+          ctx.addIssue({
+            path: ['hourly', 'estimatedHours'],
+            code: z.ZodIssueCode.custom,
+            message: 'Estimated hours are required',
+          });
+        } else if (
+          !/^\d+$/.test(estimatedHours) ||
+          parseInt(estimatedHours) <= 0
+        ) {
+          ctx.addIssue({
+            path: ['hourly', 'estimatedHours'],
+            code: z.ZodIssueCode.custom,
+            message: 'Enter a valid number of hours > 0',
+          });
+        }
+
+        // Validate logical relationship between min and max
+        if (
+          minRate &&
+          maxRate &&
+          /^\d+(\.\d{1,2})?$/.test(minRate) &&
+          /^\d+(\.\d{1,2})?$/.test(maxRate)
+        ) {
+          const min = parseFloat(minRate);
+          const max = parseFloat(maxRate);
+          if (max < min) {
+            ctx.addIssue({
+              path: ['hourly', 'maxRate'],
+              code: z.ZodIssueCode.custom,
+              message: 'Maximum rate must be ≥ minimum rate',
+            });
+          }
+        }
+      }
+    }),
   profiles: z
     .array(
       z.object({
@@ -515,7 +531,7 @@ export function CreateProjectBusinessForm() {
     if (budgetData.type === 'FIXED') {
       return {
         type: 'FIXED',
-        fixedAmount: parseFloat(budgetData.fixedAmount)
+        fixedAmount: parseFloat(budgetData.fixedAmount),
       };
     } else {
       return {
@@ -523,8 +539,8 @@ export function CreateProjectBusinessForm() {
         hourly: {
           minRate: parseFloat(budgetData.hourly.minRate),
           maxRate: parseFloat(budgetData.hourly.maxRate),
-          estimatedHours: parseInt(budgetData.hourly.estimatedHours)
-        }
+          estimatedHours: parseInt(budgetData.hourly.estimatedHours),
+        },
       };
     }
   };
@@ -548,7 +564,7 @@ export function CreateProjectBusinessForm() {
         companyId: user.uid,
         companyName: user.displayName,
         url: data.urls,
-        budget: budget
+        budget: budget,
       });
       toast({
         title: 'Project Added',
@@ -628,10 +644,11 @@ export function CreateProjectBusinessForm() {
             size="sm"
             variant={activeProfile === index ? 'default' : 'outline'}
             onClick={() => setActiveProfile(index)}
-            className={`px-4 py-2 ${activeProfile === index
-              ? 'bg-blue-600 text-white hover:text-black'
-              : ''
-              }`}
+            className={`px-4 py-2 ${
+              activeProfile === index
+                ? 'bg-blue-600 text-white hover:text-black'
+                : ''
+            }`}
           >
             Profile {index + 1}
           </Button>
@@ -659,11 +676,15 @@ export function CreateProjectBusinessForm() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="FIXED" id="fixed" />
-                  <label htmlFor="fixed" className="cursor-pointer">Fixed Price</label>
+                  <label htmlFor="fixed" className="cursor-pointer">
+                    Fixed Price
+                  </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="HOURLY" id="hourly" />
-                  <label htmlFor="hourly" className="cursor-pointer">Hourly Rate</label>
+                  <label htmlFor="hourly" className="cursor-pointer">
+                    Hourly Rate
+                  </label>
                 </div>
               </RadioGroup>
             </FormControl>
@@ -771,7 +792,6 @@ export function CreateProjectBusinessForm() {
       )}
     </div>
   );
-
 
   const renderProjectInfoStep = () => (
     <>
