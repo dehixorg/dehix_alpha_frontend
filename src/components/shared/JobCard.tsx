@@ -14,7 +14,7 @@ import {
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 
-import ProjectDrawer from './ProjectDrawe';
+import ProjectDrawer from './ProjectDrawer';
 
 import { Project } from '@/app/freelancer/market/page';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -36,8 +36,12 @@ interface JobCardProps {
   bidExist: boolean;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, onApply, onNotInterested, bidExist }) => {
-
+const JobCard: React.FC<JobCardProps> = ({
+  job,
+  onApply,
+  onNotInterested,
+  bidExist,
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -191,17 +195,8 @@ const JobCard: React.FC<JobCardProps> = ({ job, onApply, onNotInterested, bidExi
           isSizeSmall={true}
         />
         <Link href={`/freelancer/market/project/${job._id}/apply`}>
-          <Button
-            type="submit"
-            className=''
-            size="sm"
-            disabled={bidExist}
-          >
-            {bidExist ? (
-              'Applied'
-            ) : (
-              'Bid'
-            )}
+          <Button type="submit" className="" size="sm" disabled={bidExist}>
+            {bidExist ? 'Applied' : 'Bid'}
           </Button>
         </Link>
       </CardFooter>

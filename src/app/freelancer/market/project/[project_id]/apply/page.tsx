@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 import { useToast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -66,7 +67,6 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [project, setProject] = useState<ProjectData | null>(null);
   const [coverLetter, setCoverLetter] = useState<string>('');
-  const [attachment, setAttachment] = useState<File | null>(null);
 
   // Get project ID from URL (format: /freelancer/market/post/123/apply)
   const projectId: string = (params?.project_id as string) || '123';
@@ -96,49 +96,6 @@ const Page = () => {
     fetchProjectDetails();
   }, [projectId, toast]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    if (e.target.files?.[0]) {
-      setAttachment(e.target.files[0]);
-    }
-  };
-
-  const handleSubmit = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-
-      // Create form data for multipart/form-data
-      const formData = new FormData();
-      formData.append('projectId', projectId);
-      formData.append('coverLetter', coverLetter);
-      if (attachment) {
-        formData.append('attachment', attachment);
-      }
-
-      await axiosInstance.post('/project/application', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been submitted successfully!',
-      });
-
-      // Redirect back to projects
-      router.push('/freelancer/market');
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit application',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleCancel = (): void => {
     router.back();
   };
@@ -146,7 +103,9 @@ const Page = () => {
   if (isLoading && !project) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading project details...</div>
+        <div className="text-lg">
+          <Loader2 className="animate-spin w-5 h-5" />
+        </div>
       </div>
     );
   }
@@ -173,7 +132,6 @@ const Page = () => {
             <ProjectApplicationForm
               project={project}
               isLoading={isLoading}
-              onSubmit={handleSubmit}
               onCancel={handleCancel}
             />
           )}

@@ -7,7 +7,10 @@ import { Loader2, X } from 'lucide-react';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import { menuItemsBottom, menuItemsTop } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
@@ -76,7 +79,9 @@ const Market: React.FC = () => {
 
   const [isClient, setIsClient] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [openItem, setOpenItem] = useState<string | null>('Filter by Project Domains');
+  const [openItem, setOpenItem] = useState<string | null>(
+    'Filter by Project Domains',
+  );
   const [openSheet, setOpenSheet] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -189,15 +194,18 @@ const Market: React.FC = () => {
         const freelancerDetails = freelancerRes.data;
 
         const query = constructQueryString(appliedFilters);
-        const jobsRes = await axiosInstance.get(`/project/freelancer/${user.uid}?${query}`);
+        const jobsRes = await axiosInstance.get(
+          `/project/freelancer/${user.uid}?${query}`,
+        );
 
         const allJobs = jobsRes.data.data || [];
         const notInterested = freelancerDetails.notInterestedProject || [];
 
-        const filteredJobs = allJobs.filter((job: Project) => !notInterested.includes(job._id));
+        const filteredJobs = allJobs.filter(
+          (job: Project) => !notInterested.includes(job._id),
+        );
         setJobs(filteredJobs);
         console.log(filteredJobs);
-
       } catch (err) {
         console.error('Fetch jobs error:', err);
         toast({
@@ -382,14 +390,17 @@ const Market: React.FC = () => {
                       onNotInterested={() => handleRemoveJob(job._id)}
                       bidExist={
                         Array.isArray(job.profiles) &&
-                        job.profiles.some((p:any) => bidProfiles.includes(p._id))
+                        job.profiles.some((p: any) =>
+                          bidProfiles.includes(p._id),
+                        )
                       }
-
                     />
                   ))
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-gray-400">No projects found matching your filters.</p>
+                    <p className="text-gray-400">
+                      No projects found matching your filters.
+                    </p>
                   </div>
                 )}
               </div>

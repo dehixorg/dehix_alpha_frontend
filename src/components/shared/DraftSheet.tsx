@@ -9,7 +9,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
-import ProjectDrawer from './ProjectDrawe';
+import ProjectDrawer from './ProjectDrawer';
 
 import { Button } from '@/components/ui/button';
 import {

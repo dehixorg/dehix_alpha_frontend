@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  Paperclip,
   Clock,
   DollarSign,
   Calendar,
@@ -14,6 +13,8 @@ import {
   Check,
   Loader,
 } from 'lucide-react';
+
+import { Textarea } from '../ui/textarea';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { Textarea } from '../ui/textarea';
 
 // Define interfaces for props
 interface Bid {
@@ -81,7 +81,6 @@ interface ProjectData {
 interface ProjectApplicationFormProps {
   project: ProjectData;
   isLoading: boolean;
-  onSubmit: (coverLetter: string, attachment: File | null) => Promise<void>;
   onCancel: () => void;
   bidExist?: boolean;
 }
@@ -89,12 +88,12 @@ interface ProjectApplicationFormProps {
 const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   project,
   isLoading,
-  onSubmit,
   onCancel,
   bidExist = false,
 }) => {
   const [coverLetter, setCoverLetter] = useState<string>('');
-  const [attachment, setAttachment] = useState<File | null>(null);
+  const minChars = 500;
+  const maxChars = 2000;
   const [showFullText, setShowFullText] = useState<boolean>(false);
   const maxLength = 100; // Number of characters to show when collapsed
 
@@ -105,25 +104,24 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [isBidLoading, setIsBidLoading] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
-  // User and connects state
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
   const [bidProfiles, setBidProfiles] = useState<string[]>([]);
 
-  // Load user connects on component mount and fetch existing bids
   useEffect(() => {
     const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
     setUserConnects(connects);
 
-    // Listen for connects updates
     const handleConnectsUpdated = () => {
-      const updatedConnects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
+      const updatedConnects = parseInt(
+        localStorage.getItem('DHX_CONNECTS') || '0',
+        10,
+      );
       setUserConnects(updatedConnects);
     };
 
     window.addEventListener('connectsUpdated', handleConnectsUpdated);
 
-    // Fetch existing bids
     fetchBidData();
 
     return () => {
@@ -131,11 +129,10 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     };
   }, [user.uid]);
 
-  // Fetch user's existing bids
   const fetchBidData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
-      const profileIds = response.data.data.map((bid: any) => bid.profile_id); // Extract profile_ids
+      const profileIds = response.data.data.map((bid: any) => bid.profile_id);
       setBidProfiles(profileIds);
     } catch (error) {
       console.error('API Error:', error);
@@ -143,7 +140,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         variant: 'destructive',
         title: 'Error',
         description: 'Something went wrong. Please try again.',
-      }); // Error toast
+      });
     }
   }, [user.uid]);
 
@@ -157,22 +154,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       ? project?.description
       : project?.description.slice(0, maxLength) + '...';
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    if (e.target?.files?.[0]) {
-      setAttachment(e.target.files[0]);
-    }
-  };
-
   const handleApplyClick = () => {
-    // If there are profiles, open the bid dialog with the first profile
     if (project?.profiles && project.profiles.length > 0) {
       const profile = project.profiles[0];
       setSelectedProfile(profile);
       setBidAmount(profile.minConnect || 0);
       setDialogOpen(true);
-    } else {
-      // If no profiles, proceed with regular submission
-      onSubmit(coverLetter, attachment);
     }
   };
 
@@ -230,11 +217,27 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       return;
     }
 
+    if (coverLetter.length < minChars) {
+      toast({
+        title: 'Cover letter too short',
+        description: `Please write at least ${minChars} characters.`,
+      });
+      return;
+    }
+
+    if (coverLetter.length > maxChars) {
+      toast({
+        title: 'Cover letter too long',
+        description: `Maximum allowed is ${maxChars} characters.`,
+      });
+      return;
+    }
+
     setIsBidLoading(true);
     try {
       await axiosInstance.post(`/bid`, {
         current_price: bidAmount,
-        description: coverLetter, // Using coverLetter as the description
+        description: coverLetter,
         bidder_id: user.uid,
         profile_id: selectedProfile._id,
         project_id: project._id,
@@ -245,14 +248,10 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
       window.dispatchEvent(new Event('connectsUpdated'));
 
-      // If there's an attachment, submit that too
-      if (attachment) {
-        await onSubmit(coverLetter, attachment);
-      }
-
       setBidAmount(0);
       setDialogOpen(false);
       setIsBidSubmitted(true);
+      setCoverLetter('');
       toast({
         title: 'Application Submitted',
         description: 'Your application has been successfully submitted.',
@@ -268,32 +267,41 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     }
   };
 
-  // Calculate bid summary
+  const handleCoverLetterChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const value = e.target.value.replace(/\s{10,}/g, ' ').replace(/^\s+/, '');
+
+    if (value.length <= maxChars) {
+      setCoverLetter(value);
+    }
+  };
+
   const totalBids = project?.bids?.length || 0;
   const avgBid =
     totalBids > 0
       ? (
-        project?.bids?.reduce(
-          (sum, bid) => sum + (bid?.current_price || 0),
-          0,
-        ) / totalBids
-      ).toFixed(2)
+          project?.bids?.reduce(
+            (sum, bid) => sum + (bid?.current_price || 0),
+            0,
+          ) / totalBids
+        ).toFixed(2)
       : 'N/A';
-
-  // Format posted date
   const postedDate = new Date(
     project?.createdAt || Date.now(),
   ).toLocaleDateString();
 
   if (isLoading) {
-    return <div className="text-center py-10"><Loader2 className='animate-spin w-5 h-5' /></div>;
+    return (
+      <div className="text-center py-10">
+        <Loader2 className="animate-spin w-5 h-5" />
+      </div>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Left Column - Main Content (2/3 width) */}
       <div className="md:col-span-2 space-y-6">
-        {/* Project Header */}
         <Card>
           <CardContent className="p-6">
             <div className="mb-4">
@@ -336,8 +344,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </div>
           </CardContent>
         </Card>
-
-        {/* Client Information */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-medium mb-4">Client Information</h2>
@@ -361,7 +367,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                 </div>
               </div>
             </div>
-
             <p className="mt-4 text-sm">
               {project?.companyName} is a leading technology company focused on
               innovative AI solutions. They have a history of successful project
@@ -369,8 +374,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </p>
           </CardContent>
         </Card>
-
-        {/* Project Details */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-medium mb-4">Project Details</h2>
@@ -428,8 +431,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </div>
           </CardContent>
         </Card>
-
-        {/* Bid Summary */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-medium mb-4">Bid Summary</h2>
@@ -447,74 +448,81 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </div>
           </CardContent>
         </Card>
-
-        {/* Application Form */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-medium">
               Your Application
             </CardTitle>
           </CardHeader>
-
           <CardContent className="p-6">
-            {/* Cover Letter */}
             <div className="mb-4">
               <label htmlFor="coverLetter" className="block mb-2 font-medium">
                 Cover Letter
               </label>
               <Textarea
-                id="coverLetter"
                 value={coverLetter}
-                onChange={(e) => setCoverLetter(e.target.value)}
-                className="min-h-32 w-full"
-                placeholder="Explain why you're a good fit for this project..."
+                onChange={handleCoverLetterChange}
+                placeholder="Write your cover letter..."
+                rows={8}
+                className="w-full p-3 border rounded-md resize-none"
               />
-            </div>
 
-            <div>
-              <p className="block mb-2 font-medium">Attachment</p>
-              <p className="text-sm text-muted-foreground mb-2">
-                Attach your resume to strengthen your profile
-              </p>
-              <div className="relative">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => document.getElementById('fileUpload')?.click()}
+              <div className="text-sm mt-1 text-right">
+                <span
+                  className={
+                    coverLetter.length < minChars
+                      ? 'text-yellow-600'
+                      : coverLetter.length > maxChars
+                        ? 'text-red-600'
+                        : ''
+                  }
                 >
-                  <Paperclip size={16} />
-                  <span>Attach File</span>
-                </Button>
-                <Input
-                  id="fileUpload"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-              {attachment && <p className="mt-2 text-sm">{attachment.name}</p>}
-            </div>
+                  {coverLetter.length < minChars &&
+                    `${minChars - coverLetter.length} characters left to reach minimum.`}
 
+                  {coverLetter.length >= minChars &&
+                    coverLetter.length <= maxChars &&
+                    `${maxChars - coverLetter.length} characters left.`}
+
+                  {coverLetter.length > maxChars && 'Character limit exceeded!'}
+                </span>
+              </div>
+            </div>
             <div className="flex gap-4 mt-4">
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <Button
                   onClick={handleApplyClick}
                   className="w-full md:w-auto px-8"
-                  disabled={isLoading || isBidSubmitted || bidExist || (project?.profiles?.length > 0 && project.profiles.every(p => bidProfiles.includes(p._id || '')))}
+                  disabled={
+                    isLoading ||
+                    isBidSubmitted ||
+                    bidExist ||
+                    (project?.profiles?.length > 0 &&
+                      project.profiles.every((p) =>
+                        bidProfiles.includes(p._id || ''),
+                      ))
+                  }
                 >
-                  {isLoading ? 'Submitting...' :
-                    bidExist || isBidSubmitted || (project?.profiles?.length > 0 && project.profiles.every(p => bidProfiles.includes(p._id || '')))
-                      ? 'Applied' : 'Apply Now'}
+                  {isLoading
+                    ? 'Submitting...'
+                    : bidExist ||
+                        isBidSubmitted ||
+                        (project?.profiles?.length > 0 &&
+                          project.profiles.every((p) =>
+                            bidProfiles.includes(p._id || ''),
+                          ))
+                      ? 'Applied'
+                      : 'Apply Now'}
                 </Button>
 
-                {selectedProfile && userConnects < (selectedProfile.minConnect || 0) ? (
+                {selectedProfile &&
+                userConnects < (selectedProfile.minConnect || 0) ? (
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Insufficient Connects</DialogTitle>
                       <DialogDescription>
-                        You don&apos;t have enough connects to apply for this project.
+                        You don&apos;t have enough connects to apply for this
+                        project.
                         <br />
                         Please{' '}
                         <span
@@ -554,7 +562,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                               id="bidAmount"
                               type="number"
                               value={bidAmount}
-                              onChange={(e) => setBidAmount(Number(e.target.value))}
+                              onChange={(e) =>
+                                setBidAmount(Number(e.target.value))
+                              }
                               className="w-full pl-2 pr-1"
                               required
                               min={selectedProfile?.minConnect}
@@ -595,10 +605,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
           </CardContent>
         </Card>
       </div>
-
-      {/* Right Column - Experience and Profiles (1/3 width) */}
       <div className="space-y-6">
-        {/* Experience Card */}
         <Card>
           <CardContent className="p-6">
             <h2 className="text-lg font-medium mb-4">Experience</h2>
@@ -640,8 +647,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </div>
           </CardContent>
         </Card>
-
-        {/* Profiles Section */}
         {project?.profiles?.length > 0 && (
           <Card>
             <CardHeader>
@@ -715,13 +720,19 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             setDialogOpen(true);
                           }
                         }}
-                        disabled={bidProfiles.includes(profile._id || '') || bidExist || isBidSubmitted}
+                        disabled={
+                          bidProfiles.includes(profile._id || '') ||
+                          bidExist ||
+                          isBidSubmitted
+                        }
                       >
                         {bidProfiles.includes(profile._id || '') ? (
                           <span className="flex items-center justify-center">
                             <Check className="mr-2 h-4 w-4" /> Applied
                           </span>
-                        ) : 'Apply for this role'}
+                        ) : (
+                          'Apply for this role'
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
