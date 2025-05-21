@@ -23,6 +23,14 @@ const setLocalStorageItem = (key: string, value: string) =>
   localStorage.setItem(key, value);
 const removeLocalStorageItem = (key: string) => localStorage.removeItem(key);
 
+// Helper function to extract serializable user data
+const getSerializableUserData = (user: User, type?: string) => ({
+  uid: user.uid,
+  email: user.email,
+  displayName: user.displayName,
+  type: type,
+});
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [user, setUserState] = useState<User | null>(null);
@@ -38,7 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const parsedUser = JSON.parse(storedUser);
         setUserState(parsedUser);
         initializeAxiosWithToken(storedToken);
-        dispatch(setUser(parsedUser));
+        // Only dispatch serializable user data
+        dispatch(setUser(getSerializableUserData(parsedUser, parsedUser.type)));
       } catch (error) {
         console.error('Failed to parse user:', error);
         removeLocalStorageItem('user');
@@ -57,7 +66,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setLocalStorageItem('token', accessToken);
             setUserState(userData);
             initializeAxiosWithToken(accessToken);
-            dispatch(setUser(userData));
+            // Only dispatch serializable user data
+            dispatch(setUser(getSerializableUserData(firebaseUser, claims.claims.type as string)));
           }
         } catch (error) {
           console.error('Token Refresh Error:', error);
