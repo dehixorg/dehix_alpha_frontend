@@ -37,6 +37,8 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import { addSkill } from '@/utils/skillUtils';
 import { addDomain } from '@/utils/DomainUtils';
 import { addProjectDomain } from '@/utils/ProjectDomainUtils';
+import PhoneNumberForm from '../form/register/phoneNumberChecker';
+import countries from '../../../country-codes.json';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -54,9 +56,10 @@ const profileFormSchema = z.object({
       message: 'Username must not be longer than 30 characters.',
     }),
   email: z.string().email(),
-  phone: z.string().min(10, {
-    message: 'Phone number must be at least 10 digits.',
-  }),
+  phone: z
+    .string()
+    .min(10, { message: 'Phone number must be at least 10 digits.' })
+    .regex(/^\d+$/, { message: 'Phone number can only contain digits.' }),
   role: z.string(),
   personalWebsite: z.string().url().optional(),
   resume: z.string().url().optional(),
@@ -104,6 +107,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [dialogType] = useState<'skill' | 'domain' | 'projectDomain' | null>(
     null,
   );
+  const [code, setCode] = useState<string>('IN');
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -415,50 +419,27 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   }, [user, form]);
 
   async function onSubmit(data: ProfileFormValues) {
-    setLoading(true);
     try {
-      const { ...restData } = data;
+      setLoading(true);
+      const country = countries.find((c) => c.code === code);
+      const formattedPhone = `${country?.dialCode}${data.phone}`;
+      
+      const formData = {
+        ...data,
+        phone: formattedPhone,
+      };
 
-      const updatedSkills = currSkills.map((skill: any) => ({
-        ...skill,
-        interviewInfo: skill.interviewInfo || '',
-        interviewerRating: skill.interviewerRating || 0,
-        interviewStatus: skill.interviewStatus || 'PENDING',
-      }));
-
-      await axiosInstance.put(`/freelancer`, {
-        ...restData,
-        resume: data.resume,
-        skills: updatedSkills,
-        domain: currDomains,
-        projectDomain: currProjectDomains,
-        description: data.description,
-      });
-
-      setUser({
-        ...user,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        userName: data.username,
-        email: data.email,
-        phone: data.phone,
-        role: data.role,
-        personalWebsite: data.personalWebsite,
-        resume: data.resume,
-        skills: updatedSkills,
-        domain: currDomains,
-        projectDomains: currProjectDomains,
-      });
+      await axiosInstance.put(`/users/${user_id}`, formData);
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
+        title: 'Success',
+        description: 'Profile updated successfully.',
       });
-    } catch (error) {
-      console.error('API Error:', error);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to update profile. Please try again later.',
+        description: error.response?.data?.message || 'Failed to update profile.',
       });
     } finally {
       setLoading(false);
@@ -554,10 +535,13 @@ export function ProfileForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+91" {...field} readOnly />
+                  <PhoneNumberForm
+                    control={form.control}
+                    setCode={setCode}
+                    code={code}
+                  />
                 </FormControl>
                 <FormMessage />
-                <FormDescription>Non editable field</FormDescription>
               </FormItem>
             )}
           />

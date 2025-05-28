@@ -25,7 +25,12 @@ export const EmojiPicker = ({
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
-        <Button className="my-auto " variant="link" size="sm">
+        <Button
+          className="my-auto "
+          variant="link"
+          size="sm"
+          onClick={() => console.log('Emoji button clicked!')}
+        >
           <Smile className="h-4 w-4 " />
         </Button>
       </PopoverTrigger>

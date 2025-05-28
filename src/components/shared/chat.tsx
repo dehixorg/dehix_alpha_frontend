@@ -12,10 +12,14 @@ import {
   Italic,
   Underline,
   CheckCheck,
+  Smile,
+  Paperclip,
+  Mic,
+  MoreVertical,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
+import ReactMarkdown from 'react-markdown';
 import {
   formatDistanceToNow,
   format,
@@ -33,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import { Input } from '@/components/ui/input';
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
@@ -41,12 +46,6 @@ import { FileAttachment } from './fileAttachment';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
 import {
   subscribeToFirestoreCollection,
   updateConversationWithMessageTransaction,
@@ -60,18 +59,18 @@ function formatChatTimestamp(timestamp: string) {
   const date = new Date(timestamp);
 
   if (isToday(date)) {
-    return format(date, 'hh:mm a'); // Example: "10:30 AM"
+    return format(date, 'hh:mm a');
   }
 
   if (isYesterday(date)) {
-    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
+    return `Yesterday, ${format(date, 'hh:mm a')}`;
   }
 
   if (isThisYear(date)) {
-    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
+    return format(date, 'MMM dd, hh:mm a');
   }
 
-  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+  return format(date, 'yyyy MMM dd, hh:mm a');
 }
 
 type User = {
@@ -87,15 +86,29 @@ type Message = {
   senderId: string;
   content: string;
   timestamp: string;
-  replyTo?: string | null; // Allow null
+  replyTo?: string | null;
   reactions?: MessageReaction;
 };
 
 interface CardsChatProps {
-  conversation: Conversation;
+  conversation: Conversation | null;
   conversations?: any;
   setActiveConversation?: any;
 }
+
+function getValidAvatarSrc(src: string | undefined) {
+  if (!src) return '/default-avatar.png';
+  if (src.startsWith('http://') || src.startsWith('https://')) return src;
+  if (src.startsWith('/')) return src;
+  return '/default-avatar.png';
+}
+
+const formatMessageTime = (timestamp: string) => {
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 export function CardsChat({
   conversation,
@@ -116,10 +129,10 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
-    useState<boolean>(false); // Toggle formatting options
+    useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -139,7 +152,7 @@ export function CardsChat({
 
   useEffect(() => {
     const fetchPrimaryUser = async () => {
-      const primaryUid = conversation.participants.find(
+      const primaryUid = conversation?.participants?.find(
         (participant: string) => participant !== user.uid,
       );
 
@@ -153,22 +166,33 @@ export function CardsChat({
             variant: 'destructive',
             title: 'Error',
             description: 'Something went wrong.Please try again.',
-          }); // Error toast
+          });
         }
+      } else {
+        setPrimaryUser({
+          userName: 'Unknown User',
+          email: '',
+          profilePic: '',
+        });
       }
     };
     let unsubscribeMessages: (() => void) | undefined;
 
     const fetchMessages = async () => {
       setLoading(true);
-      unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversation.id}/messages`,
-        (messagesData) => {
-          setMessages(messagesData);
-          setLoading(false);
-        },
-        'desc',
-      );
+      if (conversation?.id) {
+        unsubscribeMessages = subscribeToFirestoreCollection(
+          `conversations/${conversation.id}/messages`,
+          (messagesData) => {
+            setMessages(messagesData);
+            setLoading(false);
+          },
+          'desc',
+        );
+      } else {
+        setMessages([]);
+        setLoading(false);
+      }
     };
 
     if (conversation) {
@@ -179,7 +203,7 @@ export function CardsChat({
     return () => {
       if (unsubscribeMessages) unsubscribeMessages();
     };
-  }, [conversation, user.uid]);
+  }, [conversation?.id, user.uid]);
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -189,17 +213,19 @@ export function CardsChat({
   }, [messages.length]);
 
   async function sendMessage(
-    conversation: Conversation,
+    conversation: Conversation | null,
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+    if (!conversation?.id) return;
+
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
 
       const messageId = await updateConversationWithMessageTransaction(
         'conversations',
-        conversation?.id,
+        conversation.id,
         {
           ...message,
           timestamp: datentime,
@@ -210,6 +236,7 @@ export function CardsChat({
 
       if (messageId) {
         setInput('');
+        setReplyToMessageId('');
         setIsSending(false);
       } else {
         console.error('Failed to send message');
@@ -225,50 +252,62 @@ export function CardsChat({
     return null;
   }
 
-  // Handle image upload
   async function handleFileUpload() {
+    if (!conversation?.id) {
+      console.log('handleFileUpload: No conversation ID, returning.');
+      return;
+    }
     const fileInput = document.createElement('input');
-    fileInput.type = 'file'; // Allows selection of any file type
+    fileInput.type = 'file';
+    console.log('handleFileUpload: Created file input element.');
 
     fileInput.onchange = async () => {
+      console.log('handleFileUpload: File input onchange triggered.');
       const file = fileInput.files?.[0];
-      if (!file) return; // Exit if no file is selected
+      if (!file) {
+        console.log('handleFileUpload: No file selected.');
+        return;
+      }
+
+      console.log('handleFileUpload: File selected:', file.name);
 
       try {
-        // Create FormData to send the file
         const formData = new FormData();
         formData.append('file', file);
+        console.log('handleFileUpload: FormData created, appending file.');
 
-        // Post request to upload the file
+        console.log('handleFileUpload: Making API call to /register/upload-image');
         const postFileResponse = await axiosInstance.post(
-          '/register/upload-image', // Endpoint that handles both files and images
+          '/register/upload-image',
           formData,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
           },
         );
 
-        // Assuming the response contains the URL of the uploaded file
         const fileUrl = postFileResponse.data.data.Location;
+        console.log('handleFileUpload: File uploaded successfully, URL:', fileUrl);
 
-        // Prepare a message containing the file URL
         const message: Partial<Message> = {
           senderId: user.uid,
-          content: fileUrl, // Use the file URL as the message content
+          content: fileUrl,
           timestamp: new Date().toISOString(),
         };
 
-        // Send the message with the file URL
+        console.log('handleFileUpload: Sending message with file URL.');
         sendMessage(conversation, message, setInput);
       } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('handleFileUpload: Error uploading file:', error);
       }
     };
 
-    fileInput.click(); // Trigger file selection
+    fileInput.click();
+    console.log('handleFileUpload: Triggered file input click.');
   }
 
   async function handleCreateMeet() {
+    if (!conversation?.participants) return;
+
     try {
       const response = await axiosInstance.post('/meeting', {
         participants: conversation.participants,
@@ -292,31 +331,28 @@ export function CardsChat({
       const textarea = textAreaRef.current;
       const { selectionStart, selectionEnd, value } = textarea;
 
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
+      if (selectionStart === selectionEnd) return;
 
       const selectedText = value.slice(selectionStart, selectionEnd);
       const newText = `${value.slice(0, selectionStart)}**${selectedText}**${value.slice(selectionEnd)}`;
 
-      // Update the state with the new text (including the bold markdown)
       setInput(newText);
-      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Adjust selection to include the bold syntax
+      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2);
     }
   }
+
   const handleUnderline = () => {
     if (textAreaRef.current) {
       const textarea = textAreaRef.current;
       const { selectionStart, selectionEnd, value } = textarea;
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
+      if (selectionStart === selectionEnd) return;
 
-      // Apply the underline markdown syntax (__text__)
       const selectedText = value.slice(selectionStart, selectionEnd);
       const newText = `${value.slice(0, selectionStart)}__${selectedText}__${value.slice(selectionEnd)}`;
 
-      // Update the state with the new text (including the underline markdown)
       setInput(newText);
 
-      // Adjust the selection range to include the underline syntax
-      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Add 2 for the __ around the text
+      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2);
     }
   };
 
@@ -325,16 +361,16 @@ export function CardsChat({
       const textarea = textAreaRef.current;
       const { selectionStart, selectionEnd, value } = textarea;
 
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
+      if (selectionStart === selectionEnd) return;
 
       const selectedText = value.slice(selectionStart, selectionEnd);
       const newText = `${value.slice(0, selectionStart)}*${selectedText}*${value.slice(selectionEnd)}`;
 
-      // Update the state with the new text (including the italic markdown)
       setInput(newText);
-      textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1); // Adjust selection to include the italic syntax
+      textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1);
     }
   }
+
   const toggleFormattingOptions = () => {
     setShowFormattingOptions((prev) => !prev);
   };
@@ -343,23 +379,19 @@ export function CardsChat({
     const currentMessage = messages.find((msg) => msg.id === messageId);
     const updatedReactions = { ...currentMessage?.reactions };
 
-    // Check if the user has already reacted with a different emoji
     const userReaction = Object.keys(updatedReactions).find((existingEmoji) =>
       updatedReactions[existingEmoji]?.includes(user.uid),
     );
 
-    // If the user is reacting with the same emoji, remove it (toggle off)
     if (userReaction === emoji) {
       updatedReactions[emoji] = updatedReactions[emoji].filter(
         (uid: any) => uid !== user.uid,
       );
 
-      // Remove emoji key if no users remain
       if (updatedReactions[emoji].length === 0) {
         delete updatedReactions[emoji];
       }
     } else {
-      // Remove the previous reaction (if any)
       if (userReaction) {
         updatedReactions[userReaction] = updatedReactions[userReaction].filter(
           (uid: any) => uid !== user.uid,
@@ -369,398 +401,272 @@ export function CardsChat({
         }
       }
 
-      // Add the new reaction
       if (!updatedReactions[emoji]) {
         updatedReactions[emoji] = [];
       }
-      // Add the user's UID to the reaction array
       updatedReactions[emoji].push(user.uid);
     }
 
-    // Update the Firestore database with the updated reactions
-    await updateDataInFirestore(
-      `conversations/${conversation.id}/messages/`,
-      messageId,
-      {
-        reactions: updatedReactions,
-      },
-    );
+    if (conversation?.id) {
+      await updateDataInFirestore(
+        `conversations/${conversation.id}/messages/`,
+        messageId,
+        {
+          reactions: updatedReactions,
+        },
+      );
+    }
   }
 
   return (
-    <>
-      {loading ? (
-        <div className="flex justify-center items-center p-5 col-span-3">
-          <LoaderCircle className="h-6 w-6 text-white animate-spin" />
+    <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#27272a] rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex items-center space-x-3">
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={getValidAvatarSrc(primaryUser.profilePic)} alt={primaryUser.userName} />
+            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white font-medium">{primaryUser.userName?.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">{primaryUser.userName}</h3>
+            {primaryUser && (
+              <p className="text-sm text-green-500 dark:text-green-400">Active</p>
+            )}
+          </div>
         </div>
-      ) : (
-        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-gray-400  dark:border-white border-2 shadow-none">
-          <CardHeader className="flex flex-row items-center  bg-[#ececec] dark:bg-[#333333] text-gray-800 dark:text-white p-2 rounded-t-lg">
-            <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarImage src={primaryUser.profilePic} alt="Image" />
-                <AvatarFallback>{primaryUser.userName}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
-                  {primaryUser.userName}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {primaryUser.email}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#ffffff] dark:bg-[#181818]">
-            <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[65vh] md:h-[58vh]">
-              <div ref={messagesEndRef} />
-              {messages.map((message, index) => {
-                const formattedTimestamp = formatChatTimestamp(
-                  message.timestamp,
-                );
-                const readableTimestamp =
-                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+        <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+          <MoreVertical className="w-5 h-5" />
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col-reverse bg-white dark:bg-[#27272a]" ref={messagesEndRef}>
+        {messages.map((message, index) => {
+          const isOwn = message.senderId === user.uid;
+          const messageTime = formatMessageTime(message.timestamp);
+          const senderName = isOwn ? 'You' : primaryUser.userName;
 
-                return (
-                  <div
-                    id={message.id}
-                    key={index}
-                    className="flex flex-row relative"
-                    onMouseEnter={() => setHoveredMessageId(message.id)}
-                    onMouseLeave={() => setHoveredMessageId(null)}
-                  >
-                    {message.senderId !== user.uid && (
-                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
-                        <AvatarImage
-                          src={primaryUser.profilePic}
-                          alt={message.senderId}
-                        />
-                        <AvatarFallback>
-                          {message.senderId.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-
-                    <div
-                      className={cn(
-                        'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
-                        message.senderId === user.uid
-                          ? 'ml-auto bg-[#9155bc] dark:bg-[#580d8f] text-white  rounded-tr-none'
-                          : 'bg-[#d9d9d9] dark:bg-[#333333] text-white  rounded-tl-none',
-                      )}
-                      onClick={() => {
-                        if (message.replyTo) {
-                          const replyMessage = messages.find(
-                            (msg) => msg.id === message.replyTo,
-                          );
-                          if (replyMessage) {
-                            const replyMessageElement = document.getElementById(
-                              replyMessage.id,
-                            );
-                            if (replyMessageElement) {
-                              replyMessageElement.classList.add(
-                                'bg-gray-200',
-                                'dark:bg-gray-600',
-                                'border-2',
-                                'border-gray-300',
-                                'dark:border-gray-500',
-                                'bg-opacity-50',
-                                'dark:bg-opacity-50',
-                              );
-
-                              replyMessageElement.scrollIntoView({
-                                behavior: 'smooth',
-                              });
-
-                              setTimeout(() => {
-                                replyMessageElement.classList.remove(
-                                  'bg-gray-200',
-                                  'dark:bg-gray-600',
-                                  'border-2',
-                                  'border-gray-300',
-                                  'dark:border-gray-500',
-                                  'bg-opacity-50',
-                                  'dark:bg-opacity-50',
-                                );
-                              }, 2000);
-                            }
-                          }
-                        }
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="break-words rounded-lg w-full">
-                              {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
-                                  <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                                    <span className="font-semibold">
-                                      {messages.find(
-                                        (msg) => msg.id === message.replyTo,
-                                      )?.content || 'Message not found'}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-
-                              {message.content.match(
-                                /\.(jpeg|jpg|gif|png)$/,
-                              ) ? (
-                                <Image
-                                  src={message.content || '/placeholder.svg'}
-                                  alt="Message Image"
-                                  width={300}
-                                  height={300}
-                                  className="rounded-lg"
-                                />
-                              ) : message.content.match(
-                                  /\.(pdf|doc|docx|ppt|pptx)$/,
-                                ) ? (
-                                <FileAttachment
-                                  fileName={
-                                    message.content.split('/').pop() || 'File'
-                                  }
-                                  fileUrl={message.content}
-                                  fileType={
-                                    message.content.split('.').pop() || 'file'
-                                  }
-                                />
-                              ) : (
-                                <ReactMarkdown
-                                  className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p className="  p-1 rounded">{readableTimestamp}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      {/* Render reactions inside the message bubble */}
-                      <Reactions
-                        messageId={message.id}
-                        reactions={message.reactions || {}}
-                        toggleReaction={toggleReaction}
-                      />
-
-                      <div
-                        className={cn(
-                          'text-[10px] mt-1 text-right',
-                          message.senderId === user.uid
-                            ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
-                            : 'text-gray-500 dark:text-gray-400',
-                        )}
-                      >
-                        {formattedTimestamp}
-                        {message.senderId === user.uid && (
-                          <span className="ml-1">
-                            <CheckCheck className="w-4" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div
-                      className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}
-                    >
-                      {hoveredMessageId === message.id && (
-                        <Reply
-                          className={`h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto 
-        ${message.senderId === user.uid ? 'right-2 text-white ' : '-left-5 text-black'}`}
-                          onClick={() => setReplyToMessageId(message.id)}
-                        />
-                      )}
-                    </div>
-
-                    {message.senderId !== user.uid && (
-                      <EmojiPicker
-                        onSelect={(emoji: string) =>
-                          toggleReaction(message.id, emoji)
-                        }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-          <CardFooter className="bg-[#ffffff] dark:bg-[#181818] rounded-b-lg p-2">
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (input.trim().length === 0) return;
-
-                const newMessage = {
-                  senderId: user.uid,
-                  content: input,
-                  timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId || null,
-                };
-
-                sendMessage(conversation, newMessage, setInput);
-                setReplyToMessageId('');
-              }}
-              className="flex flex-col w-full mb-2"
-            >
-              {/* Reply Preview Area */}
-              {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
-                  <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                    <span className="font-semibold">
-                      {messages
-                        .find((msg) => msg.id === replyToMessageId)
-                        ?.content.replace(/\*/g, '') || 'Message not found'}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => setReplyToMessageId('')}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
-                    title="Cancel Reply"
-                    variant="ghost"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+          return (
+            <div
+              key={message.id}
+              id={message.id}
+              className={cn(
+                "flex items-start space-x-3",
+                isOwn && "flex-row-reverse space-x-reverse ml-auto",
+                "w-full max-w-[90%] md:max-w-[70%] lg:max-w-[60%]",
               )}
-              <div className="relative bg-[#ececec] dark:bg-[#333333] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
-                <div className="sm:hidden">
-                  <button
-                    onClick={() => setOpenDrawer(!openDrawer)}
-                    className="p-2 text-gray-500 dark:text-gray-400"
-                  >
-                    <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                  </button>
+              onMouseEnter={() => setHoveredMessageId(message.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
+            >
+              {!isOwn && (conversation?.participants?.length || 0) > 1 && primaryUser && (
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={getValidAvatarSrc(primaryUser.profilePic)} alt={primaryUser.userName} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-xs font-medium">{primaryUser.userName?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              )}
+
+              <div className={cn(
+                "flex flex-col",
+                isOwn && "items-end",
+                "relative",
+              )}>
+                <div className={cn(
+                  "mb-1 text-xs text-gray-500 dark:text-gray-400",
+                  isOwn && "text-right pr-2",
+                )}>
+                  <span className="font-medium">{senderName}</span>
+                  <span className="ml-2">{messageTime}</span>
                 </div>
 
-                <div
-                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
-                    openDrawer
-                      ? 'translate-y-0 opacity-100'
-                      : 'translate-y-5 opacity-0 pointer-events-none'
-                  }`}
-                >
-                  <div className="flex justify-around space-x-3">
-                    <button onClick={handleBold} className="p-2">
-                      <Bold className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleitalics} className="p-2">
-                      <Italic className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleUnderline} className="p-2">
-                      <Underline className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleFileUpload} className="p-2">
-                      <Upload className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleCreateMeet} className="p-2">
-                      <Video className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    title="Text Formatting"
-                    className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                    onClick={toggleFormattingOptions}
-                  >
-                    <Text className="h-4 w-4" />
-                  </Button>
-
-                  {showFormattingOptions && (
-                    <div className="formatting-options">
-                      <Button
-                        size="icon"
-                        type="button"
-                        onClick={handleBold}
-                        title="Bold"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleitalics}
-                        title="Italics"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleUnderline}
-                        title="Underline"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
+                <div className={cn(
+                  "rounded-2xl px-4 py-2 text-sm break-words",
+                  isOwn
+                    ? "bg-blue-500 text-white rounded-br-md"
+                    : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100 rounded-bl-md",
+                      message.replyTo && "border-l-4 border-gray-400 dark:border-gray-500 pl-3",
+                )}>
+                  {message.replyTo && messages.find(msg => msg.id === message.replyTo) && (
+                    <div className="text-xs italic text-gray-600 dark:text-gray-300 mb-1">
+                       Replying to: {messages.find(msg => msg.id === message.replyTo)?.content?.substring(0, 50) + '...' || 'Message not found'}
                     </div>
-                  )}
-                </div>
-                {/* Textarea */}
-                <textarea
-                  ref={textAreaRef}
-                  className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
-                  placeholder="Type message"
-                  value={input}
-                  rows={1}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-                      e.preventDefault();
-                      if (input.trim().length > 0) {
-                        setIsSending(true);
-                        setTimeout(() => {
-                          setInput('');
-                          setIsSending(false);
-                        }, 1000);
+                   )}
+
+                  {message.content?.match(
+                    /\.(jpeg|jpg|gif|png)$/,
+                  ) ? (
+                    <Image
+                      src={message.content?.startsWith('... ') ? message.content.substring(4) : message.content || '/placeholder.svg'}
+                      alt="Message Image"
+                      width={200}
+                      height={200}
+                      className="rounded-lg object-cover"
+                    />
+                  ) : message.content?.match(
+                      /\.(pdf|doc|docx|ppt|pptx)$/,
+                    ) ? (
+                    <FileAttachment
+                      fileName={
+                        message.content.split('/').pop() || 'File'
                       }
-                    }
-                  }}
-                />
-                <button
-                  disabled={!input.trim().length || isSending}
-                  className="p-2 flex md:hidden disabled:text-gray-600"
-                >
-                  {isSending ? (
-                    <LoaderCircle className="h-5 w-5 animate-spin " />
+                      fileUrl={message.content}
+                      fileType={
+                        message.content.split('.').pop() || 'file'
+                      }
+                    />
                   ) : (
-                    <Send className="h-5 w-5" />
+                    <ReactMarkdown
+                      className={cn(isOwn ? 'text-white' : 'text-gray-900 dark:text-gray-100')}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   )}
-                </button>
-                {/* Attach & Send Buttons (Visible on md+) */}
-                <div className="hidden sm:flex items-center space-x-2 pr-2">
-                  <button onClick={handleFileUpload} className="p-2">
-                    <Upload className="h-5 w-5" />
-                  </button>
-                  <button onClick={handleCreateMeet} className="p-2">
-                    <Video className="h-5 w-5" />
-                  </button>
-                  <button
-                    disabled={!input.trim().length || isSending}
-                    className="p-2 disabled:text-gray-600"
-                  >
-                    {isSending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </button>
                 </div>
+
+                 {message.reactions && Object.keys(message.reactions).length > 0 && (
+                    <div className={cn("mt-1", isOwn ? "justify-end" : "justify-start", "flex")}>
+                       <Reactions
+                         messageId={message.id}
+                         reactions={message.reactions || {}}
+                         toggleReaction={toggleReaction}
+                       />
+                    </div>
+                 )}
+
+                 {isOwn && (
+                    <div className="text-[10px] mt-1 text-gray-100 dark:text-gray-300 flex items-center gap-0.5 pr-2">
+                       {formatChatTimestamp(message.timestamp)}
+                       <CheckCheck className="w-3 h-3" />
+                    </div>
+                 )}
+
+                 {hoveredMessageId === message.id && (
+                    <Reply
+                      className={cn(
+                        "h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto",
+                        isOwn ? 'right-2 text-white' : '-left-5 text-black dark:text-white',
+                      )}
+                      onClick={() => setReplyToMessageId(message.id)}
+                    />
+                 )}
+
+                 {!isOwn && (conversation?.participants?.length || 0) > 1 && (
+                    <div className={cn("absolute top-0 z-10 pointer-events-auto", "-right-5")}>
+                      <EmojiPicker
+                         onSelect={(emoji: string) =>
+                           toggleReaction(message.id, emoji)
+                         }
+                      />
+                    </div>
+                 )}
+
               </div>
-            </form>
-          </CardFooter>
-        </Card>
-      )}
-    </>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-[#27272a]">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (input.trim().length === 0) return;
+
+            const newMessage = {
+              senderId: user.uid,
+              content: input,
+              timestamp: new Date().toISOString(),
+              replyTo: replyToMessageId || null,
+            };
+
+            sendMessage(conversation, newMessage, setInput);
+          }}
+          className="flex flex-col w-full mb-0"
+        >
+          {replyToMessageId && (
+            <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
+              <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                <span className="font-semibold">
+                  {messages
+                    .find((msg) => msg.id === replyToMessageId)
+                    ?.content?.replace(/\*/g, '') || 'Message not found'}
+                </span>
+              </div>
+              <Button
+                onClick={() => setReplyToMessageId('')}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
+                title="Cancel Reply"
+                variant="ghost"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-700 rounded-full px-4 py-3">
+            <div className="sm:hidden">
+              <button
+                onClick={() => setOpenDrawer(!openDrawer)}
+                className="p-2 text-gray-500 dark:text-gray-400"
+              >
+                <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
+              </button>
+            </div>
+
+            <div
+              className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${ openDrawer ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0' }`}
+            >
+              <div className="flex justify-around space-x-3">
+                <button onClick={handleBold} className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <Bold className="h-5 w-5" />
+                </button>
+                <button onClick={handleitalics} className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <Italic className="h-5 w-5" />
+                </button>
+                <button onClick={handleUnderline} className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <Underline className="h-5 w-5" />
+                </button>
+                <button onClick={handleFileUpload} className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <Upload className="h-5 w-5" />
+                </button>
+                <button onClick={handleCreateMeet} className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                  <Video className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <EmojiPicker onSelect={(emoji: string) => setInput(input + emoji)} />
+
+            <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hidden sm:flex" onClick={handleFileUpload}>
+              <Paperclip className="w-5 h-5" />
+            </Button>
+
+            <Input
+              placeholder="Send a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => {
+                 if (e.key === 'Enter' && !e.shiftKey) {
+                   e.preventDefault();
+                 }
+               }}
+              className="flex-1 border-none bg-transparent dark:bg-transparent focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100"
+            />
+
+              <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hidden sm:flex">
+                <Mic className="w-5 h-5" />
+              </Button>
+            
+            <Button
+              type="submit"
+              disabled={!input.trim().length || isSending}
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-10 h-10 p-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSending ? (
+                <LoaderCircle className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

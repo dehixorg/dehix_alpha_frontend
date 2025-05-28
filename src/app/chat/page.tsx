@@ -19,6 +19,8 @@ import {
   menuItemsTop,
   chatsMenu,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import ChatLayout from '@/components/shared/ChatLayout';
+import { ChatList } from '@/components/shared/chatList';
 
 // Define the Conversation interface to match the expected shape
 interface Conversation extends DocumentData {
@@ -31,10 +33,10 @@ interface Conversation extends DocumentData {
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<Conversation>(
-    conversations[0],
-  );
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"home" | "unread">("home");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -66,7 +68,7 @@ const HomePage = () => {
   }, [conversations, activeConversation]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40 overflow-hidden">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business' ? businessMenuItemsTop : chatsMenu
@@ -79,48 +81,57 @@ const HomePage = () => {
         setActiveConversation={setActiveConversation}
         activeConversation={activeConversation}
       />
-      <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
-        <Header
-          menuItemsTop={
-            user.type === 'business' ? businessMenuItemsTop : chatsMenu
-          }
-          menuItemsBottom={
-            user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
-          }
-          activeMenu="Chats"
-          conversations={conversations}
-          setActiveConversation={setActiveConversation}
-          activeConversation={activeConversation}
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Chats', link: '/dashboard/chats' },
-          ]}
-          searchPlaceholder="Search..."
-        />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-4 lg:grid-cols-3 xl:grid-cols-3">
-          {loading ? (
-            <div className="col-span-3 flex justify-center items-center p-5">
+      <Header
+        menuItemsTop={
+          user.type === 'business' ? businessMenuItemsTop : chatsMenu
+        }
+        menuItemsBottom={
+          user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
+        }
+        activeMenu="Chats"
+        conversations={conversations}
+        setActiveConversation={setActiveConversation}
+        activeConversation={activeConversation}
+        breadcrumbItems={[
+          { label: 'Freelancer', link: '/dashboard/freelancer' },
+          { label: 'Chats', link: '/dashboard/chats' },
+        ]}
+        searchPlaceholder="Search..."
+      />
+      <ChatLayout
+        sidebar={
+          <ChatList
+            conversations={conversations}
+            active={activeConversation}
+            setConversation={setActiveConversation}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        }
+        main={
+          loading ? (
+            <div className="flex flex-1 justify-center items-center">
               <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
             </div>
-          ) : conversations.length > 0 ? (
-            <>
-              <CardsChat
-                conversation={activeConversation}
-                conversations={conversations}
-                setActiveConversation={setActiveConversation}
-              />
-            </>
+          ) : activeConversation ? (
+            <CardsChat
+              conversation={activeConversation}
+              conversations={conversations}
+              setActiveConversation={setActiveConversation}
+            />
           ) : (
-            <div className="col-span-3 flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
+            <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center text-muted-foreground">
               <MessageSquare className="w-10 h-10 mb-2" />
-              <p className="text-lg font-medium">No conversations found</p>
+              <p className="text-lg font-medium">No conversation selected</p>
               <p className="text-sm">
-                Start a new chat or wait for others to connect!
+                Select a chat from the sidebar to start messaging.
               </p>
             </div>
-          )}
-        </main>
-      </div>
+          )
+        }
+      />
     </div>
   );
 };
