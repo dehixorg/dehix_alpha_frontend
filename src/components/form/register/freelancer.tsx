@@ -163,7 +163,16 @@ const profileFormSchema = z
             'GitHub URL must start with "https://github.com/" or "www.github.com/" and have a valid username',
         },
       ),
-    resume: z.string().url().optional(),
+    resume: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value || /^https?:\/\/[^\s$.?#].[^\s]*$/.test(value),
+        {
+          message: 'Resume must be a valid URL.',
+        }
+      ),
     linkedin: z
       .string()
       .optional()
@@ -341,6 +350,7 @@ function FreelancerRegisterForm({
         'lastName',
         'email',
         'dob',
+        'userName',
         'password',
         'confirmPassword',
       ]);
@@ -355,7 +365,6 @@ function FreelancerRegisterForm({
       }
     } else if (currentStep === 1) {
       const isValid = await form.trigger([
-        'userName',
         'githubLink',
         'linkedin',
         'personalWebsite',
@@ -515,6 +524,13 @@ function FreelancerRegisterForm({
                   />
                 </div>
               </div>
+              {/* UserName */}
+              <TextInput
+                  control={form.control}
+                  name="userName"
+                  label="Username"
+                  placeholder="JohnDoe123"
+                />
 
               {/* Password and Confirm Password */}
               <div className="space-y-2">
@@ -608,20 +624,22 @@ function FreelancerRegisterForm({
             <div
               className={cn('grid gap-4', currentStep === 1 ? '' : 'hidden')}
             >
-              {/* Username and GitHub */}
+              {/* GitHub and referral Code */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextInput
-                  control={form.control}
-                  name="userName"
-                  label="Username"
-                  placeholder="JohnDoe123"
-                />
                 <TextInput
                   control={form.control}
                   name="githubLink"
                   label="GitHub"
                   type="url"
                   placeholder="https://github.com/yourusername"
+                  className="w-full"
+                />
+                <TextInput
+                  control={form.control}
+                  name="referralCode"
+                  label="Referral"
+                  type="string"
+                  placeholder="JOHN123"
                   className="w-full"
                 />
               </div>
@@ -674,14 +692,6 @@ function FreelancerRegisterForm({
                   label="Work Experience (Years)"
                   type="number"
                   placeholder="0"
-                  className="w-full"
-                />
-                <TextInput
-                  control={form.control}
-                  name="referralCode"
-                  label="Referral"
-                  type="string"
-                  placeholder="JOHN123"
                   className="w-full"
                 />
               </div>
