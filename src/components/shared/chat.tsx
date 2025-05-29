@@ -136,6 +136,7 @@ export function CardsChat({
 
   const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -198,6 +199,7 @@ export function CardsChat({
     if (conversation) {
       fetchPrimaryUser();
       fetchMessages();
+      inputRef.current?.focus();
     }
 
     return () => {
@@ -638,12 +640,22 @@ export function CardsChat({
             </Button>
 
             <Input
+              ref={inputRef}
               placeholder="Send a message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => {
                  if (e.key === 'Enter' && !e.shiftKey) {
                    e.preventDefault();
+                   if (input.trim().length > 0) {
+                     const newMessage = {
+                       senderId: user.uid,
+                       content: input,
+                       timestamp: new Date().toISOString(),
+                       replyTo: replyToMessageId || null,
+                     };
+                     sendMessage(conversation, newMessage, setInput);
+                   }
                  }
                }}
               className="flex-1 border-none bg-transparent dark:bg-transparent focus:ring-0 focus:outline-none text-gray-900 dark:text-gray-100"

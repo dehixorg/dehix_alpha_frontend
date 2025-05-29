@@ -19,7 +19,6 @@ export const EmojiPicker = ({
   // Handle closing the Popover when an emoji is selected
   const handleEmojiSelect = (emoji: any) => {
     onSelect(emoji.native); // Pass the selected emoji to the parent component
-    setIsPopoverOpen(false); // Close the Popover after selection
   };
 
   return (
