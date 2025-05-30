@@ -30,32 +30,32 @@
     /* Google Chat Inspired Light Theme */
     --background: 0 0% 100%; /* White background */
     --foreground: 210 2% 13%; /* Dark Grey text (#202124) */
-    
+
     --card: 0 0% 100%; /* White card background */
     --card-foreground: 210 2% 13%; /* Dark Grey card text */
-    
+
     --popover: 210 3% 18%; /* Darker Grey for tooltips/popovers (#2d2e30) */
     --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
-    
+
     --primary: 217 82% 50%; /* Google Blue (#1a73e8) */
     --primary-foreground: 0 0% 100%; /* White text on primary */
-    
+
     --secondary: 216 28% 97%; /* Lighter Grey for secondary elements (#f1f3f4) */
     --secondary-foreground: 210 2% 13%; /* Darker Grey text for secondary elements */
-    
+
     --muted: 210 17% 98%; /* Very Light Grey for muted backgrounds (#f8f9fa) */
     --muted-foreground: 212 5% 40%; /* Grey text for muted foreground (#5f6368) */
-    
+
     --accent: 216 28% 97%; /* Light Grey for hover states (can be same as secondary) */
     --accent-foreground: 210 2% 13%; /* Darker Grey text for hover states */
-    
+
     --destructive: 0 84% 60%; /* Red for destructive actions */
     --destructive-foreground: 0 0% 100%; /* White text on destructive */
-    
+
     --border: 220 13% 86%; /* Light Grey border (#dadce0) */
     --input: 220 13% 86%; /* Light Grey for input borders (can also be background for inputs: 216 28% 97%) */
     --ring: 217 82% 50%; /* Google Blue for focus rings */
-    
+
     --radius: 0.5rem; /* Default border radius */
 
     /* Existing variables, kept for compatibility if not directly overridden by new theme */
@@ -70,34 +70,34 @@
   }
 
   .dark {
-    /* Google Chat Inspired Dark Theme */
-    --background: 210 2% 13%; /* Dark Grey background (#202124) */
-    --foreground: 210 17% 91%; /* Light Grey text (#e8eaed) */
-    
-    --card: 220 2% 19%; /* Slightly Lighter Dark Grey for cards (#2d2e30 or #303134) */
-    --card-foreground: 210 17% 91%; /* Light Grey card text */
-    
-    --popover: 210 3% 12%; /* Even Darker Grey/Black for tooltips (#1f1f1f) */
-    --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
-    
-    --primary: 216 90% 75%; /* Lighter Blue for dark mode primary (#8ab4f8) */
-    --primary-foreground: 210 2% 13%; /* Dark Grey text on dark primary */
-    
-    --secondary: 210 3% 25%; /* Darker Grey for secondary elements (#3c4043) */
-    --secondary-foreground: 210 17% 91%; /* Lighter Grey text for dark secondary */
-    
-    --muted: 210 3% 25%; /* Darker Grey for muted backgrounds */
-    --muted-foreground: 210 11% 73%; /* Medium Light Grey text for dark muted foreground (#bdc1c6) */
-    
-    --accent: 210 3% 25%; /* Darker Grey for hover states */
-    --accent-foreground: 210 17% 91%; /* Lighter Grey text for dark hover */
-    
-    --destructive: 0 70% 50%; /* Adjusted Red for dark mode destructive actions */
+    /* Google Chat Inspired Softer Dark Theme */
+    --background: 210 6% 10%; /* Slightly softer dark background (#181a1b) */
+    --foreground: 210 15% 90%; /* Softer light grey text (#e1e3e6) */
+
+    --card: 210 6% 13%; /* Softer dark grey for cards (#1f2123) */
+    --card-foreground: 210 15% 90%; /* Matching card text */
+
+    --popover: 210 6% 9%; /* Very dark for tooltips/popovers (#151718) */
+    --popover-foreground: 0 0% 96%; /* Brighter text for popovers (#f5f5f5) */
+
+    --primary: 216 75% 68%; /* Softer, slightly desaturated blue (#7c9fde -> HSL approx 216 55% 68%) - Adjusted from 216 70% 68% for better Tailwind mapping*/
+    --primary-foreground: 210 10% 15%; /* Dark text on softer blue primary (#232629) */
+
+    --secondary: 210 6% 18%; /* Darker grey for secondary elements (#2a2d2f) */
+    --secondary-foreground: 210 15% 85%; /* Lighter grey text for dark secondary (#d0d3d6) */
+
+    --muted: 210 6% 18%; /* Darker grey for muted backgrounds (same as secondary) */
+    --muted-foreground: 210 10% 65%; /* Medium grey text for dark muted foreground (#9ea3a8) */
+
+    --accent: 210 6% 22%; /* Slightly lighter grey for hover states (#34373a) */
+    --accent-foreground: 210 15% 90%; /* Lighter grey text for dark hover */
+
+    --destructive: 0 65% 55%; /* Softer red for dark mode destructive actions (#d36060) */
     --destructive-foreground: 0 0% 100%; /* White text on dark destructive */
-    
-    --border: 212 5% 30%; /* Medium Grey border (#4a4c50) - was #5f6368 (212 5% 40%) */
-    --input: 210 3% 25%; /* Medium Dark Grey for input borders/backgrounds */
-    --ring: 216 90% 75%; /* Lighter Blue for dark focus rings */
+
+    --border: 210 6% 20%; /* Softer, darker border (#2f3234) */
+    --input: 210 6% 16%; /* Darker input background (#25282a) */
+    --ring: 216 75% 68%; /* Softer blue for dark focus rings (match new primary) */
 
     /* Existing variables, kept for compatibility if not directly overridden by new theme */
     --cyan: 180 100% 43%;

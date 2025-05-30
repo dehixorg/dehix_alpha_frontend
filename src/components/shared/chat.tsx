@@ -5,6 +5,10 @@ import {
   LoaderCircle,
   Video,
   Upload,
+  Maximize2,
+  Search,
+  MoreVertical,
+  Minimize2, // Added
   Reply,
   Text,
   X,
@@ -95,12 +99,16 @@ interface CardsChatProps {
   conversation: Conversation;
   conversations?: any;
   setActiveConversation?: any;
+  isChatExpanded?: boolean; // Added
+  onToggleExpand?: () => void; // Added
 }
 
 export function CardsChat({
   conversation,
   conversations,
   setActiveConversation,
+  isChatExpanded, // Added
+  onToggleExpand, // Added
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -394,26 +402,40 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-white dark:bg-gray-800 shadow-none border-none">
-          <CardHeader className="flex flex-row items-center bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 border-b border-gray-200 dark:border-gray-700">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--background))] shadow-none border-none">
+          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))]">
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
                 <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-base font-semibold leading-none text-gray-900 dark:text-gray-100">
+                <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
                   {primaryUser.userName || conversation.project_name || 'Chat'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-[hsl(var(--muted-foreground))]">
                   {primaryUser.email || 'View participants'} {/* Or some other status */}
                 </p>
               </div>
             </div>
-            {/* Future: Add Kebab menu or other icons here */}
+            {/* Icons added here */}
+            <div className="flex items-center space-x-0.5 sm:space-x-1">
+              <Button variant="ghost" size="icon" aria-label="Search in chat" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <Search className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="Video call" onClick={handleCreateMeet} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <Video className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"} onClick={onToggleExpand} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                {isChatExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+              </Button>
+              <Button variant="ghost" size="icon" aria-label="More options" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 bg-white dark:bg-gray-800">
-            <div className="flex flex-col-reverse space-y-2 space-y-reverse overflow-y-auto h-full p-4"> {/* Applied h-full here for scroll */}
+          <CardContent className="flex-1 p-0 bg-[hsl(var(--background))]">
+            <div className="flex flex-col-reverse space-y-3 space-y-reverse overflow-y-auto h-full p-4"> {/* Changed space-y-2 to space-y-3 */}
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(message.timestamp);
@@ -425,24 +447,24 @@ export function CardsChat({
                     id={message.id}
                     key={index}
                     className={cn(
-                      "flex flex-row items-end relative group",
+                      "flex flex-row items-start relative group", // Changed items-end to items-start
                       isSender ? "justify-end" : "justify-start"
                     )}
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => setHoveredMessageId(null)}
                   >
                     {!isSender && (
-                      <Avatar key={index} className="w-8 h-8 mr-2 mb-1 self-start flex-shrink-0">
+                      <Avatar key={index} className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"> {/* Adjusted alignment classes, added small top margin for visual alignment with bubble text */}
                         <AvatarImage src={primaryUser.profilePic} alt={message.senderId} />
                         <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                       </Avatar>
                     )}
                     <div
                       className={cn(
-                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-3.5 py-2.5 text-sm shadow-sm',
+                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
                         isSender
-                          ? 'ml-auto bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none',
+                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none' // Corrected dark mode text for sender
+                          : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-bl-none',
                       )}
                       onClick={() => {
                         if (message.replyTo) {
@@ -476,19 +498,27 @@ export function CardsChat({
                               ) : message.content.match(/\.(pdf|doc|docx|ppt|pptx)(\?|$)/i) ? (
                                 <FileAttachment fileName={message.content.split('/').pop() || 'File'} fileUrl={message.content} fileType={message.content.split('.').pop() || 'file'} />
                               ) : (
-                                <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none", isSender ? "text-white dark:text-gray-50" : "text-gray-900 dark:text-gray-100")}>
+                                <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none",
+                                  isSender
+                                    ? "text-blue-800 dark:text-gray-50" // Corrected dark mode markdown text for sender
+                                    : "text-[hsl(var(--secondary-foreground))]"
+                                )}>
                                   {message.content}
                                 </ReactMarkdown>
                               )}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={5} className="bg-gray-700 dark:bg-gray-900 text-white text-xs p-1 rounded">
+                          <TooltipContent side="bottom" sideOffset={5} className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded">
                             <p>{readableTimestamp}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} isSender={isSender} />
-                      <div className={cn('text-[10px] mt-1 text-right flex items-center', isSender ? 'text-blue-100 dark:text-blue-200' : 'text-gray-500 dark:text-gray-400', isSender ? "justify-end" : "justify-start")}>
+                      <div className={cn('text-[10px] mt-1 text-right flex items-center',
+                        isSender
+                          ? 'text-blue-600 dark:text-gray-300' // Corrected dark mode timestamp for sender
+                          : 'text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]',
+                        isSender ? "justify-end" : "justify-start")}>
                         {formattedTimestamp}
                         {isSender && (
                           <span className="ml-1"><CheckCheck className="w-3.5 h-3.5" /></span>
@@ -499,7 +529,11 @@ export function CardsChat({
                       {!isSender && (
                          <EmojiPicker aria-label="Add reaction" onSelect={(emoji: string) => toggleReaction(message.id, emoji)} variant="iconButton" />
                       )}
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
+                      <Button variant="ghost" size="icon"
+                        className={cn("h-7 w-7 hover:bg-[hsl(var(--accent)_/_0.1)] dark:hover:bg-[hsl(var(--accent)_/_0.2)]",
+                          isSender ? "text-blue-600 dark:text-gray-300" : "text-[hsl(var(--muted-foreground))]" // Corrected dark mode icon for sender
+                        )}
+                        onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
                          <Reply className="h-4 w-4" />
                       </Button>
                     </div>
@@ -508,7 +542,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-white dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-700">
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))]">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -521,11 +555,11 @@ export function CardsChat({
               aria-label="Message input form"
             >
               {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 rounded-md bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-500">
-                  <div className="text-xs italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
+                  <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
                     Replying to: <span className="font-semibold">{messages.find((msg) => msg.id === replyToMessageId)?.content.replace(/\*|__/g, '').substring(0,50) || 'Message'}...</span>
                   </div>
-                  <Button onClick={() => setReplyToMessageId('')} variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-6 w-6 rounded-full" aria-label="Cancel reply">
+                  <Button onClick={() => setReplyToMessageId('')} variant="ghost" size="icon" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full" aria-label="Cancel reply">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -534,7 +568,7 @@ export function CardsChat({
                 <textarea
                   ref={textAreaRef}
                   aria-label="Type a message"
-                  className="flex-1 resize-none border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 pr-10 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-500"
+                  className="flex-1 resize-none border border-[hsl(var(--input))] rounded-lg p-2.5 pr-10 bg-[hsl(var(--input))] placeholder-[hsl(var(--muted-foreground))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))]"
                   placeholder="Type a message..."
                   value={input}
                   rows={1}
@@ -559,38 +593,38 @@ export function CardsChat({
                   }}
                 />
                 <div className="absolute right-2.5 bottom-2.5 flex items-center space-x-1">
-                  <Button type="submit" size="icon" variant="ghost" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-500" disabled={!input.trim().length || isSending} aria-label="Send message">
+                  <Button type="submit" size="icon" variant="ghost" className="text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)_/_0.8)] disabled:text-[hsl(var(--muted-foreground)_/_0.6)]" disabled={!input.trim().length || isSending} aria-label="Send message">
                     {isSending ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                   </Button>
                 </div>
               </div>
               <div className="flex items-center space-x-1">
                  {/* Formatting buttons for mobile, simplified for now */}
-                 <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Bold className="h-4 w-4" /> </Button>
-                 <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Italic className="h-4 w-4" /> </Button>
-                 <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Underline className="h-4 w-4" /> </Button>
-                 
+                 <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Bold className="h-4 w-4" /> </Button>
+                 <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Italic className="h-4 w-4" /> </Button>
+                 <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Underline className="h-4 w-4" /> </Button>
+
                  {/* Desktop Formatting Options Toggle */}
                  <TooltipProvider delayDuration={200}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button type="button" variant="ghost" size="icon" onClick={toggleFormattingOptions} title="Formatting options" aria-label="Formatting options" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hidden md:inline-flex"> <Text className="h-4 w-4" /> </Button>
+                            <Button type="button" variant="ghost" size="icon" onClick={toggleFormattingOptions} title="Formatting options" aria-label="Formatting options" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"> <Text className="h-4 w-4" /> </Button>
                         </TooltipTrigger>
                         <TooltipContent side="top"><p>Formatting</p></TooltipContent>
                     </Tooltip>
                  </TooltipProvider>
 
                 {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-md">
-                      <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Bold className="h-4 w-4" /> </Button>
-                      <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Italic className="h-4 w-4" /> </Button>
-                      <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Underline className="h-4 w-4" /> </Button>
+                    <div className="hidden md:flex items-center space-x-1 bg-[hsl(var(--accent))] p-1 rounded-md">
+                      <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Bold className="h-4 w-4" /> </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Italic className="h-4 w-4" /> </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Underline className="h-4 w-4" /> </Button>
                     </div>
                 )}
                 <TooltipProvider delayDuration={200}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                             <Button type="button" variant="ghost" size="icon" onClick={handleFileUpload} title="Upload file" aria-label="Upload file" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Upload className="h-4 w-4" /> </Button>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleFileUpload} title="Upload file" aria-label="Upload file" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Upload className="h-4 w-4" /> </Button>
                         </TooltipTrigger>
                         <TooltipContent side="top"><p>Upload file</p></TooltipContent>
                     </Tooltip>
@@ -598,7 +632,7 @@ export function CardsChat({
                 <TooltipProvider delayDuration={200}>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Video className="h-4 w-4" /> </Button>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
                         </TooltipTrigger>
                          <TooltipContent side="top"><p>Create Google Meet</p></TooltipContent>
                     </Tooltip>
