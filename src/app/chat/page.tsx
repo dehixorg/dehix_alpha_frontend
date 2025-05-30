@@ -124,8 +124,6 @@ const HomePage = () => {
     chatWindowComponentContent = (
       <CardsChat
         conversation={activeConversation}
-        isChatExpanded={isChatExpanded}
-        onToggleExpand={toggleChatExpanded}
       />
     );
   } else if (conversations.length > 0) {
@@ -187,7 +185,6 @@ const HomePage = () => {
           <ChatLayout
             chatListComponent={chatListComponentForLayout} {/* Pass the direct content */}
             chatWindowComponent={chatWindowComponentContent} {/* Pass the content (could be shell or actual CardsChat) */}
-            isChatAreaExpanded={isChatExpanded}
           />
         </main>
       </div>
