@@ -36,6 +36,9 @@ const HomePage = () => {
   // Initialize activeConversation with null
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isChatExpanded, setIsChatExpanded] = useState(false); // State for chat expansion
+
+  const toggleChatExpanded = () => setIsChatExpanded(prev => !prev); // Function to toggle expansion
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -102,9 +105,8 @@ const HomePage = () => {
   ) : activeConversation ? (
     <CardsChat
       conversation={activeConversation}
-      // Pass other props if CardsChat requires them directly
-      // conversations={conversations}
-      // setActiveConversation={setActiveConversation}
+      isChatExpanded={isChatExpanded} // Pass state
+      onToggleExpand={toggleChatExpanded} // Pass toggle function
     />
   ) : conversations.length > 0 ? ( // If there are chats, but none is active
     <div className="col-span-3 flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
@@ -159,6 +161,7 @@ const HomePage = () => {
           <ChatLayout
             chatListComponent={chatListComponent}
             chatWindowComponent={chatWindowComponent}
+            isChatAreaExpanded={isChatExpanded} // Pass state to ChatLayout
           />
         </main>
       </div>

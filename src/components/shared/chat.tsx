@@ -5,9 +5,10 @@ import {
   LoaderCircle,
   Video,
   Upload,
-  Maximize2, // Added
-  Search,    // Added
-  MoreVertical, // Added
+  Maximize2,
+  Search,
+  MoreVertical,
+  Minimize2,
   Reply,
   Text,
   X,
@@ -98,12 +99,16 @@ interface CardsChatProps {
   conversation: Conversation;
   conversations?: any;
   setActiveConversation?: any;
+  isChatExpanded?: boolean; // Added
+  onToggleExpand?: () => void; // Added
 }
 
 export function CardsChat({
   conversation,
   conversations,
   setActiveConversation,
+  isChatExpanded, // Added
+  onToggleExpand, // Added
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -421,16 +426,16 @@ export function CardsChat({
               <Button variant="ghost" size="icon" aria-label="Video call" onClick={handleCreateMeet} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 <Video className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Expand chat" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
-                <Maximize2 className="h-5 w-5" />
+              <Button variant="ghost" size="icon" aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"} onClick={onToggleExpand} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                {isChatExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </Button>
               <Button variant="ghost" size="icon" aria-label="More options" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 bg-[hsl(var(--background))]">
-            <div className="flex flex-col-reverse space-y-3 space-y-reverse overflow-y-auto h-full p-4"> {/* Changed space-y-2 to space-y-3 */}
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
+            <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(message.timestamp);
@@ -442,24 +447,24 @@ export function CardsChat({
                     id={message.id}
                     key={index}
                     className={cn(
-                      "flex flex-row items-start relative group", // Changed items-end to items-start
+                      "flex flex-row items-start relative group",
                       isSender ? "justify-end" : "justify-start"
                     )}
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => setHoveredMessageId(null)}
                   >
                     {!isSender && (
-                      <Avatar key={index} className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"> {/* Adjusted alignment classes, added small top margin for visual alignment with bubble text */}
+                      <Avatar key={index} className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0">
                         <AvatarImage src={primaryUser.profilePic} alt={message.senderId} />
                         <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                       </Avatar>
                     )}
                     <div
                       className={cn(
-                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm', 
+                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
                         isSender
-                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none' // Corrected dark mode text for sender
-                          : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-bl-none', 
+                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none'
+                          : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-bl-none',
                       )}
                       onClick={() => {
                         if (message.replyTo) {
@@ -495,7 +500,7 @@ export function CardsChat({
                               ) : (
                                 <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none",
                                   isSender
-                                    ? "text-blue-800 dark:text-gray-50" // Corrected dark mode markdown text for sender
+                                    ? "text-blue-800 dark:text-gray-50"
                                     : "text-[hsl(var(--secondary-foreground))]"
                                 )}>
                                   {message.content}
@@ -509,10 +514,10 @@ export function CardsChat({
                         </Tooltip>
                       </TooltipProvider>
                       <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} isSender={isSender} />
-                      <div className={cn('text-[10px] mt-1 text-right flex items-center', 
-                        isSender 
-                          ? 'text-blue-600 dark:text-gray-300' // Corrected dark mode timestamp for sender
-                          : 'text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]', 
+                      <div className={cn('text-[10px] mt-1 text-right flex items-center',
+                        isSender
+                          ? 'text-blue-600 dark:text-gray-300'
+                          : 'text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]',
                         isSender ? "justify-end" : "justify-start")}>
                         {formattedTimestamp}
                         {isSender && (
@@ -524,10 +529,11 @@ export function CardsChat({
                       {!isSender && (
                          <EmojiPicker aria-label="Add reaction" onSelect={(emoji: string) => toggleReaction(message.id, emoji)} variant="iconButton" />
                       )}
-                      <Button variant="ghost" size="icon" 
-                        className={cn("h-7 w-7 hover:bg-[hsl(var(--accent)_/_0.1)] dark:hover:bg-[hsl(var(--accent)_/_0.2)]", 
-                          isSender ? "text-blue-600 dark:text-gray-300" : "text-[hsl(var(--muted-foreground))]" // Corrected dark mode icon for sender
-                        )} 
+                      <Button variant="ghost" size="icon"
+                        className={cn("h-7 w-7 hover:bg-[hsl(var(--accent)_/_0.1)] dark:hover:bg-[hsl(var(--accent)_/_0.2)]",
+                          isSender ? "text-blue-600 dark:text-gray-300"
+                          : "text-[hsl(var(--muted-foreground))]"
+                        )}
                         onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
                          <Reply className="h-4 w-4" />
                       </Button>
@@ -598,7 +604,7 @@ export function CardsChat({
                  <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Bold className="h-4 w-4" /> </Button>
                  <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Italic className="h-4 w-4" /> </Button>
                  <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"> <Underline className="h-4 w-4" /> </Button>
-                 
+
                  {/* Desktop Formatting Options Toggle */}
                  <TooltipProvider delayDuration={200}>
                     <Tooltip>

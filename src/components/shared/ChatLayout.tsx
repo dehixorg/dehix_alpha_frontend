@@ -1,20 +1,30 @@
 import React from 'react';
 
+import { cn } from '@/lib/utils'; // Import cn utility
+
 interface ChatLayoutProps {
   chatListComponent: React.ReactNode;
   chatWindowComponent: React.ReactNode;
+  isChatAreaExpanded?: boolean; // Added new prop
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent }) => {
+const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded }) => {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-1/4 bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto hidden md:block" aria-label="Chat List Sidebar">
+      <aside
+        className={cn(
+          "w-1/4 bg-[hsl(var(--card))] p-4 overflow-y-auto", // Using CSS variable for background
+          isChatAreaExpanded ? "hidden" : "hidden md:block" // Logic for expand/collapse
+        )}
+        aria-label="Chat List Sidebar"
+      >
         {chatListComponent}
       </aside>
 
       {/* Main Chat Area */}
-      <main className="flex-1 bg-white dark:bg-gray-900 p-4 overflow-y-auto" aria-label="Main Chat Area">
+      {/* flex-1 will make it take full width when sidebar is hidden */}
+      <main className="flex-1 bg-[hsl(var(--background))] p-4 overflow-y-auto" aria-label="Main Chat Area">
         {chatWindowComponent}
       </main>
 
