@@ -148,7 +148,7 @@ const HomePage = () => {
 
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]"> {/* Applied bg-muted/40 from original */}
+    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business' ? businessMenuItemsTop : chatsMenu
