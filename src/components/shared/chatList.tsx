@@ -68,15 +68,15 @@ export function ChatList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-[hsl(var(--card))]"> {/* Use card color for sidebar bg */}
       {/* Search Bar Area */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-b border-[hsl(var(--border))]">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" aria-hidden="true" />
           <Input
             placeholder="Search or start new chat"
             aria-label="Search conversations"
-            className="pl-10 w-full rounded-full bg-gray-100 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="pl-10 w-full rounded-full bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:bg-[hsl(var(--background))] border-transparent focus:ring-1 focus:ring-[hsl(var(--ring))]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -98,8 +98,8 @@ export function ChatList({
                   aria-selected={isActive}
                   tabIndex={0} // Make it focusable
                   className={cn(
-                    'flex items-start p-3 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 space-x-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400',
-                    isActive && 'bg-blue-100 dark:bg-blue-700/50', // Adjusted active style
+                    'flex items-start p-3 rounded-lg cursor-pointer hover:bg-[hsl(var(--accent))] space-x-3 focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]',
+                    isActive && 'bg-[hsl(var(--primary)_/_0.15)] dark:bg-[hsl(var(--primary)_/_0.25)]', 
                   )}
                   onClick={() => setConversation(conversation)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }} // Allow selection with Enter/Space
@@ -115,14 +115,14 @@ export function ChatList({
                   </Avatar>
                   <div className="flex-grow overflow-hidden">
                     <div className="flex justify-between items-baseline">
-                      <p className={cn("text-sm font-medium truncate", isActive ? "text-blue-800 dark:text-blue-100" : "text-gray-900 dark:text-gray-100")}>
+                      <p className={cn("text-sm font-medium truncate", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--foreground))]")}>
                         {conversation.project_name || 'Unnamed Project'}
                       </p>
-                      <p className={cn("text-xs flex-shrink-0 ml-2", isActive ? "text-blue-600 dark:text-blue-200" : "text-gray-500 dark:text-gray-400")}>
+                      <p className={cn("text-xs flex-shrink-0 ml-2", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]")}>
                         {lastUpdated}
                       </p>
                     </div>
-                    <p className={cn("text-xs truncate", isActive ? "text-gray-700 dark:text-gray-300" : "text-gray-500 dark:text-gray-400")}>
+                    <p className={cn("text-xs truncate", isActive ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]")}>
                       {lastMessageText.length > 40 ? lastMessageText.substring(0, 40) + '...' : lastMessageText}
                     </p>
                   </div>
@@ -130,9 +130,9 @@ export function ChatList({
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
               <MessageSquare className="w-10 h-10 mb-2" />
-              <p className="text-lg font-medium">
+              <p className="text-lg font-medium text-[hsl(var(--foreground))]">
                 {searchTerm ? 'No matching conversations' : 'No conversations found'}
               </p>
               {!searchTerm && (
