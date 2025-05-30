@@ -8,7 +8,7 @@ import {
   Maximize2,
   Search,
   MoreVertical,
-  Minimize2, // Added
+  Minimize2,
   Reply,
   Text,
   X,
@@ -16,6 +16,8 @@ import {
   Italic,
   Underline,
   CheckCheck,
+  Flag, // Added
+  HelpCircle, // Added
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
@@ -37,6 +39,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Added
 
 import { Conversation } from './chatList';
 import Reactions from './reactions';
@@ -403,7 +411,7 @@ export function CardsChat({
         </div>
       ) : (
         <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--background))] shadow-none border-none">
-          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))]">
+          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-sm dark:shadow-none">
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
@@ -429,13 +437,27 @@ export function CardsChat({
               <Button variant="ghost" size="icon" aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"} onClick={onToggleExpand} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 {isChatExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </Button>
-              <Button variant="ghost" size="icon" aria-label="More options" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="More options" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] border-[hsl(var(--border))]">
+                  <DropdownMenuItem onSelect={() => console.log('Report option clicked')} className="hover:!bg-[hsl(var(--accent))] focus:!bg-[hsl(var(--accent))] text-[hsl(var(--popover-foreground))] focus:text-[hsl(var(--accent-foreground))]">
+                    <Flag className="mr-2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                    <span>Report</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => console.log('Help option clicked')} className="hover:!bg-[hsl(var(--accent))] focus:!bg-[hsl(var(--accent))] text-[hsl(var(--popover-foreground))] focus:text-[hsl(var(--accent-foreground))]">
+                    <HelpCircle className="mr-2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                    <span>Help</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* p-4 for padding, flex-1 and overflow for scrolling */}
-            <div className="flex flex-col-reverse space-y-3 space-y-reverse"> {/* space-y-3 for inter-message spacing, applied correctly here */}
+            <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(message.timestamp);
@@ -542,7 +564,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))]">
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-sm dark:shadow-none">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
