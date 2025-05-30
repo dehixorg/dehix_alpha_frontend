@@ -134,7 +134,7 @@ export function ChatList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-[hsl(var(--card))]"> {/* Use card color for sidebar bg */}
+    <div className="flex flex-col h-full bg-[hsl(var(--card))]">
       {/* New Chat Button and Search Bar Area */}
       <div className="p-3 border-b border-[hsl(var(--border))]">
         {/* New "Create Group Chat" Button - "New Chat" dropdown removed as it became empty */}
@@ -226,10 +226,10 @@ export function ChatList({
 
       {showCreateGroupDialog && (
         <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
-          <DialogContent className="sm:max-w-[450px] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))]">
+          <DialogContent className="sm:max-w-[450px] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"> {/* Added shadow-xl */}
             <DialogHeader>
               <DialogTitle className="text-[hsl(var(--card-foreground))]">Create a group chat</DialogTitle>
-              <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1"> {/* Added small top padding to description */}
+              <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1">
                 Fill in the details below to start a new group conversation.
               </DialogDescription>
             </DialogHeader>
