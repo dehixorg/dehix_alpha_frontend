@@ -434,8 +434,8 @@ export function CardsChat({
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 bg-[hsl(var(--background))]">
-            <div className="flex flex-col-reverse space-y-3 space-y-reverse overflow-y-auto h-full p-4"> {/* Changed space-y-2 to space-y-3 */}
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* p-4 for padding, flex-1 and overflow for scrolling */}
+            <div className="flex flex-col-reverse space-y-3 space-y-reverse"> {/* space-y-3 for inter-message spacing, applied correctly here */}
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(message.timestamp);

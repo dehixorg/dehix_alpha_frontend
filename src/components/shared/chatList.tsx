@@ -137,27 +137,16 @@ export function ChatList({
     <div className="flex flex-col h-full bg-[hsl(var(--card))]"> {/* Use card color for sidebar bg */}
       {/* New Chat Button and Search Bar Area */}
       <div className="p-3 border-b border-[hsl(var(--border))]">
-        <div className="mb-3"> {/* Spacing below New Chat button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="default" className="w-full sm:w-auto flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm">
-                <SquarePen className="h-4 w-4 mr-2" />
-                New chat
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="start"> {/* Adjust width and alignment as needed */}
-              <DropdownMenuItem onSelect={() => setShowCreateGroupDialog(true)}>
-                <Users className="h-4 w-4 mr-2 text-[hsl(var(--muted-foreground))]" />
-                <span>Create a group chat</span>
-              </DropdownMenuItem>
-              {/* Potential other items:
-              <DropdownMenuItem onSelect={() => console.log("Trigger New Direct Message UI")}>
-                <UserPlus className="h-4 w-4 mr-2 text-[hsl(var(--muted-foreground))]" />
-                <span>Start a new chat</span>
-              </DropdownMenuItem>
-              */}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* New "Create Group Chat" Button - "New Chat" dropdown removed as it became empty */}
+        <div className="mb-3">
+          <Button
+            variant="default" // Or "outline" depending on desired prominence
+            className="w-full flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
+            onClick={() => setShowCreateGroupDialog(true)}
+          >
+            <Users className="h-4 w-4 mr-2" /> {/* Icon color will be primary-foreground */}
+            Create Group
+          </Button>
         </div>
 
         {/* Existing Search Bar Div */}
