@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { DocumentData } from 'firebase/firestore';
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { cn } from '@/lib/utils'; // Added cn
 
-import Header from '@/components/header/header'; // Adjust the import path as necessary
+import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
-import ChatLayout from '@/components/shared/ChatLayout'; // Added
-import { ChatList } from '@/components/shared/chatList'; // Added
+import ChatLayout from '@/components/shared/ChatLayout';
+import { ChatList } from '@/components/shared/chatList';
+// Card might not be needed if CardsChat itself is the shell or if we use generic divs for loading shell.
+// For now, let's assume CardsChat component or a simple div can act as shell for chat window.
 import {
   menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
@@ -78,52 +81,74 @@ const HomePage = () => {
     }
   }, [conversations, activeConversation]);
 
+  // Determine content for chat list
+  let chatListComponentContent;
+  if (loading) {
+    chatListComponentContent = (
+      <div className="flex justify-center items-center h-full">
+        <LoaderCircle className="h-6 w-6 text-[hsl(var(--primary))] animate-spin" />
+      </div>
+    );
+  } else if (conversations.length > 0) {
+    chatListComponentContent = (
+      <ChatList
+        conversations={conversations}
+        active={activeConversation}
+        setConversation={setActiveConversation}
+      />
+    );
+  } else {
+    chatListComponentContent = (
+      <div className="flex flex-col items-center justify-center h-full text-center text-[hsl(var(--muted-foreground))] p-4">
+        <MessageSquare className="w-10 h-10 mb-2" />
+        <p className="text-lg font-medium">No conversations</p>
+        <p className="text-sm">New chats will appear here.</p>
+      </div>
+    );
+  }
 
-  // Prepare components for ChatLayout
-  const chatListComponent = loading ? (
-    <div className="flex justify-center items-center h-full">
-      <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
-    </div>
-  ) : conversations.length > 0 ? (
-    <ChatList
-      conversations={conversations}
-      active={activeConversation!} // Non-null assertion as it's set if conversations.length > 0
-      setConversation={setActiveConversation}
-    />
-  ) : (
-    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-      <MessageSquare className="w-10 h-10 mb-2" />
-      <p className="text-lg font-medium">No conversations</p>
-      <p className="text-sm">New chats will appear here.</p>
-    </div>
-  );
+  // Content for the chat list component (sidebar)
+  // This is passed directly to ChatLayout, which handles the <aside> shell.
+  const chatListComponentForLayout = chatListComponentContent;
 
-  const chatWindowComponent = loading && !activeConversation ? (
-    <div className="col-span-3 flex justify-center items-center p-5 h-full"> {/* Ensure full height */}
-      <LoaderCircle className="h-6 w-6 text-primary animate-spin" />
-    </div>
-  ) : activeConversation ? (
-    <CardsChat
-      conversation={activeConversation}
-      isChatExpanded={isChatExpanded} // Pass state
-      onToggleExpand={toggleChatExpanded} // Pass toggle function
-    />
-  ) : conversations.length > 0 ? ( // If there are chats, but none is active
-    <div className="col-span-3 flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-      <MessageSquare className="w-10 h-10 mb-2" />
-      <p className="text-lg font-medium">Select a conversation</p>
-      <p className="text-sm">Choose a conversation from the list to start chatting.</p>
-    </div>
-  ) : ( // No conversations at all
-    <div className="col-span-3 flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
-      <MessageSquare className="w-10 h-10 mb-2" />
-      <p className="text-lg font-medium">No conversations found</p>
-      <p className="text-sm">Start a new chat or wait for others to connect!</p>
-    </div>
-  );
+  // Determine content for chat window
+  let chatWindowComponentContent;
+  if (loading && !activeConversation) {
+    // This is the main loader for the chat window area, rendered in a Card-like shell
+    chatWindowComponentContent = (
+      <div className="flex flex-col h-full items-center justify-center bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none">
+        <LoaderCircle className="h-8 w-8 text-[hsl(var(--primary))] animate-spin" />
+      </div>
+    );
+  } else if (activeConversation) {
+    chatWindowComponentContent = (
+      <CardsChat
+        conversation={activeConversation}
+        isChatExpanded={isChatExpanded}
+        onToggleExpand={toggleChatExpanded}
+      />
+    );
+  } else if (conversations.length > 0) {
+    chatWindowComponentContent = (
+      <div className="flex flex-col h-full items-center justify-center text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
+        <MessageSquare className="w-10 h-10 mb-2" />
+        <p className="text-lg font-medium">Select a conversation</p>
+        <p className="text-sm">Choose a conversation from the list to start chatting.</p>
+      </div>
+    );
+  } else { // No conversations and not loading
+    chatWindowComponentContent = (
+      <div className="flex flex-col h-full items-center justify-center text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
+        <MessageSquare className="w-10 h-10 mb-2" />
+        <p className="text-lg font-medium">No conversations found</p>
+        <p className="text-sm">Start a new chat or wait for others to connect!</p>
+      </div>
+    );
+  }
+
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business' ? businessMenuItemsTop : chatsMenu
@@ -132,11 +157,13 @@ const HomePage = () => {
           user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
         }
         active="Chats"
-        conversations={conversations}
-        setActiveConversation={setActiveConversation}
-        activeConversation={activeConversation}
+        // Props below might be redundant if SidebarMenu doesn't use them or if ChatList handles its own data
+        // conversations={conversations}
+        // setActiveConversation={setActiveConversation}
+        // activeConversation={activeConversation}
       />
-      <div className="flex flex-col mb-8 sm:gap-8 sm:py-0 sm:pl-14">
+      {/* Ensure this div allows content to take full height */}
+      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden"> {/* Added flex-1 and overflow-hidden */}
         <Header
           menuItemsTop={
             user.type === 'business' ? businessMenuItemsTop : chatsMenu
@@ -145,23 +172,22 @@ const HomePage = () => {
             user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
           }
           activeMenu="Chats"
-          // Pass conversation related props if Header still needs to display them for mobile or other specific views
-          conversations={conversations}
-          setActiveConversation={setActiveConversation}
-          activeConversation={activeConversation}
+          // Props below might be redundant if Header doesn't use them
+          // conversations={conversations}
+          // setActiveConversation={setActiveConversation}
+          // activeConversation={activeConversation}
           breadcrumbItems={[
-            // Example breadcrumb, adjust as per actual app structure
             { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
             { label: 'Chats', link: '/chat' },
           ]}
-          searchPlaceholder="Search chats..." // Or a more general search placeholder
+          searchPlaceholder="Search chats..."
         />
-        {/* Main content area where ChatLayout will be used */}
-        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-4"> {/* Adjusted classes */}
+        {/* Main content area where ChatLayout will be used, ensure it can fill height */}
+        <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Added overflow-hidden and adjusted padding */}
           <ChatLayout
-            chatListComponent={chatListComponent}
-            chatWindowComponent={chatWindowComponent}
-            isChatAreaExpanded={isChatExpanded} // Pass state to ChatLayout
+            chatListComponent={chatListComponentForLayout} {/* Pass the direct content */}
+            chatWindowComponent={chatWindowComponentContent} {/* Pass the content (could be shell or actual CardsChat) */}
+            isChatAreaExpanded={isChatExpanded}
           />
         </main>
       </div>
