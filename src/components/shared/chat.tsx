@@ -394,368 +394,217 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-gray-400  dark:border-white border-2 shadow-none">
-          <CardHeader className="flex flex-row items-center  bg-[#ececec] dark:bg-[#333333] text-gray-800 dark:text-white p-2 rounded-t-lg">
+        <Card className="col-span-3 flex flex-col h-full bg-white dark:bg-gray-800 shadow-none border-none">
+          <CardHeader className="flex flex-row items-center bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarImage src={primaryUser.profilePic} alt="Image" />
-                <AvatarFallback>{primaryUser.userName}</AvatarFallback>
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
+                <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
-                  {primaryUser.userName}
+                <p className="text-base font-semibold leading-none text-gray-900 dark:text-gray-100">
+                  {primaryUser.userName || conversation.project_name || 'Chat'}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {primaryUser.email}
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {primaryUser.email || 'View participants'} {/* Or some other status */}
                 </p>
               </div>
             </div>
+            {/* Future: Add Kebab menu or other icons here */}
           </CardHeader>
-          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#ffffff] dark:bg-[#181818]">
-            <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[65vh] md:h-[58vh]">
+          <CardContent className="flex-1 p-0 bg-white dark:bg-gray-800">
+            <div className="flex flex-col-reverse space-y-2 space-y-reverse overflow-y-auto h-full p-4"> {/* Applied h-full here for scroll */}
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
-                const formattedTimestamp = formatChatTimestamp(
-                  message.timestamp,
-                );
-                const readableTimestamp =
-                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+                const formattedTimestamp = formatChatTimestamp(message.timestamp);
+                const readableTimestamp = formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+                const isSender = message.senderId === user.uid;
 
                 return (
                   <div
                     id={message.id}
                     key={index}
-                    className="flex flex-row relative"
+                    className={cn(
+                      "flex flex-row items-end relative group",
+                      isSender ? "justify-end" : "justify-start"
+                    )}
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => setHoveredMessageId(null)}
                   >
-                    {message.senderId !== user.uid && (
-                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
-                        <AvatarImage
-                          src={primaryUser.profilePic}
-                          alt={message.senderId}
-                        />
-                        <AvatarFallback>
-                          {message.senderId.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                    {!isSender && (
+                      <Avatar key={index} className="w-8 h-8 mr-2 mb-1 self-start flex-shrink-0">
+                        <AvatarImage src={primaryUser.profilePic} alt={message.senderId} />
+                        <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                       </Avatar>
                     )}
-
                     <div
                       className={cn(
-                        'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
-                        message.senderId === user.uid
-                          ? 'ml-auto bg-[#9155bc] dark:bg-[#580d8f] text-white  rounded-tr-none'
-                          : 'bg-[#d9d9d9] dark:bg-[#333333] text-white  rounded-tl-none',
+                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-3.5 py-2.5 text-sm shadow-sm',
+                        isSender
+                          ? 'ml-auto bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none',
                       )}
                       onClick={() => {
                         if (message.replyTo) {
-                          const replyMessage = messages.find(
-                            (msg) => msg.id === message.replyTo,
-                          );
-                          if (replyMessage) {
-                            const replyMessageElement = document.getElementById(
-                              replyMessage.id,
-                            );
-                            if (replyMessageElement) {
-                              replyMessageElement.classList.add(
-                                'bg-gray-200',
-                                'dark:bg-gray-600',
-                                'border-2',
-                                'border-gray-300',
-                                'dark:border-gray-500',
-                                'bg-opacity-50',
-                                'dark:bg-opacity-50',
-                              );
-
-                              replyMessageElement.scrollIntoView({
-                                behavior: 'smooth',
-                              });
-
-                              setTimeout(() => {
-                                replyMessageElement.classList.remove(
-                                  'bg-gray-200',
-                                  'dark:bg-gray-600',
-                                  'border-2',
-                                  'border-gray-300',
-                                  'dark:border-gray-500',
-                                  'bg-opacity-50',
-                                  'dark:bg-opacity-50',
-                                );
-                              }, 2000);
-                            }
+                          const replyMessageElement = document.getElementById(message.replyTo);
+                          if (replyMessageElement) {
+                            replyMessageElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-800', 'transition-all', 'duration-300');
+                            replyMessageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => {
+                              replyMessageElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-800');
+                            }, 2500);
                           }
                         }
                       }}
                     >
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={300}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="break-words rounded-lg w-full">
+                            <div className="break-words w-full">
                               {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
-                                  <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                                    <span className="font-semibold">
-                                      {messages.find(
-                                        (msg) => msg.id === message.replyTo,
-                                      )?.content || 'Message not found'}
+                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md border-l-2 border-blue-400 dark:border-blue-500 mb-1.5 text-xs">
+                                  <div className={cn("italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2", isSender ? "text-blue-50 dark:text-blue-100" : "text-blue-600 dark:text-blue-300")}>
+                                    <span className="font-medium">
+                                      {messages.find(msg => msg.id === message.replyTo)?.content.substring(0,100) || 'Original message'}
+                                      { (messages.find(msg => msg.id === message.replyTo)?.content?.length || 0) > 100 && "..."}
                                     </span>
                                   </div>
                                 </div>
                               )}
-
-                              {message.content.match(
-                                /\.(jpeg|jpg|gif|png)$/,
-                              ) ? (
-                                <Image
-                                  src={message.content || '/placeholder.svg'}
-                                  alt="Message Image"
-                                  width={300}
-                                  height={300}
-                                  className="rounded-lg"
-                                />
-                              ) : message.content.match(
-                                  /\.(pdf|doc|docx|ppt|pptx)$/,
-                                ) ? (
-                                <FileAttachment
-                                  fileName={
-                                    message.content.split('/').pop() || 'File'
-                                  }
-                                  fileUrl={message.content}
-                                  fileType={
-                                    message.content.split('.').pop() || 'file'
-                                  }
-                                />
+                              {message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ? (
+                                <Image src={message.content || '/placeholder.svg'} alt="Message Image" width={300} height={300} className="rounded-md my-1" />
+                              ) : message.content.match(/\.(pdf|doc|docx|ppt|pptx)(\?|$)/i) ? (
+                                <FileAttachment fileName={message.content.split('/').pop() || 'File'} fileUrl={message.content} fileType={message.content.split('.').pop() || 'file'} />
                               ) : (
-                                <ReactMarkdown
-                                  className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}
-                                >
+                                <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none", isSender ? "text-white dark:text-gray-50" : "text-gray-900 dark:text-gray-100")}>
                                   {message.content}
                                 </ReactMarkdown>
                               )}
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p className="  p-1 rounded">{readableTimestamp}</p>
+                          <TooltipContent side="bottom" sideOffset={5} className="bg-gray-700 dark:bg-gray-900 text-white text-xs p-1 rounded">
+                            <p>{readableTimestamp}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      {/* Render reactions inside the message bubble */}
-                      <Reactions
-                        messageId={message.id}
-                        reactions={message.reactions || {}}
-                        toggleReaction={toggleReaction}
-                      />
-
-                      <div
-                        className={cn(
-                          'text-[10px] mt-1 text-right',
-                          message.senderId === user.uid
-                            ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
-                            : 'text-gray-500 dark:text-gray-400',
-                        )}
-                      >
+                      <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} isSender={isSender} />
+                      <div className={cn('text-[10px] mt-1 text-right flex items-center', isSender ? 'text-blue-100 dark:text-blue-200' : 'text-gray-500 dark:text-gray-400', isSender ? "justify-end" : "justify-start")}>
                         {formattedTimestamp}
-                        {message.senderId === user.uid && (
-                          <span className="ml-1">
-                            <CheckCheck className="w-4" />
-                          </span>
+                        {isSender && (
+                          <span className="ml-1"><CheckCheck className="w-3.5 h-3.5" /></span>
                         )}
                       </div>
                     </div>
-
-                    <div
-                      className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}
-                    >
-                      {hoveredMessageId === message.id && (
-                        <Reply
-                          className={`h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto 
-        ${message.senderId === user.uid ? 'right-2 text-white ' : '-left-5 text-black'}`}
-                          onClick={() => setReplyToMessageId(message.id)}
-                        />
+                    <div className={cn("relative opacity-0 group-hover:opacity-100 transition-opacity", isSender ? 'mr-1' : 'ml-1')}>
+                      {!isSender && (
+                         <EmojiPicker aria-label="Add reaction" onSelect={(emoji: string) => toggleReaction(message.id, emoji)} variant="iconButton" />
                       )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
+                         <Reply className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    {message.senderId !== user.uid && (
-                      <EmojiPicker
-                        onSelect={(emoji: string) =>
-                          toggleReaction(message.id, emoji)
-                        }
-                      />
-                    )}
                   </div>
                 );
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[#ffffff] dark:bg-[#181818] rounded-b-lg p-2">
+          <CardFooter className="bg-white dark:bg-gray-800 p-2 border-t border-gray-200 dark:border-gray-700">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
                 if (input.trim().length === 0) return;
-
-                const newMessage = {
-                  senderId: user.uid,
-                  content: input,
-                  timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId || null,
-                };
-
+                const newMessage = { senderId: user.uid, content: input, timestamp: new Date().toISOString(), replyTo: replyToMessageId || null };
                 sendMessage(conversation, newMessage, setInput);
                 setReplyToMessageId('');
               }}
-              className="flex flex-col w-full mb-2"
+              className="flex flex-col w-full space-y-2"
+              aria-label="Message input form"
             >
-              {/* Reply Preview Area */}
               {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
-                  <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                    <span className="font-semibold">
-                      {messages
-                        .find((msg) => msg.id === replyToMessageId)
-                        ?.content.replace(/\*/g, '') || 'Message not found'}
-                    </span>
+                <div className="flex items-center justify-between p-2 rounded-md bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-500">
+                  <div className="text-xs italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                    Replying to: <span className="font-semibold">{messages.find((msg) => msg.id === replyToMessageId)?.content.replace(/\*|__/g, '').substring(0,50) || 'Message'}...</span>
                   </div>
-                  <Button
-                    onClick={() => setReplyToMessageId('')}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
-                    title="Cancel Reply"
-                    variant="ghost"
-                  >
+                  <Button onClick={() => setReplyToMessageId('')} variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 h-6 w-6 rounded-full" aria-label="Cancel reply">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               )}
-              <div className="relative bg-[#ececec] dark:bg-[#333333] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
-                <div className="sm:hidden">
-                  <button
-                    onClick={() => setOpenDrawer(!openDrawer)}
-                    className="p-2 text-gray-500 dark:text-gray-400"
-                  >
-                    <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                  </button>
-                </div>
-
-                <div
-                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
-                    openDrawer
-                      ? 'translate-y-0 opacity-100'
-                      : 'translate-y-5 opacity-0 pointer-events-none'
-                  }`}
-                >
-                  <div className="flex justify-around space-x-3">
-                    <button onClick={handleBold} className="p-2">
-                      <Bold className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleitalics} className="p-2">
-                      <Italic className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleUnderline} className="p-2">
-                      <Underline className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleFileUpload} className="p-2">
-                      <Upload className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleCreateMeet} className="p-2">
-                      <Video className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    title="Text Formatting"
-                    className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                    onClick={toggleFormattingOptions}
-                  >
-                    <Text className="h-4 w-4" />
-                  </Button>
-
-                  {showFormattingOptions && (
-                    <div className="formatting-options">
-                      <Button
-                        size="icon"
-                        type="button"
-                        onClick={handleBold}
-                        title="Bold"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleitalics}
-                        title="Italics"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleUnderline}
-                        title="Underline"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                {/* Textarea */}
+              <div className="relative flex items-center">
                 <textarea
                   ref={textAreaRef}
-                  className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
-                  placeholder="Type message"
+                  aria-label="Type a message"
+                  className="flex-1 resize-none border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 pr-10 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-500"
+                  placeholder="Type a message..."
                   value={input}
                   rows={1}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    // Auto-resize textarea
+                    if (textAreaRef.current) {
+                      textAreaRef.current.style.height = 'auto';
+                      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
                       e.preventDefault();
                       if (input.trim().length > 0) {
-                        setIsSending(true);
-                        setTimeout(() => {
-                          setInput('');
-                          setIsSending(false);
-                        }, 1000);
+                        const newMessage = { senderId: user.uid, content: input, timestamp: new Date().toISOString(), replyTo: replyToMessageId || null };
+                        sendMessage(conversation, newMessage, setInput);
+                        setReplyToMessageId('');
+                        if (textAreaRef.current) textAreaRef.current.style.height = 'auto'; // Reset height
                       }
                     }
                   }}
                 />
-                <button
-                  disabled={!input.trim().length || isSending}
-                  className="p-2 flex md:hidden disabled:text-gray-600"
-                >
-                  {isSending ? (
-                    <LoaderCircle className="h-5 w-5 animate-spin " />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </button>
-                {/* Attach & Send Buttons (Visible on md+) */}
-                <div className="hidden sm:flex items-center space-x-2 pr-2">
-                  <button onClick={handleFileUpload} className="p-2">
-                    <Upload className="h-5 w-5" />
-                  </button>
-                  <button onClick={handleCreateMeet} className="p-2">
-                    <Video className="h-5 w-5" />
-                  </button>
-                  <button
-                    disabled={!input.trim().length || isSending}
-                    className="p-2 disabled:text-gray-600"
-                  >
-                    {isSending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </button>
+                <div className="absolute right-2.5 bottom-2.5 flex items-center space-x-1">
+                  <Button type="submit" size="icon" variant="ghost" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 disabled:text-gray-400 dark:disabled:text-gray-500" disabled={!input.trim().length || isSending} aria-label="Send message">
+                    {isSending ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
                 </div>
+              </div>
+              <div className="flex items-center space-x-1">
+                 {/* Formatting buttons for mobile, simplified for now */}
+                 <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Bold className="h-4 w-4" /> </Button>
+                 <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Italic className="h-4 w-4" /> </Button>
+                 <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"> <Underline className="h-4 w-4" /> </Button>
+                 
+                 {/* Desktop Formatting Options Toggle */}
+                 <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon" onClick={toggleFormattingOptions} title="Formatting options" aria-label="Formatting options" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hidden md:inline-flex"> <Text className="h-4 w-4" /> </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top"><p>Formatting</p></TooltipContent>
+                    </Tooltip>
+                 </TooltipProvider>
+
+                {showFormattingOptions && (
+                    <div className="hidden md:flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-md">
+                      <Button type="button" variant="ghost" size="icon" onClick={handleBold} title="Bold" aria-label="Bold" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Bold className="h-4 w-4" /> </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={handleitalics} title="Italic" aria-label="Italic" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Italic className="h-4 w-4" /> </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={handleUnderline} title="Underline" aria-label="Underline" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Underline className="h-4 w-4" /> </Button>
+                    </div>
+                )}
+                <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleFileUpload} title="Upload file" aria-label="Upload file" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Upload className="h-4 w-4" /> </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top"><p>Upload file</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"> <Video className="h-4 w-4" /> </Button>
+                        </TooltipTrigger>
+                         <TooltipContent side="top"><p>Create Google Meet</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                 <div className="ml-auto md:hidden"> {/* Send button for mobile, already handled by textarea's absolute send button */}
+                 </div>
               </div>
             </form>
           </CardFooter>

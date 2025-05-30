@@ -27,30 +27,42 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
-    --cyan: 180, 100%, 50%;
-    --cyan-foreground: 180, 100%, 43%;
+    /* Google Chat Inspired Light Theme */
+    --background: 0 0% 100%; /* White background */
+    --foreground: 210 2% 13%; /* Dark Grey text (#202124) */
+    
+    --card: 0 0% 100%; /* White card background */
+    --card-foreground: 210 2% 13%; /* Dark Grey card text */
+    
+    --popover: 210 3% 18%; /* Darker Grey for tooltips/popovers (#2d2e30) */
+    --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
+    
+    --primary: 217 82% 50%; /* Google Blue (#1a73e8) */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    
+    --secondary: 216 28% 97%; /* Lighter Grey for secondary elements (#f1f3f4) */
+    --secondary-foreground: 210 2% 13%; /* Darker Grey text for secondary elements */
+    
+    --muted: 210 17% 98%; /* Very Light Grey for muted backgrounds (#f8f9fa) */
+    --muted-foreground: 212 5% 40%; /* Grey text for muted foreground (#5f6368) */
+    
+    --accent: 216 28% 97%; /* Light Grey for hover states (can be same as secondary) */
+    --accent-foreground: 210 2% 13%; /* Darker Grey text for hover states */
+    
+    --destructive: 0 84% 60%; /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White text on destructive */
+    
+    --border: 220 13% 86%; /* Light Grey border (#dadce0) */
+    --input: 220 13% 86%; /* Light Grey for input borders (can also be background for inputs: 216 28% 97%) */
+    --ring: 217 82% 50%; /* Google Blue for focus rings */
+    
+    --radius: 0.5rem; /* Default border radius */
+
+    /* Existing variables, kept for compatibility if not directly overridden by new theme */
+    --cyan: 180 100% 50%;
+    --cyan-foreground: 180 100% 43%;
     --line-color-light: 0 0% 0% / 90%;
-    --line-color-dark: 0 0% 100% / 20%;
+    --line-color-dark: 0 0% 100% / 20%; /* This will be overridden by .dark specific line color if needed */
     --dot-bg-color: #ffffff;
     --dot-border-color: #000000;
     --dot-hover-bg-color: #000000;
@@ -58,30 +70,41 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --cyan: 180, 100%, 43%;
-    --cyan-foreground: 180, 100%, 50%;
-    --line-color-light: 0 0% 0% / 20%;
-    --line-color-dark: 0 0% 100% / 20%;
-    --dot-bg-color: #ffffff;
+    /* Google Chat Inspired Dark Theme */
+    --background: 210 2% 13%; /* Dark Grey background (#202124) */
+    --foreground: 210 17% 91%; /* Light Grey text (#e8eaed) */
+    
+    --card: 220 2% 19%; /* Slightly Lighter Dark Grey for cards (#2d2e30 or #303134) */
+    --card-foreground: 210 17% 91%; /* Light Grey card text */
+    
+    --popover: 210 3% 12%; /* Even Darker Grey/Black for tooltips (#1f1f1f) */
+    --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
+    
+    --primary: 216 90% 75%; /* Lighter Blue for dark mode primary (#8ab4f8) */
+    --primary-foreground: 210 2% 13%; /* Dark Grey text on dark primary */
+    
+    --secondary: 210 3% 25%; /* Darker Grey for secondary elements (#3c4043) */
+    --secondary-foreground: 210 17% 91%; /* Lighter Grey text for dark secondary */
+    
+    --muted: 210 3% 25%; /* Darker Grey for muted backgrounds */
+    --muted-foreground: 210 11% 73%; /* Medium Light Grey text for dark muted foreground (#bdc1c6) */
+    
+    --accent: 210 3% 25%; /* Darker Grey for hover states */
+    --accent-foreground: 210 17% 91%; /* Lighter Grey text for dark hover */
+    
+    --destructive: 0 70% 50%; /* Adjusted Red for dark mode destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White text on dark destructive */
+    
+    --border: 212 5% 30%; /* Medium Grey border (#4a4c50) - was #5f6368 (212 5% 40%) */
+    --input: 210 3% 25%; /* Medium Dark Grey for input borders/backgrounds */
+    --ring: 216 90% 75%; /* Lighter Blue for dark focus rings */
+
+    /* Existing variables, kept for compatibility if not directly overridden by new theme */
+    --cyan: 180 100% 43%;
+    --cyan-foreground: 180 100% 50%;
+    --line-color-light: 0 0% 0% / 20%; /* This is light theme's line color, dark theme has its own */
+    --line-color-dark: 0 0% 100% / 20%; /* This is the dark theme line color */
+    --dot-bg-color: #ffffff; /* Should these change for dark mode? Assuming not for now. */
     --dot-border-color: #f5f5f5;
     --dot-hover-bg-color: #ffffff;
     --dot-hover-border-color: #11a0ff;
@@ -90,11 +113,12 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border; /* Uses the CSS variable --border */
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* Uses CSS variables --background and --foreground */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Added generic sans-serif stack */
   }
 }
 
