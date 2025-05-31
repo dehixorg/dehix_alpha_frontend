@@ -39,9 +39,12 @@ const HomePage = () => {
   // Initialize activeConversation with null
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isChatExpanded, setIsChatExpanded] = useState(false); // State for chat expansion
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
 
-  const toggleChatExpanded = () => setIsChatExpanded(prev => !prev); // Function to toggle expansion
+  const toggleChatExpanded = () => {
+    // console.log("page.tsx: toggleChatExpanded called, current isChatExpanded before update:", isChatExpanded);
+    setIsChatExpanded(prev => !prev);
+  };
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -124,6 +127,8 @@ const HomePage = () => {
     chatWindowComponentContent = (
       <CardsChat
         conversation={activeConversation}
+        isChatExpanded={isChatExpanded}
+        onToggleExpand={toggleChatExpanded}
       />
     );
   } else if (conversations.length > 0) {
@@ -144,52 +149,14 @@ const HomePage = () => {
     );
   }
 
+  // console.log("page.tsx: Rendering, isChatExpanded:", isChatExpanded);
 
   // Manually re-typed return statement and component closing
   return (
-
-    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
-      <SidebarMenu
-        menuItemsTop={
-          user.type === 'business' ? businessMenuItemsTop : chatsMenu
-        }
-        menuItemsBottom={
-          user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
-        }
-        active="Chats"
-        // Props below might be redundant if SidebarMenu doesn't use them or if ChatList handles its own data
-        // conversations={conversations}
-        // setActiveConversation={setActiveConversation}
-        // activeConversation={activeConversation}
-      />
-      {/* Ensure this div allows content to take full height */}
-      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden"> {/* Added flex-1 and overflow-hidden */}
-        <Header
-          menuItemsTop={
-            user.type === 'business' ? businessMenuItemsTop : chatsMenu
-          }
-          menuItemsBottom={
-            user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom
-          }
-          activeMenu="Chats"
-          // Props below might be redundant if Header doesn't use them
-          // conversations={conversations}
-          // setActiveConversation={setActiveConversation}
-          // activeConversation={activeConversation}
-          breadcrumbItems={[
-            { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
-            { label: 'Chats', link: '/chat' },
-          ]}
-          searchPlaceholder="Search chats..."
-        />
-        {/* Main content area where ChatLayout will be used, ensure it can fill height */}
-        <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Added overflow-hidden and adjusted padding */}
-          <ChatLayout
-            chatListComponent={chatListComponentForLayout} {/* Pass the direct content */}
-            chatWindowComponent={chatWindowComponentContent} {/* Pass the content (could be shell or actual CardsChat) */}
-          />
-        </main>
-   
+    <div>
+      <h1>Test Page</h1>
+      <p>If you see this, the basic component is parsing.</p>
+    </div>
   );
 };
 

@@ -28,7 +28,7 @@
 @layer base {
   :root {
     /* Google Chat Inspired Light Theme */
-    --background: 0 0% 100%; /* White background */
+    --background: 210 17% 98%; /* Very Light Grey background (#f8f9fa), was white */
     --foreground: 210 2% 13%; /* Dark Grey text (#202124) */
 
     --card: 0 0% 100%; /* White card background */
