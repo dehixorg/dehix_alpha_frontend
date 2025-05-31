@@ -18,6 +18,8 @@ import {
   CheckCheck,
   Flag, // Added
   HelpCircle, // Added
+  Flag,
+  HelpCircle,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
@@ -413,8 +415,8 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg border-none"> {/* Applied dark:shadow-lg */}
-          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Applied dark:shadow-sm */}
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg"> {/* Removed debug border */}
+          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Removed debug border */}
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
@@ -470,7 +472,7 @@ export function CardsChat({
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* Removed debug border */}
             <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
@@ -578,7 +580,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Applied dark:shadow-sm */}
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Removed debug border */}
             <form
               onSubmit={(event) => {
                 event.preventDefault();

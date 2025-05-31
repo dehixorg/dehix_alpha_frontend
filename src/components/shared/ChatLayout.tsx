@@ -33,10 +33,10 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
     } else {
       console.error("[ChatLayout.tsx] sidebarPanelRef.current IS NULL or UNDEFINED.");
     }
-  }, [isChatAreaExpanded]); // Removed defaultSidebarSize from deps as panel.resize is commented
+  }, [isChatAreaExpanded]);
 
   return (
-    <PanelGroup direction="horizontal" className="flex-1 h-full">
+    <PanelGroup direction="horizontal" className="flex-1 h-full"> {/* Removed purple border */}
       <Panel
         ref={sidebarPanelRef}
         defaultSize={defaultSidebarSize}
@@ -50,7 +50,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
       >
         <aside
           className={cn(
-            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg" // Applied dark:shadow-lg
+            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg" // Removed lime border
           )}
           aria-label="Chat List Sidebar"
         >
@@ -66,9 +66,9 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
         minSize={60}
         id="chat-main-panel"
         className="h-full"
-        order={2} // Explicit order
+        order={2}
       >
-        <main className="h-full bg-[hsl(var(--background))] p-4" aria-label="Main Chat Area">
+        <main className="h-full bg-[hsl(var(--background))] p-4" aria-label="Main Chat Area"> {/* Removed yellow border */}
           {chatWindowComponent}
         </main>
       </Panel>
