@@ -120,7 +120,7 @@ export function CardsChat({
   onToggleExpand,
 }: CardsChatProps) {
   const router = useRouter();
-  // console.log("CardsChat: Received isChatExpanded:", isChatExpanded, "onToggleExpand type:", typeof onToggleExpand);
+  console.log("[CardsChat] Received isChatExpanded:", isChatExpanded, "onToggleExpand type:", typeof onToggleExpand);
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -413,8 +413,8 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-none border-none"> {/* Changed to --card bg and shadow-xl */}
-          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-none">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg border-none"> {/* Applied dark:shadow-lg */}
+          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Applied dark:shadow-sm */}
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
@@ -437,7 +437,16 @@ export function CardsChat({
               <Button variant="ghost" size="icon" aria-label="Video call" onClick={handleCreateMeet} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 <Video className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"} onClick={onToggleExpand} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+              <Button variant="ghost" size="icon" aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
+                onClick={() => {
+                  console.log("[CardsChat] Expand/collapse button clicked!");
+                  if (onToggleExpand) {
+                    onToggleExpand();
+                  } else {
+                    console.error("[CardsChat] onToggleExpand is undefined!");
+                  }
+                }}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 {isChatExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
               </Button>
               <DropdownMenu>
@@ -461,7 +470,7 @@ export function CardsChat({
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* Main message area uses page background */}
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
             <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
@@ -569,7 +578,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-none"> {/* Kept shadow-md as it has a border */}
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Applied dark:shadow-sm */}
             <form
               onSubmit={(event) => {
                 event.preventDefault();

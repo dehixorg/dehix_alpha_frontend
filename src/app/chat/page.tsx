@@ -42,8 +42,11 @@ const HomePage = () => {
   const [isChatExpanded, setIsChatExpanded] = useState(false);
 
   const toggleChatExpanded = () => {
-    // console.log("page.tsx: toggleChatExpanded called, current isChatExpanded before update:", isChatExpanded);
-    setIsChatExpanded(prev => !prev);
+    console.log("[page.tsx] toggleChatExpanded called. Current isChatExpanded:", isChatExpanded);
+    setIsChatExpanded(prev => {
+      console.log("[page.tsx] setIsChatExpanded. New value will be:", !prev);
+      return !prev;
+    });
   };
 
   useEffect(() => {
@@ -151,9 +154,7 @@ const HomePage = () => {
 
   // console.log("page.tsx: Rendering, isChatExpanded:", isChatExpanded);
 
-  // Manually re-typed return statement and component closing
   return (
-
     <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
       <SidebarMenu
         menuItemsTop={
@@ -191,8 +192,9 @@ const HomePage = () => {
         {/* Main content area where ChatLayout will be used, ensure it can fill height */}
         <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Added overflow-hidden and adjusted padding */}
           <ChatLayout
-            chatListComponent={chatListComponentForLayout} 
-            chatWindowComponent={chatWindowComponentContent}
+            chatListComponent={chatListComponentForLayout} {/* Pass the direct content */}
+            chatWindowComponent={chatWindowComponentContent} {/* Pass the content (could be shell or actual CardsChat) */}
+            isChatAreaExpanded={isChatExpanded}
           />
         </main>
       </div>
@@ -201,5 +203,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
-
