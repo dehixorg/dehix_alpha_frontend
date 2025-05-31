@@ -18,9 +18,12 @@ import {
   CheckCheck,
   Flag, // Added
   HelpCircle, // Added
+  Flag,
+  HelpCircle,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
+import { useRouter } from 'next/navigation'; // Added
 import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
 import {
   formatDistanceToNow,
@@ -115,9 +118,10 @@ export function CardsChat({
   conversation,
   conversations,
   setActiveConversation,
-  isChatExpanded, // Added
-  onToggleExpand, // Added
+  isChatExpanded,
+  onToggleExpand,
 }: CardsChatProps) {
+  const router = useRouter(); // Added
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -410,8 +414,8 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--background))] shadow-none border-none">
-          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-sm dark:shadow-none">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--background))] shadow-lg dark:shadow-none border-none">
+          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-none">
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
@@ -448,7 +452,9 @@ export function CardsChat({
                     <Flag className="mr-2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                     <span>Report</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => console.log('Help option clicked')} className="hover:!bg-[hsl(var(--accent))] focus:!bg-[hsl(var(--accent))] text-[hsl(var(--popover-foreground))] focus:text-[hsl(var(--accent-foreground))]">
+                  <DropdownMenuItem
+                    onSelect={() => router.push('http://localhost:3000/settings/support')}
+                    className="hover:!bg-[hsl(var(--accent))] focus:!bg-[hsl(var(--accent))] text-[hsl(var(--popover-foreground))] focus:text-[hsl(var(--accent-foreground))]">
                     <HelpCircle className="mr-2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                     <span>Help</span>
                   </DropdownMenuItem>
@@ -456,7 +462,7 @@ export function CardsChat({
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* p-4 for padding, flex-1 and overflow for scrolling */}
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
             <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
@@ -564,7 +570,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-sm dark:shadow-none">
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-none">
             <form
               onSubmit={(event) => {
                 event.preventDefault();

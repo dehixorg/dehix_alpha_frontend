@@ -32,7 +32,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
       <Panel defaultSize={25} minSize={20} maxSize={40} collapsible={true} collapsedSize={0} id="chat-sidebar-panel" className="h-full">
         <aside
           className={cn(
-            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-md dark:shadow-none", // Added shadow for light mode
+            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-lg dark:shadow-none", // Changed shadow-md to shadow-lg for light mode
             // Original responsive hiding logic is no longer needed here as Panel can be collapsed.
             // Or, if we want to hide it by default on small screens even when not "expanded":
             // "hidden md:flex flex-col h-full"
