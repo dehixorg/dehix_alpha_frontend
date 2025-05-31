@@ -475,14 +475,14 @@ export function CardsChat({
                     id={message.id}
                     key={index}
                     className={cn(
-                      "flex flex-row items-start relative group",
+                      "flex flex-row items-start relative group", // Changed items-end to items-start
                       isSender ? "justify-end" : "justify-start"
                     )}
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => setHoveredMessageId(null)}
                   >
                     {!isSender && (
-                      <Avatar key={index} className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0">
+                      <Avatar key={index} className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"> {/* Adjusted alignment classes, added small top margin for visual alignment with bubble text */}
                         <AvatarImage src={primaryUser.profilePic} alt={message.senderId} />
                         <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                       </Avatar>
@@ -491,7 +491,7 @@ export function CardsChat({
                       className={cn(
                         'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
                         isSender
-                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none'
+                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none' // Corrected dark mode text for sender
                           : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-bl-none',
                       )}
                       onClick={() => {
@@ -528,7 +528,7 @@ export function CardsChat({
                               ) : (
                                 <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none",
                                   isSender
-                                    ? "text-blue-800 dark:text-gray-50"
+                                    ? "text-blue-800 dark:text-gray-50" // Corrected dark mode markdown text for sender
                                     : "text-[hsl(var(--secondary-foreground))]"
                                 )}>
                                   {message.content}
@@ -544,7 +544,7 @@ export function CardsChat({
                       <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} isSender={isSender} />
                       <div className={cn('text-[10px] mt-1 text-right flex items-center',
                         isSender
-                          ? 'text-blue-600 dark:text-gray-300'
+                          ? 'text-blue-600 dark:text-gray-300' // Corrected dark mode timestamp for sender
                           : 'text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]',
                         isSender ? "justify-end" : "justify-start")}>
                         {formattedTimestamp}
@@ -559,8 +559,7 @@ export function CardsChat({
                       )}
                       <Button variant="ghost" size="icon"
                         className={cn("h-7 w-7 hover:bg-[hsl(var(--accent)_/_0.1)] dark:hover:bg-[hsl(var(--accent)_/_0.2)]",
-                          isSender ? "text-blue-600 dark:text-gray-300"
-                          : "text-[hsl(var(--muted-foreground))]"
+                          isSender ? "text-blue-600 dark:text-gray-300" : "text-[hsl(var(--muted-foreground))]" // Corrected dark mode icon for sender
                         )}
                         onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
                          <Reply className="h-4 w-4" />

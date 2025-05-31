@@ -178,7 +178,7 @@ export function ChatList({
                   tabIndex={0} // Make it focusable
                   className={cn(
                     'flex items-start p-3 rounded-lg cursor-pointer hover:bg-[hsl(var(--accent))] space-x-3 focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]',
-                    isActive && 'bg-[hsl(var(--primary)_/_0.15)] dark:bg-[hsl(var(--primary)_/_0.25)]', 
+                    isActive && 'bg-[hsl(var(--primary)_/_0.15)] dark:bg-[hsl(var(--primary)_/_0.25)]',
                   )}
                   onClick={() => setConversation(conversation)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }} // Allow selection with Enter/Space
