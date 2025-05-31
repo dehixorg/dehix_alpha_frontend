@@ -192,8 +192,8 @@ const HomePage = () => {
         {/* Main content area where ChatLayout will be used, ensure it can fill height */}
         <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Added overflow-hidden and adjusted padding */}
           <ChatLayout
-            chatListComponent={chatListComponentForLayout} {/* Pass the direct content */}
-            chatWindowComponent={chatWindowComponentContent} {/* Pass the content (could be shell or actual CardsChat) */}
+            chatListComponent={chatListComponentForLayout} 
+            chatWindowComponent={chatWindowComponentContent} 
             isChatAreaExpanded={isChatExpanded}
           />
         </main>
