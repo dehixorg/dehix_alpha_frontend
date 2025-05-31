@@ -9,13 +9,16 @@ interface ChatLayoutProps {
 }
 
 const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded }) => {
+  // console.log("ChatLayout.tsx: Received isChatAreaExpanded:", isChatAreaExpanded);
+
   // If chat area is expanded, only render the chat window component
   if (isChatAreaExpanded) {
     return (
-      <main aria-label="Main Chat Area" className="flex-1 h-full bg-[hsl(var(--background))] p-4 overflow-y-auto">
+      // This main tag needs to correctly fill the space provided by ChatLayout's parent
+      <main aria-label="Main Chat Area" className="flex-1 h-full bg-[hsl(var(--background))] p-4"> {/* Ensured flex-1 and h-full for expansion */}
         {/* The CardsChat component (chatWindowComponent) should manage its own internal scrolling and height if it's the direct child.
-            The p-4 and overflow-y-auto here are fallbacks if chatWindowComponent itself doesn't fill height and provide padding.
-            Given previous changes to CardsChat, it should be h-full and manage its own padding/scroll for content.
+            The p-4 here provides padding around CardsChat.
+            CardsChat itself is h-full and manages its own content scrolling.
             So, p-4 and overflow-y-auto might be removed from this <main> if CardsChat is self-contained.
             For now, keeping p-4 for consistency if CardsChat expects parent padding.
          */}
@@ -32,7 +35,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
       <Panel defaultSize={25} minSize={20} maxSize={40} collapsible={true} collapsedSize={0} id="chat-sidebar-panel" className="h-full">
         <aside
           className={cn(
-            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-lg dark:shadow-none", // Changed shadow-md to shadow-lg for light mode
+            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-none", // Changed shadow-lg to shadow-xl for light mode
             // Original responsive hiding logic is no longer needed here as Panel can be collapsed.
             // Or, if we want to hide it by default on small screens even when not "expanded":
             // "hidden md:flex flex-col h-full"

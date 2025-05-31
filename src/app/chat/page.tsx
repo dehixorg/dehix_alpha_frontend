@@ -39,9 +39,12 @@ const HomePage = () => {
   // Initialize activeConversation with null
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isChatExpanded, setIsChatExpanded] = useState(false); // State for chat expansion
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
 
-  const toggleChatExpanded = () => setIsChatExpanded(prev => !prev); // Function to toggle expansion
+  const toggleChatExpanded = () => {
+    // console.log("page.tsx: toggleChatExpanded called, current isChatExpanded before update:", isChatExpanded);
+    setIsChatExpanded(prev => !prev);
+  };
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -124,6 +127,8 @@ const HomePage = () => {
     chatWindowComponentContent = (
       <CardsChat
         conversation={activeConversation}
+        isChatExpanded={isChatExpanded}
+        onToggleExpand={toggleChatExpanded}
       />
     );
   } else if (conversations.length > 0) {
@@ -144,6 +149,7 @@ const HomePage = () => {
     );
   }
 
+  // console.log("page.tsx: Rendering, isChatExpanded:", isChatExpanded);
 
   // Manually re-typed return statement and component closing
   return (

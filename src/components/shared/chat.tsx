@@ -119,7 +119,8 @@ export function CardsChat({
   isChatExpanded,
   onToggleExpand,
 }: CardsChatProps) {
-  const router = useRouter(); // Added
+  const router = useRouter();
+  // console.log("CardsChat: Received isChatExpanded:", isChatExpanded, "onToggleExpand type:", typeof onToggleExpand);
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -412,7 +413,7 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--background))] shadow-lg dark:shadow-none border-none">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-none border-none"> {/* Changed to --card bg and shadow-xl */}
           <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-none">
             <div className="flex items-center space-x-3">
               <Avatar className="w-10 h-10">
@@ -460,7 +461,7 @@ export function CardsChat({
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
+          <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]"> {/* Main message area uses page background */}
             <div className="flex flex-col-reverse space-y-3 space-y-reverse">
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
@@ -568,7 +569,7 @@ export function CardsChat({
               })}
             </div>
           </CardContent>
-          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-none">
+          <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-none"> {/* Kept shadow-md as it has a border */}
             <form
               onSubmit={(event) => {
                 event.preventDefault();
