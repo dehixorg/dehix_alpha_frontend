@@ -17,8 +17,6 @@ import {
   Underline,
   CheckCheck,
   Flag, // Added
-  HelpCircle, // Added
-  Flag,
   HelpCircle,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
