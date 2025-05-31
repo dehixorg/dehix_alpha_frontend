@@ -155,7 +155,7 @@ const HomePage = () => {
   // console.log("page.tsx: Rendering, isChatExpanded:", isChatExpanded);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)] border border-red-500">
+    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
       <SidebarMenu
         menuItemsTop={
           user.type === 'business' ? businessMenuItemsTop : chatsMenu
@@ -170,7 +170,7 @@ const HomePage = () => {
         // activeConversation={activeConversation}
       />
       {/* Ensure this div allows content to take full height */}
-      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden border border-green-500">
+      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
         <Header
           menuItemsTop={
             user.type === 'business' ? businessMenuItemsTop : chatsMenu
@@ -190,7 +190,7 @@ const HomePage = () => {
           searchPlaceholder="Search chats..."
         />
         {/* Main content area where ChatLayout will be used, ensure it can fill height */}
-        <main className="h-[90vh] border-4 border-red-500 p-1 sm:p-2 md:p-4"> {/* Applied fixed height and debug border */}
+        <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Restored flexible layout, removed debug border */}
           <ChatLayout
             chatListComponent={chatListComponentForLayout}
             chatWindowComponent={chatWindowComponentContent}
