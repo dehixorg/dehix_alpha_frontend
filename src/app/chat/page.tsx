@@ -190,7 +190,7 @@ const HomePage = () => {
           searchPlaceholder="Search chats..."
         />
         {/* Main content area where ChatLayout will be used, ensure it can fill height */}
-        <main className="flex-1 overflow-hidden p-1 sm:p-2 md:p-4"> {/* Restored flexible layout, removed debug border */}
+        <main className="h-[90vh] border-4 border-red-500 p-1 sm:p-2 md:p-4"> {/* Applied fixed height and debug border */}
           <ChatLayout
             chatListComponent={chatListComponentForLayout}
             chatWindowComponent={chatWindowComponentContent}
