@@ -1,5 +1,5 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import React, { useEffect, useRef } from 'react'; // Added useEffect, useRef
+import { Panel, PanelGroup, PanelResizeHandle, PanelRef } from "react-resizable-panels"; // Added PanelRef
 import { cn } from '@/lib/utils';
 
 interface ChatLayoutProps {
@@ -9,39 +9,48 @@ interface ChatLayoutProps {
 }
 
 const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded }) => {
-  // console.log("ChatLayout.tsx: Received isChatAreaExpanded:", isChatAreaExpanded);
+  const sidebarPanelRef = useRef<PanelRef>(null);
+  const defaultSidebarSize = 25;
 
-  // If chat area is expanded, only render the chat window component
-  if (isChatAreaExpanded) {
-    return (
-      // This main tag needs to correctly fill the space provided by ChatLayout's parent
-      <main aria-label="Main Chat Area" className="flex-1 h-full bg-[hsl(var(--background))] p-4"> {/* Ensured flex-1 and h-full for expansion */}
-        {/* The CardsChat component (chatWindowComponent) should manage its own internal scrolling and height if it's the direct child.
-            The p-4 here provides padding around CardsChat.
-            CardsChat itself is h-full and manages its own content scrolling.
-            So, p-4 and overflow-y-auto might be removed from this <main> if CardsChat is self-contained.
-            For now, keeping p-4 for consistency if CardsChat expects parent padding.
-         */}
-        {chatWindowComponent}
-      </main>
-    );
-  }
+  console.log("[ChatLayout.tsx] Received isChatAreaExpanded:", isChatAreaExpanded);
+
+  useEffect(() => {
+    console.log("[ChatLayout.tsx] useEffect triggered. isChatAreaExpanded:", isChatAreaExpanded);
+    const panel = sidebarPanelRef.current;
+    if (panel) {
+      console.log("[ChatLayout.tsx] sidebarPanelRef.current IS valid.");
+      if (isChatAreaExpanded) {
+        console.log("[ChatLayout.tsx] Calling panel.collapse()");
+        panel.collapse();
+      } else {
+        console.log("[ChatLayout.tsx] Calling panel.expand()");
+        panel.expand();
+        // Optional: If expand() doesn't restore to a specific size,
+        // and you want it to reset to its default size when re-expanding:
+        // console.log("[ChatLayout.tsx] Resizing panel to default:", defaultSidebarSize);
+        // panel.resize(defaultSidebarSize);
+      }
+    } else {
+      console.error("[ChatLayout.tsx] sidebarPanelRef.current IS NULL or UNDEFINED.");
+    }
+  }, [isChatAreaExpanded]); // Removed defaultSidebarSize from deps as panel.resize is commented
 
   return (
-    // PanelGroup should be the direct child of the flex container that has h-screen
-    // The parent div of PanelGroup in page.tsx's main section might need flex-1 if ChatLayout is not directly filling screen height.
-    // Assuming ChatLayout's parent div (the <main> in page.tsx) is already flex-1 and provides height context.
     <PanelGroup direction="horizontal" className="flex-1 h-full">
-      <Panel defaultSize={25} minSize={20} maxSize={40} collapsible={true} collapsedSize={0} id="chat-sidebar-panel" className="h-full">
+      <Panel
+        ref={sidebarPanelRef}
+        defaultSize={defaultSidebarSize}
+        minSize={15}
+        maxSize={40}
+        collapsible={true}
+        collapsedSize={0}
+        id="chat-sidebar-panel"
+        className="h-full"
+        order={1}
+      >
         <aside
           className={cn(
-            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-none", // Changed shadow-lg to shadow-xl for light mode
-            // Original responsive hiding logic is no longer needed here as Panel can be collapsed.
-            // Or, if we want to hide it by default on small screens even when not "expanded":
-            // "hidden md:flex flex-col h-full"
-            // For now, let Panel manage visibility based on its props and user interaction.
-            // The `collapsible` and `collapsedSize` props handle this.
-            // The `isChatAreaExpanded` logic now prevents this PanelGroup from rendering at all.
+            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg" // Applied dark:shadow-lg
           )}
           aria-label="Chat List Sidebar"
         >
@@ -52,12 +61,14 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
         className="w-1 bg-[hsl(var(--border))] hover:bg-[hsl(var(--primary))] dark:hover:bg-[hsl(var(--primary))] transition-colors duration-200 data-[resize-handle-active]:bg-[hsl(var(--primary))] dark:data-[resize-handle-active]:bg-[hsl(var(--primary))]"
         aria-label="Resize chat sidebar"
       />
-      <Panel defaultSize={75} minSize={60} id="chat-main-panel" className="h-full">
+      <Panel
+        defaultSize={100 - defaultSidebarSize}
+        minSize={60}
+        id="chat-main-panel"
+        className="h-full"
+        order={2} // Explicit order
+      >
         <main className="h-full bg-[hsl(var(--background))] p-4" aria-label="Main Chat Area">
-          {/* CardsChat (chatWindowComponent) is h-full and manages its own internal scrolling and padding for its content.
-              So this <main> just provides the background and overall padding from the resizer edge.
-              No overflow-y-auto needed here.
-          */}
           {chatWindowComponent}
         </main>
       </Panel>
