@@ -16,6 +16,7 @@ import Breadcrumb from '@/components/shared/breadcrumbList';
 import ProjectApplicationForm from '@/components/shared/ProjectApplicationPage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import Header from '@/components/header/header';
+import ProjectAnalyticsDrawer from '@/components/shared/ProjectAnalyticsDrawer';
 
 interface Bid {
   _id: string;
@@ -128,6 +129,7 @@ const Page = () => {
           ]}
         />
         <main className="w-[85vw] mx-auto text-foreground">
+          {/* <ProjectAnalyticsDrawer /> */}
           {project && (
             <ProjectApplicationForm
               project={project}

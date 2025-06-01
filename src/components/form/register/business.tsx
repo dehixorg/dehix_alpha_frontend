@@ -205,7 +205,9 @@ function BusinessRegisterForm({
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const [isTermsDialog, setIsTermsDialog] = useState(false);
   const searchParams = useSearchParams();
-  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(null);
+  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
+    null,
+  );
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -247,13 +249,13 @@ function BusinessRegisterForm({
         const { userName } = form.getValues();
         try {
           setIsVerified(true);
-          const username = userName;          
+          const username = userName;
           if (username === lastCheckedUsername) {
-          setCurrentStep(currentStep + 1);
-          return;
+            setCurrentStep(currentStep + 1);
+            return;
           }
-        const response = await axiosInstance.get(
-          `/public/username/check-duplicate?username=${username}&is_business=true`,
+          const response = await axiosInstance.get(
+            `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
 
           if (response.data.duplicate === false) {

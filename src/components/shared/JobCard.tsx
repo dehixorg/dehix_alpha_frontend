@@ -51,7 +51,7 @@ const JobCard: React.FC<JobCardProps> = ({
     (state: RootState) => state.projectDraft.draftedProjects,
   );
 
-  const isDrafted = draftedProjects.includes(job._id);
+  const isDrafted = draftedProjects?.includes(job._id);
 
   const toggleExpand = () => setExpanded(!expanded);
 

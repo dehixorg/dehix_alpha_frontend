@@ -167,11 +167,10 @@ const profileFormSchema = z
       .string()
       .optional()
       .refine(
-        (value) =>
-          !value || /^https?:\/\/[^\s$.?#].[^\s]*$/.test(value),
+        (value) => !value || /^https?:\/\/[^\s$.?#].[^\s]*$/.test(value),
         {
           message: 'Resume must be a valid URL.',
-        }
+        },
       ),
     linkedin: z
       .string()
@@ -313,7 +312,9 @@ function FreelancerRegisterForm({
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const [isTermsDialog, setIsTermsDialog] = useState(false);
-  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(null);
+  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
+    null,
+  );
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -381,7 +382,7 @@ function FreelancerRegisterForm({
             setCurrentStep(currentStep + 1);
             return;
           }
-          
+
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_freelancer=true`,
           );
@@ -526,11 +527,11 @@ function FreelancerRegisterForm({
               </div>
               {/* UserName */}
               <TextInput
-                  control={form.control}
-                  name="userName"
-                  label="Username"
-                  placeholder="JohnDoe123"
-                />
+                control={form.control}
+                name="userName"
+                label="Username"
+                placeholder="JohnDoe123"
+              />
 
               {/* Password and Confirm Password */}
               <div className="space-y-2">

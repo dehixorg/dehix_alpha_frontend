@@ -106,13 +106,17 @@ const Market: React.FC = () => {
           queryParts.push(`${key}=${cleanedValues.join(',')}`);
         }
       } else if (typeof value === 'string') {
-        queryParts.push(`${key}=${value.split(',').map((v) => v.trim()).join(',')}`);
+        queryParts.push(
+          `${key}=${value
+            .split(',')
+            .map((v) => v.trim())
+            .join(',')}`,
+        );
       }
     });
 
     return queryParts.join('&');
   };
-
 
   const fetchData = useCallback(async (appliedFilters: FilterState) => {
     try {
