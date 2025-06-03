@@ -62,7 +62,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
         <div className="mb-4">
           <SkillDom
-            label="Domains"
             heading="Filter by Domains"
             checkboxLabels={domains}
             selectedValues={filters.domain}
@@ -71,7 +70,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
         <div className="mb-12">
           <SkillDom
-            label="Skills"
             heading="Filter by Skills"
             checkboxLabels={skills}
             selectedValues={filters.skills}
