@@ -27,11 +27,22 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Define the Conversation interface to match the expected shape
+// This should ideally be a shared type with chatList.tsx
 interface Conversation extends DocumentData {
   id: string;
   participants: string[];
-  timestamp?: string;
-  lastMessage?: any;
+  project_name?: string; // Used for groups in chatList, maps to groupName or similar
+  type?: 'individual' | 'group';
+  timestamp?: string; // Represents last activity
+  lastMessage?: { content?: string; senderId?: string; timestamp?: string };
+  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
+  groupName?: string; // Actual group name
+  description?: string; // Group description
+  createdBy?: string;
+  admins?: string[];
+  createdAt?: string; // Original creation timestamp
+  updatedAt?: string; // Last update to conversation metadata or message
+  // labels?: string[]; // Not currently used in page.tsx's direct logic for activeConversation
 }
 
 const HomePage = () => {

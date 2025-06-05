@@ -6,6 +6,7 @@ import { DocumentData } from 'firebase/firestore';
 import { MessageSquare, Search, SquarePen, Users, X as LucideX } from 'lucide-react'; // Added X
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from "@/components/ui/textarea"; // Import Textarea
 import { useSelector } from 'react-redux'; // Added
 import { RootState } from '@/lib/store'; // Added
 import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
@@ -45,6 +46,7 @@ export interface Conversation extends DocumentData {
   participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
   // Group specific fields
   groupName?: string;
+  description?: string; // Added group description
   createdBy?: string;
   admins?: string[];
   createdAt?: string; // Keep original creation timestamp
@@ -72,6 +74,7 @@ export function ChatList({
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState(''); // State for group description
   const user = useSelector((state: RootState) => state.user);
 
   // Removed local ProfileSidebar state:
@@ -343,7 +346,7 @@ export function ChatList({
                 Fill in the details below to start a new group conversation.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-5 py-5"> {/* Adjusted gap and padding slightly */}
+            <div className="space-y-4 p-4"> {/* Changed from grid to space-y and added padding */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="groupName" className="text-right col-span-1 text-[hsl(var(--foreground))]">
                   Group Name
@@ -356,7 +359,20 @@ export function ChatList({
                   onChange={(e) => setGroupName(e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              {/* Group Description Textarea */}
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="groupDescription" className="text-right col-span-1 pt-2 text-[hsl(var(--foreground))]"> {/* items-start applied to parent div */}
+                  Description
+                </Label>
+                <Textarea
+                  id="groupDescription"
+                  placeholder="What's this group about? (Optional)"
+                  className="col-span-3 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))] min-h-[80px]"
+                  value={groupDescription}
+                  onChange={(e) => setGroupDescription(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4"> {/* This items-center is fine for single-line input */}
                 <Label htmlFor="addPeople" className="text-right col-span-1 text-[hsl(var(--foreground))]">
                   Add People
                 </Label>
@@ -415,10 +431,11 @@ export function ChatList({
                  </div>
               )}
             </div>
-            <DialogFooter className="border-t border-[hsl(var(--border))] pt-6"> {/* Changed pt-4 to pt-6 */}
+            <DialogFooter className="flex justify-end space-x-2 pt-4 border-t border-[hsl(var(--border))]"> {/* Applied flex, justify-end, space-x-2 and adjusted padding */}
               <DialogClose asChild>
                 <Button type="button" variant="outline" onClick={() => {
                   setGroupName('');
+                  setGroupDescription(''); // Reset description
                   setSelectedUsers([]);
                   setUserSearchTerm('');
                   setSearchResults([]);
@@ -464,14 +481,22 @@ export function ChatList({
                       senderId: 'system',
                       timestamp: now,
                     },
-                    // Add any other necessary fields from your Conversation interface
+                    // participantDetails will be populated by a cloud function or when participants send messages
                   };
+
+                  if (groupDescription.trim()) {
+                    (newGroupConversation as any).description = groupDescription.trim();
+                  }
 
                   try {
                     const docRef = await addDoc(collection(db, 'conversations'), newGroupConversation);
                     console.log("Group conversation created with ID: ", docRef.id);
                     toast({ title: "Success", description: "Group chat created successfully." });
                     setGroupName('');
+                    setGroupDescription(''); // Reset description
+                    setSelectedUsers([]); // Reset selected users
+                    setUserSearchTerm(''); // Reset search term for users
+                    setSearchResults([]); // Reset search results for users
                     setShowCreateGroupDialog(false);
                   } catch (error) {
                     console.error("Error creating group conversation: ", error);
