@@ -35,21 +35,20 @@ export const useAllUsers = () => {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setUsers([]); // Clear previous users before fetching
+    setUsers([]);
 
     try {
-      const response = await axiosInstance.get('/freelancer'); // Only fetch freelancers
+      const response = await axiosInstance.get('/freelancer');
 
-      let processedUsers: CombinedUser[] = [];
-
-      if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
+      // The API returns the array inside a `data` property. Check for its existence.
+      if (response.data && Array.isArray(response.data.data)) {
         const freelancerData = response.data.data as ApiUser[];
-        processedUsers = freelancerData.map(user => ({
+        const processedUsers = freelancerData.map(user => ({
           id: user._id,
           displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed User').trim(),
           email: user.email,
           profilePic: user.profilePic,
-          userType: 'freelancer', // Explicitly set userType
+          userType: 'freelancer' as 'freelancer',
           rawUserName: user.userName,
           rawName: user.name,
           rawFirstName: user.firstName,
@@ -57,20 +56,20 @@ export const useAllUsers = () => {
         }));
         setUsers(processedUsers);
       } else {
-        // Handle cases where freelancer data is not as expected, or status is not 'success'
-        const errorMessage = `Failed to fetch freelancer data or data format incorrect. Status: ${response.data?.status}, Message: ${response.data?.message}`;
-        console.error('Error or unexpected format fetching freelancers:', response.data);
+        // Handle cases where response.data.data is not an array
+        const errorMessage = `Failed to process freelancer data. Unexpected format received from server.`;
+        console.error('Unexpected response format:', response.data);
         setError(errorMessage);
-        setUsers([]); // Ensure users are cleared on error
+        setUsers([]);
       }
     } catch (e: any) {
       console.error('Error fetching freelancer users:', e);
-      setError(e.message || 'An unexpected error occurred while fetching freelancers.');
-      setUsers([]); // Clear users on error
+      setError(e.response?.data?.message || e.message || 'An unexpected error occurred while fetching freelancers.');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
-  }, []); // Empty dependency array means fetchUsers is created once and is stable
+  }, []);
 
   useEffect(() => {
     fetchUsers();

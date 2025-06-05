@@ -5,13 +5,16 @@ import { DocumentData } from 'firebase/firestore';
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils'; // Added cn
+import { Button } from '@/components/ui/button';
 
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
 import ChatLayout from '@/components/shared/ChatLayout';
-import { ChatList } from '@/components/shared/chatList';
+import { ChatList, type Conversation } from '@/components/shared/chatList';
 import ProfileSidebar from '@/components/shared/ProfileSidebar'; // Import ProfileSidebar
+import { NewChatDialog } from '@/components/shared/NewChatDialog'; // Import NewChatDialog
+import type { CombinedUser as NewChatUser } from '@/hooks/useAllUsers';
 // Card might not be needed if CardsChat itself is the shell or if we use generic divs for loading shell.
 // For now, let's assume CardsChat component or a simple div can act as shell for chat window.
 import {
@@ -26,25 +29,6 @@ import {
   chatsMenu,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
-// Define the Conversation interface to match the expected shape
-// This should ideally be a shared type with chatList.tsx
-interface Conversation extends DocumentData {
-  id: string;
-  participants: string[];
-  project_name?: string; // Used for groups in chatList, maps to groupName or similar
-  type?: 'individual' | 'group';
-  timestamp?: string; // Represents last activity
-  lastMessage?: { content?: string; senderId?: string; timestamp?: string };
-  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
-  groupName?: string; // Actual group name
-  description?: string; // Group description
-  createdBy?: string;
-  admins?: string[];
-  createdAt?: string; // Original creation timestamp
-  updatedAt?: string; // Last update to conversation metadata or message
-  // labels?: string[]; // Not currently used in page.tsx's direct logic for activeConversation
-}
-
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -58,6 +42,9 @@ const HomePage = () => {
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
   const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
+
+  // State for NewChatDialog
+  const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
   const handleOpenProfileSidebar = (id: string, type: 'user' | 'group') => {
     setProfileSidebarId(id);
@@ -78,6 +65,34 @@ const HomePage = () => {
       console.log("[page.tsx] setIsChatExpanded. New value will be:", !prev);
       return !prev;
     });
+  };
+
+  const handleStartNewChat = async (selectedUser: NewChatUser) => {
+    // This logic is now duplicated from chatList.tsx and should be unified
+    // For now, let's keep it here to make the dialog functional from the page level.
+    if (!user || !user.uid) {
+      // toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      return;
+    }
+
+    const existingConversation = conversations.find(conv =>
+      conv.type === 'individual' &&
+      conv.participants.length === 2 &&
+      conv.participants.includes(user.uid) &&
+      conv.participants.includes(selectedUser.id)
+    );
+
+    if (existingConversation) {
+      setActiveConversation(existingConversation);
+      setIsNewChatDialogOpen(false);
+      // toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      return;
+    }
+    
+    // If no existing chat, we would create a new one here.
+    // This logic needs to be fully implemented, likely involving a call to a Firestore utility.
+    console.log("Starting new chat with:", selectedUser.displayName);
+    setIsNewChatDialogOpen(false);
   };
 
   useEffect(() => {
@@ -141,6 +156,7 @@ const HomePage = () => {
         active={activeConversation}
         setConversation={setActiveConversation}
         onOpenProfileSidebar={handleOpenProfileSidebar} // Pass handler
+        onOpenNewChatDialog={() => setIsNewChatDialogOpen(true)} // Pass handler
       />
     );
   } else {
@@ -149,6 +165,7 @@ const HomePage = () => {
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">No conversations</p>
         <p className="text-sm">New chats will appear here.</p>
+        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">Start a Chat</Button>
       </div>
     );
   }
@@ -249,6 +266,14 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
         />
+        {user && (
+          <NewChatDialog
+            isOpen={isNewChatDialogOpen}
+            onClose={() => setIsNewChatDialogOpen(false)}
+            onSelectUser={handleStartNewChat}
+            currentUserUid={user.uid}
+          />
+        )}
       </div>
     </div>
   );
