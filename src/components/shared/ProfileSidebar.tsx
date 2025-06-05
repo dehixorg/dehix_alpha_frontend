@@ -47,6 +47,11 @@ export type ProfileGroup = {
   admins?: string[];
   participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
   inviteLink?: string; // Added for invite link functionality
+  project_name?: string;
+  name?: string;
+  participants?: string[];
+
+
 };
 
 interface ProfileSidebarProps {
@@ -61,6 +66,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   const [loading, setLoading] = useState(false);
   const currentUser = useSelector((state: RootState) => state.user);
   const { toast } = useToast(); // Initialize useToast
+  
 
   // State for dialog visibility
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
@@ -177,9 +183,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
       }
     };
 
-    internalFetchProfileData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, profileId, profileType, refreshDataKey]); // Added refreshDataKey
+    useEffect(() => {
+      internalFetchProfileData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, profileId, profileType, refreshDataKey]);
 
   const handleAddMembersToGroup = async (selectedUserIds: string[], groupId: string) => {
     if (!selectedUserIds || selectedUserIds.length === 0) {
@@ -586,6 +593,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
       )}
     </Sheet>
   );
-};
 
+}
 export default ProfileSidebar;
