@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSelector } from 'react-redux'; // Added
 import { RootState } from '@/lib/store'; // Added
-import { getFirestore, addDoc, collection } from 'firebase/firestore'; // Added
-import { db } from '@/config/firebaseConfig'; // Added - Adjust path if necessary
-import { toast } from '@/hooks/use-toast'; // Added
+import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebaseConfig';
+import { toast } from '@/hooks/use-toast';
+import { NewChatDialog, User as NewChatUser } from './NewChatDialog';
+// ProfileSidebar is no longer imported or rendered here
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,30 +37,47 @@ import { cn } from '@/lib/utils'; // Utility class names
 export interface Conversation extends DocumentData {
   id: string;
   participants: string[];
-  project_name?: string;
-  timestamp?: string;
-  lastMessage?: { content?: string; senderId?: string }; // Added lastMessage structure
+  project_name?: string; // Used for groups
+  type?: 'individual' | 'group'; // To distinguish chat types
+  timestamp?: string; // Should be lastActivity or similar
+  lastMessage?: { content?: string; senderId?: string; timestamp?: string };
+  // For individual chats, we might want to store the other user's info for quick display
+  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
+  // Group specific fields
+  groupName?: string;
+  createdBy?: string;
+  admins?: string[];
+  createdAt?: string; // Keep original creation timestamp
+  updatedAt?: string; // Explicitly for last update to conversation metadata or message
   labels?: string[];
 }
 
 interface ChatListProps {
   conversations: Conversation[];
-  active: Conversation | null; // active can be null
+  active: Conversation | null;
   setConversation: (activeConversation: Conversation) => void;
+  onOpenProfileSidebar?: (id: string, type: 'user' | 'group') => void; // Added prop
 }
 
 export function ChatList({
   conversations,
   active,
   setConversation,
+  onOpenProfileSidebar, // Destructure the new prop
 }: ChatListProps) {
   const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
     Record<string, string>
   >({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const user = useSelector((state: RootState) => state.user);
+
+  // Removed local ProfileSidebar state:
+  // const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
+  // const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  // const [selectedProfileType, setSelectedProfileType] = useState<'user' | 'group' | null>(null);
 
   // Mock Users (replace with actual data source/API call in a real app)
   const MOCK_USERS = [
@@ -73,6 +92,21 @@ export function ChatList({
   const [searchResults, setSearchResults] = useState<typeof MOCK_USERS>([]);
   const [selectedUsers, setSelectedUsers] = useState<typeof MOCK_USERS>([]);
 
+  const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
+    e.stopPropagation(); // Prevent triggering setConversation if this is nested
+    if (!onOpenProfileSidebar) return; // Guard if prop is not provided
+
+    if (conv.type === 'group') {
+      onOpenProfileSidebar(conv.id, 'group');
+    } else {
+      const otherParticipantUid = conv.participants.find(p => p !== user.uid);
+      if (otherParticipantUid) {
+        onOpenProfileSidebar(otherParticipantUid, 'user');
+      } else {
+        console.error("Could not determine other participant for profile view in ChatList.");
+      }
+    }
+  };
 
   const handleUserSearch = (term: string) => {
     setUserSearchTerm(term);
@@ -133,19 +167,84 @@ export function ChatList({
     );
   });
 
+  const handleStartNewChat = async (selectedUser: NewChatUser) => {
+    if (!user || !user.uid) {
+      toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      return;
+    }
+
+    // Check for existing individual conversation
+    const existingConversation = conversations.find(conv =>
+      conv.type === 'individual' &&
+      conv.participants.length === 2 &&
+      arraysHaveSameElements(conv.participants, [user.uid, selectedUser.uid])
+    );
+
+    if (existingConversation) {
+      setConversation(existingConversation);
+      setIsNewChatDialogOpen(false);
+      toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      return;
+    }
+
+    // Create new conversation
+    const now = new Date().toISOString();
+    const newConversationData: Partial<Conversation> = { // Use Partial as ID will be generated by Firestore
+      participants: [user.uid, selectedUser.uid].sort(),
+      type: 'individual',
+      createdAt: now,
+      updatedAt: now, // Represents last activity timestamp for the conversation
+      lastMessage: null, // No messages yet
+      // Store minimal details of participants for easier display in chat list if needed
+      participantDetails: {
+        [user.uid]: { userName: user.displayName || user.email || 'Current User', profilePic: user.photoURL || undefined, email: user.email || undefined },
+        [selectedUser.uid]: { userName: selectedUser.userName, profilePic: selectedUser.profilePic, email: selectedUser.email },
+      }
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
+      setIsNewChatDialogOpen(false);
+      toast({ title: "Success", description: `New chat started with ${selectedUser.userName}.` });
+
+      // Fetch the newly created document to pass to setConversation
+      // This ensures the local state `active` is correctly set with the full conversation object including ID
+      const newDocSnap = await getDoc(doc(db, "conversations", docRef.id));
+      if (newDocSnap.exists()) {
+        setConversation({ id: newDocSnap.id, ...newDocSnap.data() } as Conversation);
+      } else {
+        // Fallback or error - should ideally not happen if addDoc succeeded
+        console.warn("Newly created conversation document not found immediately after creation.");
+        // Potentially trigger a refresh of conversations list if direct setting fails
+      }
+
+    } catch (error) {
+      console.error("Error starting new chat: ", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to start new chat." });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
       {/* New Chat Button and Search Bar Area */}
       <div className="p-3 border-b border-[hsl(var(--border))]">
         {/* New "Create Group Chat" Button - "New Chat" dropdown removed as it became empty */}
-        <div className="mb-3">
+        <div className="flex space-x-2 mb-3">
           <Button
             variant="default" // Or "outline" depending on desired prominence
-            className="w-full flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
+            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
             onClick={() => setShowCreateGroupDialog(true)}
           >
             <Users className="h-4 w-4 mr-2" /> {/* Icon color will be primary-foreground */}
             Create Group
+          </Button>
+          <Button
+            variant="default" // Or "outline"
+            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
+            onClick={() => setIsNewChatDialogOpen(true)}
+          >
+            <SquarePen className="h-4 w-4 mr-2" />
+            New Chat
           </Button>
         </div>
 
@@ -181,21 +280,32 @@ export function ChatList({
                     isActive && 'bg-[hsl(var(--primary)_/_0.15)] dark:bg-[hsl(var(--primary)_/_0.25)]',
                   )}
                   onClick={() => setConversation(conversation)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }} // Allow selection with Enter/Space
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }}
                 >
-                  <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
-                    <AvatarImage
-                      src={`https://api.adorable.io/avatars/285/${conversation.participants[0]}.png`} // Placeholder
-                      alt={conversation.participants[0]}
-                    />
-                    <AvatarFallback>
-                      {conversation.participants[0]?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-grow overflow-hidden">
+                  <div className="flex items-center space-x-3 flex-shrink-0" onClick={(e) => handleProfileIconClick(e, conversation)} role="button" aria-label="View profile">
+                    <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
+                      <AvatarImage
+                        src={
+                          conversation.type === 'group'
+                            ? conversation.participantDetails?.[conversation.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${conversation.id}.png` // Group avatar
+                            : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== user.uid)}.png` // User avatar
+                        }
+                        alt={conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName}
+                      />
+                      <AvatarFallback>
+                        {
+                          (conversation.type === 'group'
+                            ? conversation.groupName?.charAt(0)
+                            : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName?.charAt(0)
+                          )?.toUpperCase() || 'P'
+                        }
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="flex-grow overflow-hidden" onClick={() => setConversation(conversation)}> {/* Make text area also set active conversation */}
                     <div className="flex justify-between items-baseline">
                       <p className={cn("text-sm font-medium truncate", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--foreground))]")}>
-                        {conversation.project_name || 'Unnamed Project'}
+                        {conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName || 'Chat User'}
                       </p>
                       <p className={cn("text-xs flex-shrink-0 ml-2", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]")}>
                         {lastUpdated}
@@ -375,6 +485,25 @@ export function ChatList({
           </DialogContent>
         </Dialog>
       )}
+
+      {user && ( // Ensure user object is available before rendering NewChatDialog
+        <NewChatDialog
+          isOpen={isNewChatDialogOpen}
+          onClose={() => setIsNewChatDialogOpen(false)}
+          onSelectUser={handleStartNewChat}
+          currentUserUid={user.uid}
+        />
+      )}
+
+      {/* ProfileSidebar instance is removed from here, will be rendered in page.tsx */}
     </div>
   );
 }
+
+// Helper function to check if two arrays contain the same elements, regardless of order
+const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
+  if (arr1.length !== arr2.length) return false;
+  const sortedArr1 = [...arr1].sort();
+  const sortedArr2 = [...arr2].sort();
+  return sortedArr1.every((value, index) => value === sortedArr2[index]);
+};

@@ -6,9 +6,10 @@ interface ChatLayoutProps {
   chatListComponent: React.ReactNode;
   chatWindowComponent: React.ReactNode;
   isChatAreaExpanded?: boolean;
+  onOpenProfileSidebar?: (id: string, type: 'user' | 'group') => void; // Added prop
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded }) => {
+const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded, onOpenProfileSidebar }) => {
   const sidebarPanelRef = useRef<PanelRef>(null);
   const defaultSidebarSize = 25;
 
@@ -54,7 +55,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
           )}
           aria-label="Chat List Sidebar"
         >
-          {chatListComponent}
+          {/* Pass onOpenProfileSidebar to chatListComponent if it's a React element that can accept it */}
+          {React.isValidElement(chatListComponent) ? React.cloneElement(chatListComponent as React.ReactElement<any>, { onOpenProfileSidebar }) : chatListComponent}
         </aside>
       </Panel>
       <PanelResizeHandle
@@ -69,7 +71,8 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
         order={2}
       >
         <main className="h-full bg-[hsl(var(--background))] p-4" aria-label="Main Chat Area"> {/* Removed yellow border */}
-          {chatWindowComponent}
+          {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}
+          {React.isValidElement(chatWindowComponent) ? React.cloneElement(chatWindowComponent as React.ReactElement<any>, { onOpenProfileSidebar }) : chatWindowComponent}
         </main>
       </Panel>
     </PanelGroup>

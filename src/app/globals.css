@@ -37,8 +37,9 @@
     --popover: 210 3% 18%; /* Darker Grey for tooltips/popovers (#2d2e30) */
     --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
 
-    --primary: 210 15% 25%; /* Black Blue/Charcoal e.g. #343A40 */
+    --primary: 217 91% 60%; /* Blue (#3b82f6) */
     --primary-foreground: 0 0% 100%; /* White text on primary */
+    --primary-hover: 217 91% 70%; /* Lighter blue for hover */
 
     --secondary: 216 28% 97%; /* Lighter Grey for secondary elements (#f1f3f4) */
     --secondary-foreground: 210 2% 13%; /* Darker Grey text for secondary elements */
@@ -80,8 +81,9 @@
     --popover: 210 6% 9%; /* Very dark for tooltips/popovers (#151718) */
     --popover-foreground: 0 0% 96%; /* Brighter text for popovers (#f5f5f5) */
 
-    --primary: 216 75% 68%; /* Softer, slightly desaturated blue (#7c9fde -> HSL approx 216 55% 68%) - Adjusted from 216 70% 68% for better Tailwind mapping*/
+    --primary: 217 95% 67%; /* Blue (#60a5fa) for dark mode */
     --primary-foreground: 210 10% 15%; /* Dark text on softer blue primary (#232629) */
+    --primary-hover: 217 95% 77%; /* Lighter blue for hover in dark mode */
 
     --secondary: 210 6% 18%; /* Darker grey for secondary elements (#2a2d2f) */
     --secondary-foreground: 210 15% 85%; /* Lighter grey text for dark secondary (#d0d3d6) */

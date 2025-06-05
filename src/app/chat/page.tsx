@@ -11,6 +11,7 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
 import ChatLayout from '@/components/shared/ChatLayout';
 import { ChatList } from '@/components/shared/chatList';
+import ProfileSidebar from '@/components/shared/ProfileSidebar'; // Import ProfileSidebar
 // Card might not be needed if CardsChat itself is the shell or if we use generic divs for loading shell.
 // For now, let's assume CardsChat component or a simple div can act as shell for chat window.
 import {
@@ -40,6 +41,24 @@ const HomePage = () => {
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+
+  // State for ProfileSidebar
+  const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
+  const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
+  const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
+
+  const handleOpenProfileSidebar = (id: string, type: 'user' | 'group') => {
+    setProfileSidebarId(id);
+    setProfileSidebarType(type);
+    setIsProfileSidebarOpen(true);
+  };
+
+  const handleCloseProfileSidebar = () => {
+    setIsProfileSidebarOpen(false);
+    // Optionally clear id and type:
+    // setProfileSidebarId(null);
+    // setProfileSidebarType(null);
+  };
 
   const toggleChatExpanded = () => {
     console.log("[page.tsx] toggleChatExpanded called. Current isChatExpanded:", isChatExpanded);
@@ -101,6 +120,7 @@ const HomePage = () => {
         conversations={conversations}
         active={activeConversation}
         setConversation={setActiveConversation}
+        onOpenProfileSidebar={handleOpenProfileSidebar} // Pass handler
       />
     );
   } else {
@@ -132,6 +152,7 @@ const HomePage = () => {
         conversation={activeConversation}
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
+        onOpenProfileSidebar={handleOpenProfileSidebar} // Pass handler
       />
     );
   } else if (conversations.length > 0) {
@@ -195,8 +216,18 @@ const HomePage = () => {
             chatListComponent={chatListComponentForLayout}
             chatWindowComponent={chatWindowComponentContent}
             isChatAreaExpanded={isChatExpanded}
+            // Pass onOpenProfileSidebar through ChatLayout if ChatLayout needs to pass it to its children
+            // This specific prop name is for ChatLayout to know what to pass down.
+            // We'll need to adjust ChatLayoutProps and how it passes this down.
+             onOpenProfileSidebar={handleOpenProfileSidebar}
           />
         </main>
+        <ProfileSidebar
+          isOpen={isProfileSidebarOpen}
+          onClose={handleCloseProfileSidebar}
+          profileId={profileSidebarId}
+          profileType={profileSidebarType}
+        />
       </div>
     </div>
   );

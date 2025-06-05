@@ -47,9 +47,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"; // Added
 
-import { Conversation } from './chatList';
+import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
 import { FileAttachment } from './fileAttachment';
+// ProfileSidebar is no longer imported or rendered here
 
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -106,21 +107,25 @@ type Message = {
 
 interface CardsChatProps {
   conversation: Conversation;
+  // conversations and setActiveConversation might not be needed if this component is only for displaying a single active chat
+  // For now, keeping them if they are used for other functionalities within CardsChat.
   conversations?: any;
   setActiveConversation?: any;
-  isChatExpanded?: boolean; // Added
-  onToggleExpand?: () => void; // Added
+  isChatExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onOpenProfileSidebar?: (id: string, type: 'user' | 'group') => void; // Added prop
 }
 
 export function CardsChat({
   conversation,
-  conversations,
-  setActiveConversation,
+  // conversations, // Not used in current snippet for profile sidebar logic
+  // setActiveConversation, // Not used in current snippet for profile sidebar logic
   isChatExpanded,
   onToggleExpand,
+  onOpenProfileSidebar, // Destructure the new prop
 }: CardsChatProps) {
   const router = useRouter();
-  console.log("[CardsChat] Received isChatExpanded:", isChatExpanded, "onToggleExpand type:", typeof onToggleExpand);
+  // console.log("[CardsChat] Received isChatExpanded:", isChatExpanded, "onToggleExpand type:", typeof onToggleExpand); // Optional: keep for debugging
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -132,7 +137,7 @@ export function CardsChat({
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const inputLength = input.trim().length;
-  const user = useSelector((state: RootState) => state.user);
+  const user = useSelector((state: RootState) => state.user); // Redux user
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
   const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
@@ -140,8 +145,28 @@ export function CardsChat({
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false); // Toggle formatting options
 
+  // Removed local ProfileSidebar state:
+  // const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
+  // const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  // const [selectedProfileType, setSelectedProfileType] = useState<'user' | 'group' | null>(null);
+
   const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
+
+  const handleHeaderClick = () => {
+    if (!onOpenProfileSidebar) return; // Guard if prop is not provided
+
+    if (conversation.type === 'group') {
+      onOpenProfileSidebar(conversation.id, 'group');
+    } else {
+      const otherParticipantUid = conversation.participants.find(p => p !== user.uid);
+      if (otherParticipantUid) {
+        onOpenProfileSidebar(otherParticipantUid, 'user');
+      } else {
+        console.error("Could not determine the other participant in an individual chat for profile sidebar.");
+      }
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -413,24 +438,29 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg"> {/* Removed debug border */}
-          <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Removed debug border */}
-            <div className="flex items-center space-x-3">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={primaryUser.profilePic} alt={primaryUser.userName || 'User'} />
-                <AvatarFallback>{primaryUser.userName ? primaryUser.userName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
-                  {primaryUser.userName || conversation.project_name || 'Chat'}
-                </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                  {primaryUser.email || 'View participants'} {/* Or some other status */}
-                </p>
-              </div>
-            </div>
-            {/* Icons added here */}
-            <div className="flex items-center space-x-0.5 sm:space-x-1">
+        <>
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg"> {/* Removed debug border */}
+            <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm"> {/* Removed debug border */}
+              <button
+                onClick={handleHeaderClick}
+                className="flex items-center space-x-3 text-left hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors" // Make header clickable
+                aria-label="View profile information"
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={conversation.type === 'group' ? (conversation.participantDetails && conversation.participantDetails[conversation.id]?.profilePic) || `https://api.adorable.io/avatars/285/group-${conversation.id}.png` : primaryUser.profilePic} alt={conversation.type === 'group' ? conversation.groupName : primaryUser.userName || 'User'} />
+                  <AvatarFallback>{(conversation.type === 'group' ? conversation.groupName : primaryUser.userName) ? (conversation.type === 'group' ? conversation.groupName?.charAt(0).toUpperCase() : primaryUser.userName?.charAt(0).toUpperCase()) : 'P'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                    {conversation.type === 'group' ? conversation.groupName : primaryUser.userName || 'Chat'}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {conversation.type === 'group' ? `${conversation.participants.length} members` : primaryUser.email || 'Click to view profile'}
+                  </p>
+                </div>
+              </button>
+              {/* Icons added here */}
+              <div className="flex items-center space-x-0.5 sm:space-x-1">
               <Button variant="ghost" size="icon" aria-label="Search in chat" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 <Search className="h-5 w-5" />
               </Button>
@@ -499,17 +529,17 @@ export function CardsChat({
                       className={cn(
                         'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
                         isSender
-                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-blue-800 dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none' // Corrected dark mode text for sender
+                          ? 'ml-auto bg-[hsl(var(--primary)_/_0.2)] text-primary-foreground dark:bg-[hsl(var(--primary))] dark:text-gray-50 rounded-br-none' // Corrected dark mode text for sender
                           : 'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-bl-none',
                       )}
                       onClick={() => {
                         if (message.replyTo) {
                           const replyMessageElement = document.getElementById(message.replyTo);
                           if (replyMessageElement) {
-                            replyMessageElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-800', 'transition-all', 'duration-300');
+                              replyMessageElement.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-gray-800', 'transition-all', 'duration-300');
                             replyMessageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             setTimeout(() => {
-                              replyMessageElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-800');
+                                replyMessageElement.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'dark:ring-offset-gray-800');
                             }, 2500);
                           }
                         }
@@ -520,8 +550,8 @@ export function CardsChat({
                           <TooltipTrigger asChild>
                             <div className="break-words w-full">
                               {message.replyTo && (
-                                <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md border-l-2 border-blue-400 dark:border-blue-500 mb-1.5 text-xs">
-                                  <div className={cn("italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2", isSender ? "text-blue-50 dark:text-blue-100" : "text-blue-600 dark:text-blue-300")}>
+                                <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                                  <div className={cn("italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2", isSender ? "text-primary-foreground dark:text-primary-foreground" : "text-primary dark:text-primary")}>
                                     <span className="font-medium">
                                       {messages.find(msg => msg.id === message.replyTo)?.content.substring(0,100) || 'Original message'}
                                       { (messages.find(msg => msg.id === message.replyTo)?.content?.length || 0) > 100 && "..."}
@@ -536,7 +566,7 @@ export function CardsChat({
                               ) : (
                                 <ReactMarkdown className={cn("prose prose-sm dark:prose-invert max-w-none",
                                   isSender
-                                    ? "text-blue-800 dark:text-gray-50" // Corrected dark mode markdown text for sender
+                                    ? "text-primary-foreground dark:text-gray-50" // Corrected dark mode markdown text for sender
                                     : "text-[hsl(var(--secondary-foreground))]"
                                 )}>
                                   {message.content}
@@ -552,7 +582,7 @@ export function CardsChat({
                       <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} isSender={isSender} />
                       <div className={cn('text-[10px] mt-1 text-right flex items-center',
                         isSender
-                          ? 'text-blue-600 dark:text-gray-300' // Corrected dark mode timestamp for sender
+                          ? 'text-primary/80 dark:text-purple-300' // Corrected dark mode timestamp for sender
                           : 'text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]',
                         isSender ? "justify-end" : "justify-start")}>
                         {formattedTimestamp}
@@ -566,8 +596,8 @@ export function CardsChat({
                          <EmojiPicker aria-label="Add reaction" onSelect={(emoji: string) => toggleReaction(message.id, emoji)} variant="iconButton" />
                       )}
                       <Button variant="ghost" size="icon"
-                        className={cn("h-7 w-7 hover:bg-[hsl(var(--accent)_/_0.1)] dark:hover:bg-[hsl(var(--accent)_/_0.2)]",
-                          isSender ? "text-blue-600 dark:text-gray-300" : "text-[hsl(var(--muted-foreground))]" // Corrected dark mode icon for sender
+                        className={cn("h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20",
+                          isSender ? "text-primary/80 dark:text-purple-300" : "text-[hsl(var(--muted-foreground))]" // Corrected dark mode icon for sender
                         )}
                         onClick={() => setReplyToMessageId(message.id)} aria-label="Reply to message">
                          <Reply className="h-4 w-4" />
@@ -679,6 +709,8 @@ export function CardsChat({
             </form>
           </CardFooter>
         </Card>
+        {/* ProfileSidebar instance is removed from here, will be rendered in page.tsx */}
+      </>
       )}
     </>
   );
