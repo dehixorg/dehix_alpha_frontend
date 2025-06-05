@@ -12,7 +12,8 @@ import { RootState } from '@/lib/store'; // Added
 import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { toast } from '@/hooks/use-toast';
-import { NewChatDialog, User as NewChatUser } from './NewChatDialog';
+import { NewChatDialog } from './NewChatDialog'; // User as NewChatUser removed, CombinedUser will be inferred
+import type { CombinedUser as NewChatUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
 // ProfileSidebar is no longer imported or rendered here
 import {
   DropdownMenu,
@@ -42,8 +43,7 @@ export interface Conversation extends DocumentData {
   type?: 'individual' | 'group'; // To distinguish chat types
   timestamp?: string; // Should be lastActivity or similar
   lastMessage?: { content?: string; senderId?: string; timestamp?: string };
-  // For individual chats, we might want to store the other user's info for quick display
-  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
+  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string; userType?: 'freelancer' | 'business' } };
   // Group specific fields
   groupName?: string;
   description?: string; // Added group description
@@ -198,10 +198,20 @@ export function ChatList({
       createdAt: now,
       updatedAt: now, // Represents last activity timestamp for the conversation
       lastMessage: null, // No messages yet
-      // Store minimal details of participants for easier display in chat list if needed
       participantDetails: {
-        [user.uid]: { userName: user.displayName || user.email || 'Current User', profilePic: user.photoURL || undefined, email: user.email || undefined },
-        [selectedUser.uid]: { userName: selectedUser.userName, profilePic: selectedUser.profilePic, email: selectedUser.email },
+        [user.uid]: {
+          userName: user.displayName || user.email || 'Current User',
+          profilePic: user.photoURL || undefined,
+          email: user.email || undefined,
+          // userType for currentUser might need to be sourced from Redux state if available/needed
+          // userType: user.userType // Assuming user from Redux might have this
+        },
+        [selectedUser.id]: { // Use .id from CombinedUser
+          userName: selectedUser.displayName,
+          profilePic: selectedUser.profilePic,
+          email: selectedUser.email,
+          userType: selectedUser.userType
+        },
       }
     };
 

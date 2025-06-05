@@ -59,10 +59,14 @@ export function ChangeGroupInfoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl">
+      <DialogContent
+        className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"
+        aria-labelledby="change-group-info-title"
+        aria-describedby="change-group-info-description"
+      >
         <DialogHeader>
-          <DialogTitle className="text-[hsl(var(--card-foreground))]">Change Group Information</DialogTitle>
-          <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1">
+          <DialogTitle id="change-group-info-title" className="text-[hsl(var(--card-foreground))]">Change Group Information</DialogTitle>
+          <DialogDescription id="change-group-info-description" className="text-[hsl(var(--muted-foreground))] pt-1">
             Update the group's name and avatar URL.
           </DialogDescription>
         </DialogHeader>

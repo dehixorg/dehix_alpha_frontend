@@ -41,11 +41,15 @@ export function ConfirmActionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl">
+      <DialogContent
+        className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"
+        aria-labelledby="confirm-action-title"
+        aria-describedby={description ? "confirm-action-description" : undefined}
+      >
         <DialogHeader>
-          <DialogTitle className="text-[hsl(var(--card-foreground))]">{title}</DialogTitle>
+          <DialogTitle id="confirm-action-title" className="text-[hsl(var(--card-foreground))]">{title}</DialogTitle>
           {description && (
-            <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-2">
+            <DialogDescription id="confirm-action-description" className="text-[hsl(var(--muted-foreground))] pt-2">
               {description}
             </DialogDescription>
           )}

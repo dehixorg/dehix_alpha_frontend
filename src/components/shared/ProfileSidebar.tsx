@@ -16,7 +16,8 @@ import { AddMembersDialog } from './AddMembersDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
-import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay'; // Import MediaItem type and SharedMediaDisplay component
+import { SharedMediaDisplay, type MediaItem } from './SharedMediaDisplay';
+import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
 
 export type ProfileUser = {
   _id: string;
@@ -143,10 +144,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
           setProfileData(mappedUser);
         } else {
           console.warn(`User profile not found for ID: ${profileId} from any endpoint.`);
-          // Do not toast "Not Found" here if one of the endpoints failing with 404 is expected.
-          // Only toast if both fail for reasons other than "not found" or if explicitly no data after trying all.
-          if (!apiResponse?.data?.data && !loading) { // Check if still loading to avoid premature toast
-             toast({ title: "Not Found", description: "User profile could not be loaded." });
+          // This specific toast is for when user is not found after trying all relevant API endpoints.
+          if (!apiResponse?.data?.data && profileId) { // Ensure profileId was present for the attempt
+            toast({
+              variant: "default",
+              title: "User Profile Not Found",
+              description: `Could not load a profile for ID: ${profileId}. Please check if the ID is correct and the user exists.`,
+            });
           }
           setProfileData(null);
         }
@@ -313,9 +317,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, profileId, profileType, refreshDataKey]);
 
-  const handleAddMembersToGroup = async (selectedUserIds: string[], groupId: string) => {
-    // ... (existing implementation)
-    if (!selectedUserIds || selectedUserIds.length === 0) {
+  const handleAddMembersToGroup = async (selectedUsers: CombinedUser[], groupId: string) => {
+    if (!selectedUsers || selectedUsers.length === 0) {
       toast({ variant: "destructive", title: "No users selected", description: "Please select users to add." });
       return;
     }
@@ -325,31 +328,28 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     }
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
-      const groupSnap = await getDoc(groupDocRef);
-      if (!groupSnap.exists()) {
-        toast({ variant: "destructive", title: "Error", description: "Group not found." });
-        return;
-      }
+      // No need to fetch groupSnap if we are just updating, unless we need to validate something from it first.
+      // For now, assuming direct update is fine.
+
       const newParticipantDetailsUpdates: { [key: string]: any } = {};
-      const userFetchPromises = selectedUserIds.map(async (uid) => {
-        const userDoc = await getDoc(doc(db, 'users', uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          newParticipantDetailsUpdates[`participantDetails.${uid}`] = {
-            email: userData.email || '',
-            userName: userData.userName || userData.name || 'Unknown User',
-            profilePic: userData.profilePic || '',
-          };
-        }
-      });
-      await Promise.all(userFetchPromises);
+      const selectedUserIds = selectedUsers.map(user => user.id);
+
+      for (const user of selectedUsers) {
+        newParticipantDetailsUpdates[`participantDetails.${user.id}`] = {
+          email: user.email,
+          userName: user.displayName, // Using displayName from CombinedUser
+          profilePic: user.profilePic,
+          userType: user.userType, // Storing userType
+        };
+      }
+
       await updateDoc(groupDocRef, {
         participants: arrayUnion(...selectedUserIds),
         ...newParticipantDetailsUpdates,
         updatedAt: new Date().toISOString()
       });
-      toast({ title: "Success", description: `${selectedUserIds.length} member(s) added successfully.` });
-      setRefreshDataKey(prev => prev + 1);
+      toast({ title: "Success", description: `${selectedUsers.length} member(s) added successfully.` });
+      setRefreshDataKey(prev => prev + 1); // Trigger data refresh for the sidebar
     } catch (error) {
       console.error("Error adding members:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to add members. Please try again." });
@@ -551,10 +551,19 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl">
+      <SheetContent
+        className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+        aria-labelledby="profile-sidebar-title"
+        aria-describedby="profile-sidebar-description"
+      >
         <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
           <div className="flex justify-between items-center">
-            <SheetTitle className="text-[hsl(var(--card-foreground))]">{profileType === 'user' ? 'User Profile' : 'Group Details'}</SheetTitle>
+            <SheetTitle id="profile-sidebar-title" className="text-[hsl(var(--card-foreground))]">
+              {profileType === 'user' ? 'User Profile' : 'Group Details'}
+            </SheetTitle>
+            <p id="profile-sidebar-description" className="sr-only">
+              Displays details and actions for the selected user or group.
+            </p>
             <SheetClose asChild>
               <Button variant="ghost" size="icon" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
                 <X className="h-5 w-5" />
@@ -839,4 +848,4 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 
 export default ProfileSidebar;
 
-
+[end of dehix_alpha_frontend-main/src/components/shared/ProfileSidebar.tsx]

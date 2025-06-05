@@ -106,10 +106,14 @@ export function InviteLinkDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl">
+      <DialogContent
+        className="sm:max-w-lg bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"
+        aria-labelledby="invite-link-title"
+        aria-describedby="invite-link-description"
+      >
         <DialogHeader>
-          <DialogTitle className="text-[hsl(var(--card-foreground))]">{dialogTitle}</DialogTitle>
-          <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1">
+          <DialogTitle id="invite-link-title" className="text-[hsl(var(--card-foreground))]">{dialogTitle}</DialogTitle>
+          <DialogDescription id="invite-link-description" className="text-[hsl(var(--muted-foreground))] pt-1">
             {dialogDescription}
           </DialogDescription>
         </DialogHeader>
