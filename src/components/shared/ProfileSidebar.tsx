@@ -16,7 +16,7 @@ import { AddMembersDialog } from './AddMembersDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
-import { SharedMediaDisplay, type MediaItem } from './SharedMediaDisplay'; // Import MediaItem type and SharedMediaDisplay component
+import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay'; // Import MediaItem type and SharedMediaDisplay component
 
 export type ProfileUser = {
   _id: string;
