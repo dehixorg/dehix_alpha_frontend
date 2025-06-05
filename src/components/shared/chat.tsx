@@ -182,27 +182,39 @@ export function CardsChat({
   }, []);
 
   useEffect(() => {
-    const fetchPrimaryUser = async () => {
+    const fetchPrimaryUserAndMessages = async () => {
       const primaryUid = conversation.participants.find(
         (participant: string) => participant !== user.uid,
       );
 
-      if (primaryUid) {
+      let userDetailsFoundInConversation = false;
+      if (primaryUid && conversation.participantDetails && conversation.participantDetails[primaryUid] && conversation.participantDetails[primaryUid].userName) {
+        const details = conversation.participantDetails[primaryUid];
+        setPrimaryUser({
+          userName: details.userName,
+          email: details.email || '', 
+          profilePic: details.profilePic || '', 
+        });
+        userDetailsFoundInConversation = true;
+      }
+
+      if (primaryUid && !userDetailsFoundInConversation) {
         try {
           const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
           setPrimaryUser(response.data.data);
         } catch (error) {
-          console.error('Error fetching primary user:', error);
+          console.error('Error fetching primary user via API:', error);
+          // Show toast only if details were not found in conversation.participantDetails
           toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Something went wrong.Please try again.',
-          }); // Error toast
+            description: 'Failed to load user details. Please try again.',
+          });
         }
       }
     };
-    let unsubscribeMessages: (() => void) | undefined;
 
+    let unsubscribeMessages: (() => void) | undefined;
     const fetchMessages = async () => {
       setLoading(true);
       unsubscribeMessages = subscribeToFirestoreCollection(
@@ -216,8 +228,18 @@ export function CardsChat({
     };
 
     if (conversation) {
-      fetchPrimaryUser();
-      fetchMessages();
+      fetchPrimaryUserAndMessages(); // Combined function call
+      // Messages are fetched regardless of primary user fetch path
+      unsubscribeMessages = subscribeToFirestoreCollection(
+        `conversations/${conversation.id}/messages`,
+        (messagesData) => {
+          setMessages(messagesData);
+          setLoading(false); // Set loading to false after messages are fetched
+        },
+        'desc',
+      );
+    } else {
+      setLoading(false); // If no conversation, not loading
     }
 
     return () => {

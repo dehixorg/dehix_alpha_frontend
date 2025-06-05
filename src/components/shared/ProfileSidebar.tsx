@@ -87,17 +87,17 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     // This function will now only fetch profile data.
     // Media fetching and its state resets will be handled by fetchSharedMedia or useEffect.
     // Reset profile-specific states
-    setProfileData(null);
+        setProfileData(null);
     // setLoading(true) will be called by the useEffect orchestrator
 
     if (!profileId || !profileType) { // isOpen is checked by the caller (useEffect)
       // toast({ title: "Debug", description: "internalFetchProfileData: missing profileId or profileType" });
       setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      if (profileType === 'user') {
+        return;
+      }
+      setLoading(true);
+      try {
+        if (profileType === 'user') {
         let apiResponse;
         let userDataFromApi: any = null;
 
@@ -146,8 +146,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
              // console.log("Final check: userDataFromApi is null"); // For debugging if needed
           }
           // setProfileData(null); // Already handled if errors occurred. If successful, it's set above.
-        }
-      } else if (profileType === 'group') {
+          }
+        } else if (profileType === 'group') {
         // setLoading(true); // Already set at the beginning of the function
         // setProfileData(null); // Already set at the beginning of the function
         try {
@@ -270,7 +270,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
       console.error("Error fetching shared media:", error.message || error);
       toast({ variant: "destructive", title: "Error", description: "Could not load shared media." });
       setSharedMedia([]);
-    } finally {
+      } finally {
       setLoadingMedia(false);
     }
   };
@@ -407,8 +407,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     } catch (error) {
       console.error("Error generating and saving invite link:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to generate invite link." });
-      return null;
-    }
+    return null;
+  }
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {

@@ -38,11 +38,18 @@ export const useAllUsers = () => {
     setUsers([]);
 
     try {
-      const response = await axiosInstance.get('/freelancer');
+      // Add pagination parameters to get all users
+      const response = await axiosInstance.get('/freelancer', {
+        params: {
+          limit: 100, // Set a high limit to get all users
+          page: 1
+        }
+      });
 
       // The API returns the array inside a `data` property. Check for its existence.
       if (response.data && Array.isArray(response.data.data)) {
         const freelancerData = response.data.data as ApiUser[];
+        console.log('Fetched freelancers:', freelancerData.length); // Debug log
         const processedUsers = freelancerData.map(user => ({
           id: user._id,
           displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed User').trim(),
@@ -54,6 +61,7 @@ export const useAllUsers = () => {
           rawFirstName: user.firstName,
           rawLastName: user.lastName,
         }));
+        console.log('Processed users:', processedUsers.length); // Debug log
         setUsers(processedUsers);
       } else {
         // Handle cases where response.data.data is not an array

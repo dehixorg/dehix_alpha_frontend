@@ -54,7 +54,6 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
     setSearchResults(filtered);
   }, [isOpen, userSearchTerm, allFetchedUsers, isLoadingUsers, currentUserUid]);
 
-
   // Reset search term and results when dialog is closed/opened
   useEffect(() => {
     if (isOpen) {
@@ -80,7 +79,7 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="searchUser" className="text-right col-span-1 text-[hsl(var(--foreground))]">
               Search
@@ -96,7 +95,7 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
             />
           </div>
 
-          <div className="col-span-4 mt-2 min-h-[200px]"> {/* Ensure space for loader/messages/list */}
+          <div className="min-h-[200px]">
             {isLoadingUsers ? (
               <div className="flex items-center justify-center h-full">
                 <LoaderCircle className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
@@ -112,10 +111,10 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
                   {searchResults.map((foundUser) => (
                     <Button
                       variant="ghost"
-                      key={foundUser.id} // Use id from CombinedUser
+                      key={foundUser.id}
                       onClick={() => {
-                        onSelectUser(foundUser); // Pass CombinedUser object
-                        onClose(); // Close dialog after selection
+                        onSelectUser(foundUser);
+                        onClose();
                       }}
                       className="w-full flex items-center justify-start space-x-3 p-2 text-left h-auto hover:bg-[hsl(var(--accent))]"
                     >

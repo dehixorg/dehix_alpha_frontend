@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react'; // Import useRef
-import { DocumentData } from 'firebase/firestore';
+import { DocumentData, addDoc, collection, doc, getDoc } from 'firebase/firestore'; // Added addDoc, collection, doc, getDoc
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils'; // Added cn
 import { Button } from '@/components/ui/button';
+import { db } from '@/config/firebaseConfig'; // Added db
+import { toast } from '@/hooks/use-toast'; // Added toast
 
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -28,6 +30,14 @@ import {
   menuItemsTop,
   chatsMenu,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+
+// Helper function to check if two arrays contain the same elements, regardless of order
+const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
+  if (arr1.length !== arr2.length) return false;
+  const sortedArr1 = [...arr1].sort();
+  const sortedArr2 = [...arr2].sort();
+  return sortedArr1.every((value, index) => value === sortedArr2[index]);
+};
 
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
@@ -71,28 +81,67 @@ const HomePage = () => {
     // This logic is now duplicated from chatList.tsx and should be unified
     // For now, let's keep it here to make the dialog functional from the page level.
     if (!user || !user.uid) {
-      // toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
       return;
     }
 
     const existingConversation = conversations.find(conv =>
       conv.type === 'individual' &&
       conv.participants.length === 2 &&
-      conv.participants.includes(user.uid) &&
-      conv.participants.includes(selectedUser.id)
+      // Use arraysHaveSameElements to ensure participant check is order-agnostic
+      arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id])
     );
 
     if (existingConversation) {
       setActiveConversation(existingConversation);
       setIsNewChatDialogOpen(false);
-      // toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      toast({ title: "Info", description: "Conversation already exists, switching to it." });
       return;
     }
     
-    // If no existing chat, we would create a new one here.
-    // This logic needs to be fully implemented, likely involving a call to a Firestore utility.
-    console.log("Starting new chat with:", selectedUser.displayName);
-    setIsNewChatDialogOpen(false);
+    // Create new conversation
+    const now = new Date().toISOString();
+    // Ensure newConversationData is typed correctly, using Partial<Conversation> or a more specific type
+    const newConversationData: Partial<Conversation> = { 
+      participants: [user.uid, selectedUser.id].sort(),
+      type: 'individual',
+      createdAt: now,
+      updatedAt: now,
+      lastMessage: null, // No messages yet
+      participantDetails: {
+        [user.uid]: {
+          userName: user.displayName || user.email || 'Current User',
+          profilePic: user.photoURL || undefined,
+          email: user.email || undefined,
+          userType: user.type // Assuming user from Redux has 'type'
+        },
+        [selectedUser.id]: {
+          userName: selectedUser.displayName,
+          profilePic: selectedUser.profilePic,
+          email: selectedUser.email,
+          userType: selectedUser.userType
+        },
+      }
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
+      toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
+      
+      const newDocSnap = await getDoc(doc(db, "conversations", docRef.id));
+      if (newDocSnap.exists()) {
+        const conversationDataForState = { id: newDocSnap.id, ...newDocSnap.data() } as Conversation;
+        setActiveConversation(conversationDataForState);
+      } else {
+        console.warn("Newly created conversation document not found immediately after creation.");
+        // Potentially trigger a refresh of conversations list if direct setting fails
+      }
+      setIsNewChatDialogOpen(false); // Close dialog after successful creation
+    } catch (error) {
+      console.error("Error starting new chat: ", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to start new chat." });
+      setIsNewChatDialogOpen(false); // Ensure dialog closes even on error
+    }
   };
 
   useEffect(() => {
