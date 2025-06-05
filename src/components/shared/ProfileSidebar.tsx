@@ -3,10 +3,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/comp
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users, MinusCircle } from "lucide-react";
+import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users, MinusCircle, Volume2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
-import { doc, getDoc, DocumentData, updateDoc, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
+import { doc, getDoc, DocumentData, updateDoc, arrayUnion, arrayRemove, deleteField, deleteDoc } from 'firebase/firestore'; // Import deleteDoc
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ export type ProfileGroup = {
 
 interface ProfileSidebarProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: () => void; // Prop to close the sidebar itself
   profileId: string | null;
   profileType: 'user' | 'group' | null;
 }
@@ -80,6 +80,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   const [refreshDataKey, setRefreshDataKey] = useState(0);
 
   const internalFetchProfileData = async () => {
+    // ... (existing fetch logic)
     if (!isOpen || !profileId || !profileType) {
       setProfileData(null);
       return;
@@ -153,7 +154,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
             avatar: finalAvatar,
             createdAtFirebase: groupData.createdAtFirebase,
             createdAtFormatted: formattedCreatedAt,
-            admins: Array.isArray(groupData.admins) ? groupData.admins : [], // Refined admin handling
+            admins: Array.isArray(groupData.admins) ? groupData.admins : [],
             participants: participantUIDs,
             participantDetails: groupData.participantDetails,
             inviteLink: groupData.inviteLink,
@@ -171,12 +172,14 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     }
   };
 
+
   useEffect(() => {
     internalFetchProfileData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, profileId, profileType, refreshDataKey]);
 
   const handleAddMembersToGroup = async (selectedUserIds: string[], groupId: string) => {
+    // ... (existing implementation)
     if (!selectedUserIds || selectedUserIds.length === 0) {
       toast({ variant: "destructive", title: "No users selected", description: "Please select users to add." });
       return;
@@ -219,6 +222,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   };
 
   const handleSaveGroupInfo = async (newName: string, newAvatarUrl: string, groupId: string) => {
+    // ... (existing implementation)
     if (!newName.trim()) {
       toast({ variant: "destructive", title: "Validation Error", description: "Group name cannot be empty." });
       return;
@@ -256,7 +260,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   };
 
   const handleGenerateInviteLink = async (groupId: string): Promise<string | null> => {
-    if (!groupId) {
+    // ... (existing implementation)
+     if (!groupId) {
       toast({ variant: "destructive", title: "Error", description: "Group ID is missing." });
       return null;
     }
@@ -279,6 +284,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
+    // ... (existing implementation)
     if (!profileId) {
       toast({ variant: "destructive", title: "Error", description: "Group ID is missing." });
       return;
@@ -304,12 +310,117 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     }
   };
 
+  const handleToggleMuteGroup = async (groupId: string, isCurrentlyMuted: boolean) => {
+    // ... (existing implementation)
+    if (!currentUser || !currentUser.uid) {
+      toast({ variant: "destructive", title: "Error", description: "User not found or not logged in." });
+      return;
+    }
+    if (!groupId) {
+      toast({ variant: "destructive", title: "Error", description: "Group ID not found." });
+      return;
+    }
+    const userDocRef = doc(db, 'users', currentUser.uid);
+    try {
+      if (isCurrentlyMuted) {
+        await updateDoc(userDocRef, {
+          mutedGroups: arrayRemove(groupId)
+        });
+        toast({ title: "Success", description: "Group unmuted. You will now receive notifications." });
+      } else {
+        await updateDoc(userDocRef, {
+          mutedGroups: arrayUnion(groupId)
+        });
+        toast({ title: "Success", description: "Group muted. You will no longer receive notifications." });
+      }
+      // TODO: IMPORTANT - Dispatch an action to update the Redux store for `currentUser.mutedGroups`.
+    } catch (error) {
+      console.error("Error updating mute status:", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to update mute status." });
+    }
+  };
+
+  const handleLeaveGroup = async (groupId: string, userIdToLeave: string) => {
+    // ... (existing implementation)
+    if (!groupId || !userIdToLeave) {
+      toast({ variant: "destructive", title: "Error", description: "Group or User ID is missing." });
+      setIsConfirmDialogOpen(false);
+      return;
+    }
+    const groupDocRef = doc(db, 'conversations', groupId);
+    const updateData: any = {
+      participants: arrayRemove(userIdToLeave),
+      [`participantDetails.${userIdToLeave}`]: deleteField(),
+      updatedAt: new Date().toISOString()
+    };
+    const groupData = profileData as ProfileGroup;
+    if (groupData && groupData.admins?.includes(userIdToLeave)) {
+      updateData.admins = arrayRemove(userIdToLeave);
+      if (groupData.admins.length === 1 && groupData.admins[0] === userIdToLeave) {
+        toast({
+          variant: "default",
+          title: "Last Admin Left",
+          description: "The last admin has left the group. The group currently has no administrators.",
+          duration: 7000,
+         });
+      }
+    }
+    try {
+      await updateDoc(groupDocRef, updateData);
+      toast({ title: "Success", description: "You have left the group." });
+      onClose();
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to leave group." });
+    } finally {
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!groupId) {
+      toast({ variant: "destructive", title: "Error", description: "Group ID not found for deletion." });
+      setIsConfirmDialogOpen(false);
+      return;
+    }
+    // Optional: Admin check, though UI should already gate this.
+    if (!currentUser || !(profileData as ProfileGroup)?.admins?.includes(currentUser.uid)) {
+        toast({ variant: "destructive", title: "Unauthorized", description: "Only admins can delete groups." });
+        setIsConfirmDialogOpen(false);
+        return;
+    }
+
+    const groupDocRef = doc(db, 'conversations', groupId);
+    try {
+      // Note: This deletes the group document but not its subcollections (e.g., messages).
+      // Cascading deletes typically require a Firebase Function.
+      await deleteDoc(groupDocRef);
+      toast({ title: "Success", description: "Group has been permanently deleted." });
+      onClose(); // Close the ProfileSidebar
+
+      // TODO: Ensure chat list updates and activeConversation is cleared/updated.
+      // This relies on Firestore listeners in `chat/page.tsx` correctly handling document deletion.
+      // Parent component might need a callback or to observe changes to reset active chat.
+
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete group. Please try again." });
+    } finally {
+      setIsConfirmDialogOpen(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
+
+  const isCurrentlyMuted =
+    profileType === 'group' &&
+    profileData &&
+    currentUser?.mutedGroups?.includes((profileData as ProfileGroup).id);
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -425,7 +536,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                                 size="icon"
                                 className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
                                 onClick={(e) => {
-                                  e.stopPropagation(); // Important to prevent parent list item click if any
+                                  e.stopPropagation();
                                   setConfirmDialogProps({
                                     title: "Confirm Removal",
                                     description: `Are you sure you want to remove ${member.userName} from the group?`,
@@ -434,7 +545,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                                   });
                                   setIsConfirmDialogOpen(true);
                                 }}
-                                aria-label={`Remove ${member.userName} from group`} // Accessibility
+                                aria-label={`Remove ${member.userName} from group`}
                               >
                                 <MinusCircle className="h-4 w-4" />
                               </Button>
@@ -449,7 +560,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                     <div>
                       <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">Shared Media</h3>
                       <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                        <p>Group media previews will appear here.</p>
+                        <p>Media previews will appear here.</p>
                         <span className="text-xs">(Feature coming soon)</span>
                       </div>
                     </div>
@@ -460,7 +571,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                           <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))]" onClick={() => setIsAddMembersDialogOpen(true)}>
                             <Users className="h-4 w-4 mr-2" /> Add Members
                           </Button>
-                          {/* General "Remove Members" button removed. Per-member removal is available in the list. */}
                           <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))]" onClick={() => setIsChangeGroupInfoDialogOpen(true)}>
                             <Edit3 className="h-4 w-4 mr-2" /> Change Group Name/Avatar
                           </Button>
@@ -469,14 +579,57 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                           </Button>
                         </>
                       )}
-                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50" disabled>
-                        <VolumeX className="h-4 w-4 mr-2" /> Mute Group
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-[hsl(var(--muted-foreground))]"
+                        onClick={() => {
+                          if (profileData && profileType === 'group') {
+                            handleToggleMuteGroup((profileData as ProfileGroup).id, !!isCurrentlyMuted);
+                          }
+                        }}
+                      >
+                        {isCurrentlyMuted ? (
+                          <Volume2 className="h-4 w-4 mr-2" />
+                        ) : (
+                          <VolumeX className="h-4 w-4 mr-2" />
+                        )}
+                        {isCurrentlyMuted ? 'Unmute Group' : 'Mute Group'}
                       </Button>
-                      <Button variant="destructive" className="w-full justify-start disabled:opacity-50" disabled>
+                      <Button
+                        variant="destructive"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          if (profileData && profileType === 'group' && currentUser?.uid) {
+                            setConfirmDialogProps({
+                              title: "Leave Group?",
+                              description: "Are you sure you want to leave this group? You will need to be re-invited to join again.",
+                              onConfirm: () => handleLeaveGroup((profileData as ProfileGroup).id, currentUser.uid),
+                              confirmButtonText: "Leave Group",
+                              confirmButtonVariant: "destructive"
+                            });
+                            setIsConfirmDialogOpen(true);
+                          }
+                        }}
+                      >
                         <LogOut className="h-4 w-4 mr-2" /> Leave Group
                       </Button>
                       {currentUser && (profileData as ProfileGroup).admins?.includes(currentUser.uid) && (
-                        <Button variant="destructive" className="w-full justify-start disabled:opacity-50" disabled>
+                        <Button
+                          variant="destructive"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            if (profileData && profileType === 'group') {
+                              setConfirmDialogProps({
+                                title: "Delete Group Permanently?",
+                                description: "This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?",
+                                onConfirm: () => handleDeleteGroup((profileData as ProfileGroup).id),
+                                confirmButtonText: "Yes, Delete This Group",
+                                confirmButtonVariant: "destructive"
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete Group
                         </Button>
                       )}
