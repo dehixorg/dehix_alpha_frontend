@@ -22,7 +22,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input'; // Import the Input component
+import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -43,10 +43,9 @@ interface SkillDomainData {
   type: string;
 }
 
-// Define the props for the SkillDialog component
 interface SkillDialogProps {
   skills: Skill[];
-  onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
+  onSubmitSkill: (data: SkillDomainData) => boolean;
   setSkills: any;
 }
 
@@ -92,6 +91,20 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
+
+    // Check for duplicate before making API call
+    const isUnique = onSubmitSkill({
+      ...data,
+      uid: '', // Will be set after API call
+      type: 'SKILL',
+    });
+
+    if (!isUnique) {
+      setLoading(false);
+      // The toast for duplicate is shown in the handler
+      return;
+    }
+
     try {
       const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.skillId,
@@ -104,17 +117,18 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
       });
 
       if (response.status === 200) {
-        // Assuming the response contains the newly created talent data including UID
-        const newTalent = response.data.data; // Adjust based on your response structure
+        const newTalent = response.data.data;
+        // Call handler again to update state with UID (if needed)
         onSubmitSkill({
           ...data,
-          uid: newTalent._id, // Update this line to use the UID from the response
+          uid: newTalent._id,
+          type: 'SKILL',
         });
         setSkills((prevSkills: any) =>
           prevSkills.filter((skill: any) => skill._id !== data.skillId),
         );
         reset();
-        setOpen(false); // Close the dialog after successful submission
+        setOpen(false);
         toast({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
@@ -129,7 +143,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
         description: 'Failed to add talent. Please try again.',
       });
     } finally {
-      setLoading(false); // Ensures the button returns to its default state
+      setLoading(false);
     }
   };
 
@@ -157,14 +171,11 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                 <Select
                   value={field.value}
                   onValueChange={(selectedLabel) => {
-                    // Find the selected skill by label
-                    const selectedDomain = skills.find(
+                    const selectedSkill = skills.find(
                       (skill) => skill.name === selectedLabel,
                     );
-
-                    // Set label and domainId in form
-                    field.onChange(selectedLabel); // Set label
-                    setValue('skillId', selectedDomain?._id || ''); // Set domainId
+                    field.onChange(selectedLabel);
+                    setValue('skillId', selectedSkill?._id || '');
                   }}
                 >
                   <SelectTrigger>
@@ -173,7 +184,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                   <SelectContent>
                     {skills.length > 0 ? (
                       skills.map((skill: Skill) => (
-                        <SelectItem key={skill.name} value={skill.name}>
+                        <SelectItem key={skill._id} value={skill.name}>
                           {skill.name}
                         </SelectItem>
                       ))
@@ -207,7 +218,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1} // Allow decimals
+                    step={0.1}
                     {...field}
                     className="mt-2 w-full"
                   />

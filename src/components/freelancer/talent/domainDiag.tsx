@@ -22,18 +22,16 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input'; // Import ShadCN Input component
+import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
-// Define the type for a domain
 interface Domain {
   _id: string;
   name: string;
 }
 
-// Define SkillDomainData based on your form data structure
 interface SkillDomainData {
   uid: string;
   domainId: string;
@@ -45,14 +43,12 @@ interface SkillDomainData {
   type: string;
 }
 
-// Define the props for the DomainDialog component
 interface DomainDialogProps {
   domains: Domain[];
-  onSubmitDomain: (data: SkillDomainData) => void; // Update this type based on your actual data structure
+  onSubmitDomain: (data: SkillDomainData) => boolean;
   setDomains: any;
 }
 
-// Define the schema for validation
 const domainSchema = z.object({
   domainId: z.string(),
   label: z.string().nonempty('Please select a domain'),
@@ -73,7 +69,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   onSubmitDomain,
   setDomains,
 }) => {
-  const [open, setOpen] = useState(false); // Manage dialog visibility
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
     control,
@@ -95,8 +91,22 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
+
+    // Check for duplicate before making API call
+    const isUnique = onSubmitDomain({
+      ...data,
+      uid: '', // Will be set after API call
+      type: 'DOMAIN',
+    });
+
+    if (!isUnique) {
+      setLoading(false);
+      // The toast for duplicate is shown in the handler
+      return;
+    }
+
     try {
-      const response = await axiosInstance.post(`/freelancers/dehix-talent`, {
+      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.domainId,
         talentName: data.label,
         experience: data.experience,
@@ -107,16 +117,18 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
 
       if (response.status === 200) {
-        const newTalent = response.data.data; // Adjust based on your response structure
+        const newTalent = response.data.data;
+        // Call handler again to update state with UID (if needed)
         onSubmitDomain({
           ...data,
-          uid: newTalent._id, // Use the UID from the response
+          uid: newTalent._id,
+          type: 'DOMAIN',
         });
-        setDomains((prevSkills: any) =>
-          prevSkills.filter((domain: any) => domain._id !== data.domainId),
+        setDomains((prevDomains: any) =>
+          prevDomains.filter((domain: any) => domain._id !== data.domainId),
         );
         reset();
-        setOpen(false); // Close the dialog after successful submission
+        setOpen(false);
         toast({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
@@ -203,7 +215,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1} //Allow decimals
+                    step={0.1}
                     {...field}
                     className="w-full mt-2"
                   />

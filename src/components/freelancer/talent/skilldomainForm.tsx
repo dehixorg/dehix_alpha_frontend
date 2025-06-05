@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Switch } from '@/components/ui/switch';
-import { RootState } from '@/lib/store';
+import type { RootState } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getBadgeColor } from '@/utils/common/getBadgeStatus';
@@ -43,6 +44,7 @@ interface SkillDomainData {
   type: string;
   status: StatusEnum;
   activeStatus: boolean;
+  domainId?: string;
 }
 
 const SkillDomainForm: React.FC = () => {
@@ -51,6 +53,27 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Counter states for skills and domains (by label)
+  const [skillCounts, setSkillCounts] = useState<{ [label: string]: number }>(
+    {},
+  );
+  const [domainCounts, setDomainCounts] = useState<{ [label: string]: number }>(
+    {},
+  );
+
+  // Function to remove duplicate entries
+  const removeDuplicates = (data: SkillDomainData[]) => {
+    const seen = new Set<string>();
+    return data.filter((item) => {
+      const key = `${item.label.trim().toLowerCase()}-${item.type}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
 
   const user = useSelector((state: RootState) => state.user);
 
@@ -76,7 +99,6 @@ const SkillDomainForm: React.FC = () => {
             `/freelancer/${user.uid}/dehix-talent`,
           );
         }
-        console.log(talentResponse);
 
         const talentData = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data?.data
@@ -106,13 +128,29 @@ const SkillDomainForm: React.FC = () => {
           type: item.type,
         }));
 
+        const deduplicatedData = removeDuplicates(formattedTalentData);
+        setSkillDomainData(deduplicatedData);
+        setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
+
         setSkills(filteredSkills);
         setDomains(filteredDomains);
-        setSkillDomainData(formattedTalentData);
 
-        setStatusVisibility(
-          formattedTalentData.map((item) => item.activeStatus),
-        );
+        // Initialize skill and domain counters (by label) - improved logic
+        const skillCounter: { [label: string]: number } = {};
+        const domainCounter: { [label: string]: number } = {};
+
+        deduplicatedData.forEach((item) => {
+          const label = item.label.trim().toLowerCase();
+          if (item.type === 'SKILL') {
+            skillCounter[label] = (skillCounter[label] || 0) + 1;
+          }
+          if (item.type === 'DOMAIN') {
+            domainCounter[label] = (domainCounter[label] || 0) + 1;
+          }
+        });
+
+        setSkillCounts(skillCounter);
+        setDomainCounts(domainCounter);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -128,20 +166,66 @@ const SkillDomainForm: React.FC = () => {
     fetchData();
   }, [user?.uid]);
 
+  // Updated: Return boolean for success/duplicate
   const onSubmitSkill = (data: SkillDomainData) => {
-    setSkillDomainData([
-      ...skillDomainData,
-      { ...data, status: StatusEnum.PENDING, activeStatus: false },
-    ]);
+    const label = data.label.trim().toLowerCase();
+
+    // Check if skill already exists in current data or counters
+    const existsInData = skillDomainData.some(
+      (item) =>
+        item.label.trim().toLowerCase() === label && item.type === 'SKILL',
+    );
+
+    if (existsInData || (skillCounts[label] || 0) > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Duplicate Skill',
+        description: 'This skill has already been added.',
+      });
+      return false;
+    }
+
+    const newData = {
+      ...data,
+      status: StatusEnum.PENDING,
+      activeStatus: false,
+      type: 'SKILL',
+    };
+    setSkillDomainData([...skillDomainData, newData]);
     setStatusVisibility([...statusVisibility, false]);
+    setSkillCounts({ ...skillCounts, [label]: 1 });
+    return true;
   };
 
+  // Updated: Return boolean for success/duplicate
   const onSubmitDomain = (data: SkillDomainData) => {
-    setSkillDomainData([
-      ...skillDomainData,
-      { ...data, status: StatusEnum.PENDING, activeStatus: false },
-    ]);
+    const label = data.label.trim().toLowerCase();
+
+    // Check if domain already exists in current data or counters
+    const existsInData = skillDomainData.some(
+      (item) =>
+        item.label.trim().toLowerCase() === label && item.type === 'DOMAIN',
+    );
+
+    if (existsInData || (domainCounts[label] || 0) > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Duplicate Domain',
+        description: 'This domain has already been added.',
+      });
+      return false;
+    }
+
+    const newData = {
+      ...data,
+      status: StatusEnum.PENDING,
+      activeStatus: false,
+      type: 'DOMAIN',
+    };
+    setSkillDomainData([...skillDomainData, newData]);
     setStatusVisibility([...statusVisibility, false]);
+    setDomainCounts({ ...domainCounts, [label]: 1 });
+    return true;
   };
 
   const handleToggleVisibility = async (
@@ -170,6 +254,31 @@ const SkillDomainForm: React.FC = () => {
     }
   };
 
+  // Handler for SkillDialog and DomainDialog to show success toast only on success
+  const handleSkillSubmit = (data: SkillDomainData) => {
+    const success = onSubmitSkill(data);
+    if (success) {
+      toast({
+        variant: 'default',
+        title: 'Talent Added',
+        description: 'The skill has been successfully added.',
+      });
+    }
+    return success;
+  };
+
+  const handleDomainSubmit = (data: SkillDomainData) => {
+    const success = onSubmitDomain(data);
+    if (success) {
+      toast({
+        variant: 'default',
+        title: 'Talent Added',
+        description: 'The domain has been successfully added.',
+      });
+    }
+    return success;
+  };
+
   return (
     <div className="p-6 mt-2">
       <div className="mb-8 mt-1 ml-2">
@@ -186,12 +295,12 @@ const SkillDomainForm: React.FC = () => {
               <SkillDialog
                 setSkills={setSkills}
                 skills={skills}
-                onSubmitSkill={onSubmitSkill}
+                onSubmitSkill={handleSkillSubmit}
               />
               <DomainDialog
                 setDomains={setDomains}
                 domains={domains}
-                onSubmitDomain={onSubmitDomain}
+                onSubmitDomain={handleDomainSubmit}
               />
             </div>
           </div>
