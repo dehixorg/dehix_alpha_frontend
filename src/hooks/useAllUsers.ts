@@ -38,80 +38,39 @@ export const useAllUsers = () => {
     setUsers([]); // Clear previous users before fetching
 
     try {
-      const [freelancerResponse, businessResponse] = await Promise.allSettled([
-        axiosInstance.get('/freelancer'), // Endpoint for all freelancers
-        axiosInstance.get('/business')    // Endpoint for all businesses
-      ]);
+      // Fetch only from the working /freelancer endpoint
+      const freelancerResponse = await axiosInstance.get('/freelancer');
 
-      let combinedUsersList: CombinedUser[] = [];
-      let fetchErrors: string[] = [];
+      // The actual API response is wrapped in a 'data' object: { data: [...] }
+      // We check for this structure directly, instead of a "status" field.
+      if (freelancerResponse.data && Array.isArray(freelancerResponse.data.data)) {
+        const freelancerData = freelancerResponse.data.data as ApiUser[];
 
-      if (freelancerResponse.status === 'fulfilled' && freelancerResponse.value.data && freelancerResponse.value.data.status === 'success') {
-        const freelancerData = freelancerResponse.value.data.data as ApiUser[];
-        if (Array.isArray(freelancerData)) {
-          const mappedFreelancers = freelancerData.map(user => ({
-            id: user._id,
-            displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed User').trim(),
-            email: user.email,
-            profilePic: user.profilePic,
-            userType: 'freelancer' as 'freelancer',
-            rawUserName: user.userName,
-            rawName: user.name,
-            rawFirstName: user.firstName,
-            rawLastName: user.lastName,
-          }));
-          combinedUsersList = combinedUsersList.concat(mappedFreelancers);
-        } else {
-            console.warn('Freelancer data is not an array:', freelancerResponse.value.data.data);
-        }
-      } else if (freelancerResponse.status === 'rejected') {
-        console.error('Error fetching freelancers:', freelancerResponse.reason);
-        fetchErrors.push(`Failed to fetch freelancers: ${freelancerResponse.reason?.message || 'Unknown error'}`);
-      } else if (freelancerResponse.value?.data?.status !== 'success') {
-        console.error('Error in freelancer response structure:', freelancerResponse.value.data);
-        fetchErrors.push(`Failed to process freelancer data: Unexpected response structure.`);
+        const mappedFreelancers = freelancerData.map(user => ({
+          id: user._id,
+          displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed User').trim(),
+          email: user.email,
+          profilePic: user.profilePic,
+          userType: 'freelancer' as 'freelancer',
+          rawUserName: user.userName,
+          rawName: user.name,
+          rawFirstName: user.firstName,
+          rawLastName: user.lastName,
+        }));
+        setUsers(mappedFreelancers);
+
+      } else {
+        // Handle cases where API responds 2xx but the structure is unexpected
+        const errorMessage = 'Failed to fetch freelancers: Unexpected response structure.';
+        console.error('Error in freelancer response structure:', freelancerResponse.data);
+        setError(errorMessage);
       }
-
-
-      if (businessResponse.status === 'fulfilled' && businessResponse.value.data && businessResponse.value.data.status === 'success') {
-        const businessData = businessResponse.value.data.data as ApiUser[];
-        if (Array.isArray(businessData)) {
-          const mappedBusinesses = businessData.map(user => ({
-            id: user._id,
-            displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed Business').trim(),
-            email: user.email,
-            profilePic: user.profilePic,
-            userType: 'business' as 'business',
-            rawUserName: user.userName,
-            rawName: user.name,
-            rawFirstName: user.firstName,
-            rawLastName: user.lastName,
-          }));
-          combinedUsersList = combinedUsersList.concat(mappedBusinesses);
-        } else {
-            console.warn('Business data is not an array:', businessResponse.value.data.data);
-        }
-      } else if (businessResponse.status === 'rejected') {
-        console.error('Error fetching businesses:', businessResponse.reason);
-        fetchErrors.push(`Failed to fetch businesses: ${businessResponse.reason?.message || 'Unknown error'}`);
-      } else if (businessResponse.value?.data?.status !== 'success') {
-        console.error('Error in business response structure:', businessResponse.value.data);
-        fetchErrors.push(`Failed to process business data: Unexpected response structure.`);
-      }
-
-      // Simple de-duplication based on ID, in case a user is somehow both
-      const uniqueUsers = Array.from(new Map(combinedUsersList.map(user => [user.id, user])).values());
-      setUsers(uniqueUsers);
-
-      if (fetchErrors.length > 0) {
-        setError(fetchErrors.join('; '));
-      }
-
     } catch (e: any) {
-      // This catch is for truly unexpected errors during the setup of Promise.allSettled or other synchronous parts.
-      console.error('Generic error fetching users:', e);
-      setError(e.message || 'An unexpected error occurred');
-      setUsers([]); // Clear users on generic error
+      // This catch handles network errors, 4xx/5xx responses from axios
+      const errorMessage = e.response?.data?.message || e.message || 'An unexpected error occurred while fetching users.';
+      console.error('Error fetching freelancers:', e);
+      setError(errorMessage);
+      setUsers([]); // Ensure users list is empty on error
     } finally {
       setIsLoading(false);
     }
