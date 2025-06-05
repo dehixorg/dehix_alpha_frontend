@@ -25,10 +25,10 @@ const config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
+          DEFAULT: 'hsl(270, 50%, 60%)',
           foreground: 'hsl(var(--primary-foreground))',
         },
-        'primary-hover': 'hsl(var(--primary-hover))', // Use the new CSS variable
+        'primary-hover': 'hsl(270, 50%, 80%)',
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',

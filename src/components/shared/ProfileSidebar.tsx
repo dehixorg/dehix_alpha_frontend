@@ -6,10 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users, MinusCircle, Volume2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
-import { doc, getDoc, DocumentData, updateDoc, arrayUnion, arrayRemove, deleteField, deleteDoc } from 'firebase/firestore'; // Import deleteDoc
+import { doc, getDoc, DocumentData, updateDoc, arrayUnion, arrayRemove, deleteField, deleteDoc } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
+import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
@@ -17,15 +18,16 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 
 export type ProfileUser = {
+  _id: string;
   id: string;
-  userName?: string;
-  name?: string;
-  displayName: string;
+  userName: string;
+  name: string;
   email: string;
   profilePic?: string;
+  bio?: string;
+  displayName: string;
   status?: string;
   lastSeen?: string;
-  bio?: string;
 };
 
 export type ProfileGroupMember = {
@@ -55,7 +57,7 @@ export type ProfileGroup = {
 
 interface ProfileSidebarProps {
   isOpen: boolean;
-  onClose: () => void; // Prop to close the sidebar itself
+  onClose: () => void;
   profileId: string | null;
   profileType: 'user' | 'group' | null;
 }
@@ -80,7 +82,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   const [refreshDataKey, setRefreshDataKey] = useState(0);
 
   const internalFetchProfileData = async () => {
-    // ... (existing fetch logic)
     if (!isOpen || !profileId || !profileType) {
       setProfileData(null);
       return;
@@ -89,26 +90,61 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     setProfileData(null);
     try {
       if (profileType === 'user') {
-        const userDocRef = doc(db, 'users', profileId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          const fetchedUser: ProfileUser = {
-            id: userDocSnap.id,
-            userName: userData.userName,
-            name: userData.name,
-            displayName: userData.userName || userData.name || 'Unknown User',
-            email: userData.email || 'No email provided',
-            profilePic: userData.profilePic,
-            bio: userData.bio,
+        let apiResponse;
+        let userDataFromApi: any = null; // Use 'any' for now, or a more specific raw API response type
+
+        try {
+          // Attempt to fetch from /freelancer/:id first
+          apiResponse = await axiosInstance.get(`/freelancer/${profileId}`);
+          if (apiResponse.data && apiResponse.data.status === 'success' && apiResponse.data.data) {
+            userDataFromApi = apiResponse.data.data;
+          }
+        } catch (freelancerError: any) {
+          console.warn(`Error fetching user from /freelancer/${profileId}:`, freelancerError.message);
+          // If 404, or a specific "not found" error code from your backend, proceed to try /business
+          if (!userDataFromApi && (!freelancerError.response || freelancerError.response.status === 404)) {
+            try {
+                apiResponse = await axiosInstance.get(`/business/${profileId}`);
+                if (apiResponse.data && apiResponse.data.status === 'success' && apiResponse.data.data) {
+                  userDataFromApi = apiResponse.data.data;
+                }
+            } catch (businessError: any) {
+                console.error(`Error fetching user from /business/${profileId} also failed:`, businessError.message);
+                // Only toast if the second call also fails significantly (not just 404)
+                if (!businessError.response || businessError.response.status !== 404) {
+                    toast({ variant: "destructive", title: "Error", description: "Failed to fetch user profile." });
+                }
+            }
+          } else if (freelancerError.isAxiosError) {
+             toast({ variant: "destructive", title: "Error", description: "Failed to fetch user profile." });
+          }
+        }
+
+        if (userDataFromApi) {
+          const mappedUser: ProfileUser = {
+            _id: userDataFromApi._id,
+            id: userDataFromApi._id,
+            userName: userDataFromApi.userName || '',
+            name: userDataFromApi.name || '',
+            email: userDataFromApi.email || 'No email provided',
+            profilePic: userDataFromApi.profilePic,
+            bio: userDataFromApi.bio,
+            displayName: userDataFromApi.userName || userDataFromApi.name || 'Unknown User',
             status: 'Online',
             lastSeen: 'Just now',
           };
-          setProfileData(fetchedUser);
+          setProfileData(mappedUser);
         } else {
-          console.warn(`User document not found: ${profileId}`);
+          console.warn(`User profile not found for ID: ${profileId} from any endpoint.`);
+          // Do not toast "Not Found" here if one of the endpoints failing with 404 is expected.
+          // Only toast if both fail for reasons other than "not found" or if explicitly no data after trying all.
+          if (!apiResponse?.data?.data && !loading) { // Check if still loading to avoid premature toast
+             toast({ title: "Not Found", description: "User profile could not be loaded." });
+          }
+          setProfileData(null);
         }
       } else if (profileType === 'group') {
+        // ... existing group fetching logic from Firestore ...
         const groupDocRef = doc(db, 'conversations', profileId);
         const groupDocSnap = await getDoc(groupDocRef);
         if (groupDocSnap.exists()) {
@@ -163,10 +199,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
           setProfileData(fetchedGroup);
         } else {
           console.warn(`Group (conversation) document not found: ${profileId}`);
+          setProfileData(null); // Ensure data is null if group not found
         }
       }
-    } catch (error) {
-      console.error("Error fetching profile data: ", error);
+    } catch (error) { // Catch any other unexpected errors during the process
+      console.error("Error in internalFetchProfileData: ", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load profile information." });
+      setProfileData(null);
     } finally {
       setLoading(false);
     }
@@ -317,7 +356,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
       return;
     }
     if (!groupId) {
-      toast({ variant: "destructive", title: "Error", description: "Group ID not found." });
+      toast({ variant: "destructive", title: "Error", description: "Group ID is missing." });
       return;
     }
     const userDocRef = doc(db, 'users', currentUser.uid);
@@ -378,30 +417,22 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   };
 
   const handleDeleteGroup = async (groupId: string) => {
+    // ... (existing implementation)
     if (!groupId) {
-      toast({ variant: "destructive", title: "Error", description: "Group ID not found for deletion." });
+      toast({ variant: "destructive", title: "Error", description: "Group ID is missing for deletion." });
       setIsConfirmDialogOpen(false);
       return;
     }
-    // Optional: Admin check, though UI should already gate this.
     if (!currentUser || !(profileData as ProfileGroup)?.admins?.includes(currentUser.uid)) {
         toast({ variant: "destructive", title: "Unauthorized", description: "Only admins can delete groups." });
         setIsConfirmDialogOpen(false);
         return;
     }
-
     const groupDocRef = doc(db, 'conversations', groupId);
     try {
-      // Note: This deletes the group document but not its subcollections (e.g., messages).
-      // Cascading deletes typically require a Firebase Function.
       await deleteDoc(groupDocRef);
       toast({ title: "Success", description: "Group has been permanently deleted." });
-      onClose(); // Close the ProfileSidebar
-
-      // TODO: Ensure chat list updates and activeConversation is cleared/updated.
-      // This relies on Firestore listeners in `chat/page.tsx` correctly handling document deletion.
-      // Parent component might need a callback or to observe changes to reset active chat.
-
+      onClose();
     } catch (error) {
       console.error("Error deleting group:", error);
       toast({ variant: "destructive", title: "Error", description: "Failed to delete group. Please try again." });
@@ -691,3 +722,5 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 };
 
 export default ProfileSidebar;
+
+[end of dehix_alpha_frontend-main/src/components/shared/ProfileSidebar.tsx]
