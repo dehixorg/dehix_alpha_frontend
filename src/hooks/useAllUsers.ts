@@ -38,39 +38,35 @@ export const useAllUsers = () => {
     setUsers([]); // Clear previous users before fetching
 
     try {
-      // Fetch only from the working /freelancer endpoint
-      const freelancerResponse = await axiosInstance.get('/freelancer');
+      const response = await axiosInstance.get('/freelancer'); // Only fetch freelancers
 
-      // The actual API response is wrapped in a 'data' object: { data: [...] }
-      // We check for this structure directly, instead of a "status" field.
-      if (freelancerResponse.data && Array.isArray(freelancerResponse.data.data)) {
-        const freelancerData = freelancerResponse.data.data as ApiUser[];
+      let processedUsers: CombinedUser[] = [];
 
-        const mappedFreelancers = freelancerData.map(user => ({
+      if (response.data && response.data.status === 'success' && Array.isArray(response.data.data)) {
+        const freelancerData = response.data.data as ApiUser[];
+        processedUsers = freelancerData.map(user => ({
           id: user._id,
           displayName: (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name || user.userName || 'Unnamed User').trim(),
           email: user.email,
           profilePic: user.profilePic,
-          userType: 'freelancer' as 'freelancer',
+          userType: 'freelancer', // Explicitly set userType
           rawUserName: user.userName,
           rawName: user.name,
           rawFirstName: user.firstName,
           rawLastName: user.lastName,
         }));
-        setUsers(mappedFreelancers);
-
+        setUsers(processedUsers);
       } else {
-        // Handle cases where API responds 2xx but the structure is unexpected
-        const errorMessage = 'Failed to fetch freelancers: Unexpected response structure.';
-        console.error('Error in freelancer response structure:', freelancerResponse.data);
+        // Handle cases where freelancer data is not as expected, or status is not 'success'
+        const errorMessage = `Failed to fetch freelancer data or data format incorrect. Status: ${response.data?.status}, Message: ${response.data?.message}`;
+        console.error('Error or unexpected format fetching freelancers:', response.data);
         setError(errorMessage);
+        setUsers([]); // Ensure users are cleared on error
       }
     } catch (e: any) {
-      // This catch handles network errors, 4xx/5xx responses from axios
-      const errorMessage = e.response?.data?.message || e.message || 'An unexpected error occurred while fetching users.';
-      console.error('Error fetching freelancers:', e);
-      setError(errorMessage);
-      setUsers([]); // Ensure users list is empty on error
+      console.error('Error fetching freelancer users:', e);
+      setError(e.message || 'An unexpected error occurred while fetching freelancers.');
+      setUsers([]); // Clear users on error
     } finally {
       setIsLoading(false);
     }

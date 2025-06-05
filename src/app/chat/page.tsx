@@ -50,7 +50,7 @@ const HomePage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   // Initialize activeConversation with null
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
-  const activeConversationRef = useRef<Conversation | null>(null); // Ref to track active conversation
+  // const activeConversationRef = useRef<Conversation | null>(null); // Ref to track active conversation - REMOVED
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
 
@@ -109,22 +109,22 @@ const HomePage = () => {
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [user.uid]); // activeConversation removed from deps to avoid re-fetching when it changes
+  }, [user.uid]);
 
-  // Effect to set active conversation when conversations load or change, if not already set
+  // Effect to set a default active conversation if none is set and conversations are available
   useEffect(() => {
-    activeConversationRef.current = activeConversation; // Keep ref updated
-  }, [activeConversation]);
-
-  useEffect(() => {
-    if (conversations.length > 0 && !activeConversationRef.current) {
-      // Only set if there's truly no active one (ref helps avoid race conditions with direct sets)
-      // And ensure conversations[0] is a valid object with an id
-      if (conversations[0] && conversations[0].id) {
-         setActiveConversation(conversations[0]);
-      }
+    // Only set a default active conversation if:
+    // 1. There are conversations available.
+    // 2. The `activeConversation` state is currently null (or undefined).
+    if (conversations.length > 0 && !activeConversation && conversations[0]?.id) {
+      console.log('[Page Effect - Default Setter] Setting default active conversation:', conversations[0]);
+      setActiveConversation(conversations[0]);
+    } else if (activeConversation) {
+      console.log('[Page Effect - Default Setter] Active conversation IS SET, not changing default. Active ID:', activeConversation.id);
+    } else {
+      console.log('[Page Effect - Default Setter] No conversations or no active conversation to set, or conversations[0] is invalid.');
     }
-  }, [conversations]); // Intentionally only depends on conversations for the default setting logic
+  }, [conversations, activeConversation]); // Now depends on both
 
   // Determine content for chat list
   let chatListComponentContent;

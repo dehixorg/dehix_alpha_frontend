@@ -99,36 +99,31 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     try {
       if (profileType === 'user') {
         let apiResponse;
-        let userDataFromApi: any = null; // Use 'any' for now, or a more specific raw API response type
+        let userDataFromApi: any = null;
 
         try {
-          // Attempt to fetch from /freelancer/:id first
-          apiResponse = await axiosInstance.get(`/freelancer/${profileId}`);
-          if (apiResponse.data && apiResponse.data.status === 'success' && apiResponse.data.data) {
-            userDataFromApi = apiResponse.data.data;
+          const response = await axiosInstance.get(`/freelancer/${profileId}`);
+          if (response.data && response.data.status === 'success' && response.data.data) {
+            userDataFromApi = response.data.data;
+          } else {
+            // Handle cases where API call succeeded but response.data.status is not 'success' or data is missing
+            console.warn(`User data not found or in unexpected format for ID: ${profileId}`, response.data);
+            toast({ title: "User Profile Not Found", description: `Could not load a profile for ID: ${profileId}. Data format issue.` });
+            setProfileData(null); // Explicitly set to null
+            // userDataFromApi remains null, so the 'else' block below will also be hit, which is fine.
           }
-        } catch (freelancerError: any) {
-          console.warn(`Error fetching user from /freelancer/${profileId}:`, freelancerError.message);
-          // If 404, or a specific "not found" error code from your backend, proceed to try /business
-          if (!userDataFromApi && (!freelancerError.response || freelancerError.response.status === 404)) {
-            try {
-                apiResponse = await axiosInstance.get(`/business/${profileId}`);
-                if (apiResponse.data && apiResponse.data.status === 'success' && apiResponse.data.data) {
-                  userDataFromApi = apiResponse.data.data;
-                }
-            } catch (businessError: any) {
-                console.error(`Error fetching user from /business/${profileId} also failed:`, businessError.message);
-                // Only toast if the second call also fails significantly (not just 404)
-                if (!businessError.response || businessError.response.status !== 404) {
-                    toast({ variant: "destructive", title: "Error", description: "Failed to fetch user profile." });
-                }
-            }
-          } else if (freelancerError.isAxiosError) {
-             toast({ variant: "destructive", title: "Error", description: "Failed to fetch user profile." });
+        } catch (error: any) {
+          console.error(`Error fetching user from /freelancer/${profileId}:`, error.message);
+          if (error.response && error.response.status === 404) {
+            toast({ title: "User Profile Not Found", description: `No freelancer profile found for ID: ${profileId}.` });
+          } else {
+            toast({ variant: "destructive", title: "Error", description: "Failed to fetch user profile." });
           }
+          setProfileData(null); // Explicitly set to null on error
+          // userDataFromApi remains null
         }
 
-        if (userDataFromApi) {
+        if (userDataFromApi) { // This block will only run if userDataFromApi was successfully populated
           const mappedUser: ProfileUser = {
             _id: userDataFromApi._id,
             id: userDataFromApi._id,
@@ -143,16 +138,14 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
           };
           setProfileData(mappedUser);
         } else {
-          console.warn(`User profile not found for ID: ${profileId} from any endpoint.`);
-          // This specific toast is for when user is not found after trying all relevant API endpoints.
-          if (!apiResponse?.data?.data && profileId) { // Ensure profileId was present for the attempt
-            toast({
-              variant: "default",
-              title: "User Profile Not Found",
-              description: `Could not load a profile for ID: ${profileId}. Please check if the ID is correct and the user exists.`,
-            });
+          // console.warn(`User profile not found for ID: ${profileId} from any endpoint.`); // This console warn is less relevant now
+          // The specific toasts for 404 or data format issues are handled in the try/catch/if-else above.
+          // If userDataFromApi is still null here, it means an error occurred and was handled, or data was invalid.
+          // setProfileData(null) was already called in those error/issue paths.
+          if (!userDataFromApi && profileId) { // Redundant check now, but harmless. The toast for not found is in catch.
+             // console.log("Final check: userDataFromApi is null"); // For debugging if needed
           }
-          setProfileData(null);
+          // setProfileData(null); // Already handled if errors occurred. If successful, it's set above.
         }
       } else if (profileType === 'group') {
         // setLoading(true); // Already set at the beginning of the function
@@ -848,4 +841,4 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 
 export default ProfileSidebar;
 
-
+[end of dehix_alpha_frontend-main/src/components/shared/ProfileSidebar.tsx]
