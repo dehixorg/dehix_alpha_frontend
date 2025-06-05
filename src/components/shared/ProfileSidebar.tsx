@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/comp
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users, MinusCircle, Volume2 } from "lucide-react";
+import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users, MinusCircle, Volume2, LoaderCircle } from "lucide-react"; // Added LoaderCircle
 import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
 import { doc, getDoc, DocumentData, updateDoc, arrayUnion, arrayRemove, deleteField, deleteDoc } from 'firebase/firestore';
@@ -16,6 +16,7 @@ import { AddMembersDialog } from './AddMembersDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
+import { SharedMediaDisplay, type MediaItem } from './SharedMediaDisplay'; // Import MediaItem type and SharedMediaDisplay component
 
 export type ProfileUser = {
   _id: string;
@@ -31,28 +32,26 @@ export type ProfileUser = {
 };
 
 export type ProfileGroupMember = {
-  id: string;
+  id: string;          // User's _id from API's members array
   userName: string;
   profilePic?: string;
-  status?: 'online' | 'offline';
+  status?: 'online' | 'offline'; // Retain for mock display if needed
 };
 
 export type ProfileGroup = {
-  id: string;
-  groupName?: string;
-  name?: string;
-  project_name?: string;
-  description?: string;
-  groupAvatar?: string;
-  createdAtFirebase?: any;
-  admins?: string[];
-  participants?: string[];
-  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
-  inviteLink?: string;
-  displayName?: string;
-  avatar?: string;
+  _id: string;         // From API
+  id: string;          // To be populated from _id
+  groupName: string;   // From API
+  avatar?: string;      // From API (S3 URL)
+  description?: string; // From API
+  createdAt: string;     // ISO String from API
+  members: ProfileGroupMember[]; // From API
+  admins: string[];      // Array of user IDs from API
+  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } }; // From API
+  inviteLink?: string;  // From API
+  // Derived/processed fields
+  displayName: string;
   createdAtFormatted?: string;
-  members: ProfileGroupMember[];
 };
 
 interface ProfileSidebarProps {
@@ -80,14 +79,22 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   });
 
   const [refreshDataKey, setRefreshDataKey] = useState(0);
+  const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState<boolean>(false);
 
   const internalFetchProfileData = async () => {
-    if (!isOpen || !profileId || !profileType) {
-      setProfileData(null);
+    // This function will now only fetch profile data.
+    // Media fetching and its state resets will be handled by fetchSharedMedia or useEffect.
+    // Reset profile-specific states
+    setProfileData(null);
+    // setLoading(true) will be called by the useEffect orchestrator
+
+    if (!profileId || !profileType) { // isOpen is checked by the caller (useEffect)
+      // toast({ title: "Debug", description: "internalFetchProfileData: missing profileId or profileType" });
+      setLoading(false);
       return;
     }
     setLoading(true);
-    setProfileData(null);
     try {
       if (profileType === 'user') {
         let apiResponse;
@@ -144,67 +151,61 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
           setProfileData(null);
         }
       } else if (profileType === 'group') {
-        // ... existing group fetching logic from Firestore ...
-        const groupDocRef = doc(db, 'conversations', profileId);
-        const groupDocSnap = await getDoc(groupDocRef);
-        if (groupDocSnap.exists()) {
-          const groupData = groupDocSnap.data();
-          const participantUIDs: string[] = groupData.participants || [];
-          let processedMembers: ProfileGroupMember[] = [];
-          if (groupData.participantDetails) {
-            processedMembers = participantUIDs.map(uid => ({
-              id: uid,
-              userName: groupData.participantDetails[uid]?.userName || 'Unknown Member',
-              profilePic: groupData.participantDetails[uid]?.profilePic,
-              status: Math.random() > 0.5 ? 'online' : 'offline',
+        // setLoading(true); // Already set at the beginning of the function
+        // setProfileData(null); // Already set at the beginning of the function
+        try {
+          const response = await axiosInstance.get(`/conversations/${profileId}`);
+          if (response.data && response.data.data) { // Assuming data is nested under a 'data' key
+            const groupDataFromApi = response.data.data;
+
+            // Map API response to ProfileGroup type
+            const membersFromApi = (groupDataFromApi.members || []).map((member: any) => ({
+              id: member.id || member._id, // API might use 'id' or '_id' for members
+              userName: member.userName || 'Unknown Member',
+              profilePic: member.profilePic,
+              status: Math.random() > 0.5 ? 'online' : 'offline', // Keep mock status for now
             }));
+
+            let formattedCreatedAt = 'N/A';
+            if (groupDataFromApi.createdAt) {
+              // Assuming createdAt is an ISO string from API
+              formattedCreatedAt = new Date(groupDataFromApi.createdAt).toLocaleDateString();
+            }
+
+            const mappedGroup: ProfileGroup = {
+              _id: groupDataFromApi._id,
+              id: groupDataFromApi._id, // Populate id from _id
+              groupName: groupDataFromApi.groupName || 'Unnamed Group',
+              avatar: groupDataFromApi.avatar, // Use avatar field directly
+              description: groupDataFromApi.description,
+              createdAt: groupDataFromApi.createdAt, // Store raw ISO string
+              members: membersFromApi,
+              admins: Array.isArray(groupDataFromApi.admins) ? groupDataFromApi.admins.map((admin: any) => String(admin.id || admin._id || admin)) : [],
+              participantDetails: groupDataFromApi.participantDetails, // If API provides this directly
+              inviteLink: groupDataFromApi.inviteLink,
+              // Derived fields
+              displayName: groupDataFromApi.groupName || 'Unnamed Group',
+              createdAtFormatted: formattedCreatedAt,
+            };
+            setProfileData(mappedGroup);
           } else {
-            const memberPromises = participantUIDs.map(uid => getDoc(doc(db, 'users', uid)));
-            const memberDocsSnap = await Promise.all(memberPromises);
-            processedMembers = memberDocsSnap.map(memberSnap => {
-              const memberData = memberSnap.exists() ? memberSnap.data() : null;
-              return {
-                id: memberSnap.id,
-                userName: memberData?.userName || memberData?.name || 'Unknown Member',
-                profilePic: memberData?.profilePic,
-                status: Math.random() > 0.5 ? 'online' : 'offline',
-              };
-            }).filter(Boolean) as ProfileGroupMember[];
+            console.warn(`Group data not found or in unexpected format for ID: ${profileId}`, response.data);
+            toast({ title: "Not Found", description: "Group details could not be loaded." });
+            setProfileData(null);
           }
-          let formattedCreatedAt = 'N/A';
-          if (groupData.createdAtFirebase && typeof groupData.createdAtFirebase.toDate === 'function') {
-            formattedCreatedAt = groupData.createdAtFirebase.toDate().toLocaleDateString();
-          } else if (typeof groupData.createdAt === 'string') {
-            formattedCreatedAt = new Date(groupData.createdAt).toLocaleDateString();
+        } catch (error: any) {
+          console.error(`Error fetching group from /conversations/${profileId}:`, error.message);
+          if (error.response && error.response.status === 404) {
+            toast({ title: "Not Found", description: `Group with ID ${profileId} not found.` });
+          } else {
+            toast({ variant: "destructive", title: "Error", description: "Failed to fetch group details." });
           }
-          const displayName = groupData.groupName || groupData.name || groupData.project_name || 'Unnamed Group';
-          const finalAvatar = groupData.groupAvatar || `https://api.adorable.io/avatars/285/group-${profileId}.png`;
-          const fetchedGroup: ProfileGroup = {
-            id: groupDocSnap.id,
-            groupName: groupData.groupName,
-            name: groupData.name,
-            project_name: groupData.project_name,
-            displayName: displayName,
-            description: groupData.description,
-            groupAvatar: groupData.groupAvatar,
-            avatar: finalAvatar,
-            createdAtFirebase: groupData.createdAtFirebase,
-            createdAtFormatted: formattedCreatedAt,
-            admins: Array.isArray(groupData.admins) ? groupData.admins : [],
-            participants: participantUIDs,
-            participantDetails: groupData.participantDetails,
-            inviteLink: groupData.inviteLink,
-            members: processedMembers,
-          };
-          setProfileData(fetchedGroup);
-        } else {
-          console.warn(`Group (conversation) document not found: ${profileId}`);
-          setProfileData(null); // Ensure data is null if group not found
+          setProfileData(null);
         }
       }
-    } catch (error) { // Catch any other unexpected errors during the process
-      console.error("Error in internalFetchProfileData: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not load profile information." });
+    } catch (error: any) { // Catch any other unexpected errors during the process
+      console.error("Error in internalFetchProfileData (outer try-catch): ", error.message || error);
+      toast({ variant: "destructive", title: "Error", description: "An unexpected error occurred while loading profile information." });
       setProfileData(null);
     } finally {
       setLoading(false);
@@ -212,8 +213,103 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   };
 
 
+  const fetchSharedMedia = async (conversationId: string) => {
+    if (!conversationId) {
+      // toast({ title: "Debug", description: "fetchSharedMedia: missing conversationId" });
+      setSharedMedia([]);
+      setLoadingMedia(false);
+      return;
+    }
+    // toast({ title: "Debug", description: `fetchSharedMedia: Fetching for ${conversationId}`});
+    setLoadingMedia(true);
+    setSharedMedia([]); // Reset before fetching
+
+    try {
+      const response = await axiosInstance.get(`/conversations/${conversationId}/messages`);
+      let extractedMedia: MediaItem[] = [];
+
+      if (response.data && Array.isArray(response.data.data)) {
+        const messages = response.data.data;
+        for (const message of messages) {
+          // Check for attachments array first
+          if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+            for (const attachment of message.attachments) {
+              if (attachment.url && attachment.type && attachment.fileName) {
+                extractedMedia.push({
+                  id: (message._id || `msgid-${Math.random()}`) + '-' + attachment.fileName, // Create a unique enough ID
+                  url: attachment.url,
+                  type: attachment.type,
+                  fileName: attachment.fileName,
+                });
+              }
+            }
+          } else if (typeof message.content === 'string') {
+            // Fallback: Simple S3 URL detection in message content
+            const s3UrlPattern = /https:\/\/s3\.[a-zA-Z0-9-]+\.amazonaws\.com\/[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=]+(\.[a-zA-Z0-9]+)/gi;
+            let match;
+            while ((match = s3UrlPattern.exec(message.content)) !== null) {
+              const url = match[0];
+              const fileName = url.substring(url.lastIndexOf('/') + 1).split('?')[0]; // Remove query params for filename
+              let type = 'application/octet-stream';
+              if (/\.(jpe?g|png|gif)$/i.test(fileName)) type = 'image/' + fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+              else if (/\.pdf$/i.test(fileName)) type = 'application/pdf';
+              else if (/\.txt$/i.test(fileName)) type = 'text/plain';
+              else if (/\.(mp4|mov|avi|wmv)$/i.test(fileName)) type = 'video/' + fileName.substring(fileName.lastIndexOf('.')+1).toLowerCase();
+
+
+              extractedMedia.push({
+                id: (message._id || `msgid-${Math.random()}`) + '-' + fileName,
+                url: url,
+                type: type,
+                fileName: fileName,
+              });
+            }
+          }
+        }
+      }
+      // toast({ title: "Debug", description: `fetchSharedMedia: Found ${extractedMedia.length} items.`});
+      setSharedMedia(extractedMedia);
+    } catch (error: any) {
+      console.error("Error fetching shared media:", error.message || error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load shared media." });
+      setSharedMedia([]);
+    } finally {
+      setLoadingMedia(false);
+    }
+  };
+
   useEffect(() => {
-    internalFetchProfileData();
+    const executeFetches = async () => {
+      if (isOpen && profileId && profileType) {
+        // Initial resets for this effect run
+        setProfileData(null);
+        setSharedMedia([]);
+        setLoading(true); // For profile data loading
+        setLoadingMedia(true); // For media data loading
+
+        // Run fetches in parallel
+        await Promise.allSettled([
+          internalFetchProfileData(), // This function will set its own setLoading(false)
+          fetchSharedMedia(profileId)    // This function will set its own setLoadingMedia(false)
+        ]);
+
+        // If one of the above functions didn't manage its loading state properly in case of an early return
+        // or error, ensure they are false here. However, they should manage their own state.
+        // For example, if internalFetchProfileData returns early without error but also without setting setLoading(false)
+        if(loading){ setLoading(false);} // Only if still true
+        if(loadingMedia){ setLoadingMedia(false);} // Only if still true
+
+
+      } else {
+        // Clear data and stop loading if sidebar is closed or essential props are missing
+        setProfileData(null);
+        setSharedMedia([]);
+        setLoading(false);
+        setLoadingMedia(false);
+      }
+    };
+
+    executeFetches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, profileId, profileType, refreshDataKey]);
 
@@ -516,10 +612,20 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">Shared Media</h3>
-                      <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                        <p>Media previews will appear here.</p>
-                        <span className="text-xs">(Feature coming soon)</span>
-                      </div>
+                      {loadingMedia ? (
+                        <div className="flex justify-center items-center h-20">
+                          <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                        </div>
+                      ) : sharedMedia.length > 0 ? (
+                        <SharedMediaDisplay
+                          mediaItems={sharedMedia}
+                          // onMediaItemClick={(item) => console.log('Media item clicked:', item)} // Optional
+                        />
+                      ) : (
+                        <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                          <p>No media has been shared yet.</p>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
                       <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">Actions</h3>
@@ -590,10 +696,20 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">Shared Media</h3>
-                      <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                        <p>Media previews will appear here.</p>
-                        <span className="text-xs">(Feature coming soon)</span>
-                      </div>
+                      {loadingMedia ? (
+                        <div className="flex justify-center items-center h-20">
+                          <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                        </div>
+                      ) : sharedMedia.length > 0 ? (
+                        <SharedMediaDisplay
+                          mediaItems={sharedMedia}
+                          // onMediaItemClick={(item) => console.log('Media item clicked:', item)} // Optional
+                        />
+                      ) : (
+                        <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                          <p>No media has been shared yet.</p>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
                       <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">Actions</h3>
@@ -683,7 +799,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
               }
               setIsAddMembersDialogOpen(false);
             }}
-            currentMemberIds={(profileData as ProfileGroup).participants || (profileData as ProfileGroup).members?.map(m => m.id) || []}
+            currentMemberIds={(profileData as ProfileGroup).members?.map(m => m.id) || []}
             groupId={(profileData as ProfileGroup).id}
           />
           <ChangeGroupInfoDialog
