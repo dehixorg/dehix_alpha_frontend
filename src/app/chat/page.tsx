@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react'; // Import useRef
 import { DocumentData } from 'firebase/firestore';
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -39,6 +39,7 @@ const HomePage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   // Initialize activeConversation with null
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const activeConversationRef = useRef<Conversation | null>(null); // Ref to track active conversation
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
 
@@ -101,10 +102,18 @@ const HomePage = () => {
 
   // Effect to set active conversation when conversations load or change, if not already set
   useEffect(() => {
-    if (conversations.length > 0 && !activeConversation) {
-      setActiveConversation(conversations[0]);
+    activeConversationRef.current = activeConversation; // Keep ref updated
+  }, [activeConversation]);
+
+  useEffect(() => {
+    if (conversations.length > 0 && !activeConversationRef.current) {
+      // Only set if there's truly no active one (ref helps avoid race conditions with direct sets)
+      // And ensure conversations[0] is a valid object with an id
+      if (conversations[0] && conversations[0].id) {
+         setActiveConversation(conversations[0]);
+      }
     }
-  }, [conversations, activeConversation]);
+  }, [conversations]); // Intentionally only depends on conversations for the default setting logic
 
   // Determine content for chat list
   let chatListComponentContent;
@@ -149,6 +158,7 @@ const HomePage = () => {
   } else if (activeConversation) {
     chatWindowComponentContent = (
       <CardsChat
+        key={activeConversation.id} // Add key prop here
         conversation={activeConversation}
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}

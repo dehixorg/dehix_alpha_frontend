@@ -241,7 +241,7 @@ export function ChatList({
           <Button
             variant="default" // Or "outline"
             className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
-            onClick={() => setIsNewChatDialogOpen(true)}
+            onClick={() => setIsNewChatDialogOpen(true)} // Corrected this line
           >
             <SquarePen className="h-4 w-4 mr-2" />
             New Chat

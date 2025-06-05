@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/comp
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X } from "lucide-react";
+import { X, VolumeX, ShieldX, Trash2, UserPlus, Edit3, Link2, LogOut, Users } from "lucide-react"; // Import all necessary icons
 import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig'; // Import db
 import { doc, getDoc, DocumentData } from 'firebase/firestore'; // Import Firestore functions
@@ -11,27 +11,30 @@ import { doc, getDoc, DocumentData } from 'firebase/firestore'; // Import Firest
 // Updated types to better reflect potential Firestore data
 export type ProfileUser = {
   id: string;
-  userName: string; // Assuming userName from Firestore
+  userName: string;
   email: string;
-  profilePic?: string; // Optional
-  status?: string; // Likely not in DB, can be mocked or derived
-  lastSeen?: string; // Likely not in DB, can be mocked or derived
-  // Add other fields as they exist in your Firestore 'users' collection
+  profilePic?: string;
+  status?: string;
+  lastSeen?: string;
+  bio?: string; // Added bio field
 };
 
 export type ProfileGroupMember = {
   id: string;
-  userName: string; // Assuming userName from Firestore
-  profilePic?: string; // Optional
+  userName: string;
+  profilePic?: string;
+  status?: 'online' | 'offline'; // Added placeholder status
 };
 
 export type ProfileGroup = {
-  id: string; // Conversation ID
-  groupName?: string; // Assuming groupName from conversation document
-  avatar?: string; // Group avatar, if available
+  id: string;
+  groupName?: string;
+  avatar?: string;
+  description?: string; // Added description
+  createdAt?: string; // Added createdAt (can be string or Timestamp)
   members: ProfileGroupMember[];
-  admins?: string[]; // Array of user IDs
-  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } }; // From Conversation doc
+  admins?: string[];
+  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string } };
 };
 
 interface ProfileSidebarProps {
@@ -66,9 +69,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
             const userData = userDocSnap.data() as DocumentData;
             setProfileData({
               id: userDocSnap.id,
-              userName: userData.userName || userData.name || 'Unknown User', // Adjust field names
+              userName: userData.userName || userData.name || 'Unknown User',
               email: userData.email || 'No email provided',
               profilePic: userData.profilePic,
+              bio: userData.bio, // Fetch bio field
               status: 'Online', // Mock status
               lastSeen: 'Just now', // Mock lastSeen
             } as ProfileUser);
@@ -107,13 +111,30 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                 }).filter(member => member !== null) as ProfileGroupMember[];
             }
 
+            const creationTimestamp = groupData.createdAt; // Assuming 'createdAt' is stored on the conversation document
+            let formattedCreatedAt = 'N/A';
+            if (creationTimestamp) {
+              if (typeof creationTimestamp === 'string') {
+                formattedCreatedAt = new Date(creationTimestamp).toLocaleDateString();
+              } else if (typeof creationTimestamp === 'object' && 'toDate' in creationTimestamp) {
+                // Assuming it's a Firebase Timestamp object
+                formattedCreatedAt = creationTimestamp.toDate().toLocaleDateString();
+              }
+            }
+
+            // Add placeholder status to members for UI demo
+            const membersWithStatus: ProfileGroupMember[] = members.map(m => ({ ...m, status: Math.random() > 0.5 ? 'online' : 'offline' }));
+
+
             setProfileData({
               id: groupDocSnap.id,
               groupName: groupData.groupName || groupData.project_name || 'Unnamed Group',
-              avatar: groupData.groupAvatar || `https://api.adorable.io/avatars/285/group-${profileId}.png`, // Use a specific group avatar field or default
-              members,
-              admins: groupData.admins || [], // Assuming 'admins' field exists
-              participantDetails: groupData.participantDetails, // Keep this if useful for rendering
+              avatar: groupData.groupAvatar || `https://api.adorable.io/avatars/285/group-${profileId}.png`,
+              description: groupData.description, // Fetch description
+              createdAt: formattedCreatedAt, // Store formatted date
+              members: membersWithStatus, // Use members with placeholder status
+              admins: groupData.admins || [],
+              participantDetails: groupData.participantDetails,
             } as ProfileGroup);
           } else {
             console.warn(`Group (conversation) document not found: ${profileId}`);
@@ -166,44 +187,200 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
             {!loading && currentProfileData && (
               <>
                 <div className="flex flex-col items-center space-y-2 pt-4"> {/* Added some padding top */}
-                  <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]"> {/* Added border to avatar */}
+                  <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
                     <AvatarImage src={(currentProfileData as any).profilePic || (currentProfileData as any).avatar} alt={(currentProfileData as any).userName || (currentProfileData as any).groupName} />
                     <AvatarFallback className="text-3xl">{getFallbackName(currentProfileData)}</AvatarFallback>
                   </Avatar>
                   <h2 className="text-xl font-semibold text-[hsl(var(--foreground))] pt-2">{(currentProfileData as any).userName || (currentProfileData as any).groupName}</h2>
+
                   {profileType === 'user' && (currentProfileData as ProfileUser).email && (
                     <p className="text-sm text-[hsl(var(--muted-foreground))]">{(currentProfileData as ProfileUser).email}</p>
                   )}
+
+                  {profileType === 'group' && (currentProfileData as ProfileGroup).description && (
+                     <p className="text-sm text-center text-[hsl(var(--muted-foreground))] whitespace-pre-wrap px-2">{(currentProfileData as ProfileGroup).description}</p>
+                  )}
+                  {profileType === 'group' && !(currentProfileData as ProfileGroup).description && (
+                     <p className="text-sm text-center italic text-[hsl(var(--muted-foreground))]">No group description.</p>
+                  )}
                 </div>
 
-                {profileType === 'user' && (currentProfileData as ProfileUser).status && ( // Check for status field before rendering
-                  <div className="space-y-3"> {/* Adjusted spacing */}
+                {profileType === 'user' && (
+                  // User specific details (Status, Last Seen, Bio, Shared Media, Actions)
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Status</h3> {/* Styling for heading */}
-                      <p className="text-sm text-[hsl(var(--foreground))]">{(currentProfileData as ProfileUser).status}</p>
+                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Status</h3>
+                      <p className="text-sm text-[hsl(var(--foreground))]">{(currentProfileData as ProfileUser).status || 'Unknown'}</p>
                     </div>
                     <div>
                       <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Last Seen</h3>
-                      <p className="text-sm text-[hsl(var(--foreground))]">{(currentProfileData as ProfileUser).lastSeen}</p>
+                      <p className="text-sm text-[hsl(var(--foreground))]">{(currentProfileData as ProfileUser).lastSeen || 'Unknown'}</p>
                     </div>
-                    {/* Placeholder for more user details or actions */}
+                    <div>
+                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Bio</h3>
+                      <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">{(currentProfileData as ProfileUser).bio || 'No bio available.'}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">Shared Media</h3>
+                      <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                        <p>Media previews will appear here.</p>
+                        <span className="text-xs">(Feature coming soon)</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
+                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">Actions</h3>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50" disabled>
+                        <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50" disabled>
+                        <ShieldX className="h-4 w-4 mr-2" /> Block User
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50" disabled>
+                        <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                      </Button>
+                      <Button variant="destructive" className="w-full justify-start disabled:opacity-50" disabled>
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                      </Button>
+                    </div>
                   </div>
                 )}
 
-                {profileType === 'group' && (currentProfileData as ProfileGroup).members && (
-                  <div className="space-y-3">
+                {profileType === 'group' && (
+                  <div className="space-y-4">
+                     {/* Created Date */}
+                    {(currentProfileData as ProfileGroup).createdAt && (
+                      <div className="text-xs text-center text-[hsl(var(--muted-foreground))]">
+                        <p>Created: {(currentProfileData as ProfileGroup).createdAt}</p>
+                      </div>
+                    )}
+
+                    {/* Members List */}
                     <div>
-                      <h3 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-3">Members ({ (currentProfileData as ProfileGroup).members.length})</h3> {/* Styling for heading */}
-                      <ul className="space-y-3 max-h-60"> {/* Max height for member list if very long, ScrollArea handles overall scroll */}
+                      <h3 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-2">Members ({ (currentProfileData as ProfileGroup).members.length})</h3>
+                      <ul className="space-y-2 max-h-60">
                         {(currentProfileData as ProfileGroup).members.map((member) => (
-                          <li key={member.id} className="flex items-center space-x-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)]"> {/* Added hover effect and padding */}
-                            <Avatar className="w-9 h-9"> {/* Slightly larger member avatar */}
+                          <li key={member.id} className="flex items-center space-x-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group">
+                            <Avatar className="w-9 h-9">
                               <AvatarImage src={member.profilePic} alt={member.userName} />
                               <AvatarFallback>{member.userName?.charAt(0).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="flex-grow">
                                 <span className="text-sm font-medium text-[hsl(var(--foreground))]">{member.userName}</span>
                                 {(currentProfileData as ProfileGroup).admins?.includes(member.id) && (
+                                  <span className="ml-1.5 text-xs text-[hsl(var(--primary))] bg-[hsl(var(--primary)_/_0.1)] px-1.5 py-0.5 rounded-full">Admin</span>
+                                )}
+                            </div>
+                            <span className="text-xs text-gray-400 ml-auto mr-1 group-hover:text-[hsl(var(--foreground))]">
+                              {member.status === 'online' ? 'Online' : 'Offline'} {/* Placeholder status */}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Shared Media Placeholder for Groups */}
+                    <div>
+                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">Shared Media</h3>
+                      <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                        <p>Group media previews will appear here.</p>
+                        <span className="text-xs">(Feature coming soon)</span>
+                      </div>
+                    </div>
+
+                    {/* Group Action Buttons */}
+                    <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
+                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">Actions</h3>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] disabled:opacity-50" disabled>
+                        <Users className="h-4 w-4 mr-2" /> Add Members
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] disabled:opacity-50" disabled>
+                        <UserPlus className="h-4 w-4 mr-2" /> Remove Members
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] disabled:opacity-50" disabled>
+                        <Edit3 className="h-4 w-4 mr-2" /> Change Group Name/Avatar
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] disabled:opacity-50" disabled>
+                        <Link2 className="h-4 w-4 mr-2" /> Create Invite Link
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50" disabled>
+                        <VolumeX className="h-4 w-4 mr-2" /> Mute Group
+                      </Button>
+                      <Button variant="destructive" className="w-full justify-start disabled:opacity-50" disabled>
+                        <LogOut className="h-4 w-4 mr-2" /> Leave Group
+                      </Button>
+                       <Button variant="destructive" className="w-full justify-start disabled:opacity-50" disabled>
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete Group
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export default ProfileSidebar;
+      <SheetContent className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl">
+        <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
+          <div className="flex justify-between items-center">
+            <SheetTitle className="text-[hsl(var(--card-foreground))]">{profileType === 'user' ? 'User Profile' : 'Group Details'}</SheetTitle>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                <X className="h-5 w-5" />
+              </Button>
+            </SheetClose>
+          </div>
+        </SheetHeader>
+        <ScrollArea className="flex-1"> {/* Wrap content that might overflow in ScrollArea */}
+          <div className="p-4 space-y-6"> {/* Increased main spacing slightly */}
+            {loading && <div className="flex justify-center items-center h-32"><p className="text-[hsl(var(--muted-foreground))]">Loading profile...</p></div>}
+            {!loading && !profileData && <div className="flex justify-center items-center h-32"><p className="text-[hsl(var(--muted-foreground))]">No details to display.</p></div>}
+
+            {!loading && profileData && (
+              <>
+                <div className="flex flex-col items-center space-y-2 pt-4"> {/* Added some padding top */}
+                  <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]"> {/* Added border to avatar */}
+                    <AvatarImage src={(profileData as any).profilePic || (profileData as any).avatar} alt={profileData.name} />
+                    <AvatarFallback className="text-3xl">{profileData.name?.charAt(0).toUpperCase() || 'P'}</AvatarFallback>
+                  </Avatar>
+                  <h2 className="text-xl font-semibold text-[hsl(var(--foreground))] pt-2">{profileData.name}</h2>
+                  {profileType === 'user' && (profileData as ProfileUser).email && (
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">{(profileData as ProfileUser).email}</p>
+                  )}
+                </div>
+
+                {profileType === 'user' && (
+                  <div className="space-y-3"> {/* Adjusted spacing */}
+                    <div>
+                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Status</h3> {/* Styling for heading */}
+                      <p className="text-sm text-[hsl(var(--foreground))]">{(profileData as ProfileUser).status}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Last Seen</h3>
+                      <p className="text-sm text-[hsl(var(--foreground))]">{(profileData as ProfileUser).lastSeen}</p>
+                    </div>
+                    {/* Placeholder for more user details or actions */}
+                  </div>
+                )}
+
+                {profileType === 'group' && (profileData as ProfileGroup).members && (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-3">Members ({ (profileData as ProfileGroup).members.length})</h3> {/* Styling for heading */}
+                      <ul className="space-y-3 max-h-60"> {/* Max height for member list if very long, ScrollArea handles overall scroll */}
+                        {(profileData as ProfileGroup).members.map((member) => (
+                          <li key={member.id} className="flex items-center space-x-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)]"> {/* Added hover effect and padding */}
+                            <Avatar className="w-9 h-9"> {/* Slightly larger member avatar */}
+                              <AvatarImage src={member.profilePic} alt={member.name} />
+                              <AvatarFallback>{member.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-grow">
+                                <span className="text-sm font-medium text-[hsl(var(--foreground))]">{member.name}</span>
+                                {(profileData as ProfileGroup).admins?.includes(member.id) && (
                                   <span className="ml-1.5 text-xs text-[hsl(var(--primary))] bg-[hsl(var(--primary)_/_0.1)] px-1.5 py-0.5 rounded-full">Admin</span>
                                 )}
                             </div>
