@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+'use client';
+
+import type React from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,7 +104,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
 
     if (!isUnique) {
       setLoading(false);
-      // The toast for duplicate is shown in the handler
       return;
     }
 
@@ -118,15 +120,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
 
       if (response.status === 200) {
         const newTalent = response.data.data;
-        // Call handler again to update state with UID (if needed)
-        onSubmitSkill({
-          ...data,
-          uid: newTalent._id,
-          type: 'SKILL',
-        });
-        setSkills((prevSkills: any) =>
-          prevSkills.filter((skill: any) => skill._id !== data.skillId),
-        );
         reset();
         setOpen(false);
         toast({

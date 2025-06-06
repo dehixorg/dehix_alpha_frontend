@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+'use client';
+
+import { DialogFooter } from '@/components/ui/dialog';
+
+import type React from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +15,6 @@ import {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -101,7 +105,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 
     if (!isUnique) {
       setLoading(false);
-      // The toast for duplicate is shown in the handler
       return;
     }
 
@@ -118,15 +121,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 
       if (response.status === 200) {
         const newTalent = response.data.data;
-        // Call handler again to update state with UID (if needed)
-        onSubmitDomain({
-          ...data,
-          uid: newTalent._id,
-          type: 'DOMAIN',
-        });
-        setDomains((prevDomains: any) =>
-          prevDomains.filter((domain: any) => domain._id !== data.domainId),
-        );
         reset();
         setOpen(false);
         toast({

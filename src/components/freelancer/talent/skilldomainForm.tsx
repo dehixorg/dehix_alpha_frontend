@@ -106,18 +106,14 @@ const SkillDomainForm: React.FC = () => {
 
         const existingIds = talentData.map((item: any) => item.talentId) || [];
 
-        const filteredSkills = Array.isArray(skillsArray)
-          ? skillsArray.filter((skill: any) => !existingIds.includes(skill._id))
-          : [];
+        // Get all existing talent IDs and names for better filtering
+        const existingTalentIds =
+          talentData.map((item: any) => item.talentId) || [];
 
-        const filteredDomains = Array.isArray(domainsArray)
-          ? domainsArray.filter(
-              (domain: any) => !existingIds.includes(domain._id),
-            )
-          : [];
+        // Replace the existing filtering logic in the useEffect with this improved version:
 
+        // Get all existing talent data for comprehensive filtering
         const flattenedTalentData = talentData.flat();
-
         const formattedTalentData = flattenedTalentData.map((item: any) => ({
           uid: item._id,
           label: item.talentName || 'N/A',
@@ -126,7 +122,95 @@ const SkillDomainForm: React.FC = () => {
           status: item.status,
           activeStatus: item.activeStatus,
           type: item.type,
+          originalTalentId: item.talentId, // Keep track of original talent ID
         }));
+
+        console.log('All talent data from backend:', formattedTalentData);
+
+        // Create sets of already added talent names by type
+        const addedSkillNames = new Set(
+          formattedTalentData
+            .filter((item) => item.type === 'SKILL')
+            .map((item) =>
+              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
+            )
+            .filter(Boolean),
+        );
+
+        const addedDomainNames = new Set(
+          formattedTalentData
+            .filter((item) => item.type === 'DOMAIN')
+            .map((item) =>
+              item.label?.toLowerCase().trim().replace(/\s+/g, ' '),
+            )
+            .filter(Boolean),
+        );
+
+        // Also get talent IDs that are already used
+        const usedTalentIds = new Set(
+          formattedTalentData
+            .map((item) => item.originalTalentId)
+            .filter(Boolean),
+        );
+
+        console.log('Added skill names:', Array.from(addedSkillNames));
+        console.log('Added domain names:', Array.from(addedDomainNames));
+        console.log('Used talent IDs:', Array.from(usedTalentIds));
+        console.log(
+          'Available skills before filtering:',
+          skillsArray.map((s: any) => ({ id: s._id, name: s.name })),
+        );
+        console.log(
+          'Available domains before filtering:',
+          domainsArray.map((d: any) => ({ id: d._id, name: d.name })),
+        );
+
+        // Filter skills - exclude if name matches added skills OR if ID is already used
+        const filteredSkills = Array.isArray(skillsArray)
+          ? skillsArray.filter((skill: any) => {
+              const normalizedSkillName = skill.name
+                ?.toLowerCase()
+                .trim()
+                .replace(/\s+/g, ' ');
+              const isNameAlreadyAdded =
+                addedSkillNames.has(normalizedSkillName);
+              const isIdAlreadyUsed = usedTalentIds.has(skill._id);
+
+              console.log(
+                `Skill "${skill.name}": normalized="${normalizedSkillName}", nameAdded=${isNameAlreadyAdded}, idUsed=${isIdAlreadyUsed}`,
+              );
+
+              return !isNameAlreadyAdded && !isIdAlreadyUsed;
+            })
+          : [];
+
+        // Filter domains - exclude if name matches added domains OR if ID is already used
+        const filteredDomains = Array.isArray(domainsArray)
+          ? domainsArray.filter((domain: any) => {
+              const normalizedDomainName = domain.name
+                ?.toLowerCase()
+                .trim()
+                .replace(/\s+/g, ' ');
+              const isNameAlreadyAdded =
+                addedDomainNames.has(normalizedDomainName);
+              const isIdAlreadyUsed = usedTalentIds.has(domain._id);
+
+              console.log(
+                `Domain "${domain.name}": normalized="${normalizedDomainName}", nameAdded=${isNameAlreadyAdded}, idUsed=${isIdAlreadyUsed}`,
+              );
+
+              return !isNameAlreadyAdded && !isIdAlreadyUsed;
+            })
+          : [];
+
+        console.log(
+          'Filtered skills after filtering:',
+          filteredSkills.map((s: any) => s.name),
+        );
+        console.log(
+          'Filtered domains after filtering:',
+          filteredDomains.map((d: any) => d.name),
+        );
 
         const deduplicatedData = removeDuplicates(formattedTalentData);
         setSkillDomainData(deduplicatedData);
@@ -166,17 +250,22 @@ const SkillDomainForm: React.FC = () => {
     fetchData();
   }, [user?.uid]);
 
-  // Updated: Return boolean for success/duplicate
   const onSubmitSkill = (data: SkillDomainData) => {
-    const label = data.label.trim().toLowerCase();
+    const normalizedLabel = data.label
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
 
-    // Check if skill already exists in current data or counters
-    const existsInData = skillDomainData.some(
-      (item) =>
-        item.label.trim().toLowerCase() === label && item.type === 'SKILL',
-    );
+    // Check if skill already exists in current data
+    const existsInData = skillDomainData.some((item) => {
+      const normalizedItemLabel = item.label
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ');
+      return normalizedItemLabel === normalizedLabel && item.type === 'SKILL';
+    });
 
-    if (existsInData || (skillCounts[label] || 0) > 0) {
+    if (existsInData) {
       toast({
         variant: 'destructive',
         title: 'Duplicate Skill',
@@ -193,21 +282,37 @@ const SkillDomainForm: React.FC = () => {
     };
     setSkillDomainData([...skillDomainData, newData]);
     setStatusVisibility([...statusVisibility, false]);
-    setSkillCounts({ ...skillCounts, [label]: 1 });
+
+    // Remove the skill from available skills list using normalized comparison
+    setSkills((prevSkills) =>
+      prevSkills.filter((skill) => {
+        const normalizedSkillName = skill.name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, ' ');
+        return normalizedSkillName !== normalizedLabel;
+      }),
+    );
+
     return true;
   };
 
-  // Updated: Return boolean for success/duplicate
   const onSubmitDomain = (data: SkillDomainData) => {
-    const label = data.label.trim().toLowerCase();
+    const normalizedLabel = data.label
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
 
-    // Check if domain already exists in current data or counters
-    const existsInData = skillDomainData.some(
-      (item) =>
-        item.label.trim().toLowerCase() === label && item.type === 'DOMAIN',
-    );
+    // Check if domain already exists in current data
+    const existsInData = skillDomainData.some((item) => {
+      const normalizedItemLabel = item.label
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ');
+      return normalizedItemLabel === normalizedLabel && item.type === 'DOMAIN';
+    });
 
-    if (existsInData || (domainCounts[label] || 0) > 0) {
+    if (existsInData) {
       toast({
         variant: 'destructive',
         title: 'Duplicate Domain',
@@ -224,7 +329,18 @@ const SkillDomainForm: React.FC = () => {
     };
     setSkillDomainData([...skillDomainData, newData]);
     setStatusVisibility([...statusVisibility, false]);
-    setDomainCounts({ ...domainCounts, [label]: 1 });
+
+    // Remove the domain from available domains list using normalized comparison
+    setDomains((prevDomains) =>
+      prevDomains.filter((domain) => {
+        const normalizedDomainName = domain.name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, ' ');
+        return normalizedDomainName !== normalizedLabel;
+      }),
+    );
+
     return true;
   };
 
