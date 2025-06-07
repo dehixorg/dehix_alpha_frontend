@@ -13,7 +13,8 @@ import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestor
 import { db } from '@/config/firebaseConfig';
 import { toast } from '@/hooks/use-toast';
 import { NewChatDialog } from './NewChatDialog'; // User as NewChatUser removed, CombinedUser will be inferred
-import type { CombinedUser as NewChatUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
+import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
+import { useAllUsers } from '@/hooks/useAllUsers';
 // ProfileSidebar is no longer imported or rendered here
 import {
   DropdownMenu,
@@ -35,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils'; // Utility class names
+import { LoaderCircle } from 'lucide-react';
 
 export interface Conversation extends DocumentData {
   id: string;
@@ -81,6 +83,10 @@ export function ChatList({
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState(''); // State for group description
   const user = useSelector((state: RootState) => state.user);
+  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
 
   // Removed local ProfileSidebar state:
   // const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
@@ -95,10 +101,6 @@ export function ChatList({
     { uid: 'user4_uid_diana', userName: 'Diana Prince', email: 'diana@example.com' },
     { uid: 'user5_uid_edward', userName: 'Edward Scissorhands', email: 'edward@example.com' },
   ];
-
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<typeof MOCK_USERS>([]);
-  const [selectedUsers, setSelectedUsers] = useState<typeof MOCK_USERS>([]);
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation(); // Prevent triggering setConversation if this is nested
@@ -116,32 +118,45 @@ export function ChatList({
     }
   };
 
-  const handleUserSearch = (term: string) => {
-    setUserSearchTerm(term);
-    if (term.trim() === '') {
+  // Effect for filtering users based on search term
+  useEffect(() => {
+    if (!showCreateGroupDialog || isLoadingUsers || !allFetchedUsers) {
       setSearchResults([]);
       return;
     }
-    const filtered = MOCK_USERS.filter(
-      (mockUser) =>
-        (mockUser.userName.toLowerCase().includes(term.toLowerCase()) ||
-          mockUser.email.toLowerCase().includes(term.toLowerCase())) &&
-        !selectedUsers.find((su) => su.uid === mockUser.uid) && // Not already selected
-        mockUser.uid !== user.uid // Not the current user
+
+    const term = userSearchTerm.trim().toLowerCase();
+    if (term === '') {
+      setSearchResults([]);
+      return;
+    }
+
+    const filtered = allFetchedUsers.filter(user =>
+      user.id !== user.uid && // Exclude current user
+      !selectedUsers.find(selected => selected.id === user.id) && // Exclude already selected users
+      (
+        (user.displayName.toLowerCase().includes(term)) ||
+        (user.email.toLowerCase().includes(term)) ||
+        (user.rawUserName?.toLowerCase().includes(term)) ||
+        (user.rawName?.toLowerCase().includes(term))
+      )
     );
     setSearchResults(filtered);
+  }, [showCreateGroupDialog, userSearchTerm, allFetchedUsers, isLoadingUsers, user.uid, selectedUsers]);
+
+  const handleUserSearch = (term: string) => {
+    setUserSearchTerm(term);
   };
 
-  const handleSelectUser = (userToAdd: typeof MOCK_USERS[0]) => {
+  const handleSelectUser = (userToAdd: CombinedUser) => {
     setSelectedUsers((prev) => [...prev, userToAdd]);
     setUserSearchTerm('');
     setSearchResults([]);
   };
 
   const handleRemoveSelectedUser = (uidToRemove: string) => {
-    setSelectedUsers((prev) => prev.filter((su) => su.uid !== uidToRemove));
+    setSelectedUsers((prev) => prev.filter((su) => su.id !== uidToRemove));
   };
-
 
   // Function to update the last updated time for each conversation
   const updateLastUpdated = useCallback(() => {
@@ -287,103 +302,112 @@ export function ChatList({
 
       {showCreateGroupDialog && (
         <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
-          <DialogContent className="sm:max-w-[450px] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"> {/* Added shadow-xl */}
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="text-[hsl(var(--card-foreground))]">Create a group chat</DialogTitle>
-              <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1">
-                Fill in the details below to start a new group conversation.
+              <DialogTitle>Create New Group</DialogTitle>
+              <DialogDescription>
+                Create a new group chat and add members.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 p-4"> {/* Changed from grid to space-y and added padding */}
+            <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="groupName" className="text-right col-span-1 text-[hsl(var(--foreground))]">
+                <Label htmlFor="groupName" className="text-right">
                   Group Name
                 </Label>
                 <Input
                   id="groupName"
-                  placeholder="Enter group name"
-                  className="col-span-3 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter group name"
                 />
               </div>
-              {/* Group Description Textarea */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="groupDescription" className="text-right col-span-1 pt-2 text-[hsl(var(--foreground))]"> {/* items-start applied to parent div */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="groupDescription" className="text-right">
                   Description
                 </Label>
                 <Textarea
                   id="groupDescription"
-                  placeholder="What's this group about? (Optional)"
-                  className="col-span-3 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))] min-h-[80px]"
                   value={groupDescription}
                   onChange={(e) => setGroupDescription(e.target.value)}
+                  className="col-span-3"
+                  placeholder="Enter group description (optional)"
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4"> {/* This items-center is fine for single-line input */}
-                <Label htmlFor="addPeople" className="text-right col-span-1 text-[hsl(var(--foreground))]">
-                  Add People
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="searchUsers" className="text-right">
+                  Add Members
                 </Label>
-                <Input
-                  id="addPeople"
-                  placeholder="Search by name or email"
-                  className="col-span-3 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]"
-                  value={userSearchTerm}
-                  onChange={(e) => handleUserSearch(e.target.value)}
-                />
-              </div>
-
-              {/* Search Results */}
-              {userSearchTerm && searchResults.length > 0 && (
-                <div className="col-start-2 col-span-3 mt-2 max-h-32 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]"> {/* Changed mt-1 to mt-2 */}
-                  {searchResults.map(foundUser => (
-                    <div
-                      key={foundUser.uid}
-                      className="p-2 hover:bg-[hsl(var(--accent))] cursor-pointer text-sm text-[hsl(var(--foreground))]"
-                      onClick={() => handleSelectUser(foundUser)}
-                    >
-                      {foundUser.userName} <span className="text-xs text-[hsl(var(--muted-foreground))]">({foundUser.email})</span>
+                <div className="col-span-3 space-y-2">
+                  <Input
+                    id="searchUsers"
+                    placeholder="Search users by name or email..."
+                    value={userSearchTerm}
+                    onChange={(e) => handleUserSearch(e.target.value)}
+                    className="w-full"
+                  />
+                  {isLoadingUsers ? (
+                    <div className="flex items-center justify-center p-2">
+                      <LoaderCircle className="w-6 h-6 animate-spin text-[hsl(var(--primary))]" />
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Selected Users */}
-              {selectedUsers.length > 0 && (
-                <div className="col-start-2 col-span-3 mt-2 space-y-1.5"> {/* Increased space-y slightly */}
-                  <Label className="text-xs text-[hsl(var(--muted-foreground))] mb-1">Selected:</Label> {/* Added mb-1 for spacing to tags */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedUsers.map(selected => (
-                      <span
-                        key={selected.uid}
-                        className="flex items-center bg-[hsl(var(--primary)_/_0.2)] text-[hsl(var(--primary))] text-xs font-medium px-2.5 py-1 rounded-full"
-                      >
-                        {selected.userName}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSelectedUser(selected.uid)}
-                          className="ml-1.5 text-[hsl(var(--primary)_/_0.7)] hover:text-[hsl(var(--primary))]"
-                          aria-label={`Remove ${selected.userName}`}
+                  ) : usersError ? (
+                    <div className="text-sm text-red-500 p-2">
+                      Error loading users: {usersError}
+                      <Button variant="link" onClick={() => refetchUsers()} className="ml-2">Retry</Button>
+                    </div>
+                  ) : userSearchTerm && searchResults.length > 0 ? (
+                    <div className="max-h-48 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
+                      {searchResults.map((foundUser) => (
+                        <div
+                          key={foundUser.id}
+                          className="p-2 hover:bg-[hsl(var(--accent))] cursor-pointer text-sm text-[hsl(var(--foreground))]"
+                          onClick={() => handleSelectUser(foundUser)}
                         >
-                          <LucideX className="h-3.5 w-3.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                          <div className="flex items-center space-x-2">
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={foundUser.profilePic} alt={foundUser.displayName} />
+                              <AvatarFallback>{foundUser.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{foundUser.displayName}</p>
+                              <p className="text-xs text-[hsl(var(--muted-foreground))]">{foundUser.email}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selectedUsers.length > 0 && (
+                    <div className="mt-2">
+                      <Label className="text-xs text-[hsl(var(--muted-foreground))] mb-1">Selected Members:</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedUsers.map((selected) => (
+                          <span
+                            key={selected.id}
+                            className="flex items-center bg-[hsl(var(--primary)_/_0.2)] text-[hsl(var(--primary))] text-xs font-medium px-2.5 py-1 rounded-full"
+                          >
+                            {selected.displayName}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSelectedUser(selected.id)}
+                              className="ml-1.5 text-[hsl(var(--primary)_/_0.7)] hover:text-[hsl(var(--primary))]"
+                              aria-label={`Remove ${selected.displayName}`}
+                            >
+                              <LucideX className="h-3.5 w-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {selectedUsers.length === 0 && !userSearchTerm && (
-                 <div className="col-start-2 col-span-3 text-xs text-[hsl(var(--muted-foreground))] pl-2 mt-2"> {/* Added mt-2 */}
-                    Search by name or email to add members.
-                 </div>
-              )}
+              </div>
             </div>
-            <DialogFooter className="flex justify-end space-x-2 pt-4 border-t border-[hsl(var(--border))]"> {/* Applied flex, justify-end, space-x-2 and adjusted padding */}
+            <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline" onClick={() => {
                   setGroupName('');
-                  setGroupDescription(''); // Reset description
+                  setGroupDescription('');
                   setSelectedUsers([]);
                   setUserSearchTerm('');
                   setSearchResults([]);
@@ -407,11 +431,11 @@ export function ChatList({
                   }
 
                   const currentUserUID = user.uid;
-                  const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.uid)]));
+                  const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.id)]));
 
                   if (participantUIDs.length < 2) {
-                     toast({ variant: "destructive", title: "Error", description: "A group must have at least two distinct members." });
-                     return;
+                    toast({ variant: "destructive", title: "Error", description: "A group must have at least two distinct members." });
+                    return;
                   }
 
                   const now = new Date().toISOString();
@@ -419,7 +443,7 @@ export function ChatList({
                     participants: participantUIDs,
                     type: 'group',
                     groupName: groupName.trim(),
-                    project_name: groupName.trim(), // For display in chatList
+                    project_name: groupName.trim(),
                     createdAt: now,
                     updatedAt: now,
                     createdBy: currentUserUID,
@@ -429,7 +453,23 @@ export function ChatList({
                       senderId: 'system',
                       timestamp: now,
                     },
-                    // participantDetails will be populated by a cloud function or when participants send messages
+                    participantDetails: {
+                      [currentUserUID]: {
+                        userName: user.displayName || user.email || 'Current User',
+                        profilePic: user.photoURL || undefined,
+                        email: user.email || undefined,
+                        userType: user.type
+                      },
+                      ...Object.fromEntries(selectedUsers.map(user => [
+                        user.id,
+                        {
+                          userName: user.displayName,
+                          profilePic: user.profilePic,
+                          email: user.email,
+                          userType: user.userType
+                        }
+                      ]))
+                    }
                   };
 
                   if (groupDescription.trim()) {
@@ -441,10 +481,10 @@ export function ChatList({
                     console.log("Group conversation created with ID: ", docRef.id);
                     toast({ title: "Success", description: "Group chat created successfully." });
                     setGroupName('');
-                    setGroupDescription(''); // Reset description
-                    setSelectedUsers([]); // Reset selected users
-                    setUserSearchTerm(''); // Reset search term for users
-                    setSearchResults([]); // Reset search results for users
+                    setGroupDescription('');
+                    setSelectedUsers([]);
+                    setUserSearchTerm('');
+                    setSearchResults([]);
                     setShowCreateGroupDialog(false);
                   } catch (error) {
                     console.error("Error creating group conversation: ", error);
@@ -452,7 +492,7 @@ export function ChatList({
                   }
                 }}
               >
-                Create
+                Create Group
               </Button>
             </DialogFooter>
           </DialogContent>
