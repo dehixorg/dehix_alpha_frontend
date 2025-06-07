@@ -125,8 +125,6 @@ const SkillDomainForm: React.FC = () => {
           originalTalentId: item.talentId, // Keep track of original talent ID
         }));
 
-        console.log('All talent data from backend:', formattedTalentData);
-
         // Create sets of already added talent names by type
         const addedSkillNames = new Set(
           formattedTalentData
@@ -153,18 +151,6 @@ const SkillDomainForm: React.FC = () => {
             .filter(Boolean),
         );
 
-        console.log('Added skill names:', Array.from(addedSkillNames));
-        console.log('Added domain names:', Array.from(addedDomainNames));
-        console.log('Used talent IDs:', Array.from(usedTalentIds));
-        console.log(
-          'Available skills before filtering:',
-          skillsArray.map((s: any) => ({ id: s._id, name: s.name })),
-        );
-        console.log(
-          'Available domains before filtering:',
-          domainsArray.map((d: any) => ({ id: d._id, name: d.name })),
-        );
-
         // Filter skills - exclude if name matches added skills OR if ID is already used
         const filteredSkills = Array.isArray(skillsArray)
           ? skillsArray.filter((skill: any) => {
@@ -175,10 +161,6 @@ const SkillDomainForm: React.FC = () => {
               const isNameAlreadyAdded =
                 addedSkillNames.has(normalizedSkillName);
               const isIdAlreadyUsed = usedTalentIds.has(skill._id);
-
-              console.log(
-                `Skill "${skill.name}": normalized="${normalizedSkillName}", nameAdded=${isNameAlreadyAdded}, idUsed=${isIdAlreadyUsed}`,
-              );
 
               return !isNameAlreadyAdded && !isIdAlreadyUsed;
             })
@@ -195,22 +177,9 @@ const SkillDomainForm: React.FC = () => {
                 addedDomainNames.has(normalizedDomainName);
               const isIdAlreadyUsed = usedTalentIds.has(domain._id);
 
-              console.log(
-                `Domain "${domain.name}": normalized="${normalizedDomainName}", nameAdded=${isNameAlreadyAdded}, idUsed=${isIdAlreadyUsed}`,
-              );
-
               return !isNameAlreadyAdded && !isIdAlreadyUsed;
             })
           : [];
-
-        console.log(
-          'Filtered skills after filtering:',
-          filteredSkills.map((s: any) => s.name),
-        );
-        console.log(
-          'Filtered domains after filtering:',
-          filteredDomains.map((d: any) => d.name),
-        );
 
         const deduplicatedData = removeDuplicates(formattedTalentData);
         setSkillDomainData(deduplicatedData);
