@@ -68,9 +68,7 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
   useEffect(() => {
     if (isOpen) {
       setUserSearchTerm('');
-      // Initial results will be set by the search useEffect based on allFetchedUsers
-    } else {
-      setSearchResults([]); // Clear results when closing
+      setSearchResults([]);
     }
   }, [isOpen]);
 
@@ -118,10 +116,6 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
             ) : userSearchTerm.length > 0 && userSearchTerm.length < 3 ? (
               <div className="text-sm text-[hsl(var(--muted-foreground))] p-4">
                 Type at least 3 characters to search users
-              </div>
-            ) : isSearching ? (
-              <div className="flex items-center justify-center p-4">
-                <LoaderCircle className="w-6 h-6 animate-spin text-[hsl(var(--primary))]" />
               </div>
             ) : searchResults.length > 0 ? (
               <ScrollArea className="max-h-48 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
