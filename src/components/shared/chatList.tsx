@@ -37,6 +37,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils'; // Utility class names
 import { LoaderCircle } from 'lucide-react';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 export interface Conversation extends DocumentData {
   id: string;
@@ -82,11 +83,12 @@ export function ChatList({
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState(''); // State for group description
-  const user = useSelector((state: RootState) => state.user);
   const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const currentUser = useSelector((state: RootState) => state.user);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Removed local ProfileSidebar state:
   // const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
@@ -109,7 +111,7 @@ export function ChatList({
     if (conv.type === 'group') {
       onOpenProfileSidebar(conv.id, 'group');
     } else {
-      const otherParticipantUid = conv.participants.find(p => p !== user.uid);
+      const otherParticipantUid = conv.participants.find(p => p !== currentUser.uid);
       if (otherParticipantUid) {
         onOpenProfileSidebar(otherParticipantUid, 'user');
       } else {
@@ -120,42 +122,53 @@ export function ChatList({
 
   // Effect for filtering users based on search term
   useEffect(() => {
-    if (!showCreateGroupDialog || isLoadingUsers || !allFetchedUsers) {
-      setSearchResults([]);
-      return;
-    }
-
     const term = userSearchTerm.trim().toLowerCase();
-    if (term === '') {
+    
+    // Only search if term is at least 3 characters
+    if (term.length < 3) {
       setSearchResults([]);
       return;
     }
 
-    const filtered = allFetchedUsers.filter(user =>
-      user.id !== user.uid && // Exclude current user
-      !selectedUsers.find(selected => selected.id === user.id) && // Exclude already selected users
-      (
-        (user.displayName.toLowerCase().includes(term)) ||
-        (user.email.toLowerCase().includes(term)) ||
-        (user.rawUserName?.toLowerCase().includes(term)) ||
-        (user.rawName?.toLowerCase().includes(term))
-      )
-    );
-    setSearchResults(filtered);
-  }, [showCreateGroupDialog, userSearchTerm, allFetchedUsers, isLoadingUsers, user.uid, selectedUsers]);
+    setIsSearching(true);
+    try {
+      // Filter users based on search term
+      const filtered = allFetchedUsers.filter(user =>
+        user.id !== currentUser.uid && // Exclude current user using Redux state
+        !selectedUsers.find(selected => selected.id === user.id) && // Exclude already selected users
+        (
+          (user.displayName.toLowerCase().includes(term)) ||
+          (user.email.toLowerCase().includes(term)) ||
+          (user.rawUserName?.toLowerCase().includes(term)) ||
+          (user.rawName?.toLowerCase().includes(term))
+        )
+      );
+      setSearchResults(filtered);
+    } catch (error) {
+      console.error('Error filtering users:', error);
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Failed to search users. Please try again." 
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  }, [userSearchTerm, allFetchedUsers, selectedUsers, currentUser.uid]);
 
   const handleUserSearch = (term: string) => {
     setUserSearchTerm(term);
   };
 
-  const handleSelectUser = (userToAdd: CombinedUser) => {
-    setSelectedUsers((prev) => [...prev, userToAdd]);
+  const handleSelectUser = (user: CombinedUser) => {
+    if (!selectedUsers.find(selected => selected.id === user.id)) {
+      setSelectedUsers([...selectedUsers, user]);
+    }
     setUserSearchTerm('');
-    setSearchResults([]);
   };
 
-  const handleRemoveSelectedUser = (uidToRemove: string) => {
-    setSelectedUsers((prev) => prev.filter((su) => su.id !== uidToRemove));
+  const handleRemoveUser = (userId: string) => {
+    setSelectedUsers(selectedUsers.filter(user => user.id !== userId));
   };
 
   // Function to update the last updated time for each conversation
@@ -189,6 +202,66 @@ export function ChatList({
       lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+
+  const handleCreateGroup = async () => {
+    if (!currentUser || !currentUser.uid) {
+      toast({ variant: "destructive", title: "Error", description: "You must be logged in to create a group." });
+      return;
+    }
+
+    if (selectedUsers.length === 0) {
+      toast({ variant: "destructive", title: "Error", description: "Please select at least one user to create a group." });
+      return;
+    }
+
+    if (!groupName.trim()) {
+      toast({ variant: "destructive", title: "Error", description: "Please enter a group name." });
+      return;
+    }
+
+    const currentUserUID = currentUser.uid;
+    const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.id)]));
+
+    const now = new Date().toISOString();
+    const newGroup: Conversation = {
+      id: `group_${Date.now()}`,
+      type: 'group',
+      groupName: groupName.trim(),
+      description: groupDescription.trim(),
+      participants: participantUIDs,
+      createdAt: now,
+      updatedAt: now,
+      admins: [currentUserUID],
+      lastMessage: {
+        content: `${currentUser.displayName || currentUser.email || currentUserUID} created the group "${groupName.trim()}"`,
+        senderId: 'system',
+        timestamp: now,
+      },
+      participantDetails: {
+        [currentUserUID]: {
+          userName: currentUser.displayName || currentUser.email || 'Current User',
+          profilePic: currentUser.photoURL || undefined,
+          email: currentUser.email || undefined,
+          userType: currentUser.type
+        },
+        ...Object.fromEntries(selectedUsers.map(user => [
+          user.id,
+          {
+            userName: user.displayName,
+            profilePic: user.profilePic,
+            email: user.email,
+            userType: user.userType
+          }
+        ]))
+      }
+    };
+
+    setConversation(newGroup);
+    setSelectedUsers([]);
+    setGroupName('');
+    setGroupDescription('');
+    setShowCreateGroupDialog(false);
+  };
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
@@ -254,15 +327,15 @@ export function ChatList({
                         src={
                           conversation.type === 'group'
                             ? conversation.participantDetails?.[conversation.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${conversation.id}.png` // Group avatar
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== user.uid)}.png` // User avatar
+                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== currentUser.uid)}.png` // User avatar
                         }
-                        alt={conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName}
+                        alt={conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName}
                       />
                       <AvatarFallback>
                         {
                           (conversation.type === 'group'
                             ? conversation.groupName?.charAt(0)
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName?.charAt(0)
+                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName?.charAt(0)
                           )?.toUpperCase() || 'P'
                         }
                       </AvatarFallback>
@@ -271,7 +344,7 @@ export function ChatList({
                   <div className="flex-grow overflow-hidden" onClick={() => setConversation(conversation)}> {/* Make text area also set active conversation */}
                     <div className="flex justify-between items-baseline">
                       <p className={cn("text-sm font-medium truncate", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--foreground))]")}>
-                        {conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== user.uid) || '']?.userName || 'Chat User'}
+                        {conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName || 'Chat User'}
                       </p>
                       <p className={cn("text-xs flex-shrink-0 ml-2", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]")}>
                         {lastUpdated}
@@ -341,21 +414,20 @@ export function ChatList({
                 <div className="col-span-3 space-y-2">
                   <Input
                     id="searchUsers"
-                    placeholder="Search users by name or email..."
+                    placeholder="Type at least 3 characters to search users..."
                     value={userSearchTerm}
                     onChange={(e) => handleUserSearch(e.target.value)}
                     className="w-full"
                   />
-                  {isLoadingUsers ? (
+                  {isSearching ? (
                     <div className="flex items-center justify-center p-2">
                       <LoaderCircle className="w-6 h-6 animate-spin text-[hsl(var(--primary))]" />
                     </div>
-                  ) : usersError ? (
-                    <div className="text-sm text-red-500 p-2">
-                      Error loading users: {usersError}
-                      <Button variant="link" onClick={() => refetchUsers()} className="ml-2">Retry</Button>
+                  ) : userSearchTerm.length > 0 && userSearchTerm.length < 3 ? (
+                    <div className="text-sm text-[hsl(var(--muted-foreground))] p-2">
+                      Type at least 3 characters to search users
                     </div>
-                  ) : userSearchTerm && searchResults.length > 0 ? (
+                  ) : userSearchTerm.length >= 3 && searchResults.length > 0 ? (
                     <div className="max-h-48 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
                       {searchResults.map((foundUser) => (
                         <div
@@ -376,6 +448,10 @@ export function ChatList({
                         </div>
                       ))}
                     </div>
+                  ) : userSearchTerm.length >= 3 && searchResults.length === 0 ? (
+                    <div className="text-sm text-[hsl(var(--muted-foreground))] p-2">
+                      No users found matching your search
+                    </div>
                   ) : null}
                   {selectedUsers.length > 0 && (
                     <div className="mt-2">
@@ -389,7 +465,7 @@ export function ChatList({
                             {selected.displayName}
                             <button
                               type="button"
-                              onClick={() => handleRemoveSelectedUser(selected.id)}
+                              onClick={(e) => { e.stopPropagation(); handleRemoveUser(selected.id); }}
                               className="ml-1.5 text-[hsl(var(--primary)_/_0.7)] hover:text-[hsl(var(--primary))]"
                               aria-label={`Remove ${selected.displayName}`}
                             >
@@ -416,81 +492,7 @@ export function ChatList({
               <Button
                 type="button"
                 variant="default"
-                onClick={async () => {
-                  if (!user || !user.uid) {
-                    toast({ variant: "destructive", title: "Error", description: "You must be logged in to create a group." });
-                    return;
-                  }
-                  if (groupName.trim() === '') {
-                    toast({ variant: "destructive", title: "Error", description: "Group name cannot be empty." });
-                    return;
-                  }
-                  if (selectedUsers.length === 0) {
-                    toast({ variant: "destructive", title: "Error", description: "Please select at least one other member for the group." });
-                    return;
-                  }
-
-                  const currentUserUID = user.uid;
-                  const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.id)]));
-
-                  if (participantUIDs.length < 2) {
-                    toast({ variant: "destructive", title: "Error", description: "A group must have at least two distinct members." });
-                    return;
-                  }
-
-                  const now = new Date().toISOString();
-                  const newGroupConversation = {
-                    participants: participantUIDs,
-                    type: 'group',
-                    groupName: groupName.trim(),
-                    project_name: groupName.trim(),
-                    createdAt: now,
-                    updatedAt: now,
-                    createdBy: currentUserUID,
-                    admins: [currentUserUID],
-                    lastMessage: {
-                      content: `${user.displayName || user.email || currentUserUID} created the group "${groupName.trim()}"`,
-                      senderId: 'system',
-                      timestamp: now,
-                    },
-                    participantDetails: {
-                      [currentUserUID]: {
-                        userName: user.displayName || user.email || 'Current User',
-                        profilePic: user.photoURL || undefined,
-                        email: user.email || undefined,
-                        userType: user.type
-                      },
-                      ...Object.fromEntries(selectedUsers.map(user => [
-                        user.id,
-                        {
-                          userName: user.displayName,
-                          profilePic: user.profilePic,
-                          email: user.email,
-                          userType: user.userType
-                        }
-                      ]))
-                    }
-                  };
-
-                  if (groupDescription.trim()) {
-                    (newGroupConversation as any).description = groupDescription.trim();
-                  }
-
-                  try {
-                    const docRef = await addDoc(collection(db, 'conversations'), newGroupConversation);
-                    console.log("Group conversation created with ID: ", docRef.id);
-                    toast({ title: "Success", description: "Group chat created successfully." });
-                    setGroupName('');
-                    setGroupDescription('');
-                    setSelectedUsers([]);
-                    setUserSearchTerm('');
-                    setSearchResults([]);
-                    setShowCreateGroupDialog(false);
-                  } catch (error) {
-                    console.error("Error creating group conversation: ", error);
-                    toast({ variant: "destructive", title: "Error", description: "Failed to create group chat." });
-                  }
-                }}
+                onClick={handleCreateGroup}
               >
                 Create Group
               </Button>

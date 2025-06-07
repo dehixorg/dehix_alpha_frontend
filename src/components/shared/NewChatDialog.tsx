@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X as LucideX, LoaderCircle } from 'lucide-react'; // Using X & LoaderCircle
 import { cn } from '@/lib/utils';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers'; // Import hook and CombinedUser type
+import { toast } from '@/components/ui/use-toast';
 
 // Local User type and MOCK_USERS are no longer needed.
 
@@ -22,37 +23,46 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleUserSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserSearchTerm(event.target.value);
   };
 
-  // Effect for filtering users based on search term or when fetched users change
+  // Effect for filtering users based on search term
   useEffect(() => {
-    if (!isOpen || isLoadingUsers || !allFetchedUsers) {
+    const term = userSearchTerm.trim().toLowerCase();
+    
+    // Only search if term is at least 3 characters
+    if (term.length < 3) {
       setSearchResults([]);
       return;
     }
 
-    const term = userSearchTerm.trim().toLowerCase();
-    if (term === '') {
-      // Optionally, display all users (excluding self) or none if search term is empty.
-      // For "start new chat", showing all non-self users can be a good default.
-      setSearchResults(allFetchedUsers.filter(user => user.id !== currentUserUid));
-      return;
+    setIsSearching(true);
+    try {
+      // Filter users based on search term
+      const filtered = allFetchedUsers.filter(user =>
+        user.id !== currentUserUid && // Exclude current user
+        (
+          (user.displayName.toLowerCase().includes(term)) ||
+          (user.email.toLowerCase().includes(term)) ||
+          (user.rawUserName?.toLowerCase().includes(term)) ||
+          (user.rawName?.toLowerCase().includes(term))
+        )
+      );
+      setSearchResults(filtered);
+    } catch (error) {
+      console.error('Error filtering users:', error);
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Failed to search users. Please try again." 
+      });
+    } finally {
+      setIsSearching(false);
     }
-
-    const filtered = allFetchedUsers.filter(user =>
-      user.id !== currentUserUid && // Exclude current user
-      (
-        (user.displayName.toLowerCase().includes(term)) ||
-        (user.email.toLowerCase().includes(term)) ||
-        (user.rawUserName?.toLowerCase().includes(term)) ||
-        (user.rawName?.toLowerCase().includes(term))
-      )
-    );
-    setSearchResults(filtered);
-  }, [isOpen, userSearchTerm, allFetchedUsers, isLoadingUsers, currentUserUid]);
+  }, [userSearchTerm, allFetchedUsers, currentUserUid]);
 
   // Reset search term and results when dialog is closed/opened
   useEffect(() => {
@@ -105,6 +115,14 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
                 Error loading users: {usersError}
                 <Button variant="link" onClick={() => refetchUsers()} className="ml-2">Retry</Button>
               </div>
+            ) : userSearchTerm.length > 0 && userSearchTerm.length < 3 ? (
+              <div className="text-sm text-[hsl(var(--muted-foreground))] p-4">
+                Type at least 3 characters to search users
+              </div>
+            ) : isSearching ? (
+              <div className="flex items-center justify-center p-4">
+                <LoaderCircle className="w-6 h-6 animate-spin text-[hsl(var(--primary))]" />
+              </div>
             ) : searchResults.length > 0 ? (
               <ScrollArea className="max-h-48 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
                 <div className="p-2 space-y-1">
@@ -132,7 +150,7 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
               </ScrollArea>
             ) : (
               <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
-                {userSearchTerm ? "No users found matching your search." : "No users available or type to search."}
+                {userSearchTerm ? "No users found matching your search." : "Type to search for users."}
               </div>
             )}
           </div>
