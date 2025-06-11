@@ -9,10 +9,12 @@ import { toast } from '@/components/ui/use-toast';
 
 // Define Toast variant type
 type ToastVariant = 'destructive' | 'default' | null | undefined;
+      
+
 
 interface Project {
   _id: string;
-  projectName: string;
+  projectName: string  ;
   description: string;
   companyId: string;
   email: string;
