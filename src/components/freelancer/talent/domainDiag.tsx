@@ -1,7 +1,5 @@
 'use client';
 
-import { DialogFooter } from '@/components/ui/dialog';
-
 import type React from 'react';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
@@ -10,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 
+import { DialogFooter } from '@/components/ui/dialog';
 import {
   Dialog,
   DialogTrigger,
