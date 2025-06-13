@@ -47,6 +47,17 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 First, run the development server:
 
+### ✅ Setup Husky (optional for Git hooks)
+
+```bash
+npm install --save-dev husky
+# OR
+yarn add --dev husky
+bash
+Copy
+Edit
+npx husky install
+
 ```bash
 npm run dev
 # or
