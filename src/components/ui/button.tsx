@@ -9,7 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md', // Google Blue
+        default: 'bg-[#9966cc] text-white shadow-sm hover:bg-[#8855bb] dark:bg-[#9966cc] dark:hover:bg-[#8855bb] rounded-md',
         destructive:
           'bg-red-600 text-white shadow-sm hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-md',
         outline:

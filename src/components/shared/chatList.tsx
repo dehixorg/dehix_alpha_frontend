@@ -271,15 +271,15 @@ export function ChatList({
         <div className="flex space-x-2 mb-3">
           <Button
             variant="default" // Or "outline" depending on desired prominence
-            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
+            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
             onClick={() => setShowCreateGroupDialog(true)}
           >
             <Users className="h-4 w-4 mr-2" /> {/* Icon color will be primary-foreground */}
-            Create Group
+            Create Group 
           </Button>
-          <Button
+          <Button 
             variant="default" // Or "outline"
-            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-sm"
+            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
             onClick={onOpenNewChatDialog} // Use the prop here
           >
             <SquarePen className="h-4 w-4 mr-2" />
@@ -315,8 +315,9 @@ export function ChatList({
                   aria-selected={isActive}
                   tabIndex={0} // Make it focusable
                   className={cn(
-                    'flex items-start p-3 rounded-lg cursor-pointer hover:bg-[hsl(var(--accent))] space-x-3 focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]',
-                    isActive && 'bg-[hsl(var(--primary)_/_0.15)] dark:bg-[hsl(var(--primary)_/_0.25)]',
+                    'flex items-start p-3 rounded-lg cursor-pointer space-x-3 focus:outline-none',
+                    'hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
+                    isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e] focus:ring-0 focus:outline-none',
                   )}
                   onClick={() => setConversation(conversation)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }}
@@ -326,12 +327,12 @@ export function ChatList({
                       <AvatarImage
                         src={
                           conversation.type === 'group'
-                            ? conversation.participantDetails?.[conversation.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${conversation.id}.png` // Group avatar
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== currentUser.uid)}.png` // User avatar
+                            ? conversation.participantDetails?.[conversation.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== currentUser.uid)}.png`
                         }
                         alt={conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName}
                       />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-[#d6dae2] dark:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]">
                         {
                           (conversation.type === 'group'
                             ? conversation.groupName?.charAt(0)
@@ -341,16 +342,16 @@ export function ChatList({
                       </AvatarFallback>
                     </Avatar>
                   </div>
-                  <div className="flex-grow overflow-hidden" onClick={() => setConversation(conversation)}> {/* Make text area also set active conversation */}
+                  <div className="flex-grow overflow-hidden" onClick={() => setConversation(conversation)}>
                     <div className="flex justify-between items-baseline">
-                      <p className={cn("text-sm font-medium truncate", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--foreground))]")}>
+                      <p className="text-sm font-medium truncate text-[hsl(var(--foreground))]">
                         {conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName || 'Chat User'}
                       </p>
-                      <p className={cn("text-xs flex-shrink-0 ml-2", isActive ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]")}>
+                      <p className="text-xs flex-shrink-0 ml-2 text-[hsl(var(--muted-foreground))]">
                         {lastUpdated}
                       </p>
                     </div>
-                    <p className={cn("text-xs truncate", isActive ? "text-[hsl(var(--foreground))]" : "text-[hsl(var(--muted-foreground))]")}>
+                    <p className="text-xs truncate text-[hsl(var(--muted-foreground))]">
                       {lastMessageText.length > 40 ? lastMessageText.substring(0, 40) + '...' : lastMessageText}
                     </p>
                   </div>

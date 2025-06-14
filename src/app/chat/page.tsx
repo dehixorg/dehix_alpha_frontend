@@ -52,13 +52,20 @@ const HomePage = () => {
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
   const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
+  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<{ userName?: string; email?: string; profilePic?: string } | undefined>(undefined);
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
-  const handleOpenProfileSidebar = (id: string, type: 'user' | 'group') => {
+  // Updated to accept initialDetails as third argument
+  const handleOpenProfileSidebar = (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: { userName?: string; email?: string; profilePic?: string }
+  ) => {
     setProfileSidebarId(id);
     setProfileSidebarType(type);
+    setProfileSidebarInitialData(initialDetails);
     setIsProfileSidebarOpen(true);
   };
 
@@ -67,6 +74,7 @@ const HomePage = () => {
     // Optionally clear id and type:
     // setProfileSidebarId(null);
     // setProfileSidebarType(null);
+    setProfileSidebarInitialData(undefined);
   };
 
   const toggleChatExpanded = () => {
@@ -298,15 +306,12 @@ const HomePage = () => {
           searchPlaceholder="Search chats..."
         />
         {/* Main content area where ChatLayout will be used, ensure it can fill height */}
-        <main className="h-[90vh] border-4 border-red-500 p-1 sm:p-2 md:p-4"> {/* Applied fixed height and debug border */}
+        <main className="h-[90vh] p-1 sm:p-2 md:p-4">
           <ChatLayout
             chatListComponent={chatListComponentForLayout}
             chatWindowComponent={chatWindowComponentContent}
             isChatAreaExpanded={isChatExpanded}
-            // Pass onOpenProfileSidebar through ChatLayout if ChatLayout needs to pass it to its children
-            // This specific prop name is for ChatLayout to know what to pass down.
-            // We'll need to adjust ChatLayoutProps and how it passes this down.
-             onOpenProfileSidebar={handleOpenProfileSidebar}
+            onOpenProfileSidebar={handleOpenProfileSidebar}
           />
         </main>
         <ProfileSidebar
@@ -314,6 +319,7 @@ const HomePage = () => {
           onClose={handleCloseProfileSidebar}
           profileId={profileSidebarId}
           profileType={profileSidebarType}
+          initialData={profileSidebarInitialData}
         />
         {user && (
           <NewChatDialog

@@ -22,6 +22,8 @@ const config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        customBlue: '#6DB4FF',
+        customPurple: '#A66DFF',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
@@ -70,6 +72,9 @@ const config = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      backgroundImage: {
+        'sw-gradient': 'linear-gradient(to bottom right, #6DB4FF, #A66DFF)',
       },
       keyframes: {
         'accordion-down': {

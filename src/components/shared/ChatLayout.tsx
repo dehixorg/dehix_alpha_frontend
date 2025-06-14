@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils';
 interface ChatLayoutProps {
   chatListComponent: React.ReactNode;
   chatWindowComponent: React.ReactNode;
-  isChatAreaExpanded?: boolean;
-  onOpenProfileSidebar?: (id: string, type: 'user' | 'group') => void; // Added prop
+  isChatAreaExpanded: boolean;
+  onOpenProfileSidebar?: (id: string, type: 'user' | 'group', initialDetails?: { userName?: string; email?: string; profilePic?: string }) => void;
 }
 
 const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded, onOpenProfileSidebar }) => {

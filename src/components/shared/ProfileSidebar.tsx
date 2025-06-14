@@ -66,9 +66,10 @@ interface ProfileSidebarProps {
   // We will primarily use the Redux store version for consistency within this component,
   // but including it in props if direct passing is ever preferred.
   currentUser?: CombinedUser | null;
+  initialData?: { userName?: string; email?: string; profilePic?: string };
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profileId, profileType, currentUser: propCurrentUser }) => {
+const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profileId, profileType, currentUser: propCurrentUser, initialData }) => {
   const [profileData, setProfileData] = useState<ProfileUser | ProfileGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,16 +97,56 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
   const internalFetchProfileData = async () => {
     setLoading(true);
     setError(null);
-    setProfileData(null);
+    // Initial population from initialData if available for users
+    if (profileType === 'user' && initialData && profileId) {
+      setProfileData({
+        // Explicitly map to ProfileUser, ensure all required fields are present or defaulted
+        _id: profileId, // Assuming profileId is the _id for users from initialData context
+        id: profileId,
+        userName: initialData.userName || '',
+        name: initialData.userName || '', // Often name and userName are similar or name is preferred
+        email: initialData.email || '',
+        profilePic: initialData.profilePic,
+        displayName: initialData.userName || '', // Ensure displayName is set
+        // Initialize other fields as undefined or default if not in initialData
+        bio: undefined,
+        status: undefined,
+        lastSeen: undefined,
+      });
+      // We might still want to set loading to true if an API call will follow to supplement data
+      // setLoading(false); // Or set to false if this is considered enough initial data
+    } else {
+      setProfileData(null);
+    }
 
     try {
-      if (profileType === 'user') {
+      if (profileType === 'user' && profileId) {
         // Fetch user profile data
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
         if (response.data && response.data.data) {
-          setProfileData(response.data.data);
+          const apiData = response.data.data as ProfileUser;
+          setProfileData(prevData => ({
+            ...apiData, // API data as base
+            // Prioritize initialData for specific fields if initialData was provided
+            userName: initialData?.userName || apiData.userName,
+            email: initialData?.email || apiData.email,
+            profilePic: initialData?.profilePic || apiData.profilePic,
+            displayName: initialData?.userName || apiData.userName || apiData.displayName,
+            // Ensure critical identifiers like id are correctly maintained
+            id: profileId,
+            _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
+            // name might need specific handling depending on your data structure
+            name: initialData?.userName || apiData.name || apiData.userName,
+          }));
+        } else {
+          // If API call fails or returns no data, but we had initialData, retain it.
+          // This part depends on whether an error should clear initialData or not.
+          // For now, if initialData was set and API fails, it remains. If no initialData, then error.
+          if (!initialData) {
+            throw new Error('User not found and no initial data provided');
+          }
         }
-      } else if (profileType === 'group') {
+      } else if (profileType === 'group' && profileId) {
         // Fetch group data from Firestore
         const conversationDoc = await getDoc(doc(db, 'conversations', profileId));
         if (conversationDoc.exists()) {
@@ -260,7 +301,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 
     executeFetches();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, profileId, profileType, refreshDataKey]);
+  }, [isOpen, profileId, profileType, refreshDataKey, initialData]); // Added initialData to dependency array
 
   const handleAddMembersToGroup = async (selectedUsers: CombinedUser[], groupId: string) => {
     if (!selectedUsers || selectedUsers.length === 0) {
@@ -494,6 +535,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
     profileData &&
     user?.mutedGroups?.includes((profileData as ProfileGroup).id);
 
+  let avatarSrc = '';
+  if (profileData) {
+    if (profileType === 'user') {
+      avatarSrc = (profileData as ProfileUser).profilePic || '';
+    } else if (profileType === 'group') {
+      const groupData = profileData as ProfileGroup;
+      avatarSrc = groupData.participantDetails?.[groupData.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${groupData.id}.png`;
+    }
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
@@ -526,7 +577,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
                 <div className="flex flex-col items-center space-y-2 pt-4">
                   <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
                     <AvatarImage
-                      src={profileType === 'user' ? (profileData as ProfileUser).profilePic : (profileData as ProfileGroup).avatar}
+                      src={avatarSrc}
                       alt={profileData.displayName}
                     />
                     <AvatarFallback className="text-3xl">{getFallbackName(profileData)}</AvatarFallback>
@@ -819,5 +870,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isOpen, onClose, profil
 };
 
 export default ProfileSidebar;
+
 
 
