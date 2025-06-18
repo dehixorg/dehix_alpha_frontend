@@ -25,6 +25,7 @@ interface FilterState {
   domain: string[];
   skills: string[];
   projectDomain: string[];
+  sorting: string[];
 }
 
 interface Project {
@@ -89,10 +90,12 @@ const Market: React.FC = () => {
     skills: [],
     projects: [],
     projectDomain: [],
+    sorting: []
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
+  const [sorting, setSorting] = useState<string[]>([]);
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [isgetJobLoading, setIsJobLoading] = useState(false);
@@ -110,6 +113,7 @@ const Market: React.FC = () => {
       skills: [],
       projects: [],
       projectDomain: [],
+      sorting: []
     });
   };
 
@@ -282,6 +286,17 @@ const Market: React.FC = () => {
                 selectedValues={filters.skills}
                 setSelectedValues={(values) =>
                   handleFilterChange('skills', values)
+                }
+              />
+            </div>
+            <div className="mb-4">
+              <SkillDom
+                label="Sort"
+                heading="Sort descending"
+                checkboxLabels={['Ascending', 'Descending']}
+                selectedValues={filters.sorting}
+                setSelectedValues={(values) =>
+                  handleFilterChange('sorting', values)
                 }
               />
             </div>

@@ -50,6 +50,10 @@ const SkillDom: React.FC<SkillDomProps> = ({
         setSelectedValues(newSelectedValues);
       }
     }
+    if (label === 'Ascending' || label === 'Descending') {
+      setSelectedValues([label]);
+      return;
+    }
   };
 
   const filteredSkills = checkboxLabels.filter((label) =>
