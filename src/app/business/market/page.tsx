@@ -23,6 +23,8 @@ interface FilterState {
   domain: string[];
   skills: string[];
   experience: string[];
+  minRate: string;
+  maxRate: string;
 }
 
 const Market: React.FC = () => {
@@ -39,6 +41,8 @@ const Market: React.FC = () => {
     experience: [],
     domain: [],
     skills: [],
+    minRate: '',
+    maxRate: ''
   });
 
   const handleFilterChange = (
@@ -78,6 +82,8 @@ const Market: React.FC = () => {
       domain: [],
       skills: [],
       experience: [],
+      minRate: '',
+      maxRate: ''
     });
   };
 

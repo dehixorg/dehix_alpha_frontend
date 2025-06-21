@@ -3,6 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface FilterState {
   location: string[];
@@ -10,6 +12,8 @@ interface FilterState {
   domain: string[];
   skills: string[];
   experience: string[];
+  minRate: string;
+  maxRate: string;
 }
 interface FilterSidebarProps {
   filters: FilterState;
@@ -87,6 +91,35 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             setSelectedValues={(values) => handleFilterChange('sorting', values)}
           />
         </div>
+        <div className="mb-4">
+            <Label className="mb-2 block text-sm font-medium">Filter by Rate</Label>
+            <div className="flex gap-4">
+              <div className="flex flex-col flex-1">
+                <Label htmlFor="minRate" className="mb-1 text-xs text-muted-foreground">
+                  Min Rate
+                </Label>
+                <Input
+                  id="minRate"
+                  type="number"
+                  placeholder="e.g. 10"
+                  value={filters.minRate}
+                  onChange={(e) => handleFilterChange("minRate", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <Label htmlFor="maxRate" className="mb-1 text-xs text-muted-foreground">
+                  Max Rate
+                </Label>
+                <Input
+                  id="maxRate"
+                  type="number"
+                  placeholder="e.g. 100"
+                  value={filters.maxRate}
+                  onChange={(e) => handleFilterChange("maxRate", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   );

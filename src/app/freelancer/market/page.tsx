@@ -18,6 +18,8 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface FilterState {
   projects: string[];
@@ -26,6 +28,8 @@ interface FilterState {
   skills: string[];
   projectDomain: string[];
   sorting: string[];
+  minRate: string;
+  maxRate: string;
 }
 
 interface Project {
@@ -90,12 +94,16 @@ const Market: React.FC = () => {
     skills: [],
     projects: [],
     projectDomain: [],
-    sorting: []
+    sorting: [],
+    minRate: '',
+    maxRate: ''
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [sorting, setSorting] = useState<string[]>([]);
+  const [minRate,setMinRate] = useState<string>('');
+  const [maxRate,setMaxRate] = useState<string>('');
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [isgetJobLoading, setIsJobLoading] = useState(false);
@@ -113,22 +121,30 @@ const Market: React.FC = () => {
       skills: [],
       projects: [],
       projectDomain: [],
-      sorting: []
+      sorting: [],
+      minRate: '',
+      maxRate: '',
     });
   };
 
   const constructQueryString = (filters: FilterState) => {
-    return Object.keys(filters)
-      .map((key) => {
-        const values = filters[key as keyof FilterState];
-        if (values.length > 0) {
-          return `${key}=${values.join(',')}`;
-        }
-        return '';
-      })
-      .filter((part) => part !== '')
-      .join('&');
-  };
+  return Object.entries(filters)
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        return value.length > 0 ? `${key}=${value.join(',')}` : '';
+      }
+      if (typeof value === 'string' && value.trim() !== '') {
+        return `${key}=${encodeURIComponent(value)}`;
+      }
+      if (typeof value === 'number' && !isNaN(value)) {
+        return `${key}=${value}`;
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join('&');
+};
+
 
   useEffect(() => {
     async function fetchData() {
@@ -292,7 +308,7 @@ const Market: React.FC = () => {
             <div className="mb-4">
               <SkillDom
                 label="Sort"
-                heading="Sort descending"
+                heading="Sort"
                 checkboxLabels={['Ascending', 'Descending']}
                 selectedValues={filters.sorting}
                 setSelectedValues={(values) =>
@@ -300,6 +316,35 @@ const Market: React.FC = () => {
                 }
               />
             </div>
+            <div className="mb-4">
+            <Label className="mb-2 block text-sm font-medium">Filter by Rate</Label>
+            <div className="flex gap-4">
+              <div className="flex flex-col flex-1">
+                <Label htmlFor="minRate" className="mb-1 text-xs text-muted-foreground">
+                  Min Rate
+                </Label>
+                <Input
+                  id="minRate"
+                  type="number"
+                  placeholder="e.g. 10"
+                  value={filters.minRate}
+                  onChange={(e) => handleFilterChange("minRate", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <Label htmlFor="maxRate" className="mb-1 text-xs text-muted-foreground">
+                  Max Rate
+                </Label>
+                <Input
+                  id="maxRate"
+                  type="number"
+                  placeholder="e.g. 100"
+                  value={filters.maxRate}
+                  onChange={(e) => handleFilterChange("maxRate", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
 
             <div className="mb-4">
               <SkillDom
