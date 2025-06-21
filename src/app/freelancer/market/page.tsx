@@ -1,5 +1,7 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
 import { useSelector } from 'react-redux';
 import { Loader2, X } from 'lucide-react';
 
@@ -101,7 +103,7 @@ const Market: React.FC = () => {
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [sorting, setSorting] = useState<string[]>([]);
+  const [sorting, setSorting] = useState<string>('');
   const [minRate, setMinRate] = useState<string>('');
   const [maxRate, setMaxRate] = useState<string>('');
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
@@ -269,9 +271,11 @@ const Market: React.FC = () => {
         {/* Left Sidebar Scroll */}
         <div className="hidden lg:block lg:sticky lg:top-16 lg:w-1/3 xl:w-1/4 lg:self-start lg:h-[calc(100vh-4rem)]">
           <ScrollArea className="h-full no-scrollbar overflow-y-auto pr-4 space-y-4">
+          
             <Button onClick={handleApply} className="w-full">
               Apply
             </Button>
+
             <Button
               variant="outline"
               onClick={handleReset}
@@ -280,6 +284,15 @@ const Market: React.FC = () => {
             >
               Reset
             </Button>
+            <Select onValueChange={(value) => handleFilterChange('sorting', value)}>
+              <SelectTrigger className="w-full mt-4">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ascending">Ascending</SelectItem>
+                <SelectItem value="descending">Descending</SelectItem>
+              </SelectContent>
+            </Select>
 
             <div className="my-4">
               <SkillDom
@@ -301,17 +314,6 @@ const Market: React.FC = () => {
                 selectedValues={filters.skills}
                 setSelectedValues={(values) =>
                   handleFilterChange('skills', values)
-                }
-              />
-            </div>
-            <div className="mb-4">
-              <SkillDom
-                label="Sort"
-                heading="Sort"
-                checkboxLabels={['Ascending', 'Descending']}
-                selectedValues={filters.sorting}
-                setSelectedValues={(values) =>
-                  handleFilterChange('sorting', values)
                 }
               />
             </div>
