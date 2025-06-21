@@ -42,7 +42,7 @@ const Market: React.FC = () => {
     domain: [],
     skills: [],
     minRate: '',
-    maxRate: ''
+    maxRate: '',
   });
 
   const handleFilterChange = (
@@ -83,7 +83,7 @@ const Market: React.FC = () => {
       skills: [],
       experience: [],
       minRate: '',
-      maxRate: ''
+      maxRate: '',
     });
   };
 

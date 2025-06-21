@@ -96,14 +96,14 @@ const Market: React.FC = () => {
     projectDomain: [],
     sorting: [],
     minRate: '',
-    maxRate: ''
+    maxRate: '',
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [sorting, setSorting] = useState<string[]>([]);
-  const [minRate,setMinRate] = useState<string>('');
-  const [maxRate,setMaxRate] = useState<string>('');
+  const [minRate, setMinRate] = useState<string>('');
+  const [maxRate, setMaxRate] = useState<string>('');
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [isgetJobLoading, setIsJobLoading] = useState(false);
@@ -128,23 +128,22 @@ const Market: React.FC = () => {
   };
 
   const constructQueryString = (filters: FilterState) => {
-  return Object.entries(filters)
-    .map(([key, value]) => {
-      if (Array.isArray(value)) {
-        return value.length > 0 ? `${key}=${value.join(',')}` : '';
-      }
-      if (typeof value === 'string' && value.trim() !== '') {
-        return `${key}=${encodeURIComponent(value)}`;
-      }
-      if (typeof value === 'number' && !isNaN(value)) {
-        return `${key}=${value}`;
-      }
-      return '';
-    })
-    .filter(Boolean)
-    .join('&');
-};
-
+    return Object.entries(filters)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return value.length > 0 ? `${key}=${value.join(',')}` : '';
+        }
+        if (typeof value === 'string' && value.trim() !== '') {
+          return `${key}=${encodeURIComponent(value)}`;
+        }
+        if (typeof value === 'number' && !isNaN(value)) {
+          return `${key}=${value}`;
+        }
+        return '';
+      })
+      .filter(Boolean)
+      .join('&');
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -317,34 +316,46 @@ const Market: React.FC = () => {
               />
             </div>
             <div className="mb-4">
-            <Label className="mb-2 block text-sm font-medium">Filter by Rate</Label>
-            <div className="flex gap-4">
-              <div className="flex flex-col flex-1">
-                <Label htmlFor="minRate" className="mb-1 text-xs text-muted-foreground">
-                  Min Rate
-                </Label>
-                <Input
-                  id="minRate"
-                  type="number"
-                  placeholder="e.g. 10"
-                  value={filters.minRate}
-                  onChange={(e) => handleFilterChange("minRate", e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col flex-1">
-                <Label htmlFor="maxRate" className="mb-1 text-xs text-muted-foreground">
-                  Max Rate
-                </Label>
-                <Input
-                  id="maxRate"
-                  type="number"
-                  placeholder="e.g. 100"
-                  value={filters.maxRate}
-                  onChange={(e) => handleFilterChange("maxRate", e.target.value)}
-                />
+              <Label className="mb-2 block text-sm font-medium">
+                Filter by Rate
+              </Label>
+              <div className="flex gap-4">
+                <div className="flex flex-col flex-1">
+                  <Label
+                    htmlFor="minRate"
+                    className="mb-1 text-xs text-muted-foreground"
+                  >
+                    Min Rate
+                  </Label>
+                  <Input
+                    id="minRate"
+                    type="number"
+                    placeholder="e.g. 10"
+                    value={filters.minRate}
+                    onChange={(e) =>
+                      handleFilterChange('minRate', e.target.value)
+                    }
+                  />
+                </div>
+                <div className="flex flex-col flex-1">
+                  <Label
+                    htmlFor="maxRate"
+                    className="mb-1 text-xs text-muted-foreground"
+                  >
+                    Max Rate
+                  </Label>
+                  <Input
+                    id="maxRate"
+                    type="number"
+                    placeholder="e.g. 100"
+                    value={filters.maxRate}
+                    onChange={(e) =>
+                      handleFilterChange('maxRate', e.target.value)
+                    }
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
             <div className="mb-4">
               <SkillDom

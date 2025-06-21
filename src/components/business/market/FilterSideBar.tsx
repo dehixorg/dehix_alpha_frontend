@@ -88,38 +88,48 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             heading="Sort"
             checkboxLabels={['Ascending', 'Descending']}
             selectedValues={filters.skills}
-            setSelectedValues={(values) => handleFilterChange('sorting', values)}
+            setSelectedValues={(values) =>
+              handleFilterChange('sorting', values)
+            }
           />
         </div>
         <div className="mb-4">
-            <Label className="mb-2 block text-sm font-medium">Filter by Rate</Label>
-            <div className="flex gap-4">
-              <div className="flex flex-col flex-1">
-                <Label htmlFor="minRate" className="mb-1 text-xs text-muted-foreground">
-                  Min Rate
-                </Label>
-                <Input
-                  id="minRate"
-                  type="number"
-                  placeholder="e.g. 10"
-                  value={filters.minRate}
-                  onChange={(e) => handleFilterChange("minRate", e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col flex-1">
-                <Label htmlFor="maxRate" className="mb-1 text-xs text-muted-foreground">
-                  Max Rate
-                </Label>
-                <Input
-                  id="maxRate"
-                  type="number"
-                  placeholder="e.g. 100"
-                  value={filters.maxRate}
-                  onChange={(e) => handleFilterChange("maxRate", e.target.value)}
-                />
-              </div>
+          <Label className="mb-2 block text-sm font-medium">
+            Filter by Rate
+          </Label>
+          <div className="flex gap-4">
+            <div className="flex flex-col flex-1">
+              <Label
+                htmlFor="minRate"
+                className="mb-1 text-xs text-muted-foreground"
+              >
+                Min Rate
+              </Label>
+              <Input
+                id="minRate"
+                type="number"
+                placeholder="e.g. 10"
+                value={filters.minRate}
+                onChange={(e) => handleFilterChange('minRate', e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col flex-1">
+              <Label
+                htmlFor="maxRate"
+                className="mb-1 text-xs text-muted-foreground"
+              >
+                Max Rate
+              </Label>
+              <Input
+                id="maxRate"
+                type="number"
+                placeholder="e.g. 100"
+                value={filters.maxRate}
+                onChange={(e) => handleFilterChange('maxRate', e.target.value)}
+              />
             </div>
           </div>
+        </div>
       </div>
     </div>
   );
