@@ -317,16 +317,13 @@ const Market: React.FC = () => {
                 }
               />
             </div>
-            <div className="mb-4">
-              <Label className="mb-2 block text-sm font-medium">
+            <div className="mb-4 border rounded-lg p-4 bg-background shadow-sm">
+              <Label className="mb-4 block text-lg font-medium text-foreground ">
                 Filter by Rate
               </Label>
               <div className="flex gap-4">
                 <div className="flex flex-col flex-1">
-                  <Label
-                    htmlFor="minRate"
-                    className="mb-1 text-xs text-muted-foreground"
-                  >
+                  <Label htmlFor="minRate" className="mb-1 text-sm text-muted-foreground">
                     Min Rate
                   </Label>
                   <Input
@@ -334,16 +331,11 @@ const Market: React.FC = () => {
                     type="number"
                     placeholder="e.g. 10"
                     value={filters.minRate}
-                    onChange={(e) =>
-                      handleFilterChange('minRate', e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange('minRate', e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col flex-1">
-                  <Label
-                    htmlFor="maxRate"
-                    className="mb-1 text-xs text-muted-foreground"
-                  >
+                  <Label htmlFor="maxRate" className="mb-1 text-sm text-muted-foreground">
                     Max Rate
                   </Label>
                   <Input
@@ -351,13 +343,12 @@ const Market: React.FC = () => {
                     type="number"
                     placeholder="e.g. 100"
                     value={filters.maxRate}
-                    onChange={(e) =>
-                      handleFilterChange('maxRate', e.target.value)
-                    }
+                    onChange={(e) => handleFilterChange('maxRate', e.target.value)}
                   />
                 </div>
               </div>
             </div>
+
 
             <div className="mb-4">
               <SkillDom
@@ -379,7 +370,7 @@ const Market: React.FC = () => {
             <Loader2 size={40} className="text-white animate-spin" />
           </div>
         ) : (
-          <div className="mt-4 lg:mt-0 w-full">
+          <div className="mt-4 lg:mt-0 w-full flex justify-center">
             <ScrollArea className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
               <div className="grid grid-cols-1 gap-6 pb-20 lg:pb-4">
                 {jobs.map((job: Project, index: number) => (
