@@ -50,7 +50,6 @@ const SkillDom: React.FC<SkillDomProps> = ({
         setSelectedValues(newSelectedValues);
       }
     }
-    
   };
 
   const filteredSkills = checkboxLabels.filter((label) =>

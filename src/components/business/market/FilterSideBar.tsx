@@ -82,7 +82,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             setSelectedValues={(values) => handleFilterChange('skills', values)}
           />
         </div>
-        
+
         <div className="mb-4">
           <Label className="mb-2 block text-sm font-medium">
             Filter by Rate

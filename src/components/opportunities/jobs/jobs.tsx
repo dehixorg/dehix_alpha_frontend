@@ -233,8 +233,8 @@ const JobCard: React.FC<JobCardProps> = ({
             </div>
           </div>
         </div>
-        {(skillsRequired.length > 0 && profiles && profiles.length) && (
-            <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
+        {skillsRequired.length > 0 && profiles && profiles.length && (
+          <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
         )}
         {/* Profiles Section */}
         <div className="mt-4 hover:bg-opacity-10">

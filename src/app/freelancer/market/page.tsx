@@ -1,10 +1,15 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-
 import { useSelector } from 'react-redux';
 import { Loader2, X } from 'lucide-react';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -271,7 +276,6 @@ const Market: React.FC = () => {
         {/* Left Sidebar Scroll */}
         <div className="hidden lg:block lg:sticky lg:top-16 lg:w-1/3 xl:w-1/4 lg:self-start lg:h-[calc(100vh-4rem)]">
           <ScrollArea className="h-full no-scrollbar overflow-y-auto pr-4 space-y-4">
-          
             <Button onClick={handleApply} className="w-full">
               Apply
             </Button>
@@ -284,7 +288,9 @@ const Market: React.FC = () => {
             >
               Reset
             </Button>
-            <Select onValueChange={(value) => handleFilterChange('sorting', value)}>
+            <Select
+              onValueChange={(value) => handleFilterChange('sorting', value)}
+            >
               <SelectTrigger className="w-full mt-4">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
@@ -323,7 +329,10 @@ const Market: React.FC = () => {
               </Label>
               <div className="flex gap-4">
                 <div className="flex flex-col flex-1">
-                  <Label htmlFor="minRate" className="mb-1 text-sm text-muted-foreground">
+                  <Label
+                    htmlFor="minRate"
+                    className="mb-1 text-sm text-muted-foreground"
+                  >
                     Min Rate
                   </Label>
                   <Input
@@ -331,11 +340,16 @@ const Market: React.FC = () => {
                     type="number"
                     placeholder="e.g. 10"
                     value={filters.minRate}
-                    onChange={(e) => handleFilterChange('minRate', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange('minRate', e.target.value)
+                    }
                   />
                 </div>
                 <div className="flex flex-col flex-1">
-                  <Label htmlFor="maxRate" className="mb-1 text-sm text-muted-foreground">
+                  <Label
+                    htmlFor="maxRate"
+                    className="mb-1 text-sm text-muted-foreground"
+                  >
                     Max Rate
                   </Label>
                   <Input
@@ -343,12 +357,13 @@ const Market: React.FC = () => {
                     type="number"
                     placeholder="e.g. 100"
                     value={filters.maxRate}
-                    onChange={(e) => handleFilterChange('maxRate', e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange('maxRate', e.target.value)
+                    }
                   />
                 </div>
               </div>
             </div>
-
 
             <div className="mb-4">
               <SkillDom
