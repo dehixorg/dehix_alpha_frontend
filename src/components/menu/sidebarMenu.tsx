@@ -83,7 +83,7 @@ import { useSelector } from 'react-redux';
 import { Verified } from 'lucide-react';
 
 import { ThemeToggle } from '../shared/themeToggle';
-import { ChatList } from '../shared/chatList';
+//import { ChatList } from '../shared/chatList';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 import {

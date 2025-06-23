@@ -99,8 +99,8 @@ interface CardsChatProps {
 
 export function CardsChat({
   conversation,
-  conversations,
-  setActiveConversation,
+  //conversations,
+  //setActiveConversation,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -112,7 +112,7 @@ export function CardsChat({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const inputLength = input.trim().length;
+  //const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
