@@ -108,9 +108,6 @@ const Market: React.FC = () => {
 
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
-  const [sorting, setSorting] = useState<string>('');
-  const [minRate, setMinRate] = useState<string>('');
-  const [maxRate, setMaxRate] = useState<string>('');
   const [projects, setProjects] = useState<ProjectsDomain[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const [isgetJobLoading, setIsJobLoading] = useState(false);
