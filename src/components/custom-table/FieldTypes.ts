@@ -93,7 +93,3 @@ export interface FiltersArrayElem {
   value: string;
   arrayName?: string;
 }
-
-export interface CustomTableChildComponentsProps {
-  refetch?: () => void;
-}
