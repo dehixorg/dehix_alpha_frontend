@@ -18,6 +18,12 @@ import {
   CheckCheck,
   Flag, // Added
   HelpCircle,
+  Mic, // Added for voice recording
+  StopCircle, // Added for stopping recording
+  PlayCircle, // Added for playing preview
+  PauseCircle, // Added for pausing preview
+  Trash2, // Added for discarding recording
+  Paperclip, // Existing, or could be Upload if that's preferred for general attachments
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
@@ -148,6 +154,19 @@ export function CardsChat({
   const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
 
+  // States for voice recording
+  type RecordingStatus = "idle" | "permission_pending" | "recording" | "recorded" | "uploading";
+  const [recordingStatus, setRecordingStatus] = useState<RecordingStatus>("idle");
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); // For preview
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
+  const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
+
   const handleHeaderClick = () => {
     if (!onOpenProfileSidebar) return;
 
@@ -246,8 +265,18 @@ export function CardsChat({
 
     return () => {
       if (unsubscribeMessages) unsubscribeMessages();
+      // Cleanup for voice recording
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      if (recordingDurationIntervalRef.current) {
+        clearInterval(recordingDurationIntervalRef.current);
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl); // Clean up preview URL
+      }
     };
-  }, [conversation, user.uid]);
+  }, [conversation, user.uid, mediaRecorder, audioUrl]); // Added mediaRecorder and audioUrl to dependency array
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -477,6 +506,136 @@ export function CardsChat({
     setShowFormattingOptions((prev) => !prev);
   };
 
+  // Voice Recording Functions
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const startRecording = async () => {
+    if (recordingStatus === "recording") return;
+    setRecordingStatus("permission_pending");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+
+      recorder.ondataavailable = (event) => {
+        setAudioChunks((prev) => [...prev, event.data]);
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop()); // Stop mic access
+        setRecordingStatus("recorded");
+        if (recordingDurationIntervalRef.current) {
+          clearInterval(recordingDurationIntervalRef.current);
+        }
+      };
+
+      recorder.start();
+      setAudioChunks([]); // Clear previous chunks
+      setAudioBlob(null); // Clear previous blob
+      setAudioUrl(null); // Clear previous URL
+      setRecordingStartTime(Date.now());
+      setRecordingDuration(0);
+      recordingDurationIntervalRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+      setRecordingStatus("recording");
+      toast({ title: "Recording started", description: "Speak into your microphone."});
+
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      toast({ variant: "destructive", title: "Microphone Error", description: "Could not access microphone. Please check permissions." });
+      setRecordingStatus("idle");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && recordingStatus === "recording") {
+      mediaRecorder.stop();
+      // The onstop event handler will set status to "recorded" and clear interval
+      // Create blob and URL after chunks are all collected in onstop, or here if preferred.
+      // For simplicity, let's assume onstop handles setting the final audioBlob and audioUrl
+    }
+    // Ensure interval is cleared if stopRecording is called unexpectedly
+    if (recordingDurationIntervalRef.current) {
+      clearInterval(recordingDurationIntervalRef.current);
+    }
+  };
+
+  useEffect(() => {
+    // This effect runs when audioChunks changes, specifically after recording stops and all chunks are in.
+    if (recordingStatus === "recorded" && audioChunks.length > 0) {
+      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+      setAudioBlob(blob);
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+      setAudioChunks([]); // Clear chunks after creating blob
+    }
+  }, [audioChunks, recordingStatus, mediaRecorder?.mimeType]);
+
+
+  const discardRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioChunks([]);
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setMediaRecorder(null);
+    setRecordingStatus("idle");
+    setRecordingDuration(0);
+    if (recordingDurationIntervalRef.current) {
+      clearInterval(recordingDurationIntervalRef.current);
+    }
+    toast({ title: "Recording discarded"});
+  };
+
+  const handleSendVoiceMessage = async () => {
+    if (!audioBlob || !user || !conversation) {
+      toast({ variant: "destructive", title: "Error", description: "No audio recorded or user/conversation not found." });
+      return;
+    }
+
+    setRecordingStatus("uploading");
+    const formData = new FormData();
+    formData.append('file', audioBlob, `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`);
+    formData.append('senderId', user.uid);
+    // For individual chats, receiverId is the other participant. For group chats, it's the conversation ID.
+    const receiverId = conversation.type === 'group'
+      ? conversation.id
+      : conversation.participants.find(p => p !== user.uid) || conversation.id;
+    formData.append('receiverId', receiverId);
+    formData.append('conversationId', conversation.id);
+    formData.append('duration', recordingDuration.toString());
+
+
+    try {
+      // Using axiosInstance from the project
+      const response = await axiosInstance.post('/v1/voice-messages/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 201) {
+        toast({ title: "Success", description: "Voice message sent!" });
+        // Message should appear via Firestore listener.
+        // If not, one might need to manually add it or trigger a refetch.
+      } else {
+        throw new Error(response.data.error || "Failed to upload voice message");
+      }
+    } catch (error: any) {
+      console.error("Error sending voice message:", error);
+      toast({ variant: "destructive", title: "Upload Failed", description: error.message || "Could not send voice message." });
+    } finally {
+      discardRecording(); // Clean up states regardless of success/failure
+      setRecordingStatus("idle");
+    }
+  };
+
   async function toggleReaction(messageId: string, emoji: string): Promise<void> {
     const currentMessage = messages.find((msg) => msg.id === messageId);
     const updatedReactions: Record<string, string[]> = currentMessage?.reactions ? { ...currentMessage.reactions } : {};
@@ -667,6 +826,15 @@ export function CardsChat({
                                   {message.content}
                                 </ReactMarkdown>
                               )}
+                              {/* Voice Message Player */}
+                              {message.audioUrl && message.duration !== undefined && (
+                                <div className="mt-2">
+                                  <audio src={message.audioUrl} controls className="w-full h-10 rounded-md" />
+                                  <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
+                                    Duration: {formatDuration(message.duration)}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" sideOffset={5} className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded">
@@ -806,9 +974,66 @@ export function CardsChat({
                          <TooltipContent side="top"><p>Create Google Meet</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
+                {recordingStatus === "idle" && (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button type="button" variant="ghost" size="icon" onClick={startRecording} title="Record voice message" aria-label="Record voice message" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+                          <Mic className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top"><p>Record voice</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                  <div className="ml-auto md:hidden">
                  </div>
               </div>
+
+              {/* Voice Recording UI */}
+              {recordingStatus !== "idle" && recordingStatus !== "uploading" && ( // Hide this part during uploading too
+                <div className="p-2 border-t border-[hsl(var(--border))]">
+                  {recordingStatus === "permission_pending" && (
+                    <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
+                      <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                      Requesting microphone permission...
+                    </div>
+                  )}
+                  {recordingStatus === "recording" && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-red-500">
+                        <Mic className="w-4 h-4 mr-2 animate-pulse" />
+                        Recording... {formatDuration(recordingDuration)}
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={stopRecording} title="Stop recording" className="text-red-500 hover:text-red-700">
+                        <StopCircle className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  )}
+                  {recordingStatus === "recorded" && audioUrl && (
+                    <div className="flex flex-col space-y-2">
+                      <div className="text-sm font-medium">Recording complete ({formatDuration(recordingDuration)})</div>
+                      <audio ref={audioPreviewRef} src={audioUrl} controls className="w-full h-10" />
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button type="button" variant="outline" size="sm" onClick={discardRecording} title="Discard recording">
+                          <Trash2 className="h-4 w-4 mr-1" /> Discard
+                        </Button>
+                        <Button type="button" variant="default" size="sm" onClick={handleSendVoiceMessage} title="Send voice message">
+                          <Send className="h-4 w-4 mr-1" /> Send
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {/* Uploading indicator was here, moved below */}
+                </div>
+              )}
+              {/* Separate block for uploading indicator to ensure it's visible */}
+              {recordingStatus === "uploading" && (
+                <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
+                  <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading voice message...
+                </div>
+              )}
             </form>
           </CardFooter>
         </Card>
