@@ -62,7 +62,7 @@ export const CustomTable = ({ fields, data: propData, uniqueId }: Params) => {
                   ))
                 ) : data?.length > 0 ? (
                   data.map((elem: any, index: number) => (
-                    <TableRow key={elem[uniqueId] || index}>
+                    <TableRow key={String(elem[uniqueId] ?? index)}>
                       {fields.map((field, fieldIndex) => (
                         <TableCell
                           key={field.fieldName || fieldIndex}
