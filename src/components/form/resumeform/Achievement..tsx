@@ -80,7 +80,7 @@ export const AchievementInfo: React.FC<AchievementInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddAchievement}
-          className="text-center justify-items-center dark:text-black light:bg-black"
+          className="text-center justify-items-center dark:text-black light:bg-black px-72"
         >
           <PlusCircle />
         </Button>

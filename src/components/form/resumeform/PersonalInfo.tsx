@@ -186,9 +186,9 @@ export const PersonalInfo: React.FC<PersonalInfoProps> = ({
         ))}
       </form>
       <div className="flex justify-center mt-4">
-        <Button
+        <Button 
           onClick={handleAddPersonalInfo}
-          className="text-center  dark:text-black  light:bg-black"
+          className="text-center  dark:text-black  light:bg-black px-72"
         >
           <PlusCircle />
         </Button>

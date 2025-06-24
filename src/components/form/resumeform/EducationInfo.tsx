@@ -141,7 +141,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
         <Button
           onClick={handleAddEducation}
           className={cn(
-            'text-center justify-items-center dark:text-black  light:bg-black',
+            'text-center justify-items-center dark:text-black  light:bg-black px-72',
           )}
         >
           <PlusCircle />

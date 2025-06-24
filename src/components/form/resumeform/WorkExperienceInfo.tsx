@@ -186,7 +186,7 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddWorkExperience}
-          className="text-center dark:text-black  light:bg-black"
+          className="text-center dark:text-black  light:bg-black px-72"
         >
           <PlusCircle />
         </Button>

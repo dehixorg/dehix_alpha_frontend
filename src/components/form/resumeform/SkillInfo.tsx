@@ -123,7 +123,7 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddSkill}
-          className="text-center justify-items-centerdark:text-black  light:bg-black"
+          className="text-center justify-items-centerdark:text-black  light:bg-black px-72"
         >
           <PlusCircle />
         </Button>

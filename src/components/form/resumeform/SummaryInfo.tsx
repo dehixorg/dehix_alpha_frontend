@@ -126,7 +126,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
       <div className="flex justify-center mt-4">
         <Button
           onClick={handleAddSummary}
-          className="text-center dark:text-black  light:bg-black"
+          className="text-center dark:text-black  light:bg-black px-72"
         >
           <PlusCircle />
         </Button>
