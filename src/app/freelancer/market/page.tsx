@@ -411,12 +411,16 @@ const Market: React.FC = () => {
                   <Input
                     id="minRate"
                     type="number"
+                    min={0}
+                    max={100000}
+                    aria-label="Minimum Rate"
                     placeholder="e.g. 10"
                     value={filters.minRate}
                     onChange={(e) => {
                       const safeValue = [e.target.value];
                       handleFilterChange('minRate', safeValue);
                     }}
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
                 <div className="flex flex-col flex-1">
@@ -429,12 +433,16 @@ const Market: React.FC = () => {
                   <Input
                     id="maxRate"
                     type="number"
+                    min={0}
+                    max={100000}
+                    aria-label="Minimum Rate"
                     placeholder="e.g. 100"
                     value={filters.maxRate}
                     onChange={(e) => {
                       const safeValue = [e.target.value];
                       handleFilterChange('maxRate', safeValue);
                     }}
+                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 </div>
               </div>
