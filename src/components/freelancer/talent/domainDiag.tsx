@@ -8,8 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 
-import { DialogFooter } from '@/components/ui/dialog';
 import {
+  DialogFooter,
   Dialog,
   DialogTrigger,
   DialogContent,

@@ -358,8 +358,7 @@ const Market: React.FC = () => {
               onValueChange={(value) => {
                 const safeValue = Array.isArray(value) ? value : [value];
                 handleFilterChange('sorting', safeValue);
-                }
-              }
+              }}
             >
               <SelectTrigger className="w-full mt-4">
                 <SelectValue placeholder="Sort" />
@@ -417,9 +416,7 @@ const Market: React.FC = () => {
                     onChange={(e) => {
                       const safeValue = [e.target.value];
                       handleFilterChange('minRate', safeValue);
-                    }
-                      
-                    }
+                    }}
                   />
                 </div>
                 <div className="flex flex-col flex-1">
@@ -434,12 +431,10 @@ const Market: React.FC = () => {
                     type="number"
                     placeholder="e.g. 100"
                     value={filters.maxRate}
-                    onChange={(e) =>{
+                    onChange={(e) => {
                       const safeValue = [e.target.value];
                       handleFilterChange('maxRate', safeValue);
-                    }
-                      
-                    }
+                    }}
                   />
                 </div>
               </div>
