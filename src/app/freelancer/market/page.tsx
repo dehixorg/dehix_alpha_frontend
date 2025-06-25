@@ -23,12 +23,12 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
 import { DraftSheet } from '@/components/shared/DraftSheet';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 
 interface FilterState {
   projects: string[];
@@ -198,17 +198,20 @@ const Market: React.FC = () => {
   };
 
   const constructQueryString = (filters: FilterState) => {
-    return Object.keys(filters)
-      .map((key) => {
-        const values = filters[key as keyof FilterState];
-        if (Array.isArray(values) && values.length > 0) {
-          return `${key}=${values.join(',')}`;
-        } else if (typeof values === 'string' && values !== '') {
-          return `${key}=${values}`;
+    return Object.entries(filters)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return value.length > 0 ? `${key}=${value.join(',')}` : '';
+        }
+        if (typeof value === 'string' && value.trim() !== '') {
+          return `${key}=${encodeURIComponent(value)}`;
+        }
+        if (typeof value === 'number' && !isNaN(value)) {
+          return `${key}=${value}`;
         }
         return '';
       })
-      .filter((part) => part !== '')
+      .filter(Boolean)
       .join('&');
   };
 
