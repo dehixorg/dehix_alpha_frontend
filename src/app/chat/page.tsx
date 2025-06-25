@@ -16,7 +16,7 @@ import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import {
   menuItemsBottom,
-  menuItemsTop,
+  //menuItemsTop,
   chatsMenu,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 

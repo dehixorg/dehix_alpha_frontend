@@ -171,7 +171,7 @@ export default function Dashboard() {
             <div className="flex relative gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
               <Carousel className="w-full relative pt-9">
                 <CarouselContent className="flex gap-4">
-                  {completedProjects.length > 2 ? (
+                  {completedProjects.length > 0 ? (
                     completedProjects.map((project: any, index: number) => (
                       <CarouselItem
                         key={index}

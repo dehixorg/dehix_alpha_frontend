@@ -205,6 +205,9 @@ function BusinessRegisterForm({
   const [Isverified, setIsVerified] = useState<boolean>(false);
   const [isTermsDialog, setIsTermsDialog] = useState(false);
   const searchParams = useSearchParams();
+  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
+    null,
+  );
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -247,6 +250,10 @@ function BusinessRegisterForm({
         try {
           setIsVerified(true);
           const username = userName;
+          if (username === lastCheckedUsername) {
+            setCurrentStep(currentStep + 1);
+            return;
+          }
           const response = await axiosInstance.get(
             `/public/username/check-duplicate?username=${username}&is_business=true`,
           );
@@ -260,6 +267,7 @@ function BusinessRegisterForm({
               description:
                 'This username is already taken. Please choose another one.',
             });
+            setLastCheckedUsername(username);
           }
         } catch (error: any) {
           toast({
