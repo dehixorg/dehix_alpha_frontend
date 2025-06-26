@@ -33,11 +33,11 @@ export interface CustomComponentProps extends CustomTableChildComponentsProps {
   data: Record<string, any>;
 }
 
-export interface FieldComponentProps<T> {
+export interface FieldComponentProps<T>
+  extends CustomTableChildComponentsProps {
   value: T;
   fieldData: Field;
   id: string;
-  refetch?: () => void;
 }
 
 export interface CustomTableChildComponentsProps {
@@ -78,13 +78,6 @@ export interface Params {
   data?: any[]; // Allow passing data directly instead of API
   searchColumn?: Array<string>;
   searchPlaceholder?: string;
-}
-
-export interface FieldComponentProps<T>
-  extends CustomTableChildComponentsProps {
-  value: T;
-  fieldData: Field;
-  id: string;
 }
 
 export interface FiltersArrayElem {
