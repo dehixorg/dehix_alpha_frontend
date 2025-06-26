@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { CheckCircle, Video, XCircle, Users, PackageOpen } from 'lucide-react';
+import {
+  CheckCircle,
+  Video,
+  XCircle,
+  Users,
+  PackageOpen,
+  Eye,
+} from 'lucide-react';
 import {
   Accordion,
   AccordionItem,
@@ -7,6 +14,15 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { CustomTable } from '@/components/custom-table/CustomTable';
@@ -124,6 +140,143 @@ const FreelancerAvatar = React.memo(
   ),
 );
 
+// Freelancer Application Dialog Component
+const FreelancerApplicationDialog = React.memo(
+  ({
+    freelancer,
+    bidData,
+    isOpen,
+    onClose,
+  }: {
+    freelancer: Freelancer | null;
+    bidData: BidDetail | null;
+    isOpen: boolean;
+    onClose: () => void;
+  }) => {
+    if (!freelancer) return null;
+
+    const fullName =
+      freelancer.firstName && freelancer.lastName
+        ? `${freelancer.firstName} ${freelancer.lastName}`.trim()
+        : freelancer.userName;
+
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <FreelancerAvatar
+                profilePic={freelancer.profilePic}
+                userName={freelancer.userName}
+              />
+              <div>
+                <h2 className="text-xl font-bold">{fullName}</h2>
+                <p className="text-sm text-gray-500">@{freelancer.userName}</p>
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Freelancer Application Details
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Email
+                  </label>
+                  <p className="text-sm">{freelancer.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Role
+                  </label>
+                  <p className="text-sm">{freelancer.role || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Work Experience
+                  </label>
+                  <p className="text-sm">
+                    {freelancer.workExperience
+                      ? `${freelancer.workExperience} years`
+                      : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">
+                    Hourly Rate
+                  </label>
+                  <p className="text-sm">
+                    {freelancer.perHourPrice
+                      ? `$${freelancer.perHourPrice}/hour`
+                      : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {freelancer.description && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">About</h3>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {freelancer.description}
+                </p>
+              </div>
+            )}
+
+            {/* Cover Letter */}
+            {bidData?.description && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Cover Letter</h3>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {bidData.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Skills */}
+            {freelancer.skills && freelancer.skills.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {freelancer.skills.map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {skill.name}
+                      {skill.level && ` (${skill.level})`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Domain */}
+            {freelancer.domain && freelancer.domain.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Domain Expertise</h3>
+                <div className="flex flex-wrap gap-2">
+                  {freelancer.domain.map((domain, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {domain.name}
+                      {domain.level && ` (${domain.level})`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  },
+);
+
 const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [userData, setUserData] = useState<{ data: ProjectProfile } | null>(
     null,
@@ -135,6 +288,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingBids, setLoadingBids] = useState<Record<string, boolean>>({});
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
+  const [selectedFreelancer, setSelectedFreelancer] =
+    useState<Freelancer | null>(null);
+  const [selectedBidData, setSelectedBidData] = useState<BidDetail | null>(
+    null,
+  );
+  const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
 
   // Memoized bid counts
   const bidCounts = useMemo(
@@ -284,6 +443,23 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     }
   }, [profileId, fetchBid]);
 
+  // Handle opening application dialog
+  const handleViewApplication = useCallback(
+    (freelancer: Freelancer, bidData: BidDetail) => {
+      setSelectedFreelancer(freelancer);
+      setSelectedBidData(bidData);
+      setIsApplicationDialogOpen(true);
+    },
+    [],
+  );
+
+  // Handle closing application dialog
+  const handleCloseApplicationDialog = useCallback(() => {
+    setIsApplicationDialogOpen(false);
+    setSelectedFreelancer(null);
+    setSelectedBidData(null);
+  }, []);
+
   // Update bid status
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
@@ -420,13 +596,36 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           statusFormats: BID_STATUS_FORMATS,
         },
         {
+          textValue: 'Application',
+          type: FieldType.CUSTOM,
+          CustomComponent: ({ data }) => {
+            const freelancer = data?.freelancer;
+            const bidData = data as BidDetail;
+            return (
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    freelancer && handleViewApplication(freelancer, bidData)
+                  }
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View
+                </Button>
+              </div>
+            );
+          },
+        },
+        {
           textValue: 'Actions',
           type: FieldType.ACTION,
           actions: { options: getActionOptions(status) },
         },
       ],
     }),
-    [bids, getActionOptions],
+    [bids, getActionOptions, handleViewApplication],
   );
 
   if (loading) {
@@ -461,68 +660,78 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <div className="mb-8 mt-4">
-        <Accordion type="single" collapsible>
-          {userData.data.profiles.map((profile: any) => (
-            <AccordionItem
-              key={profile._id}
-              value={profile._id || ''}
-              onClick={() => setProfileId(profile._id)}
-            >
-              <AccordionTrigger>
-                <div className="flex justify-between items-center w-full">
-                  <h3 className="text-lg font-semibold">
-                    {profile.domain ?? 'N/A'}
-                  </h3>
-                  <span className="text-gray-500">
-                    Rate: {profile.rate ?? 'N/A'}
-                  </span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-0">
-                <div className="px-6 py-4 flex flex-col gap-2">
-                  <div className="flex gap-2 items-center">
-                    <p>Experience: {profile.experience ?? 'N/A'}</p>
+    <>
+      <div className="max-w-5xl mx-auto p-4">
+        <div className="mb-8 mt-4">
+          <Accordion type="single" collapsible>
+            {userData.data.profiles.map((profile: any) => (
+              <AccordionItem
+                key={profile._id}
+                value={profile._id || ''}
+                onClick={() => setProfileId(profile._id)}
+              >
+                <AccordionTrigger>
+                  <div className="flex justify-between items-center w-full">
+                    <h3 className="text-lg font-semibold">
+                      {profile.domain ?? 'N/A'}
+                    </h3>
+                    <span className="text-gray-500">
+                      Rate: {profile.rate ?? 'N/A'}
+                    </span>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <p>Min Connect: {profile.minConnect ?? 'N/A'}</p>
+                </AccordionTrigger>
+                <AccordionContent className="p-0">
+                  <div className="px-6 py-4 flex flex-col gap-2">
+                    <div className="flex gap-2 items-center">
+                      <p>Experience: {profile.experience ?? 'N/A'}</p>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <p>Min Connect: {profile.minConnect ?? 'N/A'}</p>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <p>Total Bids: {profile.totalBid?.length || 0}</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <p>Total Bids: {profile.totalBid?.length || 0}</p>
-                  </div>
-                </div>
-                <Tabs defaultValue="PENDING" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5 mb-4">
+                  <Tabs defaultValue="PENDING" className="w-full">
+                    <TabsList className="grid w-full grid-cols-5 mb-4">
+                      {BID_STATUSES.map((status) => (
+                        <TabsTrigger key={status} value={status}>
+                          {`${status.charAt(0) + status.slice(1).toLowerCase()} (${bidCounts[status] || 0})`}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
                     {BID_STATUSES.map((status) => (
-                      <TabsTrigger key={status} value={status}>
-                        {`${status.charAt(0) + status.slice(1).toLowerCase()} (${bidCounts[status] || 0})`}
-                      </TabsTrigger>
+                      <TabsContent key={status} value={status} className="mt-4">
+                        {loadingFreelancerDetails ? (
+                          <div className="flex justify-center items-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <span className="ml-2 text-gray-600">
+                              Loading freelancer details...
+                            </span>
+                          </div>
+                        ) : (
+                          <CustomTable
+                            {...createTableConfig(status as BidStatus)}
+                          />
+                        )}
+                      </TabsContent>
                     ))}
-                  </TabsList>
-                  {BID_STATUSES.map((status) => (
-                    <TabsContent key={status} value={status} className="mt-4">
-                      {loadingFreelancerDetails ? (
-                        <div className="flex justify-center items-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                          <span className="ml-2 text-gray-600">
-                            Loading freelancer details...
-                          </span>
-                        </div>
-                      ) : (
-                        <CustomTable
-                          {...createTableConfig(status as BidStatus)}
-                        />
-                      )}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                  </Tabs>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
-    </div>
+
+      {/* Freelancer Application Dialog */}
+      <FreelancerApplicationDialog
+        freelancer={selectedFreelancer}
+        bidData={selectedBidData}
+        isOpen={isApplicationDialogOpen}
+        onClose={handleCloseApplicationDialog}
+      />
+    </>
   );
 };
 
