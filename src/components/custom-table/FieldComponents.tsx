@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { memo } from 'react';
-
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+
 import { Currency, FieldComponentProps, FieldType } from './FieldTypes';
+
+import { cn } from '@/lib/utils';
 
 const TextField = memo(({ value }: FieldComponentProps<string>) => (
   <span>{value || '-'}</span>
