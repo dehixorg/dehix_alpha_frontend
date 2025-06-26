@@ -251,7 +251,7 @@ const Market: React.FC = () => {
 
   useEffect(() => {
     fetchJobs(filters);
-  }, [fetchJobs]);
+  }, [fetchJobs, filters]);
 
   const handleApply = () => {
     fetchJobs(filters);
