@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { PackageOpen } from 'lucide-react';
+
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
 import {
@@ -11,9 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-import { useEffect, useState } from 'react';
+
 import { FieldType, Params } from './FieldTypes';
 import { CustomTableCell } from './FieldComponents';
+
 import { cn } from '@/lib/utils';
 
 export const CustomTable = ({ fields, data: propData, uniqueId }: Params) => {
