@@ -30,7 +30,6 @@ import { DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation'; // Added
 import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import {
   formatDistanceToNow,
   format,
@@ -821,7 +820,6 @@ export function CardsChat({
                                       : "text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))]",
                                   )}
                                   remarkPlugins={[remarkGfm]}
-                                  rehypePlugins={[rehypeRaw]}
                                 >
                                   {message.content}
                                 </ReactMarkdown>
@@ -898,8 +896,9 @@ export function CardsChat({
                   ref={composerRef}
                   contentEditable
                   aria-label="Type a message"
-                  className="flex-1 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))]"
-                  placeholder="Type a message..."
+                  aria-placeholder="Type a message..."
+                  data-placeholder="Type a message..."
+                  className="flex-1 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
                   onInput={(e) => {
                     const html = (e.currentTarget as HTMLElement).innerHTML;
                     setInput(html);
