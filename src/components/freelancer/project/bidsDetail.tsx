@@ -7,6 +7,7 @@ import {
   PackageOpen,
   Eye,
 } from 'lucide-react';
+
 import {
   Accordion,
   AccordionItem,
@@ -23,8 +24,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { CustomTable } from '@/components/custom-table/CustomTable';
 import {
   FieldType,
@@ -139,6 +140,7 @@ const FreelancerAvatar = React.memo(
     </>
   ),
 );
+FreelancerAvatar.displayName = 'FreelancerAvatar';
 
 // Freelancer Application Dialog Component
 const FreelancerApplicationDialog = React.memo(
@@ -185,21 +187,21 @@ const FreelancerApplicationDialog = React.memo(
               <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Email
-                  </label>
+                  </span>
                   <p className="text-sm">{freelancer.email || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Role
-                  </label>
+                  </span>
                   <p className="text-sm">{freelancer.role || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Work Experience
-                  </label>
+                  </span>
                   <p className="text-sm">
                     {freelancer.workExperience
                       ? `${freelancer.workExperience} years`
@@ -207,9 +209,9 @@ const FreelancerApplicationDialog = React.memo(
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Hourly Rate
-                  </label>
+                  </span>
                   <p className="text-sm">
                     {freelancer.perHourPrice
                       ? `$${freelancer.perHourPrice}/hour`
@@ -276,6 +278,7 @@ const FreelancerApplicationDialog = React.memo(
     );
   },
 );
+FreelancerApplicationDialog.displayName = 'FreelancerApplicationDialog';
 
 const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [userData, setUserData] = useState<{ data: ProjectProfile } | null>(
@@ -285,7 +288,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [error, setError] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string>();
   const [bids, setBids] = useState<BidDetail[]>([]);
-  const [loadingBids, setLoadingBids] = useState<Record<string, boolean>>({});
+  const [, setLoadingBids] = useState<Record<string, boolean>>({});
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
   const [selectedFreelancer, setSelectedFreelancer] =
@@ -557,7 +560,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         {
           textValue: 'Freelancer',
           type: FieldType.CUSTOM,
-          CustomComponent: ({ data }) => {
+          CustomComponent: ({ data }: { data: any }) => {
             const freelancer = data?.freelancer;
             const userName =
               data?.userName || freelancer?.userName || 'Unknown';
@@ -583,7 +586,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         {
           textValue: 'Bid Amount',
           type: FieldType.CUSTOM,
-          CustomComponent: ({ data }) => (
+          CustomComponent: ({ data }: { data: any }) => (
             <span className="font-medium text-green-400">
               ${data?.current_price || 'N/A'}
             </span>
@@ -598,7 +601,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         {
           textValue: 'Application',
           type: FieldType.CUSTOM,
-          CustomComponent: ({ data }) => {
+          CustomComponent: ({ data }: { data: any }) => {
             const freelancer = data?.freelancer;
             const bidData = data as BidDetail;
             return (
