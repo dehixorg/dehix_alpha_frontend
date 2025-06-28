@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { MessageSquareIcon, MapPin } from 'lucide-react';
+import { MessageSquareIcon, MapPin, MoreVertical } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -33,6 +33,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { usePathname } from 'next/navigation';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+
 interface EducationProps {
   _id: string;
   type: string;
@@ -43,7 +49,7 @@ interface EducationProps {
   grade: string;
   comments: string;
   fieldOfStudy: string;
-  status: string | 'pending'; // Add initial status prop
+  status: string | 'pending';
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -63,24 +69,38 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
   startFrom,
   endTo,
   grade,
-  // referencePersonName,
   fieldOfStudy,
   comments,
-  status, // Get initial status from props
+  status,
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status); // Use initial status
+  const [verificationStatus, setVerificationStatus] = useState(status);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openReport, setOpenReport] = useState(false);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    mode: 'onChange', // Enable validation on change
+    mode: 'onChange',
   });
 
-  // Watch the 'type' field to check if it's selected
   const selectedType = form.watch('type');
 
+  const user = useSelector((state: RootState) => state.user);
+  const pathname = usePathname();
+  const reportType = getReportTypeFromPath(pathname);
+
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: user?.uid || 'user123',
+  };
+
   useEffect(() => {
-    // Ensure verificationStatus is set after the component mounts
     setVerificationStatus(status);
   }, [status]);
 
@@ -98,31 +118,52 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         variant: 'destructive',
         title: 'Error',
         description: 'Something went wrong.Please try again.',
-      }); // Error toast
+      });
     }
-    // Update status based on selection
     setVerificationStatus(data.type);
     onStatusUpdate(data.type);
     onCommentUpdate(data.comment || '');
   }
 
   return (
-    <Card className="max-w-full md:max-w-2xl">
+    <Card className="max-w-full md:max-w-2xl relative">
       <CardHeader>
-        <CardTitle className="flex justify-between">
+        <CardTitle className="flex justify-between items-start">
           <span>{type}</span>
-          {verificationStatus === 'pending' ||
-          verificationStatus === 'added' ? (
-            <Badge className="bg-warning-foreground text-white">PENDING</Badge>
-          ) : verificationStatus === 'Approved' ? (
-            <Badge className="bg-success text-white">Approved</Badge>
-          ) : (
-            <Badge className="bg-red-500 text-white">Denied</Badge>
-          )}
+          <div className="flex items-center space-x-2">
+            {verificationStatus === 'pending' || verificationStatus === 'added' ? (
+              <Badge className="bg-warning-foreground text-white">PENDING</Badge>
+            ) : verificationStatus === 'Approved' ? (
+              <Badge className="bg-success text-white">Approved</Badge>
+            ) : (
+              <Badge className="bg-red-500 text-white">Denied</Badge>
+            )}
+
+            {/* Report menu */}
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <MoreVertical className="w-5 h-5 text-gray-500" />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
+                  <button
+                    onClick={() => {
+                      setOpenReport(true);
+                      setMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Report
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </CardTitle>
         <CardDescription className="text-justify text-gray-600">
-          {/* {instituteName} */}
-          <br />
           <Tooltip>
             <TooltipTrigger asChild>
               <p className="text-lg text-gray-600 flex items-center mt-3">
@@ -132,34 +173,21 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
             </TooltipTrigger>
             <TooltipContent side="bottom">Location</TooltipContent>
           </Tooltip>
-          {/* <br /> */}
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         <div className="mt-2">
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">degree:</span>{' '}
-            {degree}
+            <span className="text-gray-500 font-semibold">Degree:</span> {degree}
           </p>
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Field Of study:</span>{' '}
+            <span className="text-gray-500 font-semibold">Field Of Study:</span>{' '}
             {fieldOfStudy}
           </p>
           <p className="text-m text-gray-600 mb-2">
             <span className="text-gray-500 font-semibold">Grade:</span> {grade}
           </p>
-
-          {/* <div className="mt-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <User className="mr-2" />
-                  {referencePersonName}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Reference Person</TooltipContent>
-            </Tooltip>
-          </div> */}
 
           {comments && (
             <p className="mt-2 flex items-center text-gray-500 border p-3 rounded">
@@ -169,9 +197,10 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
           )}
         </div>
       </CardContent>
+
       <CardFooter className="flex flex-col items-center">
         <div className="flex flex-1 gap-4">
-          {new Date(startFrom).toLocaleDateString()} -
+          {new Date(startFrom).toLocaleDateString()} -{' '}
           {endTo !== 'current'
             ? new Date(endTo).toLocaleDateString()
             : 'Current'}
@@ -200,9 +229,7 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                           <FormControl>
                             <RadioGroupItem value="Approved" />
                           </FormControl>
-                          <FormLabel className="font-normal">
-                            Approved
-                          </FormLabel>
+                          <FormLabel className="font-normal">Approved</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
@@ -242,6 +269,21 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
           </Form>
         )}
       </CardFooter>
+
+      {/* Report Modal */}
+      {openReport && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
+            <button
+              onClick={() => setOpenReport(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+            >
+              ✕
+            </button>
+            <NewReportTab reportData={reportData} />
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

@@ -38,6 +38,12 @@ import {
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+import { MoreVertical } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { usePathname } from 'next/navigation';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
 interface WorkExpProps {
   _id: string;
@@ -85,6 +91,22 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   useEffect(() => {
     setVerificationStatus(status);
   }, [status]);
+const [menuOpen, setMenuOpen] = useState(false);
+const [openReport, setOpenReport] = useState(false);
+
+const user = useSelector((state: RootState) => state.user);
+const pathname = usePathname();
+const reportType = getReportTypeFromPath(pathname);
+
+const reportData = {
+  subject: '',
+  description: '',
+  report_role: user?.type || 'STUDENT',
+  report_type: reportType,
+  status: 'OPEN',
+  reportedbyId: user?.uid || 'user123',
+  reportedId: user?.uid || 'user123',
+};
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
@@ -110,19 +132,43 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
   return (
     <Card className="max-w-full mx-auto md:min-w-[30vw]">
       <CardHeader>
-        <CardTitle className="flex justify-between">
-          <span>{jobTitle}</span>
-          {githubRepoLink && (
-            <a
-              href={githubRepoLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-white underline ml-auto"
-            >
-              <Github />
-            </a>
-          )}
-        </CardTitle>
+        <CardTitle className="flex justify-between items-start">
+  <span>{jobTitle}</span>
+  <div className="flex items-center space-x-2 ml-auto">
+    {githubRepoLink && (
+      <a
+        href={githubRepoLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-white underline"
+      >
+        <Github />
+      </a>
+    )}
+    <div className="relative">
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        <MoreVertical className="w-5 h-5 text-gray-500" />
+      </button>
+      {menuOpen && (
+        <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
+          <button
+            onClick={() => {
+              setOpenReport(true);
+              setMenuOpen(false);
+            }}
+            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            Report
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</CardTitle>
+
         <CardDescription className="text-justify text-gray-600">
           {verificationStatus === 'Pending' ? (
             <Badge className="bg-warning-foreground text-white my-2">
@@ -248,6 +294,20 @@ const WorkExpVerificationCard: React.FC<WorkExpProps> = ({
           </Form>
         )}
       </CardFooter>
+      {openReport && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+    <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
+      <button
+        onClick={() => setOpenReport(false)}
+        className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+      >
+        ✕
+      </button>
+      <NewReportTab reportData={reportData} />
+    </div>
+  </div>
+)}
+
     </Card>
   );
 };
