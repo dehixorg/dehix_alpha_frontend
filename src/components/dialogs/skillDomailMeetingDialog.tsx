@@ -50,7 +50,10 @@ export function SkillDomainMeetingDialog({
   const [endDateTime, setEndDateTime] = useState<string>(
     dayjs().add(1, 'day').add(1, 'hour').format('YYYY-MM-DD'),
   );
-  const [attendees, setAttendees] = useState<string[]>(['']);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Original const [attendees,setAttendees] = useState<string[]>(['']);
+  const attendees = useState<string[]>(['']);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [interviewer, setInterviewer] = useState<Interviewer[]>([]);
 
   const handleRequest = async (meetingData: object) => {
