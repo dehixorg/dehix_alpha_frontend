@@ -163,15 +163,7 @@ const profileFormSchema = z
             'GitHub URL must start with "https://github.com/" or "www.github.com/" and have a valid username',
         },
       ),
-    resume: z
-      .string()
-      .optional()
-      .refine(
-        (value) => !value || /^https?:\/\/[^\s$.?#].[^\s]*$/.test(value),
-        {
-          message: 'Resume must be a valid URL.',
-        },
-      ),
+
     linkedin: z
       .string()
       .optional()
@@ -328,7 +320,6 @@ function FreelancerRegisterForm({
       userName: '',
       phone: '',
       githubLink: '',
-      resume: '',
       linkedin: '',
       personalWebsite: '',
       password: '',
@@ -370,7 +361,6 @@ function FreelancerRegisterForm({
         'linkedin',
         'personalWebsite',
         'perHourPrice',
-        'resume',
         'workExperience',
       ]);
       if (isValid) {
@@ -665,7 +655,7 @@ function FreelancerRegisterForm({
                 />
               </div>
 
-              {/* Hourly Rate and Resume */}
+              {/* Hourly Rate and Work Experience */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   control={form.control}
@@ -675,18 +665,6 @@ function FreelancerRegisterForm({
                   placeholder="0"
                   className="w-full"
                 />
-                <TextInput
-                  control={form.control}
-                  name="resume"
-                  label="Resume (URL)"
-                  type="url"
-                  placeholder="Enter Google Drive Resume Link"
-                  className="w-full"
-                />
-              </div>
-
-              {/* Work Experience */}
-              <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   control={form.control}
                   name="workExperience"
