@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { useEffect, useState } from "react";
-import { apiHelperService } from "@/services/customTable";
+import { apiHelperService } from "@/services/custumTable";
 import { FieldType, FiltersArrayElem, Params } from "./FieldTypes";
 import { CustomTableCell } from "./FieldComponents";
 import FilterTable from "./FilterTable";
