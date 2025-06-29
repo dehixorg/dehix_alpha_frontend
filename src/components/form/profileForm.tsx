@@ -69,16 +69,15 @@ const profileFormSchema = z.object({
         // If no value provided, it's valid (optional field)
         if (!val || val.trim() === '') return true;
 
-        // If value is provided, check minimum requirements
+        // If value is provided, check minimum word requirements
         const wordCount = val
           .trim()
           .split(/\s+/)
           .filter((word) => word.length > 0).length;
-        return val.length >= 500 && wordCount >= 500;
+        return wordCount >= 500;
       },
       {
-        message:
-          'Cover letter must contain at least 500 words and 500 characters when provided.',
+        message: 'Cover letter must contain at least 500 words when provided.',
       },
     ),
   description: z.string().max(500, {
@@ -391,12 +390,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
-        const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        // const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
-        setProjectDomains(projectDomainResponse.data.data);
+        // setProjectDomains(projectDomainResponse.data.data);
 
         setCurrSkills(userResponse.data.data.skills);
         setCurrDomains(userResponse.data.data.domain);
@@ -978,7 +977,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 )}
               />
             </div>
-            <Separator className="sm:col-span-2 mt-0" />
           </div>
           <div className="col-span-2">
             <Button
