@@ -12,6 +12,15 @@ import {
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  SCORE_MESSAGES,
+  ACTION_VERBS,
+  REQUIRED_SECTIONS,
+  OPTIONAL_SECTIONS,
+  SCORE_THRESHOLDS,
+  ANALYSIS_WEIGHTS,
+  SCORING_RULES,
+} from '@/constants/resumeAnalysis';
 
 // Register required Chart.js components
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -38,10 +47,17 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
       /[!]{2,}/g, // Multiple exclamation marks
     ];
 
-    grammarIssues.forEach((pattern) => {
+    const penalties = [
+      SCORING_RULES.FIRST_PERSON_PENALTY,
+      SCORING_RULES.MULTIPLE_SPACES_PENALTY,
+      SCORING_RULES.MULTIPLE_PERIODS_PENALTY,
+      SCORING_RULES.MULTIPLE_EXCLAMATION_PENALTY,
+    ];
+
+    grammarIssues.forEach((pattern, index) => {
       const matches = text.match(pattern);
       if (matches) {
-        score -= matches.length * 5;
+        score -= matches.length * penalties[index];
       }
     });
 
@@ -54,7 +70,7 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
         capitalizationErrors++;
       }
     });
-    score -= capitalizationErrors * 3;
+    score -= capitalizationErrors * SCORING_RULES.CAPITALIZATION_PENALTY;
 
     return Math.max(0, Math.min(100, score));
   })();
@@ -70,94 +86,68 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
 
     // Ideal range: 15-20 words per sentence
     let score = 100;
-    if (avgWordsPerSentence > 25) {
-      score -= (avgWordsPerSentence - 25) * 3;
-    } else if (avgWordsPerSentence < 10) {
-      score -= (10 - avgWordsPerSentence) * 2;
+    if (avgWordsPerSentence > SCORING_RULES.IDEAL_SENTENCE_MAX) {
+      score -=
+        (avgWordsPerSentence - SCORING_RULES.IDEAL_SENTENCE_MAX) *
+        SCORING_RULES.LONG_SENTENCE_PENALTY;
+    } else if (avgWordsPerSentence < SCORING_RULES.IDEAL_SENTENCE_MIN) {
+      score -=
+        (SCORING_RULES.IDEAL_SENTENCE_MIN - avgWordsPerSentence) *
+        SCORING_RULES.SHORT_SENTENCE_PENALTY;
     }
 
     // Check for overly long words (jargon penalty)
-    const longWords = words.filter((word) => word.length > 12);
-    score -= longWords.length * 2;
+    const longWords = words.filter(
+      (word) => word.length > SCORING_RULES.LONG_WORD_THRESHOLD,
+    );
+    score -= longWords.length * SCORING_RULES.LONG_WORD_PENALTY;
 
     return Math.max(0, Math.min(100, score));
   })();
 
   // Impact analysis (action verbs and quantifiable achievements)
   const impactScore = (() => {
-    const actionVerbs = [
-      'achieved',
-      'managed',
-      'led',
-      'developed',
-      'created',
-      'improved',
-      'increased',
-      'decreased',
-      'optimized',
-      'implemented',
-      'designed',
-      'built',
-      'launched',
-      'delivered',
-      'executed',
-      'streamlined',
-      'coordinated',
-      'supervised',
-      'trained',
-      'mentored',
-      'analyzed',
-      'solved',
-      'reduced',
-      'enhanced',
-      'automated',
-      'innovated',
-    ];
-
     const numbers = text.match(/\d+(\.\d+)?[%$k]?/g) || [];
-    const actionVerbMatches = actionVerbs.filter((verb) =>
+    const actionVerbMatches = ACTION_VERBS.filter((verb) =>
       text.includes(verb),
     ).length;
 
     let score = 0;
 
     // Score for action verbs (up to 50 points)
-    score += Math.min(50, actionVerbMatches * 5);
+    score += Math.min(
+      SCORING_RULES.MAX_ACTION_VERB_SCORE,
+      actionVerbMatches * SCORING_RULES.ACTION_VERB_POINTS,
+    );
 
     // Score for quantifiable achievements (up to 50 points)
-    score += Math.min(50, numbers.length * 8);
+    score += Math.min(
+      SCORING_RULES.MAX_QUANTIFIABLE_SCORE,
+      numbers.length * SCORING_RULES.QUANTIFIABLE_POINTS,
+    );
 
     return Math.min(100, score);
   })();
 
   // Sections analysis
   const sectionsScore = (() => {
-    const requiredSections = ['experience', 'education', 'skills'];
-
-    const optionalSections = [
-      'summary',
-      'objective',
-      'projects',
-      'certifications',
-      'achievements',
-      'awards',
-      'volunteer',
-    ];
-
     let score = 0;
 
-    // Required sections (20 points each)
-    requiredSections.forEach((section) => {
+    // Required sections
+    REQUIRED_SECTIONS.forEach((section) => {
       if (text.includes(section)) {
-        score += 20;
+        score += SCORING_RULES.REQUIRED_SECTION_POINTS;
       }
     });
 
-    // Optional sections (10 points each, up to 40 points)
+    // Optional sections (up to max allowed)
     let optionalCount = 0;
-    optionalSections.forEach((section) => {
-      if (text.includes(section) && optionalCount < 4) {
-        score += 10;
+    OPTIONAL_SECTIONS.forEach((section) => {
+      if (
+        text.includes(section) &&
+        optionalCount < SCORING_RULES.MAX_OPTIONAL_SECTIONS
+      ) {
+        score += SCORING_RULES.OPTIONAL_SECTION_POINTS;
         optionalCount++;
       }
     });
@@ -173,16 +163,20 @@ const analyzeResume = (resumeText: string, jobKeywords: string[] = []) => {
       text.includes(keyword.toLowerCase()),
     );
 
-    return Math.min(20, (matchedKeywords.length / jobKeywords.length) * 20);
+    return Math.min(
+      SCORING_RULES.KEYWORD_BONUS_MAX,
+      (matchedKeywords.length / jobKeywords.length) *
+        SCORING_RULES.KEYWORD_BONUS_MAX,
+    );
   })();
 
   // Calculate total score with weights
   const totalScore = Math.round(
-    grammarScore * 0.2 +
-      brevityScore * 0.2 +
-      impactScore * 0.3 +
-      sectionsScore * 0.25 +
-      keywordScore * 0.05,
+    grammarScore * ANALYSIS_WEIGHTS.GRAMMAR +
+      brevityScore * ANALYSIS_WEIGHTS.BREVITY +
+      impactScore * ANALYSIS_WEIGHTS.IMPACT +
+      sectionsScore * ANALYSIS_WEIGHTS.SECTIONS +
+      keywordScore * ANALYSIS_WEIGHTS.KEYWORDS,
   );
 
   return {
@@ -233,16 +227,16 @@ export const AtsScore: React.FC<ResumeScoreProps> = ({
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
+    if (score >= SCORE_THRESHOLDS.COLOR_GREEN) return 'bg-green-500';
+    if (score >= SCORE_THRESHOLDS.COLOR_YELLOW) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
   const getScoreMessage = (score: number) => {
-    if (score >= 85) return 'Excellent! Your resume is well-optimized.';
-    if (score >= 70) return 'Good job! A few tweaks can boost your score.';
-    if (score >= 50) return 'Your resume needs some improvements.';
-    return 'Your resume needs significant improvements.';
+    if (score >= SCORE_THRESHOLDS.EXCELLENT) return SCORE_MESSAGES.EXCELLENT;
+    if (score >= SCORE_THRESHOLDS.GOOD) return SCORE_MESSAGES.GOOD;
+    if (score >= SCORE_THRESHOLDS.FAIR) return SCORE_MESSAGES.NEEDS_IMPROVEMENT;
+    return SCORE_MESSAGES.SIGNIFICANT_IMPROVEMENT;
   };
 
   const chartData = {
