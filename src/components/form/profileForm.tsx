@@ -390,12 +390,12 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
-        // const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
 
         // Set options for dropdowns
         setSkills(skillsResponse.data.data);
         setDomains(domainsResponse.data.data);
-        // setProjectDomains(projectDomainResponse.data.data);
+        setProjectDomains(projectDomainResponse.data.data);
 
         setCurrSkills(userResponse.data.data.skills);
         setCurrDomains(userResponse.data.data.domain);

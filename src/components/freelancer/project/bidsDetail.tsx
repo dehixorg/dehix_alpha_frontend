@@ -7,8 +7,6 @@ import {
   PackageOpen,
   Eye,
 } from 'lucide-react';
-import Image from 'next/image';
-import PropTypes from 'prop-types';
 
 import {
   Accordion,
@@ -26,8 +24,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { CustomTable } from '@/components/custom-table/CustomTable';
 import {
   FieldType,
@@ -122,11 +120,9 @@ const FreelancerAvatar = React.memo(
   ({ profilePic, userName }: { profilePic?: string; userName: string }) => (
     <>
       {profilePic ? (
-        <Image
+        <img
           src={profilePic}
           alt={userName}
-          width={40}
-          height={40}
           className="w-10 h-10 rounded-full object-cover"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
@@ -144,7 +140,6 @@ const FreelancerAvatar = React.memo(
     </>
   ),
 );
-
 FreelancerAvatar.displayName = 'FreelancerAvatar';
 
 // Freelancer Application Dialog Component
@@ -192,17 +187,21 @@ const FreelancerApplicationDialog = React.memo(
               <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Email</div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Email
+                  </span>
                   <p className="text-sm">{freelancer.email || 'N/A'}</p>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Role</div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Role
+                  </span>
                   <p className="text-sm">{freelancer.role || 'N/A'}</p>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Work Experience
-                  </div>
+                  </span>
                   <p className="text-sm">
                     {freelancer.workExperience
                       ? `${freelancer.workExperience} years`
@@ -210,9 +209,9 @@ const FreelancerApplicationDialog = React.memo(
                   </p>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-gray-600">
                     Hourly Rate
-                  </div>
+                  </span>
                   <p className="text-sm">
                     {freelancer.perHourPrice
                       ? `$${freelancer.perHourPrice}/hour`
@@ -279,84 +278,7 @@ const FreelancerApplicationDialog = React.memo(
     );
   },
 );
-
 FreelancerApplicationDialog.displayName = 'FreelancerApplicationDialog';
-
-// Define PropTypes for custom components
-const FreelancerCustomComponent = ({ data }: { data: any }) => {
-  const freelancer = data?.freelancer;
-  const userName = data?.userName || freelancer?.userName || 'Unknown';
-  const fullName =
-    freelancer?.firstName && freelancer?.lastName
-      ? `${freelancer.firstName} ${freelancer.lastName}`.trim()
-      : userName;
-
-  return (
-    <div className="flex items-center gap-3 justify-center">
-      <FreelancerAvatar
-        profilePic={freelancer?.profilePic}
-        userName={userName}
-      />
-      <div>
-        <p className="font-medium text-white">{fullName}</p>
-        <p className="text-sm text-gray-400">@{userName}</p>
-      </div>
-    </div>
-  );
-};
-
-FreelancerCustomComponent.propTypes = {
-  data: PropTypes.shape({
-    freelancer: PropTypes.object,
-    userName: PropTypes.string,
-  }),
-};
-
-const BidAmountCustomComponent = ({ data }: { data: any }) => (
-  <span className="font-medium text-green-400">
-    ${data?.current_price || 'N/A'}
-  </span>
-);
-
-BidAmountCustomComponent.propTypes = {
-  data: PropTypes.shape({
-    current_price: PropTypes.string,
-  }),
-};
-
-// Create a factory function for ApplicationCustomComponent that has access to handleViewApplication
-const createApplicationCustomComponent = (
-  handleViewApplication: (freelancer: Freelancer, bidData: BidDetail) => void,
-) => {
-  const ApplicationCustomComponent = ({ data }: { data: any }) => {
-    const freelancer = data?.freelancer;
-    const bidData = data as BidDetail;
-
-    return (
-      <div className="flex justify-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            freelancer && handleViewApplication(freelancer, bidData)
-          }
-          className="flex items-center gap-2"
-        >
-          <Eye className="w-4 h-4" />
-          View
-        </Button>
-      </div>
-    );
-  };
-
-  ApplicationCustomComponent.propTypes = {
-    data: PropTypes.shape({
-      freelancer: PropTypes.object,
-    }),
-  };
-
-  return ApplicationCustomComponent;
-};
 
 const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [userData, setUserData] = useState<{ data: ProjectProfile } | null>(
@@ -366,6 +288,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [error, setError] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string>();
   const [bids, setBids] = useState<BidDetail[]>([]);
+  const [, setLoadingBids] = useState<Record<string, boolean>>({});
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
   const [selectedFreelancer, setSelectedFreelancer] =
@@ -544,6 +467,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
       try {
+        setLoadingBids((prev) => ({ ...prev, [bidId]: true }));
+
         await axiosInstance.put(`/bid/${bidId}/status`, { bid_status: status });
 
         // Optimistic update
@@ -566,6 +491,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           title: 'Error',
           description: errorMessage,
         });
+      } finally {
+        setLoadingBids((prev) => ({ ...prev, [bidId]: false }));
       }
     },
     [],
@@ -633,12 +560,37 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         {
           textValue: 'Freelancer',
           type: FieldType.CUSTOM,
-          CustomComponent: FreelancerCustomComponent,
+          CustomComponent: ({ data }: { data: any }) => {
+            const freelancer = data?.freelancer;
+            const userName =
+              data?.userName || freelancer?.userName || 'Unknown';
+            const fullName =
+              freelancer?.firstName && freelancer?.lastName
+                ? `${freelancer.firstName} ${freelancer.lastName}`.trim()
+                : userName;
+
+            return (
+              <div className="flex items-center gap-3 justify-center">
+                <FreelancerAvatar
+                  profilePic={freelancer?.profilePic}
+                  userName={userName}
+                />
+                <div>
+                  <p className="font-medium text-white">{fullName}</p>
+                  <p className="text-sm text-gray-400">@{userName}</p>
+                </div>
+              </div>
+            );
+          },
         },
         {
           textValue: 'Bid Amount',
           type: FieldType.CUSTOM,
-          CustomComponent: BidAmountCustomComponent,
+          CustomComponent: ({ data }: { data: any }) => (
+            <span className="font-medium text-green-400">
+              ${data?.current_price || 'N/A'}
+            </span>
+          ),
         },
         {
           fieldName: 'bid_status',
@@ -649,9 +601,25 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         {
           textValue: 'Application',
           type: FieldType.CUSTOM,
-          CustomComponent: createApplicationCustomComponent(
-            handleViewApplication,
-          ),
+          CustomComponent: ({ data }: { data: any }) => {
+            const freelancer = data?.freelancer;
+            const bidData = data as BidDetail;
+            return (
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    freelancer && handleViewApplication(freelancer, bidData)
+                  }
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  View
+                </Button>
+              </div>
+            );
+          },
         },
         {
           textValue: 'Actions',

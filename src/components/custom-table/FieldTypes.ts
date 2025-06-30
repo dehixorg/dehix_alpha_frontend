@@ -33,15 +33,15 @@ export interface CustomComponentProps extends CustomTableChildComponentsProps {
   data: Record<string, any>;
 }
 
-export interface CustomTableChildComponentsProps {
-  refetch?: () => void;
-}
-
 export interface FieldComponentProps<T>
   extends CustomTableChildComponentsProps {
   value: T;
   fieldData: Field;
   id: string;
+}
+
+export interface CustomTableChildComponentsProps {
+  refetch?: () => void;
 }
 
 export interface Field {

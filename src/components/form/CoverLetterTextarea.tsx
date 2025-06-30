@@ -70,9 +70,7 @@ const CoverLetterTextarea: React.FC<CoverLetterTextareaProps> = ({
             placeholder="Write your cover letter here... (optional - minimum 500 words if provided)"
             value={value}
             onChange={handleChange}
-            className={`min-h-[200px] resize-y pr-10 text-foreground placeholder:text-muted-foreground ${
-              error ? 'border-red-500 focus:border-red-500' : ''
-            }`}
+            className={`min-h-[200px] resize-y pr-10 text-foreground placeholder:text-muted-foreground`}
             rows={10}
           />
           <TooltipProvider>
