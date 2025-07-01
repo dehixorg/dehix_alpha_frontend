@@ -4,7 +4,7 @@ import { apiService } from "./apiService";
 import { Api_Methods } from "../utils/common/enum";
 
 export const apiHelperService = {
-  // ✅ 1. Upload profile picture
+
   uploadProfilePicture: async (file: File) => {
     const formData = new FormData();
     formData.append("profilePicture", file);
@@ -16,7 +16,7 @@ export const apiHelperService = {
 });
   },
 
-  // ✅ 2. Update user profile with new image URL
+  
   updateUserProfilePicture: async (userId: string, imageUrl: string) => {
     return apiService({
       method: Api_Methods.PUT,

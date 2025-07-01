@@ -20,7 +20,6 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
       const res = await apiHelperService.getSingleReport(id);
       const newMessages = res.data?.data?.messages || [];
 
-      // Only update if new messages are found
       if (newMessages.length !== messages.length) {
         setMessages(newMessages);
       }
@@ -59,13 +58,13 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
   };
 
   useEffect(() => {
-    fetchMessages(); // Initial fetch
+    fetchMessages(); 
 
     const interval = setInterval(() => {
       fetchMessages();
-    }, 5000); // Every 5 seconds
+    }, 5000); 
 
-    return () => clearInterval(interval); // Cleanup
+    return () => clearInterval(interval); 
   }, [id]);
 
   useEffect(() => {
@@ -74,12 +73,11 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
 
   return (
     <div className="flex flex-col h-[500px] border rounded overflow-hidden">
-      {/* Header */}
       <div className="px-4 py-2 border-b bg-white text-center font-semibold">
         Past Reports
       </div>
 
-      {/* Scrollable Messages Area */}
+      
       <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 space-y-2 min-h-0">
         {messages.length === 0 && (
           <p className="text-sm text-muted-foreground text-center">No messages yet</p>

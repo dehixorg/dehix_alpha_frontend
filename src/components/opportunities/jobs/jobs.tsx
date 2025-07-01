@@ -165,18 +165,15 @@ const pathname=usePathname()
               >
                 <span>Invite</span>
               </Button>
-
-              {/* Not Interested Button */}
-           {/* 3-dot menu and dropdown */}
-<div className="relative">
-  <Button
-    variant="ghost"
-    size="icon"
-    onClick={() => setMenuOpen(!menuOpen)}
-    className="text-gray-500 hover:text-gray-800"
-  >
-    <MoreVertical className="w-5 h-5" />
-  </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="text-gray-500 hover:text-gray-800"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
 
         {menuOpen && (
           <div className="absolute right-0 mt-2 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">

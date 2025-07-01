@@ -25,7 +25,7 @@ export default function PastReportsTab() {
   const user = useSelector((state: RootState) => state.user);
 
   const fetchReports = async () => {
-        if (!user?.uid) return; // ⛔️ Prevent API call if user is not ready
+        if (!user?.uid) return; 
 
     setLoading(true);
     try {

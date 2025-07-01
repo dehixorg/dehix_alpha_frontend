@@ -56,7 +56,7 @@ export default function CurrentProject() {
           `/freelancer/${user.uid}/project?status=ACTIVE`,
         );
 
-        setProjects(response.data.data); // Store all projects initially
+        setProjects(response.data.data); 
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -69,7 +69,7 @@ export default function CurrentProject() {
       }
     };
 
-    fetchData(); // Call fetch data function on component mount
+    fetchData(); 
   }, [user.uid]);
 
   return (

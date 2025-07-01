@@ -13,11 +13,11 @@ import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import PastReportsTab from '@/components/report-tabs/PastReportsTab';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
-import { ReportInfo } from '@/config/defaultReportInfo';
+import { ReportInfo } from '@/config/report/defaultReportInfo';
 import {
   menuItemsTop,
   menuItemsBottom,
-} from '@/config/menuItems/freelancer/settingsMenuItems'; // or admin if needed
+} from '@/config/menuItems/freelancer/settingsMenuItems'; 
 import { usePathname } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
@@ -34,7 +34,7 @@ export default function NewReportPage() {
   const reportInfo: ReportInfo = {
     report_role: user.type || "STUDENT",
     report_type: "GENERAL",
-    reportedbyId: user?.uid || "user123", // safer fetch
+    reportedbyId: user?.uid || "user123", 
   };
 
   const reportData = {

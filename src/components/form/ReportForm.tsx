@@ -27,9 +27,8 @@ import {
 } from "@/components/ui/select";
 
 import { apiHelperService } from "@/services/report";
-import { apiHelperService as profileService } from "@/services/profilepic"; // image upload service
+import { apiHelperService as profileService } from "@/services/profilepic";
 
-// ✅ Updated Zod schema to accept array of imageMeta objects
 const reportSchema = z.object({
   subject: z.string().min(3, { message: "Subject is required" }),
   description: z.string().min(10, { message: "Description must be more detailed" }),
@@ -72,13 +71,11 @@ const [fileError, setFileError] = useState<string | null>(null);
 
       const imageMetaArray = [];
 
-      // ✅ Upload up to 3 images
       for (const file of imageFiles.slice(0, 3)) {
         const response = await profileService.uploadProfilePicture(file);
         imageMetaArray.push(response.data.data);
       }
 
-      // ✅ Final payload
       const finalPayload = {
         ...data,
         reportedById: initialData.reportedId,
