@@ -1,6 +1,6 @@
 import React from 'react';
-import { PlusCircle, X } from 'lucide-react';
-
+import { X } from 'lucide-react';
+import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,14 +77,7 @@ export const AchievementInfo: React.FC<AchievementInfoProps> = ({
         ))}
       </form>
 
-      <div className="flex justify-center mt-4">
-        <Button
-          onClick={handleAddAchievement}
-          className="text-center justify-items-center dark:text-black light:bg-black"
-        >
-          <PlusCircle />
-        </Button>
-      </div>
+      <AddButton onClick={handleAddAchievement} />
     </div>
   );
 };
