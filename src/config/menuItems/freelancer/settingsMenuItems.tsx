@@ -5,6 +5,7 @@ import {
   ImagePlus,
   Package,
   User,
+  UserCheck,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -48,6 +49,11 @@ export const menuItemsTop: MenuItem[] = [
     href: '/freelancer/settings/education-info',
     icon: <BookOpen className="h-5 w-5" />,
     label: 'Education',
+  },
+  {
+    href: '/freelancer/settings/profiles',
+    icon: <UserCheck className="h-5 w-5" />,
+    label: 'Profiles',
   },
   {
     href: '/freelancer/settings/resume',
