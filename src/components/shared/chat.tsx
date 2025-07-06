@@ -600,7 +600,9 @@ export function CardsChat({
 
     setRecordingStatus("uploading");
     const formData = new FormData();
-    formData.append('file', audioBlob, `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`);
+    // Ensure we send a proper File object rather than just a Blob
+    const audioFile = new File([audioBlob], `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`, { type: audioBlob.type });
+    formData.append('file', audioFile);
     formData.append('senderId', user.uid);
     // For individual chats, receiverId is the other participant. For group chats, it's the conversation ID.
     const receiverId = conversation.type === 'group'
@@ -608,15 +610,23 @@ export function CardsChat({
       : conversation.participants.find(p => p !== user.uid) || conversation.id;
     formData.append('receiverId', receiverId);
     formData.append('conversationId', conversation.id);
-    formData.append('duration', recordingDuration.toString());
+    // Send duration as JSON stringified object with value property
+    formData.append('duration', JSON.stringify({ value: recordingDuration }));
 
+    // Debug logging
+    console.log('Voice message upload - FormData contents:');
+    console.log('File:', audioFile, 'Type:', audioFile.type, 'Size:', audioFile.size);
+    console.log('SenderId:', user.uid);
+    console.log('ReceiverId:', receiverId);
+    console.log('ConversationId:', conversation.id);
+    console.log('Duration:', JSON.stringify({ value: recordingDuration }));
 
     try {
       // Using axiosInstance from the project
       const response = await axiosInstance.post('/v1/voice-messages/upload', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          Accept: 'application/json'
+        }
       });
 
       if (response.status === 201) {
