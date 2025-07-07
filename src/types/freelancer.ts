@@ -55,8 +55,29 @@ export interface FreelancerProfile {
   description?: string;
   skills?: Skill[];
   domains?: Domain[];
-  projects?: Project[];
-  experiences?: ProfessionalExperience[];
+  projects?: {
+    _id: string;
+    projectName: string;
+    description: string;
+    role: string;
+    start: string;
+    end: string;
+    techUsed: string[];
+    githubLink?: string;
+    projectType?: string;
+    verified?: boolean;
+  }[];
+  experiences?: {
+    _id: string;
+    company: string;
+    jobTitle: string;
+    workDescription: string;
+    workFrom: string;
+    workTo: string;
+    referencePersonName?: string;
+    referencePersonContact?: string;
+    githubRepoLink?: string;
+  }[];
   education?: Education[];
   portfolioLinks?: string[];
   githubLink?: string;

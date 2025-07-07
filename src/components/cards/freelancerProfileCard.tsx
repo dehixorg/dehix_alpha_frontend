@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { FreelancerProfile } from '@/types/freelancer';
 
 interface FreelancerProfileCardProps {
   profile: FreelancerProfile;
