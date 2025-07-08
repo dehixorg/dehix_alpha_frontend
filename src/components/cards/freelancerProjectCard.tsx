@@ -28,6 +28,7 @@ interface ProjectProps {
   oracleAssigned: string | null;
   verificationUpdateTime: string;
   comments: string;
+  thumbnail?: string;
 }
 
 const ProjectCard: React.FC<ProjectProps> = ({
@@ -42,10 +43,24 @@ const ProjectCard: React.FC<ProjectProps> = ({
   role,
   projectType,
   comments,
+  thumbnail,
 }) => {
   return (
     <Card className="w-full h-full mx-auto md:max-w-2xl ">
       <CardHeader>
+        {/* Add thumbnail display at the top of the card */}
+        {thumbnail && (
+          <div className="mb-4 rounded-lg overflow-hidden">
+            <img 
+              src={thumbnail} 
+              alt={`${projectName} thumbnail`}
+              className="w-full h-48 object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         <CardTitle className="flex">
           {projectName}
           {githubLink && (
@@ -100,3 +115,5 @@ const ProjectCard: React.FC<ProjectProps> = ({
   );
 };
 export default ProjectCard;
+
+

@@ -67,6 +67,7 @@ const dummyData = {
       role: 'Lead Developer',
       projectType: 'Web Application',
       status: 'Verified',
+      thumbnail: '/123.jpg'
     },
     {
       projectName: 'Another Cool Project',
@@ -79,6 +80,7 @@ const dummyData = {
       role: 'Full Stack Developer',
       projectType: 'Mobile Application',
       status: 'Pending',
+      thumbnail: '/123.jpg'
     },
   ],
   education: [

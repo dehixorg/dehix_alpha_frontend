@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
+import ThumbnailUpload from '../fileUpload/thumbnailUpload';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -61,6 +62,7 @@ const projectFormSchema = z
     projectType: z.string().optional(),
     verificationStatus: z.string().optional(),
     comments: z.string().optional(),
+    thumbnail: z.string().optional(), 
   })
   .refine(
     (data) => {
@@ -98,6 +100,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
   const { freelancer_id } = useParams<{ freelancer_id: string }>();
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -236,7 +240,17 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     setLoading(true);
     try {
       // Join currSkills array into comma-separated string for form submission
-
+      let thumbnailUrl = '';
+      if (thumbnailFile) {
+        const formData = new FormData();
+        formData.append('thumbnail', thumbnailFile);
+        const uploadResponse = await axiosInstance.post(
+          '/projects/upload-thumbnail',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        thumbnailUrl = uploadResponse.data.data.Location;
+      }
       // Submit with the skills from our state
       await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
         ...data,
@@ -246,6 +260,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         start: data.start ? new Date(data.start).toISOString() : null,
         end: data.end ? new Date(data.end).toISOString() : null,
         verificationUpdateTime: new Date().toISOString(),
+        thumbnail: thumbnailUrl || undefined, // Add thumbnail URL to payload
       });
 
       onFormSubmit();
@@ -265,6 +280,17 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       setLoading(false);
     }
   }
+  // Add these handler functions
+  const handleThumbnailUpload = (file: File) => {
+    setThumbnailFile(file);
+    form.setValue('thumbnail', URL.createObjectURL(file));
+  };
+
+  const handleThumbnailRemove = () => {
+    setThumbnailFile(null);
+    setThumbnailUrl(null);
+    form.setValue('thumbnail', '');
+  };
 
   return (
     <Dialog
@@ -295,6 +321,34 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
             {/* Step 1: Basic Project Information */}
             {step === 1 && (
               <>
+
+                <FormField
+                  control={form.control}
+                  name="thumbnail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Thumbnail</FormLabel>
+                      <FormControl>
+                        <ThumbnailUpload
+                          projectId="new" // Use "new" for new projects
+                          existingThumbnail={field.value}
+                          onUploadSuccess={(url) => {
+                            field.onChange(url);
+                            setThumbnailUrl(url);
+                          }}
+                          onRemoveSuccess={() => {
+                            field.onChange('');
+                            setThumbnailUrl(null);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload a thumbnail image for your project (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="projectName"
