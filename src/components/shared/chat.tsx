@@ -111,6 +111,10 @@ type Message = {
   timestamp: string;
   replyTo?: string | null;
   reactions?: MessageReaction;
+  voiceMessage?: {
+    duration: number;
+    type: 'voice';
+  };
 };
 
 interface CardsChatProps {
@@ -293,7 +297,14 @@ export function CardsChat({
       setIsSending(true);
       const datentime = new Date().toISOString();
 
-      const messageId = await updateConversationWithMessageTransaction(
+      console.log('Sending message to Firestore:', {
+        conversationId: conversation?.id,
+        message: message,
+        timestamp: datentime,
+        replyTo: replyToMessageId || null,
+      });
+
+      const result = await updateConversationWithMessageTransaction(
         'conversations',
         conversation?.id,
         {
@@ -304,14 +315,26 @@ export function CardsChat({
         datentime,
       );
 
-      if (messageId) {
+      console.log('Firestore transaction result:', result);
+
+      if (result === 'Transaction successful') {
         setInput('');
         setIsSending(false);
+        console.log('Message sent successfully');
       } else {
-        console.error('Failed to send message');
+        console.error('Failed to send message - unexpected result:', result);
+        throw new Error(`Failed to send message: ${result}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        conversationId: conversation?.id,
+        messageContent: message.content,
+        hasVoiceMessage: !!message.voiceMessage,
+      });
+      throw error; // Re-throw the error so it can be caught by the calling function
     } finally {
       setIsSending(false);
     }
@@ -599,46 +622,113 @@ export function CardsChat({
     }
 
     setRecordingStatus("uploading");
-    const formData = new FormData();
-    // Ensure we send a proper File object rather than just a Blob
-    const audioFile = new File([audioBlob], `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`, { type: audioBlob.type });
-    formData.append('file', audioFile);
-    formData.append('senderId', user.uid);
-    // For individual chats, receiverId is the other participant. For group chats, it's the conversation ID.
-    const receiverId = conversation.type === 'group'
-      ? conversation.id
-      : conversation.participants.find(p => p !== user.uid) || conversation.id;
-    formData.append('receiverId', receiverId);
-    formData.append('conversationId', conversation.id);
-    // Send duration as JSON stringified object with value property
-    formData.append('duration', JSON.stringify({ value: recordingDuration }));
-
-    // Debug logging
-    console.log('Voice message upload - FormData contents:');
-    console.log('File:', audioFile, 'Type:', audioFile.type, 'Size:', audioFile.size);
-    console.log('SenderId:', user.uid);
-    console.log('ReceiverId:', receiverId);
-    console.log('ConversationId:', conversation.id);
-    console.log('Duration:', JSON.stringify({ value: recordingDuration }));
-
+    
     try {
-      // Using axiosInstance from the project
-      const response = await axiosInstance.post('/v1/voice-messages/upload', formData, {
-        headers: {
-          Accept: 'application/json'
+      // Step 1: Convert audio blob to file (same as before)
+      const extPart = audioBlob.type.split('/')[1] || 'webm';
+      const cleanExt = extPart.split(';')[0]; // remove codec parameters like 'webm;codecs=opus'
+      const audioFile = new File([audioBlob], `voice-message.${cleanExt}`, { type: audioBlob.type });
+      
+      // Step 2: Create FormData (same as regular file upload)
+      const formData = new FormData();
+      formData.append('file', audioFile);
+
+      console.log('Voice message upload - FormData contents:');
+      console.log('File:', audioFile, 'Type:', audioFile.type, 'Size:', audioFile.size);
+      console.log('Duration:', recordingDuration.toString());
+
+      // Step 3: Use the same working file upload endpoint with retry mechanism
+      const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
+        try {
+          const postFileResponse = await axiosInstance.post(
+            '/register/upload-image',
+            formData,
+            {
+              headers: { 
+                'Content-Type': 'multipart/form-data',
+                'Accept': 'application/json'
+              },
+              onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+                console.log('Voice upload progress:', {
+                  percent: percentCompleted,
+                  loaded: progressEvent.loaded,
+                  total: progressEvent.total,
+                  timestamp: new Date().toISOString()
+                });
+              },
+            },
+          );
+
+          return postFileResponse;
+        } catch (error: any) {
+          if (retryCount < maxRetries && (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')) {
+            console.log(`Retrying voice upload (attempt ${retryCount + 1} of ${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return attemptUpload(retryCount + 1, maxRetries);
+          }
+          throw error;
         }
+      };
+
+      const postFileResponse = await attemptUpload();
+      console.log('Voice upload response:', {
+        data: postFileResponse.data,
+        timestamp: new Date().toISOString()
       });
 
-      if (response.status === 201) {
-        toast({ title: "Success", description: "Voice message sent!" });
-        // Message should appear via Firestore listener.
-        // If not, one might need to manually add it or trigger a refetch.
-      } else {
-        throw new Error(response.data.error || "Failed to upload voice message");
-      }
+      // Step 4: Get the file URL from response
+      const fileUrl = postFileResponse.data.data.Location;
+
+      // Step 5: Create message with voice file URL and duration metadata
+      const message: Partial<Message> = {
+        senderId: user.uid,
+        content: fileUrl, // Voice file URL becomes message content
+        timestamp: new Date().toISOString(),
+        // Add voice message metadata
+        voiceMessage: {
+          duration: recordingDuration,
+          type: 'voice'
+        }
+      };
+
+      // Step 6: Send message using the same working sendMessage function
+      await sendMessage(conversation, message, setInput);
+      
+      toast({ title: "Success", description: "Voice message sent!" });
     } catch (error: any) {
       console.error("Error sending voice message:", error);
-      toast({ variant: "destructive", title: "Upload Failed", description: error.message || "Could not send voice message." });
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        response: error.response?.data,
+        conversationId: conversation?.id,
+        duration: recordingDuration,
+      });
+      
+      let errorMessage = 'Failed to upload voice message. Please try again.';
+      
+      // Check if it's a file upload error
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } 
+      // Check if it's a network error
+      else if (error.code === 'ERR_CANCELED') {
+        errorMessage = 'Upload was canceled. Please try again.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Connection was aborted. Please check your network connection and try again.';
+      } 
+      // Check if it's a Firestore error
+      else if (error.message && error.message.includes('Failed to send message')) {
+        errorMessage = 'Failed to save message to chat. Please try again.';
+      }
+      // Check if it's a general error
+      else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      toast({ variant: "destructive", title: "Upload Failed", description: errorMessage });
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
       setRecordingStatus("idle");
@@ -835,11 +925,11 @@ export function CardsChat({
                                 </ReactMarkdown>
                               )}
                               {/* Voice Message Player */}
-                              {message.audioUrl && message.duration !== undefined && (
+                              {message.voiceMessage && message.voiceMessage.type === 'voice' && (
                                 <div className="mt-2">
-                                  <audio src={message.audioUrl} controls className="w-full h-10 rounded-md" />
+                                  <audio src={message.content} controls className="w-full h-10 rounded-md" />
                                   <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
-                                    Duration: {formatDuration(message.duration)}
+                                    Duration: {formatDuration(message.voiceMessage.duration)}
                                   </p>
                                 </div>
                               )}
