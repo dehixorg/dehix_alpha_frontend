@@ -927,10 +927,16 @@ export function CardsChat({
                               {/* Voice Message Player */}
                               {message.voiceMessage && message.voiceMessage.type === 'voice' && (
                                 <div className="mt-2">
-                                  <audio src={message.content} controls className="w-full h-10 rounded-md" />
-                                  <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
-                                    Duration: {formatDuration(message.voiceMessage.duration)}
-                                  </p>
+                                 <audio src={message.content} controls
+                                          className="w-full h-10 rounded-md"
+                                        />
+
+                                      <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
+                                        {message.voiceMessage.duration > 0
+                                          ? `Duration: ${formatDuration(message.voiceMessage.duration)}`
+                                          : 'Voice Message'}
+                                      </p>
+
                                 </div>
                               )}
                             </div>
