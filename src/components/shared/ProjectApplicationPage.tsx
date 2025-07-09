@@ -12,6 +12,8 @@ import {
   Loader2,
   Check,
   Eye,
+  UserCircle,
+  Plus,
 } from 'lucide-react';
 
 import { Textarea } from '../ui/textarea';
@@ -56,6 +58,25 @@ interface Profile {
   description: string;
 }
 
+interface FreelancerProfile {
+  _id: string;
+  profileName: string;
+  description: string;
+  skills: Array<{ _id: string; label: string }>;
+  domains: Array<{ _id: string; label: string }>;
+  projects: any[];
+  experiences: any[];
+  portfolioLinks?: string[];
+  githubLink?: string;
+  linkedinLink?: string;
+  personalWebsite?: string;
+  hourlyRate?: number;
+  availability?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface ProjectApplicationFormProps {
   project: any;
   isLoading: boolean;
@@ -84,6 +105,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   // State to control ProjectAnalyticsDrawer visibility
   const [showAnalyticsDrawer, setShowAnalyticsDrawer] = useState(false);
 
+  // Freelancer profiles state
+  const [freelancerProfiles, setFreelancerProfiles] = useState<
+    FreelancerProfile[]
+  >([]);
+  const [selectedFreelancerProfile, setSelectedFreelancerProfile] =
+    useState<FreelancerProfile | null>(null);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
@@ -103,10 +132,32 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     window.addEventListener('connectsUpdated', handleConnectsUpdated);
 
     fetchAppliedData(); // Fetch applied bids on component mount
+    fetchFreelancerProfiles(); // Fetch freelancer profiles
 
     return () => {
       window.removeEventListener('connectsUpdated', handleConnectsUpdated);
     };
+  }, [user.uid]);
+
+  const fetchFreelancerProfiles = useCallback(async () => {
+    if (!user.uid) return;
+
+    setIsLoadingProfiles(true);
+    try {
+      const response = await axiosInstance.get('/freelancer/profiles');
+      const profilesData = response.data.data || [];
+      setFreelancerProfiles(profilesData);
+    } catch (error) {
+      console.error('Error fetching freelancer profiles:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load your profiles. Please try again.',
+      });
+      setFreelancerProfiles([]);
+    } finally {
+      setIsLoadingProfiles(false);
+    }
   }, [user.uid]);
 
   const fetchAppliedData = useCallback(async () => {
@@ -243,14 +294,21 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
     setIsBidLoading(true);
     try {
-      await axiosInstance.post(`/bid`, {
+      const bidData: any = {
         current_price: bidAmount,
         description: coverLetter,
         bidder_id: user.uid,
         profile_id: selectedProfile._id,
         project_id: project._id,
         biddingValue: bidAmount,
-      });
+      };
+
+      // Add freelancer profile ID if selected
+      if (selectedFreelancerProfile?._id) {
+        bidData.freelancer_profile_id = selectedFreelancerProfile._id;
+      }
+
+      await axiosInstance.post(`/bid`, bidData);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
@@ -260,6 +318,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       setDialogOpen(false);
       setIsBidSubmitted(true); // Mark as applied for this project
       setCoverLetter('');
+      setSelectedFreelancerProfile(null); // Reset selected freelancer profile
       toast({
         title: 'Application Submitted',
         description: 'Your application has been successfully submitted.',
@@ -502,6 +561,125 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         'Character limit exceeded!'}
                     </span>
                   </div>
+                </div>
+
+                {/* Profiles Section */}
+                <div className="mb-6">
+                  <label className="block mb-3 font-medium text-base">
+                    Select Profile (Optional)
+                  </label>
+                  {isLoadingProfiles ? (
+                    <div className="flex items-center justify-center p-6 border rounded-lg bg-muted">
+                      <Loader2 className="animate-spin w-5 h-5 mr-3" />
+                      <span className="text-muted-foreground">
+                        Loading your profiles...
+                      </span>
+                    </div>
+                  ) : freelancerProfiles.length === 0 ? (
+                    <div className="p-6 border rounded-lg bg-muted text-center">
+                      <UserCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                      <p className="text-foreground mb-2 font-medium">
+                        No profiles created yet
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Create profiles in your settings to showcase different
+                        skill sets
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 max-h-80 overflow-y-auto pr-2">
+                        {freelancerProfiles.map((profile) => (
+                          <Card
+                            key={profile._id}
+                            className={`cursor-pointer transition-all duration-200 border-2 ${
+                              selectedFreelancerProfile?._id === profile._id
+                                ? 'border-green-500 shadow-md'
+                                : 'border-border hover:border-muted-foreground hover:shadow-sm'
+                            }`}
+                            onClick={() => {
+                              if (!hasAppliedToAnyProfileInProject) {
+                                setSelectedFreelancerProfile(
+                                  selectedFreelancerProfile?._id === profile._id
+                                    ? null
+                                    : profile,
+                                );
+                              }
+                            }}
+                          >
+                            <CardContent className="p-5">
+                              <div className="flex items-start justify-between mb-3">
+                                <h4 className="font-semibold text-base text-foreground">
+                                  {profile.profileName}
+                                </h4>
+                                {selectedFreelancerProfile?._id ===
+                                  profile._id && (
+                                  <div className="flex items-center justify-center w-6 h-6 bg-green-500 rounded-full">
+                                    <Check className="w-4 h-4 text-white" />
+                                  </div>
+                                )}
+                              </div>
+
+                              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                                {profile.description.length > 120
+                                  ? `${profile.description.substring(0, 120)}...`
+                                  : profile.description}
+                              </p>
+
+                              {profile.skills.length > 0 && (
+                                <div className="mb-3">
+                                  <div className="flex flex-wrap gap-2">
+                                    {profile.skills.slice(0, 4).map((skill) => (
+                                      <Badge
+                                        key={skill._id}
+                                        variant="secondary"
+                                        className="text-xs px-2 py-1"
+                                      >
+                                        {skill.label}
+                                      </Badge>
+                                    ))}
+                                    {profile.skills.length > 4 && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs px-2 py-1"
+                                      >
+                                        +{profile.skills.length - 4} more
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <div className="flex items-center gap-3">
+                                  {profile.domains.length > 0 && (
+                                    <span className="font-medium text-foreground">
+                                      {profile.domains
+                                        .slice(0, 2)
+                                        .map((domain) => domain.label)
+                                        .join(', ')}
+                                      {profile.domains.length > 2 &&
+                                        ` +${profile.domains.length - 2}`}
+                                    </span>
+                                  )}
+                                  {profile.hourlyRate && (
+                                    <span className="text-green-600 dark:text-green-400 font-medium">
+                                      ${profile.hourlyRate}/hr
+                                    </span>
+                                  )}
+                                </div>
+                                {profile.availability && (
+                                  <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
+                                    {profile.availability}
+                                  </span>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-4 mt-4">
                   {hasAppliedToAnyProfileInProject ? (
