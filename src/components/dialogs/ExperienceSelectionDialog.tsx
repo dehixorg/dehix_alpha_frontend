@@ -1,6 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
+import { Calendar, CheckCircle, Briefcase } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Calendar, CheckCircle, Plus, Briefcase } from 'lucide-react';
 
 interface Experience {
   _id: string;

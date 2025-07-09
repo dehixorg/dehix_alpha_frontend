@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
+import { Heart, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
 

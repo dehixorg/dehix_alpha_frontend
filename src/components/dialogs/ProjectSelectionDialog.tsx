@@ -1,6 +1,7 @@
 'use client';
-
 import { useState, useEffect } from 'react';
+import { Github, Calendar, CheckCircle } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Github, Calendar, CheckCircle, Plus } from 'lucide-react';
 
 interface Project {
   _id: string;

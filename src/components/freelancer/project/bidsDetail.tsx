@@ -57,6 +57,22 @@ interface Freelancer {
   role?: string;
 }
 
+interface FreelancerProfile {
+  _id: string;
+  profileName: string;
+  description: string;
+  skills: Array<{ _id: string; label: string }>;
+  domains: Array<{ _id: string; label: string }>;
+  projects: any[];
+  experiences: any[];
+  portfolioLinks?: string[];
+  githubLink?: string;
+  linkedinLink?: string;
+  personalWebsite?: string;
+  hourlyRate?: number;
+  availability?: string;
+}
+
 interface BidDetail {
   _id: string;
   userName: string;
@@ -65,6 +81,7 @@ interface BidDetail {
   bid_status: BidStatus;
   bidder_id?: string;
   freelancer?: Freelancer;
+  freelancer_profile_id?: FreelancerProfile;
 }
 
 interface ProjectProfile {
@@ -243,6 +260,120 @@ const FreelancerApplicationDialog = React.memo(
               </div>
             )}
 
+            {/* Freelancer Profile Used */}
+            {bidData?.freelancer_profile_id && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">
+                  Profile Used for Application
+                </h3>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100">
+                        {bidData.freelancer_profile_id.profileName}
+                      </h4>
+                      {bidData.freelancer_profile_id.hourlyRate && (
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          ${bidData.freelancer_profile_id.hourlyRate}/hr
+                        </p>
+                      )}
+                    </div>
+                    {bidData.freelancer_profile_id.availability && (
+                      <Badge variant="outline" className="text-xs">
+                        {bidData.freelancer_profile_id.availability}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {bidData.freelancer_profile_id.description && (
+                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                      {bidData.freelancer_profile_id.description}
+                    </p>
+                  )}
+
+                  {/* Profile Skills */}
+                  {bidData.freelancer_profile_id.skills &&
+                    bidData.freelancer_profile_id.skills.length > 0 && (
+                      <div className="mb-3">
+                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          Skills:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {bidData.freelancer_profile_id.skills.map(
+                            (skill: any, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+                              >
+                                {skill.label}
+                              </Badge>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Profile Domains */}
+                  {bidData.freelancer_profile_id.domains &&
+                    bidData.freelancer_profile_id.domains.length > 0 && (
+                      <div className="mb-3">
+                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          Domains:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {bidData.freelancer_profile_id.domains.map(
+                            (domain: any, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs border-blue-300 text-blue-700 dark:border-blue-600 dark:text-blue-300"
+                              >
+                                {domain.label}
+                              </Badge>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Profile Links */}
+                  <div className="flex gap-3 text-xs">
+                    {bidData.freelancer_profile_id.githubLink && (
+                      <a
+                        href={bidData.freelancer_profile_id.githubLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                    {bidData.freelancer_profile_id.linkedinLink && (
+                      <a
+                        href={bidData.freelancer_profile_id.linkedinLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        LinkedIn
+                      </a>
+                    )}
+                    {bidData.freelancer_profile_id.personalWebsite && (
+                      <a
+                        href={bidData.freelancer_profile_id.personalWebsite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Portfolio
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Skills */}
             {freelancer.skills && freelancer.skills.length > 0 && (
               <div>
@@ -368,6 +499,22 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           `/bid/project/${id}/profile/${profileId}/bid`,
         );
         const bidsData = response.data?.data || [];
+
+        // Debug: Log the bid data to see if freelancer_profile_id is populated
+        console.log('Fetched bids data:', bidsData);
+        bidsData.forEach((bid: any, index: number) => {
+          console.log('bids are', bid);
+          console.log(`Bid ${index + 1}:`, {
+            bidId: bid._id,
+            freelancer_profile_id: bid.freelancer_profile_id,
+            hasProfile: !!bid.freelancer_profile_id,
+            profileType: typeof bid.freelancer_profile_id,
+            profileName: bid.freelancer_profile_id?.profileName,
+            isObject:
+              bid.freelancer_profile_id &&
+              typeof bid.freelancer_profile_id === 'object',
+          });
+        });
 
         if (bidsData.length === 0) {
           setBids([]);
@@ -591,6 +738,44 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               ${data?.current_price || 'N/A'}
             </span>
           ),
+        },
+        {
+          textValue: 'Profile Used',
+          type: FieldType.CUSTOM,
+          CustomComponent: ({ data }: { data: any }) => {
+            const freelancerProfile = data?.freelancer_profile_id;
+
+            if (!freelancerProfile) {
+              return (
+                <div className="text-center">
+                  <span className="text-gray-400 text-sm">
+                    No profile selected
+                  </span>
+                </div>
+              );
+            }
+
+            return (
+              <div className="text-center">
+                <div className="font-medium text-white text-sm">
+                  {freelancerProfile.profileName}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {freelancerProfile.skills
+                    ?.slice(0, 2)
+                    .map((skill: any) => skill.label)
+                    .join(', ')}
+                  {freelancerProfile.skills?.length > 2 &&
+                    ` +${freelancerProfile.skills.length - 2}`}
+                </div>
+                {freelancerProfile.hourlyRate && (
+                  <div className="text-xs text-green-400 mt-1">
+                    ${freelancerProfile.hourlyRate}/hr
+                  </div>
+                )}
+              </div>
+            );
+          },
         },
         {
           fieldName: 'bid_status',

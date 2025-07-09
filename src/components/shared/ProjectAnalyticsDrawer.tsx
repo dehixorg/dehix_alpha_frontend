@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Clock,
-  DollarSign,
-  Calendar,
   User,
   Briefcase,
   Star,
-  ArrowRight,
   CheckCircle,
   XCircle,
   AlertCircle,
   BarChart3,
-  ChevronDown,
-  ChevronUp,
-  Share2,
-  Download,
   MessageSquare,
   Award,
 } from 'lucide-react';
@@ -22,13 +14,7 @@ import {
 import { CircularProgressBar } from './CircularProgressBar';
 import { MetricCard } from './MetricCard';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

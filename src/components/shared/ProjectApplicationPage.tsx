@@ -13,7 +13,6 @@ import {
   Check,
   Eye,
   UserCircle,
-  Plus,
 } from 'lucide-react';
 
 import { Textarea } from '../ui/textarea';
@@ -306,9 +305,17 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       // Add freelancer profile ID if selected
       if (selectedFreelancerProfile?._id) {
         bidData.freelancer_profile_id = selectedFreelancerProfile._id;
+        console.log('✅ Including freelancer profile in bid:', {
+          profileName: selectedFreelancerProfile.profileName,
+          profileId: selectedFreelancerProfile._id,
+        });
+      } else {
+        console.log('❌ No freelancer profile selected for this bid');
       }
 
-      await axiosInstance.post(`/bid`, bidData);
+      console.log('📤 Submitting bid with data:', bidData);
+      const bidResponse = await axiosInstance.post(`/bid`, bidData);
+      console.log('📥 Bid submission response:', bidResponse.data);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
       localStorage.setItem('DHX_CONNECTS', updatedConnects);

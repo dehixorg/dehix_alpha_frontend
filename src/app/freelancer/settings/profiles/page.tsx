@@ -1,6 +1,17 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  X,
+  Edit,
+  Save,
+  Trash2,
+  Eye,
+  User,
+  Briefcase,
+} from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -14,7 +25,6 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
 import {
   Dialog,
   DialogContent,
@@ -23,21 +33,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Plus,
-  X,
-  Edit,
-  Save,
-  Trash2,
-  Eye,
-  User,
-  Briefcase,
-} from 'lucide-react';
-import { FreelancerProfile } from '@/types/freelancer';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+
+import { FreelancerProfile } from '@/types/freelancer';
+
 export default function ProfilesPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();

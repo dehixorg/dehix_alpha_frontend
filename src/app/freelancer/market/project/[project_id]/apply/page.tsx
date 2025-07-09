@@ -5,18 +5,13 @@ import { Loader2 } from 'lucide-react';
 
 import { useToast } from '@/components/ui/use-toast';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import CollapsibleSidebarMenu from '@/components/menu/collapsibleSidebarMenu';
-import { Search } from '@/components/search';
-import DropdownProfile from '@/components/shared/DropdownProfile';
 import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import Breadcrumb from '@/components/shared/breadcrumbList';
 import ProjectApplicationForm from '@/components/shared/ProjectApplicationPage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import Header from '@/components/header/header';
-import ProjectAnalyticsDrawer from '@/components/shared/ProjectAnalyticsDrawer';
 
 interface Bid {
   _id: string;
