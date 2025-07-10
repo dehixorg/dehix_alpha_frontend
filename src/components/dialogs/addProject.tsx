@@ -237,54 +237,54 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
   // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
-    setLoading(true);
-    try {
-      // Join currSkills array into comma-separated string for form submission
-      let thumbnailUrl = '';
-      if (thumbnailFile) {
-        const formData = new FormData();
-        formData.append('thumbnail', thumbnailFile);
-        const uploadResponse = await axiosInstance.post(
-          '/projects/upload-thumbnail',
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        thumbnailUrl = uploadResponse.data.data.Location;
-      }
-      // Submit with the skills from our state
-      await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
-        ...data,
-        techUsed: currSkills,
-        verified: false,
-        oracleAssigned: '',
-        start: data.start ? new Date(data.start).toISOString() : null,
-        end: data.end ? new Date(data.end).toISOString() : null,
-        verificationUpdateTime: new Date().toISOString(),
-        thumbnail: thumbnailUrl || undefined, // Add thumbnail URL to payload
-      });
+  setLoading(true);
+  try {
+    // Start with existing comments or empty string
+    let finalComments = data.comments || '';
 
-      onFormSubmit();
-      setIsDialogOpen(false);
-      toast({
-        title: 'Project Added',
-        description: 'The project has been successfully added.',
-      });
-    } catch (error) {
-      console.error('API Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add project. Please try again later.',
-      });
-    } finally {
-      setLoading(false);
+    // If we have a thumbnail URL from earlier upload, prepend it to comments
+    if (thumbnailUrl) {
+      finalComments = `THUMBNAIL:${thumbnailUrl}` + 
+                     (finalComments ? ` | ${finalComments}` : '');
+      console.log('Final comments with thumbnail:', finalComments);
     }
+
+    // Submit the project data
+    const response = await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
+      ...data,
+      comments: finalComments, // Include our modified comments
+      techUsed: currSkills,
+      verified: false,
+      oracleAssigned: '',
+      start: data.start ? new Date(data.start).toISOString() : null,
+      end: data.end ? new Date(data.end).toISOString() : null,
+      verificationUpdateTime: new Date().toISOString(),
+    });
+
+    console.log('Project saved successfully:', response.data);
+    onFormSubmit();
+    setIsDialogOpen(false);
+    toast({
+      title: 'Project Added',
+      description: 'The project has been successfully added.',
+    });
+  } catch (error) {
+    console.error('Error saving project:', error);
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to add project. Please try again later.',
+    });
+  } finally {
+    setLoading(false);
   }
+}
   // Add these handler functions
   const handleThumbnailUpload = (file: File) => {
-    setThumbnailFile(file);
-    form.setValue('thumbnail', URL.createObjectURL(file));
-  };
+  setThumbnailFile(file);
+  // Create a preview URL but don't store it in form state yet
+  setThumbnailUrl(URL.createObjectURL(file));
+};
 
   const handleThumbnailRemove = () => {
     setThumbnailFile(null);
@@ -330,15 +330,16 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormLabel>Project Thumbnail</FormLabel>
                       <FormControl>
                         <ThumbnailUpload
-                          projectId="new" // Use "new" for new projects
+                          projectId="new"
                           existingThumbnail={field.value}
                           onUploadSuccess={(url) => {
-                            field.onChange(url);
+                            // Just store the URL - we'll handle including it in the form submission
                             setThumbnailUrl(url);
+                            console.log('Thumbnail URL stored:', url);
                           }}
                           onRemoveSuccess={() => {
-                            field.onChange('');
                             setThumbnailUrl(null);
+                            console.log('Thumbnail removed');
                           }}
                         />
                       </FormControl>

@@ -48,37 +48,37 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
     }
   };
 
-  const handleUploadClick = async () => {
-    if (!selectedThumbnail) return;
+ const handleUploadClick = async () => {
+  if (!selectedThumbnail) return;
 
-    const formData = new FormData();
-    formData.append('thumbnail', selectedThumbnail);
-    formData.append('projectId', projectId);
+  const formData = new FormData();
+  formData.append('thumbnail', selectedThumbnail);
 
-    try {
-      setIsUploading(true);
-      const response = await axiosInstance.post(
-        '/projects/upload-thumbnail',
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      );
-
-      onUploadSuccess(response.data.data.Location);
-      setSelectedThumbnail(null);
-      toast({
-        title: 'Success',
-        description: 'Thumbnail uploaded successfully!',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to upload thumbnail. Please try again.',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  try {
+    setIsUploading(true);
+    const response = await axiosInstance.post(
+      '/register/upload-image', // Make sure this matches your endpoint
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    
+    // Call the success handler with the URL
+    onUploadSuccess(response.data.data.Location);
+    setSelectedThumbnail(null);
+    toast({
+      title: 'Success',
+      description: 'Thumbnail uploaded successfully!',
+    });
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to upload thumbnail. Please try again.',
+    });
+  } finally {
+    setIsUploading(false);
+  }
+};
 
   const handleRemoveThumbnail = async () => {
     try {
