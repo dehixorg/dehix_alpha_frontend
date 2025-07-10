@@ -1,15 +1,6 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import {
-  Plus,
-  X,
-  Edit,
-  Save,
-  Trash2,
-  Eye,
-  User,
-  Briefcase,
-} from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Plus, Trash2, Eye, User, Briefcase } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
@@ -35,7 +26,6 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { FreelancerProfile } from '@/types/freelancer';
 
 export default function ProfilesPage() {
@@ -49,11 +39,7 @@ export default function ProfilesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, [user.uid]);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     if (!user.uid) return;
 
     setIsLoading(true);
@@ -72,7 +58,11 @@ export default function ProfilesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.uid]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
@@ -380,8 +370,11 @@ export default function ProfilesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Profile Name</label>
+              <label htmlFor="profile-name" className="text-sm font-medium">
+                Profile Name
+              </label>
               <Input
+                id="profile-name"
                 placeholder="e.g., Frontend Developer, Backend Engineer"
                 value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
@@ -389,10 +382,14 @@ export default function ProfilesPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">
+              <label
+                htmlFor="profile-description"
+                className="text-sm font-medium"
+              >
                 Description (optional)
               </label>
               <Textarea
+                id="profile-description"
                 placeholder="Describe your expertise and experience in this area... (minimum 10 characters if provided)"
                 value={newProfileDescription}
                 onChange={(e) => setNewProfileDescription(e.target.value)}
