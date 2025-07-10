@@ -39,6 +39,23 @@ import { FreelancerProfile } from '@/types/freelancer';
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
 
+// Add these imports at the top
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList, // Add this if using newer versions
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
@@ -49,12 +66,17 @@ export default function ProfileDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingProfileData, setEditingProfileData] = useState<any>({});
-  const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
-  const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
   const [freelancerProjects, setFreelancerProjects] = useState<any>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [skillsOpen, setSkillsOpen] = useState(false);
+const [domainsOpen, setDomainsOpen] = useState(false);
+const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
+const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
+const [selectedSkills, setSelectedSkills] = useState<any[]>([]);
+const [selectedDomains, setSelectedDomains] = useState<any[]>([]);
 
   useEffect(() => {
     if (profileId) {
@@ -63,6 +85,18 @@ export default function ProfileDetailPage() {
       fetchFreelancerProjects();
     }
   }, [profileId, user.uid]);
+
+  useEffect(() => {
+   if (profile) {
+    setSelectedSkills(profile.skills || []);
+    setSelectedDomains(profile.domains || []);
+    setEditingProfileData(prev => ({
+      ...prev,
+      skills: profile.skills || [],
+      domains: profile.domains || []
+    }));
+  }
+}, [profile]);
 
   const fetchProfile = async () => {
     if (!profileId) return;
@@ -88,24 +122,76 @@ export default function ProfileDetailPage() {
     }
   };
 
+  const handleSkillSelect = (skill: any) => {
+  setSelectedSkills(prevSkills => {
+    const isSelected = prevSkills.some(s => 
+      (typeof s === 'string' && typeof skill === 'string' && s === skill) ||
+      (s._id && skill._id && s._id === skill._id) ||
+      (s.name && skill.name && s.name === skill.name)
+    );
+
+    const newSkills = isSelected 
+      ? prevSkills.filter(s => 
+          (typeof s === 'string' && typeof skill === 'string' && s !== skill) ||
+          (s._id && skill._id && s._id !== skill._id) ||
+          (s.name && skill.name && s.name !== skill.name)
+        )
+      : [...prevSkills, skill];
+    
+    // Store both object and string representation
+    setEditingProfileData(prev => ({
+      ...prev,
+      skills: newSkills,
+      // For API compatibility, store string versions separately if needed
+      skillsStrings: newSkills.map(s => 
+        typeof s === 'string' ? s : s.name || s.label || s.skillName || s._id
+      )
+    }));
+    
+    return newSkills;
+  });
+};
+
+const handleDomainSelect = (domain: any) => {
+  setSelectedDomains(prevDomains => {
+    const isSelected = prevDomains.some(d => 
+      (typeof d === 'string' && typeof domain === 'string' && d === domain) ||
+      (d._id && domain._id && d._id === domain._id) ||
+      (d.name && domain.name && d.name === domain.name)
+    );
+
+    const newDomains = isSelected 
+      ? prevDomains.filter(d => 
+          (typeof d === 'string' && typeof domain === 'string' && d !== domain) ||
+          (d._id && domain._id && d._id !== domain._id) ||
+          (d.name && domain.name && d.name !== domain.name)
+        )
+      : [...prevDomains, domain];
+    
+    // Update the editing profile data
+    setEditingProfileData(prev => ({
+      ...prev,
+      domains: newDomains
+    }));
+    
+    return newDomains;
+  });
+};
+
   const fetchSkillsAndDomains = async () => {
-    try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
-      );
-      const freelancerData = freelancerResponse.data.data || {};
-
-      const skillsData = freelancerData.skills || [];
-      const skillsArray = Array.isArray(skillsData) ? skillsData : [];
-      setSkillsOptions(skillsArray);
-
-      const domainsData = freelancerData.domain || [];
-      const domainsArray = Array.isArray(domainsData) ? domainsData : [];
-      setDomainsOptions(domainsArray);
-    } catch (error) {
-      console.error('Error fetching skills and domains:', error);
-    }
-  };
+  try {
+    const freelancerResponse = await axiosInstance.get(`/freelancer/${user.uid}`);
+    const freelancerData = freelancerResponse.data.data || {};
+    
+    // Ensure these are always arrays
+    setSkillsOptions(Array.isArray(freelancerData.skills) ? freelancerData.skills : []);
+    setDomainsOptions(Array.isArray(freelancerData.domain) ? freelancerData.domain : []);
+  } catch (error) {
+    console.error('Error fetching skills and domains:', error);
+    setSkillsOptions([]);
+    setDomainsOptions([]);
+  }
+};
 
   const fetchFreelancerProjects = async () => {
     try {
@@ -121,30 +207,42 @@ export default function ProfileDetailPage() {
   };
 
   const handleUpdateProfile = async () => {
-    if (!profile?._id) return;
+  if (!profile?._id) return;
 
-    setIsUpdating(true);
-    try {
-      await axiosInstance.put(
-        `/freelancer/profile/${profile._id}`,
-        editingProfileData,
-      );
-      toast({
-        title: 'Success',
-        description: 'Profile updated successfully',
-      });
-      fetchProfile();
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  setIsUpdating(true);
+  try {
+    // Transform skills and domains to string arrays if they're objects
+    const payload = {
+      ...editingProfileData,
+      skills: editingProfileData.skills?.map((skill: any) => 
+        typeof skill === 'string' ? skill : skill.name || skill.label || skill.skillName || skill._id
+      ),
+      domains: editingProfileData.domains?.map((domain: any) => 
+        typeof domain === 'string' ? domain : domain.name || domain.label || domain.domainName || domain._id
+      )
+    };
+
+    await axiosInstance.put(
+      `/freelancer/profile/${profile._id}`,
+      payload
+    );
+    
+    toast({
+      title: 'Success',
+      description: 'Profile updated successfully',
+    });
+    fetchProfile();
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to update profile',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsUpdating(false);
+  }
+};
 
   const handleInputChange = (field: string, value: any) => {
     setEditingProfileData((prev: any) => ({
@@ -416,53 +514,178 @@ export default function ProfileDetailPage() {
 
                 {/* Skills and Domains */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Skills</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {profile.skills && profile.skills.length > 0 ? (
-                        profile.skills.map((skill: any, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-primary text-primary-foreground"
-                          >
-                            {typeof skill === 'string'
-                              ? skill
-                              : skill.name || skill.label || skill.skillName}
-                          </Badge>
-                        ))
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          No skills selected
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Domains</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {profile.domains && profile.domains.length > 0 ? (
-                        profile.domains.map((domain: any, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-secondary text-secondary-foreground"
-                          >
-                            {typeof domain === 'string'
-                              ? domain
-                              : domain.name ||
-                                domain.label ||
-                                domain.domainName}
-                          </Badge>
-                        ))
-                      ) : (
-                        <p className="text-muted-foreground text-sm">
-                          No domains selected
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
+{/* Skills Selection */}
+<div className="space-y-2">
+  <Label>Skills</Label>
+  <Popover open={skillsOpen} onOpenChange={setSkillsOpen}>
+    <PopoverTrigger asChild>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={skillsOpen}
+        className="w-full justify-between"
+      >
+        {selectedSkills?.length > 0 
+          ? `${selectedSkills.length} skills selected` 
+          : "Select skills..."}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-full p-0">
+      <Command>
+        <CommandInput placeholder="Search skills..." />
+        <CommandEmpty>No skills found.</CommandEmpty>
+        <CommandList>
+          <CommandGroup>
+            {skillsOptions?.map((skill) => {
+              const skillValue = typeof skill === 'string' ? skill : skill._id || skill.name || skill.label || skill.skillName;
+              const skillLabel = typeof skill === 'string' ? skill : skill.name || skill.label || skill.skillName || skill._id;
+              
+              const isSelected = selectedSkills?.some(s => 
+                (typeof s === 'string' && typeof skill === 'string' && s === skill) ||
+                (s._id && skill._id && s._id === skill._id) ||
+                (s.name && skill.name && s.name === skill.name)
+              );
+
+              return (
+                <CommandItem
+                  key={skillValue}
+                  value={skillValue}
+                  onSelect={() => handleSkillSelect(skill)}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      isSelected ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {skillLabel}
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </PopoverContent>
+  </Popover>
+  <div className="flex flex-wrap gap-2 mt-2">
+    {selectedSkills?.length > 0 ? (
+      selectedSkills.map((skill, index) => {
+        const skillLabel = typeof skill === 'string' 
+          ? skill 
+          : skill.name || skill.label || skill.skillName;
+        
+        return (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="bg-primary text-primary-foreground"
+          >
+            {skillLabel}
+            <button
+              type="button"
+              onClick={() => handleSkillSelect(skill)}
+              className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        );
+      })
+    ) : (
+      <p className="text-muted-foreground text-sm">
+        No skills selected
+      </p>
+    )}
+  </div>
+</div>
+
+  {/* Domains Selection */}
+  <div className="space-y-2">
+  <Label>Domains</Label>
+  <Popover open={domainsOpen} onOpenChange={setDomainsOpen}>
+    <PopoverTrigger asChild>
+      <Button
+        variant="outline"
+        role="combobox"
+        aria-expanded={domainsOpen}
+        className="w-full justify-between"
+      >
+        {selectedDomains?.length > 0 
+          ? `${selectedDomains.length} domains selected` 
+          : "Select domains..."}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-full p-0">
+      <Command>
+        <CommandInput placeholder="Search domains..." />
+        <CommandEmpty>No domains found.</CommandEmpty>
+        <CommandList>
+          <CommandGroup>
+            {domainsOptions?.map((domain) => {
+              const domainValue = typeof domain === 'string' ? domain : domain._id || domain.name || domain.label || domain.domainName;
+              const domainLabel = typeof domain === 'string' ? domain : domain.name || domain.label || domain.domainName || domain._id;
+              
+              const isSelected = selectedDomains?.some(d => 
+                (typeof d === 'string' && typeof domain === 'string' && d === domain) ||
+                (d._id && domain._id && d._id === domain._id) ||
+                (d.name && domain.name && d.name === domain.name)
+              );
+
+              return (
+                <CommandItem
+                  key={domainValue}
+                  value={domainValue}
+                  onSelect={() => handleDomainSelect(domain)}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      isSelected ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {domainLabel}
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </PopoverContent>
+  </Popover>
+  <div className="flex flex-wrap gap-2 mt-2">
+    {selectedDomains?.length > 0 ? (
+      selectedDomains.map((domain, index) => {
+        const domainLabel = typeof domain === 'string' 
+          ? domain 
+          : domain.name || domain.label || domain.domainName;
+        
+        return (
+          <Badge
+            key={index}
+            variant="secondary"
+            className="bg-secondary text-secondary-foreground"
+          >
+            {domainLabel}
+            <button
+              type="button"
+              onClick={() => handleDomainSelect(domain)}
+              className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        );
+      })
+    ) : (
+      <p className="text-muted-foreground text-sm">
+        No domains selected
+      </p>
+    )}
+  </div>
+</div>
+</div>
 
                 <Separator />
 
