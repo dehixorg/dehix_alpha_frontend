@@ -27,43 +27,30 @@
 
 @layer base {
   :root {
-    /* Google Chat Inspired Light Theme */
-    --background: 210 17% 98%; /* Very Light Grey background (#f8f9fa), was white */
-    --foreground: 210 2% 13%; /* Dark Grey text (#202124) */
-
-    --card: 0 0% 100%; /* White card background */
-    --card-foreground: 210 2% 13%; /* Dark Grey card text */
-
-    --popover: 210 3% 18%; /* Darker Grey for tooltips/popovers (#2d2e30) */
-    --popover-foreground: 0 0% 95%; /* Light Grey/White text for popovers */
-
-    --primary: 217 91% 60%; /* Blue (#3b82f6) */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
-    --primary-hover: 217 91% 70%; /* Lighter blue for hover */
-
-    --secondary: 216 28% 97%; /* Lighter Grey for secondary elements (#f1f3f4) */
-    --secondary-foreground: 210 2% 13%; /* Darker Grey text for secondary elements */
-
-    --muted: 210 17% 98%; /* Very Light Grey for muted backgrounds (#f8f9fa) */
-    --muted-foreground: 212 5% 40%; /* Grey text for muted foreground (#5f6368) */
-
-    --accent: 210 15% 30%; /* Slightly lighter shade of new primary for hover, e.g. #41484f */
-    --accent-foreground: 0 0% 100%; /* White text for hover on new accent */
-
-    --destructive: 0 84% 60%; /* Red for destructive actions */
-    --destructive-foreground: 0 0% 100%; /* White text on destructive */
-
-    --border: 220 13% 86%; /* Light Grey border (#dadce0) */
-    --input: 220 13% 86%; /* Light Grey for input borders (can also be background for inputs: 216 28% 97%) */
-    --ring: 210 15% 25%; /* Match new primary for focus rings */
-
-    --radius: 0.5rem; /* Default border radius */
-
-    /* Existing variables, kept for compatibility if not directly overridden by new theme */
-    --cyan: 180 100% 50%;
-    --cyan-foreground: 180 100% 43%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+    --cyan: 180, 100%, 50%;
+    --cyan-foreground: 180, 100%, 43%;
     --line-color-light: 0 0% 0% / 90%;
-    --line-color-dark: 0 0% 100% / 20%; /* This will be overridden by .dark specific line color if needed */
+    --line-color-dark: 0 0% 100% / 20%;
     --dot-bg-color: #ffffff;
     --dot-border-color: #000000;
     --dot-hover-bg-color: #000000;
@@ -71,42 +58,30 @@
   }
 
   .dark {
-    /* Google Chat Inspired Softer Dark Theme */
-    --background: 210 6% 10%; /* Slightly softer dark background (#181a1b) */
-    --foreground: 210 15% 90%; /* Softer light grey text (#e1e3e6) */
-
-    --card: 210 6% 13%; /* Softer dark grey for cards (#1f2123) */
-    --card-foreground: 210 15% 90%; /* Matching card text */
-
-    --popover: 210 6% 9%; /* Very dark for tooltips/popovers (#151718) */
-    --popover-foreground: 0 0% 96%; /* Brighter text for popovers (#f5f5f5) */
-
-    --primary: 217 95% 67%; /* Blue (#60a5fa) for dark mode */
-    --primary-foreground: 210 10% 15%; /* Dark text on softer blue primary (#232629) */
-    --primary-hover: 217 95% 77%; /* Lighter blue for hover in dark mode */
-
-    --secondary: 210 6% 18%; /* Darker grey for secondary elements (#2a2d2f) */
-    --secondary-foreground: 210 15% 85%; /* Lighter grey text for dark secondary (#d0d3d6) */
-
-    --muted: 210 6% 18%; /* Darker grey for muted backgrounds (same as secondary) */
-    --muted-foreground: 210 10% 65%; /* Medium grey text for dark muted foreground (#9ea3a8) */
-
-    --accent: 210 6% 22%; /* Slightly lighter grey for hover states (#34373a) */
-    --accent-foreground: 210 15% 90%; /* Lighter grey text for dark hover */
-
-    --destructive: 0 65% 55%; /* Softer red for dark mode destructive actions (#d36060) */
-    --destructive-foreground: 0 0% 100%; /* White text on dark destructive */
-
-    --border: 210 6% 20%; /* Softer, darker border (#2f3234) */
-    --input: 210 6% 16%; /* Darker input background (#25282a) */
-    --ring: 216 75% 68%; /* Softer blue for dark focus rings (match new primary) */
-
-    /* Existing variables, kept for compatibility if not directly overridden by new theme */
-    --cyan: 180 100% 43%;
-    --cyan-foreground: 180 100% 50%;
-    --line-color-light: 0 0% 0% / 20%; /* This is light theme's line color, dark theme has its own */
-    --line-color-dark: 0 0% 100% / 20%; /* This is the dark theme line color */
-    --dot-bg-color: #ffffff; /* Should these change for dark mode? Assuming not for now. */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --cyan: 180, 100%, 43%;
+    --cyan-foreground: 180, 100%, 50%;
+    --line-color-light: 0 0% 0% / 20%;
+    --line-color-dark: 0 0% 100% / 20%;
+    --dot-bg-color: #ffffff;
     --dot-border-color: #f5f5f5;
     --dot-hover-bg-color: #ffffff;
     --dot-hover-border-color: #11a0ff;
@@ -115,12 +90,11 @@
 
 @layer base {
   * {
-    @apply border-border; /* Uses the CSS variable --border */
+    @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground; /* Uses CSS variables --background and --foreground */
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Added generic sans-serif stack */
+    @apply bg-background text-foreground;
   }
 }
 
@@ -159,6 +133,10 @@
 
   .dynamic-text {
     color: var(--foreground);
+  }
+  .chat-emoji {
+    font-size: 1.4em;
+    line-height: 1;
   }
 
   .dynamic-card {

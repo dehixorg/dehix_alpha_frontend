@@ -104,6 +104,8 @@ export function ChatList({
     { uid: 'user5_uid_edward', userName: 'Edward Scissorhands', email: 'edward@example.com' },
   ];
 
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation(); // Prevent triggering setConversation if this is nested
     if (!onOpenProfileSidebar) return; // Guard if prop is not provided
@@ -306,7 +308,8 @@ export function ChatList({
             filteredConversations.map((conversation) => {
               const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
               const isActive = active?.id === conversation.id;
-              const lastMessageText = conversation.lastMessage?.content || 'No messages yet';
+              const lastMessageText = stripHtml(conversation.lastMessage?.content || '');
+              const displayText = lastMessageText || 'No messages yet';
 
               return (
                 <div
@@ -352,7 +355,7 @@ export function ChatList({
                       </p>
                     </div>
                     <p className="text-xs truncate text-[hsl(var(--muted-foreground))]">
-                      {lastMessageText.length > 40 ? lastMessageText.substring(0, 40) + '...' : lastMessageText}
+                      {displayText.length > 40 ? displayText.substring(0, 40) + '...' : displayText}
                     </p>
                   </div>
                 </div>

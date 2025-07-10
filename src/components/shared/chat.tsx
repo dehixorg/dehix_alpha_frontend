@@ -11,7 +11,6 @@ import {
   Minimize2,
   Reply,
   Text,
-  X,
   Bold,
   Italic,
   Underline,
@@ -39,6 +38,7 @@ import {
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { X } from 'lucide-react';
 import DOMPurify from 'dompurify'; // <-- add import later
 
 import { EmojiPicker } from '../emojiPicker';
@@ -169,6 +169,45 @@ export function CardsChat({
   const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
+  // State for image modal
+  const [modalImage, setModalImage] = useState<string | null>(null);
+
+  // For robust force update
+  const [, forceUpdate] = useState(0);
+
+  // For voice message duration display
+  const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
+  const handleLoadedMetadata = (id: string) => {
+    const audio = audioRefs.current[id];
+    if (audio && isFinite(audio.duration) && !isNaN(audio.duration) && audio.duration > 0) {
+      setAudioDurations(prev => ({ ...prev, [id]: audio.duration }));
+    } else {
+      // Try again after a short delay if duration is not available yet
+      setTimeout(() => {
+        const audioRetry = audioRefs.current[id];
+        if (audioRetry && isFinite(audioRetry.duration) && !isNaN(audioRetry.duration) && audioRetry.duration > 0) {
+          setAudioDurations(prev => ({ ...prev, [id]: audioRetry.duration }));
+          forceUpdate(n => n + 1); // force re-render
+        }
+      }, 500);
+    }
+  };
+
+  // Pause any other playing audio when a new one starts
+  const handlePlay = (id: string) => {
+    Object.entries(audioRefs.current).forEach(([key, audio]) => {
+      if (key !== id && audio && !audio.paused) {
+        audio.pause();
+      }
+    });
+  };
+  const [audioDurations, setAudioDurations] = useState<{ [key: string]: number }>({});
+
+  // Helper to check for valid duration
+  function isValidDuration(val: number | undefined) {
+    return typeof val === 'number' && isFinite(val) && !isNaN(val) && val > 0;
+  }
+
 
   const handleHeaderClick = () => {
     if (!onOpenProfileSidebar) return;
@@ -279,7 +318,7 @@ export function CardsChat({
         URL.revokeObjectURL(audioUrl); // Clean up preview URL
       }
     };
-  }, [conversation, user.uid, mediaRecorder, audioUrl]); // Added mediaRecorder and audioUrl to dependency array
+  }, [conversation, user.uid]); // <-- FIXED: removed mediaRecorder and audioUrl from dependencies
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -526,6 +565,18 @@ export function CardsChat({
 
   const toggleFormattingOptions = () => {
     setShowFormattingOptions((prev) => !prev);
+  };
+
+  // Insert emoji into composer at caret position
+  const handleInsertEmoji = (emoji: string) => {
+    if (composerRef.current) {
+      composerRef.current.focus();
+      const htmlEmoji = `<span class=\"chat-emoji\">${emoji}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, htmlEmoji);
+      // Update input state with new HTML
+      const html = composerRef.current.innerHTML;
+      setInput(html);
+    }
   };
 
   // Voice Recording Functions
@@ -778,6 +829,17 @@ export function CardsChat({
 
   return (
     <>
+      {/* Image Modal */}
+      {modalImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setModalImage(null)}>
+          <div className="relative max-w-3xl w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10" onClick={() => setModalImage(null)}>
+              <X className="w-6 h-6 text-black" />
+            </button>
+            <Image src={modalImage} alt="Full Image" width={800} height={800} className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white" />
+          </div>
+        </div>
+      )}
       {loading ? (
         <div className="flex justify-center items-center p-5 col-span-3">
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
@@ -849,6 +911,29 @@ export function CardsChat({
               <div ref={messagesEndRef} />
               {messages.map((message, index) => {
                 const formattedTimestamp = formatChatTimestamp(message.timestamp);
+
+                // Helper: detect if the content contains ONLY emojis that were inserted via <span class="chat-emoji">…</span>
+                const { isEmojiOnly, isSingleEmoji } = (() => {
+                  if (message.voiceMessage || message.content.match(/\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i)) {
+                    return { isEmojiOnly: false, isSingleEmoji: false };
+                  }
+
+                  const emojiSpanRegex = /<span[^>]*class="chat-emoji"[^>]*>[^<]*<\/span>/g;
+                  const emojiMatches = message.content.match(emojiSpanRegex) || [];
+
+                  // Remove emoji spans and markup to see if any non-emoji text remains
+                  const stripped = message.content
+                    .replace(emojiSpanRegex, '')
+                    .replace(/&nbsp;|<br\s*\/?>/gi, '')
+                    .replace(/\s+/g, '')
+                    .trim();
+
+                  const onlyEmojis = stripped.length === 0 && emojiMatches.length > 0;
+                  return {
+                    isEmojiOnly: onlyEmojis,
+                    isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
+                  };
+                })();
                 const readableTimestamp = formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                 const isSender = message.senderId === user.uid;
 
@@ -875,10 +960,18 @@ export function CardsChat({
                     )}
                     <div
                       className={cn(
-                        'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
-                        isSender
-                          ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none'
-                          : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none',
+                        'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-0 rounded-2xl px-4 py-1 text-sm shadow-sm',
+                        message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) || isEmojiOnly || (message.voiceMessage && message.voiceMessage.type === 'voice')
+                          ? (
+                              isSender
+                                ? 'ml-auto bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
+                                : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
+                            )
+                          : (
+                              isSender
+                                ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                                : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                            )
                       )}
                       onClick={() => {
                         if (message.replyTo) {
@@ -908,35 +1001,58 @@ export function CardsChat({
                                 </div>
                               )}
                               {message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) ? (
-                                <Image src={message.content || '/placeholder.svg'} alt="Message Image" width={300} height={300} className="rounded-md my-1" />
+                                <div className="relative inline-block w-full cursor-pointer" onClick={() => setModalImage(message.content)}>
+                                  <Image src={message.content || '/placeholder.svg'} alt="Message Image" width={300} height={300} className="rounded-md my-1 w-full object-contain" />
+                                  <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
+                                    <span>{formattedTimestamp}</span>
+                                    {isSender && (
+                                      <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                                    )}
+                                  </div>
+                                </div>
                               ) : message.content.match(/\.(pdf|doc|docx|ppt|pptx)(\?|$)/i) ? (
                                 <FileAttachment fileName={message.content.split('/').pop() || 'File'} fileUrl={message.content} fileType={message.content.split('.').pop() || 'file'} />
-                              ) : (
-                                <ReactMarkdown
-                                  className={cn(
-                                    "prose prose-sm dark:prose-invert max-w-none",
-                                    isSender
-                                      ? "text-[hsl(var(--foreground))] dark:text-gray-50"
-                                      : "text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))]",
+                              ):( (!message.voiceMessage && !message.content.match(/\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i)) && (
+                                <>
+                                  <div
+                                    className={cn(
+                                      'w-full break-words',
+                                      isEmojiOnly && 'text-4xl leading-snug text-center'
+                                    )}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content, { ALLOWED_TAGS: ['b','strong','i','em','u','br','div','span','a'], ALLOWED_ATTR: ['href','target','rel','style','class'] }) }}
+                                  />
+                                  {/* Inline timestamp only for non-emoji messages */}
+                                  {!isEmojiOnly && (
+                                    <div className={cn(
+                                      "absolute bottom-1 right-2 text-xs flex items-center space-x-1",
+                                      isSender
+                                        ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                                        : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]'
+                                    )}>
+                                      <span>{formattedTimestamp}</span>
+                                      {isSender && <CheckCheck className="w-3.5 h-3.5" />}
+                                    </div>
                                   )}
-                                  remarkPlugins={[remarkGfm]}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                              )}
+                                </>
+                              )) }
                               {/* Voice Message Player */}
                               {message.voiceMessage && message.voiceMessage.type === 'voice' && (
-                                <div className="mt-2">
-                                 <audio src={message.content} controls
-                                          className="w-full h-10 rounded-md"
-                                        />
-
-                                      <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
-                                        {message.voiceMessage.duration > 0
-                                          ? `Duration: ${formatDuration(message.voiceMessage.duration)}`
-                                          : 'Voice Message'}
-                                      </p>
-
+                                <div className="mt-2 flex items-center space-x-2 max-w-full">
+                                  <audio
+                                    ref={el => { audioRefs.current[message.id] = el; return undefined; }}
+                                    src={message.content}
+                                    controls
+                                    preload="metadata"
+                                    className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md bg-[#c8a3edb5]"
+                                    onLoadedMetadata={() => handleLoadedMetadata(message.id)}
+                                    onPlay={() => handlePlay(message.id)}
+                                  />
+                                  <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
+                                    {formattedTimestamp}
+                                    {isSender && (
+                                      <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
+                                    )}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -949,12 +1065,22 @@ export function CardsChat({
                       <Reactions messageId={message.id} reactions={message.reactions || {}} toggleReaction={toggleReaction} />
                       <div className={cn("flex items-center text-xs mt-1",
                         isSender
-                          ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                          ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
                           : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
-                        isSender ? "justify-end" : "justify-start")}>
-                        {formattedTimestamp}
-                        {isSender && (
-                          <span className="ml-1"><CheckCheck className="w-3.5 h-3.5" /></span>
+                        isSender ? "justify-end" : "justify-start")}> 
+                        {/* For emoji-only messages, display timestamp here */}
+                        {isEmojiOnly && (
+                          isSingleEmoji ? (
+                            <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
+                              <span>{formattedTimestamp}</span>
+                              {isSender && <CheckCheck className="w-3.5 h-3.5" />}
+                            </div>
+                          ) : (
+                            <>
+                              <span>{formattedTimestamp}</span>
+                              {isSender && <CheckCheck className="w-3.5 h-3.5 ml-1" />}
+                            </>
+                          )
                         )}
                       </div>
                     </div>
@@ -998,34 +1124,40 @@ export function CardsChat({
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <div
-                  ref={composerRef}
-                  contentEditable
-                  aria-label="Type a message"
-                  aria-placeholder="Type a message..."
-                  data-placeholder="Type a message..."
-                  className="flex-1 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
-                  onInput={(e) => {
-                    const html = (e.currentTarget as HTMLElement).innerHTML;
-                    setInput(html);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-                      e.preventDefault();
-                      const html = composerRef.current?.innerHTML || '';
-                      const textContent = composerRef.current?.innerText || '';
-                      if (textContent.trim().length > 0) {
-                        const sanitized = DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b','strong','i','em','u','br','div','span','a'] });
-                        const newMessage = { senderId: user.uid, content: sanitized, timestamp: new Date().toISOString(), replyTo: replyToMessageId || null };
-                        sendMessage(conversation, newMessage, setInput);
-                        setReplyToMessageId('');
-                        composerRef.current!.innerHTML = '';
-                        setInput('');
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 flex items-center justify-center 
+                    pl-0.1 z-10">
+                    <EmojiPicker aria-label="Insert emoji" onSelect={handleInsertEmoji} />
+                  </div>
+                  <div
+                    ref={composerRef}
+                    contentEditable
+                    aria-label="Type a message"
+                    aria-placeholder="Type a message..."
+                    data-placeholder="Type a message..."
+                    className="pl-10 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                    onInput={(e) => {
+                      const html = (e.currentTarget as HTMLElement).innerHTML;
+                      setInput(html);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                        e.preventDefault();
+                        const html = composerRef.current?.innerHTML || '';
+                        const textContent = composerRef.current?.innerText || '';
+                        if (textContent.trim().length > 0) {
+                          const sanitized = DOMPurify.sanitize(html, { ALLOWED_TAGS: ['b','strong','i','em','u','br','div','span','a'], ALLOWED_ATTR: ['href','target','rel','style','class'] });
+                          const newMessage = { senderId: user.uid, content: sanitized, timestamp: new Date().toISOString(), replyTo: replyToMessageId || null };
+                          sendMessage(conversation, newMessage, setInput);
+                          setReplyToMessageId('');
+                          composerRef.current!.innerHTML = '';
+                          setInput('');
+                        }
                       }
-                    }
-                  }}
-                  suppressContentEditableWarning
-                />
+                    }}
+                    suppressContentEditableWarning
+                  />
+                </div>
                 <Button type="button" size="icon" variant="ghost" className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50" disabled={!input.trim().length || isSending} aria-label="Send message"
                   onClick={() => {
                     const html = composerRef.current?.innerHTML || '';
@@ -1073,9 +1205,9 @@ export function CardsChat({
                 </TooltipProvider>
                 <TooltipProvider delayDuration={200}>
                     <Tooltip>
-                        <TooltipTrigger asChild>
+                        {/* <TooltipTrigger asChild>
                              <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
-                        </TooltipTrigger>
+                        </TooltipTrigger> */}
                          <TooltipContent side="top"><p>Create Google Meet</p></TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
