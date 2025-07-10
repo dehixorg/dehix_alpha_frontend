@@ -572,9 +572,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
                 {/* Profiles Section */}
                 <div className="mb-6">
-                  <label className="block mb-3 font-medium text-base">
+                  <p className="block mb-3 font-medium text-base">
                     Select Profile (Optional)
-                  </label>
+                  </p>
                   {isLoadingProfiles ? (
                     <div className="flex items-center justify-center p-6 border rounded-lg bg-muted">
                       <Loader2 className="animate-spin w-5 h-5 mr-3" />
