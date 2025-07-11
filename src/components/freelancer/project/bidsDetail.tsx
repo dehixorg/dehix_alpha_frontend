@@ -173,12 +173,14 @@ const ProfileDialog = React.memo(
     profileData,
     loading,
     isFreelancerProfile,
+    bidData,
   }: {
     isOpen: boolean;
     onClose: () => void;
     profileData: any;
     loading: boolean;
     isFreelancerProfile: boolean;
+    bidData?: any;
   }) => {
     if (!profileData && !loading) return null;
 
@@ -210,7 +212,7 @@ const ProfileDialog = React.memo(
                         profileData?.userName
                       : profileData?.profileName || 'Profile Details'}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {isFreelancerProfile
                       ? `@${profileData?.userName}`
                       : `@${profileData?.freelancerId?.userName || 'freelancer'}`}
@@ -223,7 +225,9 @@ const ProfileDialog = React.memo(
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Loading profile...</span>
+              <span className="ml-2 text-muted-foreground">
+                Loading profile...
+              </span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -265,9 +269,24 @@ const ProfileDialog = React.memo(
                     <BookOpen className="w-5 h-5" />
                     About
                   </h3>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed">
                     {profileData.description}
                   </p>
+                </div>
+              )}
+
+              {/* Cover Letter - show bid description as cover letter */}
+              {bidData?.description && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Cover Letter
+                  </h3>
+                  <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                    <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                      {bidData.description}
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -280,7 +299,11 @@ const ProfileDialog = React.memo(
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {profileData.skills.map((skill: any, index: number) => (
-                      <Badge key={index} variant="secondary">
+                      <Badge
+                        key={index}
+                        className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                        variant="outline"
+                      >
                         {skill.label || skill.name}
                         {skill.level && ` (${skill.level})`}
                       </Badge>
@@ -298,7 +321,11 @@ const ProfileDialog = React.memo(
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {profileData.domains.map((domain: any, index: number) => (
-                      <Badge key={index} variant="outline">
+                      <Badge
+                        key={index}
+                        className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                        variant="outline"
+                      >
                         {domain.label || domain.name}
                         {domain.level && ` (${domain.level})`}
                       </Badge>
@@ -318,7 +345,11 @@ const ProfileDialog = React.memo(
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {profileData.domain.map((domain: any, index: number) => (
-                        <Badge key={index} variant="outline">
+                        <Badge
+                          key={index}
+                          className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                          variant="outline"
+                        >
                           {domain.name}
                           {domain.level && ` (${domain.level})`}
                         </Badge>
@@ -358,7 +389,7 @@ const ProfileDialog = React.memo(
                             )}
                           </div>
                           {project.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                            <p className="text-sm text-muted-foreground mb-2">
                               {project.description}
                             </p>
                           )}
@@ -385,7 +416,7 @@ const ProfileDialog = React.memo(
                         </div>
                       ))}
                     {profileData.projects.length > 3 && (
-                      <p className="text-sm text-gray-500 text-center">
+                      <p className="text-sm text-muted-foreground text-center">
                         And {profileData.projects.length - 3} more projects...
                       </p>
                     )}
@@ -419,20 +450,20 @@ const ProfileDialog = React.memo(
                                 </p>
                               </div>
                               {experience.workFrom && experience.workTo && (
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-muted-foreground">
                                   {experience.workFrom} - {experience.workTo}
                                 </span>
                               )}
                             </div>
                             {experience.workDescription && (
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="text-sm text-muted-foreground">
                                 {experience.workDescription}
                               </p>
                             )}
                           </div>
                         ))}
                       {profileData.experiences.length > 3 && (
-                        <p className="text-sm text-gray-500 text-center">
+                        <p className="text-sm text-muted-foreground text-center">
                           And {profileData.experiences.length - 3} more
                           experiences...
                         </p>
@@ -468,13 +499,13 @@ const ProfileDialog = React.memo(
                                 </p>
                               </div>
                               {exp.workFrom && exp.workTo && (
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-muted-foreground">
                                   {exp.workFrom} - {exp.workTo}
                                 </span>
                               )}
                             </div>
                             {exp.workDescription && (
-                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                              <p className="text-sm text-muted-foreground">
                                 {exp.workDescription}
                               </p>
                             )}
@@ -491,7 +522,7 @@ const ProfileDialog = React.memo(
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-600 dark:text-gray-400">
+                    <span className="font-medium text-muted-foreground">
                       Email:
                     </span>
                     <p>
@@ -504,7 +535,7 @@ const ProfileDialog = React.memo(
                     profileData?.linkedinLink ||
                     profileData?.personalWebsite) && (
                     <div>
-                      <span className="font-medium text-gray-600 dark:text-gray-400">
+                      <span className="font-medium text-muted-foreground">
                         Links:
                       </span>
                       <div className="flex flex-wrap gap-2 mt-1">
@@ -572,6 +603,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   >(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [selectedBidData, setSelectedBidData] = useState<any>(null);
 
   // Memoized bid counts
   const bidCounts = useMemo(
@@ -746,9 +778,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
         if (isFreelancerProfile) {
           // Fetch general freelancer profile
-          response = await axiosInstance.get(
-            `/freelancer/${profileId}/profile-info`,
-          );
+          response = await axiosInstance.get(`/public/freelancer/${profileId}`);
         } else {
           // Fetch specific freelancer profile
           response = await axiosInstance.get(
@@ -775,7 +805,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   // Handle opening profile dialog
   const handleOpenProfileDialog = useCallback(
-    (profileId: string, freelancerId: string, hasProfile: boolean) => {
+    (
+      profileId: string,
+      freelancerId: string,
+      hasProfile: boolean,
+      bidData?: any,
+    ) => {
       if (hasProfile) {
         setSelectedProfileId(profileId);
         setSelectedFreelancerId(null);
@@ -785,6 +820,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         setSelectedFreelancerId(freelancerId);
         fetchProfileData(freelancerId, true);
       }
+      setSelectedBidData(bidData);
       setIsProfileDialogOpen(true);
     },
     [fetchProfileData],
@@ -796,6 +832,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setSelectedProfileId(null);
     setSelectedFreelancerId(null);
     setProfileData(null);
+    setSelectedBidData(null);
   }, []);
 
   // Update bid status
@@ -911,8 +948,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   userName={userName}
                 />
                 <div>
-                  <p className="font-medium text-white">{fullName}</p>
-                  <p className="text-sm text-gray-400">@{userName}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {fullName}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    @{userName}
+                  </p>
                 </div>
               </div>
             );
@@ -936,7 +977,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             if (!freelancerProfile) {
               return (
                 <div className="text-center">
-                  <span className="text-gray-400 text-sm">
+                  <span className="text-gray-600 dark:text-gray-400 text-sm">
                     No profile selected
                   </span>
                 </div>
@@ -945,10 +986,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
             return (
               <div className="text-center">
-                <div className="font-medium text-white text-sm">
+                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                   {freelancerProfile.profileName}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   {freelancerProfile.skills
                     ?.slice(0, 2)
                     .map((skill: any) => skill.label)
@@ -985,10 +1026,11 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   freelancerProfile._id,
                   freelancer._id,
                   true,
+                  data,
                 );
               } else if (freelancer) {
                 // If no profile selected, show general freelancer profile
-                handleOpenProfileDialog('', freelancer._id, false);
+                handleOpenProfileDialog('', freelancer._id, false, data);
               }
             };
 
@@ -1041,8 +1083,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     return (
       <div className="max-w-5xl mx-auto p-4">
         <div className="text-center py-10 w-full mt-10">
-          <PackageOpen className="mx-auto text-gray-500" size="100" />
-          <p className="text-gray-500 text-lg">No bid profiles found</p>
+          <PackageOpen className="mx-auto text-muted-foreground" size="100" />
+          <p className="text-muted-foreground text-lg">No bid profiles found</p>
         </div>
       </div>
     );
@@ -1064,7 +1106,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     <h3 className="text-lg font-semibold">
                       {profile.domain ?? 'N/A'}
                     </h3>
-                    <span className="text-gray-500">
+                    <span className="text-muted-foreground">
                       Rate: {profile.rate ?? 'N/A'}
                     </span>
                   </div>
@@ -1094,7 +1136,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         {loadingFreelancerDetails ? (
                           <div className="flex justify-center items-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <span className="ml-2 text-gray-600">
+                            <span className="ml-2 text-muted-foreground">
                               Loading freelancer details...
                             </span>
                           </div>
@@ -1120,6 +1162,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         profileData={profileData}
         loading={loadingProfile}
         isFreelancerProfile={!!selectedFreelancerId}
+        bidData={selectedBidData}
       />
     </>
   );

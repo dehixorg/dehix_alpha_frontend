@@ -70,7 +70,7 @@ export const CustomTable = ({ fields, data: propData, uniqueId }: Params) => {
                         <TableCell
                           key={field.fieldName || fieldIndex}
                           className={cn(
-                            'text-gray-900 dark:text-gray-300 text-center',
+                            'text-gray-900 dark:text-gray-100 text-center [&>*]:text-gray-900 [&>*]:dark:text-gray-100',
                             field.className,
                           )}
                         >
@@ -97,8 +97,11 @@ export const CustomTable = ({ fields, data: propData, uniqueId }: Params) => {
                       className="text-center py-10"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <PackageOpen className="text-gray-400" size={48} />
-                        <p className="text-gray-500 text-sm">
+                        <PackageOpen
+                          className="text-muted-foreground"
+                          size={48}
+                        />
+                        <p className="text-muted-foreground text-sm">
                           No data available
                         </p>
                       </div>
