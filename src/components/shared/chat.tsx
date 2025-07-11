@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { useRouter } from 'next/navigation'; // Added
+import { useRouter, usePathname } from 'next/navigation';
 import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
 import remarkGfm from 'remark-gfm';
 import {
@@ -77,23 +77,25 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
+// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
 function formatChatTimestamp(timestamp: string) {
+  return format(new Date(timestamp), 'hh:mm a');
+}
+
+// Helper for date header (Today, Yesterday, Oct 12 2023 …)
+function formatDateHeader(timestamp: string) {
   const date = new Date(timestamp);
+  if (isToday(date)) return 'Today';
+  if (isYesterday(date)) return 'Yesterday';
+  return isThisYear(date) ? format(date, 'MMM dd') : format(date, 'yyyy MMM dd');
+}
 
-  if (isToday(date)) {
-    return format(date, 'hh:mm a'); // Example: "10:30 AM"
-  }
-
-  if (isYesterday(date)) {
-    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
-  }
-
-  if (isThisYear(date)) {
-    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
-  }
-
-  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+function isSameDay(d1: Date, d2: Date) {
+  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
 }
 
 type User = {
@@ -172,6 +174,20 @@ export function CardsChat({
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
 
+  // Reporting modal state & helpers
+  const [openReport, setOpenReport] = useState(false);
+  const pathname = usePathname();
+  const reportType = getReportTypeFromPath(pathname);
+
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user.uid,
+    reportedId: user.uid,
+  };
   // For robust force update
   const [, forceUpdate] = useState(0);
 
@@ -894,9 +910,15 @@ export function CardsChat({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" sideOffset={5} className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]">
-                  <DropdownMenuItem className="text-black dark:text-[hsl(var(--popover-foreground))] hover:!bg-transparent focus:!bg-transparent cursor-pointer">
-                    <Flag className="mr-2 h-4 w-4" />
-                    <span>Report</span>
+                <DropdownMenuItem
+                    onClick={() => {
+                      console.log('Report button clicked, setting openReport to true');
+                      setOpenReport(true);
+                    }}
+                    className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm font-medium">Report</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-black dark:text-[hsl(var(--popover-foreground))] hover:!bg-transparent focus:!bg-transparent  cursor-pointer">
                     <HelpCircle className="mr-2 h-4 w-4" />
@@ -934,10 +956,14 @@ export function CardsChat({
                     isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
                   };
                 })();
+                // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
+                const nextMsg = messages[index + 1];
+                const showDateHeader = !nextMsg || !isSameDay(new Date(message.timestamp), new Date(nextMsg.timestamp));
                 const readableTimestamp = formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                 const isSender = message.senderId === user.uid;
 
                 return (
+                  <>
                   <div
                     id={message.id}
                     key={index}
@@ -960,7 +986,7 @@ export function CardsChat({
                     )}
                     <div
                       className={cn(
-                        'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-0 rounded-2xl px-4 py-1 text-sm shadow-sm',
+                        'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
                         message.content.match(/\.(jpeg|jpg|gif|png)(\?|$)/i) || isEmojiOnly || (message.voiceMessage && message.voiceMessage.type === 'voice')
                           ? (
                               isSender
@@ -1043,7 +1069,7 @@ export function CardsChat({
                                     src={message.content}
                                     controls
                                     preload="metadata"
-                                    className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md bg-[#c8a3edb5]"
+                                    className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
                                     onLoadedMetadata={() => handleLoadedMetadata(message.id)}
                                     onPlay={() => handlePlay(message.id)}
                                   />
@@ -1097,6 +1123,15 @@ export function CardsChat({
                       </Button>
                     </div>
                   </div>
+                  {/* Date header (appears below current bubble due to flex-col-reverse order) */}
+                  {showDateHeader && (
+                    <div className="w-full flex justify-center my-2 sticky bottom-2 z-10">
+                      <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
+                        {formatDateHeader(message.timestamp)}
+                      </span>
+                    </div>
+                  )}
+                  </>
                 );
               })}
             </div>
@@ -1135,7 +1170,7 @@ export function CardsChat({
                     aria-label="Type a message"
                     aria-placeholder="Type a message..."
                     data-placeholder="Type a message..."
-                    className="pl-10 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                    className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
                     onInput={(e) => {
                       const html = (e.currentTarget as HTMLElement).innerHTML;
                       setInput(html);
@@ -1274,6 +1309,21 @@ export function CardsChat({
             </form>
           </CardFooter>
         </Card>
+        <Dialog open={openReport} onOpenChange={setOpenReport}>
+            <DialogPortal>    
+              <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[50] transition-opacity duration-300 animate-in fade-in" />
+
+              <DialogContent
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+             z-[50] bg-background border border-border
+             shadow-2xl rounded-2xl max-w-xl w-full p-6
+             transition-transform duration-300 animate-in fade-in zoom-in-95"
+              >
+                <DialogHeader></DialogHeader>
+                <NewReportTab reportData={reportData} />
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
       </>
       )}
     </>
