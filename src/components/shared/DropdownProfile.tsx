@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { UserIcon, LogOut, Copy, Check, Share2 } from 'lucide-react'; // Import Share2 icon
 import { useSelector, useDispatch } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
-import { getReportTypeFromPath } from "@/utils/getReporttypeFromPath"
 
 import { truncateDescription } from './MilestoneTimeline';
-import { usePathname } from "next/navigation";
 
-
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,12 +30,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
 
-
-
 const useShare = () => {
-  
-
-
   const share = async (title: string, text: string, url: string) => {
     if (navigator.share) {
       try {
@@ -58,9 +51,6 @@ interface DropdownProfileProps {
 }
 
 export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
-
-  const [isReportOpen, setIsReportOpen] = useState(false);
-
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -72,12 +62,10 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const share = useShare();
 
-  const pathname=usePathname()
-  
+  const pathname = usePathname();
 
   const reportType = getReportTypeFromPath(pathname);
 
- 
   useEffect(() => {
     // Check if user type is available in Redux store
     if (user?.type) {
@@ -202,23 +190,22 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           <DropdownMenuItem onClick={handleReferralClick}>
             Referral
           </DropdownMenuItem>
-     <DropdownMenuItem
-      className="text-red-500"
-      onClick={() => {
-        if (user?.uid && userType) {
-router.push(`/reports?type=${reportType}`);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'User information is missing.',
-          });
-        }
-      }}
-    >
-      Report
-    </DropdownMenuItem>
-
+          <DropdownMenuItem
+            className="text-red-500"
+            onClick={() => {
+              if (user?.uid && userType) {
+                router.push(`/reports?type=${reportType}`);
+              } else {
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'User information is missing.',
+                });
+              }
+            }}
+          >
+            Report
+          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
@@ -303,7 +290,6 @@ router.push(`/reports?type=${reportType}`);
           )}
         </DialogContent>
       </Dialog>
-
     </>
   );
 }

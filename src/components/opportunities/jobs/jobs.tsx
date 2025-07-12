@@ -3,13 +3,14 @@ import {
   Mail,
   Building2,
   Eye,
-  XCircle,
   ChevronDown,
   ChevronUp,
-  MoreVertical
+  MoreVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,10 +20,9 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
-import { useState } from 'react';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import { usePathname } from 'next/navigation';
+
 interface Profile {
   _id?: string;
   domain?: string;
@@ -66,19 +66,19 @@ const JobCard: React.FC<JobCardProps> = ({
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
   const [openReport, setOpenReport] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-const pathname=usePathname()
-  
+  const pathname = usePathname();
+
   const reportType = getReportTypeFromPath(pathname);
   const reportData = {
-    subject: "",
-    description: "",
-    report_role: user?.type || "STUDENT",
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
     report_type: reportType,
-    status: "OPEN",
-    reportedbyId: user?.uid || "user123",
-    reportedId:user?.uid || "user123", // or whoever is being reported
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: user?.uid || 'user123', // or whoever is being reported
   };
   // Fetch bid data from the API
   const fetchBidData = React.useCallback(async () => {
@@ -111,7 +111,7 @@ const pathname=usePathname()
   const charLimit = 60;
   const isDescriptionLong = description.length > charLimit;
 
-  const notInterestedProject = async (_id: string) => {
+  async (_id: string) => {
     await axiosInstance.put(`/freelancer/${_id}/not_interested_project`);
     onRemove(_id);
   };
@@ -176,35 +176,34 @@ const pathname=usePathname()
                   <MoreVertical className="w-5 h-5" />
                 </Button>
 
-        {menuOpen && (
-          <div className="absolute right-0 mt-2 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-            <button
-              onClick={() => {
-                setOpenReport(true);
-                setMenuOpen(false);
-              }}
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              Report
-            </button>
-          </div>
-        )}
-      </div>
-
-      </div>
-               {openReport && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
-            <button
-              onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <NewReportTab reportData={reportData} />
-          </div>
-        </div>
-      )}
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+                    <button
+                      onClick={() => {
+                        setOpenReport(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Report
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {openReport && (
+              <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
+                  <button
+                    onClick={() => setOpenReport(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  >
+                    ✕
+                  </button>
+                  <NewReportTab reportData={reportData} />
+                </div>
+              </div>
+            )}
           </div>
         </CardTitle>
       </CardHeader>

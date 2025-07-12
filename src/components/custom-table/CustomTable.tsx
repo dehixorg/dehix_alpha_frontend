@@ -1,8 +1,11 @@
-"use client";
+'use client';
 
-import { DownloadIcon, PackageOpen } from "lucide-react";
-import { Card } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
+import { DownloadIcon, PackageOpen } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { twMerge } from 'tailwind-merge';
+
+import { Card } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
 import {
   Table,
   TableBody,
@@ -10,19 +13,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { useEffect, useState } from "react";
-import { apiHelperService } from "@/services/custumTable";
-import { FieldType, FiltersArrayElem, Params } from "./FieldTypes";
-import { CustomTableCell } from "./FieldComponents";
-import FilterTable from "./FilterTable";
-import { HeaderActionComponent } from "./HeaderActionsComponent";
-import { ToolTip } from "../ToolTip";
-import { TablePagination } from "./Pagination";
-import { TableSelect } from "./TableSelect";
-import { twMerge } from "tailwind-merge";
-import { useToast } from "../ui/use-toast";
-import { Messages } from "@/utils/common/enum";
+} from '../ui/table';
+import { ToolTip } from '../ToolTip';
+import { useToast } from '../ui/use-toast';
+
+import { FieldType, FiltersArrayElem, Params } from './FieldTypes';
+import { CustomTableCell } from './FieldComponents';
+import FilterTable from './FilterTable';
+import { HeaderActionComponent } from './HeaderActionsComponent';
+import { TablePagination } from './Pagination';
+import { TableSelect } from './TableSelect';
+
+import { apiHelperService } from '@/services/custumTable';
+import { Messages } from '@/utils/common/enum';
 
 export const CustomTable = ({
   title,
@@ -40,61 +43,61 @@ export const CustomTable = ({
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<FiltersArrayElem[]>(
-    []
+    [],
   );
   // const [sortByState, setSortByState] = useState<Array<{label: string, fieldName: string}>>(sortBy || [])
-  const [sortByValue, setSortByValue] = useState<string>("createdAt");
+  const [sortByValue, setSortByValue] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<1 | -1>(1);
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
 
   const { toast } = useToast();
 
   const fetchData = async () => {
-      try {
-        setLoading(true);
-        window.scrollTo(0, 0);
-        const params: Record<string, any> = {
-          filters: "",
-          page: page,
-          limit: limit
-        };
-        selectedFilters.map((filter) => {
-          params["filters"] += [`filter[${filter.fieldName}],`];
-        });
-        selectedFilters.map((filter) => {
-          if (filter.arrayName) {
-            params[`filter[${filter.fieldName}.${filter.arrayName}]`] =
-              filter.value;
-          } else {
-            params[`filter[${filter.fieldName}]`] = filter.value;
-          }
-        });
-        if (search != "") {
-          params["filter[search][value]"] = search;
-          params["filter[search][columns]"] = searchColumn?.join(",");
+    try {
+      setLoading(true);
+      window.scrollTo(0, 0);
+      const params: Record<string, any> = {
+        filters: '',
+        page: page,
+        limit: limit,
+      };
+      selectedFilters.map((filter) => {
+        params['filters'] += [`filter[${filter.fieldName}],`];
+      });
+      selectedFilters.map((filter) => {
+        if (filter.arrayName) {
+          params[`filter[${filter.fieldName}.${filter.arrayName}]`] =
+            filter.value;
+        } else {
+          params[`filter[${filter.fieldName}]`] = filter.value;
         }
-
-        params["filter[sortBy]"] = sortByValue;
-        params["filter[sortOrder]"] = sortOrder;
-        console.log(params)
-        const response = await apiHelperService.fetchData(api,params);
-        setData(response.data.data);
-      } catch (error) {
-        console.log(error);
-        toast({
-          title: "Error",
-          description: Messages.FETCH_ERROR(title || ""),
-          variant: "destructive", // Red error message
-        });
-      } finally {
-        setLoading(false);
+      });
+      if (search != '') {
+        params['filter[search][value]'] = search;
+        params['filter[search][columns]'] = searchColumn?.join(',');
       }
-  }
+
+      params['filter[sortBy]'] = sortByValue;
+      params['filter[sortOrder]'] = sortOrder;
+      console.log(params);
+      const response = await apiHelperService.fetchData(api, params);
+      setData(response.data.data);
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: 'Error',
+        description: Messages.FETCH_ERROR(title || ''),
+        variant: 'destructive', // Red error message
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, [selectedFilters, search, page, limit, sortByValue, sortOrder]);
 
   useEffect(() => {
@@ -114,13 +117,13 @@ export const CustomTable = ({
   };
 
   const handleDownload = () => {
-    let content = "";
+    let content = '';
 
     const headings: string[] = [];
     fields.forEach((field) => {
       if (field.type !== FieldType.ACTION) headings.push(field.textValue);
     });
-    content += headings.join(",") + "\n";
+    content += headings.join(',') + '\n';
 
     data.forEach((elem) => {
       const fieldValues: string[] = [];
@@ -130,37 +133,42 @@ export const CustomTable = ({
             fieldValues.push(
               (elem[field.fieldName] as Record<string, any>[])
                 .map((val) => val[field.arrayName!])
-                .join("|")
+                .join('|'),
             );
           else fieldValues.push(elem[field.fieldName]);
         }
       });
-      content += fieldValues.join(",") + "\n";
+      content += fieldValues.join(',') + '\n';
     });
     console.log(content);
 
-    const blob = new Blob([content], { type: "text/csv" });
+    const blob = new Blob([content], { type: 'text/csv' });
 
     // Create a URL for the Blob
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
+    const a = document.createElement('a');
 
     a.href = url;
-    a.download = "data.csv";
+    a.download = 'data.csv';
 
     a.click();
   };
 
   const refetch = () => {
-    fetchData()
-  }
+    fetchData();
+  };
 
   return (
     <div className="px-4">
       <div className="w-full flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-300 tracking-wider">{title}</h1>
-        <HeaderActionComponent headerActions={mainTableActions} refetch={refetch} />
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-300 tracking-wider">
+          {title}
+        </h1>
+        <HeaderActionComponent
+          headerActions={mainTableActions}
+          refetch={refetch}
+        />
         <TableSelect
           currValue={limit}
           label="Items Per Page"
@@ -198,12 +206,12 @@ export const CustomTable = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  {fields.map((field, index) => (
+                  {fields.map((field, _) => (
                     <TableHead key={field.fieldName}>
                       {field.tooltip ? (
                         <ToolTip
                           trigger={field.textValue}
-                          content={field.tooltipContent || ""}
+                          content={field.tooltipContent || ''}
                         />
                       ) : (
                         field.textValue
@@ -217,7 +225,7 @@ export const CustomTable = ({
                   <>
                     {[...Array(10)].map((_, i) => (
                       <TableRow key={i}>
-                        {fields.map((field, index) => (
+                        {fields.map((field, _) => (
                           <TableCell key={field.fieldName}>
                             <Skeleton className="h-5 w-20" />
                           </TableCell>
@@ -226,12 +234,15 @@ export const CustomTable = ({
                     ))}
                   </>
                 ) : data?.length > 0 ? (
-                  data.map((elem: any, index: number) => (
+                  data.map((elem: any, _: number) => (
                     <TableRow key={elem._id}>
                       {fields.map((field, index) => (
                         <TableCell
                           key={field.fieldName}
-                          className={twMerge("text-gray-900 dark:text-gray-300", field.className)}
+                          className={twMerge(
+                            'text-gray-900 dark:text-gray-300',
+                            field.className,
+                          )}
                           width={field.width}
                         >
                           <CustomTableCell
@@ -239,8 +250,9 @@ export const CustomTable = ({
                             value={
                               field.fieldName
                                 ? elem[field.fieldName]
-                                : field.type === FieldType.CUSTOM ?
-                                elem : undefined
+                                : field.type === FieldType.CUSTOM
+                                  ? elem
+                                  : undefined
                             }
                             id={elem[uniqueId]}
                             refetch={refetch}

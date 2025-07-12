@@ -1,4 +1,4 @@
-import { ReportForm } from "@/components/form/ReportForm";
+import { ReportForm } from '@/components/form/ReportForm';
 
 interface NewReportTabProps {
   reportData: any;

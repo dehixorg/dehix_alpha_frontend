@@ -1,5 +1,6 @@
-import { Dispatch, SetStateAction } from "react";
-import { ButtonIcon } from "./ui/arrowButton";
+import { Dispatch, SetStateAction } from 'react';
+
+import { ButtonIcon } from './ui/arrowButton';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
+} from './ui/dialog';
 
 type Params = {
   title: string | React.JSX.Element;
@@ -31,16 +32,18 @@ export function CustomDialog({
 }: Params) {
   return (
     <Dialog open={triggerState} onOpenChange={setTriggerState}>
-      {<DialogTrigger asChild>{triggerContent || <ButtonIcon />}</DialogTrigger>}
+      {
+        <DialogTrigger asChild>
+          {triggerContent || <ButtonIcon />}
+        </DialogTrigger>
+      }
       <DialogContent className="p-4 max-h-[80%] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {content}
-        <DialogFooter>
-          {footer}
-        </DialogFooter>
+        <DialogFooter>{footer}</DialogFooter>
       </DialogContent>
     </Dialog>
   );

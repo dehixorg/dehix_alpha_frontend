@@ -7,6 +7,7 @@ import {
   PackageOpen,
   Eye,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   Accordion,
@@ -120,7 +121,7 @@ const FreelancerAvatar = React.memo(
   ({ profilePic, userName }: { profilePic?: string; userName: string }) => (
     <>
       {profilePic ? (
-        <img
+        <Image
           src={profilePic}
           alt={userName}
           className="w-10 h-10 rounded-full object-cover"

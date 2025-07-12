@@ -4,6 +4,8 @@ import { MessageSquareIcon, MapPin, MoreVertical } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
+import { usePathname } from 'next/navigation';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -32,10 +34,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-import { usePathname } from 'next/navigation';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
@@ -131,8 +130,11 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
         <CardTitle className="flex justify-between items-start">
           <span>{type}</span>
           <div className="flex items-center space-x-2">
-            {verificationStatus === 'pending' || verificationStatus === 'added' ? (
-              <Badge className="bg-warning-foreground text-white">PENDING</Badge>
+            {verificationStatus === 'pending' ||
+            verificationStatus === 'added' ? (
+              <Badge className="bg-warning-foreground text-white">
+                PENDING
+              </Badge>
             ) : verificationStatus === 'Approved' ? (
               <Badge className="bg-success text-white">Approved</Badge>
             ) : (
@@ -179,7 +181,8 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
       <CardContent>
         <div className="mt-2">
           <p className="text-m text-gray-600 mb-2">
-            <span className="text-gray-500 font-semibold">Degree:</span> {degree}
+            <span className="text-gray-500 font-semibold">Degree:</span>{' '}
+            {degree}
           </p>
           <p className="text-m text-gray-600 mb-2">
             <span className="text-gray-500 font-semibold">Field Of Study:</span>{' '}
@@ -229,7 +232,9 @@ const EducationVerificationCard: React.FC<EducationProps> = ({
                           <FormControl>
                             <RadioGroupItem value="Approved" />
                           </FormControl>
-                          <FormLabel className="font-normal">Approved</FormLabel>
+                          <FormLabel className="font-normal">
+                            Approved
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>

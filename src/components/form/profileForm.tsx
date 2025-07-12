@@ -510,7 +510,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         <ProfilePictureUpload
           profile={user.profilePic}
           entityType={Type.FREELANCER}
-          
         />
         <form
           onSubmit={form.handleSubmit(onSubmit)}

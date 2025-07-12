@@ -47,7 +47,6 @@ export default function Dashboard() {
       icon: <LineChart className="h-5 w-5" />,
       label: 'Analytics',
     },
-    
   ];
 
   const menuItemsBottom: MenuItem[] = [

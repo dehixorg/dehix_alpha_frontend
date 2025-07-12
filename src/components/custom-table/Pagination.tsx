@@ -1,3 +1,5 @@
+import { twMerge } from 'tailwind-merge';
+
 import {
   Pagination,
   PaginationContent,
@@ -6,8 +8,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { twMerge } from "tailwind-merge";
+} from '@/components/ui/pagination';
 
 type Params = {
   page: number;
@@ -23,9 +24,9 @@ export function TablePagination({
   isNextAvailable = true,
 }: Params) {
   return (
-    <Pagination className={twMerge("mt-6", className)}>
+    <Pagination className={twMerge('mt-6', className)}>
       <PaginationContent>
-        {page-1 > 0 && (
+        {page - 1 > 0 && (
           <>
             <PaginationItem>
               <PaginationPrevious

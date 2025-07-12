@@ -13,6 +13,8 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useSelector } from 'react-redux';
+import { usePathname } from 'next/navigation';
 
 import {
   Card,
@@ -39,11 +41,8 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
-
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
-import { usePathname } from 'next/navigation';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
 interface BusinessProps {
@@ -136,7 +135,11 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
                 </a>
               )}
               {linkedInLink && (
-                <a href={linkedInLink} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={linkedInLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Linkedin className="text-muted-foreground hover:text-primary" />
                 </a>
               )}
@@ -254,13 +257,17 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
                           <FormControl>
                             <RadioGroupItem value="verified" />
                           </FormControl>
-                          <FormLabel className="font-normal">Verified</FormLabel>
+                          <FormLabel className="font-normal">
+                            Verified
+                          </FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-3">
                           <FormControl>
                             <RadioGroupItem value="rejected" />
                           </FormControl>
-                          <FormLabel className="font-normal">Rejected</FormLabel>
+                          <FormLabel className="font-normal">
+                            Rejected
+                          </FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>

@@ -182,7 +182,6 @@ export default function CurrentPage() {
   const [projectDomain, setProjectDomain] = useState<any>([]);
 
   const [isLoading, setIsloading] = useState(false);
-  const [noCurrentInterviews, setNoCurrentInterviews] = useState(false);
 
   useEffect(() => {
     if (isFocused && inputRef.current) {
@@ -194,7 +193,6 @@ export default function CurrentPage() {
     const fetchInterviews = async () => {
       try {
         setIsloading(true);
-        setNoCurrentInterviews(false);
         const response = await axiosInstance.get(
           '/interview/current-interview',
           {
@@ -245,7 +243,6 @@ export default function CurrentPage() {
             err.response?.data?.code === 'NOT_FOUND')
         ) {
           // This is not an error - just no current interviews scheduled
-          setNoCurrentInterviews(true);
           setSkillData([]);
           setDomainData([]);
           setProjectSkill([]);
@@ -303,13 +300,6 @@ export default function CurrentPage() {
     },
     { label: 'Current Interviews', link: '#' },
   ];
-
-  // Check if we have any data to show
-  const hasData =
-    skillData.length > 0 ||
-    domainData.length > 0 ||
-    projectSkill.length > 0 ||
-    projectDomain.length > 0;
 
   return (
     <div className="flex min-h-screen w-full bg-muted/40">

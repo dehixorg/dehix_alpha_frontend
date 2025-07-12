@@ -1,19 +1,21 @@
-import { useState, useEffect, useRef } from "react";
-import { apiHelperService } from "@/services/report";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useEffect, useRef } from 'react';
+
+import { apiHelperService } from '@/services/report';
+import { toast } from '@/components/ui/use-toast';
 
 interface MessagesTabProps {
   id: string;
-  reportStatus: "OPEN" | "CLOSED" | "IN_PROGRESS";
+  reportStatus: 'OPEN' | 'CLOSED' | 'IN_PROGRESS';
 }
 
 export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
   const [messages, setMessages] = useState<any[]>([]);
-  const [text, setText] = useState("");
+  const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isDisabled = reportStatus === "OPEN" || reportStatus === "CLOSED" || sending;
+  const isDisabled =
+    reportStatus === 'OPEN' || reportStatus === 'CLOSED' || sending;
 
   const fetchMessages = async () => {
     try {
@@ -25,9 +27,9 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
       }
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to fetch messages.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch messages.',
+        variant: 'destructive',
       });
     }
   };
@@ -38,19 +40,19 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
     setSending(true);
     try {
       await apiHelperService.sendMessageToReport(id, {
-        sender: "user",
+        sender: 'user',
         text,
       });
       setMessages((prev) => [
         ...prev,
-        { sender: "user", text, createdAt: new Date().toISOString() },
+        { sender: 'user', text, createdAt: new Date().toISOString() },
       ]);
-      setText("");
+      setText('');
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to send message.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to send message.',
+        variant: 'destructive',
       });
     } finally {
       setSending(false);
@@ -58,17 +60,17 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
   };
 
   useEffect(() => {
-    fetchMessages(); 
+    fetchMessages();
 
     const interval = setInterval(() => {
       fetchMessages();
-    }, 5000); 
+    }, 5000);
 
-    return () => clearInterval(interval); 
+    return () => clearInterval(interval);
   }, [id]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   return (
@@ -77,19 +79,20 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
         Past Reports
       </div>
 
-      
       <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 space-y-2 min-h-0">
         {messages.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center">No messages yet</p>
+          <p className="text-sm text-muted-foreground text-center">
+            No messages yet
+          </p>
         )}
         <div className="flex flex-col gap-y-3">
           {messages.map((m, i) => (
             <div
               key={i}
               className={`max-w-[75%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
-                m.sender === "admin"
-                  ? "bg-blue-100 text-right self-end ml-auto"
-                  : "bg-gray-200 text-left self-start mr-auto"
+                m.sender === 'admin'
+                  ? 'bg-blue-100 text-right self-end ml-auto'
+                  : 'bg-gray-200 text-left self-start mr-auto'
               }`}
             >
               <span className="block font-semibold mb-1">{m.sender}</span>
@@ -109,9 +112,9 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
             disabled={isDisabled}
             className="flex-1 border rounded px-3 py-2 disabled:bg-gray-100"
             placeholder={
-              reportStatus !== "IN_PROGRESS"
-                ? "Messaging disabled"
-                : "Type your message..."
+              reportStatus !== 'IN_PROGRESS'
+                ? 'Messaging disabled'
+                : 'Type your message...'
             }
           />
           <button
