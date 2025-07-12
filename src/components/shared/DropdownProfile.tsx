@@ -4,8 +4,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
+import { getReportTypeFromPath } from "@/utils/getReporttypeFromPath"
 
 import { truncateDescription } from './MilestoneTimeline';
+import { usePathname } from "next/navigation";
+
 
 import {
   DropdownMenu,
@@ -29,7 +32,12 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
 
+
+
 const useShare = () => {
+  
+
+
   const share = async (title: string, text: string, url: string) => {
     if (navigator.share) {
       try {
@@ -50,6 +58,9 @@ interface DropdownProfileProps {
 }
 
 export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
+
+  const [isReportOpen, setIsReportOpen] = useState(false);
+
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -61,6 +72,12 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const share = useShare();
 
+  const pathname=usePathname()
+  
+
+  const reportType = getReportTypeFromPath(pathname);
+
+ 
   useEffect(() => {
     // Check if user type is available in Redux store
     if (user?.type) {
@@ -185,6 +202,24 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           <DropdownMenuItem onClick={handleReferralClick}>
             Referral
           </DropdownMenuItem>
+     <DropdownMenuItem
+      className="text-red-500"
+      onClick={() => {
+        if (user?.uid && userType) {
+router.push(`/reports?type=${reportType}`);
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'User information is missing.',
+          });
+        }
+      }}
+    >
+      Report
+    </DropdownMenuItem>
+
+
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut size={18} className="mr-2" />
@@ -268,6 +303,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           )}
         </DialogContent>
       </Dialog>
+
     </>
   );
 }
