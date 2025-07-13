@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 // import { useForm } from 'react-hook-form';
-import { X, PlusCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 
+import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -123,14 +124,8 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
         ))}
       </form>
 
-      <div className="flex justify-center mt-4">
-        <Button
-          onClick={handleAddSummary}
-          className="text-center dark:text-black  light:bg-black"
-        >
-          <PlusCircle />
-        </Button>
-      </div>
+      <AddButton onClick={handleAddSummary} />
+
       {/* <div className="flex justify-center mt-4">
         <Button className="text-center bg-green-500 hover:bg-green-600 text-white">
           Save

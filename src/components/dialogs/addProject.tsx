@@ -168,9 +168,10 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     }
   };
 
-  const handleAddSkill = () => {
+  const handleAddSkill = (field: { onChange: (value: any) => void }) => {
     if (tmpSkill.trim() && !currSkills.includes(tmpSkill)) {
       setCurrSkills([...currSkills, tmpSkill]);
+      field.onChange([...currSkills, tmpSkill]);
       setTmpSkill('');
     }
   };
@@ -362,7 +363,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                 <FormField
                   control={form.control}
                   name="techUsed"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem className="mb-4">
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
@@ -390,7 +391,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                               type="button"
                               size="icon"
                               className="ml-2"
-                              onClick={handleAddSkill}
+                              onClick={() => handleAddSkill(field)}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>

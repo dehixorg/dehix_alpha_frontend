@@ -23,6 +23,7 @@ export interface ProjectSkillCardProps {
   skills?: string[] | undefined;
   imageUrl?: string;
   isLastCard?: boolean;
+  onAddProfile?: () => void;
 }
 function ProjectSkillCard({
   domainName,
@@ -34,10 +35,14 @@ function ProjectSkillCard({
   domains = [],
   skills = [],
   isLastCard,
+  onAddProfile,
 }: ProjectSkillCardProps) {
   if (isLastCard) {
     return (
-      <Card className="flex w-[300px] mx-auto items-center justify-center h-[430px] border border-dashed border-gray-400 rounded-lg  cursor-pointer ">
+      <Card
+        className="flex w-full items-center justify-center h-[430px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        onClick={onAddProfile}
+      >
         <Plus className="w-12 h-12 text-gray-400" />
       </Card>
     );
@@ -52,7 +57,7 @@ function ProjectSkillCard({
   };
 
   return (
-    <div className="w-[300px] min-h-[400px] bg-card  mx-auto relative border border-gray-700 rounded-lg shadow-md p-6 flex flex-col h-full">
+    <div className="w-full min-h-[400px] bg-card relative border border-gray-700 rounded-lg shadow-md p-6 flex flex-col h-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <HoverCard>

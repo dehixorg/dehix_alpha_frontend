@@ -3,12 +3,14 @@ import {
   Mail,
   Building2,
   Eye,
-  XCircle,
   ChevronDown,
   ChevronUp,
+  MoreVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +20,8 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
 interface Profile {
   _id?: string;
@@ -61,7 +65,21 @@ const JobCard: React.FC<JobCardProps> = ({
   const [showAllSkills, setShowAllSkills] = React.useState(false);
   const [showFullDescription, setShowFullDescription] = React.useState(false); // State for description
   const [bidProfiles, setBidProfiles] = React.useState<string[]>([]); // Store profile IDs from API
+  const [openReport, setOpenReport] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  const pathname = usePathname();
+
+  const reportType = getReportTypeFromPath(pathname);
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: user?.uid || 'user123', // or whoever is being reported
+  };
   // Fetch bid data from the API
   const fetchBidData = React.useCallback(async () => {
     try {
@@ -93,7 +111,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const charLimit = 60;
   const isDescriptionLong = description.length > charLimit;
 
-  const notInterestedProject = async (_id: string) => {
+  async (_id: string) => {
     await axiosInstance.put(`/freelancer/${_id}/not_interested_project`);
     onRemove(_id);
   };
@@ -148,15 +166,44 @@ const JobCard: React.FC<JobCardProps> = ({
                 <span>Invite</span>
               </Button>
 
-              {/* Not Interested Button */}
-              <Button
-                className="w-full sm:w-auto dark:bg-muted hover:bg-secondary-grey-100 text-white"
-                onClick={() => notInterestedProject(id)}
-              >
-                <XCircle className="w-4 h-4 mr-1" />
-                <span>Not Interested</span>
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="text-gray-500 hover:text-gray-800"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+                    <button
+                      onClick={() => {
+                        setOpenReport(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Report
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+            {openReport && (
+              <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
+                  <button
+                    onClick={() => setOpenReport(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  >
+                    ✕
+                  </button>
+                  <NewReportTab reportData={reportData} />
+                </div>
+              </div>
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -233,10 +280,11 @@ const JobCard: React.FC<JobCardProps> = ({
             </div>
           </div>
         </div>
-
+        {skillsRequired.length > 0 && profiles && profiles.length && (
+          <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
+        )}
         {/* Profiles Section */}
         <div className="mt-4 hover:bg-opacity-10">
-          <hr className="w-full flex justify-end my-4 border border-muted border-opacity-10" />
           {profiles && profiles.length > 0 && (
             <div className="space-y-4">
               {profiles.map((profile: Profile, index: number) => (
