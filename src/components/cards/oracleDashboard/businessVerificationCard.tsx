@@ -8,13 +8,10 @@ import {
   Users,
   Mail,
   Phone,
-  MoreVertical,
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
-import { usePathname } from 'next/navigation';
 
 import {
   Card,
@@ -41,9 +38,6 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
-import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { RootState } from '@/lib/store';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
 interface BusinessProps {
   _id: string;
@@ -58,7 +52,7 @@ interface BusinessProps {
   linkedInLink: string;
   githubLink: string;
   comments: string;
-  status: string | 'pending';
+  status: string | 'pending'; // Add initial status prop
   onStatusUpdate: (newStatus: string) => void;
   onCommentUpdate: (newComment: string) => void;
 }
@@ -82,32 +76,14 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   linkedInLink,
   githubLink,
   comments,
-  status,
+  status, // Get initial status from props
   onStatusUpdate,
   onCommentUpdate,
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState(status);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
-
-  const user = useSelector((state: RootState) => state.user);
-  const pathname = usePathname();
-  const reportType = getReportTypeFromPath(pathname);
-
-  const reportData = {
-    subject: '',
-    description: '',
-    report_role: user?.type || 'STUDENT',
-    report_type: reportType,
-    status: 'OPEN',
-    reportedbyId: user?.uid || 'user123',
-    reportedId: user?.uid || 'user123',
-  };
-
+  const [verificationStatus, setVerificationStatus] = useState(status); // Use initial status
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
-
   const selectedType = form.watch('type');
 
   useEffect(() => {
@@ -121,71 +97,59 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
   }
 
   return (
-    <Card className="max-w-full md:max-w-2xl relative">
+    <Card className="max-w-full md:max-w-2xl">
       <CardHeader>
-        <CardTitle>
-          <div className="flex justify-between items-center w-full">
-            <span>
-              {firstName} {lastName}
-            </span>
-            <div className="flex items-center space-x-3">
-              {websiteLink && (
-                <a href={websiteLink} target="_blank" rel="noopener noreferrer">
-                  <GlobeIcon className="text-muted-foreground hover:text-primary" />
-                </a>
-              )}
-              {linkedInLink && (
-                <a
-                  href={linkedInLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Linkedin className="text-muted-foreground hover:text-primary" />
-                </a>
-              )}
-              {githubLink && (
-                <a href={githubLink} target="_blank" rel="noopener noreferrer">
-                  <Github className="text-muted-foreground hover:text-primary" />
-                </a>
-              )}
-              {/* Report menu button */}
-              <div className="relative">
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <MoreVertical className="w-5 h-5 text-gray-500" />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
-                    <button
-                      onClick={() => {
-                        setOpenReport(true);
-                        setMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      Report
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+        <CardTitle className="flex justify-between">
+          <span>
+            {firstName} {lastName}
+          </span>
+          <div className="flex flex-row space-x-3">
+            {websiteLink && (
+              <a
+                href={websiteLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline flex items-center"
+              >
+                <GlobeIcon className="mt-auto" />
+              </a>
+            )}
+            {linkedInLink && (
+              <a
+                href={linkedInLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm  underline flex items-center"
+              >
+                <Linkedin />
+              </a>
+            )}
+            {githubLink && (
+              <a
+                href={githubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm  underline flex items-center"
+              >
+                <Github />
+              </a>
+            )}
           </div>
         </CardTitle>
         <CardDescription className="mt-1 text-justify text-gray-600">
           {companyName}
           <br />
           {verificationStatus === 'pending' ? (
-            <Badge className="bg-yellow-500 text-white mt-2">PENDING</Badge>
+            <Badge className="bg-warning-foreground text-white mt-2">
+              PENDING
+            </Badge>
           ) : verificationStatus === 'verified' ? (
-            <Badge className="bg-green-500 text-white mt-2">VERIFIED</Badge>
+            <Badge className="bg-success text-white mt-2">VERIFIED</Badge>
           ) : (
             <Badge className="bg-red-500 text-white mt-2">REJECTED</Badge>
           )}
         </CardDescription>
       </CardHeader>
-
       <CardContent>
         <div className="space-y-2">
           <Tooltip>
@@ -215,6 +179,7 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
             </TooltipTrigger>
             <TooltipContent side="bottom">Phone</TooltipContent>
           </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <p className="text-sm text-gray-600 flex items-center">
@@ -233,7 +198,6 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
           )}
         </div>
       </CardContent>
-
       <CardFooter className="flex flex-col items-center">
         {verificationStatus === 'pending' && (
           <Form {...form}>
@@ -282,7 +246,7 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
                   <FormItem>
                     <FormLabel>Comments:</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter comments..." {...field} />
+                      <Textarea placeholder="Enter comments:" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -299,21 +263,6 @@ const BusinessVerificationCard: React.FC<BusinessProps> = ({
           </Form>
         )}
       </CardFooter>
-
-      {/* Report Modal */}
-      {openReport && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
-            <button
-              onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-            >
-              ✕
-            </button>
-            <NewReportTab reportData={reportData} />
-          </div>
-        </div>
-      )}
     </Card>
   );
 };

@@ -2,16 +2,6 @@ import React, { useRef } from 'react';
 
 // import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-// Add this interface near the top of both files
-interface SectionVisibility {
-  personal: boolean;
-  summary: boolean;
-  workExperience: boolean;
-  education: boolean;
-  projects: boolean;
-  skills: boolean;
-  achievements: boolean;
-}
 
 interface ResumePreviewProps {
   educationData?: {
@@ -40,7 +30,6 @@ interface ResumePreviewProps {
   achievementData?: { achievementName: string }[];
   summaryData?: string[];
   headingColor?: string;
-  sectionVisibility?: SectionVisibility;
 }
 
 export const ResumePreview2: React.FC<ResumePreviewProps> = ({
@@ -82,65 +71,67 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
   projectData = [],
   summaryData = [],
   headingColor = '#1A73E8',
-  sectionVisibility = {
-    personal: true,
-    summary: true,
-    workExperience: true,
-    education: true,
-    projects: true,
-    skills: true,
-    achievements: true,
-  },
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="flex justify-center w-full h-full py-4">
+    <div className="flex justify-center w-full h-full py-10">
       <div
         ref={containerRef}
-        className="bg-white w-full max-w-[794px] p-4 flex"
-        style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)' }}
+        className="bg-white w-[900px] p-6 shadow-lg flex"
+        style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' }}
       >
-        {/* Left Section - Fixed width */}
-        <div className="w-1/3 bg-gray-100 p-4 flex flex-col">
-          {sectionVisibility.personal &&
-            personalData.map((person, index) => (
-              <div key={index} className="mb-4">
-                <h1
-                  className="text-3xl font-bold text-gray-900"
-                  style={{ color: headingColor }}
-                >
-                  {`${person.firstName} ${person.lastName}`}
-                </h1>
+        {/* Left Section: Header and Details */}
+        <div className="w-1/3 bg-gray-200 dark:bg-gray-200 text-black p-6 flex flex-col">
+          {personalData.map((person, index) => (
+            <div key={index} className="mb-6">
+              <h1
+                className="text-3xl font-bold"
+                style={{ color: headingColor }}
+              >{`${person.firstName} ${person.lastName}`}</h1>
 
-                <div className="mt-4">
+              {summaryData.length > 0 && (
+                <div className="mb-6">
                   <h2
-                    className="text-lg font-semibold text-gray-900 mb-4"
+                    className="text-xl font-semibold text-blue-800 mt-4"
                     style={{ color: headingColor }}
                   >
-                    Contact Details
+                    Profile Summary
                   </h2>
-                  <Separator className="my-2" />
-                  <p className="text-sm text-gray-800">{person.email}</p>
-                  <p className="text-sm text-gray-800">{person.phoneNumber}</p>
-                  <p className="text-sm text-gray-800 mt-2">
-                    {person.linkedin}
+                  <Separator className="mb-2" />
+                  <p className="text-sm leading-relaxed">
+                    {summaryData.join(' ')}
                   </p>
-                  <p className="text-sm text-gray-800">{person.github}</p>
                 </div>
-              </div>
-            ))}
+              )}
 
-          {sectionVisibility.skills && skillData.length > 0 && (
-            <div className="mt-4">
+              <div className="mt-6">
+                <h2
+                  className="text-xl font-semibold text-blue-800 "
+                  style={{ color: headingColor }}
+                >
+                  Contact Details
+                </h2>
+                <Separator className="mb-2" />
+                <p className="text-sm mt-2">{person.email}</p>
+                <p className="text-sm">{person.phoneNumber}</p>
+                <p className="text-sm mt-2">{person.linkedin}</p>
+                <p className="text-sm">{person.github}</p>
+              </div>
+            </div>
+          ))}
+          {/* <Separator className='mb-4'/> */}
+          {/* Skills Section */}
+          {skillData.length > 0 && (
+            <div className="mb-6">
               <h2
-                className="text-lg font-semibold text-gray-900"
+                className="text-xl font-semibold text-blue-800 "
                 style={{ color: headingColor }}
               >
                 Skills
               </h2>
-              <Separator className="my-2" />
-              <ul className="list-disc list-inside text-sm text-gray-800 space-y-1">
+              <Separator className="mb-2" />
+              <ul className="list-disc list-inside text-sm">
                 {skillData.map((skill, index) => (
                   <li key={index}>{skill.skillName}</li>
                 ))}
@@ -149,103 +140,94 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
           )}
         </div>
 
-        {/* Right Section - Flexible width */}
-        <div className="w-2/3 p-4 flex flex-col">
-          {sectionVisibility.summary && summaryData.length > 0 && (
-            <div className="mb-4">
+        {/* Right Section: Experience and Education */}
+        <div className="w-2/3 p-6">
+          {/* Work Experience Section */}
+          {workExperienceData.length > 0 && (
+            <div className="mb-6">
               <h2
-                className="text-lg font-bold text-gray-900"
+                className="text-xl font-semibold text-blue-800 mb-2"
                 style={{ color: headingColor }}
               >
-                Profile Summary
+                Experience
               </h2>
-              <Separator className="my-2" />
-              <p className="text-sm text-gray-800">{summaryData.join(' ')}</p>
+              <Separator className="mb-2" />
+              {workExperienceData.map((item, index) => (
+                <div key={index} className="mb-4">
+                  <p className="text-sm font-medium text-black">
+                    {item.jobTitle} - {item.company}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {item.startDate} to {item.endDate}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
 
-          {sectionVisibility.workExperience &&
-            workExperienceData.length > 0 && (
-              <div className="mb-4">
-                <h2
-                  className="text-lg font-semibold text-gray-900"
-                  style={{ color: headingColor }}
-                >
-                  Experience
-                </h2>
-                <Separator className="my-2" />
-                {workExperienceData.map((item, index) => (
-                  <div key={index} className="mb-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      {item.jobTitle} - {item.company}
-                    </p>
-                    <p className="text-xs text-gray-700">
-                      {item.startDate} to {item.endDate}
-                    </p>
-                    <p className="text-sm text-gray-800 mt-1 ">
-                      {item.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-          {sectionVisibility.projects && projectData.length > 0 && (
-            <div className="mb-4">
-              <h2
-                className="text-lg font-semibold text-gray-900"
+          {/* Projects Section */}
+          {projectData.length > 0 && (
+            <div className="mt-6">
+              <h3
+                className="text-xl font-semibold text-blue-800  mb-2"
                 style={{ color: headingColor }}
               >
                 Projects
-              </h2>
-              <Separator className="my-2" />
-              {projectData.map((project, index) => (
-                <div key={index} className="mb-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    {project.title}
-                  </p>
-                  <p className="text-sm text-gray-700">{project.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {sectionVisibility.education && educationData.length > 0 && (
-            <div className="mb-4">
-              <h2
-                className="text-lg font-semibold text-gray-900"
-                style={{ color: headingColor }}
-              >
-                Education
-              </h2>
-              <Separator className="my-2" />
-              {educationData.map((item, index) => (
-                <div key={index} className="mb-2">
-                  <p className="text-sm font-medium text-gray-900">
-                    {item.degree} - {item.school}
-                  </p>
-                  <p className="text-xs text-gray-700">
-                    {item.startDate} to {item.endDate}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {sectionVisibility.achievements && achievementData.length > 0 && (
-            <div>
-              <h2
-                className="text-lg font-semibold text-gray-900"
-                style={{ color: headingColor }}
-              >
-                Achievements
-              </h2>
-              <Separator className="my-2" />
-              <ul className="list-disc list-inside text-sm text-gray-800">
-                {achievementData.map((achievement, index) => (
-                  <li key={index}>{achievement.achievementName}</li>
+              </h3>
+              <Separator className="mb-2" />
+              <div>
+                {projectData.map((project, index) => (
+                  <div key={index} className="space-y-1 mb-4">
+                    <p className="text-sm font-medium text-black ">
+                      {project.title}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {project.description}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+                {/* Education Section */}
+                {educationData.length > 0 && (
+                  <div>
+                    <h2
+                      className="text-xl font-semibold text-blue-800 mb-2"
+                      style={{ color: headingColor }}
+                    >
+                      Education
+                    </h2>
+                    <Separator className="mb-2" />
+                    {educationData.map((item, index) => (
+                      <div key={index} className="mb-4">
+                        <p className="text-sm font-medium text-black">
+                          {item.degree} - {item.school}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.startDate} to {item.endDate}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {achievementData.length > 0 && (
+                  <div className="mb-6">
+                    <h2
+                      className="text-xl font-semibold text-blue-800 "
+                      style={{ color: headingColor }}
+                    >
+                      Achievements
+                    </h2>
+                    <Separator className="mb-2" />
+                    <ul className="list-disc list-inside text-sm text-gray-600">
+                      {achievementData.map((achievement, index) => (
+                        <li key={index}>{achievement.achievementName}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

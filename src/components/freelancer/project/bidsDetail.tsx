@@ -23,7 +23,15 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -33,30 +41,16 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { CustomTable } from '@/components/custom-table/CustomTable';
-import {
-  FieldType,
-  Params as TableProps,
-} from '@/components/custom-table/FieldTypes';
-// Constants - Backend expects uppercase values
-const BID_STATUSES = [
-  'PENDING',
-  'ACCEPTED',
-  'REJECTED',
-  'PANEL',
-  'INTERVIEW',
-] as const;
-type BidStatus = (typeof BID_STATUSES)[number];
 
-// Types
-interface Freelancer {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  userName: string;
-  email: string;
-  profilePic?: string;
+interface ProjectProfile {
+  selectedFreelancer?: string[];
+  totalBid?: number[];
+  domain?: string;
+  freelancersRequired?: string;
+  skills?: string[];
+  experience?: number;
+  minConnect?: number;
+  rate?: number;
   description?: string;
   skills?: Array<{ name: string; level: string; experience?: string }>;
   domain?: Array<{ name: string; level: string; experience?: string }>;
@@ -92,14 +86,8 @@ interface BidDetail {
   freelancer_profile_id?: FreelancerProfile;
 }
 
-interface ProjectProfile {
-  _id?: string;
-  domain?: string;
-  experience?: number;
-  minConnect?: number;
-  rate?: number;
-  totalBid?: number[];
-  profiles?: any;
+interface UserData {
+  data: ProjectProfile;
 }
 
 interface BidsDetailsProps {
@@ -564,12 +552,10 @@ const ProfileDialog = React.memo(
 ProfileDialog.displayName = 'ProfileDialog';
 
 const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
-  const [userData, setUserData] = useState<{ data: ProjectProfile } | null>(
-    null,
-  );
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [profileId, setProfileId] = useState<string>();
+  const [profileId, setProfileId] = useState<string | undefined>(undefined);
   const [bids, setBids] = useState<BidDetail[]>([]);
   const [, setLoadingBids] = useState<Record<string, boolean>>({});
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
@@ -600,134 +586,40 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       ),
     [bids],
   );
-
-  // Fetch project data
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!id) return;
-
       try {
         const response = await axiosInstance.get(`/project/${id}`);
         setUserData(response.data);
-        setError(null);
-      } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message || 'Failed to fetch project data';
-        setError(errorMessage);
+      } catch (error) {
+        setError('Error fetching user data.');
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: errorMessage,
-        });
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    if (id) {
+      fetchUserData();
+    }
   }, [id]);
 
-  // Create freelancer object from API data
-  const createFreelancerObject = useCallback(
-    (freelancerData: any, bidderId: string, userName?: string): Freelancer => ({
-      _id: freelancerData?._id || bidderId,
-      userName: freelancerData?.userName || userName || '',
-      firstName: freelancerData?.firstName || '',
-      lastName: freelancerData?.lastName || '',
-      email: freelancerData?.email || '',
-      profilePic: freelancerData?.profilePic,
-      description:
-        freelancerData?.description || `Freelancer: ${userName || 'Unknown'}`,
-      skills: freelancerData?.skills || [],
-      domain: freelancerData?.domain || [],
-      workExperience: freelancerData?.workExperience || 0,
-      perHourPrice: freelancerData?.perHourPrice || 0,
-      role: freelancerData?.role || '',
-    }),
-    [],
-  );
-
-  // Fetch bids and freelancer details
-  const fetchBid = useCallback(
+  const fetchBid = React.useCallback(
     async (profileId: string) => {
       try {
-        setLoadingFreelancerDetails(true);
-        setError(null);
-
         const response = await axiosInstance.get(
           `/bid/project/${id}/profile/${profileId}/bid`,
         );
-        const bidsData = response.data?.data || [];
-
-        if (bidsData.length === 0) {
-          setBids([]);
-          return;
-        }
-
-        // Get unique bidder IDs
-        const uniqueBidderIds: string[] = Array.from(
-          new Set(
-            bidsData
-              .map((bid: any) => bid.bidder_id)
-              .filter((id: string) => id && id.trim()),
-          ),
-        );
-
-        // Fetch freelancer data in parallel
-        const freelancerMap = new Map();
-        if (uniqueBidderIds.length > 0) {
-          const freelancerPromises = uniqueBidderIds.map(
-            async (bidderId: string) => {
-              try {
-                const freelancerResponse = await axiosInstance.get(
-                  `/public/freelancer/${bidderId}`,
-                );
-                return {
-                  bidderId,
-                  data:
-                    freelancerResponse.data?.data || freelancerResponse.data,
-                };
-              } catch (error: any) {
-                console.warn(
-                  `Failed to fetch freelancer ${bidderId}:`,
-                  error.message,
-                );
-                return { bidderId, data: null };
-              }
-            },
-          );
-
-          const freelancerResults = await Promise.all(freelancerPromises);
-          freelancerResults.forEach(({ bidderId, data }) => {
-            freelancerMap.set(bidderId, data);
-          });
-        }
-
-        // Map bids with freelancer data
-        const bidsWithFreelancerDetails = bidsData.map((bid: any) => ({
-          ...bid,
-          freelancer: createFreelancerObject(
-            freelancerMap.get(bid.bidder_id),
-            bid.bidder_id,
-            bid.userName,
-          ),
-        }));
-
-        setBids(bidsWithFreelancerDetails);
-      } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message || 'Failed to fetch bid details';
-        setError(errorMessage);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: errorMessage,
-        });
-      } finally {
-        setLoadingFreelancerDetails(false);
+        setBids(response.data?.data || []);
+      } catch (e) {
+        console.error(e);
       }
     },
-    [id, createFreelancerObject],
+    [id],
   );
 
   useEffect(() => {
@@ -1205,16 +1097,19 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     </span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="p-0">
-                  <div className="px-6 py-4 flex flex-col gap-2">
+                <AccordionContent>
+                  <div className="p-4 flex flex-col gap-2">
                     <div className="flex gap-2 items-center">
-                      <p>Experience: {profile.experience ?? 'N/A'}</p>
+                      <p>Experience:</p>
+                      <p>{profile.experience ?? 'N/A'}</p>
                     </div>
                     <div className="flex gap-2 items-center">
-                      <p>Min Connect: {profile.minConnect ?? 'N/A'}</p>
+                      <p>Min Connect:</p>
+                      <p>{profile.minConnect ?? 'N/A'}</p>
                     </div>
                     <div className="flex gap-2 items-center">
-                      <p>Total Bids: {profile.totalBid?.length || 0}</p>
+                      <p>Total Bids:</p>
+                      <p>{bids.length}</p>
                     </div>
                   </div>
                   <Tabs defaultValue="PENDING" className="w-full">
@@ -1246,7 +1141,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        ) : (
+          <div className="text-center py-10 w-full mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500 text-lg">No bid profiles found</p>
+          </div>
+        )}
       </div>
 
       {/* Profile Dialog */}

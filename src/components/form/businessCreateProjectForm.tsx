@@ -43,14 +43,15 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const profileFormSchema = z.object({
-  projectName: z
-    .string()
-    .min(2, { message: 'Project Name must be at least 2 characters.' }),
+  projectName: z.string().min(2, {
+    message: 'Project Name must be at least 2 characters.',
+  }),
   email: z
-    .string({ required_error: 'Email is required.' })
+    .string({
+      required_error: 'Email is required.',
+    })
     .email({ message: 'Please enter a valid email address.' }),
   projectDomain: z
     .array(z.string().min(1, { message: 'Project domain cannot be empty.' }))
@@ -212,7 +213,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
-  email: '',
+  email: '', //default field for email
   projectDomain: [],
   urls: [],
   description: '',
@@ -233,6 +234,21 @@ const defaultValues: Partial<ProfileFormValues> = {
   ],
 };
 
+interface Skill {
+  _id: string;
+  label: string;
+}
+
+interface Domain {
+  _id: string;
+  label: string;
+}
+
+interface projectDomain {
+  _id: string;
+  label: string;
+}
+
 const FORM_DRAFT_KEY = 'DEHIX-BUSINESS-DRAFT';
 
 enum FormSteps {
@@ -242,15 +258,20 @@ enum FormSteps {
 
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
-  const [skills, setSkills] = useState<any[]>([]);
-  const [currSkills, setCurrSkills] = useState<any[]>([]);
-  const [tmpSkill, setTmpSkill] = useState('');
-  const [domains, setDomains] = useState<any[]>([]);
-  const [projectDomains, setProjectDomains] = useState<any[]>([]);
-  const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState('');
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  const [domains, setDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+
+  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
+  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+
   const [loading, setLoading] = useState(false);
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
+
   const [currentStep, setCurrentStep] = useState<FormSteps>(
     FormSteps.ProjectInfo,
   );
@@ -326,62 +347,35 @@ export function CreateProjectBusinessForm() {
 
   // Project domain handlers
   const handleAddProjectDomain = () => {
-    if (tmpProjectDomains && !currProjectDomains.includes(tmpProjectDomains)) {
+    if (
+      tmpProjectDomains &&
+      !currProjectDomains.some((d: any) => d === tmpProjectDomains)
+    ) {
       const updatedDomains = [...currProjectDomains, tmpProjectDomains];
+
       setCurrProjectDomains(updatedDomains);
       setTmpProjectDomains('');
+
       form.setValue('projectDomain', updatedDomains);
     }
   };
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
     const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== domainToDelete,
+      (domain: any) => domain !== domainToDelete,
     );
+
     setCurrProjectDomains(updatedDomains);
     form.setValue('projectDomain', updatedDomains);
   };
 
-  // Skills handlers
-  const handleAddSkill = (profileIndex: number) => {
-    if (tmpSkill.trim() !== '') {
-      setCurrSkills((prevSkills) => {
-        const updatedSkills = [...prevSkills];
-        if (!updatedSkills[profileIndex]) updatedSkills[profileIndex] = [];
-        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
-          updatedSkills[profileIndex].push(tmpSkill);
-        }
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-        return updatedSkills;
-      });
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
-    setCurrSkills((prevSkills) => {
-      const updatedSkills = [...prevSkills];
-      if (updatedSkills[profileIndex]) {
-        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
-          (skill: string) => skill !== skillToDelete,
-        );
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-      }
-      return updatedSkills;
-    });
-  };
-
-  // Draft save/load/discard
   const saveDraft = () => {
     const formValues = form.getValues();
     const isOtherValid = hasOtherValues(formValues);
     const isProfileValid = hasProfiles(formValues.profiles);
+
+    console.log(formValues);
+
     if (!isOtherValid && !isProfileValid) {
       toast({
         variant: 'destructive',
@@ -390,13 +384,19 @@ export function CreateProjectBusinessForm() {
       });
       return;
     }
+
     const DraftProfile = formValues.profiles?.map(
       (profile: any, index: number) => ({
         ...profile,
         skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
       }),
     );
-    const DraftData = { ...formValues, profiles: DraftProfile };
+
+    const DraftData = {
+      ...formValues,
+      profiles: DraftProfile,
+    };
+
     localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
     toast({
       title: 'Draft Saved',
@@ -410,17 +410,23 @@ export function CreateProjectBusinessForm() {
       try {
         const parsedDraft = JSON.parse(savedDraft);
         form.reset(parsedDraft);
+
         setCurrProjectDomains(parsedDraft.projectDomain || []);
+        setCurrDomains(
+          parsedDraft.profiles?.map((profile: any) => profile.domain) || [],
+        );
+
         setCurrSkills(
           parsedDraft.profiles?.map((profile: any) =>
             Array.isArray(profile.skills) ? profile.skills : [],
           ) || [],
         );
+
         toast({
           title: 'Draft loaded',
           description: 'Your saved draft has been loaded.',
         });
-      } catch {
+      } catch (error) {
         toast({
           title: 'Error loading draft',
           description: 'There was a problem loading your draft.',
@@ -440,22 +446,129 @@ export function CreateProjectBusinessForm() {
     });
   };
 
-  // Budget formatting for API
-  const getBudgetForAPI = (budgetData: any) => {
-    if (budgetData.type === 'FIXED') {
-      return { type: 'FIXED', fixedAmount: parseFloat(budgetData.fixedAmount) };
+  const handleAddSkill = (profileIndex: number) => {
+    if (tmpSkill.trim() !== '') {
+      setCurrSkills((prevSkills: any) => {
+        const updatedSkills = [...prevSkills];
+
+        // Ensure array exists for profile index
+        if (!updatedSkills[profileIndex]) {
+          updatedSkills[profileIndex] = [];
+        }
+
+        // Push skill without duplicates for that index only
+        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
+          updatedSkills[profileIndex].push(tmpSkill);
+        }
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+
+        return updatedSkills;
+      });
+
+      setTmpSkill('');
     }
-    return {
-      type: 'HOURLY',
-      hourly: {
-        minRate: parseFloat(budgetData.hourly.minRate),
-        maxRate: parseFloat(budgetData.hourly.maxRate),
-        estimatedHours: parseInt(budgetData.hourly.estimatedHours),
-      },
-    };
   };
 
-  // Form submit
+  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
+    setCurrSkills((prevSkills: any) => {
+      const updatedSkills = [...prevSkills];
+
+      if (updatedSkills[profileIndex]) {
+        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
+          (skill: string) => skill !== skillToDelete,
+        );
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+      }
+
+      return updatedSkills;
+    });
+  };
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
+        setShowLoadDraftDialog(true);
+      }
+    }
+  }, [hasProfiles, hasOtherValues]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        const transformedProjectDomain = projectDomainResponse.data.data.map(
+          (skill: projectDomain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setProjectDomains(transformedProjectDomain);
+
+        const domainResponse = await axiosInstance.get('/domain');
+        const transformedDomain = domainResponse.data.data.map(
+          (skill: Domain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+            domain_id: skill._id,
+          }),
+        );
+
+        setDomains(transformedDomain);
+
+        const skillsResponse = await axiosInstance.get('/skills');
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
+      }
+    };
+    fetchData();
+  }, []);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues,
+    mode: 'onChange',
+  });
+
+  const { fields: urlFields, append: appendUrl } = useFieldArray({
+    name: 'urls',
+    control: form.control,
+  });
+
+  const {
+    fields: profileFields,
+    append: appendProfile,
+    remove: removeProfile,
+  } = useFieldArray({
+    name: 'profiles',
+    control: form.control,
+  });
+
+  const removeUrl = (index: number) => {
+    const currentUrls = form.getValues('urls') || [];
+    const updatedUrls = currentUrls.filter((_, i) => i !== index);
+    form.setValue('urls', updatedUrls);
+  };
+
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
@@ -478,6 +591,10 @@ export function CreateProjectBusinessForm() {
         projectDomain: currProjectDomains,
         role: '',
         projectType: 'FREELANCE',
+        skillsRequired: uniqueSkills,
+        domains: currDomains,
+        companyId: user.uid,
+        companyName: user.displayName,
         url: data.urls,
         profiles: data.profiles || [],
         profilesWithFormattedBudget,
@@ -487,17 +604,22 @@ export function CreateProjectBusinessForm() {
         title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
+
       const connectsCost = parseInt(
         process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
         10,
       );
+
       const updatedConnects = (
         parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - connectsCost
       ).toString();
+
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
       localStorage.removeItem(FORM_DRAFT_KEY);
+
       window.dispatchEvent(new Event('connectsUpdated'));
-    } catch {
+    } catch (error) {
+      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -511,7 +633,6 @@ export function CreateProjectBusinessForm() {
     setCurrSkills([]);
   }
 
-  // Step navigation
   const nextStep = async () => {
     const isValid = await form.trigger([
       'urls',
@@ -520,25 +641,30 @@ export function CreateProjectBusinessForm() {
       'email',
       'projectName',
     ]);
+
     if (!isValid) return;
-    if (currentStep === FormSteps.ProjectInfo)
+
+    if (currentStep === FormSteps.ProjectInfo) {
       setCurrentStep(FormSteps.ProfileInfo);
+    }
   };
 
   const prevStep = () => {
-    if (currentStep === FormSteps.ProfileInfo)
+    if (currentStep === FormSteps.ProfileInfo) {
       setCurrentStep(FormSteps.ProjectInfo);
+    }
   };
 
   const removeProfileByIndex = (indexToRemove: number) => {
     if (profileFields.length === 1) return;
     removeProfile(indexToRemove);
     form.unregister(`profiles.${indexToRemove}`);
-    if (activeProfile >= indexToRemove)
+
+    if (activeProfile >= indexToRemove) {
       setActiveProfile((prev) => Math.max(0, prev - 1));
+    }
   };
 
-  // UI render helpers
   const ProfileTabs = () => (
     <ScrollArea>
       <div
@@ -747,24 +873,29 @@ export function CreateProjectBusinessForm() {
               <div>
                 <div className="flex items-center mt-2">
                   <Select
-                    onValueChange={setTmpProjectDomains}
+                    onValueChange={(value) => setTmpProjectDomains(value)}
                     value={tmpProjectDomains || ''}
                   >
                     <SelectTrigger>
                       <SelectValue
                         placeholder={
-                          tmpProjectDomains || 'Select project domain'
+                          tmpProjectDomains
+                            ? tmpProjectDomains
+                            : 'Select project domain'
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
                       {projectDomains
                         .filter(
-                          (d: any) => !currProjectDomains.includes(d.label),
+                          (projectDomains: any) =>
+                            !currProjectDomains.some(
+                              (d: any) => d.name === projectDomains.label,
+                            ),
                         )
-                        .map((d: any, idx: number) => (
-                          <SelectItem key={idx} value={d.label}>
-                            {d.label}
+                        .map((projectDomains: any, index: number) => (
+                          <SelectItem key={index} value={projectDomains.label}>
+                            {projectDomains.label}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -780,10 +911,10 @@ export function CreateProjectBusinessForm() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap mt-5">
-                  {currProjectDomains.map((domain, idx) => (
+                  {currProjectDomains.map((domain: any, index: number) => (
                     <Badge
                       className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                      key={idx}
+                      key={index}
                     >
                       {domain}
                       <button
@@ -802,6 +933,7 @@ export function CreateProjectBusinessForm() {
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="description"
@@ -835,22 +967,17 @@ export function CreateProjectBusinessForm() {
                   <FormControl>
                     <div className="flex justify-center items-center  gap-3 mb-2">
                       <Input {...field} />
-                      <Button
-                        variant="outline"
-                        type="button"
-                        size="icon"
-                        className="ml-2"
-                        onClick={() =>
-                          form.setValue(
-                            'urls',
-                            (form.getValues('urls') || []).filter(
-                              (_, i) => i !== index,
-                            ),
-                          )
-                        }
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {index >= 0 && (
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="icon"
+                          className="ml-2"
+                          onClick={() => removeUrl(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage className="my-2.5" />
@@ -1114,6 +1241,7 @@ export function CreateProjectBusinessForm() {
         >
           {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
           {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
+
           <div className="w-full mt-4 flex col-span-2 justify-end">
             {currentStep === FormSteps.ProjectInfo && (
               <Button type="button" variant="outline" onClick={nextStep}>

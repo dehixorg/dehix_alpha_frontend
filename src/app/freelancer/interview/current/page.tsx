@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
-import { ListFilter, Search, Table, PackageOpen } from 'lucide-react';
+import { ListFilter, Search, Table } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
@@ -35,7 +35,7 @@ import DehixInterviews from '@/components/freelancer/dehix-talent-interview/Dehi
 // import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
-import type { RootState } from '@/lib/store';
+import { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
@@ -235,31 +235,15 @@ export default function CurrentPage() {
         setDomainData(domainArray ?? []);
         setProjectSkill(projectSkillArray ?? []);
         setProjectDomain(projectDomainArray ?? []);
-      } catch (err: any) {
-        // Check if this is the specific "no current interviews" case
-        if (
-          err.response?.status === 404 &&
-          (err.response?.data?.message === 'Current Interview not found' ||
-            err.response?.data?.code === 'NOT_FOUND')
-        ) {
-          // This is not an error - just no current interviews scheduled
-          setSkillData([]);
-          setDomainData([]);
-          setProjectSkill([]);
-          setProjectDomain([]);
-        } else {
-          // This is a real error - show error toast
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Something went wrong. Please try again.',
-          });
-          console.error('Failed to load data. Please try again.', err);
-          setSkillData([]);
-          setDomainData([]);
-          setProjectSkill([]);
-          setProjectDomain([]);
-        }
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
+        console.error('Failed to load data. Please try again.', err);
+        setSkillData([]);
+        setDomainData([]);
       } finally {
         setIsloading(false);
       }
@@ -371,7 +355,7 @@ export default function CurrentPage() {
                 <Search
                   size="sm"
                   className={`absolute h-7 gap-1 text-sm left-2 top-1/2 transform -translate-y-1/2 w-5 text-gray-400 cursor-pointer 
-        ${isFocused ? 'sm:flex' : 'hidden md:flex'}`}
+      ${isFocused ? 'sm:flex' : 'hidden md:flex'}`}
                 />
 
                 <Input
@@ -382,7 +366,7 @@ export default function CurrentPage() {
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   className={`pl-8 transition-all duration-300 ease-in-out
-          ${isFocused ? 'w-full sm:w-72' : 'w-0 sm:w-0 md:w-full'} sm:hidden `}
+        ${isFocused ? 'w-full sm:w-72' : 'w-0 sm:w-0 md:w-full'} sm:hidden `}
                 />
                 <Input
                   placeholder="Search interview by..."
@@ -446,75 +430,30 @@ export default function CurrentPage() {
               />
             ))}
           </div>  */}
+          {/* <div className="text-center py-10 w-[90vw] mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">No Inverview Scheduled for you.</p>
+          </div> */}
           <div className="w-full flex justify-center items-center flex-col">
             {isLoading ? (
               <SkeletonLoader isTableView={isTableView} />
             ) : (
-              <div className="w-full space-y-8">
-                {/* Dehix Talent Interviews Section */}
-                <div className="w-full">
-                  <div className="mb-4">
-                    <h2 className="text-2xl font-semibold ">
-                      Dehix Talent Interviews
-                    </h2>
-                  </div>
-                  {skillData.length === 0 && domainData.length === 0 ? (
-                    <div className="text-center py-8 w-full ">
-                      <PackageOpen
-                        className="mx-auto text-gray-400"
-                        size="60"
-                      />
-                      <p className="text-gray-500 text-base font-medium mt-3">
-                        No Dehix talent interviews scheduled.
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Browse available talent opportunities to schedule new
-                        interviews.
-                      </p>
-                    </div>
-                  ) : (
-                    <DehixInterviews
-                      skillData={skillData}
-                      domainData={domainData}
-                      searchQuery={searchQuery}
-                      isTableView={isTableView}
-                      filter={filter}
-                    />
-                  )}
-                </div>
-
-                {/* Project Interviews Section */}
-                <div className="w-full">
-                  <div className="mb-4">
-                    <h2 className="text-2xl font-semibold ">
-                      Project Interviews
-                    </h2>
-                  </div>
-                  {projectSkill.length === 0 && projectDomain.length === 0 ? (
-                    <div className="text-center py-8 w-full">
-                      <PackageOpen
-                        className="mx-auto text-gray-400"
-                        size="60"
-                      />
-                      <p className="text-gray-500 text-base font-medium mt-3">
-                        No project interviews scheduled.
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Check your project applications for upcoming interview
-                        opportunities.
-                      </p>
-                    </div>
-                  ) : (
-                    <Projects
-                      searchQuery={searchQuery}
-                      isTableView={isTableView}
-                      skillData={projectSkill}
-                      domainData={projectDomain}
-                      filter={filter}
-                    />
-                  )}
-                </div>
-              </div>
+              <>
+                <DehixInterviews
+                  skillData={skillData}
+                  domainData={domainData}
+                  searchQuery={searchQuery}
+                  isTableView={isTableView}
+                  filter={filter}
+                />
+                <Projects
+                  searchQuery={searchQuery}
+                  isTableView={isTableView}
+                  skillData={projectSkill}
+                  domainData={projectDomain}
+                  filter={filter}
+                />
+              </>
             )}
           </div>
         </div>

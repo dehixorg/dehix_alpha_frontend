@@ -1,7 +1,4 @@
-'use client';
-
-import type React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,7 +22,7 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Import the Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -46,9 +43,10 @@ interface SkillDomainData {
   type: string;
 }
 
+// Define the props for the SkillDialog component
 interface SkillDialogProps {
   skills: Skill[];
-  onSubmitSkill: (data: SkillDomainData) => boolean;
+  onSubmitSkill: (data: SkillDomainData) => void; // Use SkillDomainData type
   setSkills: any;
 }
 
@@ -67,7 +65,11 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({
+  skills,
+  onSubmitSkill,
+  setSkills,
+}) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -90,19 +92,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
-
-    // Check for duplicate before making API call
-    const isUnique = onSubmitSkill({
-      ...data,
-      uid: '', // Will be set after API call
-      type: 'SKILL',
-    });
-
-    if (!isUnique) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.skillId,
@@ -115,8 +104,17 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       });
 
       if (response.status === 200) {
+        // Assuming the response contains the newly created talent data including UID
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitSkill({
+          ...data,
+          uid: newTalent._id, // Update this line to use the UID from the response
+        });
+        setSkills((prevSkills: any) =>
+          prevSkills.filter((skill: any) => skill._id !== data.skillId),
+        );
         reset();
-        setOpen(false);
+        setOpen(false); // Close the dialog after successful submission
         toast({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
@@ -131,7 +129,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         description: 'Failed to add talent. Please try again.',
       });
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensures the button returns to its default state
     }
   };
 
@@ -159,11 +157,14 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                 <Select
                   value={field.value}
                   onValueChange={(selectedLabel) => {
-                    const selectedSkill = skills.find(
+                    // Find the selected skill by label
+                    const selectedDomain = skills.find(
                       (skill) => skill.name === selectedLabel,
                     );
-                    field.onChange(selectedLabel);
-                    setValue('skillId', selectedSkill?._id || '');
+
+                    // Set label and domainId in form
+                    field.onChange(selectedLabel); // Set label
+                    setValue('skillId', selectedDomain?._id || ''); // Set domainId
                   }}
                 >
                   <SelectTrigger>
@@ -172,7 +173,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                   <SelectContent>
                     {skills.length > 0 ? (
                       skills.map((skill: Skill) => (
-                        <SelectItem key={skill._id} value={skill.name}>
+                        <SelectItem key={skill.name} value={skill.name}>
                           {skill.name}
                         </SelectItem>
                       ))
@@ -206,7 +207,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1}
+                    step={0.1} // Allow decimals
                     {...field}
                     className="mt-2 w-full"
                   />
