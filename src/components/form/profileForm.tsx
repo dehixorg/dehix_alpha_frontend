@@ -10,8 +10,6 @@ import { Textarea } from '../ui/textarea';
 import ProfilePictureUpload from '../fileUpload/profilePicture';
 import ResumeUpload from '../fileUpload/resume';
 
-import CoverLetterTextarea from './CoverLetterTextarea';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,25 +59,7 @@ const profileFormSchema = z.object({
   }),
   role: z.string(),
   personalWebsite: z.string().url().optional(),
-  coverLetter: z
-    .string()
-    .optional()
-    .refine(
-      (val) => {
-        // If no value provided, it's valid (optional field)
-        if (!val || val.trim() === '') return true;
-
-        // If value is provided, check minimum word requirements
-        const wordCount = val
-          .trim()
-          .split(/\s+/)
-          .filter((word) => word.length > 0).length;
-        return wordCount >= 500;
-      },
-      {
-        message: 'Cover letter must contain at least 500 words when provided.',
-      },
-    ),
+  resume: z.string().url().optional(),
   description: z.string().max(500, {
     message: 'Description cannot exceed 500 characters.',
   }),
@@ -100,7 +80,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [resumeRefreshTrigger, setResumeRefreshTrigger] = useState(0);
   const [, setLastAddedItems] = useState<{
     skills: { name: string }[];
     projectsDomains: { name: string }[];
@@ -135,9 +114,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       email: '',
       phone: '',
       role: '',
-      personalWebsite: '',
-      coverLetter: '',
-      description: '',
     },
     mode: 'all',
   });
@@ -387,7 +363,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
         setUser(userResponse.data.data);
-
         const skillsResponse = await axiosInstance.get('/skills');
         const domainsResponse = await axiosInstance.get('/domain');
         const projectDomainResponse = await axiosInstance.get('/projectdomain');
@@ -401,15 +376,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         setCurrDomains(userResponse.data.data.domain);
         setCurrProjectDomains(userResponse.data.data.projectDomain);
 
-        // Ensure cover letter is treated as text, not URL
-        const coverLetterValue = userResponse.data.data.coverLetter;
-        const cleanCoverLetter =
-          coverLetterValue &&
-          typeof coverLetterValue === 'string' &&
-          !coverLetterValue.startsWith('http')
-            ? coverLetterValue
-            : '';
-
         form.reset({
           firstName: userResponse.data.data.firstName || '',
           lastName: userResponse.data.data.lastName || '',
@@ -418,7 +384,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           phone: userResponse.data.data.phone || '',
           role: userResponse.data.data.role || '',
           personalWebsite: userResponse.data.data.personalWebsite || '',
-          coverLetter: cleanCoverLetter,
+          resume: userResponse.data.data.resume || '',
           description: userResponse.data.data.description || '',
         });
       } catch (error) {
@@ -443,7 +409,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
       phone: user?.phone || '',
       role: user?.role || '',
       personalWebsite: user?.personalWebsite || '',
-      coverLetter: user?.coverLetter || '',
+      resume: user?.resume || '',
       description: user?.description || '',
     });
   }, [user, form]);
@@ -462,7 +428,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
 
       await axiosInstance.put(`/freelancer`, {
         ...restData,
-        coverLetter: data.coverLetter,
+        resume: data.resume,
         skills: updatedSkills,
         domain: currDomains,
         projectDomain: currProjectDomains,
@@ -478,7 +444,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         phone: data.phone,
         role: data.role,
         personalWebsite: data.personalWebsite,
-        coverLetter: data.coverLetter,
+        resume: data.resume,
         skills: updatedSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
@@ -487,11 +453,6 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         title: 'Profile Updated',
         description: 'Your profile has been successfully updated.',
       });
-
-      // Trigger resume component refresh with a small delay to ensure backend processing
-      setTimeout(() => {
-        setResumeRefreshTrigger((prev) => prev + 1);
-      }, 500);
     } catch (error) {
       console.error('API Error:', error);
       toast({
@@ -621,6 +582,24 @@ export function ProfileForm({ user_id }: { user_id: string }) {
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resume URL</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your Resume URL"
+                    type="url"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Enter your Resume URL</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Separator className="col-span-2" />
           <div className="sm:col-span-2">
             <div className="grid gap-10 grid-cols-1 sm:grid-cols-6">
@@ -948,35 +927,19 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </div>
           <Separator className="col-span-2 mt-0" />
           <div className="col-span-2">
-            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2">
-              <div className="flex flex-col items-start">
-                <FormLabel className="ml-2">Upload Resume</FormLabel>
-                <div className="w-full">
-                  <ResumeUpload
-                    refreshTrigger={resumeRefreshTrigger}
-                    userId={user_id}
-                  />
-                </div>
-              </div>
-              <FormField
-                control={form.control}
-                name="coverLetter"
-                render={({ field, fieldState }) => (
-                  <FormItem className="flex flex-col items-start">
-                    <FormLabel className="ml-2">
-                      Cover Letter (Optional)
-                    </FormLabel>
-                    <div className="w-full">
-                      <CoverLetterTextarea
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        error={fieldState.error?.message}
-                      />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="resume"
+              render={() => (
+                <FormItem className="flex flex-col items-start ">
+                  <FormLabel className="ml-2">Upload Resume</FormLabel>
+                  <div className="w-full sm:w-auto sm:mr-26">
+                    <ResumeUpload />
+                  </div>
+                </FormItem>
+              )}
+            />
+            <Separator className="sm:col-span-2 mt-0" />
           </div>
           <div className="col-span-2">
             <Button

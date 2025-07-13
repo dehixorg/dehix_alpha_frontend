@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { UserIcon, LogOut, Copy, Check, Share2 } from 'lucide-react'; // Import Share2 icon
 import { useSelector, useDispatch } from 'react-redux';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
 
 import { truncateDescription } from './MilestoneTimeline';
 
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,10 +60,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const share = useShare();
-
-  const pathname = usePathname();
-
-  const reportType = getReportTypeFromPath(pathname);
 
   useEffect(() => {
     // Check if user type is available in Redux store
@@ -190,23 +185,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           <DropdownMenuItem onClick={handleReferralClick}>
             Referral
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-red-500"
-            onClick={() => {
-              if (user?.uid && userType) {
-                router.push(`/reports?type=${reportType}`);
-              } else {
-                toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                  description: 'User information is missing.',
-                });
-              }
-            }}
-          >
-            Report
-          </DropdownMenuItem>
-
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut size={18} className="mr-2" />

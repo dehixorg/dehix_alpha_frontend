@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { PlusCircle, X } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -121,7 +120,14 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
         ))}
       </form>
 
-      <AddButton onClick={handleAddSkill} />
+      <div className="flex justify-center mt-4">
+        <Button
+          onClick={handleAddSkill}
+          className="text-center justify-items-centerdark:text-black  light:bg-black"
+        >
+          <PlusCircle />
+        </Button>
+      </div>
 
       {/* AI Response Section */}
       {/* AI Response Section */}

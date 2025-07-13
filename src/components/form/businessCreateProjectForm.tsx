@@ -35,14 +35,15 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const profileFormSchema = z.object({
-  projectName: z
-    .string()
-    .min(2, { message: 'Project Name must be at least 2 characters.' }),
+  projectName: z.string().min(2, {
+    message: 'Project Name must be at least 2 characters.',
+  }),
   email: z
-    .string({ required_error: 'Email is required.' })
+    .string({
+      required_error: 'Email is required.',
+    })
     .email({ message: 'Please enter a valid email address.' }),
   projectDomain: z
     .array(z.string().min(1, { message: 'Project domain cannot be empty.' }))
@@ -59,113 +60,6 @@ const profileFormSchema = z.object({
     .min(4, { message: 'Description must be at least 4 characters long.' })
     .max(160, { message: 'Description cannot exceed 160 characters.' })
     .optional(),
-  budget: z
-    .object({
-      type: z.enum(['FIXED', 'HOURLY']),
-      fixedAmount: z.string().optional(),
-      hourly: z
-        .object({
-          minRate: z.string().optional(),
-          maxRate: z.string().optional(),
-          estimatedHours: z.string().optional(),
-        })
-        .optional(),
-    })
-    .superRefine((data, ctx) => {
-      if (data.type === 'FIXED') {
-        if (!data.fixedAmount) {
-          ctx.addIssue({
-            path: ['fixedAmount'],
-            code: z.ZodIssueCode.custom,
-            message: 'Fixed amount is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) ||
-          parseFloat(data.fixedAmount) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['fixedAmount'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid amount greater than 0',
-          });
-        }
-      }
-      if (data.type === 'HOURLY') {
-        if (!data.hourly) {
-          ctx.addIssue({
-            path: ['hourly'],
-            code: z.ZodIssueCode.custom,
-            message: 'Hourly details are required',
-          });
-          return;
-        }
-        const { minRate, maxRate, estimatedHours } = data.hourly;
-        if (!minRate) {
-          ctx.addIssue({
-            path: ['hourly', 'minRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Minimum rate is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(minRate) ||
-          parseFloat(minRate) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'minRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid minimum rate > 0',
-          });
-        }
-        if (!maxRate) {
-          ctx.addIssue({
-            path: ['hourly', 'maxRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Maximum rate is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(maxRate) ||
-          parseFloat(maxRate) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'maxRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid maximum rate > 0',
-          });
-        }
-        if (!estimatedHours) {
-          ctx.addIssue({
-            path: ['hourly', 'estimatedHours'],
-            code: z.ZodIssueCode.custom,
-            message: 'Estimated hours are required',
-          });
-        } else if (
-          !/^\d+$/.test(estimatedHours) ||
-          parseInt(estimatedHours) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'estimatedHours'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid number of hours > 0',
-          });
-        }
-        if (
-          minRate &&
-          maxRate &&
-          /^\d+(\.\d{1,2})?$/.test(minRate) &&
-          /^\d+(\.\d{1,2})?$/.test(maxRate)
-        ) {
-          const min = parseFloat(minRate);
-          const max = parseFloat(maxRate);
-          if (max < min) {
-            ctx.addIssue({
-              path: ['hourly', 'maxRate'],
-              code: z.ZodIssueCode.custom,
-              message: 'Maximum rate must be ≥ minimum rate',
-            });
-          }
-        }
-      }
-    }),
   profiles: z
     .array(
       z.object({
@@ -186,7 +80,9 @@ const profileFormSchema = z.object({
               /^\d+$/.test(val) &&
               parseInt(val, 10) >= 0 &&
               parseInt(val, 10) <= 40,
-            { message: 'Experience must be a number between 0 and 40.' },
+            {
+              message: 'Experience must be a number between 0 and 40.',
+            },
           ),
         domain_id: z.string().min(1, { message: 'Domain ID is required.' }),
         minConnect: z
@@ -198,7 +94,9 @@ const profileFormSchema = z.object({
           .string()
           .refine(
             (val) => /^\d+(\.\d{1,2})?$/.test(val) && parseFloat(val) >= 0,
-            { message: 'Per hour rate should be a valid non-negative number.' },
+            {
+              message: 'Per hour rate should be a valid non-negative number.',
+            },
           ),
         description: z
           .string()
@@ -215,15 +113,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const defaultValues: Partial<ProfileFormValues> = {
   projectName: '',
-  email: '',
+  email: '', //default field for email
   projectDomain: [],
   urls: [],
   description: '',
-  budget: {
-    type: 'FIXED',
-    fixedAmount: '',
-    hourly: { minRate: '', maxRate: '', estimatedHours: '' },
-  },
   profiles: [
     {
       domain: '',
@@ -238,6 +131,21 @@ const defaultValues: Partial<ProfileFormValues> = {
   ],
 };
 
+interface Skill {
+  _id: string;
+  label: string;
+}
+
+interface Domain {
+  _id: string;
+  label: string;
+}
+
+interface projectDomain {
+  _id: string;
+  label: string;
+}
+
 const FORM_DRAFT_KEY = 'DEHIX-BUSINESS-DRAFT';
 
 enum FormSteps {
@@ -247,15 +155,20 @@ enum FormSteps {
 
 export function CreateProjectBusinessForm() {
   const user = useSelector((state: RootState) => state.user);
-  const [skills, setSkills] = useState<any[]>([]);
-  const [currSkills, setCurrSkills] = useState<any[]>([]);
-  const [tmpSkill, setTmpSkill] = useState('');
-  const [domains, setDomains] = useState<any[]>([]);
-  const [projectDomains, setProjectDomains] = useState<any[]>([]);
-  const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
-  const [tmpProjectDomains, setTmpProjectDomains] = useState('');
+  const [skills, setSkills] = useState<any>([]);
+  const [currSkills, setCurrSkills] = useState<any>([]);
+  const [tmpSkill, setTmpSkill] = useState<any>('');
+
+  const [domains, setDomains] = useState<any>([]);
+  const [currDomains, setCurrDomains] = useState<any>([]);
+
+  const [projectDomains, setProjectDomains] = useState<any>([]); // add projectDomain
+  const [currProjectDomains, setCurrProjectDomains] = useState<any>([]);
+  const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
+
   const [loading, setLoading] = useState(false);
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
+
   const [currentStep, setCurrentStep] = useState<FormSteps>(
     FormSteps.ProjectInfo,
   );
@@ -263,130 +176,36 @@ export function CreateProjectBusinessForm() {
 
   const { hasOtherValues, hasProfiles } = useDraft({});
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: 'onChange',
-  });
-
-  const { fields: urlFields, append: appendUrl } = useFieldArray({
-    name: 'urls',
-    control: form.control,
-  });
-  const {
-    fields: profileFields,
-    append: appendProfile,
-    remove: removeProfile,
-  } = useFieldArray({ name: 'profiles', control: form.control });
-
-  // Draft logic
-  useEffect(() => {
-    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
-    if (savedDraft) {
-      const parsedDraft = JSON.parse(savedDraft);
-      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
-        setShowLoadDraftDialog(true);
-      }
-    }
-  }, [hasProfiles, hasOtherValues]);
-
-  // Fetch domains and skills
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [projectDomainRes, domainRes, skillsRes] = await Promise.all([
-          axiosInstance.get('/projectdomain'),
-          axiosInstance.get('/domain'),
-          axiosInstance.get('/skills'),
-        ]);
-        setProjectDomains(
-          projectDomainRes.data.data.map((d: any) => ({
-            value: d.label,
-            label: d.label,
-          })),
-        );
-        setDomains(
-          domainRes.data.data.map((d: any) => ({
-            value: d.label,
-            label: d.label,
-            domain_id: d._id,
-          })),
-        );
-        setSkills(
-          skillsRes.data.data.map((s: any) => ({
-            value: s.label,
-            label: s.label,
-          })),
-        );
-      } catch {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again.',
-        });
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Project domain handlers
   const handleAddProjectDomain = () => {
-    if (tmpProjectDomains && !currProjectDomains.includes(tmpProjectDomains)) {
+    if (
+      tmpProjectDomains &&
+      !currProjectDomains.some((d: any) => d === tmpProjectDomains)
+    ) {
       const updatedDomains = [...currProjectDomains, tmpProjectDomains];
+
       setCurrProjectDomains(updatedDomains);
       setTmpProjectDomains('');
+
       form.setValue('projectDomain', updatedDomains);
     }
   };
 
   const handleDeleteProjectDomain = (domainToDelete: string) => {
     const updatedDomains = currProjectDomains.filter(
-      (domain) => domain !== domainToDelete,
+      (domain: any) => domain !== domainToDelete,
     );
+
     setCurrProjectDomains(updatedDomains);
     form.setValue('projectDomain', updatedDomains);
   };
 
-  // Skills handlers
-  const handleAddSkill = (profileIndex: number) => {
-    if (tmpSkill.trim() !== '') {
-      setCurrSkills((prevSkills) => {
-        const updatedSkills = [...prevSkills];
-        if (!updatedSkills[profileIndex]) updatedSkills[profileIndex] = [];
-        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
-          updatedSkills[profileIndex].push(tmpSkill);
-        }
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-        return updatedSkills;
-      });
-      setTmpSkill('');
-    }
-  };
-
-  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
-    setCurrSkills((prevSkills) => {
-      const updatedSkills = [...prevSkills];
-      if (updatedSkills[profileIndex]) {
-        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
-          (skill: string) => skill !== skillToDelete,
-        );
-        form.setValue(
-          `profiles.${profileIndex}.skills`,
-          updatedSkills[profileIndex],
-        );
-      }
-      return updatedSkills;
-    });
-  };
-
-  // Draft save/load/discard
   const saveDraft = () => {
     const formValues = form.getValues();
     const isOtherValid = hasOtherValues(formValues);
     const isProfileValid = hasProfiles(formValues.profiles);
+
+    console.log(formValues);
+
     if (!isOtherValid && !isProfileValid) {
       toast({
         variant: 'destructive',
@@ -395,13 +214,19 @@ export function CreateProjectBusinessForm() {
       });
       return;
     }
+
     const DraftProfile = formValues.profiles?.map(
       (profile: any, index: number) => ({
         ...profile,
         skills: Array.isArray(currSkills[index]) ? currSkills[index] : [],
       }),
     );
-    const DraftData = { ...formValues, profiles: DraftProfile };
+
+    const DraftData = {
+      ...formValues,
+      profiles: DraftProfile,
+    };
+
     localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(DraftData));
     toast({
       title: 'Draft Saved',
@@ -415,17 +240,23 @@ export function CreateProjectBusinessForm() {
       try {
         const parsedDraft = JSON.parse(savedDraft);
         form.reset(parsedDraft);
+
         setCurrProjectDomains(parsedDraft.projectDomain || []);
+        setCurrDomains(
+          parsedDraft.profiles?.map((profile: any) => profile.domain) || [],
+        );
+
         setCurrSkills(
           parsedDraft.profiles?.map((profile: any) =>
             Array.isArray(profile.skills) ? profile.skills : [],
           ) || [],
         );
+
         toast({
           title: 'Draft loaded',
           description: 'Your saved draft has been loaded.',
         });
-      } catch {
+      } catch (error) {
         toast({
           title: 'Error loading draft',
           description: 'There was a problem loading your draft.',
@@ -445,59 +276,166 @@ export function CreateProjectBusinessForm() {
     });
   };
 
-  // Budget formatting for API
-  const getBudgetForAPI = (budgetData: any) => {
-    if (budgetData.type === 'FIXED') {
-      return { type: 'FIXED', fixedAmount: parseFloat(budgetData.fixedAmount) };
+  const handleAddSkill = (profileIndex: number) => {
+    if (tmpSkill.trim() !== '') {
+      setCurrSkills((prevSkills: any) => {
+        const updatedSkills = [...prevSkills];
+
+        // Ensure array exists for profile index
+        if (!updatedSkills[profileIndex]) {
+          updatedSkills[profileIndex] = [];
+        }
+
+        // Push skill without duplicates for that index only
+        if (!updatedSkills[profileIndex].includes(tmpSkill)) {
+          updatedSkills[profileIndex].push(tmpSkill);
+        }
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+
+        return updatedSkills;
+      });
+
+      setTmpSkill('');
     }
-    return {
-      type: 'HOURLY',
-      hourly: {
-        minRate: parseFloat(budgetData.hourly.minRate),
-        maxRate: parseFloat(budgetData.hourly.maxRate),
-        estimatedHours: parseInt(budgetData.hourly.estimatedHours),
-      },
-    };
   };
 
-  // Form submit
+  const handleDeleteSkill = (profileIndex: number, skillToDelete: string) => {
+    setCurrSkills((prevSkills: any) => {
+      const updatedSkills = [...prevSkills];
+
+      if (updatedSkills[profileIndex]) {
+        updatedSkills[profileIndex] = updatedSkills[profileIndex].filter(
+          (skill: string) => skill !== skillToDelete,
+        );
+        form.setValue(
+          `profiles.${profileIndex}.skills`,
+          updatedSkills[profileIndex],
+        );
+      }
+
+      return updatedSkills;
+    });
+  };
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(FORM_DRAFT_KEY);
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      if (hasOtherValues(parsedDraft) || hasProfiles(parsedDraft.profiles)) {
+        setShowLoadDraftDialog(true);
+      }
+    }
+  }, [hasProfiles, hasOtherValues]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const projectDomainResponse = await axiosInstance.get('/projectdomain');
+        const transformedProjectDomain = projectDomainResponse.data.data.map(
+          (skill: projectDomain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setProjectDomains(transformedProjectDomain);
+
+        const domainResponse = await axiosInstance.get('/domain');
+        const transformedDomain = domainResponse.data.data.map(
+          (skill: Domain) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+            domain_id: skill._id,
+          }),
+        );
+
+        setDomains(transformedDomain);
+
+        const skillsResponse = await axiosInstance.get('/skills');
+        const transformedSkills = skillsResponse.data.data.map(
+          (skill: Skill) => ({
+            value: skill.label, // Set the value to label
+            label: skill.label, // Set the label to label
+          }),
+        );
+        setSkills(transformedSkills);
+      } catch (error) {
+        console.error('API Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong.Please try again.',
+        }); // Error toast
+      }
+    };
+    fetchData();
+  }, []);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues,
+    mode: 'onChange',
+  });
+
+  const { fields: urlFields, append: appendUrl } = useFieldArray({
+    name: 'urls',
+    control: form.control,
+  });
+
+  const {
+    fields: profileFields,
+    append: appendProfile,
+    remove: removeProfile,
+  } = useFieldArray({
+    name: 'profiles',
+    control: form.control,
+  });
+
+  const removeUrl = (index: number) => {
+    const currentUrls = form.getValues('urls') || [];
+    const updatedUrls = currentUrls.filter((_, i) => i !== index);
+    form.setValue('urls', updatedUrls);
+  };
+
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
       const uniqueSkills = Array.from(
-        new Set(currSkills.flat().filter(Boolean)),
+        new Set(currSkills.flat().filter((skill: any) => skill !== undefined)),
       );
-      const budget = getBudgetForAPI(data.budget);
-      const payload = {
-        projectName: data.projectName,
-        description: data.description,
-        email: data.email,
-        companyId: user.uid,
-        companyName: user.displayName,
-        skillsRequired: uniqueSkills,
-        projectDomain: currProjectDomains,
+
+      await axiosInstance.post(`/project/business`, {
+        ...data,
         role: '',
         projectType: 'FREELANCE',
+        skillsRequired: uniqueSkills,
+        domains: currDomains,
+        companyId: user.uid,
+        companyName: user.displayName,
         url: data.urls,
-        budget,
-        profiles: data.profiles || [],
-      };
-      await axiosInstance.post(`/project/business`, payload);
+      });
       toast({
         title: 'Project Added',
         description: 'Your project has been successfully added.',
       });
+
       const connectsCost = parseInt(
         process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
         10,
       );
+
       const updatedConnects = (
         parseInt(localStorage.getItem('DHX_CONNECTS') || '0') - connectsCost
       ).toString();
+
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
       localStorage.removeItem(FORM_DRAFT_KEY);
+
       window.dispatchEvent(new Event('connectsUpdated'));
-    } catch {
+    } catch (error) {
+      console.error('API Error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -511,7 +449,6 @@ export function CreateProjectBusinessForm() {
     setCurrSkills([]);
   }
 
-  // Step navigation
   const nextStep = async () => {
     const isValid = await form.trigger([
       'urls',
@@ -519,26 +456,33 @@ export function CreateProjectBusinessForm() {
       'description',
       'email',
       'projectName',
-      'budget',
     ]);
+
     if (!isValid) return;
-    if (currentStep === FormSteps.ProjectInfo)
+
+    if (currentStep === FormSteps.ProjectInfo) {
       setCurrentStep(FormSteps.ProfileInfo);
+    }
   };
 
   const prevStep = () => {
-    if (currentStep === FormSteps.ProfileInfo)
+    if (currentStep === FormSteps.ProfileInfo) {
       setCurrentStep(FormSteps.ProjectInfo);
+    }
   };
 
   const removeProfileByIndex = (indexToRemove: number) => {
-    if (profileFields.length === 1) return;
+    if (profileFields.length === 1) {
+      return;
+    }
+
     form.unregister(`profiles.${indexToRemove}`);
-    if (activeProfile >= indexToRemove)
+
+    if (activeProfile >= indexToRemove) {
       setActiveProfile((prev) => Math.max(0, prev - 1));
+    }
   };
 
-  // UI render helpers
   const ProfileTabs = () => (
     <ScrollArea>
       <div className="flex gap-2 mb-4">
@@ -549,7 +493,11 @@ export function CreateProjectBusinessForm() {
             size="sm"
             variant={activeProfile === index ? 'default' : 'outline'}
             onClick={() => setActiveProfile(index)}
-            className={`px-4 py-2 ${activeProfile === index ? 'bg-blue-600 text-white hover:text-black' : ''}`}
+            className={`px-4 py-2 ${
+              activeProfile === index
+                ? 'bg-blue-600 text-white hover:text-black'
+                : ''
+            }`}
           >
             Profile {index + 1}
           </Button>
@@ -558,139 +506,6 @@ export function CreateProjectBusinessForm() {
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
-
-  const renderBudgetSection = () => {
-    const budgetType = form.watch('budget.type');
-    return (
-      <div className="lg:col-span-2 xl:col-span-2 border p-4 rounded-md mb-4">
-        <h3 className="text-lg font-medium mb-4">Project Budget</h3>
-        <FormField
-          control={form.control}
-          name="budget.type"
-          render={({ field }) => (
-            <FormItem className="mb-6">
-              <FormLabel>Budget Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="FIXED" id="fixed" />
-                    <label htmlFor="fixed" className="cursor-pointer">
-                      Fixed Price
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="HOURLY" id="hourly" />
-                    <label htmlFor="hourly" className="cursor-pointer">
-                      Hourly Rate
-                    </label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {budgetType === 'FIXED' && (
-          <FormField
-            control={form.control}
-            name="budget.fixedAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fixed Budget Amount ($)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Enter fixed amount"
-                    min="1"
-                    step="0.01"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Enter the total fixed price for the project
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {budgetType === 'HOURLY' && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="budget.hourly.minRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimum Rate ($/hour)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Min rate"
-                        min="1"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="budget.hourly.maxRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maximum Rate ($/hour)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Max rate"
-                        min="1"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="budget.hourly.estimatedHours"
-              render={({ field }) => (
-                <FormItem className="mt-4">
-                  <FormLabel>Estimated Hours</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Estimated number of hours"
-                      min="1"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Estimated total hours required for project completion
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
-        {form.formState.errors.budget?.message && (
-          <p className="text-sm text-red-600 mt-4">
-            {form.formState.errors.budget.message}
-          </p>
-        )}
-      </div>
-    );
-  };
 
   const renderProjectInfoStep = () => (
     <>
@@ -732,24 +547,29 @@ export function CreateProjectBusinessForm() {
               <div>
                 <div className="flex items-center mt-2">
                   <Select
-                    onValueChange={setTmpProjectDomains}
+                    onValueChange={(value) => setTmpProjectDomains(value)}
                     value={tmpProjectDomains || ''}
                   >
                     <SelectTrigger>
                       <SelectValue
                         placeholder={
-                          tmpProjectDomains || 'Select project domain'
+                          tmpProjectDomains
+                            ? tmpProjectDomains
+                            : 'Select project domain'
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
                       {projectDomains
                         .filter(
-                          (d: any) => !currProjectDomains.includes(d.label),
+                          (projectDomains: any) =>
+                            !currProjectDomains.some(
+                              (d: any) => d.name === projectDomains.label,
+                            ),
                         )
-                        .map((d: any, idx: number) => (
-                          <SelectItem key={idx} value={d.label}>
-                            {d.label}
+                        .map((projectDomains: any, index: number) => (
+                          <SelectItem key={index} value={projectDomains.label}>
+                            {projectDomains.label}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -765,10 +585,10 @@ export function CreateProjectBusinessForm() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap mt-5">
-                  {currProjectDomains.map((domain, idx) => (
+                  {currProjectDomains.map((domain: any, index: number) => (
                     <Badge
                       className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                      key={idx}
+                      key={index}
                     >
                       {domain}
                       <button
@@ -787,6 +607,7 @@ export function CreateProjectBusinessForm() {
           </FormItem>
         )}
       />
+
       <FormField
         control={form.control}
         name="description"
@@ -800,7 +621,6 @@ export function CreateProjectBusinessForm() {
           </FormItem>
         )}
       />
-      {renderBudgetSection()}
       <div className="lg:col-span-2 xl:col-span-2">
         {urlFields.map((field, index) => (
           <FormField
@@ -821,22 +641,17 @@ export function CreateProjectBusinessForm() {
                   <FormControl>
                     <div className="flex justify-center items-center  gap-3 mb-2">
                       <Input {...field} />
-                      <Button
-                        variant="outline"
-                        type="button"
-                        size="icon"
-                        className="ml-2"
-                        onClick={() =>
-                          form.setValue(
-                            'urls',
-                            (form.getValues('urls') || []).filter(
-                              (_, i) => i !== index,
-                            ),
-                          )
-                        }
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      {index >= 0 && (
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="icon"
+                          className="ml-2"
+                          onClick={() => removeUrl(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage className="my-2.5" />
@@ -937,7 +752,7 @@ export function CreateProjectBusinessForm() {
                     <div>
                       <div className="flex items-center mt-2">
                         <Select
-                          onValueChange={setTmpSkill}
+                          onValueChange={(value) => setTmpSkill(value)}
                           value={tmpSkill || ''}
                         >
                           <SelectTrigger>
@@ -1118,6 +933,7 @@ export function CreateProjectBusinessForm() {
         >
           {currentStep === FormSteps.ProjectInfo && renderProjectInfoStep()}
           {currentStep === FormSteps.ProfileInfo && renderProfileInfoStep()}
+
           <div className="w-full mt-4 flex col-span-2 justify-end">
             {currentStep === FormSteps.ProjectInfo && (
               <Button type="button" variant="outline" onClick={nextStep}>

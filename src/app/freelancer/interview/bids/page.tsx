@@ -20,7 +20,7 @@ export default function ProfilePage() {
         menuItemsBottom={menuItemsBottom}
         active="Bids"
       />
-      <div className="flex mb-8 flex-col sm:pl-14 w-full">
+      <div className="flex mb-8 flex-col sm:pl-14 w-full mb-5">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
