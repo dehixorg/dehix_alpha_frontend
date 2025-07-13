@@ -16,10 +16,6 @@ import {
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
-import { useState } from 'react';
-
-
-
 
 export const menuItemsTop: MenuItem[] = [
   {
@@ -85,7 +81,7 @@ export const menuItemsTop: MenuItem[] = [
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
   },
- //   <ReportMenuItem key="report" /> 
+  //   <ReportMenuItem key="report" />
 ];
 
 export const menuItemsBottom: MenuItem[] = [
@@ -130,7 +126,6 @@ export const notesMenu: MenuItem[] = [
     icon: <Trash2 className="h-5 w-5" />,
     label: 'Trash',
   },
-
 ];
 export const chatsMenu: MenuItem[] = [
   {
@@ -152,5 +147,3 @@ export const chatsMenu: MenuItem[] = [
     label: 'Home',
   },
 ];
-
-

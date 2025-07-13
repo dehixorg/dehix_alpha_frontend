@@ -7,7 +7,7 @@ export type ReportInfo = {
 };
 
 export const defaultReportInfo: ReportInfo = {
-  report_role: "STUDENT",
-  report_type: "GENERAL",
-  reportedbyId: "user123",
+  report_role: 'STUDENT',
+  report_type: 'GENERAL',
+  reportedbyId: 'user123',
 };

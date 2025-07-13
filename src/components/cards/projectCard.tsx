@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { MoreVertical, ShieldCheck } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -17,8 +19,6 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { usePathname } from 'next/navigation';
-import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
@@ -87,7 +87,10 @@ export function ProjectCard({
   };
 
   return (
-    <Card className={cn('flex flex-col h-[400px] relative', cardClassName)} {...props}>
+    <Card
+      className={cn('flex flex-col h-[400px] relative', cardClassName)}
+      {...props}
+    >
       {/* 3-dot menu */}
       <div className="absolute top-3 right-3 z-20">
         <div className="relative">
@@ -138,9 +141,15 @@ export function ProjectCard({
           </p>
         </div>
         <div>
-          <p><strong>Company:</strong> {project.companyName}</p>
-          <p><strong>Role:</strong> {project.role}</p>
-          <p><strong>Experience:</strong> {project.experience}</p>
+          <p>
+            <strong>Company:</strong> {project.companyName}
+          </p>
+          <p>
+            <strong>Role:</strong> {project.role}
+          </p>
+          <p>
+            <strong>Experience:</strong> {project.experience}
+          </p>
           <div className="flex flex-wrap gap-1 mt-2">
             {project?.skillsRequired?.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
@@ -166,14 +175,13 @@ export function ProjectCard({
 
       {/* Report Dialog */}
       <Dialog open={openReport} onOpenChange={setOpenReport}>
-  <DialogContent className="max-w-xl">
-    <DialogHeader>
-      <DialogTitle>Create New Report</DialogTitle>
-    </DialogHeader>
-    <NewReportTab reportData={reportData} />
-  </DialogContent>
-</Dialog>
-
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Create New Report</DialogTitle>
+          </DialogHeader>
+          <NewReportTab reportData={reportData} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

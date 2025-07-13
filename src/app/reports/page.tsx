@@ -1,14 +1,10 @@
 'use client';
 
 import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@/components/ui/tabs';
+import { RootState } from '@/lib/store';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import PastReportsTab from '@/components/report-tabs/PastReportsTab';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -17,33 +13,30 @@ import { ReportInfo } from '@/config/report/defaultReportInfo';
 import {
   menuItemsTop,
   menuItemsBottom,
-} from '@/config/menuItems/freelancer/settingsMenuItems'; 
-import { usePathname } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 export default function NewReportPage() {
   const user = useSelector((state: RootState) => state.user);
- 
+
   const pathname = usePathname();
 
-  
-    const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
 
-    const reportType = getReportTypeFromPath(pathname);
- const type = searchParams.get('type');
+  const reportType = getReportTypeFromPath(pathname);
+  const type = searchParams.get('type');
   const reportInfo: ReportInfo = {
-    report_role: user.type || "STUDENT",
-    report_type: "GENERAL",
-    reportedbyId: user?.uid || "user123", 
+    report_role: user.type || 'STUDENT',
+    report_type: 'GENERAL',
+    reportedbyId: user?.uid || 'user123',
   };
 
   const reportData = {
-    subject: "",
-    description: "",
+    subject: '',
+    description: '',
     report_role: reportInfo.report_role,
-    report_type: type ||reportType,
-    status: "OPEN",
-    reportedbyId: "",
+    report_type: type || reportType,
+    status: 'OPEN',
+    reportedbyId: '',
     reportedId: reportInfo.reportedbyId,
   };
 

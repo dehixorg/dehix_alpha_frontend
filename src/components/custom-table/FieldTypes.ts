@@ -1,26 +1,26 @@
-import React from "react";
+import React from 'react';
 
 export enum FilterDataType {
-  SINGLE = "Single",
-  MULTI = "Multi",
-  CALENDER = "Calendar",
+  SINGLE = 'Single',
+  MULTI = 'Multi',
+  CALENDER = 'Calendar',
 }
 
 export enum FieldType {
-  TEXT = "Text",
-  LINK = "Link",
-  CURRENCY = "Currency",
-  CRYPTO = "Crypto",
-  DATE = "Date",
-  DATETIME = "DateTime",
-  ACTION = "Action",
-  ARRAY_VALUE = "ArrayValue",
-  STATUS = "Status",
-  TOGGLE = "Toggle",
-  TOOLTIP = "Tooltip",
-  LONGTEXT = "LongText",
-  CUSTOM = "Custom",
-  LENGTH = "Length",
+  TEXT = 'Text',
+  LINK = 'Link',
+  CURRENCY = 'Currency',
+  CRYPTO = 'Crypto',
+  DATE = 'Date',
+  DATETIME = 'DateTime',
+  ACTION = 'Action',
+  ARRAY_VALUE = 'ArrayValue',
+  STATUS = 'Status',
+  TOGGLE = 'Toggle',
+  TOOLTIP = 'Tooltip',
+  LONGTEXT = 'LongText',
+  CUSTOM = 'Custom',
+  LENGTH = 'Length',
 }
 
 interface ActionHandler extends CustomTableChildComponentsProps {
@@ -32,7 +32,7 @@ export interface Actions {
   options: Array<{
     actionName: string;
     actionIcon: React.JSX.Element;
-    type: "Button" | "Link";
+    type: 'Button' | 'Link';
     href?: string;
     handler?: ({ id, refetch }: ActionHandler) => void;
     className?: string;
@@ -40,8 +40,8 @@ export interface Actions {
 }
 
 export enum Currency {
-  INR = "INR",
-  USD = "USD",
+  INR = 'INR',
+  USD = 'USD',
 }
 
 export interface CustomComponentProps extends CustomTableChildComponentsProps {

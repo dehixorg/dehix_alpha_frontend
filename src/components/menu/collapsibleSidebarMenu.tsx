@@ -80,7 +80,7 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
           {menuItemsTop.map((item, index) => (
             <Link
               key={index}
-              href={item.href}
+              href={item.href ? item.href : ''}
               onClick={() => setActive(item.label)}
               className={`flex items-center gap-4 px-2.5 ${
                 item.label === 'Dehix'
@@ -113,7 +113,7 @@ const CollapsibleSidebarMenu: React.FC<CollapsibleSidebarMenuProps> = ({
               )}
 
               <Link
-                href={item.href}
+                href={item.href ? item.href : ''}
                 onClick={() => setActive(item.label)}
                 className={`flex items-center gap-4 px-2.5 ${
                   item.label === 'Dehix'

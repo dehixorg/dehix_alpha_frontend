@@ -35,16 +35,6 @@ import { Label } from '@/components/ui/label';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 
-// Define interfaces for props
-interface Bid {
-  _id: string;
-  userName: string;
-  current_price: number;
-  bid_status: string;
-  description: string;
-  profile_id: string; // Ensure bid has profile_id
-}
-
 interface Profile {
   _id: string;
   domain: string;

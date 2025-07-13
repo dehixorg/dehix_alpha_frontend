@@ -18,7 +18,6 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
   menuItemsTop,
-
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
 import { Skeleton } from '@/components/ui/skeleton';

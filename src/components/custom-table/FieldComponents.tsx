@@ -1,22 +1,24 @@
-import Link from "next/link";
-import {
-  Actions,
-  Currency,
-  FieldComponentProps,
-  FieldType,
-} from "./FieldTypes";
-import { useState } from "react";
-import { Switch } from "../ui/switch";
+import Link from 'next/link';
+import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { twMerge } from 'tailwind-merge';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { ArrowRight } from "lucide-react";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
-import { twMerge } from "tailwind-merge";
-import { ToolTip } from "../ToolTip";
+} from '../ui/dropdown-menu';
+import { Switch } from '../ui/switch';
+import { ToolTip } from '../ToolTip';
+
+import {
+  Actions,
+  Currency,
+  FieldComponentProps,
+  FieldType,
+} from './FieldTypes';
 
 const DateTimeField = ({ value }: FieldComponentProps<string>) => {
   const date = new Date(value);
@@ -49,7 +51,7 @@ const ToggleField = ({
   value,
   id,
 }: FieldComponentProps<boolean | string>) => {
-  "use client";
+  'use client';
   const [toggleVal, setToggleVal] = useState(Boolean(value));
 
   return (
@@ -74,15 +76,21 @@ const ArrayValueField = ({
           <ToolTip
             trigger={
               <div className="">
-                <span>{fieldData.arrayName ? value[0][fieldData.arrayName] : value[0]} </span>
+                <span>
+                  {fieldData.arrayName
+                    ? value[0][fieldData.arrayName]
+                    : value[0]}{' '}
+                </span>
                 <span className="text-xs text-gray-500">
                   {value.length > 1 && `+${value.length - 1} more`}
                 </span>
               </div>
             }
             content={value
-              .map((val: any) => fieldData.arrayName ? `${val[fieldData.arrayName!]}` : `${val}`)
-              .join(", ")}
+              .map((val: any) =>
+                fieldData.arrayName ? `${val[fieldData.arrayName!]}` : `${val}`,
+              )
+              .join(', ')}
           />
         </>
       ) : (
@@ -112,30 +120,30 @@ const ActionField = ({
         {fieldData.actions?.options.map(
           (
             { actionIcon, actionName, type, handler, href, className },
-            index
+            index,
           ) => (
             <DropdownMenuItem
               key={index}
-              className={`w-${fieldData.width || "32"} px-0 py-0 my-1`}
+              className={`w-${fieldData.width || '32'} px-0 py-0 my-1`}
             >
-              {type === "Button" && (
+              {type === 'Button' && (
                 <div
                   onClick={() => handler?.({ id, refetch })}
                   className={twMerge(
-                    "text-sm w-full py-2 px-3 flex items-center dark:text-gray-300 justify-start hover:cursor-pointer gap-4 font-medium text-gray-600",
-                    className
+                    'text-sm w-full py-2 px-3 flex items-center dark:text-gray-300 justify-start hover:cursor-pointer gap-4 font-medium text-gray-600',
+                    className,
                   )}
                 >
                   {actionIcon}
                   <span>{actionName}</span>
                 </div>
               )}
-              {type === "Link" && (
+              {type === 'Link' && (
                 <Link
-                  href={href || "#"}
+                  href={href || '#'}
                   className={twMerge(
-                    "text-sm w-full flex py-2 px-3 items-center justify-start gap-4 font-medium text-gray-600",
-                    className
+                    'text-sm w-full flex py-2 px-3 items-center justify-start gap-4 font-medium text-gray-600',
+                    className,
                   )}
                 >
                   {actionIcon}
@@ -143,7 +151,7 @@ const ActionField = ({
                 </Link>
               )}
             </DropdownMenuItem>
-          )
+          ),
         )}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -151,8 +159,8 @@ const ActionField = ({
 };
 
 const numberFormat = (value: string, currency: Currency = Currency.INR) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
     currency: currency,
     maximumFractionDigits: 0,
   }).format(Number(value));
@@ -163,7 +171,7 @@ const CurrencyField = ({ fieldData, value }: FieldComponentProps<string>) => {
 
 const StatusField = ({ value, fieldData }: FieldComponentProps<string>) => {
   const statusMetaData = fieldData.statusFormats?.find(
-    (status) => status.value.toLowerCase() === value.toLowerCase()
+    (status) => status.value.toLowerCase() === value.toLowerCase(),
   );
 
   if (!statusMetaData) return <span>{value}</span>;
@@ -174,7 +182,7 @@ const StatusField = ({ value, fieldData }: FieldComponentProps<string>) => {
       style={{
         backgroundColor: bgColor,
         color: textColor,
-        textTransform: isUppercase ? "uppercase" : "none",
+        textTransform: isUppercase ? 'uppercase' : 'none',
       }}
       className=" rounded-sm px-2 py-1 text-center"
     >
@@ -187,11 +195,11 @@ export const TooltipField = ({
   value,
   fieldData,
 }: FieldComponentProps<string>) => {
-  return <ToolTip trigger={value} content={fieldData.tooltipContent || ""} />;
+  return <ToolTip trigger={value} content={fieldData.tooltipContent || ''} />;
 };
 
 const LongTextField = ({ fieldData, value }: FieldComponentProps<string>) => {
-  if(!value) return <span>-</span>
+  if (!value) return <span>-</span>;
   if (fieldData.wordsCnt && value.length <= fieldData.wordsCnt)
     return <span>{value}</span>;
 
@@ -203,14 +211,14 @@ const LongTextField = ({ fieldData, value }: FieldComponentProps<string>) => {
             {value.slice(0, fieldData.wordsCnt)}...
           </span>
         }
-        content={value || ""}
+        content={value || ''}
       />
     );
 
   return (
     <ToolTip
       trigger={<span className=" line-clamp-1">{value}</span>}
-      content={value || ""}
+      content={value || ''}
     />
   );
 };

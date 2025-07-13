@@ -1,20 +1,21 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button"; 
-import { Search } from "lucide-react"; 
+import React, { Dispatch, SetStateAction, useState } from 'react';
+import { Search } from 'lucide-react';
+
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 type Params = {
-  searchValue: string,
-  setSearchValue: Dispatch<SetStateAction<string>>
-}
+  searchValue: string;
+  setSearchValue: Dispatch<SetStateAction<string>>;
+};
 
 export const SearchComponent = ({ searchValue, setSearchValue }: Params) => {
-  const [search, setSearch] = useState<string>(searchValue)
+  const [search, setSearch] = useState<string>(searchValue);
   return (
     <form className="relative w-full" action={() => setSearchValue(search)}>
       <Input
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
         placeholder="Search..."
         className="h-10 w-full rounded-lg px-4 py-2 text-sm bg-white dark:bg-gray-800 text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border-gray-300 dark:border-gray-600 focus:ring-blue-500 pr-10"
       />
