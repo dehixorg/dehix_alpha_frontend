@@ -552,7 +552,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   // Create table configuration
   const createTableConfig = useCallback(
-    (status: BidStatus): TableProps => ({
+    (status: BidStatus): any => ({
       uniqueId: '_id',
       data: bids.filter((bid) => bid.bid_status === status),
       searchColumn: ['userName', 'current_price', 'description'],

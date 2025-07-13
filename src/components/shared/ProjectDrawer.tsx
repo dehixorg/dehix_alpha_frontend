@@ -34,12 +34,6 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-interface Freelancer {
-  freelancerId: string;
-  bidId: string;
-  _id: string;
-}
-
 interface ProjectDrawerProps {
   project: any;
   text: string;
