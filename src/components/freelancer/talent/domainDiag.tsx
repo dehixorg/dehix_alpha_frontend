@@ -1,7 +1,4 @@
-'use client';
-
-import type React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,11 +6,11 @@ import { z } from 'zod';
 import Link from 'next/link';
 
 import {
-  DialogFooter,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
@@ -25,16 +22,18 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Import ShadCN Input component
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { StatusEnum } from '@/utils/freelancer/enum';
 
+// Define the type for a domain
 interface Domain {
   _id: string;
   name: string;
 }
 
+// Define SkillDomainData based on your form data structure
 interface SkillDomainData {
   uid: string;
   domainId: string;
@@ -46,12 +45,14 @@ interface SkillDomainData {
   type: string;
 }
 
+// Define the props for the DomainDialog component
 interface DomainDialogProps {
   domains: Domain[];
-  onSubmitDomain: (data: SkillDomainData) => boolean;
+  onSubmitDomain: (data: SkillDomainData) => void; // Update this type based on your actual data structure
   setDomains: any;
 }
 
+// Define the schema for validation
 const domainSchema = z.object({
   domainId: z.string(),
   label: z.string().nonempty('Please select a domain'),
@@ -70,8 +71,9 @@ const domainSchema = z.object({
 const DomainDialog: React.FC<DomainDialogProps> = ({
   domains,
   onSubmitDomain,
+  setDomains,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // Manage dialog visibility
   const [loading, setLoading] = useState(false);
   const {
     control,
@@ -93,21 +95,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
-
-    // Check for duplicate before making API call
-    const isUnique = onSubmitDomain({
-      ...data,
-      uid: '', // Will be set after API call
-      type: 'DOMAIN',
-    });
-
-    if (!isUnique) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
+      const response = await axiosInstance.post(`/freelancers/dehix-talent`, {
         talentId: data.domainId,
         talentName: data.label,
         experience: data.experience,
@@ -118,8 +107,16 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
 
       if (response.status === 200) {
+        const newTalent = response.data.data; // Adjust based on your response structure
+        onSubmitDomain({
+          ...data,
+          uid: newTalent._id, // Use the UID from the response
+        });
+        setDomains((prevSkills: any) =>
+          prevSkills.filter((domain: any) => domain._id !== data.domainId),
+        );
         reset();
-        setOpen(false);
+        setOpen(false); // Close the dialog after successful submission
         toast({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
@@ -206,7 +203,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                     placeholder="Experience (years)"
                     min={0}
                     max={50}
-                    step={0.1}
+                    step={0.1} //Allow decimals
                     {...field}
                     className="w-full mt-2"
                   />

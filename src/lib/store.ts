@@ -1,13 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 
 import userSlice from './userSlice';
-import projectDraftSlice from './projectDraftSlice';
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       user: userSlice,
-      projectDraft: projectDraftSlice,
     },
   });
 };
