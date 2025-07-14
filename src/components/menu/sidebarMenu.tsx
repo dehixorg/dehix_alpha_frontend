@@ -100,7 +100,7 @@ import {
 import { RootState } from '@/lib/store';
 
 export interface MenuItem {
-  href: string;
+  href?: string;
   icon: React.ReactNode;
   label: string;
   subItems?: {
@@ -108,6 +108,7 @@ export interface MenuItem {
     icon: React.ReactNode;
     label: string;
   }[];
+  onClick?: () => void;
 }
 
 type SidebarMenuProps = {
@@ -134,14 +135,14 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
   const pathname = usePathname();
 
   const user = useSelector((state: RootState) => state.user);
-
   const isActive = (href: string) => pathname === href;
   const isActiveParent = (item: MenuItem) => {
-    if (isActive(item.href)) return true;
+    if (isActive(item.href ? item.href : '')) return true;
     return item.subItems?.some((subItem) => isActive(subItem.href));
   };
 
   const finalMenuItemsTop = [...menuItemsTop];
+
   if (
     isKycCheck &&
     user?.kycStatus !== 'ACTIVE' &&
@@ -227,12 +228,33 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
       );
     }
 
+    // 👇 Handle buttons (onClick menu items)
+    if (item.onClick) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={item.onClick}
+                className={`flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors md:h-8 md:w-8`}
+              >
+                {item.icon}
+                <span className="sr-only">{item.label}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">{item.label}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    // 👇 Handle normal links
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href={item.href}
+              href={item.href ? item.href : ''}
               onClick={() => setActive(item.label)}
               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                 item.label === active || item.label === 'Dehix'

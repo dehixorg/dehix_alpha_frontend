@@ -67,11 +67,7 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({
-  skills,
-  onSubmitSkill,
-  setSkills,
-}) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -119,7 +115,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({
       });
 
       if (response.status === 200) {
-        const newTalent = response.data.data;
         reset();
         setOpen(false);
         toast({
