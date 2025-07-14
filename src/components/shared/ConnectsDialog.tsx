@@ -14,8 +14,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-
+import { UseFormReturn } from 'react-hook-form';
 interface ConnectsDialogProps {
+  form: UseFormReturn<any>;
   loading: boolean;
   setLoading: (loading: boolean) => void;
   onSubmit: any;
@@ -28,6 +29,7 @@ interface ConnectsDialogProps {
 }
 
 export default function ConnectsDialog({
+  form,
   loading,
   setLoading,
   onSubmit,
@@ -84,7 +86,7 @@ export default function ConnectsDialog({
   const dialogOpen = async () => {
     const isValid = await isValidCheck();
     console.log(isValid);
-
+    console.log("Form Errors", form.formState.errors);
     if (!isValid) return;
     console.log(requiredConnects);
 

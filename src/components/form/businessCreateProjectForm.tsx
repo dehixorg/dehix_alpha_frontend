@@ -4,11 +4,12 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
+import { useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -59,113 +60,6 @@ const profileFormSchema = z.object({
     .min(4, { message: 'Description must be at least 4 characters long.' })
     .max(160, { message: 'Description cannot exceed 160 characters.' })
     .optional(),
-  budget: z
-    .object({
-      type: z.enum(['FIXED', 'HOURLY']),
-      fixedAmount: z.string().optional(),
-      hourly: z
-        .object({
-          minRate: z.string().optional(),
-          maxRate: z.string().optional(),
-          estimatedHours: z.string().optional(),
-        })
-        .optional(),
-    })
-    .superRefine((data, ctx) => {
-      if (data.type === 'FIXED') {
-        if (!data.fixedAmount) {
-          ctx.addIssue({
-            path: ['fixedAmount'],
-            code: z.ZodIssueCode.custom,
-            message: 'Fixed amount is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) ||
-          parseFloat(data.fixedAmount) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['fixedAmount'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid amount greater than 0',
-          });
-        }
-      }
-      if (data.type === 'HOURLY') {
-        if (!data.hourly) {
-          ctx.addIssue({
-            path: ['hourly'],
-            code: z.ZodIssueCode.custom,
-            message: 'Hourly details are required',
-          });
-          return;
-        }
-        const { minRate, maxRate, estimatedHours } = data.hourly;
-        if (!minRate) {
-          ctx.addIssue({
-            path: ['hourly', 'minRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Minimum rate is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(minRate) ||
-          parseFloat(minRate) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'minRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid minimum rate > 0',
-          });
-        }
-        if (!maxRate) {
-          ctx.addIssue({
-            path: ['hourly', 'maxRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Maximum rate is required',
-          });
-        } else if (
-          !/^\d+(\.\d{1,2})?$/.test(maxRate) ||
-          parseFloat(maxRate) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'maxRate'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid maximum rate > 0',
-          });
-        }
-        if (!estimatedHours) {
-          ctx.addIssue({
-            path: ['hourly', 'estimatedHours'],
-            code: z.ZodIssueCode.custom,
-            message: 'Estimated hours are required',
-          });
-        } else if (
-          !/^\d+$/.test(estimatedHours) ||
-          parseInt(estimatedHours) <= 0
-        ) {
-          ctx.addIssue({
-            path: ['hourly', 'estimatedHours'],
-            code: z.ZodIssueCode.custom,
-            message: 'Enter a valid number of hours > 0',
-          });
-        }
-        if (
-          minRate &&
-          maxRate &&
-          /^\d+(\.\d{1,2})?$/.test(minRate) &&
-          /^\d+(\.\d{1,2})?$/.test(maxRate)
-        ) {
-          const min = parseFloat(minRate);
-          const max = parseFloat(maxRate);
-          if (max < min) {
-            ctx.addIssue({
-              path: ['hourly', 'maxRate'],
-              code: z.ZodIssueCode.custom,
-              message: 'Maximum rate must be ≥ minimum rate',
-            });
-          }
-        }
-      }
-    }),
   profiles: z
     .array(
       z.object({
@@ -194,18 +88,113 @@ const profileFormSchema = z.object({
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
             message: 'Minimum connect must be at least 1.',
           }),
-        rate: z
-          .string()
-          .refine(
-            (val) => /^\d+(\.\d{1,2})?$/.test(val) && parseFloat(val) >= 0,
-            { message: 'Per hour rate should be a valid non-negative number.' },
-          ),
-        description: z
-          .string()
-          .min(4, {
-            message: 'Description must be at least 4 characters long.',
+          budget: z
+          .object({
+            type: z.enum(['FIXED', 'HOURLY']),
+            fixedAmount: z.string().optional(),
+            hourly: z
+              .object({
+                minRate: z.string().optional(),
+                maxRate: z.string().optional(),
+                estimatedHours: z.string().optional(),
+              })
+              .optional(),
           })
-          .max(160, { message: 'Description cannot exceed 160 characters.' }),
+          .superRefine((data, ctx) => {
+            if (data.type === 'FIXED') {
+              if (!data.fixedAmount) {
+                ctx.addIssue({
+                  path: ['fixedAmount'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Fixed amount is required',
+                });
+              } else if (
+                !/^\d+(\.\d{1,2})?$/.test(data.fixedAmount) ||
+                parseFloat(data.fixedAmount) <= 0
+              ) {
+                ctx.addIssue({
+                  path: ['fixedAmount'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Enter a valid amount greater than 0',
+                });
+              }
+            }
+            if (data.type === 'HOURLY') {
+              if (!data.hourly) {
+                ctx.addIssue({
+                  path: ['hourly'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Hourly details are required',
+                });
+                return;
+              }
+              const { minRate, maxRate, estimatedHours } = data.hourly;
+              if (!minRate) {
+                ctx.addIssue({
+                  path: ['hourly', 'minRate'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Minimum rate is required',
+                });
+              } else if (
+                !/^\d+(\.\d{1,2})?$/.test(minRate) ||
+                parseFloat(minRate) <= 0
+              ) {
+                ctx.addIssue({
+                  path: ['hourly', 'minRate'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Enter a valid minimum rate > 0',
+                });
+              }
+              if (!maxRate) {
+                ctx.addIssue({
+                  path: ['hourly', 'maxRate'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Maximum rate is required',
+                });
+              } else if (
+                !/^\d+(\.\d{1,2})?$/.test(maxRate) ||
+                parseFloat(maxRate) <= 0
+              ) {
+                ctx.addIssue({
+                  path: ['hourly', 'maxRate'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Enter a valid maximum rate > 0',
+                });
+              }
+              if (!estimatedHours) {
+                ctx.addIssue({
+                  path: ['hourly', 'estimatedHours'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Estimated hours are required',
+                });
+              } else if (
+                !/^\d+$/.test(estimatedHours) ||
+                parseInt(estimatedHours) <= 0
+              ) {
+                ctx.addIssue({
+                  path: ['hourly', 'estimatedHours'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Enter a valid number of hours > 0',
+                });
+              }
+              if (
+                minRate &&
+                maxRate &&
+                /^\d+(\.\d{1,2})?$/.test(minRate) &&
+                /^\d+(\.\d{1,2})?$/.test(maxRate)
+              ) {
+                const min = parseFloat(minRate);
+                const max = parseFloat(maxRate);
+                if (max < min) {
+                  ctx.addIssue({
+                    path: ['hourly', 'maxRate'],
+                    code: z.ZodIssueCode.custom,
+                    message: 'Maximum rate must be ≥ minimum rate',
+                  });
+                }
+              }
+            }
+          }),
       }),
     )
     .optional(),
@@ -219,11 +208,6 @@ const defaultValues: Partial<ProfileFormValues> = {
   projectDomain: [],
   urls: [],
   description: '',
-  budget: {
-    type: 'FIXED',
-    fixedAmount: '',
-    hourly: { minRate: '', maxRate: '', estimatedHours: '' },
-  },
   profiles: [
     {
       domain: '',
@@ -231,8 +215,11 @@ const defaultValues: Partial<ProfileFormValues> = {
       skills: [],
       experience: '',
       minConnect: '',
-      rate: '',
-      description: '',
+      budget: {
+        type: 'FIXED',
+        fixedAmount: '',
+        hourly: { minRate: '', maxRate: '', estimatedHours: '' },
+      },
       domain_id: '',
     },
   ],
@@ -260,7 +247,8 @@ export function CreateProjectBusinessForm() {
     FormSteps.ProjectInfo,
   );
   const [activeProfile, setActiveProfile] = useState(0);
-
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode') as 'single' | 'multiple';
   const { hasOtherValues, hasProfiles } = useDraft({});
 
   const form = useForm<ProfileFormValues>({
@@ -268,7 +256,6 @@ export function CreateProjectBusinessForm() {
     defaultValues,
     mode: 'onChange',
   });
-
   const { fields: urlFields, append: appendUrl } = useFieldArray({
     name: 'urls',
     control: form.control,
@@ -463,11 +450,15 @@ export function CreateProjectBusinessForm() {
   // Form submit
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
+     console.log('Form submitted with data:', data);
     try {
       const uniqueSkills = Array.from(
         new Set(currSkills.flat().filter(Boolean)),
       );
-      const budget = getBudgetForAPI(data.budget);
+      const profilesWithFormattedBudget = (data.profiles || []).map((profile) => ({
+        ...profile,
+        budget: getBudgetForAPI(profile.budget),
+      }));
       const payload = {
         projectName: data.projectName,
         description: data.description,
@@ -479,8 +470,8 @@ export function CreateProjectBusinessForm() {
         role: '',
         projectType: 'FREELANCE',
         url: data.urls,
-        budget,
         profiles: data.profiles || [],
+        profilesWithFormattedBudget,
       };
       await axiosInstance.post(`/project/business`, payload);
       toast({
@@ -519,7 +510,6 @@ export function CreateProjectBusinessForm() {
       'description',
       'email',
       'projectName',
-      'budget',
     ]);
     if (!isValid) return;
     if (currentStep === FormSteps.ProjectInfo)
@@ -533,6 +523,7 @@ export function CreateProjectBusinessForm() {
 
   const removeProfileByIndex = (indexToRemove: number) => {
     if (profileFields.length === 1) return;
+    removeProfile(indexToRemove);
     form.unregister(`profiles.${indexToRemove}`);
     if (activeProfile >= indexToRemove)
       setActiveProfile((prev) => Math.max(0, prev - 1));
@@ -540,33 +531,37 @@ export function CreateProjectBusinessForm() {
 
   // UI render helpers
   const ProfileTabs = () => (
-    <ScrollArea>
-      <div className="flex gap-2 mb-4">
-        {profileFields.map((_, index) => (
-          <Button
-            key={index}
-            type="button"
-            size="sm"
-            variant={activeProfile === index ? 'default' : 'outline'}
-            onClick={() => setActiveProfile(index)}
-            className={`px-4 py-2 ${activeProfile === index ? 'bg-blue-600 text-white hover:text-black' : ''}`}
-          >
-            Profile {index + 1}
-          </Button>
-        ))}
+  <ScrollArea>
+      <div className={`flex gap-2 mb-2 ${mode === "multiple" ? "p-2 rounded-md" : ""}`}>
+        {mode === "multiple" &&
+          profileFields.map((_, index) => (
+            <Button
+              key={index}
+              type="button"
+              size="sm"
+              variant={activeProfile === index ? "default" : "outline"}
+              onClick={() => setActiveProfile(index)}
+              className={`px-4 py-2 ${
+                activeProfile === index ? "bg-blue-600 text-white hover:text-black" : ""
+              }`}
+            >
+              Profile {index + 1}
+            </Button>
+          ))}
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
 
+
   const renderBudgetSection = () => {
-    const budgetType = form.watch('budget.type');
+    const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
     return (
       <div className="lg:col-span-2 xl:col-span-2 border p-4 rounded-md mb-4">
         <h3 className="text-lg font-medium mb-4">Project Budget</h3>
         <FormField
           control={form.control}
-          name="budget.type"
+          name={`profiles.${activeProfile}.budget.type`}
           render={({ field }) => (
             <FormItem className="mb-6">
               <FormLabel>Budget Type</FormLabel>
@@ -576,6 +571,7 @@ export function CreateProjectBusinessForm() {
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
                 >
+                <div className='flex flex-row gap-4'>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="FIXED" id="fixed" />
                     <label htmlFor="fixed" className="cursor-pointer">
@@ -588,6 +584,7 @@ export function CreateProjectBusinessForm() {
                       Hourly Rate
                     </label>
                   </div>
+                </div>
                 </RadioGroup>
               </FormControl>
               <FormMessage />
@@ -597,7 +594,7 @@ export function CreateProjectBusinessForm() {
         {budgetType === 'FIXED' && (
           <FormField
             control={form.control}
-            name="budget.fixedAmount"
+            name= {`profiles.${activeProfile}.budget.fixedAmount`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Fixed Budget Amount ($)</FormLabel>
@@ -620,10 +617,10 @@ export function CreateProjectBusinessForm() {
         )}
         {budgetType === 'HOURLY' && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="budget.hourly.minRate"
+                name={`profiles.${activeProfile}.budget.hourly.minRate`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Minimum Rate ($/hour)</FormLabel>
@@ -642,7 +639,7 @@ export function CreateProjectBusinessForm() {
               />
               <FormField
                 control={form.control}
-                name="budget.hourly.maxRate"
+                name={`profiles.${activeProfile}.budget.hourly.maxRate`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Maximum Rate ($/hour)</FormLabel>
@@ -659,12 +656,11 @@ export function CreateProjectBusinessForm() {
                   </FormItem>
                 )}
               />
-            </div>
             <FormField
               control={form.control}
-              name="budget.hourly.estimatedHours"
+              name={`profiles.${activeProfile}.budget.hourly.estimatedHours`}
               render={({ field }) => (
-                <FormItem className="mt-4">
+                <FormItem>
                   <FormLabel>Estimated Hours</FormLabel>
                   <FormControl>
                     <Input
@@ -681,12 +677,21 @@ export function CreateProjectBusinessForm() {
                 </FormItem>
               )}
             />
+            </div>
           </>
         )}
-        {form.formState.errors.budget?.message && (
-          <p className="text-sm text-red-600 mt-4">
-            {form.formState.errors.budget.message}
-          </p>
+        {form.formState.errors.profiles &&
+          form.formState.errors.profiles[activeProfile]?.budget && (
+            <p className="text-sm text-red-600 mt-4">
+              {
+                Object.values(
+                  form.formState.errors.profiles[activeProfile]?.budget || {}
+                )
+                  .map((err: any) => err?.message)
+                  .filter(Boolean)
+                  .join(', ')
+              }
+            </p>
         )}
       </div>
     );
@@ -800,7 +805,6 @@ export function CreateProjectBusinessForm() {
           </FormItem>
         )}
       />
-      {renderBudgetSection()}
       <div className="lg:col-span-2 xl:col-span-2">
         {urlFields.map((field, index) => (
           <FormField
@@ -859,17 +863,17 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProfileInfoStep = () => (
-    <div className="lg:col-span-2 xl:col-span-2">
-      <div className="my-4">
-        <ProfileTabs />
-      </div>
-      {profileFields.map((field, index) =>
-        index === activeProfile ? (
-          <div key={index} className="border p-4 mb-4 rounded-md relative">
-            <X
-              onClick={() => removeProfileByIndex(index)}
-              className="w-5 hover:text-red-600 h-5 absolute right-2 top-1 cursor-pointer"
-            />
+  <div className="lg:col-span-2 xl:col-span-2">
+    <div className="my-4">
+      <ProfileTabs />
+    </div>
+    {profileFields.map((field, index) => {
+      if (mode === 'single' && index > 0) return null;
+
+      return (
+        index === activeProfile || mode === 'single' ? (
+          <div key={index} className="p-4 mb-4 rounded-md relative">
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
             <FormField
               control={form.control}
               name={`profiles.${index}.domain`}
@@ -979,11 +983,14 @@ export function CreateProjectBusinessForm() {
                         ))}
                       </div>
                     </div>
+                    
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            </div>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
             <FormField
               control={form.control}
               name={`profiles.${index}.experience`}
@@ -1008,10 +1015,12 @@ export function CreateProjectBusinessForm() {
               name={`profiles.${index}.minConnect`}
               render={({ field }) => (
                 <FormItem className="mb-4">
+                  <div className='flex items-center justify-between mb-2'>
                   <FormLabel>Min Connect</FormLabel>
                   <FormDescription>
                     Minimum number of connects for the project
                   </FormDescription>
+                  </div>
                   <FormControl>
                     <Input
                       placeholder="Enter Min Connects (Recommended: 10)"
@@ -1022,50 +1031,24 @@ export function CreateProjectBusinessForm() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.rate`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Per Hour Rate</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter rate"
-                      min={0}
-                      max={200}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.description`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Enter description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => removeProfile(index)}
-            >
-              Remove Profile
-            </Button>
+            </div>
+            {renderBudgetSection()}
+            {mode === 'multiple' && profileFields.length > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => removeProfile(index)}
+              >
+                Remove Profile
+              </Button>
+            )}
           </div>
-        ) : null,
-      )}
+        ) : null
+      );
+    })}
+    {mode === 'multiple' && (
       <div className="flex justify-between items-center">
         <Button
           type="button"
@@ -1079,7 +1062,11 @@ export function CreateProjectBusinessForm() {
               skills: [],
               experience: '',
               minConnect: '',
-              rate: '',
+              budget: {
+                type: 'FIXED',
+                fixedAmount: '',
+                hourly: { minRate: '', maxRate: '', estimatedHours: '' },
+              },
               description: '',
               domain_id: '',
             })
@@ -1091,23 +1078,26 @@ export function CreateProjectBusinessForm() {
           <Save />
         </Button>
       </div>
-      <div className="lg:col-span-2 xl:col-span-2 mt-4">
-        <ConnectsDialog
-          loading={loading}
-          isValidCheck={form.trigger}
-          onSubmit={form.handleSubmit(onSubmit)}
-          setLoading={setLoading}
-          userId={user.uid}
-          buttonText={'Create Project'}
-          userType={'BUSINESS'}
-          requiredConnects={parseInt(
-            process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
-            10,
-          )}
-        />
-      </div>
+    )}
+    <div className="lg:col-span-2 xl:col-span-2 mt-4">
+      <ConnectsDialog
+        form={form}
+        loading={loading}
+        isValidCheck={form.trigger}
+        onSubmit={form.handleSubmit(onSubmit)}
+        setLoading={setLoading}
+        userId={user.uid}
+        buttonText={'Create Project'}
+        userType={'BUSINESS'}
+        requiredConnects={parseInt(
+          process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+          10,
+        )}
+      />
     </div>
-  );
+  </div>
+);
+
 
   return (
     <Card className="p-10">
