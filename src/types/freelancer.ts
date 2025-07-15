@@ -20,6 +20,7 @@ export interface Project {
   end: string;
   techUsed: string[];
   githubLink?: string;
+  liveDemoLink?: string;
   projectType?: string;
   verified?: boolean;
   referencePersonName?: string;

@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
+import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -51,6 +52,11 @@ const projectFormSchema = z
       .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
         message: 'GitHub repository URL must start with https://github.com/',
       }),
+    liveDemoLink: z
+      .string()
+      .url({ message: 'Live demo link must be a valid URL.' })
+      .optional(),
+    thumbnail: z.string().optional(),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -104,6 +110,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       projectName: '',
       description: '',
       githubLink: '',
+      liveDemoLink: '',
+      thumbnail: '',
       start: '',
       end: '',
       refer: '',
@@ -231,6 +239,28 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     setCurrSkills,
   });
 
+  // Reset form function
+  const resetForm = () => {
+    form.reset({
+      projectName: '',
+      description: '',
+      githubLink: '',
+      liveDemoLink: '',
+      thumbnail: '',
+      start: '',
+      end: '',
+      refer: '',
+      techUsed: [],
+      role: '',
+      projectType: '',
+      verificationStatus: 'ADDED',
+      comments: '',
+    });
+    setCurrSkills([]);
+    setTmpSkill('');
+    setStep(1);
+  };
+
   // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
@@ -249,6 +279,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       });
 
       onFormSubmit();
+      resetForm(); // Reset form after successful submission
       setIsDialogOpen(false);
       toast({
         title: 'Project Added',
@@ -439,6 +470,43 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       </FormControl>
                       <FormDescription>
                         Enter the GitHub repository link (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="liveDemoLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Live Demo Link</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter live demo link" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the live demo link (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="thumbnail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Thumbnail</FormLabel>
+                      <FormControl>
+                        <ThumbnailUpload
+                          onThumbnailUpdate={(url) => field.onChange(url)}
+                          existingThumbnailUrl={field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload a thumbnail image for your project (optional)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

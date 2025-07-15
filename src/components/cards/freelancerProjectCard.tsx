@@ -1,5 +1,6 @@
 import React from 'react';
-import { Github, MessageSquareIcon } from 'lucide-react';
+import { Github, MessageSquareIcon, ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 
 import DateRange from './dateRange';
 
@@ -19,6 +20,8 @@ interface ProjectProps {
   description: string;
   verified: boolean;
   githubLink: string;
+  liveDemoLink?: string;
+  thumbnail?: string;
   start: string;
   end: string;
   refer: string;
@@ -35,6 +38,8 @@ const ProjectCard: React.FC<ProjectProps> = ({
   description,
   verified,
   githubLink,
+  liveDemoLink,
+  thumbnail,
   start,
   end,
   refer,
@@ -48,23 +53,49 @@ const ProjectCard: React.FC<ProjectProps> = ({
       <CardHeader>
         <CardTitle className="flex">
           {projectName}
-          {githubLink && (
-            <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            {githubLink && (
               <a
                 href={githubLink}
                 className="text-sm text-white underline"
                 target="_blank"
                 rel="noopener noreferrer"
+                title="View GitHub Repository"
               >
                 <Github />
               </a>
-            </div>
-          )}
+            )}
+            {liveDemoLink && (
+              <a
+                href={liveDemoLink}
+                className="text-sm text-white underline"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Live Demo"
+              >
+                <ExternalLink />
+              </a>
+            )}
+          </div>
         </CardTitle>
         <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-white">
           {projectType}
         </CardDescription>
       </CardHeader>
+
+      {/* Project Thumbnail */}
+      {thumbnail && (
+        <div className="px-6 pb-4">
+          <Image
+            src={thumbnail}
+            alt={`${projectName} thumbnail`}
+            width={400}
+            height={200}
+            className="w-full h-48 object-cover rounded-lg"
+          />
+        </div>
+      )}
+
       <CardContent>
         {verified ? (
           <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
