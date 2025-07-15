@@ -116,15 +116,12 @@ export default function ProfilesPage() {
         personalWebsite: (freelancerData as any).personalWebsite || '',
       };
 
-      console.log('Profile creation payload:', profilePayload);
-
       const response = await axiosInstance.post(
         `/freelancer/profile`,
         profilePayload,
       );
 
       const newProfile = response.data.data;
-      console.log('Created profile response:', newProfile);
 
       setProfiles([...profiles, newProfile]);
       setNewProfileName('');

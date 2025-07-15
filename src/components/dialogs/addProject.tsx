@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 import DraftDialog from '../shared/DraftDialog';
 
@@ -39,6 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
+import { RootState } from '@/lib/store';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -55,8 +56,9 @@ const projectFormSchema = z
     liveDemoLink: z
       .string()
       .url({ message: 'Live demo link must be a valid URL.' })
-      .optional(),
-    thumbnail: z.string().optional(),
+      .optional()
+      .or(z.literal('')),
+    thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -103,7 +105,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
-  const { freelancer_id } = useParams<{ freelancer_id: string }>();
+  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -267,16 +269,47 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     try {
       // Join currSkills array into comma-separated string for form submission
 
-      // Submit with the skills from our state
-      await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
-        ...data,
+      // Prepare the payload - NOTE: liveDemoLink is not supported by backend CREATE schema
+      const payload = {
+        projectName: data.projectName,
+        description: data.description,
+        githubLink: data.githubLink,
+        thumbnail: data.thumbnail, // Now required
         techUsed: currSkills,
         verified: false,
         oracleAssigned: '',
         start: data.start ? new Date(data.start).toISOString() : null,
         end: data.end ? new Date(data.end).toISOString() : null,
+        refer: data.refer,
+        role: data.role,
+        projectType: data.projectType,
+        comments: data.comments || '',
         verificationUpdateTime: new Date().toISOString(),
-      });
+      };
+
+      // Submit with the skills from our state
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/project`,
+        payload,
+      );
+
+      // If liveDemoLink is provided, update the project immediately after creation
+      // This is a workaround since CREATE schema doesn't support liveDemoLink but UPDATE does
+      if (data.liveDemoLink && data.liveDemoLink.trim()) {
+        const projectId =
+          response.data?.data?.projectId || response.data?.projectId;
+        if (projectId) {
+          try {
+            await axiosInstance.put(`/freelancer/project/${projectId}`, {
+              ...payload,
+              liveDemoLink: data.liveDemoLink,
+            });
+          } catch (updateError) {
+            console.warn('Failed to update liveDemoLink:', updateError);
+            // Don't fail the entire operation if liveDemoLink update fails
+          }
+        }
+      }
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission
@@ -506,7 +539,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                         />
                       </FormControl>
                       <FormDescription>
-                        Upload a thumbnail image for your project (optional)
+                        Upload a thumbnail image for your project (required)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
