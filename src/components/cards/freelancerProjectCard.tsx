@@ -1,18 +1,8 @@
 import React from 'react';
-import { Github, MessageSquareIcon, ExternalLink } from 'lucide-react';
+import { Github, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 
-import DateRange from './dateRange';
-
-import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProjectProps {
   _id: string;
@@ -31,102 +21,73 @@ interface ProjectProps {
   oracleAssigned: string | null;
   verificationUpdateTime: string;
   comments: string;
+  onClick?: () => void;
 }
 
 const ProjectCard: React.FC<ProjectProps> = ({
   projectName,
-  description,
-  verified,
   githubLink,
   liveDemoLink,
   thumbnail,
-  start,
-  end,
-  refer,
-  techUsed,
-  role,
-  projectType,
-  comments,
+  onClick,
 }) => {
+  const handleLinkClick = (e: React.MouseEvent, url: string) => {
+    e.stopPropagation();
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <Card className="w-full h-full mx-auto md:max-w-2xl ">
-      <CardHeader>
-        <CardTitle className="flex">
-          {projectName}
-          <div className="ml-auto flex gap-2">
-            {githubLink && (
-              <a
-                href={githubLink}
-                className="text-sm text-white underline"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View GitHub Repository"
-              >
-                <Github />
-              </a>
-            )}
-            {liveDemoLink && (
-              <a
-                href={liveDemoLink}
-                className="text-sm text-white underline"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View Live Demo"
-              >
-                <ExternalLink />
-              </a>
-            )}
+    <Card
+      className="w-full h-full mx-auto md:max-w-2xl cursor-pointer hover:shadow-lg transition-shadow duration-200"
+      onClick={onClick}
+    >
+      <CardContent className="p-0">
+        {/* Project Thumbnail */}
+        <div className="relative">
+          {thumbnail ? (
+            <Image
+              src={thumbnail}
+              alt={`${projectName} thumbnail`}
+              width={400}
+              height={200}
+              className="w-full h-48 object-cover rounded-t-lg"
+            />
+          ) : (
+            <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg flex items-center justify-center">
+              <span className="text-gray-500 dark:text-gray-400">No Image</span>
+            </div>
+          )}
+        </div>
+
+        {/* Project Name and Links */}
+        <div className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-lg truncate flex-1">
+              {projectName}
+            </h3>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {githubLink && (
+                <button
+                  onClick={(e) => handleLinkClick(e, githubLink)}
+                  className="p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  title="View GitHub Repository"
+                >
+                  <Github className="h-4 w-4" />
+                </button>
+              )}
+              {liveDemoLink && (
+                <button
+                  onClick={(e) => handleLinkClick(e, liveDemoLink)}
+                  className="p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  title="View Live Demo"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </CardTitle>
-        <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-white">
-          {projectType}
-        </CardDescription>
-      </CardHeader>
-
-      {/* Project Thumbnail */}
-      {thumbnail && (
-        <div className="px-6 pb-4">
-          <Image
-            src={thumbnail}
-            alt={`${projectName} thumbnail`}
-            width={400}
-            height={200}
-            className="w-full h-48 object-cover rounded-lg"
-          />
         </div>
-      )}
-
-      <CardContent>
-        {verified ? (
-          <Badge className="bg-success hover:bg-success">VERIFIED</Badge>
-        ) : (
-          <Badge className="bg-warning hover:bg-warning">PENDING</Badge>
-        )}
-        <p className="text-gray-300 pt-4">{description}</p>
-
-        <p className="mt-2 flex text-gray-500 border p-3 rounded">
-          <MessageSquareIcon className="pr-1" />
-          {comments}
-        </p>
-        <div className="mt-4">
-          <p className="text-sm text-gray-600">Reference: {refer}</p>
-        </div>
-        <div className="my-4">
-          <p className="text-sm text-gray-600">Role: {role}</p>
-        </div>
-
-        {techUsed.map((tech: string, index: number) => (
-          <Badge
-            className="uppercase mx-1 text-xs font-normal bg-gray-300"
-            key={index}
-          >
-            {tech}
-          </Badge>
-        ))}
       </CardContent>
-      <CardFooter className="flex">
-        <DateRange startDate={start} endDate={end} />
-      </CardFooter>
     </Card>
   );
 };
