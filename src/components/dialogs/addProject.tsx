@@ -269,11 +269,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     try {
       // Join currSkills array into comma-separated string for form submission
 
-      // Prepare the payload - NOTE: liveDemoLink is not supported by backend CREATE schema
+      // Prepare the payload
       const payload = {
         projectName: data.projectName,
         description: data.description,
         githubLink: data.githubLink,
+        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
         thumbnail: data.thumbnail, // Now required
         techUsed: currSkills,
         verified: false,
@@ -292,24 +293,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         `/freelancer/${user.uid}/project`,
         payload,
       );
-
-      // If liveDemoLink is provided, update the project immediately after creation
-      // This is a workaround since CREATE schema doesn't support liveDemoLink but UPDATE does
-      if (data.liveDemoLink && data.liveDemoLink.trim()) {
-        const projectId =
-          response.data?.data?.projectId || response.data?.projectId;
-        if (projectId) {
-          try {
-            await axiosInstance.put(`/freelancer/project/${projectId}`, {
-              ...payload,
-              liveDemoLink: data.liveDemoLink,
-            });
-          } catch (updateError) {
-            console.warn('Failed to update liveDemoLink:', updateError);
-            // Don't fail the entire operation if liveDemoLink update fails
-          }
-        }
-      }
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission
