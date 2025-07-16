@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Github, Calendar, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 import {
   Dialog,
@@ -10,10 +10,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 
 interface Project {
   _id: string;
@@ -21,12 +21,16 @@ interface Project {
   description: string;
   verified: boolean;
   githubLink: string;
+  liveDemoLink?: string;
+  thumbnail?: string;
   start: string;
   end: string;
   refer: string;
   techUsed: string[];
   role: string;
   projectType: string;
+  oracleAssigned: string | null;
+  verificationUpdateTime: string;
   comments: string;
 }
 
@@ -152,8 +156,14 @@ export default function ProjectSelectionDialog({
           end: project.end,
           techUsed: project.techUsed || [],
           githubLink: project.githubLink,
+          liveDemoLink: project.liveDemoLink || '', // Provide fallback for undefined
+          thumbnail: project.thumbnail || '', // Provide fallback for undefined
           projectType: project.projectType,
           verified: project.verified || false,
+          oracleAssigned: project.oracleAssigned || null,
+          verificationUpdateTime: project.verificationUpdateTime,
+          comments: project.comments || '',
+          refer: project.refer,
         }));
 
       // Combine existing projects with newly selected ones
@@ -236,100 +246,37 @@ export default function ProjectSelectionDialog({
                   const isSelected = selectedProjects.includes(project._id);
 
                   return (
-                    <Card
+                    <div
                       key={project._id}
-                      className={`transition-all duration-200 ${
+                      className={`relative transition-all duration-200 ${
                         isAlreadyInProfile
-                          ? 'bg-green-50 border-green-200 opacity-60 dark:bg-green-900/30 dark:border-green-600'
+                          ? 'opacity-60 pointer-events-none'
                           : isSelected
-                            ? 'bg-primary/10 border-primary cursor-pointer'
-                            : 'hover:bg-accent cursor-pointer'
+                            ? 'ring-2 ring-green-500 ring-offset-2'
+                            : 'cursor-pointer'
                       }`}
                       onClick={() =>
                         !isAlreadyInProfile && handleProjectToggle(project._id)
                       }
                     >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {project.projectName}
-                            {isAlreadyInProfile ? (
-                              <Badge className="bg-green-600 hover:bg-green-600 text-xs">
-                                Already Added
-                              </Badge>
-                            ) : isSelected ? (
-                              <CheckCircle className="h-5 w-5 text-primary" />
-                            ) : null}
-                          </CardTitle>
-                          {project.githubLink && (
-                            <a
-                              href={project.githubLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <Github className="h-5 w-5" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            className={`${
-                              project.verified
-                                ? 'bg-green-600 hover:bg-green-600'
-                                : 'bg-yellow-600 hover:bg-yellow-600'
-                            }`}
-                          >
-                            {project.verified ? 'VERIFIED' : 'PENDING'}
+                      <ProjectCard
+                        {...project}
+                        onClick={() => {}} // Prevent default click since we handle it on the wrapper
+                      />
+
+                      {/* Selection indicators */}
+                      <div className="absolute top-2 right-2 z-10">
+                        {isAlreadyInProfile ? (
+                          <Badge className="bg-green-600 hover:bg-green-600 text-xs">
+                            Already Added
                           </Badge>
-                          {project.projectType && (
-                            <Badge variant="outline">
-                              {project.projectType}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-muted-foreground text-sm line-clamp-3">
-                          {project.description}
-                        </p>
-
-                        {project.role && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Role:</span>{' '}
-                            {project.role}
-                          </p>
-                        )}
-
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {formatDate(project.start)} -{' '}
-                            {formatDate(project.end)}
-                          </span>
-                        </div>
-
-                        {project.techUsed && project.techUsed.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {project.techUsed.slice(0, 3).map((tech, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {tech}
-                              </Badge>
-                            ))}
-                            {project.techUsed.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{project.techUsed.length - 3} more
-                              </Badge>
-                            )}
+                        ) : isSelected ? (
+                          <div className="bg-green-500 rounded-full p-1">
+                            <CheckCircle className="h-4 w-4 text-white" />
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                        ) : null}
+                      </div>
+                    </div>
                   );
                 })}
               </div>

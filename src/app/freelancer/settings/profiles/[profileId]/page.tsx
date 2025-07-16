@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,8 @@ export default function ProfileDetailPage() {
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
   const [freelancerProjects, setFreelancerProjects] = useState<any>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (profileId) {
@@ -73,6 +76,40 @@ export default function ProfileDetailPage() {
         `/freelancer/profile/${profileId}`,
       );
       const profileData = response.data.data;
+
+      // If profile has projects, fetch complete project data to ensure we have thumbnails
+      if (profileData.projects && profileData.projects.length > 0) {
+        try {
+          const freelancerResponse = await axiosInstance.get(
+            `/freelancer/${user.uid}`,
+          );
+          const freelancerData = freelancerResponse.data.data || {};
+          const freelancerProjects = freelancerData.projects || {};
+
+          // Convert projects object to array if it's an object
+          const allFreelancerProjects = Array.isArray(freelancerProjects)
+            ? freelancerProjects
+            : Object.values(freelancerProjects);
+
+          // Merge profile projects with complete freelancer project data
+          const enrichedProjects = profileData.projects.map(
+            (profileProject: any) => {
+              const fullProject = allFreelancerProjects.find(
+                (fp: any) => fp._id === profileProject._id,
+              );
+
+              // Use full project data if available, otherwise use profile project data
+              return fullProject || profileProject;
+            },
+          );
+
+          profileData.projects = enrichedProjects;
+        } catch (projectError) {
+          console.warn('Could not fetch complete project data:', projectError);
+          // Continue with existing profile data if project fetch fails
+        }
+      }
+
       setProfile(profileData);
       setEditingProfileData(profileData);
     } catch (error) {
@@ -207,6 +244,16 @@ export default function ProfileDetailPage() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleProjectClick = (project: any) => {
+    setSelectedProject(project);
+    setIsProjectDetailsOpen(true);
+  };
+
+  const handleCloseProjectDetails = () => {
+    setIsProjectDetailsOpen(false);
+    setSelectedProject(null);
   };
 
   const handleDeleteProfile = async () => {
@@ -546,51 +593,26 @@ export default function ProfileDetailPage() {
               </CardHeader>
               <CardContent>
                 {profile.projects && profile.projects.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {profile.projects.map((project: any, index: number) => (
-                      <Card key={project._id || index} className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium">
-                            {project.projectName || project.name}
-                          </h4>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveProject(project._id)}
-                            className="text-destructive hover:text-destructive/80"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                          {project.description}
-                        </p>
-                        {project.role && (
-                          <p className="text-xs text-muted-foreground">
-                            Role: {project.role}
-                          </p>
-                        )}
-                        {project.techUsed && project.techUsed.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {project.techUsed
-                              .slice(0, 3)
-                              .map((tech: string, techIndex: number) => (
-                                <Badge
-                                  key={techIndex}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {tech}
-                                </Badge>
-                              ))}
-                            {project.techUsed.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{project.techUsed.length - 3} more
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                      </Card>
+                      <div key={project._id || index} className="relative">
+                        <ProjectCard
+                          {...project}
+                          onClick={() => handleProjectClick(project)}
+                        />
+                        {/* Remove button overlay */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveProject(project._id);
+                          }}
+                          className="absolute top-2 right-2 z-10 h-8 w-8 p-0 bg-red-500/80 hover:bg-red-600/90 text-white rounded-full"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -724,6 +746,112 @@ export default function ProfileDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View-Only Project Details Dialog */}
+      {selectedProject && (
+        <Dialog
+          open={isProjectDetailsOpen}
+          onOpenChange={handleCloseProjectDetails}
+        >
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                {selectedProject.projectName}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Project Image */}
+              {selectedProject.thumbnail && (
+                <div className="w-full">
+                  <img
+                    src={selectedProject.thumbnail}
+                    alt={`${selectedProject.projectName} thumbnail`}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              {/* Project Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Description</h3>
+                    <p className="text-muted-foreground">
+                      {selectedProject.description}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Role</h3>
+                    <p className="text-muted-foreground">
+                      {selectedProject.role}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Project Type</h3>
+                    <Badge variant="outline">
+                      {selectedProject.projectType}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Duration</h3>
+                    <p className="text-muted-foreground">
+                      {new Date(selectedProject.start).toLocaleDateString()} -{' '}
+                      {new Date(selectedProject.end).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Technologies Used
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProject.techUsed?.map(
+                        (tech: string, index: number) => (
+                          <Badge key={index} variant="secondary">
+                            {tech}
+                          </Badge>
+                        ),
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">Links</h3>
+                    <div className="space-y-2">
+                      {selectedProject.githubLink && (
+                        <a
+                          href={selectedProject.githubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                        >
+                          GitHub Repository
+                        </a>
+                      )}
+                      {selectedProject.liveDemoLink && (
+                        <a
+                          href={selectedProject.liveDemoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                        >
+                          Live Demo
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
