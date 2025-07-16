@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
@@ -43,7 +44,14 @@ interface Project {
   end: string;
   techUsed: string[];
   githubLink?: string;
+  liveDemoLink?: string;
+  thumbnail?: string;
   projectType?: string;
+  verified?: boolean;
+  refer?: string;
+  oracleAssigned?: string | null;
+  verificationUpdateTime?: string;
+  comments?: string;
 }
 
 interface ProfessionalExperience {
@@ -90,10 +98,39 @@ const FreelancerProfile = () => {
         try {
           setLoading(true);
           const response = await axiosInstance.get(
-            `/freelancer/${freelancer_id}/profile-info`,
+            `/public/freelancer/${freelancer_id}`,
           );
           if (response.status === 200) {
-            setProfileData(response.data);
+            const freelancerData = response.data.data || response.data;
+            console.log('🔍 Freelancer data received:', freelancerData);
+
+            // Transform the data to match our interface
+            const transformedData: FreelancerProfile = {
+              firstName: freelancerData.firstName || '',
+              lastName: freelancerData.lastName || '',
+              description: freelancerData.description || '',
+              profilePic: freelancerData.profilePic || '',
+              skills: freelancerData.skills || [],
+              domain: freelancerData.domain || [],
+              projectDomain: freelancerData.projectDomain || [],
+              projects: freelancerData.projects
+                ? Array.isArray(freelancerData.projects)
+                  ? freelancerData.projects
+                  : Object.values(freelancerData.projects || {})
+                : [],
+              professionalInfo: freelancerData.professionalInfo
+                ? Array.isArray(freelancerData.professionalInfo)
+                  ? freelancerData.professionalInfo
+                  : Object.values(freelancerData.professionalInfo || {})
+                : [],
+              education: freelancerData.education
+                ? Array.isArray(freelancerData.education)
+                  ? freelancerData.education
+                  : Object.values(freelancerData.education || {})
+                : [],
+            };
+
+            setProfileData(transformedData);
           }
         } catch (error) {
           console.error('Error fetching freelancer details', error);
@@ -357,28 +394,45 @@ const FreelancerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {profileData &&
                   profileData.projects &&
                   profileData.projects.length > 0 ? (
-                    profileData.projects.slice(0, 3).map((project) => (
-                      <div
-                        key={project._id}
-                        className="border-b border-border pb-4 last:border-b-0"
-                      >
-                        <div className="flex justify-between items-start">
-                          <h3
-                            className="font-medium text-foreground hover:text-primary cursor-pointer"
-                            onClick={() => setSelectedProject(project)}
-                          >
-                            {project.projectName}
-                          </h3>
-                        </div>
-                      </div>
-                    ))
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profileData.projects.slice(0, 4).map((project) => (
+                        <ProjectCard
+                          key={project._id}
+                          _id={project._id}
+                          projectName={project.projectName}
+                          description={project.description || ''}
+                          verified={project.verified || false}
+                          githubLink={project.githubLink || ''}
+                          liveDemoLink={project.liveDemoLink || ''}
+                          thumbnail={project.thumbnail || ''}
+                          start={project.start || ''}
+                          end={project.end || ''}
+                          refer={project.refer || ''}
+                          techUsed={project.techUsed || []}
+                          role={project.role || ''}
+                          projectType={project.projectType || ''}
+                          oracleAssigned={project.oracleAssigned || null}
+                          verificationUpdateTime={
+                            project.verificationUpdateTime || ''
+                          }
+                          comments={project.comments || ''}
+                          isViewOnly={true}
+                          onClick={() => setSelectedProject(project)}
+                        />
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-muted-foreground italic">
                       No projects added
+                    </p>
+                  )}
+                  {profileData?.projects && profileData.projects.length > 4 && (
+                    <p className="text-sm text-muted-foreground text-center mt-4">
+                      And {profileData.projects.length - 4} more projects...
                     </p>
                   )}
                 </div>

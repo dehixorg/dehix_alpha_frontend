@@ -14,6 +14,7 @@ import {
   Clock,
   DollarSign,
 } from 'lucide-react';
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 
 import {
   Accordion,
@@ -365,62 +366,61 @@ const ProfileDialog = React.memo(
                     <Briefcase className="w-5 h-5" />
                     Projects ({profileData.projects.length})
                   </h3>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profileData.projects
-                      .slice(0, 3)
-                      .map((project: any, index: number) => (
-                        <div
-                          key={index}
-                          className="border-l-4 border-blue-500 pl-4 bg-gray-50 dark:bg-gray-800 p-3 rounded"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-semibold">
-                              {project.projectName}
-                            </h4>
-                            {project.githubLink && (
-                              <a
-                                href={project.githubLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-sm"
-                              >
-                                GitHub ↗
-                              </a>
-                            )}
-                          </div>
-                          {project.description && (
-                            <p className="text-sm text-muted-foreground mb-2">
-                              {project.description}
-                            </p>
-                          )}
-                          {project.techUsed && project.techUsed.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {project.techUsed
-                                .slice(0, 4)
-                                .map((tech: string, techIndex: number) => (
-                                  <Badge
-                                    key={techIndex}
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
-                                    {tech}
-                                  </Badge>
-                                ))}
-                              {project.techUsed.length > 4 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{project.techUsed.length - 4} more
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    {profileData.projects.length > 3 && (
-                      <p className="text-sm text-muted-foreground text-center">
-                        And {profileData.projects.length - 3} more projects...
-                      </p>
-                    )}
+                      .slice(0, 4)
+                      .map((project: any, index: number) => {
+                        console.log('🔍 Project data in bid view:', {
+                          name: project.projectName,
+                          thumbnail: project.thumbnail,
+                          liveDemoLink: project.liveDemoLink,
+                          githubLink: project.githubLink,
+                          hasThumb: !!project.thumbnail,
+                          hasLive: !!project.liveDemoLink,
+                          hasGithub: !!project.githubLink,
+                        });
+
+                        // Debug live demo link specifically
+                        if (project.liveDemoLink) {
+                          console.log(
+                            '✅ Live demo link found:',
+                            project.liveDemoLink,
+                          );
+                        } else {
+                          console.log(
+                            '❌ No live demo link for:',
+                            project.projectName,
+                          );
+                        }
+                        // Debug what props are being passed to ProjectCard
+                        console.log('🔍 Props being passed to ProjectCard:', {
+                          projectName: project.projectName,
+                          liveDemoLink: project.liveDemoLink,
+                          githubLink: project.githubLink,
+                          thumbnail: project.thumbnail,
+                          hasLiveDemoLink: !!project.liveDemoLink,
+                          liveDemoLinkType: typeof project.liveDemoLink,
+                          liveDemoLinkLength: project.liveDemoLink?.length,
+                        });
+
+                        return (
+                          <ProjectCard
+                            key={project._id || index}
+                            {...project}
+                            isViewOnly={true}
+                            onClick={() => {
+                              // Optional: Add project detail view functionality
+                              console.log('Project clicked:', project);
+                            }}
+                          />
+                        );
+                      })}
                   </div>
+                  {profileData.projects.length > 4 && (
+                    <p className="text-sm text-muted-foreground text-center mt-4">
+                      And {profileData.projects.length - 4} more projects...
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -771,8 +771,17 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   // Fetch profile data for dialog
   const fetchProfileData = useCallback(
-    async (profileId: string, isFreelancerProfile: boolean = false) => {
+    async (
+      profileId: string,
+      isFreelancerProfile: boolean = false,
+      freelancerIdOverride?: string,
+    ) => {
       try {
+        console.log('🔍 fetchProfileData called with:', {
+          profileId,
+          isFreelancerProfile,
+          freelancerIdOverride,
+        });
         setLoadingProfile(true);
         let response;
 
@@ -787,7 +796,200 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         }
 
         if (response.status === 200) {
-          setProfileData(response.data.data || response.data);
+          const profileData = response.data.data || response.data;
+          console.log('🔍 Profile data received:', profileData);
+          console.log('🔍 Profile data keys:', Object.keys(profileData));
+          console.log('🔍 Profile has projects:', !!profileData.projects);
+          console.log(
+            '🔍 Profile projects count:',
+            profileData.projects?.length || 0,
+          );
+
+          // If this profile has projects, enrich project data with complete freelancer data
+          if (profileData.projects && profileData.projects.length > 0) {
+            console.log('🔍 Starting project enrichment process...');
+            console.log(
+              '🔍 Profile projects before enrichment:',
+              profileData.projects,
+            );
+            try {
+              // Get freelancer ID - use override if provided, otherwise determine from context
+              let freelancerId;
+              if (freelancerIdOverride) {
+                // Use the freelancer ID passed from the bid data
+                freelancerId = freelancerIdOverride;
+                console.log('🔍 Using freelancer ID override:', freelancerId);
+              } else if (isFreelancerProfile) {
+                // For general freelancer profile, profileId IS the freelancer ID
+                freelancerId = profileId;
+                console.log(
+                  '🔍 Using profileId as freelancer ID:',
+                  freelancerId,
+                );
+              } else {
+                // For specific freelancer profile, try to get freelancer ID from profile data
+                freelancerId =
+                  profileData.freelancerId || profileData.freelancer_id;
+
+                console.log('🔍 Looking for freelancer ID in profile data:');
+                console.log(
+                  '  - profileData.freelancerId:',
+                  profileData.freelancerId,
+                );
+                console.log(
+                  '  - profileData.freelancer_id:',
+                  profileData.freelancer_id,
+                );
+                console.log('  - Final freelancerId:', freelancerId);
+
+                // If still not found, we can't enrich the projects
+                if (!freelancerId) {
+                  console.warn(
+                    '⚠️ No freelancer ID found in profile data:',
+                    profileData,
+                  );
+                  return;
+                }
+              }
+
+              console.log(
+                '🔍 Enriching projects for freelancer:',
+                freelancerId,
+                'isFreelancerProfile:',
+                isFreelancerProfile,
+              );
+
+              if (freelancerId) {
+                // Fetch complete freelancer project data using public endpoint
+                const freelancerResponse = await axiosInstance.get(
+                  `/public/freelancer/${freelancerId}`,
+                );
+                const freelancerData =
+                  freelancerResponse.data?.data || freelancerResponse.data;
+
+                console.log('🔍 Freelancer data received:', freelancerData);
+                console.log(
+                  '🔍 Freelancer projects type:',
+                  typeof freelancerData.projects,
+                );
+                console.log('🔍 Freelancer projects:', freelancerData.projects);
+
+                if (freelancerData.projects) {
+                  // Convert projects object to array if needed
+                  const allFreelancerProjects = Array.isArray(
+                    freelancerData.projects,
+                  )
+                    ? freelancerData.projects
+                    : Object.values(freelancerData.projects || {});
+
+                  // Merge profile projects with complete freelancer project data
+                  const enrichedProjects = profileData.projects.map(
+                    (profileProject: any) => {
+                      const fullProject = allFreelancerProjects.find(
+                        (fp: any) => fp._id === profileProject._id,
+                      );
+
+                      console.log(
+                        `🔍 Enriching project "${profileProject.projectName}":`,
+                      );
+                      console.log('  - Profile project:', profileProject);
+                      console.log('  - Full project found:', fullProject);
+                      console.log(
+                        '  - Has thumbnail in profile:',
+                        !!profileProject.thumbnail,
+                      );
+                      console.log(
+                        '  - Has thumbnail in full:',
+                        !!fullProject?.thumbnail,
+                      );
+                      console.log(
+                        '  - Has liveDemoLink in profile:',
+                        !!profileProject.liveDemoLink,
+                      );
+                      console.log(
+                        '  - Has liveDemoLink in full:',
+                        !!fullProject?.liveDemoLink,
+                      );
+                      console.log(
+                        '  - Profile liveDemoLink:',
+                        profileProject.liveDemoLink,
+                      );
+                      console.log(
+                        '  - Full liveDemoLink:',
+                        fullProject?.liveDemoLink,
+                      );
+
+                      // Use full project data if available, otherwise merge with profile project data
+                      let enrichedProject;
+                      if (fullProject) {
+                        // Use full project data but ensure all fields are present
+                        enrichedProject = {
+                          ...profileProject, // Start with profile project as base
+                          ...fullProject, // Override with full project data
+                          // Explicitly ensure these fields are copied
+                          thumbnail:
+                            fullProject.thumbnail || profileProject.thumbnail,
+                          liveDemoLink:
+                            fullProject.liveDemoLink ||
+                            profileProject.liveDemoLink,
+                          githubLink:
+                            fullProject.githubLink || profileProject.githubLink,
+                        };
+                      } else {
+                        enrichedProject = profileProject;
+                      }
+
+                      console.log(
+                        '  - Final enriched project:',
+                        enrichedProject,
+                      );
+                      console.log(
+                        '  - Final liveDemoLink:',
+                        enrichedProject.liveDemoLink,
+                      );
+                      return enrichedProject;
+                    },
+                  );
+
+                  profileData.projects = enrichedProjects;
+                  console.log(
+                    '🔄 Enriched projects with full data:',
+                    enrichedProjects,
+                  );
+                  console.log(
+                    '🔍 First project thumbnail:',
+                    enrichedProjects[0]?.thumbnail,
+                  );
+                  console.log(
+                    '🔍 All project thumbnails:',
+                    enrichedProjects.map((p: any) => ({
+                      name: p.projectName,
+                      thumb: p.thumbnail,
+                      liveDemoLink: p.liveDemoLink,
+                    })),
+                  );
+                  console.log('🔄 Profile data after enrichment:', profileData);
+                }
+              } else {
+                console.warn(
+                  '⚠️ No freelancer ID found for enriching projects',
+                );
+              }
+            } catch (projectError) {
+              console.warn(
+                'Could not fetch complete project data:',
+                projectError,
+              );
+              // Continue with existing profile data if project fetch fails
+            }
+          }
+
+          console.log('🔍 Final profile data being set:', profileData);
+          console.log(
+            '🔍 Final projects in profile data:',
+            profileData.projects,
+          );
+          setProfileData(profileData);
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -813,8 +1015,8 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     ) => {
       if (hasProfile) {
         setSelectedProfileId(profileId);
-        setSelectedFreelancerId(null);
-        fetchProfileData(profileId, false);
+        setSelectedFreelancerId(freelancerId); // Store freelancer ID for enrichment
+        fetchProfileData(profileId, false, freelancerId); // Pass freelancer ID
       } else {
         setSelectedProfileId(null);
         setSelectedFreelancerId(freelancerId);
@@ -1020,17 +1222,28 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             const freelancerProfile = data?.freelancer_profile_id;
 
             const handleViewProfile = () => {
+              // Get freelancer ID from bid data
+              const freelancerId = data?.bidder_id || freelancer?._id;
+
+              console.log('🔍 handleViewProfile called with:', {
+                bidder_id: data?.bidder_id,
+                freelancer_id: freelancer?._id,
+                final_freelancerId: freelancerId,
+                hasProfile: !!freelancerProfile,
+                profileId: freelancerProfile?._id,
+              });
+
               if (freelancerProfile) {
                 // If freelancer selected a profile, show the selected profile
                 handleOpenProfileDialog(
                   freelancerProfile._id,
-                  freelancer._id,
+                  freelancerId,
                   true,
                   data,
                 );
-              } else if (freelancer) {
+              } else if (freelancerId) {
                 // If no profile selected, show general freelancer profile
-                handleOpenProfileDialog('', freelancer._id, false, data);
+                handleOpenProfileDialog('', freelancerId, false, data);
               }
             };
 
