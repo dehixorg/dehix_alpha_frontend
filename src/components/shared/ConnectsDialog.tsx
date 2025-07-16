@@ -85,8 +85,6 @@ export default function ConnectsDialog({
 
   const dialogOpen = async () => {
     const isValid = await isValidCheck();
-    console.log(isValid);
-    console.log("Form Errors", form.formState.errors);
     if (!isValid) return;
     console.log(requiredConnects);
 

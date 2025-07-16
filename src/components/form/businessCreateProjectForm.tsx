@@ -450,7 +450,6 @@ export function CreateProjectBusinessForm() {
   // Form submit
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
-     console.log('Form submitted with data:', data);
     try {
       const uniqueSkills = Array.from(
         new Set(currSkills.flat().filter(Boolean)),
