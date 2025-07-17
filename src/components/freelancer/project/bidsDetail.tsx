@@ -526,8 +526,8 @@ const ProfileDialog = React.memo(
                       Email:
                     </span>
                     <p>
-                      {profileData?.email ||
-                        profileData?.freelancerId?.email ||
+                      {profileData?.freelancerId?.email ||
+                        profileData?.email ||
                         'Not provided'}
                     </p>
                   </div>
