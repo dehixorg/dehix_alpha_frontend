@@ -675,7 +675,21 @@ export default function ProfileDetailPage() {
                             {experience.company}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {experience.workFrom} - {experience.workTo}
+                            {new Date(experience.workFrom).toLocaleDateString(
+                              'en-US',
+                              {
+                                year: 'numeric',
+                                month: 'short',
+                              },
+                            )}{' '}
+                            -{' '}
+                            {new Date(experience.workTo).toLocaleDateString(
+                              'en-US',
+                              {
+                                year: 'numeric',
+                                month: 'short',
+                              },
+                            )}
                           </p>
                         </Card>
                       ),

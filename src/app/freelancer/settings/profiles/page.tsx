@@ -231,7 +231,7 @@ export default function ProfilesPage() {
                 {profiles.map((profile) => (
                   <Card
                     key={profile._id}
-                    className="hover:shadow-lg transition-shadow"
+                    className="hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -250,87 +250,123 @@ export default function ProfilesPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Skills */}
-                      {profile.skills && profile.skills.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium mb-2">Skills:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {profile.skills
-                              .slice(0, 3)
-                              .map((skill: any, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {typeof skill === 'string'
-                                    ? skill
-                                    : skill.name || skill.skillName}
-                                </Badge>
-                              ))}
-                            {profile.skills.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{profile.skills.length - 3} more
-                              </Badge>
-                            )}
+                    <CardContent className="space-y-4 flex-1 flex flex-col">
+                      <div className="flex-1 space-y-4">
+                        {/* Skills */}
+                        <div className="min-h-[60px]">
+                          {profile.skills && profile.skills.length > 0 ? (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Skills:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {profile.skills
+                                  .slice(0, 3)
+                                  .map((skill: any, index: number) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {typeof skill === 'string'
+                                        ? skill
+                                        : skill.name || skill.skillName}
+                                    </Badge>
+                                  ))}
+                                {profile.skills.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{profile.skills.length - 3} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Skills:
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                No skills added
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Domains */}
+                        <div className="min-h-[60px]">
+                          {profile.domains && profile.domains.length > 0 ? (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Domains:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {profile.domains
+                                  .slice(0, 2)
+                                  .map((domain: any, index: number) => (
+                                    <Badge
+                                      key={index}
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {typeof domain === 'string'
+                                        ? domain
+                                        : domain.name || domain.domainName}
+                                    </Badge>
+                                  ))}
+                                {profile.domains.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{profile.domains.length - 2} more
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Domains:
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                No domains added
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Projects & Experience Count */}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Briefcase className="h-4 w-4" />
+                            <span>
+                              {profile.projects?.length || 0} Projects
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            <span>
+                              {profile.experiences?.length || 0} Experience
+                            </span>
                           </div>
                         </div>
-                      )}
 
-                      {/* Domains */}
-                      {profile.domains && profile.domains.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium mb-2">Domains:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {profile.domains
-                              .slice(0, 2)
-                              .map((domain: any, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {typeof domain === 'string'
-                                    ? domain
-                                    : domain.name || domain.domainName}
-                                </Badge>
-                              ))}
-                            {profile.domains.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{profile.domains.length - 2} more
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Projects & Experience Count */}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Briefcase className="h-4 w-4" />
-                          <span>{profile.projects?.length || 0} Projects</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          <span>
-                            {profile.experiences?.length || 0} Experience
-                          </span>
+                        {/* Hourly Rate */}
+                        <div className="text-sm min-h-[20px]">
+                          {profile.hourlyRate ? (
+                            <>
+                              <span className="font-medium">Rate: </span>
+                              <span className="text-green-600">
+                                ${profile.hourlyRate}/hr
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              No rate set
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Hourly Rate */}
-                      {profile.hourlyRate && (
-                        <div className="text-sm">
-                          <span className="font-medium">Rate: </span>
-                          <span className="text-green-600">
-                            ${profile.hourlyRate}/hr
-                          </span>
-                        </div>
-                      )}
-
                       {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2 pt-4 mt-auto">
                         <Button
                           onClick={() => handleViewProfile(profile._id!)}
                           className="flex-1 flex items-center gap-2"

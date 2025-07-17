@@ -76,6 +76,10 @@ interface FreelancerProfile {
   lastName: string;
   description: string;
   profilePic?: string;
+  email?: string;
+  githubLink?: string;
+  linkedin?: string;
+  personalWebsite?: string;
   skills: Skill[];
   domain: Domain[];
   projectDomain: Domain[];
@@ -110,6 +114,10 @@ const FreelancerProfile = () => {
               lastName: freelancerData.lastName || '',
               description: freelancerData.description || '',
               profilePic: freelancerData.profilePic || '',
+              email: freelancerData.email || '',
+              githubLink: freelancerData.githubLink || '',
+              linkedin: freelancerData.linkedin || '',
+              personalWebsite: freelancerData.personalWebsite || '',
               skills: freelancerData.skills || [],
               domain: freelancerData.domain || [],
               projectDomain: freelancerData.projectDomain || [],
@@ -486,6 +494,72 @@ const FreelancerProfile = () => {
             </Card>
 
             <Separator className="h-px bg-border my-6" />
+
+            {/* Contact Information */}
+            <Card className="mb-6 overflow-hidden border border-border shadow-md">
+              <CardHeader className="bg-blue-500/5 dark:bg-blue-500/10 border-b border-border py-4">
+                <CardTitle className="text-md font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      Email:
+                    </span>
+                    <p className="mt-1">
+                      {profileData?.email || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      Links:
+                    </span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {profileData?.githubLink && (
+                        <a
+                          href={profileData.githubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          GitHub ↗
+                        </a>
+                      )}
+                      {profileData?.linkedin && (
+                        <a
+                          href={profileData.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          LinkedIn ↗
+                        </a>
+                      )}
+                      {profileData?.personalWebsite && (
+                        <a
+                          href={profileData.personalWebsite}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Portfolio ↗
+                        </a>
+                      )}
+                      {!profileData?.githubLink &&
+                        !profileData?.linkedin &&
+                        !profileData?.personalWebsite && (
+                          <p className="text-muted-foreground italic">
+                            No links provided
+                          </p>
+                        )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Education */}
             <Card className="mb-6 overflow-hidden border border-border shadow-md">
