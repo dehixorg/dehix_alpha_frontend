@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '../ui/button';
 import { ProjectForm } from '../educational-form/project-form';
-import { Dialog, DialogContent } from '@/components/ui/dialog'; // Assuming you're using shadcn/ui
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface ProjectProps {
   _id: string;
@@ -29,6 +29,7 @@ interface ProjectProps {
   oracleAssigned: string | null;
   verificationUpdateTime: string;
   comments: string;
+  thumbnail?: string; // Add thumbnail to props
   onProjectUpdated: () => void;
 }
 
@@ -45,13 +46,10 @@ const ProjectCard: React.FC<ProjectProps> = ({
   role,
   projectType,
   comments,
+  thumbnail, // Destructure thumbnail from props
   onProjectUpdated,
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-
-  // Extract thumbnail URL from comments
-  const thumbnailUrl = comments?.match(/THUMBNAIL:(.+?)(\s|\|)/)?.[1] || 
-                      comments?.match(/THUMBNAIL:(.+)/)?.[1];
 
   // Prepare project data for the form
   const projectData = {
@@ -65,7 +63,8 @@ const ProjectCard: React.FC<ProjectProps> = ({
     techUsed,
     role,
     projectType,
-    comments: comments?.replace(/THUMBNAIL:(.+?)(\s|\|)/, '').trim() || '',
+    comments,
+    thumbnail, // Include thumbnail in form data
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -90,12 +89,12 @@ const ProjectCard: React.FC<ProjectProps> = ({
         onClick={handleCardClick}
       >
         {/* Background image container */}
-        {thumbnailUrl && (
+        {thumbnail && (
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div 
               className="w-full h-full bg-cover bg-center transition-all duration-300 group-hover:opacity-20"
               style={{ 
-                backgroundImage: `url(${thumbnailUrl})`,
+                backgroundImage: `url(${thumbnail})`,
                 borderRadius: 'calc(var(--radius) - 4px)'
               }}
             />
