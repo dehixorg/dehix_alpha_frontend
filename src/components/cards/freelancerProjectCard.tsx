@@ -1,5 +1,5 @@
-import React from 'react';
-import { Github, MessageSquareIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Github, MessageSquareIcon, Edit } from 'lucide-react';
 import DateRange from './dateRange';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,6 +10,9 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
+import { Button } from '../ui/button';
+import { ProjectForm } from '../educational-form/project-form';
+import { Dialog, DialogContent } from '@/components/ui/dialog'; // Assuming you're using shadcn/ui
 
 interface ProjectProps {
   _id: string;
@@ -26,9 +29,11 @@ interface ProjectProps {
   oracleAssigned: string | null;
   verificationUpdateTime: string;
   comments: string;
+  onProjectUpdated: () => void;
 }
 
 const ProjectCard: React.FC<ProjectProps> = ({
+  _id,
   projectName,
   description,
   verified,
@@ -40,94 +45,144 @@ const ProjectCard: React.FC<ProjectProps> = ({
   role,
   projectType,
   comments,
+  onProjectUpdated,
 }) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
   // Extract thumbnail URL from comments
   const thumbnailUrl = comments?.match(/THUMBNAIL:(.+?)(\s|\|)/)?.[1] || 
                       comments?.match(/THUMBNAIL:(.+)/)?.[1];
 
-  // Get clean comments (without thumbnail URL)
-  const cleanComments = thumbnailUrl 
-    ? comments.replace(`THUMBNAIL:${thumbnailUrl}`, '').replace(/^\s*\|\s*/, '')
-    : comments;
+  // Prepare project data for the form
+  const projectData = {
+    _id,
+    projectName,
+    description,
+    githubLink,
+    start: start ? new Date(start).toISOString().split('T')[0] : '',
+    end: end ? new Date(end).toISOString().split('T')[0] : '',
+    refer,
+    techUsed,
+    role,
+    projectType,
+    comments: comments?.replace(/THUMBNAIL:(.+?)(\s|\|)/, '').trim() || '',
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFormOpen(true);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFormOpen(true);
+  };
+
+  const handleFormSubmit = () => {
+    setIsFormOpen(false);
+    onProjectUpdated();
+  };
 
   return (
-    <Card className="w-full h-full mx-auto md:max-w-2xl relative group overflow-hidden">
-      {/* Background image with overlay */}
-      {thumbnailUrl && (
-        <>
-          <div 
-            className="absolute inset-0 bg-cover bg-center transition-all duration-300 group-hover:scale-105"
-            style={{ 
-              backgroundImage: `url(${thumbnailUrl})`,
-              filter: 'blur(0px)'
-            }}
-          />
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-        </>
-      )}
+    <>
+      <Card 
+        className="w-full h-full mx-auto md:max-w-2xl relative group overflow-hidden cursor-pointer"
+        onClick={handleCardClick}
+      >
+        {/* Background image container */}
+        {thumbnailUrl && (
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <div 
+              className="w-full h-full bg-cover bg-center transition-all duration-300 group-hover:opacity-20"
+              style={{ 
+                backgroundImage: `url(${thumbnailUrl})`,
+                borderRadius: 'calc(var(--radius) - 4px)'
+              }}
+            />
+          </div>
+        )}
 
-      {/* Card content */}
-      <div className="relative z-10 h-full flex flex-col">
-        <CardHeader className="flex-grow-0">
-          <CardTitle className="flex text-white drop-shadow-md">
-            {projectName}
-            {githubLink && (
-              <div className="ml-auto">
+        {/* Overlay that darkens on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
+
+        {/* Card content */}
+        <div className="relative z-10 h-full flex flex-col">
+          <CardHeader className="flex-grow-0">
+            <div className="flex items-center">
+              <CardTitle className="text-white drop-shadow-md">
+                {projectName}
+              </CardTitle>
+              {githubLink && (
                 <a
                   href={githubLink}
-                  className="text-white hover:text-gray-300 transition-colors"
+                  className="ml-auto text-white hover:text-gray-300 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <Github />
+                  <Github className="h-5 w-5" />
                 </a>
-              </div>
-            )}
-          </CardTitle>
-          <CardDescription className="text-gray-200 mt-1 uppercase tracking-wide leading-tight font-medium">
-            {projectType}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="flex-grow">
-          {verified ? (
-            <Badge className="bg-green-600 hover:bg-green-700 text-white">VERIFIED</Badge>
-          ) : (
-            <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">PENDING</Badge>
-          )}
-          <p className="text-gray-100 pt-4 drop-shadow-md">{description}</p>
-
-          {cleanComments?.trim() && (
-            <p className="mt-2 flex items-start text-gray-200 bg-black/20 p-3 rounded-lg backdrop-blur-sm">
-              <MessageSquareIcon className="flex-shrink-0 mt-1 mr-2" />
-              {cleanComments}
-            </p>
-          )}
+              )}
+            </div>
+          </CardHeader>
           
-          <div className="mt-4">
-            <p className="text-sm text-gray-200">Reference: {refer}</p>
-          </div>
-          <div className="my-4">
-            <p className="text-sm text-gray-200">Role: {role}</p>
-          </div>
+          {/* Hidden content that appears on hover */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-grow">
+            <CardContent>
+              {verified ? (
+                <Badge className="bg-green-600 hover:bg-green-700 text-white">VERIFIED</Badge>
+              ) : (
+                <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white">PENDING</Badge>
+              )}
+              <p className="text-gray-100 pt-4 drop-shadow-md">{description}</p>
 
-          <div className="flex flex-wrap gap-2">
-            {techUsed.map((tech: string, index: number) => (
-              <Badge
-                className="uppercase text-xs font-medium bg-white/90 hover:bg-white text-gray-800"
-                key={index}
-              >
-                {tech}
-              </Badge>
-            ))}
+              <div className="mt-4">
+                <p className="text-sm text-gray-200">Reference: {refer}</p>
+              </div>
+              <div className="my-4">
+                <p className="text-sm text-gray-200">Role: {role}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {techUsed.map((tech: string, index: number) => (
+                  <Badge
+                    className="uppercase text-xs font-medium bg-white/90 hover:bg-white text-gray-800"
+                    key={index}
+                  >
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+            
+            <CardFooter className="flex-shrink-0">
+              <DateRange startDate={start} endDate={end} />
+            </CardFooter>
           </div>
-        </CardContent>
-        
-        <CardFooter className="flex-shrink-0">
-          <DateRange startDate={start} endDate={end} />
-        </CardFooter>
-      </div>
-    </Card>
+        </div>
+
+        {/* Edit button - now part of the card */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={handleEditClick}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+      </Card>
+
+      {/* Dialog for the project form */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+          <ProjectForm
+            mode="edit"
+            projectData={projectData}
+            onFormSubmit={handleFormSubmit}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

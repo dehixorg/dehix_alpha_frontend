@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, X, Save, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, X, Save, ArrowLeft, Trash2, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -87,9 +87,11 @@ const [selectedDomains, setSelectedDomains] = useState<any[]>([]);
   }, [profileId, user.uid]);
 
   useEffect(() => {
-   if (profile) {
+  if (profile) {
     setSelectedSkills(profile.skills || []);
     setSelectedDomains(profile.domains || []);
+    
+    // Ensure editingProfileData has the correct format
     setEditingProfileData(prev => ({
       ...prev,
       skills: profile.skills || [],
@@ -99,57 +101,93 @@ const [selectedDomains, setSelectedDomains] = useState<any[]>([]);
 }, [profile]);
 
   const fetchProfile = async () => {
-    if (!profileId) return;
+  if (!profileId) return;
 
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get(
-        `/freelancer/profile/${profileId}`,
-      );
-      const profileData = response.data.data;
-      setProfile(profileData);
-      setEditingProfileData(profileData);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profile',
-        variant: 'destructive',
-      });
-      router.push('/freelancer/settings/profiles');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  setIsLoading(true);
+  try {
+    console.log('Fetching profile...', profileId); // Debug log
+    const response = await axiosInstance.get(`/freelancer/profile/${profileId}`);
+    console.log('Full API response:', response.data); // Debug log
+    
+    const profileData = response.data.data;
+    console.log('Profile data received:', profileData); // Debug log
+    
+    // Normalize skills from API response
+    const normalizedSkills = Array.isArray(profileData.skills) 
+      ? profileData.skills.map(skill => {
+          const skillObj = { _id: skill, name: skill };
+          console.log('Normalized skill:', skill, '->', skillObj); // Debug log
+          return skillObj;
+        })
+      : [];
+    
+    console.log('Normalized skills:', normalizedSkills); // Debug log
+    
+    setProfile(profileData);
+    setSelectedSkills(normalizedSkills);
+    setEditingProfileData({
+      ...profileData,
+      skills: normalizedSkills
+    });
+    
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to load profile',
+      variant: 'destructive',
+    });
+    router.push('/freelancer/settings/profiles');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSkillSelect = (skill: any) => {
-  setSelectedSkills(prevSkills => {
-    const isSelected = prevSkills.some(s => 
-      (typeof s === 'string' && typeof skill === 'string' && s === skill) ||
-      (s._id && skill._id && s._id === skill._id) ||
-      (s.name && skill.name && s.name === skill.name)
+  console.log('Skill selected (raw):', skill); // Debug log
+  
+  // Convert to object format for UI
+  const skillObj = typeof skill === 'string' 
+    ? { _id: skill, name: skill }
+    : skill;
+
+  console.log('Skill selected (processed):', skillObj); // Debug log
+
+  setSelectedSkills(prev => {
+    const isSelected = prev.some(s => 
+      (typeof s === 'string' && s === skillObj.name) ||
+      (typeof s !== 'string' && s.name === skillObj.name)
     );
 
-    const newSkills = isSelected 
-      ? prevSkills.filter(s => 
-          (typeof s === 'string' && typeof skill === 'string' && s !== skill) ||
-          (s._id && skill._id && s._id !== skill._id) ||
-          (s.name && skill.name && s.name !== skill.name)
+    const newSkills = isSelected
+      ? prev.filter(s => 
+          (typeof s === 'string' ? s : s.name) !== skillObj.name
         )
-      : [...prevSkills, skill];
+      : [...prev, skillObj];
+
+    console.log('Updated skills:', newSkills); // Debug log
     
-    // Store both object and string representation
+    // Update the editing profile data
     setEditingProfileData(prev => ({
       ...prev,
-      skills: newSkills,
-      // For API compatibility, store string versions separately if needed
-      skillsStrings: newSkills.map(s => 
-        typeof s === 'string' ? s : s.name || s.label || s.skillName || s._id
-      )
+      skills: newSkills
     }));
     
     return newSkills;
   });
+};
+
+const normalizeSkill = (skill: string | any) => {
+  if (typeof skill === 'string') {
+    return {
+      _id: skill,
+      name: skill
+    };
+  }
+  return {
+    _id: skill._id || Math.random().toString(36).substring(2, 9),
+    name: skill.name || skill.label || skill.skillName || 'Unnamed Skill'
+  };
 };
 
 const handleDomainSelect = (domain: any) => {
@@ -211,37 +249,43 @@ const handleDomainSelect = (domain: any) => {
 
   setIsUpdating(true);
   try {
-    // Transform skills and domains to string arrays if they're objects
+    // 1. Update skills separately using the dedicated endpoint
+    if (selectedSkills.length > 0) {
+      await axiosInstance.put(
+  `/skill`, // Matches FREELANCER_SKILLS_ADD_BY_ID = "/skill"
+  {
+    skills: selectedSkills.map(s => typeof s === 'string' ? s : s.name),
+    // Include freelancer_id if required by your schema
+    freelancer_id: user.uid
+  }
+);
+    }
+
+    // 2. Update other profile fields
     const payload = {
-      ...editingProfileData,
-      skills: editingProfileData.skills?.map((skill: any) => 
-        typeof skill === 'string' ? skill : skill.name || skill.label || skill.skillName || skill._id
-      ),
-      domains: editingProfileData.domains?.map((domain: any) => 
-        typeof domain === 'string' ? domain : domain.name || domain.label || domain.domainName || domain._id
-      )
+      profileName: editingProfileData.profileName,
+      description: editingProfileData.description,
+      hourlyRate: editingProfileData.hourlyRate,
+      // Include other non-skill/domain fields
     };
 
-    await axiosInstance.put(
-      `/freelancer/profile/${profile._id}`,
-      payload
-    );
-    
-    toast({
-      title: 'Success',
-      description: 'Profile updated successfully',
-    });
-    fetchProfile();
+    await axiosInstance.put(`/freelancer/profile/${profile._id}`, payload);
+
+    toast({ title: 'Success', description: 'Profile updated' });
+    fetchProfile(); // Refresh data
   } catch (error) {
-    console.error('Error updating profile:', error);
-    toast({
-      title: 'Error',
-      description: 'Failed to update profile',
-      variant: 'destructive',
-    });
+    toast({ title: 'Error', variant: 'destructive' });
   } finally {
     setIsUpdating(false);
   }
+};
+
+// Add this normalization function
+const normalizeSkills = (skills: any[]) => {
+  return skills.map(skill => {
+    if (typeof skill === 'string') return skill;
+    return skill.name || skill.label || skill.skillName || skill._id || '';
+  });
 };
 
   const handleInputChange = (field: string, value: any) => {
@@ -568,20 +612,19 @@ const handleDomainSelect = (domain: any) => {
       </Command>
     </PopoverContent>
   </Popover>
+   {/* Existing Skills Badges */}
+{/* Skills Badges Display */}
   <div className="flex flex-wrap gap-2 mt-2">
     {selectedSkills?.length > 0 ? (
       selectedSkills.map((skill, index) => {
-        const skillLabel = typeof skill === 'string' 
-          ? skill 
-          : skill.name || skill.label || skill.skillName;
-        
+        const skillName = typeof skill === 'string' ? skill : skill.name;
         return (
           <Badge
-            key={index}
+            key={skillName || index}
             variant="secondary"
             className="bg-primary text-primary-foreground"
           >
-            {skillLabel}
+            {skillName}
             <button
               type="button"
               onClick={() => handleSkillSelect(skill)}
@@ -594,7 +637,9 @@ const handleDomainSelect = (domain: any) => {
       })
     ) : (
       <p className="text-muted-foreground text-sm">
-        No skills selected
+        {skillsOptions?.length > 0 
+          ? "No skills selected. Click to add some."
+          : "No skills available. Add skills to your account first."}
       </p>
     )}
   </div>

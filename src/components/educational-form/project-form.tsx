@@ -5,8 +5,6 @@ import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
-import DraftDialog from '../shared/DraftDialog';
-
 import {
   Dialog,
   DialogTrigger,
@@ -37,7 +35,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import useDraft from '@/hooks/useDraft';
 import ThumbnailUpload from '../fileUpload/thumbnailUpload';
 
 // Schema for form validation using zod
@@ -62,7 +59,7 @@ const projectFormSchema = z
     projectType: z.string().optional(),
     verificationStatus: z.string().optional(),
     comments: z.string().optional(),
-    thumbnail: z.string().optional(), 
+    thumbnail: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -81,8 +78,11 @@ const projectFormSchema = z
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
-interface AddProjectProps {
+interface ProjectFormProps {
+  mode: 'add' | 'edit';
+  projectData?: ProjectFormValues;
   onFormSubmit: () => void;
+  children?: React.ReactNode;
 }
 
 interface Skill {
@@ -90,7 +90,12 @@ interface Skill {
   label: string;
 }
 
-export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
+export const ProjectForm: React.FC<ProjectFormProps> = ({
+  mode,
+  projectData,
+  onFormSubmit,
+  children,
+}) => {
   const [step, setStep] = useState<number>(1);
   const [skills, setSkills] = useState<any>([]);
   const [currSkills, setCurrSkills] = useState<string[]>([]);
@@ -98,13 +103,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
-  const restoredDraft = useRef<any>(null);
   const { freelancer_id } = useParams<{ freelancer_id: string }>();
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
+  // Initialize form with default values or existing project data
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
-    defaultValues: {
+    defaultValues: projectData || {
       projectName: '',
       description: '',
       githubLink: '',
@@ -120,13 +125,30 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     mode: 'all',
   });
 
+  // Set initial skills when project data is provided
+  useEffect(() => {
+    if (projectData && projectData.techUsed) {
+      setCurrSkills(projectData.techUsed);
+    }
+  }, [projectData]);
+
+  // Extract thumbnail URL from comments if in edit mode
+  useEffect(() => {
+    if (mode === 'edit' && projectData?.comments) {
+      const url = projectData.comments.match(/THUMBNAIL:(.+?)(\s|\|)/)?.[1] || 
+                  projectData.comments.match(/THUMBNAIL:(.+)/)?.[1];
+      if (url) {
+        setThumbnailUrl(url);
+      }
+    }
+  }, [mode, projectData]);
+
   // Field validation for Step 1
   const validateStep1 = () => {
     const { projectName, description, start, end } = form.getValues();
     const startDate = new Date(start);
     const endDate = new Date(end);
 
-    // Check if required fields are filled
     if (!projectName || !description || !start || !end) {
       toast({
         variant: 'destructive',
@@ -136,7 +158,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       return false;
     }
 
-    // Validate date relationship
     if (startDate >= endDate) {
       form.setError('end', {
         type: 'manual',
@@ -145,7 +166,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       return false;
     }
 
-    // Check if at least one skill is added
     if (currSkills.length === 0) {
       toast({
         variant: 'destructive',
@@ -159,10 +179,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   };
 
   const nextStep = () => {
-    if (step === 1) {
-      if (validateStep1()) {
-        setStep(2);
-      }
+    if (step === 1 && validateStep1()) {
+      setStep(2);
     }
   };
 
@@ -181,11 +199,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   };
 
   const handleDeleteSkill = (skillToDelete: string) => {
-    setCurrSkills(currSkills.filter((skill: any) => skill !== skillToDelete));
+    const updatedSkills = currSkills.filter((skill) => skill !== skillToDelete);
+    setCurrSkills(updatedSkills);
+    form.setValue('techUsed', updatedSkills);
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSkills = async () => {
       try {
         const skillsResponse = await axiosInstance.get('/skills');
         const transformedSkills =
@@ -195,110 +215,81 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           })) || [];
         setSkills(transformedSkills);
       } catch (error) {
-        console.error('API Error:', error);
+        console.error('Error fetching skills:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong. Please try again.',
+          description: 'Failed to load skills. Please try again later.',
         });
       }
     };
-    fetchData();
+    fetchSkills();
   }, []);
 
-  useEffect(() => {
-    if (isDialogOpen) {
-      setStep(1);
+  const onSubmit = async (data: ProjectFormValues) => {
+    setLoading(true);
+    try {
+      // Prepare comments with thumbnail URL if exists
+      let finalComments = data.comments || '';
+      if (thumbnailUrl) {
+        finalComments = `THUMBNAIL:${thumbnailUrl}` + 
+                       (finalComments ? ` | ${finalComments}` : '');
+      }
+
+      const projectPayload = {
+        ...data,
+        comments: finalComments,
+        techUsed: currSkills,
+        verified: false,
+        oracleAssigned: '',
+        start: data.start ? new Date(data.start).toISOString() : null,
+        end: data.end ? new Date(data.end).toISOString() : null,
+        verificationUpdateTime: new Date().toISOString(),
+      };
+
+      if (mode === 'add') {
+        await axiosInstance.post(`/freelancer/${freelancer_id}/project`, projectPayload);
+        toast({
+          title: 'Project Added',
+          description: 'The project has been successfully added.',
+        });
+      } else if (mode === 'edit' && projectData) {
+        await axiosInstance.put(`/freelancer/${freelancer_id}/project/${projectData._id}`, projectPayload);
+        toast({
+          title: 'Project Updated',
+          description: 'The project has been successfully updated.',
+        });
+      }
+
+      onFormSubmit();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: `Failed to ${mode === 'add' ? 'add' : 'update'} project. Please try again later.`,
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [isDialogOpen, form]);
-  const {
-    handleSaveAndClose,
-    showDraftDialog,
-    setShowDraftDialog,
-    confirmExitDialog,
-    setConfirmExitDialog,
-    handleDiscardAndClose,
-    handleDialogClose,
-    discardDraft,
-    loadDraft,
-  } = useDraft({
-    form,
-    formSection: 'projects',
-    isDialogOpen,
-    setIsDialogOpen,
-    onSave: (values) => {
-      restoredDraft.current = { ...values, techUsed: currSkills };
-    },
-    onDiscard: () => {
-      restoredDraft.current = null;
-    },
-    setCurrSkills,
-  });
-
-  // Submit handler for the form
-  async function onSubmit(data: ProjectFormValues) {
-  setLoading(true);
-  try {
-    // Submit the project data with thumbnail in the proper field
-    const response = await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
-      ...data,
-      thumbnail: thumbnailUrl || '', // Use the thumbnail URL if available
-      techUsed: currSkills,
-      verified: false,
-      oracleAssigned: '',
-      start: data.start ? new Date(data.start).toISOString() : null,
-      end: data.end ? new Date(data.end).toISOString() : null,
-      verificationUpdateTime: new Date().toISOString(),
-    });
-
-    console.log('Project saved successfully:', response.data);
-    onFormSubmit();
-    setIsDialogOpen(false);
-    toast({
-      title: 'Project Added',
-      description: 'The project has been successfully added.',
-    });
-  } catch (error) {
-    console.error('Error saving project:', error);
-    toast({
-      variant: 'destructive',
-      title: 'Error',
-      description: 'Failed to add project. Please try again later.',
-    });
-  } finally {
-    setLoading(false);
-  }
-}
-  // Add these handler functions
-  const handleThumbnailUpload = (file: File) => {
-  setThumbnailFile(file);
-  // Create a preview URL but don't store it in form state yet
-  setThumbnailUrl(URL.createObjectURL(file));
-};
-
-  const handleThumbnailRemove = () => {
-    setThumbnailFile(null);
-    setThumbnailUrl(null);
-    form.setValue('thumbnail', '');
   };
 
   return (
-    <Dialog
-      open={isDialogOpen}
-      onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) handleDialogClose();
-      }}
-    >
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="my-auto">
-          <Plus className="h-4 w-4" />
-        </Button>
+        {children || (
+          <Button variant="outline" size="icon" className="my-auto">
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="lg:max-w-screen-lg overflow-y-scroll max-h-screen no-scrollbar">
         <DialogHeader>
-          <DialogTitle>Add Project - Step {step} of 2</DialogTitle>
+          <DialogTitle>
+            {mode === 'add' ? 'Add' : 'Edit'} Project - Step {step} of 2
+          </DialogTitle>
           <DialogDescription>
             {step === 1
               ? 'Fill in the basic details of your project.'
@@ -308,10 +299,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Step 1: Basic Project Information */}
             {step === 1 && (
               <>
-
                 <FormField
                   control={form.control}
                   name="thumbnail"
@@ -320,15 +309,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormLabel>Project Thumbnail</FormLabel>
                       <FormControl>
                         <ThumbnailUpload
-                          projectId="new"
-                          existingThumbnail={field.value}
+                          projectId={mode === 'edit' ? projectData?._id || 'new' : 'new'}
+                          existingThumbnail={thumbnailUrl || ''}
                           onUploadSuccess={(url) => {
-                            form.setValue('thumbnail', url); // Directly set the thumbnail URL in form state
-                            setThumbnailUrl(url); // Also keep it in local state if needed
+                            setThumbnailUrl(url);
                           }}
                           onRemoveSuccess={() => {
-                            form.setValue('thumbnail', ''); // Clear the thumbnail field
-                            setThumbnailUrl(null); // Clear local state
+                            setThumbnailUrl(null);
                           }}
                         />
                       </FormControl>
@@ -339,6 +326,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="projectName"
@@ -348,7 +336,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter project name" {...field} />
                       </FormControl>
-                      <FormDescription>Enter the project name</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -361,14 +348,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter project description"
-                          {...field}
-                        />
+                        <Input placeholder="Enter project description" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project description
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -383,7 +364,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input type="date" max={currentDate} {...field} />
                       </FormControl>
-                      <FormDescription>Select the start date</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -398,7 +378,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
-                      <FormDescription>Select the end date</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -408,15 +387,13 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                   control={form.control}
                   name="techUsed"
                   render={({ field }) => (
-                    <FormItem className="mb-4">
+                    <FormItem>
                       <FormLabel>Skills</FormLabel>
                       <FormControl>
                         <div>
                           <div className="flex items-center mt-2">
                             <Select
-                              onValueChange={(selectedValue) => {
-                                setTmpSkill(selectedValue);
-                              }}
+                              onValueChange={setTmpSkill}
                               value={tmpSkill}
                             >
                               <SelectTrigger>
@@ -441,7 +418,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                             </Button>
                           </div>
                           <div className="flex flex-wrap mt-5">
-                            {currSkills.map((skill: any, index: number) => (
+                            {currSkills.map((skill, index) => (
                               <Badge
                                 className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center my-2"
                                 key={index}
@@ -466,7 +443,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
               </>
             )}
 
-            {/* Step 2: Additional Project Information */}
             {step === 2 && (
               <>
                 <FormField
@@ -476,14 +452,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>GitHub Repo Link</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter GitHub repository link"
-                          {...field}
-                        />
+                        <Input placeholder="Enter GitHub repository link" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the GitHub repository link (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -496,14 +466,8 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     <FormItem>
                       <FormLabel>Reference</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter project reference"
-                          {...field}
-                        />
+                        <Input placeholder="Enter project reference" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project reference
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -518,7 +482,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter role" {...field} />
                       </FormControl>
-                      <FormDescription>Enter the role</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -533,9 +496,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter project type" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter the project type (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -550,9 +510,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       <FormControl>
                         <Input placeholder="Enter any comments" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Enter any comments (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -568,12 +525,12 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                     Back
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Loading...' : 'Add Project'}
+                    {loading ? 'Loading...' : mode === 'add' ? 'Add Project' : 'Update Project'}
                   </Button>
                 </>
               ) : (
                 <>
-                  <div></div> {/* Empty div to create space */}
+                  <div></div>
                   <Button type="button" onClick={nextStep}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -584,30 +541,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
           </form>
         </Form>
       </DialogContent>
-      {confirmExitDialog && (
-        <DraftDialog
-          dialogChange={confirmExitDialog}
-          setDialogChange={setConfirmExitDialog}
-          heading="Save Draft?"
-          desc="Do you want to save your draft before leaving?"
-          handleClose={handleDiscardAndClose}
-          handleSave={handleSaveAndClose}
-          btn1Txt="Don't save"
-          btn2Txt="Yes save"
-        />
-      )}
-      {showDraftDialog && (
-        <DraftDialog
-          dialogChange={showDraftDialog}
-          setDialogChange={setShowDraftDialog}
-          heading="Load Draft?"
-          desc="You have unsaved data. Would you like to restore it?"
-          handleClose={discardDraft}
-          handleSave={loadDraft}
-          btn1Txt=" No, start fresh"
-          btn2Txt="Yes, load draft"
-        />
-      )}
     </Dialog>
   );
 };
