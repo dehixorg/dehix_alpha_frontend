@@ -14,8 +14,8 @@ import {
   Clock,
   DollarSign,
 } from 'lucide-react';
-import ProjectCard from '@/components/cards/freelancerProjectCard';
 
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
   Accordion,
   AccordionItem,

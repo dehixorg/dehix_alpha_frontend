@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import ProjectCard from '@/components/cards/freelancerProjectCard';
 
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
