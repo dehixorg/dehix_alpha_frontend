@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import ProjectCard from '@/components/cards/freelancerProjectCard';
 
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -106,7 +106,6 @@ const FreelancerProfile = () => {
           );
           if (response.status === 200) {
             const freelancerData = response.data.data || response.data;
-            console.log('🔍 Freelancer data received:', freelancerData);
 
             // Transform the data to match our interface
             const transformedData: FreelancerProfile = {

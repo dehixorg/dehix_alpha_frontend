@@ -205,7 +205,6 @@ const Market: React.FC = () => {
           (job: Project) => !notInterested.includes(job._id),
         );
         setJobs(filteredJobs);
-        console.log(filteredJobs);
       } catch (err) {
         console.error('Fetch jobs error:', err);
         toast({

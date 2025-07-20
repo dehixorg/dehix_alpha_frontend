@@ -28,12 +28,14 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
 }) => {
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreviewURL, setThumbnailPreviewURL] = useState<string | null>(
-    existingThumbnailUrl || null
+    existingThumbnailUrl || null,
   );
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -42,7 +44,8 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
       toast({
         variant: 'destructive',
         title: 'Invalid file type',
-        description: 'Please select a valid image file (PNG, JPG, JPEG, GIF, WebP).',
+        description:
+          'Please select a valid image file (PNG, JPG, JPEG, GIF, WebP).',
       });
       return;
     }
@@ -58,7 +61,7 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
     }
 
     setSelectedThumbnail(file);
-    
+
     // Create preview URL
     const previewURL = URL.createObjectURL(file);
     setThumbnailPreviewURL(previewURL);
@@ -110,7 +113,7 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
   const handleRemoveThumbnail = () => {
     setSelectedThumbnail(null);
     setThumbnailPreviewURL(null);
-    
+
     if (onThumbnailUpdate) {
       onThumbnailUpdate('');
     }
@@ -171,7 +174,7 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
             </div>
           </>
         )}
-        
+
         <input
           type="file"
           accept={allowedImageFormats.join(',')}
