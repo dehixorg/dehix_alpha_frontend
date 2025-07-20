@@ -139,7 +139,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
           <div className="flex gap-4">
             {project.githubLink && (
               <Button
-                onClick={() => handleLinkClick(project.githubLink)}
+                onClick={() => handleLinkClick(project.githubLink!)}
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -149,7 +149,7 @@ const ProjectDetailsDialog: React.FC<ProjectDetailsDialogProps> = ({
             )}
             {project.liveDemoLink && (
               <Button
-                onClick={() => handleLinkClick(project.liveDemoLink)}
+                onClick={() => handleLinkClick(project.liveDemoLink!)}
                 variant="outline"
                 className="flex items-center gap-2"
               >

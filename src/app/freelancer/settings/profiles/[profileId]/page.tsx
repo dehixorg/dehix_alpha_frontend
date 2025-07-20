@@ -52,20 +52,112 @@ export default function ProfileDetailPage() {
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
   const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
+  const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
   const [freelancerProjects, setFreelancerProjects] = useState<any>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
+  const [tmpSkill, setTmpSkill] = useState<string>('');
+  const [tmpDomain, setTmpDomain] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     if (profileId) {
-      fetchProfile();
-      fetchSkillsAndDomains();
-      fetchFreelancerProjects();
+      fetchSkillsAndDomains().then(() => {
+        fetchProfile();
+        fetchFreelancerProjects();
+      });
     }
   }, [profileId, user.uid]);
+
+  // Helper function to get skill name from ID
+  const getSkillNameById = (skillId: string) => {
+    if (!skillId || !skillsOptions || skillsOptions.length === 0) {
+      return skillId || '';
+    }
+
+    // Try multiple matching strategies
+    let skill = skillsOptions.find((s: any) => s.skillId === skillId);
+    if (!skill) skill = skillsOptions.find((s: any) => s._id === skillId);
+    if (!skill) skill = skillsOptions.find((s: any) => s.id === skillId);
+    if (!skill) skill = skillsOptions.find((s: any) => s.name === skillId);
+
+    // If still not found, try case-insensitive name matching
+    if (!skill) {
+      skill = skillsOptions.find(
+        (s: any) =>
+          (s.name || s.label || s.skillName)?.toLowerCase() ===
+          skillId.toLowerCase(),
+      );
+    }
+
+    return skill
+      ? skill.name || skill.label || skill.skillName || skillId
+      : skillId;
+  };
+
+  // Helper function to get domain name from ID
+  const getDomainNameById = (domainId: string) => {
+    if (!domainId || !domainsOptions || domainsOptions.length === 0) {
+      return domainId || '';
+    }
+
+    // Try multiple matching strategies
+    let domain = domainsOptions.find((d: any) => d.domainId === domainId);
+    if (!domain) domain = domainsOptions.find((d: any) => d._id === domainId);
+    if (!domain) domain = domainsOptions.find((d: any) => d.id === domainId);
+    if (!domain) domain = domainsOptions.find((d: any) => d.name === domainId);
+
+    // If still not found, try case-insensitive name matching
+    if (!domain) {
+      domain = domainsOptions.find(
+        (d: any) =>
+          (d.name || d.label || d.domainName)?.toLowerCase() ===
+          domainId.toLowerCase(),
+      );
+    }
+
+    return domain
+      ? domain.name || domain.label || domain.domainName || domainId
+      : domainId;
+  };
+
+  // Helper function to transform profile data for backend API
+  const transformProfileForAPI = (profileData: any) => {
+    const transformedSkills =
+      profileData.skills?.map((skill: any) => {
+        if (typeof skill === 'string') {
+          return skill;
+        }
+        // Prioritize skillId field, then fallback to other ID fields
+        const skillId =
+          skill.skillId || skill._id || skill.id || skill.value || skill.name;
+        return skillId;
+      }) || [];
+
+    const transformedDomains =
+      profileData.domains?.map((domain: any) => {
+        if (typeof domain === 'string') {
+          return domain;
+        }
+        // Prioritize domainId field, then fallback to other ID fields
+        const domainId =
+          domain.domainId ||
+          domain._id ||
+          domain.id ||
+          domain.value ||
+          domain.name;
+        return domainId;
+      }) || [];
+
+    return {
+      ...profileData,
+      skills: transformedSkills,
+      domains: transformedDomains,
+    };
+  };
 
   const fetchProfile = async () => {
     if (!profileId) return;
@@ -110,8 +202,15 @@ export default function ProfileDetailPage() {
         }
       }
 
-      setProfile(profileData);
-      setEditingProfileData(profileData);
+      // Ensure skills and domains are properly formatted as arrays of strings
+      const processedProfileData = {
+        ...profileData,
+        skills: Array.isArray(profileData.skills) ? profileData.skills : [],
+        domains: Array.isArray(profileData.domains) ? profileData.domains : [],
+      };
+
+      setProfile(processedProfileData);
+      setEditingProfileData(processedProfileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -139,6 +238,8 @@ export default function ProfileDetailPage() {
       const domainsData = freelancerData.domain || [];
       const domainsArray = Array.isArray(domainsData) ? domainsData : [];
       setDomainsOptions(domainsArray);
+
+      setSkillsAndDomainsLoaded(true);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
     }
@@ -160,11 +261,57 @@ export default function ProfileDetailPage() {
   const handleUpdateProfile = async () => {
     if (!profile?._id) return;
 
+    // Client-side validation
+    if (
+      !editingProfileData.profileName ||
+      editingProfileData.profileName.trim().length === 0
+    ) {
+      toast({
+        title: 'Validation Error',
+        description: 'Profile name is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (
+      !editingProfileData.description ||
+      editingProfileData.description.trim().length < 10
+    ) {
+      toast({
+        title: 'Validation Error',
+        description: 'Description must be at least 10 characters long',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (editingProfileData.profileName.length > 100) {
+      toast({
+        title: 'Validation Error',
+        description: 'Profile name must be less than 100 characters',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (editingProfileData.description.length > 500) {
+      toast({
+        title: 'Validation Error',
+        description: 'Description must be less than 500 characters',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsUpdating(true);
     try {
+      // Transform the data to match backend schema
+      const updatePayload = transformProfileForAPI(editingProfileData);
+
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
-        editingProfileData,
+        updatePayload,
       );
       toast({
         title: 'Success',
@@ -190,6 +337,117 @@ export default function ProfileDetailPage() {
     }));
   };
 
+  const handleAddSkill = () => {
+    if (!tmpSkill || !profile || !skillsOptions || skillsOptions.length === 0)
+      return;
+
+    const selectedSkill = skillsOptions.find(
+      (skill: any) =>
+        (skill.name || skill.label || skill.skillName) === tmpSkill,
+    );
+
+    if (selectedSkill) {
+      // Add the skillId (string) to the profile, not the entire object
+      const skillIdToAdd =
+        selectedSkill.skillId ||
+        selectedSkill._id ||
+        selectedSkill.id ||
+        selectedSkill.name;
+
+      // Check if skill is already added by comparing IDs
+      const isAlreadyAdded = profile.skills?.some((skill: any) => {
+        const existingSkillId =
+          typeof skill === 'string'
+            ? skill
+            : skill.skillId || skill._id || skill.id || skill.name;
+        return existingSkillId === skillIdToAdd;
+      });
+
+      if (!isAlreadyAdded) {
+        const updatedSkills = [...(profile.skills || []), skillIdToAdd];
+        setProfile({ ...profile, skills: updatedSkills });
+        setEditingProfileData({
+          ...editingProfileData,
+          skills: updatedSkills,
+        });
+      }
+      setTmpSkill('');
+      setSearchQuery('');
+    }
+  };
+
+  const handleAddDomain = () => {
+    if (
+      !tmpDomain ||
+      !profile ||
+      !domainsOptions ||
+      domainsOptions.length === 0
+    )
+      return;
+
+    const selectedDomain = domainsOptions.find(
+      (domain: any) =>
+        (domain.name || domain.label || domain.domainName) === tmpDomain,
+    );
+
+    if (selectedDomain) {
+      // Add the domainId (string) to the profile, not the entire object
+      const domainIdToAdd =
+        selectedDomain.domainId ||
+        selectedDomain._id ||
+        selectedDomain.id ||
+        selectedDomain.name;
+
+      // Check if domain is already added by comparing IDs
+      const isAlreadyAdded = profile.domains?.some((domain: any) => {
+        const existingDomainId =
+          typeof domain === 'string'
+            ? domain
+            : domain.domainId || domain._id || domain.id || domain.name;
+        return existingDomainId === domainIdToAdd;
+      });
+
+      if (!isAlreadyAdded) {
+        const updatedDomains = [...(profile.domains || []), domainIdToAdd];
+        setProfile({ ...profile, domains: updatedDomains });
+        setEditingProfileData({
+          ...editingProfileData,
+          domains: updatedDomains,
+        });
+      }
+      setTmpDomain('');
+      setSearchQuery('');
+    }
+  };
+
+  const handleDeleteSkill = (skillIdToDelete: string) => {
+    if (!profile || !profile.skills) return;
+
+    const updatedSkills = profile.skills.filter((skill: any) => {
+      const skillId =
+        typeof skill === 'string'
+          ? skill
+          : skill.skillId || skill._id || skill.id || skill.name;
+      return skillId !== skillIdToDelete;
+    });
+    setProfile({ ...profile, skills: updatedSkills });
+    setEditingProfileData({ ...editingProfileData, skills: updatedSkills });
+  };
+
+  const handleDeleteDomain = (domainIdToDelete: string) => {
+    if (!profile || !profile.domains) return;
+
+    const updatedDomains = profile.domains.filter((domain: any) => {
+      const domainId =
+        typeof domain === 'string'
+          ? domain
+          : domain.domainId || domain._id || domain.id || domain.name;
+      return domainId !== domainIdToDelete;
+    });
+    setProfile({ ...profile, domains: updatedDomains });
+    setEditingProfileData({ ...editingProfileData, domains: updatedDomains });
+  };
+
   const handleRemoveProject = async (projectId: string) => {
     if (!profile?._id) return;
 
@@ -198,10 +456,16 @@ export default function ProfileDetailPage() {
         (project: any) => project._id !== projectId,
       );
 
-      await axiosInstance.put(`/freelancer/profile/${profile._id}`, {
+      // Transform the data to match backend schema
+      const updatePayload = transformProfileForAPI({
         ...profile,
         projects: updatedProjects,
       });
+
+      await axiosInstance.put(
+        `/freelancer/profile/${profile._id}`,
+        updatePayload,
+      );
 
       toast({
         title: 'Success',
@@ -226,10 +490,16 @@ export default function ProfileDetailPage() {
         (experience: any) => experience._id !== experienceId,
       );
 
-      await axiosInstance.put(`/freelancer/profile/${profile._id}`, {
+      // Transform the data to match backend schema
+      const updatePayload = transformProfileForAPI({
         ...profile,
         experiences: updatedExperiences,
       });
+
+      await axiosInstance.put(
+        `/freelancer/profile/${profile._id}`,
+        updatePayload,
+      );
 
       toast({
         title: 'Success',
@@ -278,7 +548,7 @@ export default function ProfileDetailPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !skillsAndDomainsLoaded) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <SidebarMenu
@@ -418,7 +688,21 @@ export default function ProfileDetailPage() {
                 {/* Profile Name and Hourly Rate */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="profileName">Profile Name</Label>
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="profileName">Profile Name</Label>
+                      <span
+                        className={`text-sm ${
+                          (editingProfileData.profileName || '').length === 0
+                            ? 'text-red-500'
+                            : (editingProfileData.profileName || '').length >
+                                100
+                              ? 'text-red-500'
+                              : 'text-muted-foreground'
+                        }`}
+                      >
+                        {(editingProfileData.profileName || '').length}/100
+                      </span>
+                    </div>
                     <Input
                       id="profileName"
                       value={editingProfileData.profileName || ''}
@@ -426,6 +710,12 @@ export default function ProfileDetailPage() {
                         handleInputChange('profileName', e.target.value)
                       }
                       placeholder="e.g., Frontend Developer"
+                      className={
+                        (editingProfileData.profileName || '').length === 0 ||
+                        (editingProfileData.profileName || '').length > 100
+                          ? 'border-red-500'
+                          : ''
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -447,15 +737,35 @@ export default function ProfileDetailPage() {
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="description">Description</Label>
+                    <span
+                      className={`text-sm ${
+                        (editingProfileData.description || '').length < 10
+                          ? 'text-red-500'
+                          : (editingProfileData.description || '').length > 500
+                            ? 'text-red-500'
+                            : 'text-muted-foreground'
+                      }`}
+                    >
+                      {(editingProfileData.description || '').length}/500 (min:
+                      10)
+                    </span>
+                  </div>
                   <Textarea
                     id="description"
                     value={editingProfileData.description || ''}
                     onChange={(e) =>
                       handleInputChange('description', e.target.value)
                     }
-                    placeholder="Describe your expertise and experience..."
+                    placeholder="Describe your expertise and experience... (minimum 10 characters)"
                     rows={4}
+                    className={
+                      (editingProfileData.description || '').length < 10 ||
+                      (editingProfileData.description || '').length > 500
+                        ? 'border-red-500'
+                        : ''
+                    }
                   />
                 </div>
 
@@ -465,19 +775,161 @@ export default function ProfileDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Skills</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="flex items-center mt-2">
+                      <Select
+                        onValueChange={(value) => {
+                          setTmpSkill(value);
+                          setSearchQuery('');
+                        }}
+                        value={tmpSkill || ''}
+                        onOpenChange={(open) => {
+                          if (!open) setSearchQuery('');
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={tmpSkill ? tmpSkill : 'Select skill'}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* Add search input */}
+                          <div className="p-2 relative">
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                              placeholder="Search skills"
+                            />
+                            {searchQuery && (
+                              <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                          {/* Filtered skill list */}
+                          {skillsOptions &&
+                            skillsOptions.length > 0 &&
+                            skillsOptions
+                              .filter((skill: any) => {
+                                const skillName =
+                                  skill.name || skill.label || skill.skillName;
+                                if (!skillName) return false;
+
+                                const matchesSearch = skillName
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase());
+
+                                const isAlreadySelected = profile?.skills?.some(
+                                  (s: any) => {
+                                    const existingSkillId =
+                                      typeof s === 'string'
+                                        ? s
+                                        : s.skillId || s._id || s.id || s.name;
+                                    const currentSkillId =
+                                      skill.skillId ||
+                                      skill._id ||
+                                      skill.id ||
+                                      skill.name;
+                                    return existingSkillId === currentSkillId;
+                                  },
+                                );
+
+                                return matchesSearch && !isAlreadySelected;
+                              })
+                              .map((skill: any, index: number) => (
+                                <SelectItem
+                                  key={
+                                    skill.skillId ||
+                                    skill._id ||
+                                    skill.id ||
+                                    index
+                                  }
+                                  value={
+                                    skill.name || skill.label || skill.skillName
+                                  }
+                                >
+                                  {skill.name || skill.label || skill.skillName}
+                                </SelectItem>
+                              ))}
+                          {/* No matching skills */}
+                          {skillsOptions &&
+                            skillsOptions.length > 0 &&
+                            skillsOptions.filter((skill: any) => {
+                              const skillName =
+                                skill.name || skill.label || skill.skillName;
+                              if (!skillName) return false;
+
+                              const matchesSearch = skillName
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase());
+
+                              const isAlreadySelected = profile?.skills?.some(
+                                (s: any) => {
+                                  const existingSkillId =
+                                    typeof s === 'string'
+                                      ? s
+                                      : s.skillId || s._id || s.id || s.name;
+                                  const currentSkillId =
+                                    skill.skillId ||
+                                    skill._id ||
+                                    skill.id ||
+                                    skill.name;
+                                  return existingSkillId === currentSkillId;
+                                },
+                              );
+
+                              return matchesSearch && !isAlreadySelected;
+                            }).length === 0 && (
+                              <div className="p-2 text-gray-500 italic text-center">
+                                No matching skills
+                              </div>
+                            )}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="icon"
+                        className="ml-2"
+                        disabled={!tmpSkill}
+                        onClick={() => {
+                          handleAddSkill();
+                          setTmpSkill('');
+                          setSearchQuery('');
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-5">
                       {profile.skills && profile.skills.length > 0 ? (
-                        profile.skills.map((skill: any, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-primary text-primary-foreground"
-                          >
-                            {typeof skill === 'string'
+                        profile.skills.map((skill: any, index: number) => {
+                          const skillId =
+                            typeof skill === 'string'
                               ? skill
-                              : skill.name || skill.label || skill.skillName}
-                          </Badge>
-                        ))
+                              : skill.skillId ||
+                                skill._id ||
+                                skill.id ||
+                                skill.name;
+                          const skillName = getSkillNameById(skillId);
+
+                          return (
+                            <Badge
+                              key={index}
+                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                            >
+                              {skillName}
+                              <X
+                                className="ml-2 h-3 w-3 cursor-pointer"
+                                onClick={() => handleDeleteSkill(skillId)}
+                              />
+                            </Badge>
+                          );
+                        })
                       ) : (
                         <p className="text-muted-foreground text-sm">
                           No skills selected
@@ -487,21 +939,170 @@ export default function ProfileDetailPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Domains</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {profile.domains && profile.domains.length > 0 ? (
-                        profile.domains.map((domain: any, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-secondary text-secondary-foreground"
-                          >
-                            {typeof domain === 'string'
-                              ? domain
-                              : domain.name ||
+                    <div className="flex items-center mt-2">
+                      <Select
+                        onValueChange={(value) => {
+                          setTmpDomain(value);
+                          setSearchQuery('');
+                        }}
+                        value={tmpDomain || ''}
+                        onOpenChange={(open) => {
+                          if (!open) setSearchQuery('');
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              tmpDomain ? tmpDomain : 'Select domain'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* Add search input */}
+                          <div className="p-2 relative">
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-lg text-sm"
+                              placeholder="Search domains"
+                            />
+                            {searchQuery && (
+                              <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                          {/* Filtered domain list */}
+                          {domainsOptions &&
+                            domainsOptions.length > 0 &&
+                            domainsOptions
+                              .filter((domain: any) => {
+                                const domainName =
+                                  domain.name ||
+                                  domain.label ||
+                                  domain.domainName;
+                                if (!domainName) return false;
+
+                                const matchesSearch = domainName
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase());
+
+                                const isAlreadySelected =
+                                  profile?.domains?.some((d: any) => {
+                                    const existingDomainId =
+                                      typeof d === 'string'
+                                        ? d
+                                        : d.domainId || d._id || d.id || d.name;
+                                    const currentDomainId =
+                                      domain.domainId ||
+                                      domain._id ||
+                                      domain.id ||
+                                      domain.name;
+                                    return existingDomainId === currentDomainId;
+                                  });
+
+                                return matchesSearch && !isAlreadySelected;
+                              })
+                              .map((domain: any, index: number) => (
+                                <SelectItem
+                                  key={
+                                    domain.domainId ||
+                                    domain._id ||
+                                    domain.id ||
+                                    index
+                                  }
+                                  value={
+                                    domain.name ||
+                                    domain.label ||
+                                    domain.domainName
+                                  }
+                                >
+                                  {domain.name ||
+                                    domain.label ||
+                                    domain.domainName}
+                                </SelectItem>
+                              ))}
+                          {/* No matching domains */}
+                          {domainsOptions &&
+                            domainsOptions.length > 0 &&
+                            domainsOptions.filter((domain: any) => {
+                              const domainName =
+                                domain.name ||
                                 domain.label ||
-                                domain.domainName}
-                          </Badge>
-                        ))
+                                domain.domainName;
+                              if (!domainName) return false;
+
+                              const matchesSearch = domainName
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase());
+
+                              const isAlreadySelected = profile?.domains?.some(
+                                (d: any) => {
+                                  const existingDomainId =
+                                    typeof d === 'string'
+                                      ? d
+                                      : d.domainId || d._id || d.id || d.name;
+                                  const currentDomainId =
+                                    domain.domainId ||
+                                    domain._id ||
+                                    domain.id ||
+                                    domain.name;
+                                  return existingDomainId === currentDomainId;
+                                },
+                              );
+
+                              return matchesSearch && !isAlreadySelected;
+                            }).length === 0 && (
+                              <div className="p-2 text-gray-500 italic text-center">
+                                No matching domains
+                              </div>
+                            )}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        type="button"
+                        size="icon"
+                        className="ml-2"
+                        disabled={!tmpDomain}
+                        onClick={() => {
+                          handleAddDomain();
+                          setTmpDomain('');
+                          setSearchQuery('');
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-5">
+                      {profile.domains && profile.domains.length > 0 ? (
+                        profile.domains.map((domain: any, index: number) => {
+                          const domainId =
+                            typeof domain === 'string'
+                              ? domain
+                              : domain.domainId ||
+                                domain._id ||
+                                domain.id ||
+                                domain.name;
+                          const domainName = getDomainNameById(domainId);
+
+                          return (
+                            <Badge
+                              key={index}
+                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
+                            >
+                              {domainName}
+                              <X
+                                className="ml-2 h-3 w-3 cursor-pointer"
+                                onClick={() => handleDeleteDomain(domainId)}
+                              />
+                            </Badge>
+                          );
+                        })
                       ) : (
                         <p className="text-muted-foreground text-sm">
                           No domains selected
@@ -542,7 +1143,7 @@ export default function ProfileDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="personalWebsite">Personal Website</Label>
-                    <Input
+                      <Input
                       id="personalWebsite"
                       value={editingProfileData.personalWebsite || ''}
                       onChange={(e) =>
@@ -655,42 +1256,51 @@ export default function ProfileDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profile.experiences.map(
                       (experience: any, index: number) => (
-                        <Card key={experience._id || index} className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium">
-                              {experience.jobTitle || experience.title}
-                            </h4>
+                        <Card
+                          key={experience._id || index}
+                          className="p-4 bg-background border"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-lg mb-1">
+                                {experience.jobTitle || experience.title}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {experience.company}
+                              </p>
+                              <p className="text-xs text-muted-foreground mb-3">
+                                {new Date(
+                                  experience.workFrom,
+                                ).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                })}{' '}
+                                -{' '}
+                                {new Date(experience.workTo).toLocaleDateString(
+                                  'en-US',
+                                  {
+                                    year: 'numeric',
+                                    month: 'short',
+                                  },
+                                )}
+                              </p>
+                              {experience.workDescription && (
+                                <p className="text-sm text-foreground">
+                                  {experience.workDescription}
+                                </p>
+                              )}
+                            </div>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() =>
                                 handleRemoveExperience(experience._id)
                               }
-                              className="text-destructive hover:text-destructive/80"
+                              className="text-destructive hover:text-destructive/80 ml-2"
                             >
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {experience.company}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(experience.workFrom).toLocaleDateString(
-                              'en-US',
-                              {
-                                year: 'numeric',
-                                month: 'short',
-                              },
-                            )}{' '}
-                            -{' '}
-                            {new Date(experience.workTo).toLocaleDateString(
-                              'en-US',
-                              {
-                                year: 'numeric',
-                                month: 'short',
-                              },
-                            )}
-                          </p>
                         </Card>
                       ),
                     )}

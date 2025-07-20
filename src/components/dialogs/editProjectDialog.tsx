@@ -344,8 +344,8 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
                   <FormLabel>Project Thumbnail</FormLabel>
                   <FormControl>
                     <ThumbnailUpload
-                      onUploadComplete={(url) => field.onChange(url)}
-                      currentThumbnail={field.value}
+                      onThumbnailUpdate={(url) => field.onChange(url)}
+                      existingThumbnailUrl={field.value}
                     />
                   </FormControl>
                   <FormDescription>
