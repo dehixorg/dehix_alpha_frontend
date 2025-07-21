@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
 
 import { Button } from '../ui/button';
 import { GeneralInfo } from '../form/resumeform/GeneralInfo';
@@ -24,9 +27,71 @@ import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 
 export default function ResumeEditor() {
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
   const [showAtsScore, setShowAtsScore] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const user = useSelector((state: RootState) => state.user);
+
+  const handleSubmitResume = async () => {
+    setIsSubmitting(true);
+    setSubmitError('');
+    
+    try {
+      // Prepare the data in the format your backend expects
+      const resumeData = {
+        userId: user.uid, // You'll need to get this from your auth system
+        personalInfo: {
+          firstName: personalData[0]?.firstName || '',
+          lastName: personalData[0]?.lastName || '',
+          email: personalData[0]?.email || '',
+          phone: personalData[0]?.phoneNumber || '',
+          city: personalData[0]?.city || '',
+          country: personalData[0]?.country || '',
+          linkedin: personalData[0]?.linkedin || '',
+          github: personalData[0]?.github || '',
+        },
+        workExperience: workExperienceData.map(exp => ({
+          jobTitle: exp.jobTitle || '',
+          company: exp.company || '',
+          startDate: exp.startDate || '',
+          endDate: exp.endDate || '',
+          description: exp.description || '',
+        })),
+        education: educationData.map(edu => ({
+          degree: edu.degree || '',
+          school: edu.school || '',
+          startDate: edu.startDate || '',
+          endDate: edu.endDate || '',
+        })),
+        skills: skillData.map(skill => skill.skillName).filter(Boolean),
+        achievements: achievementData.map(ach => ({
+          achievementDescription: ach.achievementName || '',
+        })),
+        projects: projectData.map(proj => ({
+          title: proj.title || '',
+          description: proj.description || '',
+        })),
+        professionalSummary: summaryData.join(' '),
+        selectedTemplate,
+        selectedColor,
+      };
+
+      // Make the API call to your backend
+      const response = await axios.post('http://127.0.0.1:8080/resume', resumeData);
+
+      console.log('Resume saved successfully:', response.data);
+      // You might want to show a success message to the user here
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      setSubmitError('Failed to save resume. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const [educationData, setEducationData] = useState([
     {
       degree: 'Bachelor of Science in Computer Science',
@@ -206,7 +271,20 @@ export default function ResumeEditor() {
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
+              {/* Add Submit Button */}
+              <Button
+                onClick={handleSubmitResume}
+                disabled={isSubmitting}
+                className="p-2 bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Resume'}
+              </Button>
             </div>
+            
+            {/* Show error message if there's an error */}
+            {submitError && (
+              <div className="text-red-500 text-sm mt-2">{submitError}</div>
+            )}
 
             {/* Render the Current Step Content */}
             {steps[currentStep]}
