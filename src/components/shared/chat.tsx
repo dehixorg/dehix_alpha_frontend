@@ -5,6 +5,10 @@ import {
   LoaderCircle,
   Video,
   Upload,
+  Maximize2,
+  Search,
+  MoreVertical,
+  Minimize2,
   Reply,
   Text,
   X,
@@ -12,10 +16,17 @@ import {
   Italic,
   Underline,
   CheckCheck,
+  Flag, // Added
+  HelpCircle,
+  Mic, // Added for voice recording
+  StopCircle, // Added for stopping recording
+  Trash2, // Added for discarding recording
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
+import { usePathname } from 'next/navigation'; // Added
 import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
+import remarkGfm from 'remark-gfm';
 import {
   formatDistanceToNow,
   format,
@@ -25,6 +36,13 @@ import {
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import DOMPurify from 'dompurify'; // <-- add import later
+import {
+  Dialog,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+} from '@radix-ui/react-dialog';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -33,11 +51,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+import { DialogHeader } from '../ui/dialog';
+import { NewReportTab } from '../report-tabs/NewReportTabs';
 
-import { Conversation } from './chatList';
+import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
 import { FileAttachment } from './fileAttachment';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -55,6 +81,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
 function formatChatTimestamp(timestamp: string) {
   const date = new Date(timestamp);
@@ -87,7 +114,7 @@ type Message = {
   senderId: string;
   content: string;
   timestamp: string;
-  replyTo?: string | null; // Allow null
+  replyTo?: string | null;
   reactions?: MessageReaction;
 };
 
@@ -95,12 +122,22 @@ interface CardsChatProps {
   conversation: Conversation;
   conversations?: any;
   setActiveConversation?: any;
+  isChatExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onOpenProfileSidebar?: (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: { userName?: string; email?: string; profilePic?: string },
+  ) => void;
 }
 
 export function CardsChat({
   conversation,
-  //conversations,
-  //setActiveConversation,
+  conversations,
+  setActiveConversation,
+  isChatExpanded,
+  onToggleExpand,
+  onOpenProfileSidebar,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -112,17 +149,81 @@ export function CardsChat({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  //const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [hoveredMessageId, setHoveredMessageId] = useState(null); // state to track hovered message
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
-    useState<boolean>(false); // Toggle formatting options
+    useState<boolean>(false);
+  const user1 = useSelector((state: RootState) => state.user);
 
   const prevMessagesLength = useRef(messages.length);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [openReport, setOpenReport] = useState(false);
+
+  const pathname = usePathname();
+  const reportType = getReportTypeFromPath(pathname);
+  // States for voice recording
+  type RecordingStatus =
+    | 'idle'
+    | 'permission_pending'
+    | 'recording'
+    | 'recorded'
+    | 'uploading';
+  const [recordingStatus, setRecordingStatus] =
+    useState<RecordingStatus>('idle');
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null); // For preview
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
+    null,
+  );
+  const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
+  const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user1?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user1?.uid || '',
+    reportedId: user1?.uid || '',
+  };
+
+  const handleHeaderClick = () => {
+    if (!onOpenProfileSidebar) return;
+
+    if (conversation.type === 'group') {
+      onOpenProfileSidebar(conversation.id, 'group', {
+        userName: conversation.displayName,
+        profilePic: conversation.avatar,
+      });
+    } else {
+      const otherParticipantUid = conversation.participants.find(
+        (p) => p !== user.uid,
+      );
+      if (otherParticipantUid) {
+        const participantDetails =
+          conversation.participantDetails?.[otherParticipantUid];
+        const initialUserData = {
+          userName: participantDetails?.userName || primaryUser.userName,
+          email: participantDetails?.email || primaryUser.email,
+          profilePic: participantDetails?.profilePic || primaryUser.profilePic,
+        };
+        onOpenProfileSidebar(otherParticipantUid, 'user', initialUserData);
+      } else {
+        console.error(
+          'Could not determine the other participant in an individual chat for profile sidebar.',
+        );
+      }
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -138,27 +239,43 @@ export function CardsChat({
   }, []);
 
   useEffect(() => {
-    const fetchPrimaryUser = async () => {
+    const fetchPrimaryUserAndMessages = async () => {
       const primaryUid = conversation.participants.find(
         (participant: string) => participant !== user.uid,
       );
 
-      if (primaryUid) {
+      let userDetailsFoundInConversation = false;
+      if (
+        primaryUid &&
+        conversation.participantDetails &&
+        conversation.participantDetails[primaryUid] &&
+        conversation.participantDetails[primaryUid].userName
+      ) {
+        const details = conversation.participantDetails[primaryUid];
+        setPrimaryUser({
+          userName: details.userName,
+          email: details.email || '',
+          profilePic: details.profilePic || '',
+        });
+        userDetailsFoundInConversation = true;
+      }
+
+      if (primaryUid && !userDetailsFoundInConversation) {
         try {
           const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
           setPrimaryUser(response.data.data);
         } catch (error) {
-          console.error('Error fetching primary user:', error);
+          console.error('Error fetching primary user via API:', error);
           toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Something went wrong.Please try again.',
-          }); // Error toast
+            description: 'Failed to load user details. Please try again.',
+          });
         }
       }
     };
-    let unsubscribeMessages: (() => void) | undefined;
 
+    let unsubscribeMessages: (() => void) | undefined;
     const fetchMessages = async () => {
       setLoading(true);
       unsubscribeMessages = subscribeToFirestoreCollection(
@@ -172,14 +289,33 @@ export function CardsChat({
     };
 
     if (conversation) {
-      fetchPrimaryUser();
-      fetchMessages();
+      fetchPrimaryUserAndMessages();
+      unsubscribeMessages = subscribeToFirestoreCollection(
+        `conversations/${conversation.id}/messages`,
+        (messagesData) => {
+          setMessages(messagesData);
+          setLoading(false);
+        },
+        'desc',
+      );
+    } else {
+      setLoading(false);
     }
 
     return () => {
       if (unsubscribeMessages) unsubscribeMessages();
+      // Cleanup for voice recording
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      if (recordingDurationIntervalRef.current) {
+        clearInterval(recordingDurationIntervalRef.current);
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl); // Clean up preview URL
+      }
     };
-  }, [conversation, user.uid]);
+  }, [conversation, user.uid, mediaRecorder, audioUrl]); // Added mediaRecorder and audioUrl to dependency array
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -221,51 +357,149 @@ export function CardsChat({
     }
   }
 
-  if (!conversation) {
-    return null;
-  }
-
-  // Handle image upload
   async function handleFileUpload() {
     const fileInput = document.createElement('input');
-    fileInput.type = 'file'; // Allows selection of any file type
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,.pdf,.doc,.docx,.ppt,.pptx';
 
     fileInput.onchange = async () => {
       const file = fileInput.files?.[0];
-      if (!file) return; // Exit if no file is selected
+      if (!file) return;
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'File size should not exceed 10MB',
+        });
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid file type',
+          description: 'Please upload an image, PDF, Word, or PowerPoint file',
+        });
+        return;
+      }
 
       try {
-        // Create FormData to send the file
+        setIsSending(true);
         const formData = new FormData();
         formData.append('file', file);
 
-        // Post request to upload the file
-        const postFileResponse = await axiosInstance.post(
-          '/register/upload-image', // Endpoint that handles both files and images
-          formData,
-          {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          },
-        );
+        console.log('Starting file upload:', {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          timestamp: new Date().toISOString(),
+        });
 
-        // Assuming the response contains the URL of the uploaded file
+        // Function to attempt upload with retries
+        const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
+          try {
+            const postFileResponse = await axiosInstance.post(
+              '/register/upload-image',
+              formData,
+              {
+                headers: {
+                  'Content-Type': 'multipart/form-data',
+                  Accept: 'application/json',
+                },
+                onUploadProgress: (progressEvent) => {
+                  const percentCompleted = Math.round(
+                    (progressEvent.loaded * 100) / progressEvent.total!,
+                  );
+                  console.log('Upload progress:', {
+                    percent: percentCompleted,
+                    loaded: progressEvent.loaded,
+                    total: progressEvent.total,
+                    timestamp: new Date().toISOString(),
+                  });
+                },
+              },
+            );
+
+            return postFileResponse;
+          } catch (error: any) {
+            if (
+              retryCount < maxRetries &&
+              (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
+            ) {
+              console.log(
+                `Retrying upload (attempt ${retryCount + 1} of ${maxRetries})`,
+              );
+              // Wait for 1 second before retrying
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              return attemptUpload(retryCount + 1, maxRetries);
+            }
+            throw error;
+          }
+        };
+
+        const postFileResponse = await attemptUpload();
+        console.log('Upload response:', {
+          data: postFileResponse.data,
+          timestamp: new Date().toISOString(),
+        });
+
         const fileUrl = postFileResponse.data.data.Location;
 
-        // Prepare a message containing the file URL
         const message: Partial<Message> = {
           senderId: user.uid,
-          content: fileUrl, // Use the file URL as the message content
+          content: fileUrl,
           timestamp: new Date().toISOString(),
         };
 
-        // Send the message with the file URL
-        sendMessage(conversation, message, setInput);
-      } catch (error) {
-        console.error('Error uploading file:', error);
+        await sendMessage(conversation, message, setInput);
+
+        toast({
+          title: 'Success',
+          description: 'File uploaded successfully',
+        });
+      } catch (error: any) {
+        console.error('Error uploading file:', {
+          error: error.message,
+          code: error.code,
+          response: error.response?.data,
+          timestamp: new Date().toISOString(),
+        });
+
+        let errorMessage = 'Failed to upload file. Please try again.';
+        if (error.code === 'ERR_CANCELED') {
+          errorMessage = 'Upload was canceled. Please try again.';
+        } else if (error.code === 'ECONNABORTED') {
+          errorMessage =
+            'Connection was aborted. Please check your network connection and try again.';
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: errorMessage,
+        });
+      } finally {
+        setIsSending(false);
       }
     };
 
-    fileInput.click(); // Trigger file selection
+    fileInput.click();
   }
 
   async function handleCreateMeet() {
@@ -287,97 +521,229 @@ export function CardsChat({
     }
   }
 
+  /**
+   * Apply bold using execCommand so the formatting appears live.
+   */
   function handleBold() {
-    if (textAreaRef.current) {
-      const textarea = textAreaRef.current;
-      const { selectionStart, selectionEnd, value } = textarea;
-
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
-
-      const selectedText = value.slice(selectionStart, selectionEnd);
-      const newText = `${value.slice(0, selectionStart)}**${selectedText}**${value.slice(selectionEnd)}`;
-
-      // Update the state with the new text (including the bold markdown)
-      setInput(newText);
-      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Adjust selection to include the bold syntax
-    }
+    composerRef.current?.focus();
+    document.execCommand('bold');
   }
+
+  /**
+   * Underline uses <u> tags (markdown has no underline). Same logic as bold.
+   */
   const handleUnderline = () => {
-    if (textAreaRef.current) {
-      const textarea = textAreaRef.current;
-      const { selectionStart, selectionEnd, value } = textarea;
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
-
-      // Apply the underline markdown syntax (__text__)
-      const selectedText = value.slice(selectionStart, selectionEnd);
-      const newText = `${value.slice(0, selectionStart)}__${selectedText}__${value.slice(selectionEnd)}`;
-
-      // Update the state with the new text (including the underline markdown)
-      setInput(newText);
-
-      // Adjust the selection range to include the underline syntax
-      textarea.setSelectionRange(selectionStart + 2, selectionEnd + 2); // Add 2 for the __ around the text
-    }
+    composerRef.current?.focus();
+    document.execCommand('underline');
   };
 
+  /**
+   * Italic formatting with single * markers.
+   */
   function handleitalics() {
-    if (textAreaRef.current) {
-      const textarea = textAreaRef.current;
-      const { selectionStart, selectionEnd, value } = textarea;
-
-      if (selectionStart === selectionEnd) return; // No selection, do nothing
-
-      const selectedText = value.slice(selectionStart, selectionEnd);
-      const newText = `${value.slice(0, selectionStart)}*${selectedText}*${value.slice(selectionEnd)}`;
-
-      // Update the state with the new text (including the italic markdown)
-      setInput(newText);
-      textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1); // Adjust selection to include the italic syntax
-    }
+    composerRef.current?.focus();
+    document.execCommand('italic');
   }
+
   const toggleFormattingOptions = () => {
     setShowFormattingOptions((prev) => !prev);
   };
 
-  async function toggleReaction(messageId: string, emoji: string) {
-    const currentMessage = messages.find((msg) => msg.id === messageId);
-    const updatedReactions = { ...currentMessage?.reactions };
+  // Voice Recording Functions
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
 
-    // Check if the user has already reacted with a different emoji
+  const startRecording = async () => {
+    if (recordingStatus === 'recording') return;
+    setRecordingStatus('permission_pending');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+
+      recorder.ondataavailable = (event) => {
+        setAudioChunks((prev) => [...prev, event.data]);
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop()); // Stop mic access
+        setRecordingStatus('recorded');
+        if (recordingDurationIntervalRef.current) {
+          clearInterval(recordingDurationIntervalRef.current);
+        }
+      };
+
+      recorder.start();
+      setAudioChunks([]); // Clear previous chunks
+      setAudioBlob(null); // Clear previous blob
+      setAudioUrl(null); // Clear previous URL
+      setRecordingStartTime(Date.now());
+      setRecordingDuration(0);
+      recordingDurationIntervalRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+      setRecordingStatus('recording');
+      toast({
+        title: 'Recording started',
+        description: 'Speak into your microphone.',
+      });
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Error',
+        description: 'Could not access microphone. Please check permissions.',
+      });
+      setRecordingStatus('idle');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && recordingStatus === 'recording') {
+      mediaRecorder.stop();
+      // The onstop event handler will set status to "recorded" and clear interval
+      // Create blob and URL after chunks are all collected in onstop, or here if preferred.
+      // For simplicity, let's assume onstop handles setting the final audioBlob and audioUrl
+    }
+    // Ensure interval is cleared if stopRecording is called unexpectedly
+    if (recordingDurationIntervalRef.current) {
+      clearInterval(recordingDurationIntervalRef.current);
+    }
+  };
+
+  useEffect(() => {
+    if (recordingStatus === 'recorded' && audioChunks.length > 0) {
+      const blob = new Blob(audioChunks, {
+        type: mediaRecorder?.mimeType || 'audio/webm',
+      });
+      setAudioBlob(blob);
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+      setAudioChunks([]);
+    }
+  }, [audioChunks, recordingStatus, mediaRecorder?.mimeType]);
+  if (!conversation) {
+    return null;
+  }
+
+  const discardRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioChunks([]);
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setMediaRecorder(null);
+    setRecordingStatus('idle');
+    setRecordingDuration(0);
+    if (recordingDurationIntervalRef.current) {
+      clearInterval(recordingDurationIntervalRef.current);
+    }
+    toast({ title: 'Recording discarded' });
+  };
+
+  const handleSendVoiceMessage = async () => {
+    if (!audioBlob || !user || !conversation) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No audio recorded or user/conversation not found.',
+      });
+      return;
+    }
+
+    setRecordingStatus('uploading');
+    const formData = new FormData();
+    formData.append(
+      'file',
+      audioBlob,
+      `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`,
+    );
+    formData.append('senderId', user.uid);
+    // For individual chats, receiverId is the other participant. For group chats, it's the conversation ID.
+    const receiverId =
+      conversation.type === 'group'
+        ? conversation.id
+        : conversation.participants.find((p) => p !== user.uid) ||
+          conversation.id;
+    formData.append('receiverId', receiverId);
+    formData.append('conversationId', conversation.id);
+    formData.append('duration', recordingDuration.toString());
+
+    try {
+      // Using axiosInstance from the project
+      const response = await axiosInstance.post(
+        '/v1/voice-messages/upload',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      if (response.status === 201) {
+        toast({ title: 'Success', description: 'Voice message sent!' });
+        // Message should appear via Firestore listener.
+        // If not, one might need to manually add it or trigger a refetch.
+      } else {
+        throw new Error(
+          response.data.error || 'Failed to upload voice message',
+        );
+      }
+    } catch (error: any) {
+      console.error('Error sending voice message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: error.message || 'Could not send voice message.',
+      });
+    } finally {
+      discardRecording(); // Clean up states regardless of success/failure
+      setRecordingStatus('idle');
+    }
+  };
+
+  async function toggleReaction(
+    messageId: string,
+    emoji: string,
+  ): Promise<void> {
+    const currentMessage = messages.find((msg) => msg.id === messageId);
+    const updatedReactions: Record<string, string[]> = currentMessage?.reactions
+      ? { ...currentMessage.reactions }
+      : {};
+
     const userReaction = Object.keys(updatedReactions).find((existingEmoji) =>
       updatedReactions[existingEmoji]?.includes(user.uid),
     );
 
-    // If the user is reacting with the same emoji, remove it (toggle off)
     if (userReaction === emoji) {
       updatedReactions[emoji] = updatedReactions[emoji].filter(
-        (uid: any) => uid !== user.uid,
+        (uid: string) => uid !== user.uid,
       );
 
-      // Remove emoji key if no users remain
       if (updatedReactions[emoji].length === 0) {
         delete updatedReactions[emoji];
       }
     } else {
-      // Remove the previous reaction (if any)
       if (userReaction) {
         updatedReactions[userReaction] = updatedReactions[userReaction].filter(
-          (uid: any) => uid !== user.uid,
+          (uid: string) => uid !== user.uid,
         );
         if (updatedReactions[userReaction].length === 0) {
           delete updatedReactions[userReaction];
         }
       }
 
-      // Add the new reaction
       if (!updatedReactions[emoji]) {
         updatedReactions[emoji] = [];
       }
-      // Add the user's UID to the reaction array
       updatedReactions[emoji].push(user.uid);
     }
 
-    // Update the Firestore database with the updated reactions
     await updateDataInFirestore(
       `conversations/${conversation.id}/messages/`,
       messageId,
@@ -394,372 +760,736 @@ export function CardsChat({
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
         </div>
       ) : (
-        <Card className="col-span-3 w-[92vw] mt-0 min-h-[70vh] border-gray-400  dark:border-white border-2 shadow-none">
-          <CardHeader className="flex flex-row items-center  bg-[#ececec] dark:bg-[#333333] text-gray-800 dark:text-white p-2 rounded-t-lg">
-            <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarImage src={primaryUser.profilePic} alt="Image" />
-                <AvatarFallback>{primaryUser.userName}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium leading-none text-gray-800 dark:text-white">
-                  {primaryUser.userName}
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {primaryUser.email}
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 px-2 pb-2 pt-2 bg-[#ffffff] dark:bg-[#181818]">
-            <div className="flex flex-col-reverse space-y-4 space-y-reverse overflow-y-auto h-[65vh] md:h-[58vh]">
-              <div ref={messagesEndRef} />
-              {messages.map((message, index) => {
-                const formattedTimestamp = formatChatTimestamp(
-                  message.timestamp,
-                );
-                const readableTimestamp =
-                  formatDistanceToNow(new Date(message.timestamp)) + ' ago';
-
-                return (
-                  <div
-                    id={message.id}
-                    key={index}
-                    className="flex flex-row relative"
-                    onMouseEnter={() => setHoveredMessageId(message.id)}
-                    onMouseLeave={() => setHoveredMessageId(null)}
+        <>
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+              <button
+                onClick={handleHeaderClick}
+                className="flex items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
+                aria-label="View profile information"
+              >
+                <Avatar className="w-10 h-10">
+                  <AvatarImage
+                    src={
+                      conversation.type === 'group'
+                        ? (conversation.participantDetails &&
+                            conversation.participantDetails[conversation.id]
+                              ?.profilePic) ||
+                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        : primaryUser.profilePic
+                    }
+                    alt={
+                      conversation.type === 'group'
+                        ? conversation.groupName
+                        : primaryUser.userName || 'User'
+                    }
+                  />
+                  <AvatarFallback className="bg-[#d7dae0] dark:bg-[#35383b9e] text-[hsl(var(--foreground))]">
+                    {(
+                      conversation.type === 'group'
+                        ? conversation.groupName
+                        : primaryUser.userName
+                    )
+                      ? conversation.type === 'group'
+                        ? conversation.groupName?.charAt(0).toUpperCase()
+                        : primaryUser.userName?.charAt(0).toUpperCase()
+                      : 'P'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                    {conversation.type === 'group'
+                      ? conversation.groupName
+                      : primaryUser.userName || 'Chat'}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {conversation.type === 'group'
+                      ? `${conversation.participants.length} members`
+                      : primaryUser.email || 'Click to view profile'}
+                  </p>
+                </div>
+              </button>
+              <div className="flex items-center space-x-0.5 sm:space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Search in chat"
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Video call"
+                  onClick={handleCreateMeet}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  <Video className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
+                  onClick={() => {
+                    console.log('[CardsChat] Expand/collapse button clicked!');
+                    if (onToggleExpand) {
+                      onToggleExpand();
+                    } else {
+                      console.error('[CardsChat] onToggleExpand is undefined!');
+                    }
+                  }}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {isChatExpanded ? (
+                    <Minimize2 className="h-5 w-5" />
+                  ) : (
+                    <Maximize2 className="h-5 w-5" />
+                  )}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="More options"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={5}
+                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
                   >
-                    {message.senderId !== user.uid && (
-                      <Avatar key={index} className="w-8 h-8 mr-1 my-auto">
-                        <AvatarImage
-                          src={primaryUser.profilePic}
-                          alt={message.senderId}
-                        />
-                        <AvatarFallback>
-                          {message.senderId.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-
-                    <div
-                      className={cn(
-                        'flex w-max max-w-[65%] flex-col gap-1 rounded-lg px-3 py-2 text-sm',
-                        message.senderId === user.uid
-                          ? 'ml-auto bg-[#9155bc] dark:bg-[#580d8f] text-white  rounded-tr-none'
-                          : 'bg-[#d9d9d9] dark:bg-[#333333] text-white  rounded-tl-none',
-                      )}
+                    <DropdownMenuItem
                       onClick={() => {
-                        if (message.replyTo) {
-                          const replyMessage = messages.find(
-                            (msg) => msg.id === message.replyTo,
-                          );
-                          if (replyMessage) {
+                        // message object should be available in scope
+                        setOpenReport(true);
+                      }}
+                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <Flag className="h-4 w-4" />
+                      <span className="text-sm font-medium">Report</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem className="text-black dark:text-[hsl(var(--popover-foreground))] hover:!bg-transparent focus:!bg-transparent  cursor-pointer">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
+              <div className="flex flex-col-reverse space-y-3 space-y-reverse">
+                <div ref={messagesEndRef} />
+                {messages.map((message, index) => {
+                  const formattedTimestamp = formatChatTimestamp(
+                    message.timestamp,
+                  );
+                  const readableTimestamp =
+                    formatDistanceToNow(new Date(message.timestamp)) + ' ago';
+                  const isSender = message.senderId === user.uid;
+
+                  return (
+                    <div
+                      id={message.id}
+                      key={index}
+                      className={cn(
+                        'flex flex-row items-start relative group',
+                        isSender ? 'justify-end' : 'justify-start',
+                      )}
+                      onMouseEnter={() => setHoveredMessageId(message.id)}
+                      onMouseLeave={() => setHoveredMessageId(null)}
+                    >
+                      {!isSender && (
+                        <Avatar
+                          key={index}
+                          className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
+                        >
+                          <AvatarImage
+                            src={primaryUser.profilePic}
+                            alt={message.senderId}
+                          />
+                          <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                            {primaryUser.userName
+                              ? primaryUser.userName.charAt(0).toUpperCase()
+                              : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={cn(
+                          'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
+                          isSender
+                            ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none'
+                            : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none',
+                        )}
+                        onClick={() => {
+                          if (message.replyTo) {
                             const replyMessageElement = document.getElementById(
-                              replyMessage.id,
+                              message.replyTo,
                             );
                             if (replyMessageElement) {
                               replyMessageElement.classList.add(
-                                'bg-gray-200',
-                                'dark:bg-gray-600',
-                                'border-2',
-                                'border-gray-300',
-                                'dark:border-gray-500',
-                                'bg-opacity-50',
-                                'dark:bg-opacity-50',
+                                'ring-2',
+                                'ring-primary',
+                                'ring-offset-2',
+                                'dark:ring-offset-gray-800',
+                                'transition-all',
+                                'duration-300',
                               );
-
                               replyMessageElement.scrollIntoView({
                                 behavior: 'smooth',
+                                block: 'center',
                               });
-
                               setTimeout(() => {
                                 replyMessageElement.classList.remove(
-                                  'bg-gray-200',
-                                  'dark:bg-gray-600',
-                                  'border-2',
-                                  'border-gray-300',
-                                  'dark:border-gray-500',
-                                  'bg-opacity-50',
-                                  'dark:bg-opacity-50',
+                                  'ring-2',
+                                  'ring-primary',
+                                  'ring-offset-2',
+                                  'dark:ring-offset-gray-800',
                                 );
-                              }, 2000);
+                              }, 2500);
                             }
                           }
-                        }
-                      }}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="break-words rounded-lg w-full">
-                              {message.replyTo && (
-                                <div className="flex items-center justify-between p-2 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-4 border-gray-400 dark:border-gray-500 shadow-sm opacity-100 transition-opacity duration-300 max-w-2xl mb-1">
-                                  <div className="text-sm italic text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2 max-w-2xl">
-                                    <span className="font-semibold">
-                                      {messages.find(
-                                        (msg) => msg.id === message.replyTo,
-                                      )?.content || 'Message not found'}
-                                    </span>
+                        }}
+                      >
+                        <TooltipProvider delayDuration={300}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="break-words w-full">
+                                {message.replyTo && (
+                                  <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                                    <div
+                                      className={cn(
+                                        'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
+                                        isSender
+                                          ? 'text-primary-foreground dark:text-primary-foreground'
+                                          : 'text-primary dark:text-primary',
+                                      )}
+                                    >
+                                      <span className="font-medium">
+                                        {messages
+                                          .find(
+                                            (msg) => msg.id === message.replyTo,
+                                          )
+                                          ?.content.substring(0, 100) ||
+                                          'Original message'}
+                                        {(messages.find(
+                                          (msg) => msg.id === message.replyTo,
+                                        )?.content?.length || 0) > 100 && '...'}
+                                      </span>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-
-                              {message.content.match(
-                                /\.(jpeg|jpg|gif|png)$/,
-                              ) ? (
-                                <Image
-                                  src={message.content || '/placeholder.svg'}
-                                  alt="Message Image"
-                                  width={300}
-                                  height={300}
-                                  className="rounded-lg"
-                                />
-                              ) : message.content.match(
-                                  /\.(pdf|doc|docx|ppt|pptx)$/,
+                                )}
+                                {message.content.match(
+                                  /\.(jpeg|jpg|gif|png)(\?|$)/i,
                                 ) ? (
-                                <FileAttachment
-                                  fileName={
-                                    message.content.split('/').pop() || 'File'
-                                  }
-                                  fileUrl={message.content}
-                                  fileType={
-                                    message.content.split('.').pop() || 'file'
-                                  }
-                                />
-                              ) : (
-                                <ReactMarkdown
-                                  className={` ${message.senderId === user.uid ? 'text-white' : 'text-black'} dark:text-gray-100`}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="bottom" sideOffset={10}>
-                            <p className="  p-1 rounded">{readableTimestamp}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      {/* Render reactions inside the message bubble */}
-                      <Reactions
-                        messageId={message.id}
-                        reactions={message.reactions || {}}
-                        toggleReaction={toggleReaction}
-                      />
-
+                                  <Image
+                                    src={message.content || '/placeholder.svg'}
+                                    alt="Message Image"
+                                    width={300}
+                                    height={300}
+                                    className="rounded-md my-1"
+                                  />
+                                ) : message.content.match(
+                                    /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                                  ) ? (
+                                  <FileAttachment
+                                    fileName={
+                                      message.content.split('/').pop() || 'File'
+                                    }
+                                    fileUrl={message.content}
+                                    fileType={
+                                      message.content.split('.').pop() || 'file'
+                                    }
+                                  />
+                                ) : (
+                                  <ReactMarkdown
+                                    className={cn(
+                                      'prose prose-sm dark:prose-invert max-w-none',
+                                      isSender
+                                        ? 'text-[hsl(var(--foreground))] dark:text-gray-50'
+                                        : 'text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))]',
+                                    )}
+                                    remarkPlugins={[remarkGfm]}
+                                  >
+                                    {message.content}
+                                  </ReactMarkdown>
+                                )}
+                                {/* Voice Message Player */}
+                                {message.audioUrl &&
+                                  message.duration !== undefined && (
+                                    <div className="mt-2">
+                                      <audio
+                                        src={message.audioUrl}
+                                        controls
+                                        className="w-full h-10 rounded-md"
+                                      />
+                                      <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
+                                        Duration:{' '}
+                                        {formatDuration(message.duration)}
+                                      </p>
+                                    </div>
+                                  )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              sideOffset={5}
+                              className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
+                            >
+                              <p>{readableTimestamp}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Reactions
+                          messageId={message.id}
+                          reactions={message.reactions || {}}
+                          toggleReaction={toggleReaction}
+                        />
+                        <div
+                          className={cn(
+                            'flex items-center text-xs mt-1',
+                            isSender
+                              ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                              : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                            isSender ? 'justify-end' : 'justify-start',
+                          )}
+                        >
+                          {formattedTimestamp}
+                          {isSender && (
+                            <span className="ml-1">
+                              <CheckCheck className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <div
                         className={cn(
-                          'text-[10px] mt-1 text-right',
-                          message.senderId === user.uid
-                            ? 'text-gray-100 dark:text-gray-300 flex items-center gap-0.5'
-                            : 'text-gray-500 dark:text-gray-400',
+                          'relative opacity-0 group-hover:opacity-100 transition-opacity',
+                          isSender ? 'mr-1' : 'ml-1',
                         )}
                       >
-                        {formattedTimestamp}
-                        {message.senderId === user.uid && (
-                          <span className="ml-1">
-                            <CheckCheck className="w-4" />
-                          </span>
+                        {!isSender && (
+                          <EmojiPicker
+                            aria-label="Add reaction"
+                            onSelect={(emoji: string) =>
+                              toggleReaction(message.id, emoji)
+                            }
+                          />
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
+                            isSender
+                              ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                              : 'text-[hsl(var(--muted-foreground))]',
+                          )}
+                          onClick={() => setReplyToMessageId(message.id)}
+                          aria-label="Reply to message"
+                        >
+                          <Reply className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-
-                    <div
-                      className={`relative ${message.senderId === user.uid ? 'text-right' : 'text-left'}`}
-                    >
-                      {hoveredMessageId === message.id && (
-                        <Reply
-                          className={`h-4 w-4 absolute cursor-pointer top-0 z-10 pointer-events-auto 
-        ${message.senderId === user.uid ? 'right-2 text-white ' : '-left-5 text-black'}`}
-                          onClick={() => setReplyToMessageId(message.id)}
-                        />
-                      )}
+                  );
+                })}
+              </div>
+            </CardContent>
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (input.trim().length === 0) return;
+                  const newMessage = {
+                    senderId: user.uid,
+                    content: input,
+                    timestamp: new Date().toISOString(),
+                    replyTo: replyToMessageId || null,
+                  };
+                  sendMessage(conversation, newMessage, setInput);
+                  setReplyToMessageId('');
+                }}
+                className="flex flex-col w-full space-y-2"
+                aria-label="Message input form"
+              >
+                {replyToMessageId && (
+                  <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
+                    <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                      Replying to:{' '}
+                      <span className="font-semibold">
+                        {messages
+                          .find((msg) => msg.id === replyToMessageId)
+                          ?.content.replace(/\*|__/g, '')
+                          .substring(0, 50) || 'Message'}
+                        ...
+                      </span>
                     </div>
-
-                    {message.senderId !== user.uid && (
-                      <EmojiPicker
-                        onSelect={(emoji: string) =>
-                          toggleReaction(message.id, emoji)
+                    <Button
+                      onClick={() => setReplyToMessageId('')}
+                      variant="ghost"
+                      size="icon"
+                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
+                      aria-label="Cancel reply"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <div
+                    ref={composerRef}
+                    contentEditable
+                    aria-label="Type a message"
+                    aria-placeholder="Type a message..."
+                    data-placeholder="Type a message..."
+                    className="flex-1 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                    onInput={(e) => {
+                      const html = (e.currentTarget as HTMLElement).innerHTML;
+                      setInput(html);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                        e.preventDefault();
+                        const html = composerRef.current?.innerHTML || '';
+                        const textContent =
+                          composerRef.current?.innerText || '';
+                        if (textContent.trim().length > 0) {
+                          const sanitized = DOMPurify.sanitize(html, {
+                            ALLOWED_TAGS: [
+                              'b',
+                              'strong',
+                              'i',
+                              'em',
+                              'u',
+                              'br',
+                              'div',
+                              'span',
+                              'a',
+                            ],
+                          });
+                          const newMessage = {
+                            senderId: user.uid,
+                            content: sanitized,
+                            timestamp: new Date().toISOString(),
+                            replyTo: replyToMessageId || null,
+                          };
+                          sendMessage(conversation, newMessage, setInput);
+                          setReplyToMessageId('');
+                          composerRef.current!.innerHTML = '';
+                          setInput('');
                         }
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-          <CardFooter className="bg-[#ffffff] dark:bg-[#181818] rounded-b-lg p-2">
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (input.trim().length === 0) return;
-
-                const newMessage = {
-                  senderId: user.uid,
-                  content: input,
-                  timestamp: new Date().toISOString(),
-                  replyTo: replyToMessageId || null,
-                };
-
-                sendMessage(conversation, newMessage, setInput);
-                setReplyToMessageId('');
-              }}
-              className="flex flex-col w-full mb-2"
-            >
-              {/* Reply Preview Area */}
-              {replyToMessageId && (
-                <div className="flex items-center justify-between p-2 rounded-lg shadow-sm opacity-90 bg-white dark:bg-[#2D2D2D] mb-2 border-l-4 border-gray-400 dark:border-gray-500 ">
-                  <div className="text-sm italic text-gray-600 dark:text-gray-300 overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                    <span className="font-semibold">
-                      {messages
-                        .find((msg) => msg.id === replyToMessageId)
-                        ?.content.replace(/\*/g, '') || 'Message not found'}
-                    </span>
-                  </div>
+                      }
+                    }}
+                    suppressContentEditableWarning
+                  />
                   <Button
-                    onClick={() => setReplyToMessageId('')}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 h-6 rounded-full"
-                    title="Cancel Reply"
-                    variant="ghost"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-              <div className="relative bg-[#ececec] dark:bg-[#333333] rounded-full border border-gray-300 dark:border-gray-600 p-1 flex items-center space-x-2">
-                <div className="sm:hidden">
-                  <button
-                    onClick={() => setOpenDrawer(!openDrawer)}
-                    className="p-2 text-gray-500 dark:text-gray-400"
-                  >
-                    <Text className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                  </button>
-                </div>
-
-                <div
-                  className={`absolute bottom-full left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg transition-transform duration-300 ${
-                    openDrawer
-                      ? 'translate-y-0 opacity-100'
-                      : 'translate-y-5 opacity-0 pointer-events-none'
-                  }`}
-                >
-                  <div className="flex justify-around space-x-3">
-                    <button onClick={handleBold} className="p-2">
-                      <Bold className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleitalics} className="p-2">
-                      <Italic className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleUnderline} className="p-2">
-                      <Underline className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleFileUpload} className="p-2">
-                      <Upload className="h-5 w-5" />
-                    </button>
-                    <button onClick={handleCreateMeet} className="p-2">
-                      <Video className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
+                    type="button"
                     size="icon"
                     variant="ghost"
-                    title="Text Formatting"
-                    className="group text-gray-500 hidden md:flex dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                    onClick={toggleFormattingOptions}
-                  >
-                    <Text className="h-4 w-4" />
-                  </Button>
-
-                  {showFormattingOptions && (
-                    <div className="formatting-options">
-                      <Button
-                        size="icon"
-                        type="button"
-                        onClick={handleBold}
-                        title="Bold"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Bold className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleitalics}
-                        title="Italics"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Italic className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="icon"
-                        onClick={handleUnderline}
-                        title="Underline"
-                        className="group text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-                      >
-                        <Underline className="h-5 w-5 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                {/* Textarea */}
-                <textarea
-                  ref={textAreaRef}
-                  className="w-full flex-1 h-10 max-h-32 resize-none border-none p-2 bg-transparent placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100 focus:outline-none"
-                  placeholder="Type message"
-                  value={input}
-                  rows={1}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
-                      e.preventDefault();
-                      if (input.trim().length > 0) {
-                        setIsSending(true);
-                        setTimeout(() => {
-                          setInput('');
-                          setIsSending(false);
-                        }, 1000);
-                      }
-                    }
-                  }}
-                />
-                <button
-                  disabled={!input.trim().length || isSending}
-                  className="p-2 flex md:hidden disabled:text-gray-600"
-                >
-                  {isSending ? (
-                    <LoaderCircle className="h-5 w-5 animate-spin " />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </button>
-                {/* Attach & Send Buttons (Visible on md+) */}
-                <div className="hidden sm:flex items-center space-x-2 pr-2">
-                  <button onClick={handleFileUpload} className="p-2">
-                    <Upload className="h-5 w-5" />
-                  </button>
-                  <button onClick={handleCreateMeet} className="p-2">
-                    <Video className="h-5 w-5" />
-                  </button>
-                  <button
+                    className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
                     disabled={!input.trim().length || isSending}
-                    className="p-2 disabled:text-gray-600"
+                    aria-label="Send message"
+                    onClick={() => {
+                      const html = composerRef.current?.innerHTML || '';
+                      const textContent = composerRef.current?.innerText || '';
+                      if (textContent.trim().length === 0) return;
+                      const sanitized = DOMPurify.sanitize(html, {
+                        ALLOWED_TAGS: [
+                          'b',
+                          'strong',
+                          'i',
+                          'em',
+                          'u',
+                          'br',
+                          'div',
+                          'span',
+                          'a',
+                        ],
+                      });
+                      const newMessage = {
+                        senderId: user.uid,
+                        content: sanitized,
+                        timestamp: new Date().toISOString(),
+                        replyTo: replyToMessageId || null,
+                      };
+                      sendMessage(conversation, newMessage, setInput);
+                      setReplyToMessageId('');
+                      composerRef.current!.innerHTML = '';
+                      setInput('');
+                    }}
                   >
                     {isSending ? (
                       <LoaderCircle className="h-5 w-5 animate-spin" />
                     ) : (
                       <Send className="h-5 w-5" />
                     )}
-                  </button>
+                  </Button>
                 </div>
-              </div>
-            </form>
-          </CardFooter>
-        </Card>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBold}
+                    title="Bold"
+                    aria-label="Bold"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                  >
+                    {' '}
+                    <Bold className="h-4 w-4" />{' '}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleitalics}
+                    title="Italic"
+                    aria-label="Italic"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                  >
+                    {' '}
+                    <Italic className="h-4 w-4" />{' '}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleUnderline}
+                    title="Underline"
+                    aria-label="Underline"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
+                  >
+                    {' '}
+                    <Underline className="h-4 w-4" />{' '}
+                  </Button>
+
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={toggleFormattingOptions}
+                          title="Formatting options"
+                          aria-label="Formatting options"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
+                        >
+                          {' '}
+                          <Text className="h-4 w-4" />{' '}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Formatting</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  {showFormattingOptions && (
+                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleBold}
+                        title="Bold"
+                        aria-label="Bold"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        {' '}
+                        <Bold className="h-4 w-4" />{' '}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleitalics}
+                        title="Italic"
+                        aria-label="Italic"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        {' '}
+                        <Italic className="h-4 w-4" />{' '}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleUnderline}
+                        title="Underline"
+                        aria-label="Underline"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                      >
+                        {' '}
+                        <Underline className="h-4 w-4" />{' '}
+                      </Button>
+                    </div>
+                  )}
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleFileUpload}
+                          title="Upload file"
+                          aria-label="Upload file"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          {' '}
+                          <Upload className="h-4 w-4" />{' '}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Upload file</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={handleCreateMeet}
+                          title="Create Google Meet"
+                          aria-label="Create Google Meet"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        >
+                          {' '}
+                          <Video className="h-4 w-4" />{' '}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Create Google Meet</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {recordingStatus === 'idle' && (
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={startRecording}
+                            title="Record voice message"
+                            aria-label="Record voice message"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            <Mic className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p>Record voice</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                  <div className="ml-auto md:hidden"></div>
+                </div>
+
+                {/* Voice Recording UI */}
+                {recordingStatus !== 'idle' &&
+                  recordingStatus !== 'uploading' && ( // Hide this part during uploading too
+                    <div className="p-2 border-t border-[hsl(var(--border))]">
+                      {recordingStatus === 'permission_pending' && (
+                        <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
+                          <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                          Requesting microphone permission...
+                        </div>
+                      )}
+                      {recordingStatus === 'recording' && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-sm text-red-500">
+                            <Mic className="w-4 h-4 mr-2 animate-pulse" />
+                            Recording... {formatDuration(recordingDuration)}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={stopRecording}
+                            title="Stop recording"
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <StopCircle className="h-6 w-6" />
+                          </Button>
+                        </div>
+                      )}
+                      {recordingStatus === 'recorded' && audioUrl && (
+                        <div className="flex flex-col space-y-2">
+                          <div className="text-sm font-medium">
+                            Recording complete (
+                            {formatDuration(recordingDuration)})
+                          </div>
+                          <audio
+                            ref={audioPreviewRef}
+                            src={audioUrl}
+                            controls
+                            className="w-full h-10"
+                          />
+                          <div className="flex items-center justify-end space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={discardRecording}
+                              title="Discard recording"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" /> Discard
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="default"
+                              size="sm"
+                              onClick={handleSendVoiceMessage}
+                              title="Send voice message"
+                            >
+                              <Send className="h-4 w-4 mr-1" /> Send
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {/* Uploading indicator was here, moved below */}
+                    </div>
+                  )}
+                {/* Separate block for uploading indicator to ensure it's visible */}
+                {recordingStatus === 'uploading' && (
+                  <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
+                    <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading voice message...
+                  </div>
+                )}
+              </form>
+            </CardFooter>
+          </Card>
+          <Dialog open={openReport} onOpenChange={setOpenReport}>
+            <DialogPortal>
+              <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[50] transition-opacity duration-300 animate-in fade-in" />
+
+              <DialogContent
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+             z-[50] bg-background border border-border
+             shadow-2xl rounded-2xl max-w-xl w-full p-6
+             transition-transform duration-300 animate-in fade-in zoom-in-95"
+              >
+                <DialogHeader></DialogHeader>
+                <NewReportTab reportData={reportData} />
+              </DialogContent>
+            </DialogPortal>
+          </Dialog>
+        </>
       )}
     </>
   );

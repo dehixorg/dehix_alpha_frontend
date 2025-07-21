@@ -14,6 +14,7 @@ import {
   Clock,
   DollarSign,
 } from 'lucide-react';
+import Image from 'next/image';
 
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
@@ -144,7 +145,7 @@ const FreelancerAvatar = React.memo(
   ({ profilePic, userName }: { profilePic?: string; userName: string }) => (
     <>
       {profilePic ? (
-        <img
+        <Image
           src={profilePic}
           alt={userName}
           className="w-10 h-10 rounded-full object-cover"
@@ -1125,7 +1126,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
   // Create table configuration
   const createTableConfig = useCallback(
-    (status: BidStatus): TableProps => ({
+    (status: BidStatus): any => ({
       uniqueId: '_id',
       data: bids.filter((bid) => bid.bid_status === status),
       searchColumn: ['userName', 'current_price', 'description'],

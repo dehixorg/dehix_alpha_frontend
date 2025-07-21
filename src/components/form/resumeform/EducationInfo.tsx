@@ -1,6 +1,7 @@
 import React from 'react';
-import { PlusCircle, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
+import { AddButton } from '@/components/ui/AddButton';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,16 +138,7 @@ export const EducationInfo: React.FC<EducationInfoProps> = ({
         ))}
       </form>
 
-      <div className={cn('flex justify-center mt-4')}>
-        <Button
-          onClick={handleAddEducation}
-          className={cn(
-            'text-center justify-items-center dark:text-black  light:bg-black',
-          )}
-        >
-          <PlusCircle />
-        </Button>
-      </div>
+      <AddButton onClick={handleAddEducation} />
     </div>
   );
 };
