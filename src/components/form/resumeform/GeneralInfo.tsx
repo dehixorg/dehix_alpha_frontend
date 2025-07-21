@@ -12,32 +12,17 @@ interface ProjectInfo {
 
 interface GeneralInfoProps {
   projectData: ProjectInfo[];
-  setProjectData: React.Dispatch<React.SetStateAction<ProjectInfo[]>>;
+  onAddProject: (e: React.MouseEvent) => void;
+  onRemoveProject: (e: React.MouseEvent, index: number) => void;
+  onProjectChange: (e: React.ChangeEvent<HTMLInputElement>, index: number, field: keyof ProjectInfo) => void;
 }
 
 export const GeneralInfo: React.FC<GeneralInfoProps> = ({
   projectData,
-  setProjectData,
+  onAddProject,
+  onRemoveProject,
+  onProjectChange,
 }) => {
-  const handleInputChange = (
-    index: number,
-    field: keyof ProjectInfo,
-    value: string,
-  ) => {
-    const updatedProjects = [...projectData];
-    updatedProjects[index] = { ...updatedProjects[index], [field]: value };
-    setProjectData(updatedProjects);
-  };
-
-  const handleAddProject = () => {
-    setProjectData([...projectData, { title: '', description: '' }]);
-  };
-
-  const handleRemoveProject = (index: number) => {
-    const updatedProjects = projectData.filter((_, i) => i !== index);
-    setProjectData(updatedProjects);
-  };
-
   return (
     <div>
       <div className="space-y-1.5 ml-5 mb-5">
@@ -47,7 +32,7 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
         </p>
       </div>
 
-      <form className="space-y-5">
+      <div className="space-y-5">
         {projectData.map((project, index) => (
           <div key={index} className="relative space-y-4 p-6 shadow-lg">
             <div className="flex justify-between items-center">
@@ -55,8 +40,9 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
               {index > 0 && (
                 <Button
                   variant="outline"
-                  onClick={() => handleRemoveProject(index)}
+                  onClick={(e) => onRemoveProject(e, index)}
                   className="p-1 rounded-full"
+                  type="button"
                 >
                   <X className="h-5 w-5 text-red-500" />
                 </Button>
@@ -69,9 +55,7 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
                 id={`project-title-${index}`}
                 name="title"
                 value={project.title}
-                onChange={(e) =>
-                  handleInputChange(index, 'title', e.target.value)
-                }
+                onChange={(e) => onProjectChange(e, index, 'title')}
                 placeholder="My cool project"
                 className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
               />
@@ -86,21 +70,20 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
                 id={`project-description-${index}`}
                 name="description"
                 value={project.description}
-                onChange={(e) =>
-                  handleInputChange(index, 'description', e.target.value)
-                }
+                onChange={(e) => onProjectChange(e, index, 'description')}
                 placeholder="A project for learning purposes"
                 className="block w-full border-gray-300 rounded-md shadow-sm sm:text-sm"
               />
             </div>
           </div>
         ))}
-      </form>
+      </div>
 
       <div className="flex justify-center mt-4">
         <Button
-          onClick={handleAddProject}
-          className="text-center justify-items-center dark:text-black  light:bg-black"
+          onClick={onAddProject}
+          className="text-center justify-items-center dark:text-black light:bg-black"
+          type="button"
         >
           <PlusCircle />
         </Button>

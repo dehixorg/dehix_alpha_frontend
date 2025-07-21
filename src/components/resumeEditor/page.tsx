@@ -114,6 +114,48 @@ export default function ResumeEditor() {
   const [summaryData, setSummaryData] = useState([
     'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
   ]);
+
+  const handleAddSkill = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setSkillData([...skillData, { skillName: '' }]);
+  };
+
+  const handleRemoveSkill = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    const newSkills = [...skillData];
+    newSkills.splice(index, 1);
+    setSkillData(newSkills);
+  };
+
+  const handleSkillChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const newSkills = [...skillData];
+    newSkills[index].skillName = e.target.value;
+    setSkillData(newSkills);
+  };
+
+  // Project handlers
+  const handleAddProject = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setProjectData([...projectData, { title: '', description: '' }]);
+  };
+
+  const handleRemoveProject = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    const newProjects = [...projectData];
+    newProjects.splice(index, 1);
+    setProjectData(newProjects);
+  };
+
+  const handleProjectChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    field: keyof { title: string; description: string }
+  ) => {
+    const newProjects = [...projectData];
+    newProjects[index][field] = e.target.value;
+    setProjectData(newProjects);
+  };
+
   const [selectedColor, setSelectedColor] = useState('#000000');
 
   const resumeData = `
@@ -194,13 +236,17 @@ export default function ResumeEditor() {
     />,
     <GeneralInfo
       key="general"
-      projectData={projectData}
-      setProjectData={setProjectData}
+      onAddProject={handleAddProject}
+      onRemoveProject={handleRemoveProject}
+      onProjectChange={handleProjectChange}
+      projectData={projectData} 
     />,
     <SkillInfo
       key="skill"
       skillData={skillData}
-      setSkillData={setSkillData}
+      onAddSkill={handleAddSkill}
+      onRemoveSkill={handleRemoveSkill}
+      onSkillChange={handleSkillChange}
       projectData={projectData}
     />,
     <AchievementInfo
@@ -221,33 +267,69 @@ export default function ResumeEditor() {
   };
 
   const downloadPDF = async () => {
-    const element = resumeRef.current;
-    if (element) {
-      // Ensure the .resumeContent element is available and cast it to HTMLElement
-      const resumeContentElement = element.querySelector(
-        '.resumeContent',
-      ) as HTMLElement;
+  const element = resumeRef.current;
+  if (!element) {
+    console.error('Resume element is not available.');
+    return;
+  }
 
-      if (resumeContentElement) {
-        // Render only the content inside the resume container (exclude buttons and color options)
-        const canvas = await html2canvas(resumeContentElement, { scale: 2 }); // Ensure scale is set to 2 for better resolution
-        const imgData = canvas.toDataURL('image/png');
+  const resumeContentElement = element.querySelector('.resumeContent') as HTMLElement;
+  if (!resumeContentElement) {
+    console.error('No .resumeContent element found.');
+    return;
+  }
 
-        const pdf = new jsPDF('portrait', 'mm', 'a4');
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  try {
+    // Temporary styling for PDF generation
+    const originalStyles = {
+      width: resumeContentElement.style.width,
+      height: resumeContentElement.style.height,
+      overflow: resumeContentElement.style.overflow,
+    };
 
-        // Add the image to the PDF at full size
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('Resume.pdf');
-      } else {
-        console.error('No .resumeContent element found.');
-      }
-    } else {
-      console.error('Resume element is not available.');
+    // Set explicit dimensions for Template1
+    if (selectedTemplate === 'ResumePreview1') {
+      resumeContentElement.style.width = '210mm';
+      resumeContentElement.style.height = 'auto';
+      resumeContentElement.style.overflow = 'visible';
     }
-  };
+
+    // Capture with adjusted scale based on template
+    const scale = selectedTemplate === 'ResumePreview1' ? 1.5 : 2;
+    const canvas = await html2canvas(resumeContentElement, {
+      scale,
+      logging: true, // Enable for debugging
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#FFFFFF',
+    });
+
+    // Restore original styles
+    resumeContentElement.style.width = originalStyles.width;
+    resumeContentElement.style.height = originalStyles.height;
+    resumeContentElement.style.overflow = originalStyles.overflow;
+
+    // Create PDF
+    const pdf = new jsPDF('portrait', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    // Adjust positioning for Template1
+    if (selectedTemplate === 'ResumePreview1') {
+      // Add small margins for Template1
+      pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
+    } else {
+      // Full page for Template2
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    }
+
+    pdf.save(`Resume-${selectedTemplate}.pdf`);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+  }
+};
 
   const colorOptions = ['#000000', '#31572c', '#1e40af', '#9d0208', '#fb8500'];
 
