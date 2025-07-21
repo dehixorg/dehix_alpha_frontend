@@ -14,7 +14,10 @@ interface SkillInfoProps {
   skillData: Skill[];
   onAddSkill: (e: React.MouseEvent) => void;
   onRemoveSkill: (e: React.MouseEvent, index: number) => void;
-  onSkillChange: (e: React.ChangeEvent<HTMLInputElement>, index: number) => void;
+  onSkillChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => void;
   projectData?: { title: string; description: string }[];
 }
 

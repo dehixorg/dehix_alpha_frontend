@@ -14,7 +14,11 @@ interface GeneralInfoProps {
   projectData: ProjectInfo[];
   onAddProject: (e: React.MouseEvent) => void;
   onRemoveProject: (e: React.MouseEvent, index: number) => void;
-  onProjectChange: (e: React.ChangeEvent<HTMLInputElement>, index: number, field: keyof ProjectInfo) => void;
+  onProjectChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    field: keyof ProjectInfo,
+  ) => void;
 }
 
 export const GeneralInfo: React.FC<GeneralInfoProps> = ({

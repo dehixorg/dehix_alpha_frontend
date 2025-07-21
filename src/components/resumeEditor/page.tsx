@@ -4,7 +4,6 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/lib/store';
 
 import { Button } from '../ui/button';
 import { GeneralInfo } from '../form/resumeform/GeneralInfo';
@@ -19,6 +18,7 @@ import { ResumePreview1 } from './ResumePreview1';
 import { ResumePreview2 } from './ResumePreview2';
 import { AtsScore } from './atsScore';
 
+import { RootState } from '@/lib/store';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -27,7 +27,6 @@ import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 
 export default function ResumeEditor() {
-  
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
   const [showAtsScore, setShowAtsScore] = useState(false);
@@ -38,7 +37,7 @@ export default function ResumeEditor() {
   const handleSubmitResume = async () => {
     setIsSubmitting(true);
     setSubmitError('');
-    
+
     try {
       // Prepare the data in the format your backend expects
       const resumeData = {
@@ -53,24 +52,24 @@ export default function ResumeEditor() {
           linkedin: personalData[0]?.linkedin || '',
           github: personalData[0]?.github || '',
         },
-        workExperience: workExperienceData.map(exp => ({
+        workExperience: workExperienceData.map((exp) => ({
           jobTitle: exp.jobTitle || '',
           company: exp.company || '',
           startDate: exp.startDate || '',
           endDate: exp.endDate || '',
           description: exp.description || '',
         })),
-        education: educationData.map(edu => ({
+        education: educationData.map((edu) => ({
           degree: edu.degree || '',
           school: edu.school || '',
           startDate: edu.startDate || '',
           endDate: edu.endDate || '',
         })),
-        skills: skillData.map(skill => skill.skillName).filter(Boolean),
-        achievements: achievementData.map(ach => ({
+        skills: skillData.map((skill) => skill.skillName).filter(Boolean),
+        achievements: achievementData.map((ach) => ({
           achievementDescription: ach.achievementName || '',
         })),
-        projects: projectData.map(proj => ({
+        projects: projectData.map((proj) => ({
           title: proj.title || '',
           description: proj.description || '',
         })),
@@ -80,7 +79,10 @@ export default function ResumeEditor() {
       };
 
       // Make the API call to your backend
-      const response = await axios.post('http://127.0.0.1:8080/resume', resumeData);
+      const response = await axios.post(
+        'http://127.0.0.1:8080/resume',
+        resumeData,
+      );
 
       console.log('Resume saved successfully:', response.data);
       // You might want to show a success message to the user here
@@ -91,7 +93,7 @@ export default function ResumeEditor() {
       setIsSubmitting(false);
     }
   };
-  
+
   const [educationData, setEducationData] = useState([
     {
       degree: 'Bachelor of Science in Computer Science',
@@ -192,7 +194,10 @@ export default function ResumeEditor() {
     setSkillData(newSkills);
   };
 
-  const handleSkillChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleSkillChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     const newSkills = [...skillData];
     newSkills[index].skillName = e.target.value;
     setSkillData(newSkills);
@@ -214,7 +219,7 @@ export default function ResumeEditor() {
   const handleProjectChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
-    field: keyof { title: string; description: string }
+    field: keyof { title: string; description: string },
   ) => {
     const newProjects = [...projectData];
     newProjects[index][field] = e.target.value;
@@ -280,7 +285,7 @@ export default function ResumeEditor() {
                 {isSubmitting ? 'Saving...' : 'Save Resume'}
               </Button>
             </div>
-            
+
             {/* Show error message if there's an error */}
             {submitError && (
               <div className="text-red-500 text-sm mt-2">{submitError}</div>
@@ -317,7 +322,7 @@ export default function ResumeEditor() {
       onAddProject={handleAddProject}
       onRemoveProject={handleRemoveProject}
       onProjectChange={handleProjectChange}
-      projectData={projectData} 
+      projectData={projectData}
     />,
     <SkillInfo
       key="skill"
@@ -345,69 +350,71 @@ export default function ResumeEditor() {
   };
 
   const downloadPDF = async () => {
-  const element = resumeRef.current;
-  if (!element) {
-    console.error('Resume element is not available.');
-    return;
-  }
-
-  const resumeContentElement = element.querySelector('.resumeContent') as HTMLElement;
-  if (!resumeContentElement) {
-    console.error('No .resumeContent element found.');
-    return;
-  }
-
-  try {
-    // Temporary styling for PDF generation
-    const originalStyles = {
-      width: resumeContentElement.style.width,
-      height: resumeContentElement.style.height,
-      overflow: resumeContentElement.style.overflow,
-    };
-
-    // Set explicit dimensions for Template1
-    if (selectedTemplate === 'ResumePreview1') {
-      resumeContentElement.style.width = '210mm';
-      resumeContentElement.style.height = 'auto';
-      resumeContentElement.style.overflow = 'visible';
+    const element = resumeRef.current;
+    if (!element) {
+      console.error('Resume element is not available.');
+      return;
     }
 
-    // Capture with adjusted scale based on template
-    const scale = selectedTemplate === 'ResumePreview1' ? 1.5 : 2;
-    const canvas = await html2canvas(resumeContentElement, {
-      scale,
-      logging: true, // Enable for debugging
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#FFFFFF',
-    });
-
-    // Restore original styles
-    resumeContentElement.style.width = originalStyles.width;
-    resumeContentElement.style.height = originalStyles.height;
-    resumeContentElement.style.overflow = originalStyles.overflow;
-
-    // Create PDF
-    const pdf = new jsPDF('portrait', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/png');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    // Adjust positioning for Template1
-    if (selectedTemplate === 'ResumePreview1') {
-      // Add small margins for Template1
-      pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
-    } else {
-      // Full page for Template2
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    const resumeContentElement = element.querySelector(
+      '.resumeContent',
+    ) as HTMLElement;
+    if (!resumeContentElement) {
+      console.error('No .resumeContent element found.');
+      return;
     }
 
-    pdf.save(`Resume-${selectedTemplate}.pdf`);
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-  }
-};
+    try {
+      // Temporary styling for PDF generation
+      const originalStyles = {
+        width: resumeContentElement.style.width,
+        height: resumeContentElement.style.height,
+        overflow: resumeContentElement.style.overflow,
+      };
+
+      // Set explicit dimensions for Template1
+      if (selectedTemplate === 'ResumePreview1') {
+        resumeContentElement.style.width = '210mm';
+        resumeContentElement.style.height = 'auto';
+        resumeContentElement.style.overflow = 'visible';
+      }
+
+      // Capture with adjusted scale based on template
+      const scale = selectedTemplate === 'ResumePreview1' ? 1.5 : 2;
+      const canvas = await html2canvas(resumeContentElement, {
+        scale,
+        logging: true, // Enable for debugging
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#FFFFFF',
+      });
+
+      // Restore original styles
+      resumeContentElement.style.width = originalStyles.width;
+      resumeContentElement.style.height = originalStyles.height;
+      resumeContentElement.style.overflow = originalStyles.overflow;
+
+      // Create PDF
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      // Adjust positioning for Template1
+      if (selectedTemplate === 'ResumePreview1') {
+        // Add small margins for Template1
+        pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
+      } else {
+        // Full page for Template2
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      }
+
+      pdf.save(`Resume-${selectedTemplate}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
 
   const colorOptions = ['#000000', '#31572c', '#1e40af', '#9d0208', '#fb8500'];
 
