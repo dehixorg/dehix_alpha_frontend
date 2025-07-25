@@ -301,6 +301,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
         title: 'Project Added',
         description: 'The project has been successfully added.',
       });
+      
     } catch (error) {
       console.error('API Error:', error);
       toast({
