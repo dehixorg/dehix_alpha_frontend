@@ -26,6 +26,7 @@ import { TableSelect } from './TableSelect';
 
 import { apiHelperService } from '@/services/custumTable';
 import { Messages } from '@/utils/common/enum';
+import { cn } from '@/lib/utils';
 
 export const CustomTable = ({
   title,
@@ -238,9 +239,9 @@ export const CustomTable = ({
                     <TableRow key={elem._id}>
                       {fields.map((field, index) => (
                         <TableCell
-                          key={field.fieldName}
-                          className={twMerge(
-                            'text-gray-900 dark:text-gray-300',
+                          key={field.fieldName || index}
+                          className={cn(
+                            'text-gray-900 dark:text-gray-100 text-center [&>*]:text-gray-900 [&>*]:dark:text-gray-100',
                             field.className,
                           )}
                           width={field.width}
@@ -264,17 +265,17 @@ export const CustomTable = ({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
-                      <div className="text-center py-10 w-full mt-10">
+                    <TableCell
+                      colSpan={fields.length}
+                      className="text-center py-10"
+                    >
+                      <div className="flex flex-col items-center gap-2">
                         <PackageOpen
-                          className="mx-auto text-gray-500"
-                          size="100"
+                          className="text-muted-foreground"
+                          size={48}
                         />
-                        <p className="text-gray-500">
-                          No data available.
-                          <br /> This feature will be available soon.
-                          <br />
-                          Here you can get directly hired for different roles.
+                        <p className="text-muted-foreground text-sm">
+                          No data available
                         </p>
                       </div>
                     </TableCell>

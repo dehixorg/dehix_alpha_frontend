@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { CheckCircle, Clock, PackageOpen, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
@@ -95,27 +96,34 @@ export default function Dashboard() {
                 <CardFooter>
                   {/* Wrap the Button with the Link component to make it clickable */}
                   {/* <Link href="/business/add-project" passHref>
-                    <Button className="w-full"> */}
-                      {' '}
-                      {/* Ensure the Button takes up full width */}
-                      {/* Create New Project
+                    <Button className="w-full"> */}{' '}
+                  {/* Ensure the Button takes up full width */}
+                  {/* Create New Project
                     </Button>
                   </Link> */}
-                  <Dialog open={modalOpen}
-                  onOpenChange={(isOpen) => {
-                    setModalOpen(isOpen);
-                    if (!isOpen) setMode(null);
-                  }}>
+                  <Dialog
+                    open={modalOpen}
+                    onOpenChange={(isOpen) => {
+                      setModalOpen(isOpen);
+                      if (!isOpen) setMode(null);
+                    }}
+                  >
                     <DialogTrigger asChild>
-                        <Button className="w-full">Create New Project</Button>
+                      <Button className="w-full">Create New Project</Button>
                     </DialogTrigger>
-                      <DialogContent className="max-w-sm">
-                        <h2 className="text-lg font-semibold mb-4">Choose Project Type</h2>
-                        <div className="flex gap-4 items-center justify-around">
-                          <Link href="/business/add-project?mode=single"><Button>Single Profile</Button></Link>
-                          <Link href="/business/add-project?mode=multiple"><Button>Multiple Profile</Button></Link>
-                        </div>
-                      </DialogContent>
+                    <DialogContent className="max-w-sm">
+                      <h2 className="text-lg font-semibold mb-4">
+                        Choose Project Type
+                      </h2>
+                      <div className="flex gap-4 items-center justify-around">
+                        <Link href="/business/add-project?mode=single">
+                          <Button>Single Profile</Button>
+                        </Link>
+                        <Link href="/business/add-project?mode=multiple">
+                          <Button>Multiple Profile</Button>
+                        </Link>
+                      </div>
+                    </DialogContent>
                   </Dialog>
                 </CardFooter>
               </Card>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { UseFormReturn } from 'react-hook-form';
 
 import { toast } from '../ui/use-toast';
 
@@ -14,7 +15,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
 interface ConnectsDialogProps {
   form: UseFormReturn<any>;
   loading: boolean;
