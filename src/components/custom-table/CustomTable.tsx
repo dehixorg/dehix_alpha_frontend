@@ -26,6 +26,7 @@ import { TableSelect } from './TableSelect';
 
 import { apiHelperService } from '@/services/custumTable';
 import { Messages } from '@/utils/common/enum';
+import { cn } from '@/lib/utils';
 
 export const CustomTable = ({
   title,
@@ -238,8 +239,7 @@ export const CustomTable = ({
                     <TableRow key={elem._id}>
                       {fields.map((field, index) => (
                         <TableCell
-
-                          key={field.fieldName || fieldIndex}
+                          key={field.fieldName || index}
                           className={cn(
                             'text-gray-900 dark:text-gray-100 text-center [&>*]:text-gray-900 [&>*]:dark:text-gray-100',
                             field.className,

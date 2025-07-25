@@ -4,12 +4,19 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { useSearchParams } from 'next/navigation';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../ui/dialog';
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
-import { useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,6 +71,7 @@ const profileFormSchema = z.object({
     .array(
       z.object({
         domain: z.string().min(1, { message: 'Domain is required.' }),
+        description: z.string().optional(),
         freelancersRequired: z
           .string()
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
@@ -88,7 +96,7 @@ const profileFormSchema = z.object({
           .refine((val) => /^\d+$/.test(val) && parseInt(val, 10) > 0, {
             message: 'Minimum connect must be at least 1.',
           }),
-          budget: z
+        budget: z
           .object({
             type: z.enum(['FIXED', 'HOURLY']),
             fixedAmount: z.string().optional(),
@@ -454,10 +462,12 @@ export function CreateProjectBusinessForm() {
       const uniqueSkills = Array.from(
         new Set(currSkills.flat().filter(Boolean)),
       );
-      const profilesWithFormattedBudget = (data.profiles || []).map((profile) => ({
-        ...profile,
-        budget: getBudgetForAPI(profile.budget),
-      }));
+      const profilesWithFormattedBudget = (data.profiles || []).map(
+        (profile) => ({
+          ...profile,
+          budget: getBudgetForAPI(profile.budget),
+        }),
+      );
       const payload = {
         projectName: data.projectName,
         description: data.description,
@@ -530,18 +540,22 @@ export function CreateProjectBusinessForm() {
 
   // UI render helpers
   const ProfileTabs = () => (
-  <ScrollArea>
-      <div className={`flex gap-2 mb-2 ${mode === "multiple" ? "p-2 rounded-md" : ""}`}>
-        {mode === "multiple" &&
+    <ScrollArea>
+      <div
+        className={`flex gap-2 mb-2 ${mode === 'multiple' ? 'p-2 rounded-md' : ''}`}
+      >
+        {mode === 'multiple' &&
           profileFields.map((_, index) => (
             <Button
               key={index}
               type="button"
               size="sm"
-              variant={activeProfile === index ? "default" : "outline"}
+              variant={activeProfile === index ? 'default' : 'outline'}
               onClick={() => setActiveProfile(index)}
               className={`px-4 py-2 ${
-                activeProfile === index ? "bg-blue-600 text-white hover:text-black" : ""
+                activeProfile === index
+                  ? 'bg-blue-600 text-white hover:text-black'
+                  : ''
               }`}
             >
               Profile {index + 1}
@@ -551,7 +565,6 @@ export function CreateProjectBusinessForm() {
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
-
 
   const renderBudgetSection = () => {
     const budgetType = form.watch(`profiles.${activeProfile}.budget.type`);
@@ -570,20 +583,20 @@ export function CreateProjectBusinessForm() {
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
                 >
-                <div className='flex flex-row gap-4'>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="FIXED" id="fixed" />
-                    <label htmlFor="fixed" className="cursor-pointer">
-                      Fixed Price
-                    </label>
+                  <div className="flex flex-row gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="FIXED" id="fixed" />
+                      <label htmlFor="fixed" className="cursor-pointer">
+                        Fixed Price
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="HOURLY" id="hourly" />
+                      <label htmlFor="hourly" className="cursor-pointer">
+                        Hourly Rate
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="HOURLY" id="hourly" />
-                    <label htmlFor="hourly" className="cursor-pointer">
-                      Hourly Rate
-                    </label>
-                  </div>
-                </div>
                 </RadioGroup>
               </FormControl>
               <FormMessage />
@@ -593,7 +606,7 @@ export function CreateProjectBusinessForm() {
         {budgetType === 'FIXED' && (
           <FormField
             control={form.control}
-            name= {`profiles.${activeProfile}.budget.fixedAmount`}
+            name={`profiles.${activeProfile}.budget.fixedAmount`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Fixed Budget Amount ($)</FormLabel>
@@ -655,43 +668,41 @@ export function CreateProjectBusinessForm() {
                   </FormItem>
                 )}
               />
-            <FormField
-              control={form.control}
-              name={`profiles.${activeProfile}.budget.hourly.estimatedHours`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimated Hours</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Estimated number of hours"
-                      min="1"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Estimated total hours required for project completion
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name={`profiles.${activeProfile}.budget.hourly.estimatedHours`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Hours</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Estimated number of hours"
+                        min="1"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Estimated total hours required for project completion
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </>
         )}
         {form.formState.errors.profiles &&
           form.formState.errors.profiles[activeProfile]?.budget && (
             <p className="text-sm text-red-600 mt-4">
-              {
-                Object.values(
-                  form.formState.errors.profiles[activeProfile]?.budget || {}
-                )
-                  .map((err: any) => err?.message)
-                  .filter(Boolean)
-                  .join(', ')
-              }
+              {Object.values(
+                form.formState.errors.profiles[activeProfile]?.budget || {},
+              )
+                .map((err: any) => err?.message)
+                .filter(Boolean)
+                .join(', ')}
             </p>
-        )}
+          )}
       </div>
     );
   };
@@ -862,174 +873,172 @@ export function CreateProjectBusinessForm() {
   );
 
   const renderProfileInfoStep = () => (
-  <div className="lg:col-span-2 xl:col-span-2">
-    <div className="my-4">
-      <ProfileTabs />
-    </div>
-    {profileFields.map((field, index) => {
-      if (mode === 'single' && index > 0) return null;
+    <div className="lg:col-span-2 xl:col-span-2">
+      <div className="my-4">
+        <ProfileTabs />
+      </div>
+      {profileFields.map((field, index) => {
+        if (mode === 'single' && index > 0) return null;
 
-      return (
-        index === activeProfile || mode === 'single' ? (
+        return index === activeProfile || mode === 'single' ? (
           <div key={index} className="p-4 mb-4 rounded-md relative">
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-4'>
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.domain`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Profile Domain</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) => {
-                        const selectedDomain = domains.find(
-                          (d: any) => d.label === value,
-                        );
-                        form.setValue(
-                          `profiles.${index}.domain`,
-                          selectedDomain?.label || '',
-                        );
-                        form.setValue(
-                          `profiles.${index}.domain_id`,
-                          selectedDomain?.domain_id || '',
-                        );
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select domain" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {domains.map((domain: any, i: number) => (
-                          <SelectItem key={i} value={domain.label}>
-                            {domain.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.freelancersRequired`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Number of Freelancers Required</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter number"
-                      min={1}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.skills`}
-              render={() => (
-                <FormItem className="mb-4">
-                  <FormLabel>Skills</FormLabel>
-                  <FormControl>
-                    <div>
-                      <div className="flex items-center mt-2">
-                        <Select
-                          onValueChange={setTmpSkill}
-                          value={tmpSkill || ''}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select skill" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {skills.map((skill: any, i: number) => (
-                              <SelectItem key={i} value={skill.label}>
-                                {skill.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="ml-2"
-                          onClick={() => handleAddSkill(index)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap mt-5">
-                        {currSkills[index]?.map((skill: any, i: number) => (
-                          <Badge
-                            className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
-                            key={i}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.domain`}
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormLabel>Profile Domain</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) => {
+                          const selectedDomain = domains.find(
+                            (d: any) => d.label === value,
+                          );
+                          form.setValue(
+                            `profiles.${index}.domain`,
+                            selectedDomain?.label || '',
+                          );
+                          form.setValue(
+                            `profiles.${index}.domain_id`,
+                            selectedDomain?.domain_id || '',
+                          );
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {domains.map((domain: any, i: number) => (
+                            <SelectItem key={i} value={domain.label}>
+                              {domain.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.freelancersRequired`}
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormLabel>Number of Freelancers Required</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Enter number"
+                        min={1}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.skills`}
+                render={() => (
+                  <FormItem className="mb-4">
+                    <FormLabel>Skills</FormLabel>
+                    <FormControl>
+                      <div>
+                        <div className="flex items-center mt-2">
+                          <Select
+                            onValueChange={setTmpSkill}
+                            value={tmpSkill || ''}
                           >
-                            {skill}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteSkill(index, skill)}
-                              className="ml-2 text-red-500 hover:text-red-700"
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select skill" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {skills.map((skill: any, i: number) => (
+                                <SelectItem key={i} value={skill.label}>
+                                  {skill.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            type="button"
+                            size="icon"
+                            className="ml-2"
+                            onClick={() => handleAddSkill(index)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap mt-5">
+                          {currSkills[index]?.map((skill: any, i: number) => (
+                            <Badge
+                              className="uppercase mx-1 text-xs font-normal bg-gray-400 flex items-center"
+                              key={i}
                             >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </Badge>
-                        ))}
+                              {skill}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSkill(index, skill)}
+                                className="ml-2 text-red-500 hover:text-red-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.experience`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel>Experience</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter experience"
-                      min={0}
-                      max={60}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`profiles.${index}.minConnect`}
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <div className='flex items-center justify-between mb-2'>
-                  <FormLabel>Min Connect</FormLabel>
-                  <FormDescription>
-                    Minimum number of connects for the project
-                  </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter Min Connects (Recommended: 10)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.experience`}
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormLabel>Experience</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Enter experience"
+                        min={0}
+                        max={60}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`profiles.${index}.minConnect`}
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <FormLabel>Min Connect</FormLabel>
+                      <FormDescription>
+                        Minimum number of connects for the project
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter Min Connects (Recommended: 10)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             {renderBudgetSection()}
             {mode === 'multiple' && profileFields.length > 1 && (
@@ -1044,59 +1053,57 @@ export function CreateProjectBusinessForm() {
               </Button>
             )}
           </div>
-        ) : null
-      );
-    })}
-    {mode === 'multiple' && (
-      <div className="flex justify-between items-center">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-2"
-          onClick={() =>
-            appendProfile({
-              domain: '',
-              freelancersRequired: '',
-              skills: [],
-              experience: '',
-              minConnect: '',
-              budget: {
-                type: 'FIXED',
-                fixedAmount: '',
-                hourly: { minRate: '', maxRate: '', estimatedHours: '' },
-              },
-              description: '',
-              domain_id: '',
-            })
-          }
-        >
-          Add Profile
-        </Button>
-        <Button type="button" size="sm" variant="outline" onClick={saveDraft}>
-          <Save />
-        </Button>
+        ) : null;
+      })}
+      {mode === 'multiple' && (
+        <div className="flex justify-between items-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() =>
+              appendProfile({
+                domain: '',
+                freelancersRequired: '',
+                skills: [],
+                experience: '',
+                minConnect: '',
+                budget: {
+                  type: 'FIXED',
+                  fixedAmount: '',
+                  hourly: { minRate: '', maxRate: '', estimatedHours: '' },
+                },
+                description: '',
+                domain_id: '',
+              })
+            }
+          >
+            Add Profile
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={saveDraft}>
+            <Save />
+          </Button>
+        </div>
+      )}
+      <div className="lg:col-span-2 xl:col-span-2 mt-4">
+        <ConnectsDialog
+          form={form}
+          loading={loading}
+          isValidCheck={form.trigger}
+          onSubmit={form.handleSubmit(onSubmit)}
+          setLoading={setLoading}
+          userId={user.uid}
+          buttonText={'Create Project'}
+          userType={'BUSINESS'}
+          requiredConnects={parseInt(
+            process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
+            10,
+          )}
+        />
       </div>
-    )}
-    <div className="lg:col-span-2 xl:col-span-2 mt-4">
-      <ConnectsDialog
-        form={form}
-        loading={loading}
-        isValidCheck={form.trigger}
-        onSubmit={form.handleSubmit(onSubmit)}
-        setLoading={setLoading}
-        userId={user.uid}
-        buttonText={'Create Project'}
-        userType={'BUSINESS'}
-        requiredConnects={parseInt(
-          process.env.NEXT_PUBLIC__APP_PROJECT_CREATION_COST || '0',
-          10,
-        )}
-      />
     </div>
-  </div>
-);
-
+  );
 
   return (
     <Card className="p-10">

@@ -63,15 +63,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    getValues,
-    trigger,
-  } = useForm<SkillDomainData>({
+  const form = useForm<SkillDomainData>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
       skillId: '',
@@ -82,6 +74,16 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
       status: 'ADDED',
     },
   });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    getValues,
+    trigger,
+  } = form;
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
@@ -230,6 +232,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
             <p className="text-red-600">{errors.description.message}</p>
           )}
           <ConnectsDialog
+            form={form}
             loading={loading}
             setLoading={setLoading}
             onSubmit={onSubmit}
