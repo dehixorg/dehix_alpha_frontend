@@ -12,29 +12,39 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
-// import { axiosInstance } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
+  const [resumeData, setResumeData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchResumeData = async () => {
+      console.log(user);
+      // if (!user?.uid || !user?.resume) return;
+      
+      setIsLoading(true);
       try {
-        // const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        const response = await axiosInstance.get(`/resume/${user.resume}`);
+        
+        setResumeData(response.data);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Failed to fetch resume data. Please try again.',
+        });
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [user.uid, refresh]);
+    fetchResumeData();
+  }, [user.uid, user.resume, refresh]);
 
   if (showResumeEditor) {
     return <ResumeEditor />;
@@ -61,15 +71,32 @@ export default function Resume() {
         />
         <div className="flex flex-col h-screen">
           <h1 className="text-2xl font-bold mb-6 mt-5 ml-8">
-            Start Building Your Resume
+            {resumeData ? 'Your Resume' : 'Start Building Your Resume'}
           </h1>
           <div className="ml-10">
-            <button
-              onClick={() => setShowResumeEditor(true)}
-              className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-200"
-            >
-              <span className="text-4xl text-gray-600">+</span>
-            </button>
+            {isLoading ? (
+              <div>Loading resume data...</div>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowResumeEditor(true)}
+                  className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-200"
+                >
+                  <span className="text-4xl text-gray-600">+</span>
+                </button>
+                {resumeData && (
+                  <div className="mt-4">
+                    <p className="text-gray-600 mb-2">You have a saved resume.</p>
+                    <button 
+                      onClick={() => setShowResumeEditor(true)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit Resume
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
