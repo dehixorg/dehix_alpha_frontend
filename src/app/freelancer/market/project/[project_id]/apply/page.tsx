@@ -62,7 +62,6 @@ const Page = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [project, setProject] = useState<ProjectData | null>(null);
-  const [coverLetter, setCoverLetter] = useState<string>('');
 
   // Get project ID from URL (format: /freelancer/market/post/123/apply)
   const projectId: string = (params?.project_id as string) || '123';

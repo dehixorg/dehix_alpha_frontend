@@ -81,6 +81,7 @@ export const menuItemsTop: MenuItem[] = [
     icon: <StickyNote className="h-5 w-5" />,
     label: 'Notes',
   },
+  //   <ReportMenuItem key="report" />
 ];
 
 export const menuItemsBottom: MenuItem[] = [

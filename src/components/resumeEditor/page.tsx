@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import axios from 'axios';
@@ -25,6 +25,17 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+
+// Define SectionVisibility interface
+interface SectionVisibility {
+  personal: boolean;
+  summary: boolean;
+  workExperience: boolean;
+  education: boolean;
+  projects: boolean;
+  skills: boolean;
+  achievements: boolean;
+}
 
 export default function ResumeEditor() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -93,6 +104,7 @@ export default function ResumeEditor() {
       setIsSubmitting(false);
     }
   };
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const [educationData, setEducationData] = useState([
     {
@@ -142,7 +154,7 @@ export default function ResumeEditor() {
     {
       title: 'AI-Powered Resume Builder',
       description:
-        'Developed a full-stack platform integrating OpenAI’s GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.',
+        "Developed a full-stack platform integrating OpenAI's GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.",
     },
     {
       title: 'E-Commerce Platform with Real-Time Analytics',
@@ -178,6 +190,7 @@ export default function ResumeEditor() {
         'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
     },
   ]);
+
   const [summaryData, setSummaryData] = useState([
     'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
   ]);
@@ -228,6 +241,28 @@ export default function ResumeEditor() {
 
   const [selectedColor, setSelectedColor] = useState('#000000');
 
+  // Add section visibility state
+  const [sectionVisibility, setSectionVisibility] = useState<SectionVisibility>(
+    {
+      personal: true,
+      summary: true,
+      workExperience: true,
+      education: true,
+      projects: true,
+      skills: true,
+      achievements: true,
+    },
+  );
+
+  // Toggle function
+  const toggleSection = (section: keyof SectionVisibility) => {
+    setSectionVisibility((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  // Generate resume data string for ATS analysis
   const resumeData = `
   ${personalData[0]?.firstName || ''} ${personalData[0]?.lastName || ''}
   ${summaryData.join(' ')}
@@ -259,7 +294,7 @@ export default function ResumeEditor() {
         ) : (
           <>
             {/* Navigation Buttons at the Top-Right */}
-            <div className="absolute top-0 right-0 flex mb-5 p-2 space-x-2">
+            <div className="absolute top-0 right-0 flex mb-5 p-2 space-x-2 lg:mr-5">
               <Button
                 onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
                 disabled={currentStep === 0}
@@ -349,6 +384,7 @@ export default function ResumeEditor() {
     setSelectedTemplate(page === 1 ? 'ResumePreview1' : 'ResumePreview2');
   };
 
+  // Fixed PDF generation function with no visual expansion
   const downloadPDF = async () => {
     const element = resumeRef.current;
     if (!element) {
@@ -416,7 +452,30 @@ export default function ResumeEditor() {
     }
   };
 
+  // Color options for theming (currently unused but preserved for future use)
   const colorOptions = ['#000000', '#31572c', '#1e40af', '#9d0208', '#fb8500'];
+
+  // Function to format section names for display
+  const formatSectionName = (section: string) => {
+    switch (section) {
+      case 'workExperience':
+        return 'Work Experience';
+      case 'personal':
+        return 'Personal';
+      case 'summary':
+        return 'Summary';
+      case 'education':
+        return 'Education';
+      case 'projects':
+        return 'Projects';
+      case 'skills':
+        return 'Skills';
+      case 'achievements':
+        return 'Achievements';
+      default:
+        return section.charAt(0).toUpperCase() + section.slice(1);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -441,78 +500,164 @@ export default function ResumeEditor() {
         />
         <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
           {/* Left section - Form */}
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Design your Resume</h1>
-            <p className="text-sm text-muted-foreground mb-5">
-              Follow the steps below to create your resume.
-            </p>
+          <div className="p-6 relative">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-5">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold lg:ml-5">
+                  Design your Resume
+                </h1>
+                <p className="text-sm text-muted-foreground lg:ml-5">
+                  Follow the steps below to create your resume.
+                </p>
+              </div>
 
-            <div className="mt-5">{renderContent()}</div>
+              {/* ATS Score Toggle Button - Positioned on the right */}
+              <div className="flex-shrink-0 lg:mr-7">
+                <Button
+                  onClick={() => setShowAtsScore(!showAtsScore)}
+                  className={`transition-colors duration-200 ${
+                    showAtsScore
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                  aria-label={
+                    showAtsScore ? 'Return to resume editor' : 'Check ATS score'
+                  }
+                >
+                  {showAtsScore ? 'Back to Resume Editor' : 'Check ATS Score'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Show/Hide Sections - Aligned with content below */}
+            <div className="mb-6 lg:ml-5">
+              <h2 className="text-lg font-bold mb-3 text-white-400">
+                Show/Hide Sections
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(sectionVisibility).map(
+                  ([section, isVisible]) => (
+                    <button
+                      key={section}
+                      onClick={() =>
+                        toggleSection(section as keyof SectionVisibility)
+                      }
+                      className={`
+                        inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium 
+                        transition-all duration-200 ease-out cursor-pointer
+                        border hover:shadow-sm active:scale-95
+                        ${
+                          isVisible
+                            ? 'bg-slate-800 text-slate-100 border-slate-700 hover:bg-slate-700 shadow-sm'
+                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-700'
+                        }
+                      `}
+                    >
+                      <div
+                        className={`
+                          w-1.5 h-1.5 rounded-full mr-2 transition-colors duration-200
+                          ${isVisible ? 'bg-slate-300' : 'bg-slate-400'}
+                        `}
+                      />
+                      <span>{formatSectionName(section)}</span>
+                    </button>
+                  ),
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Toggle sections to customize your resume layout
+              </p>
+            </div>
+
+            <div>{renderContent()}</div>
           </div>
 
           {/* Right section - Resume Preview */}
-          <div ref={resumeRef} className="p-6 " style={{ minHeight: '1100px' }}>
-            <div className="flex justify-end gap-3 mb-4">
-              <Button
-                onClick={() => setShowAtsScore(!showAtsScore)}
-                className="p-2"
-              >
-                {showAtsScore ? 'Hide ATS Score' : 'Check ATS Score'}
-              </Button>
-              <Button onClick={downloadPDF} className="p-2">
-                Download PDF
-              </Button>
-            </div>
-            <section className="flex justify-start gap-3">
-              {colorOptions.map((color, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedColor(color)}
-                  className="w-8 h-8 rounded-full cursor-pointer"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </section>
+          <div className="relative p-6">
+            {/* Resume Preview Container */}
+            <div
+              ref={resumeRef}
+              className="relative"
+              style={{ minHeight: '1100px' }}
+            >
+              {/* Template selection and download buttons - Top Right of Resume */}
+              <div className="absolute top-2 right-2 z-10 flex gap-1 bg-gray-800/90 backdrop-blur-sm rounded-lg p-1 shadow-sm border border-gray-200">
+                <Button
+                  onClick={() => handleTemplateChange(1)}
+                  size="sm"
+                  variant={
+                    selectedTemplate === 'ResumePreview1'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="h-8 px-3 text-xs font-medium"
+                >
+                  <FileText className="w-3 h-3 mr-1" />
+                  T1
+                </Button>
+                <Button
+                  onClick={() => handleTemplateChange(2)}
+                  size="sm"
+                  variant={
+                    selectedTemplate === 'ResumePreview2'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="h-8 px-3 text-xs font-medium"
+                >
+                  <FileText className="w-3 h-3 mr-1" />
+                  T2
+                </Button>
+                <Button
+                  onClick={downloadPDF}
+                  disabled={isGeneratingPDF}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 disabled:opacity-50"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  {isGeneratingPDF ? 'PDF...' : 'PDF'}
+                </Button>
+              </div>
 
-            <div className="resumeContent ">
-              {selectedTemplate === 'ResumePreview1' ? (
-                <ResumePreview1
-                  educationData={educationData}
-                  workExperienceData={workExperienceData}
-                  personalData={personalData}
-                  projectData={projectData}
-                  skillData={skillData}
-                  achievementData={achievementData}
-                  headingColor={selectedColor}
-                  summaryData={summaryData}
-                />
-              ) : (
-                <ResumePreview2
-                  educationData={educationData}
-                  workExperienceData={workExperienceData}
-                  personalData={personalData}
-                  projectData={projectData}
-                  skillData={skillData}
-                  achievementData={achievementData}
-                  headingColor={selectedColor}
-                  summaryData={summaryData}
-                />
-              )}
-            </div>
-
-            <div className="flex justify-center gap-3">
-              <Button
-                onClick={() => handleTemplateChange(1)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview1' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
+              {/* Resume content with border removal */}
+              <div
+                className="resumeContent pt-1 "
+                style={{
+                  backgroundColor: '#ffffff',
+                  // Remove any potential borders that might be causing the red line
+                  border: 'none',
+                  borderTop: 'none',
+                  borderBottom: 'none',
+                  outline: 'none',
+                }}
               >
-                Template 1
-              </Button>
-              <Button
-                onClick={() => handleTemplateChange(2)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview2' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
-              >
-                Template 2
-              </Button>
+                {selectedTemplate === 'ResumePreview1' ? (
+                  <ResumePreview1
+                    educationData={educationData}
+                    workExperienceData={workExperienceData}
+                    personalData={personalData}
+                    projectData={projectData}
+                    skillData={skillData}
+                    achievementData={achievementData}
+                    headingColor={selectedColor}
+                    summaryData={summaryData}
+                    sectionVisibility={sectionVisibility}
+                  />
+                ) : (
+                  <ResumePreview2
+                    educationData={educationData}
+                    workExperienceData={workExperienceData}
+                    personalData={personalData}
+                    projectData={projectData}
+                    skillData={skillData}
+                    achievementData={achievementData}
+                    headingColor={selectedColor}
+                    summaryData={summaryData}
+                    sectionVisibility={sectionVisibility}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </main>

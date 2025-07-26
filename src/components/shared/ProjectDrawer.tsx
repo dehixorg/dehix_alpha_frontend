@@ -34,46 +34,6 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 
-interface Freelancer {
-  freelancerId: string;
-  bidId: string;
-  _id: string;
-}
-
-interface Profile {
-  _id: string;
-  domain: string;
-  freelancersRequired: string;
-  skills: string[];
-  experience: number;
-  minConnect: number;
-  rate: number;
-  description: string;
-  selectedFreelancer: string[];
-  totalBid: string[];
-  freelancers: Freelancer[];
-}
-
-interface Project {
-  _id: string;
-  projectName: string;
-  projectDomain: string[];
-  description: string;
-  companyId: string;
-  email: string;
-  companyName: string;
-  end: string | null;
-  skillsRequired: string[];
-  role: string;
-  projectType: string;
-  profiles: Profile[];
-  status: string;
-  team: any[];
-  url: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface ProjectDrawerProps {
   project: any;
   text: string;

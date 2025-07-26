@@ -9,13 +9,13 @@ import { z } from 'zod';
 import Link from 'next/link';
 
 import {
+  DialogFooter,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,7 +70,6 @@ const domainSchema = z.object({
 const DomainDialog: React.FC<DomainDialogProps> = ({
   domains,
   onSubmitDomain,
-  setDomains,
 }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,7 +118,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       });
 
       if (response.status === 200) {
-        const newTalent = response.data.data;
         reset();
         setOpen(false);
         toast({

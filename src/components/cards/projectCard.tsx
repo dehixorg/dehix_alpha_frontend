@@ -1,5 +1,8 @@
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck } from 'lucide-react';
+import { MoreVertical, ShieldCheck } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,6 +18,15 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { RootState } from '@/lib/store';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ProjectType {
   _id: string;
@@ -57,8 +69,53 @@ export function ProjectCard({
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openReport, setOpenReport] = useState(false);
+
+  const pathname = usePathname();
+  const user = useSelector((state: RootState) => state.user);
+
+  const reportType = getReportTypeFromPath(pathname);
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: user?.uid || 'user123',
+  };
+
   return (
-    <Card className={cn('flex flex-col h-[400px]', cardClassName)} {...props}>
+    <Card
+      className={cn('flex flex-col h-[400px] relative', cardClassName)}
+      {...props}
+    >
+      {/* 3-dot menu */}
+      <div className="absolute top-3 right-3 z-20">
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <MoreVertical className="w-5 h-5 text-gray-500" />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
+              <button
+                onClick={() => {
+                  setOpenReport(true);
+                  setMenuOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Report
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <CardHeader>
         <CardTitle className="flex">
           {project.projectName}&nbsp;
@@ -70,14 +127,13 @@ export function ProjectCard({
               ? new Date(project.createdAt).toLocaleDateString()
               : 'N/A'}
           </p>
-
           <br />
           <Badge className={className}>{text}</Badge>
         </CardDescription>
       </CardHeader>
+
       <CardContent className="grid gap-4 mb-auto flex-grow">
         <div className="mb-4 items-start pb-4 last:mb-0 last:pb-0 w-full">
-          <span className="flex h-2 w-2 rounded-full" />
           <p className="text-sm text-muted-foreground">
             {project.description?.length > 40
               ? `${project.description.slice(0, 40)}...`
@@ -94,7 +150,6 @@ export function ProjectCard({
           <p>
             <strong>Experience:</strong> {project.experience}
           </p>
-
           <div className="flex flex-wrap gap-1 mt-2">
             {project?.skillsRequired?.map((skill, index) => (
               <Badge key={index} className="text-xs text-white bg-muted">
@@ -104,9 +159,10 @@ export function ProjectCard({
           </div>
         </div>
       </CardContent>
+
       <CardFooter>
         <Link
-          href={`/${type.toLocaleLowerCase()}/project/${project._id}`}
+          href={`/${type.toLowerCase()}/project/${project._id}`}
           className="w-full"
         >
           <Button
@@ -116,6 +172,16 @@ export function ProjectCard({
           </Button>
         </Link>
       </CardFooter>
+
+      {/* Report Dialog */}
+      <Dialog open={openReport} onOpenChange={setOpenReport}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Create New Report</DialogTitle>
+          </DialogHeader>
+          <NewReportTab reportData={reportData} />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

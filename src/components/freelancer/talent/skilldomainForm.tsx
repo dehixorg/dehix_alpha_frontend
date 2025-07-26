@@ -54,14 +54,6 @@ const SkillDomainForm: React.FC = () => {
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Counter states for skills and domains (by label)
-  const [skillCounts, setSkillCounts] = useState<{ [label: string]: number }>(
-    {},
-  );
-  const [domainCounts, setDomainCounts] = useState<{ [label: string]: number }>(
-    {},
-  );
-
   // Function to remove duplicate entries
   const removeDuplicates = (data: SkillDomainData[]) => {
     const seen = new Set<string>();
@@ -103,14 +95,6 @@ const SkillDomainForm: React.FC = () => {
         const talentData = Array.isArray(talentResponse.data?.data)
           ? talentResponse.data?.data
           : Object.values(talentResponse.data?.data || {});
-
-        const existingIds = talentData.map((item: any) => item.talentId) || [];
-
-        // Get all existing talent IDs and names for better filtering
-        const existingTalentIds =
-          talentData.map((item: any) => item.talentId) || [];
-
-        // Replace the existing filtering logic in the useEffect with this improved version:
 
         // Get all existing talent data for comprehensive filtering
         const flattenedTalentData = talentData.flat();
@@ -201,9 +185,6 @@ const SkillDomainForm: React.FC = () => {
             domainCounter[label] = (domainCounter[label] || 0) + 1;
           }
         });
-
-        setSkillCounts(skillCounter);
-        setDomainCounts(domainCounter);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({

@@ -106,7 +106,6 @@ const FreelancerProfile = () => {
           );
           if (response.status === 200) {
             const freelancerData = response.data.data || response.data;
-            console.log('🔍 Freelancer data received:', freelancerData);
 
             // Transform the data to match our interface
             const transformedData: FreelancerProfile = {

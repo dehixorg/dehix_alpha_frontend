@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Heart, Eye, EyeOff } from 'lucide-react';
+import { Heart, Eye, EyeOff, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
+import { usePathname } from 'next/navigation';
 
 import {
   Card,
@@ -16,6 +17,8 @@ import { Button } from '../ui/button';
 
 import ProjectDrawer from './ProjectDrawer';
 
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import { Project } from '@/app/freelancer/market/page';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
@@ -52,8 +55,22 @@ const JobCard: React.FC<JobCardProps> = ({
   );
 
   const isDrafted = draftedProjects?.includes(job._id);
+  const user = useSelector((state: RootState) => state.user);
 
   const toggleExpand = () => setExpanded(!expanded);
+  const [openReport, setOpenReport] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const reportType = getReportTypeFromPath(pathname);
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: job._id,
+  };
 
   const handleLike = async () => {
     setLoading(true); // start loading
@@ -126,6 +143,28 @@ const JobCard: React.FC<JobCardProps> = ({
                   loading ? undefined : isDrafted ? handleUnlike : handleLike
                 }
               />
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-gray-500 hover:text-gray-800 p-0 h-6 w-6"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-6 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+                <button
+                  onClick={() => {
+                    setOpenReport(true);
+                    setMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Report
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -200,6 +239,19 @@ const JobCard: React.FC<JobCardProps> = ({
           </Button>
         </Link>
       </CardFooter>
+      {openReport && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
+            <button
+              onClick={() => setOpenReport(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+            >
+              ✕
+            </button>
+            <NewReportTab reportData={reportData} />
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

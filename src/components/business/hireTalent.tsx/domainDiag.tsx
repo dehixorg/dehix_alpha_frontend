@@ -69,15 +69,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const [open, setOpen] = useState(false); // Manage dialog visibility
   const [loading, setLoading] = useState(false);
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    getValues,
-    trigger,
-  } = useForm<SkillDomainData>({
+  const form = useForm<SkillDomainData>({
     resolver: zodResolver(domainSchema),
     defaultValues: {
       domainId: '',
@@ -88,6 +80,16 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
       status: 'ADDED',
     },
   });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    getValues,
+    trigger,
+  } = form;
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
@@ -233,6 +235,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
             <p className="text-red-600">{errors.description.message}</p>
           )}
           <ConnectsDialog
+            form={form}
             loading={loading}
             setLoading={setLoading}
             onSubmit={onSubmit}

@@ -4,6 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Loader2, X } from 'lucide-react';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -16,6 +23,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
@@ -27,6 +36,9 @@ interface FilterState {
   domain: string[];
   skills: string[];
   projectDomain: string[];
+  sorting: string[];
+  minRate: string;
+  maxRate: string;
 }
 
 export interface Project {
@@ -90,6 +102,9 @@ const Market: React.FC = () => {
     skills: [],
     projects: [],
     projectDomain: [],
+    sorting: [],
+    minRate: '',
+    maxRate: '',
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
@@ -176,13 +191,27 @@ const Market: React.FC = () => {
       skills: [],
       projects: [],
       projectDomain: [],
+      sorting: [],
+      minRate: '',
+      maxRate: '',
     });
   };
 
   const constructQueryString = (filters: FilterState) => {
     return Object.entries(filters)
-      .filter(([_, val]) => val.length > 0)
-      .map(([key, val]) => `${key}=${val.join(',')}`)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return value.length > 0 ? `${key}=${value.join(',')}` : '';
+        }
+        if (typeof value === 'string' && value.trim() !== '') {
+          return `${key}=${encodeURIComponent(value)}`;
+        }
+        if (typeof value === 'number' && !isNaN(value)) {
+          return `${key}=${value}`;
+        }
+        return '';
+      })
+      .filter(Boolean)
       .join('&');
   };
 
@@ -205,7 +234,6 @@ const Market: React.FC = () => {
           (job: Project) => !notInterested.includes(job._id),
         );
         setJobs(filteredJobs);
-        console.log(filteredJobs);
       } catch (err) {
         console.error('Fetch jobs error:', err);
         toast({
@@ -222,7 +250,7 @@ const Market: React.FC = () => {
 
   useEffect(() => {
     fetchJobs(filters);
-  }, [fetchJobs]);
+  }, [fetchJobs, filters]);
 
   const handleApply = () => {
     fetchJobs(filters);
@@ -319,6 +347,7 @@ const Market: React.FC = () => {
             <Button onClick={handleApply} className="w-full">
               Apply
             </Button>
+
             <Button
               variant="outline"
               onClick={handleReset}
@@ -327,6 +356,20 @@ const Market: React.FC = () => {
             >
               Reset
             </Button>
+            <Select
+              onValueChange={(value) => {
+                const safeValue = Array.isArray(value) ? value : [value];
+                handleFilterChange('sorting', safeValue);
+              }}
+            >
+              <SelectTrigger className="w-full mt-4">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ascending">Ascending</SelectItem>
+                <SelectItem value="descending">Descending</SelectItem>
+              </SelectContent>
+            </Select>
 
             <div className="my-4">
               <SkillDom
@@ -355,6 +398,59 @@ const Market: React.FC = () => {
                 useAccordion={true}
               />
             </div>
+            <div className="mb-4 border rounded-lg p-4 bg-background shadow-sm">
+              <Label className="mb-4 block text-lg font-medium text-foreground ">
+                Filter by Rate
+              </Label>
+              <div className="flex gap-4">
+                <div className="flex flex-col flex-1">
+                  <Label
+                    htmlFor="minRate"
+                    className="mb-1 text-sm text-muted-foreground"
+                  >
+                    Min Rate
+                  </Label>
+                  <Input
+                    id="minRate"
+                    type="number"
+                    min={0}
+                    max={100000}
+                    aria-label="Minimum Rate"
+                    placeholder="e.g. 10"
+                    value={filters.minRate}
+                    onChange={(e) => {
+                      const rawValue = Number(e.target.value);
+                      const safeValue = Math.min(Math.max(rawValue, 0), 100000);
+                      handleFilterChange('minRate', [safeValue.toString()]);
+                    }}
+                    onWheel={(e) => e.currentTarget.blur()}
+                  />
+                </div>
+                <div className="flex flex-col flex-1">
+                  <Label
+                    htmlFor="maxRate"
+                    className="mb-1 text-sm text-muted-foreground"
+                  >
+                    Max Rate
+                  </Label>
+                  <Input
+                    id="maxRate"
+                    type="number"
+                    min={0}
+                    max={100000}
+                    aria-label="Maximum Rate"
+                    placeholder="e.g. 100"
+                    value={filters.maxRate}
+                    onChange={(e) => {
+                      const rawValue = Number(e.target.value);
+                      const safeValue = Math.min(Math.max(rawValue, 0), 100000);
+                      handleFilterChange('maxRate', [safeValue.toString()]);
+                    }}
+                    onWheel={(e) => e.currentTarget.blur()}
+                  />
+                </div>
+              </div>
+            </div>
 
             <div className="mb-4">
               <SkillDom
@@ -378,7 +474,7 @@ const Market: React.FC = () => {
             <Loader2 size={40} className="text-primary animate-spin" />
           </div>
         ) : (
-          <div className="mt-4 lg:mt-0 w-full">
+          <div className="mt-4 lg:mt-0 w-full flex justify-center">
             <ScrollArea className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-4rem)] no-scrollbar overflow-y-auto">
               <div className="grid grid-cols-1 gap-6 pb-20 lg:pb-4">
                 {jobs.length > 0 ? (
