@@ -99,7 +99,8 @@ export interface Params {
     arrayName?: string;
   }>;
   fields: Array<Field>;
-  api: string;
+  api?: string;
+  data?: any[];
   params?: Record<string, any>;
   searchColumn?: Array<string>;
   isFilter?: boolean;
