@@ -105,6 +105,15 @@ const ActionField = ({
   fieldData,
   refetch,
 }: FieldComponentProps<Actions>) => {
+  // If no actions are available, show a status message
+  if (!fieldData.actions?.options || fieldData.actions.options.length === 0) {
+    return (
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        Final Status
+      </span>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="text-sm dark:text-gray-300 text-gray-600 hover:dark:text-gray-800 hover:bg-gray-200 p-1 rounded transition duration-300">
