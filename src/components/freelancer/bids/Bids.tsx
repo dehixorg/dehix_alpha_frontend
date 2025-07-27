@@ -104,7 +104,25 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           intervieweeName: intervieweeMap[iv.intervieweeId]?.userName || intervieweeMap[iv.intervieweeId]?.profileHeadline || 'Unknown',
         }));
 
-        setBidsData(enriched);
+        // Fetch skill names for each talentId
+        const talentIds = Array.from(new Set(enriched.map((iv: any) => iv.talentId).filter(Boolean)));
+        let skillMap: Record<string, any> = {};
+        if (talentIds.length) {
+          const skillPromises = talentIds.map((id) => axiosInstance.get(`/skill/${id}`).catch(() => null));
+          const skillResults = await Promise.all(skillPromises);
+          skillResults.forEach((res, idx) => {
+            if (res?.data) {
+              skillMap[talentIds[idx]] = res.data;
+            }
+          });
+        }
+
+        const finalList = enriched.map((iv: any) => ({
+          ...iv,
+          skillName: skillMap[iv.talentId]?.name || iv.talentType || iv.talentId,
+        }));
+
+        setBidsData(finalList);
       } catch (error) {
         console.error('Error fetching interview bids', error);
         toast({
