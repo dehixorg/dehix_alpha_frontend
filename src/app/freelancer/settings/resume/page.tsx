@@ -16,6 +16,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
 
+
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
