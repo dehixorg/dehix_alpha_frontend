@@ -188,7 +188,23 @@ const [selectedColor, setSelectedColor] = useState(
     <PersonalInfo key="personal" personalData={personalData} setPersonalData={setPersonalData} />,
     <WorkExperienceInfo key="workexperience" workExperienceData={workExperienceData} setWorkExperienceData={setWorkExperienceData} />,
     <EducationInfo key="education" educationData={educationData} setEducationData={setEducationData} />,
-    <SkillInfo key="skill" skillData={skillData} setSkillData={setSkillData} />,
+    <SkillInfo 
+    key="skill" 
+    skillData={skillData} 
+    onAddSkill={(e) => {
+      e.preventDefault();
+      setSkillData([...skillData, { skillName: '' }]);
+    }}
+    onRemoveSkill={(e, index) => {
+      e.preventDefault();
+      setSkillData(skillData.filter((_, i) => i !== index));
+    }}
+    onSkillChange={(e, index) => {
+      const newSkills = [...skillData];
+      newSkills[index].skillName = e.target.value;
+      setSkillData(newSkills);
+    }}
+  />,
     <AchievementInfo key="achievement" achievementData={achievementData} setAchievementData={setAchievementData} />,
     <SummaryInfo key="summary" summaryData={summaryData} setSummaryData={setSummaryData} workExperienceData={[]} />,
   ];
