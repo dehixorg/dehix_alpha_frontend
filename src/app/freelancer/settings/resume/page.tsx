@@ -16,7 +16,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import ResumeInfoCard from '@/components/cards/resumeInfoCard';
 import { Button } from '@/components/ui/button';
 
-
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
@@ -57,15 +56,17 @@ export default function Resume() {
   };
 
   const handleResumeSaved = () => {
-    setRefresh(prev => !prev);
+    setRefresh((prev) => !prev);
     setShowResumeEditor(false);
   };
 
   if (showResumeEditor) {
-    return <ResumeEditor 
-             initialResume={selectedResume}  
-             onCancel={() => setShowResumeEditor(false)} 
-           />;
+    return (
+      <ResumeEditor
+        initialResume={selectedResume}
+        onCancel={() => setShowResumeEditor(false)}
+      />
+    );
   }
 
   return (
@@ -90,7 +91,9 @@ export default function Resume() {
         <div className="flex flex-col">
           <div className="flex justify-between items-center mx-8 mt-5 mb-6">
             <h1 className="text-2xl font-bold">
-              {resumeData.length > 0 ? 'Your Resumes' : 'Start Building Your Resume'}
+              {resumeData.length > 0
+                ? 'Your Resumes'
+                : 'Start Building Your Resume'}
             </h1>
             <Button onClick={handleNewResume} className="ml-4">
               + New Resume
@@ -104,9 +107,9 @@ export default function Resume() {
             ) : (
               <div className="grid flex-1 items-start gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
                 {resumeData.map((resume) => (
-                  <ResumeInfoCard 
-                    key={resume._id} 
-                    {...resume} 
+                  <ResumeInfoCard
+                    key={resume._id}
+                    {...resume}
                     onClick={() => handleEditResume(resume)}
                   />
                 ))}

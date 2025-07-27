@@ -1,4 +1,6 @@
 import React from 'react';
+import { format } from 'date-fns';
+
 import {
   Card,
   CardContent,
@@ -7,7 +9,6 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
-import { format } from 'date-fns';
 
 interface ResumeProps {
   _id: string;
@@ -31,13 +32,18 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
   onClick,
 }) => {
   return (
-    <Card className="w-full h-full mx-auto md:max-w-2xl hover:shadow-lg  cursor-pointer hover:bg-gray-800 transition-colors" onClick={onClick}>
+    <Card
+      className="w-full h-full mx-auto md:max-w-2xl hover:shadow-lg  cursor-pointer hover:bg-gray-800 transition-colors"
+      onClick={onClick}
+    >
       <CardHeader>
         <CardTitle className="flex">
           {personalInfo?.firstName || 'No'} {personalInfo?.lastName || 'Name'}
         </CardTitle>
         <CardDescription className="block mt-1">
-          {selectedTemplate ? `Template: ${selectedTemplate}` : 'No template selected'}
+          {selectedTemplate
+            ? `Template: ${selectedTemplate}`
+            : 'No template selected'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -47,7 +53,9 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
       </CardContent>
       <CardFooter className="flex justify-between items-center">
         <span className="text-xs text-gray-500">
-          {updatedAt ? `Last updated: ${format(new Date(updatedAt), 'MMM d, yyyy')}` : 'No update date'}
+          {updatedAt
+            ? `Last updated: ${format(new Date(updatedAt), 'MMM d, yyyy')}`
+            : 'No update date'}
         </span>
       </CardFooter>
     </Card>
