@@ -31,7 +31,7 @@ const ResumeInfoCard: React.FC<ResumeProps> = ({
   onClick,
 }) => {
   return (
-    <Card className="w-full h-full mx-auto md:max-w-2xl hover:shadow-lg transition-shadow" onClick={onClick}>
+    <Card className="w-full h-full mx-auto md:max-w-2xl hover:shadow-lg  cursor-pointer hover:bg-gray-800 transition-colors" onClick={onClick}>
       <CardHeader>
         <CardTitle className="flex">
           {personalInfo?.firstName || 'No'} {personalInfo?.lastName || 'Name'}

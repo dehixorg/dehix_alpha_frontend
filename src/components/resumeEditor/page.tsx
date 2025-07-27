@@ -57,9 +57,17 @@ interface ResumeData {
   professionalSummary?: string;
   selectedTemplate?: string;
   selectedColor?: string;
+  
+}
+interface ResumeEditorProps {
+  initialResume?: ResumeData;
+  onCancel: () => void;  // Only keep the close handler
 }
 
-export default function ResumeEditor({ initialResume }: { initialResume?: ResumeData }) {
+export default function ResumeEditor({ 
+  initialResume, 
+  onCancel 
+}: ResumeEditorProps) {
   // State initialization with default values or from initialResume
   const [educationData, setEducationData] = useState(
   initialResume?.education || [
@@ -295,19 +303,28 @@ const [selectedColor, setSelectedColor] = useState(
           {/* Form Section */}
           <div className="p-6 relative">
             <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {initialResume?._id ? 'Edit Resume' : 'Create New Resume'}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {initialResume?._id ? 'Update your resume details' : 'Fill in your resume details'}
-                </p>
-              </div>
-              
-              <Button onClick={() => setShowAtsScore(!showAtsScore)}>
-                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
-              </Button>
-            </div>
+  <div>
+    <h1 className="text-2xl font-bold">
+      {initialResume?._id ? 'Edit Resume' : 'Create New Resume'}
+    </h1>
+    <p className="text-sm text-muted-foreground">
+      {initialResume?._id ? 'Update your resume details' : 'Fill in your resume details'}
+    </p>
+  </div>
+  
+  <div className="flex gap-2">
+    <Button 
+      onClick={onCancel}
+      variant="outline"
+    >
+      ← Back to Resumes
+    </Button>
+    
+    <Button onClick={() => setShowAtsScore(!showAtsScore)}>
+      {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+    </Button>
+  </div>
+</div>
 
             {showAtsScore ? (
               <AtsScore 
@@ -355,8 +372,8 @@ const [selectedColor, setSelectedColor] = useState(
 
           {/* Preview Section */}
           <div className="relative p-6">
-            <div ref={resumeRef} className="relative" style={{ minHeight: '1100px' }}>
-              <div className="absolute top-2 right-2 z-10 flex gap-2 bg-white p-2 rounded shadow">
+            <div ref={resumeRef} className="relative mt-10" style={{ minHeight: '1100px' }}>
+              <div className="absolute -top-10 right-2 z-10 flex gap-2 bg-white p-2 rounded shadow">
                 <Button
                   size="sm"
                   variant={selectedTemplate === 'ResumePreview1' ? 'default' : 'outline'}
