@@ -13,6 +13,7 @@ import {
 import Image from 'next/image';
 import { format } from 'date-fns';
 
+import ProjectCard from '@/components/cards/freelancerProjectCard';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import {
@@ -43,7 +44,14 @@ interface Project {
   end: string;
   techUsed: string[];
   githubLink?: string;
+  liveDemoLink?: string;
+  thumbnail?: string;
   projectType?: string;
+  verified?: boolean;
+  refer?: string;
+  oracleAssigned?: string | null;
+  verificationUpdateTime?: string;
+  comments?: string;
 }
 
 interface ProfessionalExperience {
@@ -68,6 +76,10 @@ interface FreelancerProfile {
   lastName: string;
   description: string;
   profilePic?: string;
+  email?: string;
+  githubLink?: string;
+  linkedin?: string;
+  personalWebsite?: string;
   skills: Skill[];
   domain: Domain[];
   projectDomain: Domain[];
@@ -90,10 +102,42 @@ const FreelancerProfile = () => {
         try {
           setLoading(true);
           const response = await axiosInstance.get(
-            `/freelancer/${freelancer_id}/profile-info`,
+            `/public/freelancer/${freelancer_id}`,
           );
           if (response.status === 200) {
-            setProfileData(response.data);
+            const freelancerData = response.data.data || response.data;
+
+            // Transform the data to match our interface
+            const transformedData: FreelancerProfile = {
+              firstName: freelancerData.firstName || '',
+              lastName: freelancerData.lastName || '',
+              description: freelancerData.description || '',
+              profilePic: freelancerData.profilePic || '',
+              email: freelancerData.email || '',
+              githubLink: freelancerData.githubLink || '',
+              linkedin: freelancerData.linkedin || '',
+              personalWebsite: freelancerData.personalWebsite || '',
+              skills: freelancerData.skills || [],
+              domain: freelancerData.domain || [],
+              projectDomain: freelancerData.projectDomain || [],
+              projects: freelancerData.projects
+                ? Array.isArray(freelancerData.projects)
+                  ? freelancerData.projects
+                  : Object.values(freelancerData.projects || {})
+                : [],
+              professionalInfo: freelancerData.professionalInfo
+                ? Array.isArray(freelancerData.professionalInfo)
+                  ? freelancerData.professionalInfo
+                  : Object.values(freelancerData.professionalInfo || {})
+                : [],
+              education: freelancerData.education
+                ? Array.isArray(freelancerData.education)
+                  ? freelancerData.education
+                  : Object.values(freelancerData.education || {})
+                : [],
+            };
+
+            setProfileData(transformedData);
           }
         } catch (error) {
           console.error('Error fetching freelancer details', error);
@@ -357,28 +401,45 @@ const FreelancerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {profileData &&
                   profileData.projects &&
                   profileData.projects.length > 0 ? (
-                    profileData.projects.slice(0, 3).map((project) => (
-                      <div
-                        key={project._id}
-                        className="border-b border-border pb-4 last:border-b-0"
-                      >
-                        <div className="flex justify-between items-start">
-                          <h3
-                            className="font-medium text-foreground hover:text-primary cursor-pointer"
-                            onClick={() => setSelectedProject(project)}
-                          >
-                            {project.projectName}
-                          </h3>
-                        </div>
-                      </div>
-                    ))
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {profileData.projects.slice(0, 4).map((project) => (
+                        <ProjectCard
+                          key={project._id}
+                          _id={project._id}
+                          projectName={project.projectName}
+                          description={project.description || ''}
+                          verified={project.verified || false}
+                          githubLink={project.githubLink || ''}
+                          liveDemoLink={project.liveDemoLink || ''}
+                          thumbnail={project.thumbnail || ''}
+                          start={project.start || ''}
+                          end={project.end || ''}
+                          refer={project.refer || ''}
+                          techUsed={project.techUsed || []}
+                          role={project.role || ''}
+                          projectType={project.projectType || ''}
+                          oracleAssigned={project.oracleAssigned || null}
+                          verificationUpdateTime={
+                            project.verificationUpdateTime || ''
+                          }
+                          comments={project.comments || ''}
+                          isViewOnly={true}
+                          onClick={() => setSelectedProject(project)}
+                        />
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-muted-foreground italic">
                       No projects added
+                    </p>
+                  )}
+                  {profileData?.projects && profileData.projects.length > 4 && (
+                    <p className="text-sm text-muted-foreground text-center mt-4">
+                      And {profileData.projects.length - 4} more projects...
                     </p>
                   )}
                 </div>
@@ -432,6 +493,72 @@ const FreelancerProfile = () => {
             </Card>
 
             <Separator className="h-px bg-border my-6" />
+
+            {/* Contact Information */}
+            <Card className="mb-6 overflow-hidden border border-border shadow-md">
+              <CardHeader className="bg-blue-500/5 dark:bg-blue-500/10 border-b border-border py-4">
+                <CardTitle className="text-md font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      Email:
+                    </span>
+                    <p className="mt-1">
+                      {profileData?.email || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-muted-foreground">
+                      Links:
+                    </span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {profileData?.githubLink && (
+                        <a
+                          href={profileData.githubLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          GitHub ↗
+                        </a>
+                      )}
+                      {profileData?.linkedin && (
+                        <a
+                          href={profileData.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          LinkedIn ↗
+                        </a>
+                      )}
+                      {profileData?.personalWebsite && (
+                        <a
+                          href={profileData.personalWebsite}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Portfolio ↗
+                        </a>
+                      )}
+                      {!profileData?.githubLink &&
+                        !profileData?.linkedin &&
+                        !profileData?.personalWebsite && (
+                          <p className="text-muted-foreground italic">
+                            No links provided
+                          </p>
+                        )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Education */}
             <Card className="mb-6 overflow-hidden border border-border shadow-md">

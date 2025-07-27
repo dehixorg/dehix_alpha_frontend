@@ -4,6 +4,7 @@ import { CheckCircle, Clock, PackageOpen, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,11 +34,11 @@ import dummyData from '@/dummydata.json';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
-
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
-
+  const [modalOpen, setModalOpen] = useState(false);
+  const [mode, setMode] = useState<'single' | 'multiple' | null>(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,13 +95,36 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardFooter>
                   {/* Wrap the Button with the Link component to make it clickable */}
-                  <Link href="/business/add-project" passHref>
-                    <Button className="w-full">
-                      {' '}
-                      {/* Ensure the Button takes up full width */}
-                      Create New Project
+                  {/* <Link href="/business/add-project" passHref>
+                    <Button className="w-full"> */}{' '}
+                  {/* Ensure the Button takes up full width */}
+                  {/* Create New Project
                     </Button>
-                  </Link>
+                  </Link> */}
+                  <Dialog
+                    open={modalOpen}
+                    onOpenChange={(isOpen) => {
+                      setModalOpen(isOpen);
+                      if (!isOpen) setMode(null);
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button className="w-full">Create New Project</Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-sm">
+                      <h2 className="text-lg font-semibold mb-4">
+                        Choose Project Type
+                      </h2>
+                      <div className="flex gap-4 items-center justify-around">
+                        <Link href="/business/add-project?mode=single">
+                          <Button>Single Profile</Button>
+                        </Link>
+                        <Link href="/business/add-project?mode=multiple">
+                          <Button>Multiple Profile</Button>
+                        </Link>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </CardFooter>
               </Card>
 

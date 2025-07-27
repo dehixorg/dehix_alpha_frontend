@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Code2, FlagIcon, Mail, Tag } from 'lucide-react';
+import { CheckCircle, Code2, FlagIcon, Mail, Play, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ export interface ProjectDetailCardProps {
   userRole?: 'Business' | 'Freelancer'; // Added role prop
   projectId: string; // Added project ID prop
   handleCompleteProject?: () => void;
+  handleStartProject?: () => void; // Added start project handler
 }
 
 function ProjectDetailCard({
@@ -35,6 +36,7 @@ function ProjectDetailCard({
   userRole = 'Business',
   projectId,
   handleCompleteProject,
+  handleStartProject,
 }: ProjectDetailCardProps) {
   const { text: projectStatus, className: statusBadgeStyle } =
     getStatusBadge(status);
@@ -118,19 +120,37 @@ function ProjectDetailCard({
               Milestone
             </Button>
           </Link>
-          <Button
-            className={`flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md ${
-              projectStatus === 'COMPLETED'
-                ? 'bg-green-600 hover:bg-green-500'
-                : 'bg-blue-600 hover:bg-blue-500'
-            }`}
-            size="sm"
-            onClick={handleCompleteProject}
-            disabled={!handleCompleteProject}
-          >
-            <CheckCircle className="w-4 h-4 mr-1" />
-            {projectStatus === 'COMPLETED' ? 'Completed' : 'Mark complete'}
-          </Button>
+          {/* Conditional button based on project status */}
+          {projectStatus === 'PENDING' ? (
+            <Button
+              className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-green-600 hover:bg-green-500"
+              size="sm"
+              onClick={handleStartProject}
+              disabled={!handleStartProject}
+            >
+              <Play className="w-4 h-4 mr-1" />
+              Start Project
+            </Button>
+          ) : projectStatus === 'ACTIVE' ? (
+            <Button
+              className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-blue-600 hover:bg-blue-500"
+              size="sm"
+              onClick={handleCompleteProject}
+              disabled={!handleCompleteProject}
+            >
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Mark complete
+            </Button>
+          ) : projectStatus === 'COMPLETED' ? (
+            <Button
+              className="flex items-center px-4 py-2 text-xs md:text-sm font-medium text-white rounded-md bg-gray-600 cursor-not-allowed"
+              size="sm"
+              disabled={true}
+            >
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Completed
+            </Button>
+          ) : null}
         </div>
       </CardContent>
     </Card>

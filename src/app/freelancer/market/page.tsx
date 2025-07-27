@@ -25,6 +25,10 @@ interface FilterState {
   domain: string[];
   skills: string[];
   projectDomain: string[];
+  sorting: string[];
+  minRate: string;
+  maxRate: string;
+  favourites: boolean;
 }
 
 interface Project {
@@ -81,6 +85,12 @@ interface ProjectsDomain {
 
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
+  const draftedProjects = useSelector(
+    (state: RootState) => state.projectDraft.draftedProjects,
+  );
+  const dispatch = useDispatch();
+
+  const [isClient, setIsClient] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -89,6 +99,10 @@ const Market: React.FC = () => {
     skills: [],
     projects: [],
     projectDomain: [],
+    sorting: [],
+    minRate: '',
+    maxRate: '',
+    favourites: false,
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
@@ -110,15 +124,27 @@ const Market: React.FC = () => {
       skills: [],
       projects: [],
       projectDomain: [],
+      sorting: [],
+      minRate: '',
+      maxRate: '',
+      favourites: false,
     });
   };
 
   const constructQueryString = (filters: FilterState) => {
-    return Object.keys(filters)
-      .map((key) => {
-        const values = filters[key as keyof FilterState];
-        if (values.length > 0) {
-          return `${key}=${values.join(',')}`;
+    return Object.entries(filters)
+      .map(([key, value]) => {
+        if (Array.isArray(value)) {
+          return value.length > 0 ? `${key}=${value.join(',')}` : '';
+        }
+        if (typeof value === 'string' && value.trim() !== '') {
+          return `${key}=${encodeURIComponent(value)}`;
+        }
+        if (typeof value === 'number' && !isNaN(value)) {
+          return `${key}=${value}`;
+        }
+        if (typeof value === 'boolean' && value === true) {
+          return `${key}=true`;
         }
         return '';
       })
@@ -188,7 +214,7 @@ const Market: React.FC = () => {
         }); // Error toast
       }
     },
-    [user.uid],
+    [user.uid, draftedProjects],
   );
 
   const handleApply = () => {
@@ -364,6 +390,36 @@ const Market: React.FC = () => {
                   }
                 />
               </div>
+
+              {/* Mobile Favourites Filter */}
+              <div className="border-b border-gray-300 py-4">
+                <div className="p-3 border border-border rounded-lg bg-card">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        id="mobile-favourites"
+                        checked={filters.favourites}
+                        onChange={(e) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            favourites: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-red-600 bg-background border-2 border-muted-foreground rounded focus:ring-red-500 dark:focus:ring-red-600 focus:ring-2 checked:bg-red-600 checked:border-red-600"
+                      />
+                    </div>
+                    <label
+                      htmlFor="mobile-favourites"
+                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                    >
+                      <span>❤️</span>
+                      <span>Show Favourites Only</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-4">
                 <MobileSkillDom
                   label="ProjectDomain"

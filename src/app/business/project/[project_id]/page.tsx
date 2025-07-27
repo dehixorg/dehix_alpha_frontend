@@ -134,6 +134,72 @@ export default function Dashboard() {
       });
   };
 
+  // Handle project start
+  const handleStartProject = (): void => {
+    if (!project_id) {
+      toast({
+        title: 'Error',
+        description: 'Project ID is missing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.ACTIVE })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
+          );
+          toast({
+            title: 'Success',
+            description: 'Project started successfully!',
+          });
+        } else {
+          console.error('Unexpected response:', response);
+          toast({
+            title: 'Failed',
+            description: 'Failed to start the project.',
+            variant: 'destructive',
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        toast({
+          title: 'Error',
+          description: 'An error occurred while starting the project.',
+          variant: 'destructive',
+        });
+      });
+  };
+
+  // Handle profile addition
+  const handleAddProfile = () => {
+    setIsAddProfileDialogOpen(true);
+  };
+
+  // Handle profile added successfully
+  const handleProfileAdded = async () => {
+    // Refetch project data to update the profiles list
+    try {
+      const response = await axiosInstance.get(`/project/${project_id}`);
+      const projectData = response?.data?.data?.data || response?.data?.data;
+
+      if (projectData) {
+        setProject(projectData);
+      }
+    } catch (error) {
+      console.error('Error refetching project:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to refresh project data.',
+      });
+    }
+  };
+
   if (!project) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -160,82 +226,88 @@ export default function Dashboard() {
             { label: project.projectName, link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <div>
-              <Tabs defaultValue="Project-Info">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
-                  <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
-                </TabsList>
-                <TabsContent value="Project-Info">
-                  <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-                    <div>
-                      <ProjectDetailCard
-                        projectName={project.projectName}
-                        description={project.description}
-                        email={project.email}
-                        status={project.status}
-                        startDate={project.createdAt}
-                        endDate={project.end}
-                        projectDomain={project.projectDomain}
-                        skills={project.skillsRequired}
-                        projectId={project._id}
-                        handleCompleteProject={handleCompleteProject}
-                        userRole="Business"
-                      />
-                    </div>
-                    <div>
-                      <CardHeader className="pl-0 ">
-                        <CardTitle className="pb-4">Profiles</CardTitle>
-                      </CardHeader>
-                      <Carousel className="w-full relative pt-3">
-                        <CarouselContent className="flex mt-3 gap-4">
-                          {project.profiles?.map((profile, index) => (
-                            <CarouselItem
-                              key={index}
-                              className="flex shrink-1 w-1/3 md:basis-1/2 lg:basis-1/2"
-                            >
+        <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+          <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
+            <Tabs defaultValue="Project-Info">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
+                <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
+              </TabsList>
+              <TabsContent value="Project-Info">
+                <div className="space-y-4 md:space-y-8">
+                  <div>
+                    <ProjectDetailCard
+                      projectName={project.projectName}
+                      description={project.description}
+                      email={project.email}
+                      status={project.status}
+                      startDate={project.createdAt}
+                      endDate={project.end}
+                      projectDomain={project.projectDomain}
+                      skills={project.skillsRequired}
+                      projectId={project._id}
+                      handleCompleteProject={handleCompleteProject}
+                      handleStartProject={handleStartProject}
+                      userRole="Business"
+                    />
+                  </div>
+                  <div>
+                    <CardHeader className="pl-0 ">
+                      <CardTitle className="pb-4">Profiles</CardTitle>
+                    </CardHeader>
+                    <Carousel className="w-full relative pt-3">
+                      <CarouselContent className="flex mt-3 -ml-2">
+                        {project.profiles?.map((profile, index) => (
+                          <CarouselItem
+                            key={index}
+                            className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2"
+                          >
+                            <ProjectSkillCard
+                              domainName={profile.domain}
+                              description={profile.description}
+                              email={project.email}
+                              status={project.status}
+                              startDate={project.createdAt}
+                              endDate={project.end}
+                              domains={[]}
+                              skills={profile.skills}
+                            />
+                          </CarouselItem>
+                        ))}
+                        {/* Only show Add Profile card if project is not completed or rejected */}
+                        {project.status !== StatusEnum.COMPLETED &&
+                          project.status !== StatusEnum.REJECTED && (
+                            <CarouselItem className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2">
                               <ProjectSkillCard
-                                domainName={profile.domain}
-                                description={profile.description}
-                                email={project.email}
-                                status={project.status}
-                                startDate={project.createdAt}
-                                endDate={project.end}
-                                domains={[]}
-                                skills={profile.skills}
+                                isLastCard={true}
+                                onAddProfile={handleAddProfile}
                               />
                             </CarouselItem>
-                          ))}
-                          <div className="flex-nowrap w-full">
-                            <ProjectSkillCard isLastCard={true} />
+                          )}
+                      </CarouselContent>
+                      {project.profiles && project.profiles.length > 0 && (
+                        <>
+                          <div className="flex">
+                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                              Previous
+                            </CarouselPrevious>
+                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                              Next
+                            </CarouselNext>
                           </div>
-                        </CarouselContent>
-                        {project.profiles && project.profiles.length > 0 && (
-                          <>
-                            <div className="flex">
-                              <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                                Previous
-                              </CarouselPrevious>
-                              <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-                                Next
-                              </CarouselNext>
-                            </div>
-                          </>
-                        )}
-                      </Carousel>
-                    </div>
+                        </>
+                      )}
+                    </Carousel>
                   </div>
-                </TabsContent>
-                <TabsContent value="Profiles">
-                  <BidsDetails id={project_id || ''} />
-                </TabsContent>
-              </Tabs>
-            </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="Profiles">
+                <BidsDetails id={project_id || ''} />
+              </TabsContent>
+            </Tabs>
           </div>
-          <div className="space-y-6">
-            <CardTitle className="group flex items-center gap-2 text-2xl">
+          <div className="w-full lg:col-span-1 lg:w-auto mt-8 lg:mt-0 space-y-6 min-w-0">
+            <CardTitle className="group flex items-center gap-2 text-xl">
               Interviews
             </CardTitle>
             <div className="text-center py-10">

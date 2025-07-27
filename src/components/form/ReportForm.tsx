@@ -116,54 +116,68 @@ const [fileError, setFileError] = useState<string | null>(null);
             />
           </div>
 
-          {/* Report Type - 25% */}
-          <div className="flex-1 min-w-[150px]">
-            <FormField
-              control={form.control}
-              name="report_type"
-              render={({ field }) => (
-                <FormItem>
-                  <Label>Report Type</Label>
-                  <Select defaultValue={field.value} onValueChange={() => {}} disabled>
-                    <FormControl>
-                      <SelectTrigger className="bg-gray-100 cursor-not-allowed h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={field.value}>{field.value}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+            {/* Report Type - 25% */}
+            <div className="flex-1 min-w-[150px]">
+              <FormField
+                control={form.control}
+                name="report_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <Label>Report Type</Label>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={() => {}}
+                      disabled
+                    >
+                      <FormControl>
+                        {/* CHANGE 1: Replaced `bg-gray-100` with `bg-muted` for disabled inputs */}
+                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={field.value}>
+                          {field.value}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          {/* Report Role - 25% */}
-          <div className="flex-1 min-w-[150px]">
-            <FormField
-              control={form.control}
-              name="report_role"
-              render={({ field }) => (
-                <FormItem>
-                  <Label>Role</Label>
-                  <Select defaultValue={field.value} onValueChange={() => {}} disabled>
-                    <FormControl>
-                      <SelectTrigger className="bg-gray-100 cursor-not-allowed h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={field.value}>{field.value}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Report Role - 25% */}
+            <div className="flex-1 min-w-[150px]">
+              <FormField
+                control={form.control}
+                name="report_role"
+                render={({ field }) => (
+                  <FormItem>
+                    <Label>Role</Label>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={() => {}}
+                      disabled
+                    >
+                      <FormControl>
+                        {/* CHANGE 1 (repeated): Replaced `bg-gray-100` with `bg-muted` */}
+                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={field.value}>
+                          {field.value}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
-        </div>
 
         {/* 📄 Description */}
         <FormField
@@ -197,64 +211,75 @@ const [fileError, setFileError] = useState<string | null>(null);
           )}
         />
 
-        {/* 🖼 Image Upload */}
-       {/* 🖼 Image Upload with Preview and Validation */}
-<FormItem>
-  <Label>Upload Screenshots (up to 3)</Label>
-  <FormControl>
-    <Input
-      type="file"
-      accept="image/*"
-      multiple
-      onChange={(e) => {
-        const files = e.target.files ? Array.from(e.target.files) : [];
-        if (files.length > 3) {
-          setFileError("You can only upload up to 3 images.");
-          setImageFiles([]); // Optional: clear if over limit
-        } else {
-          setFileError(null);
-          setImageFiles(files);
-        }
-      }}
-    />
-  </FormControl>
+          {/* 🖼 Image Upload */}
+          <FormItem>
+            <Label>Upload Screenshots (up to 3)</Label>
+            <FormControl>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files
+                    ? Array.from(e.target.files)
+                    : [];
+                  if (files.length > 3) {
+                    setFileError('You can only upload up to 3 images.');
+                    setImageFiles([]);
+                  } else {
+                    setFileError(null);
+                    setImageFiles(files);
+                  }
+                }}
+              />
+            </FormControl>
 
-  {/* 🔴 File error message */}
-  {fileError && (
-    <p className="text-sm text-red-600 mt-1">{fileError}</p>
-  )}
+            {/* 🔴 File error message */}
+            {fileError && (
+              // CHANGE 2: Used `text-destructive` for error messages.
+              <p className="text-sm text-destructive mt-1">{fileError}</p>
+            )}
 
-  {/* 🖼 Image Preview with Delete and View */}
-{imageFiles.length > 0 && (
-  <div className="mt-3 flex gap-4 flex-wrap">
-    {imageFiles.map((file, idx) => {
-      const imageUrl = URL.createObjectURL(file);
-      return (
-        <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden group">
-          {/* 🖼 Click to view */}
-          <a href={imageUrl} target="_blank" rel="noopener noreferrer">
-            <img
-              src={imageUrl}
-              alt={`screenshot-${idx}`}
-              className="object-cover w-full h-full hover:opacity-80 cursor-pointer"
-            />
-          </a>
+            {/* 🖼 Image Preview with Delete and View */}
+            {/* 🖼 Image Preview with Delete and View */}
+            {imageFiles.length > 0 && (
+              <div className="mt-3 flex gap-4 flex-wrap">
+                {imageFiles.map((file, idx) => {
+                  const imageUrl = URL.createObjectURL(file);
+                  return (
+                    <div
+                      key={idx}
+                      className="relative w-24 h-24 border rounded-md overflow-hidden group"
+                    >
+                      <a
+                        href={imageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {/* ✅ FIX: Added the `fill` prop and removed `className` */}
+                        <Image
+                          src={imageUrl}
+                          alt={`screenshot-${idx}`}
+                          fill
+                          sizes="96px" // Tells browser the image is 96px wide
+                          className="object-cover" // Keep object-cover for correct scaling
+                        />
+                      </a>
 
-          {/* ❌ Cancel Button */}
-          <button
-            type="button"
-            onClick={() => removeImage(idx)}
-            className="absolute top-1 right-1 bg-white rounded-full p-1 text-red-600 hover:bg-red-100 transition"
-            title="Remove"
-          >
-            ✕
-          </button>
-        </div>
-      );
-    })}
-  </div>
-)}
-
+                      {/* ❌ Cancel Button (no changes here) */}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-background rounded-full p-1 text-destructive hover:bg-accent transition"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
   <FormDescription>
     Attach up to 3 optional screenshots of the issue.
