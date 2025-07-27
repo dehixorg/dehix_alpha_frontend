@@ -28,12 +28,12 @@ import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface Domain {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface SkillDomainData {
@@ -45,6 +45,7 @@ interface SkillDomainData {
   status: StatusEnum;
   activeStatus: boolean;
   domainId?: string;
+  originalTalentId: string;
 }
 
 const SkillDomainForm: React.FC = () => {
@@ -53,6 +54,7 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Function to remove duplicate entries
   const removeDuplicates = (data: SkillDomainData[]) => {
@@ -73,16 +75,13 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/skill`,
-        );
-
-        const skillsArray = skillsResponse.data?.data?.[0]?.skills || [];
-
-        const domainsResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/domain`,
-        );
-        const domainsArray = domainsResponse.data?.data?.[0]?.domain || [];
+        // Fetch global skills and domains
+        const skillsResponse = await axiosInstance.get('/skills');
+        
+        const skillsArray = skillsResponse.data?.data || [];
+        setSkills(skillsArray);
+        const domainsResponse = await axiosInstance.get('/domain');
+        const domainsArray = domainsResponse.data?.data || [];
 
         let talentResponse = { data: { data: {} } };
 
@@ -138,7 +137,7 @@ const SkillDomainForm: React.FC = () => {
         // Filter skills - exclude if name matches added skills OR if ID is already used
         const filteredSkills = Array.isArray(skillsArray)
           ? skillsArray.filter((skill: any) => {
-              const normalizedSkillName = skill.name
+              const normalizedSkillName = skill.label
                 ?.toLowerCase()
                 .trim()
                 .replace(/\s+/g, ' ');
@@ -153,7 +152,7 @@ const SkillDomainForm: React.FC = () => {
         // Filter domains - exclude if name matches added domains OR if ID is already used
         const filteredDomains = Array.isArray(domainsArray)
           ? domainsArray.filter((domain: any) => {
-              const normalizedDomainName = domain.name
+              const normalizedDomainName = domain.label
                 ?.toLowerCase()
                 .trim()
                 .replace(/\s+/g, ' ');
@@ -169,8 +168,19 @@ const SkillDomainForm: React.FC = () => {
         setSkillDomainData(deduplicatedData);
         setStatusVisibility(deduplicatedData.map((item) => item.activeStatus));
 
-        setSkills(filteredSkills);
-        setDomains(filteredDomains);
+        // Map global skills to use _id and label for compatibility
+        setSkills(
+          filteredSkills.map((skill: any) => ({
+            _id: skill._id,
+            label: skill.label,
+          }))
+        );
+        setDomains(
+          filteredDomains.map((domain: any) => ({
+            _id: domain._id,
+            label: domain.label,
+          }))
+        );
 
         // Initialize skill and domain counters (by label) - improved logic
         const skillCounter: { [label: string]: number } = {};
@@ -198,101 +208,12 @@ const SkillDomainForm: React.FC = () => {
     }
 
     fetchData();
-  }, [user?.uid]);
+  }, [user?.uid, refreshTrigger]);
 
-  const onSubmitSkill = (data: SkillDomainData) => {
-    const normalizedLabel = data.label
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ');
-
-    // Check if skill already exists in current data
-    const existsInData = skillDomainData.some((item) => {
-      const normalizedItemLabel = item.label
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, ' ');
-      return normalizedItemLabel === normalizedLabel && item.type === 'SKILL';
-    });
-
-    if (existsInData) {
-      toast({
-        variant: 'destructive',
-        title: 'Duplicate Skill',
-        description: 'This skill has already been added.',
-      });
-      return false;
-    }
-
-    const newData = {
-      ...data,
-      status: StatusEnum.PENDING,
-      activeStatus: false,
-      type: 'SKILL',
-    };
-    setSkillDomainData([...skillDomainData, newData]);
-    setStatusVisibility([...statusVisibility, false]);
-
-    // Remove the skill from available skills list using normalized comparison
-    setSkills((prevSkills) =>
-      prevSkills.filter((skill) => {
-        const normalizedSkillName = skill.name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ' ');
-        return normalizedSkillName !== normalizedLabel;
-      }),
-    );
-
-    return true;
-  };
-
-  const onSubmitDomain = (data: SkillDomainData) => {
-    const normalizedLabel = data.label
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ');
-
-    // Check if domain already exists in current data
-    const existsInData = skillDomainData.some((item) => {
-      const normalizedItemLabel = item.label
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, ' ');
-      return normalizedItemLabel === normalizedLabel && item.type === 'DOMAIN';
-    });
-
-    if (existsInData) {
-      toast({
-        variant: 'destructive',
-        title: 'Duplicate Domain',
-        description: 'This domain has already been added.',
-      });
-      return false;
-    }
-
-    const newData = {
-      ...data,
-      status: StatusEnum.PENDING,
-      activeStatus: false,
-      type: 'DOMAIN',
-    };
-    setSkillDomainData([...skillDomainData, newData]);
-    setStatusVisibility([...statusVisibility, false]);
-
-    // Remove the domain from available domains list using normalized comparison
-    setDomains((prevDomains) =>
-      prevDomains.filter((domain) => {
-        const normalizedDomainName = domain.name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ' ');
-        return normalizedDomainName !== normalizedLabel;
-      }),
-    );
-
-    return true;
-  };
+  useEffect(() => {
+    console.log("Skills in skilldomainForm:", skills);
+    
+  }, [skills]);
 
   const handleToggleVisibility = async (
     index: number,
@@ -320,31 +241,6 @@ const SkillDomainForm: React.FC = () => {
     }
   };
 
-  // Handler for SkillDialog and DomainDialog to show success toast only on success
-  const handleSkillSubmit = (data: SkillDomainData) => {
-    const success = onSubmitSkill(data);
-    if (success) {
-      toast({
-        variant: 'default',
-        title: 'Talent Added',
-        description: 'The skill has been successfully added.',
-      });
-    }
-    return success;
-  };
-
-  const handleDomainSubmit = (data: SkillDomainData) => {
-    const success = onSubmitDomain(data);
-    if (success) {
-      toast({
-        variant: 'default',
-        title: 'Talent Added',
-        description: 'The domain has been successfully added.',
-      });
-    }
-    return success;
-  };
-
   return (
     <div className="p-6 mt-2">
       <div className="mb-8 mt-1 ml-2">
@@ -361,12 +257,12 @@ const SkillDomainForm: React.FC = () => {
               <SkillDialog
                 setSkills={setSkills}
                 skills={skills}
-                onSubmitSkill={handleSkillSubmit}
+                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
               />
               <DomainDialog
                 setDomains={setDomains}
                 domains={domains}
-                onSubmitDomain={handleDomainSubmit}
+                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
               />
             </div>
           </div>
@@ -410,12 +306,14 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell className="text-center">
                         ${item.monthlyPay}
                       </TableCell>
+                        
                       <TableCell>
-                        {item.status.toUpperCase() === StatusEnum.PENDING ? (
+                        {item.status.toUpperCase() === StatusEnum.PENDING && item.uid ? (
                           <VerifyDialog
                             talentType={item.type}
-                            talentId={item.uid}
+                            _id={item.uid}
                             userId={user.uid}
+                            originalTalentId={item.originalTalentId}
                           />
                         ) : (
                           <Badge className={getBadgeColor(item.status)}>
