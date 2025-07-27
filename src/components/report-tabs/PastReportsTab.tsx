@@ -8,6 +8,11 @@ import { toast } from '@/components/ui/use-toast';
 import { apiHelperService } from '@/services/report';
 import { MessagesTab } from '@/components/report-tabs/Messagestab';
 import { RootState } from '@/lib/store';
+
+// NOTE: It's good practice to import and use shadcn/ui components
+// like Button, Table, Select etc. directly for better consistency and accessibility.
+// For this example, we'll stick to updating class names.
+
 interface PastReport {
   id: string;
   subject: string;
@@ -85,9 +90,11 @@ export default function PastReportsTab() {
   const hasNextPage = pastReports.length === limit;
 
   return (
+    // The parent already correctly uses bg-background and text-foreground. Good!
     <main className="min-h-screen bg-background text-foreground px-4">
       <div className="w-full">
-        <div className="w-full flex flex-col  rounded-md p-6 bg-white shadow-sm">
+        {/* CHANGE 1: Swapped `bg-white` for `bg-card` and added `text-card-foreground` for card-specific text. */}
+        <div className="w-full flex flex-col rounded-md p-6 bg-card text-card-foreground shadow-sm">
           <AnimatePresence mode="wait">
             {viewingReport ? (
               <motion.div
@@ -99,16 +106,18 @@ export default function PastReportsTab() {
                 className="flex-1 flex flex-col"
               >
                 <div className="relative mb-6">
+                  {/* CHANGE 2: Replaced hardcoded blue button with primary theme colors. */}
                   <button
                     onClick={handleBack}
-                    className="absolute left-0 px-4 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow"
+                    className="absolute left-0 px-4 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold shadow"
                     aria-label="Back to reports"
                   >
                     ← Back
                   </button>
 
-                  <h2 className="text-center text-lg sm:text-2xl font-bold text-gray-800">
-                    <span className="text-blue-600">
+                  {/* CHANGE 3: Replaced `text-gray-800` and `text-blue-600` with theme-aware colors. */}
+                  <h2 className="text-center text-lg sm:text-2xl font-bold text-foreground">
+                    <span className="text-primary">
                       {viewingReport.subject}
                     </span>
                   </h2>
@@ -144,26 +153,30 @@ export default function PastReportsTab() {
                   ) : pastReports.length > 0 ? (
                     <>
                       <table className="w-full text-sm">
-                        <thead className="bg-gray-50 text-left text-gray-600">
+                        {/* CHANGE 4: Themed table header. */}
+                        <thead className="text-left text-muted-foreground">
                           <tr>
-                            <th className="py-2 px-4">Subject</th>
-                            <th className="py-2 px-4">Status</th>
-                            <th className="py-2 px-4">Date</th>
+                            <th className="py-3 px-4 font-medium">Subject</th>
+                            <th className="py-3 px-4 font-medium">Status</th>
+                            <th className="py-3 px-4 font-medium">Date</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {pastReports.map((report, i) => (
+                          {pastReports.map((report) => (
+                            // CHANGE 5: Replaced striped background with a simple bottom border.
+                            // This is a common, clean pattern that works perfectly in both themes.
                             <tr
                               key={report.id}
-                              className={`${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                              className="border-b border-border"
                             >
-                              <td className="py-2 px-4">{report.subject}</td>
+                              <td className="py-3 px-4">{report.subject}</td>
 
-                              <td className="py-2 px-4">
+                              <td className="py-3 px-4">
                                 {report.status === 'IN_PROGRESS' ? (
+                                  // CHANGE 6: Used `text-primary` for the clickable link.
                                   <button
                                     onClick={() => handleViewMessages(report)}
-                                    className="text-blue-600 underline hover:text-blue-700 font-medium"
+                                    className="text-primary underline-offset-4 hover:underline font-medium"
                                   >
                                     OPEN
                                   </button>
@@ -171,8 +184,8 @@ export default function PastReportsTab() {
                                   <span
                                     className={`font-medium ${
                                       report.status === 'OPEN'
-                                        ? 'text-yellow-500'
-                                        : 'text-green-600'
+                                        ? 'text-yellow-500' // These specific colors can be kept for status indicators
+                                        : 'text-green-600'  // but ensure they have enough contrast in dark mode.
                                     }`}
                                   >
                                     {report.status}
@@ -180,7 +193,7 @@ export default function PastReportsTab() {
                                 )}
                               </td>
 
-                              <td className="py-2 px-4">
+                              <td className="py-3 px-4 text-muted-foreground">
                                 {new Date(report.date).toLocaleDateString()}
                               </td>
                             </tr>
@@ -193,27 +206,29 @@ export default function PastReportsTab() {
                           Page {page}
                         </span>
                         <div className="flex items-center space-x-2">
+                          {/* CHANGE 7: Themed pagination buttons. */}
                           <button
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={page === 1}
-                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 hover:bg-gray-100"
+                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground"
                           >
                             Prev
                           </button>
                           <button
                             onClick={() => setPage((p) => p + 1)}
                             disabled={!hasNextPage}
-                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 hover:bg-gray-100"
+                            className="px-3 py-1.5 text-sm rounded-md disabled:opacity-50 border border-input hover:bg-accent hover:text-accent-foreground"
                           >
                             Next
                           </button>
+                          {/* CHANGE 8: Themed select input. */}
                           <select
                             value={limit}
                             onChange={(e) => {
                               setLimit(parseInt(e.target.value));
                               setPage(1);
                             }}
-                            className="border rounded-md px-2 py-1 text-sm"
+                            className="border border-input bg-background rounded-md px-2 py-1 text-sm"
                           >
                             {[5, 10, 20, 50].map((size) => (
                               <option key={size} value={size}>
