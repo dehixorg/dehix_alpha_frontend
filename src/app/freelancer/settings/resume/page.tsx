@@ -55,11 +55,6 @@ export default function Resume() {
     setShowResumeEditor(true);
   };
 
-  const handleResumeSaved = () => {
-    setRefresh((prev) => !prev);
-    setShowResumeEditor(false);
-  };
-
   if (showResumeEditor) {
     return (
       <ResumeEditor

@@ -1,6 +1,6 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Download, FileText } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Download, } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useSelector } from 'react-redux';
@@ -121,7 +121,7 @@ export default function ResumeEditor({
     },
   ]);
 
-  const [projectData, setProjectData] = useState(
+  const [projectData] = useState(
     initialResume?.projects || [
       {
         title: 'AI-Powered Resume Builder',
@@ -184,14 +184,13 @@ export default function ResumeEditor({
     initialResume?.selectedTemplate || 'ResumePreview2',
   );
 
-  const [selectedColor, setSelectedColor] = useState(
+  const [selectedColor] = useState(
     initialResume?.selectedColor || '#000000',
   );
 
   const [currentStep, setCurrentStep] = useState(0);
   const [showAtsScore, setShowAtsScore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
@@ -244,8 +243,6 @@ export default function ResumeEditor({
 
   const handleSubmitResume = async () => {
     setIsSubmitting(true);
-    setSubmitError('');
-
     try {
       const formatDateForBackend = (dateString: string) => {
         if (!dateString) return '';
@@ -307,7 +304,6 @@ export default function ResumeEditor({
         });
       }
     } catch (error) {
-      setSubmitError('Failed to save resume. Please try again.');
       console.error('Error saving resume:', error);
       toast({
         title: 'Error',

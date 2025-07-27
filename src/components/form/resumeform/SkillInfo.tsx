@@ -1,11 +1,10 @@
 import React from 'react';
 import { PlusCircle, X } from 'lucide-react';
 
-import { AddButton } from '@/components/ui/AddButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+
 
 interface Skill {
   skillName: string;
@@ -27,7 +26,6 @@ export const SkillInfo: React.FC<SkillInfoProps> = ({
   onAddSkill,
   onRemoveSkill,
   onSkillChange,
-  projectData = [],
 }) => {
   return (
     <div>

@@ -24,7 +24,6 @@ interface ResumeProps {
 }
 
 const ResumeInfoCard: React.FC<ResumeProps> = ({
-  _id,
   personalInfo,
   professionalSummary,
   selectedTemplate,
