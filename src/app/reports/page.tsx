@@ -10,18 +10,14 @@ import PastReportsTab from '@/components/report-tabs/PastReportsTab';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { ReportInfo } from '@/config/report/defaultReportInfo';
-
-// NEW: Import menu items for both roles and use aliases to avoid name conflicts.
 import {
   menuItemsTop as freelancerMenuItemsTop,
   menuItemsBottom as freelancerMenuItemsBottom,
 } from '@/config/menuItems/freelancer/settingsMenuItems';
-// NEW: Assuming you have a similar file for the business role.
 import {
   menuItemsTop as businessMenuItemsTop,
   menuItemsBottom as businessMenuItemsBottom,
 } from '@/config/menuItems/business/settingsMenuItems';
-
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 
 export default function NewReportPage() {
@@ -33,8 +29,12 @@ export default function NewReportPage() {
   const isBusinessRole = user.type === 'business';
 
   // NEW: Conditionally select the correct menu items and breadcrumbs based on the user's role.
-  const menuItemsTop = isBusinessRole ? businessMenuItemsTop : freelancerMenuItemsTop;
-  const menuItemsBottom = isBusinessRole ? businessMenuItemsBottom : freelancerMenuItemsBottom;
+  const menuItemsTop = isBusinessRole
+    ? businessMenuItemsTop
+    : freelancerMenuItemsTop;
+  const menuItemsBottom = isBusinessRole
+    ? businessMenuItemsBottom
+    : freelancerMenuItemsBottom;
 
   const breadcrumbItems = isBusinessRole
     ? [
