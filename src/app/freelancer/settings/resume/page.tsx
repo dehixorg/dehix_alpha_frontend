@@ -13,24 +13,23 @@ import {
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import ResumeInfoCard from '@/components/cards/resumeInfoCard';
+import { Button } from '@/components/ui/button';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
-  const [resumeData, setResumeData] = useState(null);
+  const [resumeData, setResumeData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedResume, setSelectedResume] = useState<any>(null);
 
   useEffect(() => {
     const fetchResumeData = async () => {
-      console.log(user);
-      // if (!user?.uid || !user?.resume) return;
-      
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/resume/${user.resume}`);
-        
-        setResumeData(response.data);
+        const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
+        setResumeData(res.data.resumes || []);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -44,10 +43,28 @@ export default function Resume() {
     };
 
     fetchResumeData();
-  }, [user.uid, user.resume, refresh]);
+  }, [user.uid, refresh]);
+
+  const handleNewResume = () => {
+    setSelectedResume(null);
+    setShowResumeEditor(true);
+  };
+
+  const handleEditResume = (resume: any) => {
+    setSelectedResume(resume);
+    setShowResumeEditor(true);
+  };
+
+  const handleResumeSaved = () => {
+    setRefresh(prev => !prev);
+    setShowResumeEditor(false);
+  };
 
   if (showResumeEditor) {
-    return <ResumeEditor />;
+    return <ResumeEditor 
+             initialResume={selectedResume}  
+             onCancel={() => setShowResumeEditor(false)} 
+           />;
   }
 
   return (
@@ -69,33 +86,38 @@ export default function Resume() {
             { label: 'Resume Building', link: '#' },
           ]}
         />
-        <div className="flex flex-col h-screen">
-          <h1 className="text-2xl font-bold mb-6 mt-5 ml-8">
-            {resumeData ? 'Your Resume' : 'Start Building Your Resume'}
-          </h1>
-          <div className="ml-10">
+        <div className="flex flex-col">
+          <div className="flex justify-between items-center mx-8 mt-5 mb-6">
+            <h1 className="text-2xl font-bold">
+              {resumeData.length > 0 ? 'Your Resumes' : 'Start Building Your Resume'}
+            </h1>
+            <Button onClick={handleNewResume} className="ml-4">
+              + New Resume
+            </Button>
+          </div>
+          <div className="mx-8">
             {isLoading ? (
-              <div>Loading resume data...</div>
+              <div className="flex justify-center items-center h-64">
+                <p>Loading resume data...</p>
+              </div>
             ) : (
-              <>
-                <button
-                  onClick={() => setShowResumeEditor(true)}
-                  className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-200"
-                >
-                  <span className="text-4xl text-gray-600">+</span>
-                </button>
-                {resumeData && (
-                  <div className="mt-4">
-                    <p className="text-gray-600 mb-2">You have a saved resume.</p>
-                    <button 
-                      onClick={() => setShowResumeEditor(true)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit Resume
-                    </button>
+              <div className="grid flex-1 items-start gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {resumeData.map((resume) => (
+                  <ResumeInfoCard 
+                    key={resume._id} 
+                    {...resume} 
+                    onClick={() => handleEditResume(resume)}
+                  />
+                ))}
+                {resumeData.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12">
+                    <p className="text-gray-500 mb-4">No resumes found</p>
+                    <Button onClick={handleNewResume}>
+                      Create Your First Resume
+                    </Button>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
