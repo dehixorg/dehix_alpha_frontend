@@ -39,6 +39,7 @@ interface FilterState {
   sorting: string[];
   minRate: string;
   maxRate: string;
+  favourites: boolean;
 }
 
 export interface Project {
@@ -87,6 +88,9 @@ export interface Project {
 
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
+  const draftedProjects = useSelector(
+    (state: RootState) => state.projectDraft.draftedProjects,
+  );
   const dispatch = useDispatch();
 
   const [isClient, setIsClient] = useState(false);
@@ -105,6 +109,7 @@ const Market: React.FC = () => {
     sorting: [],
     minRate: '',
     maxRate: '',
+    favourites: false,
   });
 
   const [jobs, setJobs] = useState<Project[]>([]);
@@ -194,6 +199,7 @@ const Market: React.FC = () => {
       sorting: [],
       minRate: '',
       maxRate: '',
+      favourites: false,
     });
   };
 
@@ -209,6 +215,9 @@ const Market: React.FC = () => {
         if (typeof value === 'number' && !isNaN(value)) {
           return `${key}=${value}`;
         }
+        if (typeof value === 'boolean' && value === true) {
+          return `${key}=true`;
+        }
         return '';
       })
       .filter(Boolean)
@@ -219,8 +228,6 @@ const Market: React.FC = () => {
     async (appliedFilters: FilterState) => {
       try {
         setIsLoading(true);
-        const freelancerRes = await axiosInstance.get(`/freelancer`);
-        const freelancerDetails = freelancerRes.data;
 
         const query = constructQueryString(appliedFilters);
         const jobsRes = await axiosInstance.get(
@@ -228,11 +235,22 @@ const Market: React.FC = () => {
         );
 
         const allJobs = jobsRes.data.data || [];
-        const notInterested = freelancerDetails.notInterestedProject || [];
 
-        const filteredJobs = allJobs.filter(
-          (job: Project) => !notInterested.includes(job._id),
+        // Backend already filters out "not interested" projects
+        let filteredJobs = allJobs;
+
+        // Filter out completed projects - freelancers shouldn't see completed projects
+        filteredJobs = filteredJobs.filter(
+          (job: Project) => job.status?.toLowerCase() !== 'completed',
         );
+
+        // Apply favourites filter if enabled
+        if (appliedFilters.favourites) {
+          filteredJobs = filteredJobs.filter((job: Project) =>
+            draftedProjects.includes(job._id),
+          );
+        }
+
         setJobs(filteredJobs);
       } catch (err) {
         console.error('Fetch jobs error:', err);
@@ -245,7 +263,7 @@ const Market: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [user.uid],
+    [user.uid, draftedProjects],
   );
 
   useEffect(() => {
@@ -272,7 +290,15 @@ const Market: React.FC = () => {
   const handleRemoveJob = async (id: string) => {
     try {
       await axiosInstance.put(`/freelancer/${id}/not_interested_project`);
+
+      // Immediately remove from UI
       setJobs((prev) => prev.filter((job) => job._id !== id));
+
+      // Refresh the data to ensure consistency
+      setTimeout(() => {
+        fetchJobs(filters);
+      }, 500);
+
       toast({
         title: 'Success',
         description: 'Project marked as not interested.',
@@ -370,6 +396,33 @@ const Market: React.FC = () => {
                 <SelectItem value="descending">Descending</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Favourites Filter */}
+            <div className="my-4 p-3 border border-border rounded-lg bg-card">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="favourites"
+                    checked={filters.favourites}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        favourites: e.target.checked,
+                      }))
+                    }
+                    className="w-4 h-4 text-red-600 bg-background border-2 border-muted-foreground rounded focus:ring-red-500 dark:focus:ring-red-600 focus:ring-2 checked:bg-red-600 checked:border-red-600"
+                  />
+                </div>
+                <label
+                  htmlFor="favourites"
+                  className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                >
+                  <span>❤️</span>
+                  <span>Show Favourites Only</span>
+                </label>
+              </div>
+            </div>
 
             <div className="my-4">
               <SkillDom
@@ -539,6 +592,36 @@ const Market: React.FC = () => {
                   }
                 />
               </div>
+
+              {/* Mobile Favourites Filter */}
+              <div className="border-b border-gray-300 py-4">
+                <div className="p-3 border border-border rounded-lg bg-card">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        id="mobile-favourites"
+                        checked={filters.favourites}
+                        onChange={(e) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            favourites: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-red-600 bg-background border-2 border-muted-foreground rounded focus:ring-red-500 dark:focus:ring-red-600 focus:ring-2 checked:bg-red-600 checked:border-red-600"
+                      />
+                    </div>
+                    <label
+                      htmlFor="mobile-favourites"
+                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                    >
+                      <span>❤️</span>
+                      <span>Show Favourites Only</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-4">
                 <MobileSkillDom
                   label="ProjectDomain"

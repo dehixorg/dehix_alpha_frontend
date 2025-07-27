@@ -136,6 +136,47 @@ export default function Dashboard() {
       });
   };
 
+  // Handle project start
+  const handleStartProject = (): void => {
+    if (!project_id) {
+      toast({
+        title: 'Error',
+        description: 'Project ID is missing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    axiosInstance
+      .put(`/project/${project_id}`, { status: StatusEnum.ACTIVE })
+      .then((response) => {
+        if (response.status === 200) {
+          setProject((prev) =>
+            prev ? { ...prev, status: StatusEnum.ACTIVE } : prev,
+          );
+          toast({
+            title: 'Success',
+            description: 'Project started successfully!',
+          });
+        } else {
+          console.error('Unexpected response:', response);
+          toast({
+            title: 'Failed',
+            description: 'Failed to start the project.',
+            variant: 'destructive',
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating project status:', error);
+        toast({
+          title: 'Error',
+          description: 'An error occurred while starting the project.',
+          variant: 'destructive',
+        });
+      });
+  };
+
   // Handle profile addition
   const handleAddProfile = () => {
     setIsAddProfileDialogOpen(true);
@@ -208,6 +249,7 @@ export default function Dashboard() {
                       skills={project.skillsRequired}
                       projectId={project._id}
                       handleCompleteProject={handleCompleteProject}
+                      handleStartProject={handleStartProject}
                       userRole="Business"
                     />
                   </div>

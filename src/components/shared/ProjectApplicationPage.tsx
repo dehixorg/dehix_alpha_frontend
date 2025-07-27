@@ -13,6 +13,7 @@ import {
   Check,
   Eye,
   UserCircle,
+  ChevronDown,
 } from 'lucide-react';
 
 import { Textarea } from '../ui/textarea';
@@ -90,7 +91,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [isBidLoading, setIsBidLoading] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [appliesBidData, setAppliesBidData] = useState<any>([]);
+
   // State to control ProjectAnalyticsDrawer visibility
   const [showAnalyticsDrawer, setShowAnalyticsDrawer] = useState(false);
 
@@ -101,6 +102,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [selectedFreelancerProfile, setSelectedFreelancerProfile] =
     useState<FreelancerProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+
+  // Profile dropdown state
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
@@ -120,13 +124,28 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
     window.addEventListener('connectsUpdated', handleConnectsUpdated);
 
-    fetchAppliedData(); // Fetch applied bids on component mount
-    fetchFreelancerProfiles(); // Fetch freelancer profiles
-
     return () => {
       window.removeEventListener('connectsUpdated', handleConnectsUpdated);
     };
   }, [user.uid]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (
+        showProfileDropdown &&
+        !target.closest('.profile-dropdown-container')
+      ) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileDropdown]);
 
   const fetchFreelancerProfiles = useCallback(async () => {
     if (!user.uid) return;
@@ -167,12 +186,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       );
 
       if (appliedProfiles.length > 0) {
-        console.log('Applied profiles:', appliedProfiles);
-
-        setAppliesBidData(appliedProfiles);
         setIsBidSubmitted(true);
       } else {
-        setAppliesBidData([]);
         setIsBidSubmitted(false);
       }
     } catch (error) {
@@ -184,6 +199,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       });
     }
   }, [user.uid, project._id, project.profiles]); // Added project dependencies
+
+  // Effect to fetch data when component mounts
+  useEffect(() => {
+    fetchAppliedData(); // Fetch applied bids on component mount
+    fetchFreelancerProfiles(); // Fetch freelancer profiles
+  }, [fetchAppliedData, fetchFreelancerProfiles]);
 
   const toggleText = () => {
     setShowFullText(!showFullText);
@@ -295,17 +316,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       // Add freelancer profile ID if selected
       if (selectedFreelancerProfile?._id) {
         bidData.freelancer_profile_id = selectedFreelancerProfile._id;
-        console.log('✅ Including freelancer profile in bid:', {
-          profileName: selectedFreelancerProfile.profileName,
-          profileId: selectedFreelancerProfile._id,
-        });
-      } else {
-        console.log('❌ No freelancer profile selected for this bid');
       }
-
-      console.log('📤 Submitting bid with data:', bidData);
-      const bidResponse = await axiosInstance.post(`/bid`, bidData);
-      console.log('📥 Bid submission response:', bidResponse.data);
+      await axiosInstance.post(`/bid`, bidData);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
@@ -517,9 +529,91 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-medium">
-                  Your Application
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-medium">
+                    Your Application
+                  </CardTitle>
+                  <div className="relative profile-dropdown-container">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setShowProfileDropdown(!showProfileDropdown)
+                      }
+                      className="flex items-center gap-2"
+                      disabled={hasAppliedToAnyProfileInProject}
+                    >
+                      {selectedFreelancerProfile
+                        ? selectedFreelancerProfile.profileName
+                        : 'Add Profiles'}
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
+                      />
+                    </Button>
+
+                    {/* Profile Dropdown */}
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                        {isLoadingProfiles ? (
+                          <div className="flex items-center justify-center p-4">
+                            <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                            <span className="text-sm text-muted-foreground">
+                              Loading profiles...
+                            </span>
+                          </div>
+                        ) : freelancerProfiles.length === 0 ? (
+                          <div className="p-4 text-center">
+                            <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">
+                              No profiles created yet
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Create profiles in your settings
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="p-2">
+                            {freelancerProfiles.map((profile) => (
+                              <div
+                                key={profile._id}
+                                className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
+                                  selectedFreelancerProfile?._id === profile._id
+                                    ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                    : 'border-transparent hover:border-muted-foreground hover:bg-muted'
+                                }`}
+                                onClick={() => {
+                                  if (!hasAppliedToAnyProfileInProject) {
+                                    setSelectedFreelancerProfile(
+                                      selectedFreelancerProfile?._id ===
+                                        profile._id
+                                        ? null
+                                        : profile,
+                                    );
+                                    setShowProfileDropdown(false);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-sm text-foreground">
+                                      {profile.profileName}
+                                    </h4>
+                                  </div>
+                                  {selectedFreelancerProfile?._id ===
+                                    profile._id && (
+                                    <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
+                                      <Check className="w-3 h-3 text-white" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="mb-4">
@@ -560,124 +654,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                   </div>
                 </div>
 
-                {/* Profiles Section */}
-                <div className="mb-6">
-                  <p className="block mb-3 font-medium text-base">
-                    Select Profile (Optional)
-                  </p>
-                  {isLoadingProfiles ? (
-                    <div className="flex items-center justify-center p-6 border rounded-lg bg-muted">
-                      <Loader2 className="animate-spin w-5 h-5 mr-3" />
-                      <span className="text-muted-foreground">
-                        Loading your profiles...
-                      </span>
-                    </div>
-                  ) : freelancerProfiles.length === 0 ? (
-                    <div className="p-6 border rounded-lg bg-muted text-center">
-                      <UserCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                      <p className="text-foreground mb-2 font-medium">
-                        No profiles created yet
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Create profiles in your settings to showcase different
-                        skill sets
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-4 max-h-80 overflow-y-auto pr-2">
-                        {freelancerProfiles.map((profile) => (
-                          <Card
-                            key={profile._id}
-                            className={`cursor-pointer transition-all duration-200 border-2 ${
-                              selectedFreelancerProfile?._id === profile._id
-                                ? 'border-green-500 shadow-md'
-                                : 'border-border hover:border-muted-foreground hover:shadow-sm'
-                            }`}
-                            onClick={() => {
-                              if (!hasAppliedToAnyProfileInProject) {
-                                setSelectedFreelancerProfile(
-                                  selectedFreelancerProfile?._id === profile._id
-                                    ? null
-                                    : profile,
-                                );
-                              }
-                            }}
-                          >
-                            <CardContent className="p-5">
-                              <div className="flex items-start justify-between mb-3">
-                                <h4 className="font-semibold text-base text-foreground">
-                                  {profile.profileName}
-                                </h4>
-                                {selectedFreelancerProfile?._id ===
-                                  profile._id && (
-                                  <div className="flex items-center justify-center w-6 h-6 bg-green-500 rounded-full">
-                                    <Check className="w-4 h-4 text-white" />
-                                  </div>
-                                )}
-                              </div>
-
-                              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                                {profile.description.length > 120
-                                  ? `${profile.description.substring(0, 120)}...`
-                                  : profile.description}
-                              </p>
-
-                              {profile.skills.length > 0 && (
-                                <div className="mb-3">
-                                  <div className="flex flex-wrap gap-2">
-                                    {profile.skills.slice(0, 4).map((skill) => (
-                                      <Badge
-                                        key={skill._id}
-                                        variant="secondary"
-                                        className="text-xs px-2 py-1"
-                                      >
-                                        {skill.label}
-                                      </Badge>
-                                    ))}
-                                    {profile.skills.length > 4 && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs px-2 py-1"
-                                      >
-                                        +{profile.skills.length - 4} more
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                <div className="flex items-center gap-3">
-                                  {profile.domains.length > 0 && (
-                                    <span className="font-medium text-foreground">
-                                      {profile.domains
-                                        .slice(0, 2)
-                                        .map((domain) => domain.label)
-                                        .join(', ')}
-                                      {profile.domains.length > 2 &&
-                                        ` +${profile.domains.length - 2}`}
-                                    </span>
-                                  )}
-                                  {profile.hourlyRate && (
-                                    <span className="text-green-600 dark:text-green-400 font-medium">
-                                      ${profile.hourlyRate}/hr
-                                    </span>
-                                  )}
-                                </div>
-                                {profile.availability && (
-                                  <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                                    {profile.availability}
-                                  </span>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
                 <div className="flex gap-4 mt-4">
                   {hasAppliedToAnyProfileInProject ? (
                     <Button
