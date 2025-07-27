@@ -185,7 +185,7 @@ export default function PastReportsTab() {
                                     className={`font-medium ${
                                       report.status === 'OPEN'
                                         ? 'text-yellow-500' // These specific colors can be kept for status indicators
-                                        : 'text-green-600'  // but ensure they have enough contrast in dark mode.
+                                        : 'text-green-600' // but ensure they have enough contrast in dark mode.
                                     }`}
                                   >
                                     {report.status}

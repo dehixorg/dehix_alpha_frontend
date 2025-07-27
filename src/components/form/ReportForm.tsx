@@ -283,10 +283,10 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
               </div>
             )}
 
-              <FormDescription>
-                Attach up to 3 optional screenshots of the issue.
-              </FormDescription>
-            </FormItem>
+            <FormDescription>
+              Attach up to 3 optional screenshots of the issue.
+            </FormDescription>
+          </FormItem>
 
           {/* 🚀 Submit Button */}
           <Button type="submit" className="h-9 px-4" disabled={isSubmitting}>
