@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Download, } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useSelector } from 'react-redux';
@@ -184,9 +184,7 @@ export default function ResumeEditor({
     initialResume?.selectedTemplate || 'ResumePreview2',
   );
 
-  const [selectedColor] = useState(
-    initialResume?.selectedColor || '#000000',
-  );
+  const [selectedColor] = useState(initialResume?.selectedColor || '#000000');
 
   const [currentStep, setCurrentStep] = useState(0);
   const [showAtsScore, setShowAtsScore] = useState(false);
