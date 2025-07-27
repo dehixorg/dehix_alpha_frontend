@@ -28,12 +28,12 @@ import { toast } from '@/components/ui/use-toast';
 
 interface Skill {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface Domain {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface SkillDomainData {
@@ -73,16 +73,11 @@ const SkillDomainForm: React.FC = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const skillsResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/skill`,
-        );
+        const skillsResponse = await axiosInstance.get('/skills');
+        const skillsArray = skillsResponse.data?.data || [];
 
-        const skillsArray = skillsResponse.data?.data?.[0]?.skills || [];
-
-        const domainsResponse = await axiosInstance.get(
-          `/freelancer/${user.uid}/domain`,
-        );
-        const domainsArray = domainsResponse.data?.data?.[0]?.domain || [];
+        const domainsResponse = await axiosInstance.get('/domain');
+        const domainsArray = domainsResponse.data?.data || [];
 
         let talentResponse = { data: { data: {} } };
 
@@ -236,7 +231,7 @@ const SkillDomainForm: React.FC = () => {
     // Remove the skill from available skills list using normalized comparison
     setSkills((prevSkills) =>
       prevSkills.filter((skill) => {
-        const normalizedSkillName = skill.name
+        const normalizedSkillName = skill.label
           .toLowerCase()
           .trim()
           .replace(/\s+/g, ' ');
@@ -283,7 +278,7 @@ const SkillDomainForm: React.FC = () => {
     // Remove the domain from available domains list using normalized comparison
     setDomains((prevDomains) =>
       prevDomains.filter((domain) => {
-        const normalizedDomainName = domain.name
+        const normalizedDomainName = domain.label
           .toLowerCase()
           .trim()
           .replace(/\s+/g, ' ');

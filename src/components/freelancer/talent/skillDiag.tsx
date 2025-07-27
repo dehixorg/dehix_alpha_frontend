@@ -32,7 +32,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Skill {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface SkillDomainData {
@@ -160,7 +160,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedSkill = skills.find(
-                      (skill) => skill.name === selectedLabel,
+                      (skill) => skill.label === selectedLabel,
                     );
                     field.onChange(selectedLabel);
                     setValue('skillId', selectedSkill?._id || '');
@@ -172,8 +172,8 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
                   <SelectContent>
                     {skills.length > 0 ? (
                       skills.map((skill: Skill) => (
-                        <SelectItem key={skill._id} value={skill.name}>
-                          {skill.name}
+                        <SelectItem key={skill._id} value={skill.label}>
+                          {skill.label}
                         </SelectItem>
                       ))
                     ) : (
