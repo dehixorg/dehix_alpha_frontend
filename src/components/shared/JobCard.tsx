@@ -138,7 +138,7 @@ const JobCard: React.FC<JobCardProps> = ({
               <Loader />
             ) : (
               <Heart
-                className={`w-5 h-5 cursor-pointer ${isDrafted ? 'fill-red-600 text-red-600' : 'hover:fill-red-700 hover:text-red-700'}`}
+                className={`w-5 h-5 cursor-pointer ${isDrafted ? 'fill-red-600 text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
                 onClick={
                   loading ? undefined : isDrafted ? handleUnlike : handleLike
                 }

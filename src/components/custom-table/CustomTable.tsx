@@ -33,6 +33,7 @@ export const CustomTable = ({
   fields,
   filterData,
   api,
+  data: externalData,
   uniqueId,
   tableHeaderActions,
   mainTableActions,
@@ -41,7 +42,7 @@ export const CustomTable = ({
   isFilter = true,
   isDownload = false,
 }: Params) => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<FiltersArrayElem[]>(
     [],
@@ -59,6 +60,45 @@ export const CustomTable = ({
     try {
       setLoading(true);
       window.scrollTo(0, 0);
+
+      // If external data is provided, use it instead of fetching from API
+      if (externalData) {
+        let filteredData = [...externalData];
+
+        // Apply search filter if search term exists
+        if (search && searchColumn && searchColumn.length > 0) {
+          filteredData = filteredData.filter((item) =>
+            searchColumn.some((column) =>
+              String(item[column] || '')
+                .toLowerCase()
+                .includes(search.toLowerCase()),
+            ),
+          );
+        }
+
+        // Apply custom filters
+        selectedFilters.forEach((filter) => {
+          filteredData = filteredData.filter((item) => {
+            const fieldValue = filter.arrayName
+              ? item[filter.fieldName]?.[filter.arrayName]
+              : item[filter.fieldName];
+            return String(fieldValue || '')
+              .toLowerCase()
+              .includes(filter.value.toLowerCase());
+          });
+        });
+
+        setData(filteredData);
+        setLoading(false);
+        return;
+      }
+
+      // Only fetch from API if api prop is provided
+      if (!api) {
+        setLoading(false);
+        return;
+      }
+
       const params: Record<string, any> = {
         filters: '',
         page: page,
@@ -82,7 +122,6 @@ export const CustomTable = ({
 
       params['filter[sortBy]'] = sortByValue;
       params['filter[sortOrder]'] = sortOrder;
-      console.log(params);
       const response = await apiHelperService.fetchData(api, params);
       setData(response.data.data);
     } catch (error) {
@@ -99,7 +138,15 @@ export const CustomTable = ({
 
   useEffect(() => {
     fetchData();
-  }, [selectedFilters, search, page, limit, sortByValue, sortOrder]);
+  }, [
+    selectedFilters,
+    search,
+    page,
+    limit,
+    sortByValue,
+    sortOrder,
+    externalData,
+  ]);
 
   useEffect(() => {
     setPage(1);
@@ -141,7 +188,6 @@ export const CustomTable = ({
       });
       content += fieldValues.join(',') + '\n';
     });
-    console.log(content);
 
     const blob = new Blob([content], { type: 'text/csv' });
 
@@ -208,7 +254,10 @@ export const CustomTable = ({
               <TableHeader>
                 <TableRow>
                   {fields.map((field, _) => (
-                    <TableHead key={field.fieldName}>
+                    <TableHead
+                      key={field.fieldName}
+                      className={cn('text-center', field.className)}
+                    >
                       {field.tooltip ? (
                         <ToolTip
                           trigger={field.textValue}
