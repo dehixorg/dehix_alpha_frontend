@@ -33,7 +33,40 @@ export async function fetchBids(interviewId: string) {
   return data;
 }
 
-export async function acceptBid(bidId: string) {
-  const { data } = await axios.post(`${BASE_URL}/interview-bids/${bidId}/accept`);
-  return data; // returns the newly created interview
+// Fetch all PENDING interview bids addressed to the given interviewee
+export interface PendingBid extends PopulatedBid {
+  interviewId: string;
+  description: string;
+  talentId: string;
+  fee: number;
+}
+export async function fetchPendingBids(intervieweeId: string) {
+  // Get all interviews for this interviewee
+  const { data } = await axios.get<any[]>(
+    `${BASE_URL}/interview`,
+    {
+      params: { intervieweeId },
+    },
+  );
+  // data is array of interviews; each may have interviewBids object
+  const pending: PendingBid[] = [];
+  for (const interview of data) {
+    if (interview.InterviewStatus !== 'PENDING' && interview.InterviewStatus !== 'BIDDING') continue;
+    if (!interview.interviewBids) continue;
+    const bidsObj = interview.interviewBids;
+    for (const bidId in bidsObj) {
+      const bid = bidsObj[bidId];
+      if (bid.status === 'PENDING') {
+        pending.push({ ...bid, interviewId: interview._id });
+      }
+    }
+  }
+  return pending;
+}
+
+export async function acceptBid(interviewId: string, bidId: string) {
+  const { data } = await axios.put(
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+  );
+  return data;
 }

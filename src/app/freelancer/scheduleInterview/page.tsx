@@ -11,6 +11,8 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
 import Header from '@/components/header/header';
+import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
+import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
 
 export default function ScheduleInterviewPage() {
   const [activeTab, setActiveTab] = React.useState('upskill');
@@ -141,14 +143,10 @@ export default function ScheduleInterviewPage() {
                   <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Current Interview
+                  Current Interviews
                 </h2>
               </div>
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">
-                  No current talent interviews scheduled.
-                </p>
-              </div>
+              <CurrentInterviews />
             </div>
 
             {/* Bidded Interview Segment */}
@@ -158,14 +156,10 @@ export default function ScheduleInterviewPage() {
                   <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Bidded Interview
+                  Bided Interviews
                 </h2>
               </div>
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">
-                  No bidded talent interviews found.
-                </p>
-              </div>
+              <BidedInterviews />
             </div>
 
             {/* History Segment */}

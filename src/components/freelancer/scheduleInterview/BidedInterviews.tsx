@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
-import { fetchBids, acceptBid, PopulatedBid } from "@/lib/api/interviews";
+import { fetchPendingBids, acceptBid, PendingBid } from "@/lib/api/interviews";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -10,7 +10,7 @@ export default function BidedInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
 
-  const [bids, setBids] = useState<PopulatedBid[]>([]);
+  const [bids, setBids] = useState<PendingBid[]>([]);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export default function BidedInterviews() {
     if (!intervieweeId) return;
     try {
       setLoading(true);
-      const data = await fetchBids(intervieweeId);
+      const data = await fetchPendingBids(intervieweeId);
       setBids(data);
     } catch (e) {
       setError("Failed to load bids");
@@ -29,14 +29,15 @@ export default function BidedInterviews() {
   };
 
   useEffect(() => {
+    console.log("Aditya hiiiiii");
     loadBids();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervieweeId]);
 
-  const handleAccept = async (bidId: string) => {
+  const handleAccept = async (bid: PendingBid) => {
     try {
-      setAcceptingId(bidId);
-      await acceptBid(bidId);
+      setAcceptingId(bid._id);
+      await acceptBid(bid.interviewId, bid._id);
       await loadBids();
     } catch (e) {
       alert("Failed to accept bid");
@@ -75,7 +76,7 @@ export default function BidedInterviews() {
             <Button
               size="sm"
               disabled={!!acceptingId}
-              onClick={() => handleAccept(bid._id)}
+              onClick={() => handleAccept(bid)}
             >
               {acceptingId === bid._id ? <Loader2 className="animate-spin h-4 w-4" /> : "Accept"}
             </Button>
