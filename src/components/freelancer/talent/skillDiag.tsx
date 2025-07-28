@@ -48,8 +48,8 @@ interface SkillDomainData {
 
 interface SkillDialogProps {
   skills: Skill[];
-  onSubmitSkill: (data: SkillDomainData) => boolean;
   setSkills: any;
+  onSuccess: () => void;
 }
 
 const skillSchema = z.object({
@@ -67,7 +67,7 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({ skills, setSkills, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -90,19 +90,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
-
-    // Check for duplicate before making API call
-    const isUnique = onSubmitSkill({
-      ...data,
-      uid: '', // Will be set after API call
-      type: 'SKILL',
-    });
-
-    if (!isUnique) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.skillId,
@@ -113,7 +100,6 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
         status: data.status,
         type: 'SKILL',
       });
-
       if (response.status === 200) {
         reset();
         setOpen(false);
@@ -121,6 +107,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
         });
+        onSuccess(); // Trigger parent to re-fetch
       }
     } catch (error) {
       console.error('Error submitting skill data', error);
