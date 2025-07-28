@@ -192,7 +192,7 @@ const ProfileDialog = React.memo(
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
+            <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {profileData?.profilePic ||
                 profileData?.freelancerId?.profilePic ? (
@@ -223,6 +223,20 @@ const ProfileDialog = React.memo(
                   </p>
                 </div>
               </div>
+
+              {/* View Profile Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Placeholder function - no action for now
+                  console.log('View Profile clicked');
+                }}
+                className="flex items-center gap-2"
+              >
+                <UserCircle className="w-4 h-4" />
+                View Profile
+              </Button>
             </DialogTitle>
           </DialogHeader>
 
@@ -571,6 +585,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
 
+  // Interview dialog state
+  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
+
   // Memoized bid counts
   const bidCounts = useMemo(
     () =>
@@ -878,6 +895,15 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setSelectedBidData(null);
   }, []);
 
+  // Interview dialog handlers
+  const handleOpenInterviewDialog = useCallback(() => {
+    setIsInterviewDialogOpen(true);
+  }, []);
+
+  const handleCloseInterviewDialog = useCallback(() => {
+    setIsInterviewDialogOpen(false);
+  }, []);
+
   // Update bid status
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
@@ -1099,6 +1125,25 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           },
         },
         {
+          textValue: 'Interview',
+          type: FieldType.CUSTOM,
+          CustomComponent: () => {
+            return (
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenInterviewDialog}
+                  className="flex items-center gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  Interview
+                </Button>
+              </div>
+            );
+          },
+        },
+        {
           textValue: 'Actions',
           type: FieldType.ACTION,
           actions: { options: getActionOptions(status) },
@@ -1213,6 +1258,26 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         isFreelancerProfile={!!selectedFreelancerId}
         bidData={selectedBidData}
       />
+
+      {/* Interview Dialog */}
+      <Dialog
+        open={isInterviewDialogOpen}
+        onOpenChange={setIsInterviewDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-semibold">
+              Work in Progress
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="text-6xl mb-4">🚧</div>
+            <p className="text-gray-600 dark:text-gray-400 text-center">
+              Interview functionality is currently under development.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
