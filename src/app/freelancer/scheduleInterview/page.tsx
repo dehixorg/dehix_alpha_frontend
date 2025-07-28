@@ -1,57 +1,291 @@
-"use client";
-import * as React from "react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import SidebarMenu from "@/components/menu/sidebarMenu";
-import Header from "@/components/header/header";
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from "@/config/menuItems/freelancer/scheduleInterviewMenuItems";
-import CurrentInterviews from "@/components/freelancer/scheduleInterview/CurrentInterviews";
-import BidedInterviews from "@/components/freelancer/scheduleInterview/BidedInterviews";
+'use client';
+import * as React from 'react';
+import { 
+  GraduationCap, 
+  Briefcase, 
+  Users, 
+  UserCheck
+} from 'lucide-react';
+
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
+import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
+import Header from '@/components/header/header';
 
 export default function ScheduleInterviewPage() {
+  const [activeTab, setActiveTab] = React.useState('upskill');
+
+  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(setActiveTab, activeTab);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'upskill':
+        return (
+          <div className="space-y-6">
+            {/* Current Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Current Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No current upskill interviews scheduled.
+                </p>
+              </div>
+            </div>
+
+            {/* Bidded Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Bidded Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No bidded upskill interviews found.
+                </p>
+              </div>
+            </div>
+
+            {/* History Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  History
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No upskill interview history available.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'project':
+        return (
+          <div className="space-y-6">
+            {/* Current Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Current Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No current project interviews scheduled.
+                </p>
+              </div>
+            </div>
+
+            {/* Bidded Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Bidded Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No bidded project interviews found.
+                </p>
+              </div>
+            </div>
+
+            {/* History Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  History
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No project interview history available.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'talent':
+        return (
+          <div className="space-y-6">
+            {/* Current Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Current Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No current talent interviews scheduled.
+                </p>
+              </div>
+            </div>
+
+            {/* Bidded Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Bidded Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No bidded talent interviews found.
+                </p>
+              </div>
+            </div>
+
+            {/* History Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  History
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No talent interview history available.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'dehix':
+        return (
+          <div className="space-y-6">
+            {/* Current Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Current Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No current Dehix interviews scheduled.
+                </p>
+              </div>
+            </div>
+
+            {/* Bidded Interview Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Bidded Interview
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No bidded Dehix interviews found.
+                </p>
+              </div>
+            </div>
+
+            {/* History Segment */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  History
+                </h2>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No Dehix interview history available.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return <ScheduleInterviewDialog />;
+    }
+  };
+
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="ScheduleInterviews"
+        active={activeTab === 'main' ? 'Schedule Interview' : activeTab === 'upskill' ? 'Upskill Interview' : activeTab === 'project' ? 'Project Interview' : activeTab === 'talent' ? 'Dehix Talent Interview' : activeTab === 'dehix' ? 'Dehix Interview' : 'Schedule Interview'}
       />
-      <div className="flex flex-col w-full mb-8 sm:py-0 sm:gap-2 sm:pl-14">
+      <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="ScheduleInterviews"
           breadcrumbItems={[
-            { label: "Freelancer", link: "/dashboard/freelancer" },
-            { label: "Schedule Interview", link: "#" },
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Schedule Interview', link: '#' },
           ]}
         />
-
-        <Tabs defaultValue="bided" className="w-full mt-6">
-          <TabsList className="grid mx-auto max-w-sm grid-cols-3 mb-4">
-            <TabsTrigger value="current">Current</TabsTrigger>
-            <TabsTrigger value="bided">Bided</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="current">
-            <CurrentInterviews />
-          </TabsContent>
-          <TabsContent value="bided">
-            <BidedInterviews />
-          </TabsContent>
-          <TabsContent value="history">
-            <p className="text-muted-foreground">Coming soon…</p>
-          </TabsContent>
-        </Tabs>
+        <div className="p-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {activeTab === 'upskill' && 'Upskill Interview'}
+              {activeTab === 'project' && 'Project Interview'}
+              {activeTab === 'talent' && 'Dehix Talent Interview'}
+              {activeTab === 'dehix' && 'Dehix Interview'}
+              {activeTab === 'main' && 'Schedule Interview'}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              {activeTab === 'upskill' && 'Enhance your skills through specialized interviews'}
+              {activeTab === 'project' && 'Project-based interviews for specific opportunities'}
+              {activeTab === 'talent' && 'Talent assessment interviews'}
+              {activeTab === 'dehix' && 'Platform verification interviews'}
+              {activeTab === 'main' && 'Manage your interview scheduling and preparation'}
+            </p>
+          </div>
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
 }
+

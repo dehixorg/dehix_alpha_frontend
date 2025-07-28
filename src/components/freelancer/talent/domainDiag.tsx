@@ -32,7 +32,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Domain {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface SkillDomainData {
@@ -162,7 +162,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedDomain = domains.find(
-                      (domain) => domain.name === selectedLabel,
+                      (domain) => domain.label === selectedLabel,
                     );
                     field.onChange(selectedLabel);
                     setValue('domainId', selectedDomain?._id || '');
@@ -174,8 +174,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   <SelectContent>
                     {domains.length > 0 ? (
                       domains.map((domain) => (
-                        <SelectItem key={domain._id} value={domain.name}>
-                          {domain.name}
+                        <SelectItem key={domain._id} value={domain.label}>
+                          {domain.label}
                         </SelectItem>
                       ))
                     ) : (
