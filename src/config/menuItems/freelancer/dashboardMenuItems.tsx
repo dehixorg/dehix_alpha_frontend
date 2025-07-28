@@ -57,8 +57,8 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Interviews',
   },
   {
-    href: '#',
-    icon: <CalendarClock className="h-5 w-5 cursor-not-allowed" />,
+    href: '/freelancer/scheduleInterview',
+    icon: <CalendarClock className="h-5 w-5" />,
     label: 'Schedule Interviews',
   },
   {
