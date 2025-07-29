@@ -364,27 +364,18 @@ export default function ResumeEditor({
           {/* Form Section */}
           <div className="p-6 relative">
             <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {initialResume?._id ? 'Edit Resume' : 'Create New Resume'}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  {initialResume?._id
-                    ? 'Update your resume details'
-                    : 'Fill in your resume details'}
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={onCancel} variant="outline">
-                  ← Back to Resumes
-                </Button>
-
-                <Button onClick={() => setShowAtsScore(!showAtsScore)}>
-                  {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
-                </Button>
-              </div>
+            <div>
+              <Button onClick={onCancel} >
+                ← Back to Resumes
+              </Button>
             </div>
+
+            <div className="flex gap-2">
+              <Button onClick={() => setShowAtsScore(!showAtsScore)} >
+                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+              </Button>
+            </div>
+          </div>
 
             {showAtsScore ? (
               <AtsScore
@@ -403,15 +394,17 @@ export default function ResumeEditor({
               <>
                 <div className="flex justify-between mb-4">
                   <Button
+                    variant="outline" className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) => Math.max(prev - 1, 0))
                     }
                     disabled={currentStep === 0}
                   >
-                    <ChevronLeft className="mr-2" /> Back
+                    <ChevronLeft className="mr-2" /> 
                   </Button>
 
                   <Button
+                    variant="outline" className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) =>
                         Math.min(prev + 1, steps.length - 1),
@@ -419,14 +412,16 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === steps.length - 1}
                   >
-                    Next <ChevronRight className="ml-2" />
+                     <ChevronRight className="ml-2" />
                   </Button>
                 </div>
 
                 {steps[currentStep]}
 
                 <div className="mt-6 flex justify-end">
+                  
                   <Button
+                    
                     onClick={handleSubmitResume}
                     disabled={isSubmitting}
                     className="bg-green-600 hover:bg-green-700"
