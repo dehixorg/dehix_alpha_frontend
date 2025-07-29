@@ -13,6 +13,8 @@ export default function BidedInterviews() {
   const [bids, setBids] = useState<PendingBid[]>([]);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+
+  const getRowKey = (bid: PendingBid) => `${bid.interviewId}-${bid.bidKey}`;
   const [error, setError] = useState<string | null>(null);
 
   const loadBids = async () => {
@@ -36,8 +38,8 @@ export default function BidedInterviews() {
 
   const handleAccept = async (bid: PendingBid) => {
     try {
-      setAcceptingId(bid._id);
-      await acceptBid(bid.interviewId, bid._id);
+      setAcceptingId(getRowKey(bid));
+      await acceptBid(bid.interviewId, bid.bidKey);
       await loadBids();
     } catch (e) {
       alert("Failed to accept bid");
@@ -64,7 +66,7 @@ export default function BidedInterviews() {
     <div className="space-y-4">
       {bids.map((bid) => (
         <div
-          key={bid._id}
+          key={getRowKey(bid)}
           className="border rounded-md p-4 flex items-center justify-between"
         >
           <div>
@@ -78,7 +80,7 @@ export default function BidedInterviews() {
               disabled={!!acceptingId}
               onClick={() => handleAccept(bid)}
             >
-              {acceptingId === bid._id ? <Loader2 className="animate-spin h-4 w-4" /> : "Accept"}
+              {acceptingId === getRowKey(bid) ? <Loader2 className="animate-spin h-4 w-4" /> : "Accept"}
             </Button>
           </div>
         </div>

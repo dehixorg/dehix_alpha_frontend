@@ -1,7 +1,8 @@
-import axios from 'axios';
+/* eslint-disable prettier/prettier */
+import { axiosInstance as axios } from '../axiosinstance';
 
 // Adjust BASE_URL via env variable if you have a proxy setup
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const BASE_URL = (process.env.NEXT_PUBLIC__BASE_URL || '').replace(/\/$/, '');
 
 export interface InterviewBid {
   _id: string;
@@ -35,6 +36,7 @@ export async function fetchBids(interviewId: string) {
 
 // Fetch all PENDING interview bids addressed to the given interviewee
 export interface PendingBid extends PopulatedBid {
+  bidKey: string;
   interviewId: string;
   description: string;
   talentId: string;
@@ -42,22 +44,28 @@ export interface PendingBid extends PopulatedBid {
 }
 export async function fetchPendingBids(intervieweeId: string) {
   // Get all interviews for this interviewee
-  const { data } = await axios.get<any[]>(
+  const { data: resp } = await axios.get<any>(
     `${BASE_URL}/interview`,
     {
       params: { intervieweeId },
     },
   );
+  const interviews = Array.isArray(resp) ? resp : resp.data;
   // data is array of interviews; each may have interviewBids object
   const pending: PendingBid[] = [];
-  for (const interview of data) {
-    if (interview.InterviewStatus !== 'PENDING' && interview.InterviewStatus !== 'BIDDING') continue;
-    if (!interview.interviewBids) continue;
+  for (const interview of interviews) {
+    if (!interview.interviewBids || Object.keys(interview.interviewBids).length === 0) {
+      continue;
+    }
     const bidsObj = interview.interviewBids;
-    for (const bidId in bidsObj) {
-      const bid = bidsObj[bidId];
-      if (bid.status === 'PENDING') {
-        pending.push({ ...bid, interviewId: interview._id });
+    if (Array.isArray(bidsObj)) {
+      for (const bid of bidsObj) {
+        pending.push({ ...bid, interviewId: interview._id, bidKey: bid._id });
+      }
+    } else {
+      for (const bidId in bidsObj) {
+        const bid = bidsObj[bidId];
+        pending.push({ ...bid, interviewId: interview._id, bidKey: bidId });
       }
     }
   }
@@ -65,7 +73,7 @@ export async function fetchPendingBids(intervieweeId: string) {
 }
 
 export async function acceptBid(interviewId: string, bidId: string) {
-  const { data } = await axios.put(
+  const { data } = await axios.post(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
   );
   return data;
