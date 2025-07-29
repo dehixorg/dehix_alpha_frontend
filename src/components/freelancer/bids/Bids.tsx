@@ -65,44 +65,93 @@ const BidsPage = ({ userId }: { userId?: string }) => {
     const fetchBids = async () => {
       try {
         setLoading(true);
-        // Fetch both freelancer profile (to know their skills) and interview requests in parallel
+        // Fetch interviews where the current user is the interviewee
         const [{ data: interviewRes }, { data: freelancerRes }] = await Promise.all([
-          axiosInstance.get('/interview'),
+          axiosInstance.get(`/interview?intervieweeId=${userId}`),
           axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
         ]);
         console.log('interviewRes', interviewRes);
         console.log('freelancerRes', freelancerRes);
 
         const allInterviews: any[] = Array.isArray(interviewRes) ? interviewRes : (interviewRes?.data ?? []);
-        console.log('interviews fetched  mmmmmmm', allInterviews.length);
+        console.log('interviews fetched for user as interviewee:', allInterviews.length);
+        console.log('Sample interview structure:', allInterviews[0]);
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
         console.log('dehixTalentObj', dehixTalentObj);
+        console.log('dehixTalentObj keys:', Object.keys(dehixTalentObj));
+        console.log('dehixTalentObj values:', Object.values(dehixTalentObj));
         const verifierSkills: string[] = Object.values(dehixTalentObj).map((t: any) => t.talentId);
-        console.log('interviews fetched', allInterviews.length, 'skills', verifierSkills);
-        // Show only requests whose talentId (string) is in verifierSkills
-        const eligibleInterviews = allInterviews.filter(
-          (iv: any) => iv?.talentId && verifierSkills.includes(iv.talentId),
-        );
+        console.log('User skills:', verifierSkills);
+        
+        // Check if user has any talents
+        if (verifierSkills.length === 0) {
+          console.log('User has no talents, showing all interviews');
+        }
+        // TEMP FIX: Show all interviews for the user as interviewee, regardless of talentId or status
+        const eligibleInterviews = allInterviews;
+        console.log('Eligible interviews (no filter):', eligibleInterviews.length);
 
         // Fetch interviewee profiles to get their names/headlines
         const intervieweeIds = Array.from(
           new Set(eligibleInterviews.map((iv: any) => iv.intervieweeId).filter(Boolean)),
         );
+        console.log('Interviewee IDs to fetch:', intervieweeIds);
+        
+        // If all interviews are for the current user, we can use the current user's profile
+        const isAllCurrentUser = intervieweeIds.length === 1 && intervieweeIds[0] === userId;
+        
         let intervieweeMap: Record<string, any> = {};
-        if (intervieweeIds.length) {
-          const profilePromises = intervieweeIds.map((id) => axiosInstance.get(`/freelancer/${id}`).catch(() => null));
+        if (isAllCurrentUser && userId) {
+          // If all interviews are for the current user, use the current user's profile
+          intervieweeMap[userId] = freelancerRes?.data;
+          console.log('Using current user profile for all interviews:', freelancerRes?.data);
+        } else if (intervieweeIds.length) {
+          const profilePromises = intervieweeIds.map((id) => axiosInstance.get(`/freelancer/${id}`).catch((err) => {
+            console.error(`Failed to fetch profile for ${id}:`, err);
+            return null;
+          }));
           const profileResults = await Promise.all(profilePromises);
           profileResults.forEach((res, idx) => {
             if (res?.data) {
               intervieweeMap[intervieweeIds[idx]] = res.data;
+              console.log(`Profile for ${intervieweeIds[idx]}:`, res.data);
+            } else {
+              console.log(`No profile data for ${intervieweeIds[idx]}`);
             }
           });
         }
+        console.log('Final intervieweeMap:', intervieweeMap);
 
-        const enriched = eligibleInterviews.map((iv: any) => ({
-          ...iv,
-          intervieweeName: intervieweeMap[iv.intervieweeId]?.userName || intervieweeMap[iv.intervieweeId]?.profileHeadline || 'Unknown',
-        }));
+        const enriched = eligibleInterviews.map((iv: any) => {
+          const intervieweeProfile = intervieweeMap[iv.intervieweeId];
+          console.log(`Looking up intervieweeId: ${iv.intervieweeId}, found:`, intervieweeProfile);
+          
+          let intervieweeName = 'Unknown';
+          if (intervieweeProfile) {
+            // Check if the profile is wrapped in a data property
+            const profile = intervieweeProfile.data || intervieweeProfile;
+            
+            if (profile.firstName || profile.lastName) {
+              intervieweeName = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+            } else if (profile.userName) {
+              intervieweeName = profile.userName;
+            } else if (profile.profileHeadline) {
+              intervieweeName = profile.profileHeadline;
+            } else if (profile.name) {
+              intervieweeName = profile.name;
+            }
+            console.log(`Resolved name for ${iv.intervieweeId}: ${intervieweeName}`);
+          } else {
+            console.log(`No profile found for ${iv.intervieweeId}`);
+            // Fallback to showing the ID if no profile is found
+            intervieweeName = `User ${iv.intervieweeId.substring(0, 8)}...`;
+          }
+          
+          return {
+            ...iv,
+            intervieweeName,
+          };
+        });
 
         // Fetch skill names for each talentId
         const talentIds = Array.from(new Set(enriched.map((iv: any) => iv.talentId).filter(Boolean)));
@@ -283,11 +332,6 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                   interview={interview}
                   setConfirmAction={setConfirmAction}
                 />  
-                {interview?.description && (
-                    <p className="text-sm text-muted-foreground mb-2 whitespace-pre-line">
-                      {interview.description}
-                    </p>
-                  )}
               </AccordionContent>
             </AccordionItem>
           ))}
