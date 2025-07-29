@@ -314,31 +314,47 @@ export default function ResumeEditor({
   };
 
   const downloadPDF = async () => {
-    if (!resumeRef.current) return;
-    setIsGeneratingPDF(true);
+  if (!resumeRef.current) return;
+  setIsGeneratingPDF(true);
 
-    try {
-      const canvas = await html2canvas(
-        resumeRef.current.querySelector('.resumeContent') as HTMLElement,
-        {
-          scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
-          backgroundColor: '#FFFFFF',
-        },
-      );
+  try {
+    const element = resumeRef.current.querySelector('.resumeContent') as HTMLElement;
+    const canvas = await html2canvas(element, {
+      scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
+      backgroundColor: '#FFFFFF',
+      logging: true, // Enable to see console logs for debugging
+      useCORS: true,
+      allowTaint: true,
+    });
 
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdf = new jsPDF('portrait', 'mm', 'a4');
+    const imgData = canvas.toDataURL('image/png');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    } finally {
-      setIsGeneratingPDF(false);
+    // Add first page
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    // Check if content exceeds page height
+    const heightLeft = pdfHeight;
+    let position = 0;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    if (heightLeft >= pageHeight) {
+      while (position < heightLeft) {
+        position += pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, -(position), pdfWidth, pdfHeight);
+      }
     }
-  };
+
+    pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+  } finally {
+    setIsGeneratingPDF(false);
+  }
+};
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -364,18 +380,16 @@ export default function ResumeEditor({
           {/* Form Section */}
           <div className="p-6 relative">
             <div className="flex justify-between items-center mb-6">
-            <div>
-              <Button onClick={onCancel} >
-                ← Back to Resumes
-              </Button>
-            </div>
+              <div>
+                <Button onClick={onCancel}>← Back to Resumes</Button>
+              </div>
 
-            <div className="flex gap-2">
-              <Button onClick={() => setShowAtsScore(!showAtsScore)} >
-                {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowAtsScore(!showAtsScore)}>
+                  {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+                </Button>
+              </div>
             </div>
-          </div>
 
             {showAtsScore ? (
               <AtsScore
@@ -394,17 +408,19 @@ export default function ResumeEditor({
               <>
                 <div className="flex justify-between mb-4">
                   <Button
-                    variant="outline" className="mt-2"
+                    variant="outline"
+                    className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) => Math.max(prev - 1, 0))
                     }
                     disabled={currentStep === 0}
                   >
-                    <ChevronLeft className="mr-2" /> 
+                    <ChevronLeft className="mr-2" />
                   </Button>
 
                   <Button
-                    variant="outline" className="mt-2"
+                    variant="outline"
+                    className="mt-2"
                     onClick={() =>
                       setCurrentStep((prev) =>
                         Math.min(prev + 1, steps.length - 1),
@@ -412,16 +428,14 @@ export default function ResumeEditor({
                     }
                     disabled={currentStep === steps.length - 1}
                   >
-                     <ChevronRight className="ml-2" />
+                    <ChevronRight className="ml-2" />
                   </Button>
                 </div>
 
                 {steps[currentStep]}
 
                 <div className="mt-6 flex justify-end">
-                  
                   <Button
-                    
                     onClick={handleSubmitResume}
                     disabled={isSubmitting}
                     className="bg-green-600 hover:bg-green-700"
