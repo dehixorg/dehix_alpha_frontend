@@ -314,47 +314,49 @@ export default function ResumeEditor({
   };
 
   const downloadPDF = async () => {
-  if (!resumeRef.current) return;
-  setIsGeneratingPDF(true);
+    if (!resumeRef.current) return;
+    setIsGeneratingPDF(true);
 
-  try {
-    const element = resumeRef.current.querySelector('.resumeContent') as HTMLElement;
-    const canvas = await html2canvas(element, {
-      scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
-      backgroundColor: '#FFFFFF',
-      logging: true, // Enable to see console logs for debugging
-      useCORS: true,
-      allowTaint: true,
-    });
+    try {
+      const element = resumeRef.current.querySelector(
+        '.resumeContent',
+      ) as HTMLElement;
+      const canvas = await html2canvas(element, {
+        scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
+        backgroundColor: '#FFFFFF',
+        logging: true, // Enable to see console logs for debugging
+        useCORS: true,
+        allowTaint: true,
+      });
 
-    const pdf = new jsPDF('portrait', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/png');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    // Add first page
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    // Check if content exceeds page height
-    const heightLeft = pdfHeight;
-    let position = 0;
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    
-    if (heightLeft >= pageHeight) {
-      while (position < heightLeft) {
-        position += pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, -(position), pdfWidth, pdfHeight);
+      // Check if content exceeds page height
+      const heightLeft = pdfHeight;
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      if (heightLeft >= pageHeight) {
+        while (position < heightLeft) {
+          position += pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -position, pdfWidth, pdfHeight);
+        }
       }
-    }
 
-    pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-  } finally {
-    setIsGeneratingPDF(false);
-  }
-};
+      pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
