@@ -12,7 +12,15 @@ const allowedResumeFormats = [
 ];
 const maxResumeSize = 5 * 1024 * 1024; // 5MB
 
-const ResumeUpload: React.FC = () => {
+interface ResumeUploadProps {
+  onResumeUpdate?: () => void;
+  userId?: string; // Add userId to ensure we fetch the correct user's data
+}
+
+const ResumeUpload: React.FC<ResumeUploadProps> = ({
+  onResumeUpdate,
+  userId,
+}) => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);

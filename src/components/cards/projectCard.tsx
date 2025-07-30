@@ -15,6 +15,22 @@ import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
 import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { RootState } from '@/lib/store';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface ProjectType {
   _id: string;
@@ -58,7 +74,29 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
   return (
-    <Card className={cn('flex flex-col h-[400px]', cardClassName)} {...props}>
+    <Card
+      className={cn('flex flex-col h-[400px] relative', cardClassName)}
+      {...props}
+    >
+      {/* 3-dot menu */}
+      <div className="absolute top-3 right-3 z-20">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none">
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem
+              onClick={() => setOpenReport(true)} 
+              className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Report
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <CardHeader>
         <CardTitle className="flex">
           {project.projectName}&nbsp;

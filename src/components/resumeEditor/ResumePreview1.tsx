@@ -51,7 +51,13 @@ export const ResumePreview1: React.FC<ResumePreviewProps> = ({
       <div
         ref={containerRef}
         className="bg-white w-[900px] p-10 shadow-lg flex flex-col rounded-md border border-gray-300"
-        style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' }}
+        style={{
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+          width: '210mm',
+          minHeight: '297mm',
+          padding: '15mm',
+          boxSizing: 'border-box',
+        }}
       >
         <div className="w-full text-center">
           {personalData.map((person, index) => (

@@ -108,7 +108,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
       const uploadedUrls = {
         frontImageUrl: data.frontImageUrl,
         backImageUrl: data.backImageUrl,
-        liveCaptureUrl: data.liveCaptureUrl,
+        liveCapture: data.liveCaptureUrl,
       };
 
       if (data.frontImageUrl instanceof File) {
@@ -141,22 +141,18 @@ export default function KYCForm({ user_id }: { user_id: string }) {
           liveFormData,
           { headers: { 'Content-Type': 'multipart/form-data' } },
         );
-        uploadedUrls.liveCaptureUrl = response.data.data.Location;
+        uploadedUrls.liveCapture = response.data.data.Location;
       }
 
-      const { aadharOrGovtId } = data;
-
       const kyc = {
-        aadharOrGovtId,
+        aadharOrGovtId: data.aadharOrGovtId,
         frontImageUrl: uploadedUrls.frontImageUrl,
         backImageUrl: uploadedUrls.backImageUrl,
-        liveCaptureUrl: uploadedUrls.liveCaptureUrl,
+        liveCapture: uploadedUrls.liveCapture,
         status: 'APPLIED',
       };
 
-      await axiosInstance.put(`/freelancer/kyc`, {
-        kyc,
-      });
+      await axiosInstance.put(`/freelancer/kyc`, kyc);
 
       setUser({
         ...user,
@@ -165,7 +161,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
           aadharOrGovtId: data.aadharOrGovtId,
           frontImageUrl: uploadedUrls.frontImageUrl,
           backImageUrl: uploadedUrls.backImageUrl,
-          liveCaptureUrl: uploadedUrls.liveCaptureUrl,
+          liveCaptureUrl: uploadedUrls.liveCapture,
         },
       });
 

@@ -1,180 +1,197 @@
+'use client';
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { useSelector } from 'react-redux';
 
 import { Button } from '../ui/button';
-import { GeneralInfo } from '../form/resumeform/GeneralInfo';
 import { PersonalInfo } from '../form/resumeform/PersonalInfo';
 import { EducationInfo } from '../form/resumeform/EducationInfo';
 import { SkillInfo } from '../form/resumeform/SkillInfo';
 import { WorkExperienceInfo } from '../form/resumeform/WorkExperienceInfo';
 import { SummaryInfo } from '../form/resumeform/SummaryInfo';
 import { AchievementInfo } from '../form/resumeform/Achievement.';
+import { toast } from '../ui/use-toast';
 
 import { ResumePreview1 } from './ResumePreview1';
 import { ResumePreview2 } from './ResumePreview2';
 import { AtsScore } from './atsScore';
 
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/settingsMenuItems';
+import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import { axiosInstance } from '@/lib/axiosinstance';
 
-export default function ResumeEditor() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
-  const [showAtsScore, setShowAtsScore] = useState(false);
-  const [educationData, setEducationData] = useState([
-    {
-      degree: 'Bachelor of Science in Computer Science',
-      school: 'ABC University',
-      startDate: '2023-12-31',
-      endDate: '2023-12-31', //grade
-    },
-    {
-      degree: 'Master of Science in Software Engineering',
-      school: 'XYZ University',
-      startDate: '2023-12-31',
-      endDate: '2023-12-31',
-    },
-  ]);
-  const [workExperienceData, setWorkExperienceData] = useState([
-    {
-      jobTitle: 'Software Developer',
-      company: 'TechCorp Solutions',
-      startDate: '2023-12-31',
-      endDate: '2023-12-31',
-      description:
-        'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
-    },
-    {
-      jobTitle: 'Senior Developer',
-      company: 'Innovatech',
-      startDate: '2023-12-31',
-      endDate: '2023-12-31',
-      description:
-        'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
-    },
-  ]);
+interface ResumeData {
+  _id?: string;
+  personalInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    city: string;
+    country: string;
+    linkedin: string;
+    github: string;
+  };
+  workExperience?: Array<{
+    jobTitle: string;
+    company: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }>;
+  education?: Array<{
+    degree: string;
+    school: string;
+    startDate: string;
+    endDate: string;
+  }>;
+  skills?: string[];
+  achievements?: Array<{
+    achievementDescription: string;
+  }>;
+  projects?: Array<{
+    title: string;
+    description: string;
+  }>;
+  professionalSummary?: string;
+  selectedTemplate?: string;
+  selectedColor?: string;
+}
+interface ResumeEditorProps {
+  initialResume?: ResumeData;
+  onCancel: () => void; // Only keep the close handler
+}
+
+export default function ResumeEditor({
+  initialResume,
+  onCancel,
+}: ResumeEditorProps) {
+  // State initialization with default values or from initialResume
+  const [educationData, setEducationData] = useState(
+    initialResume?.education || [
+      {
+        degree: 'Bachelor of Science in Computer Science',
+        school: 'ABC University',
+        startDate: '2023-12-31',
+        endDate: '2023-12-31',
+      },
+      {
+        degree: 'Master of Science in Software Engineering',
+        school: 'XYZ University',
+        startDate: '2023-12-31',
+        endDate: '2023-12-31',
+      },
+    ],
+  );
+
+  const [workExperienceData, setWorkExperienceData] = useState(
+    initialResume?.workExperience || [
+      {
+        jobTitle: 'Software Developer',
+        company: 'TechCorp Solutions',
+        startDate: '2023-12-31',
+        endDate: '2023-12-31',
+        description:
+          'Engineered scalable web solutions, optimized system efficiency, and enhanced software reliability.',
+      },
+      {
+        jobTitle: 'Senior Developer',
+        company: 'Innovatech',
+        startDate: '2023-12-31',
+        endDate: '2023-12-31',
+        description:
+          'Spearheaded the development of cloud-based enterprise platforms, driving innovation and operational excellence.',
+      },
+    ],
+  );
+
   const [personalData, setPersonalData] = useState([
     {
-      firstName: 'John',
-      lastName: 'Doe',
-      city: 'New York',
-      country: 'USA',
-      phoneNumber: '123-456-7890',
-      email: '123.doe@example.com',
-      github: 'github.com/john',
-      linkedin: 'linkedin.com/in/john',
+      firstName: initialResume?.personalInfo?.firstName || 'John',
+      lastName: initialResume?.personalInfo?.lastName || 'Doe',
+      city: initialResume?.personalInfo?.city || 'New York',
+      country: initialResume?.personalInfo?.country || 'USA',
+      phoneNumber: initialResume?.personalInfo?.phone || '123-456-7890',
+      email: initialResume?.personalInfo?.email || '123.doe@example.com',
+      github: initialResume?.personalInfo?.github || 'github.com/john',
+      linkedin: initialResume?.personalInfo?.linkedin || 'linkedin.com/in/john',
     },
   ]);
-  const [projectData, setProjectData] = useState([
-    {
-      title: 'AI-Powered Resume Builder',
-      description:
-        'Developed a full-stack platform integrating OpenAI’s GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.',
-    },
-    {
-      title: 'E-Commerce Platform with Real-Time Analytics',
-      description:
-        'Built a scalable e-commerce platform using Next.js and PostgreSQL. Implemented real-time analytics dashboards with Socket.IO and Chart.js to track user behavior and sales trends. Deployed the application on AWS.',
-    },
-    {
-      title: 'IoT-Based Smart Home Automation System',
-      description:
-        'Designed and implemented an IoT solution for smart home automation using Raspberry Pi, Python, and MQTT protocol. Developed a mobile app with Flutter for remote control and monitoring of home devices.',
-    },
-  ]);
-  const [skillData, setSkillData] = useState([
-    {
-      skillName:
-        'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines',
-    },
-    {
-      skillName:
-        'Strategic Communication & Cross-Functional Team Collaboration',
-    },
-    { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
-    { skillName: 'Full-Stack Web Development' },
-    { skillName: 'Agile Software Development & DevOps Integration' },
-  ]);
-  const [achievementData, setAchievementData] = useState([
-    {
-      achievementName:
-        'Published Research on AI-Powered Automation in a Peer-Reviewed Journal',
-    },
-    {
-      achievementName:
-        'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
-    },
-  ]);
-  const [summaryData, setSummaryData] = useState([
-    'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
-  ]);
-  const [selectedColor, setSelectedColor] = useState('#000000');
 
-  const resumeData = `
-  ${personalData[0]?.firstName || ''} ${personalData[0]?.lastName || ''}
-  ${summaryData.join(' ')}
+  const [projectData] = useState(
+    initialResume?.projects || [
+      {
+        title: 'AI-Powered Resume Builder',
+        description:
+          "Developed a full-stack platform integrating OpenAI's GPT-4 to dynamically generate personalized resume content. Implemented secure authentication and cloud data management using Firebase.",
+      },
+      {
+        title: 'E-Commerce Platform with Real-Time Analytics',
+        description:
+          'Built a scalable e-commerce platform using Next.js and PostgreSQL. Implemented real-time analytics dashboards with Socket.IO and Chart.js to track user behavior and sales trends. Deployed the application on AWS.',
+      },
+      {
+        title: 'IoT-Based Smart Home Automation System',
+        description:
+          'Designed and implemented an IoT solution for smart home automation using Raspberry Pi, Python, and MQTT protocol. Developed a mobile app with Flutter for remote control and monitoring of home devices.',
+      },
+    ],
+  );
 
-  Work Experience:
-  ${workExperienceData.map((exp) => `${exp.jobTitle} at ${exp.company}. ${exp.description}`).join('\n')}
+  const [skillData, setSkillData] = useState(
+    initialResume?.skills?.map((skill) => ({ skillName: skill })) || [
+      {
+        skillName:
+          'Database Engineering (SQL Server, T-SQL), Data Visualization (Kibana, Eclipse Birt), ETL Pipelines',
+      },
+      {
+        skillName:
+          'Strategic Communication & Cross-Functional Team Collaboration',
+      },
+      { skillName: 'Advanced SQL Query Optimization & Performance Tuning' },
+      { skillName: 'Full-Stack Web Development' },
+      { skillName: 'Agile Software Development & DevOps Integration' },
+    ],
+  );
 
-  Education:
-  ${educationData.map((edu) => `${edu.degree} from ${edu.school}`).join('\n')}
+  const [achievementData, setAchievementData] = useState(
+    initialResume?.achievements?.map((ach) => ({
+      achievementName: ach.achievementDescription,
+    })) || [
+      {
+        achievementName:
+          'Published Research on AI-Powered Automation in a Peer-Reviewed Journal',
+      },
+      {
+        achievementName:
+          'Delivered Keynote Speech on Emerging Tech Trends at a Global Conference',
+      },
+    ],
+  );
 
-  Skills: ${skillData.map((skill) => skill.skillName).join(', ')}
-  Achievements: ${achievementData.map((ach) => ach.achievementName).join(', ')}
-  Projects:
-  ${projectData.map((proj) => `${proj.title}: ${proj.description}`).join('\n')}
-`.trim();
+  const [summaryData, setSummaryData] = useState(
+    initialResume?.professionalSummary
+      ? [initialResume.professionalSummary]
+      : [
+          'Results-driven software engineer with a passion for building scalable, high-performance applications while ensuring security, efficiency, and a seamless user experience.',
+        ],
+  );
 
-  const renderContent = () => {
-    return (
-      <div className="relative">
-        {showAtsScore ? (
-          <AtsScore
-            name={
-              `${personalData[0]?.firstName} ${personalData[0]?.lastName}`.trim() ||
-              'Your Name'
-            }
-            resumeText={resumeData}
-            jobKeywords={['React', 'JavaScript', 'Developer']} // Pass keywords if needed
-          />
-        ) : (
-          <>
-            {/* Navigation Buttons at the Top-Right */}
-            <div className="absolute top-0 right-0 flex mb-5 p-2 space-x-2">
-              <Button
-                onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-                disabled={currentStep === 0}
-                className="p-2"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={() =>
-                  setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
-                }
-                disabled={currentStep === steps.length - 1}
-                className="p-2"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </div>
+  const [selectedTemplate, setSelectedTemplate] = useState(
+    initialResume?.selectedTemplate || 'ResumePreview2',
+  );
 
-            {/* Render the Current Step Content */}
-            {steps[currentStep]}
-          </>
-        )}
-      </div>
-    );
-  };
+  const [selectedColor] = useState(initialResume?.selectedColor || '#000000');
 
-  const resumeRef = useRef<HTMLDivElement | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showAtsScore, setShowAtsScore] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const user = useSelector((state: RootState) => state.user);
+  const resumeRef = useRef<HTMLDivElement>(null);
 
   const steps = [
     <PersonalInfo
@@ -192,16 +209,22 @@ export default function ResumeEditor() {
       educationData={educationData}
       setEducationData={setEducationData}
     />,
-    <GeneralInfo
-      key="general"
-      projectData={projectData}
-      setProjectData={setProjectData}
-    />,
     <SkillInfo
       key="skill"
       skillData={skillData}
-      setSkillData={setSkillData}
-      projectData={projectData}
+      onAddSkill={(e) => {
+        e.preventDefault();
+        setSkillData([...skillData, { skillName: '' }]);
+      }}
+      onRemoveSkill={(e, index) => {
+        e.preventDefault();
+        setSkillData(skillData.filter((_, i) => i !== index));
+      }}
+      onSkillChange={(e, index) => {
+        const newSkills = [...skillData];
+        newSkills[index].skillName = e.target.value;
+        setSkillData(newSkills);
+      }}
     />,
     <AchievementInfo
       key="achievement"
@@ -212,140 +235,285 @@ export default function ResumeEditor() {
       key="summary"
       summaryData={summaryData}
       setSummaryData={setSummaryData}
-      workExperienceData={workExperienceData}
+      workExperienceData={[]}
     />,
   ];
 
-  const handleTemplateChange = (page: number) => {
-    setSelectedTemplate(page === 1 ? 'ResumePreview1' : 'ResumePreview2');
-  };
+  const handleSubmitResume = async () => {
+    setIsSubmitting(true);
+    try {
+      const formatDateForBackend = (dateString: string) => {
+        if (!dateString) return '';
+        // Convert from "YYYY-MM-DD" to ISO format if needed
+        return new Date(dateString).toISOString().split('T')[0]; // Returns "YYYY-MM-DD"
+        // OR if backend expects full ISO string:
+        // return new Date(dateString).toISOString();
+      };
 
-  const downloadPDF = async () => {
-    const element = resumeRef.current;
-    if (element) {
-      // Ensure the .resumeContent element is available and cast it to HTMLElement
-      const resumeContentElement = element.querySelector(
-        '.resumeContent',
-      ) as HTMLElement;
+      const resumeData = {
+        userId: user.uid,
+        personalInfo: {
+          firstName: personalData[0]?.firstName || '',
+          lastName: personalData[0]?.lastName || '',
+          email: personalData[0]?.email || '',
+          phone: personalData[0]?.phoneNumber || '',
+          city: personalData[0]?.city || '',
+          country: personalData[0]?.country || '',
+          linkedin: personalData[0]?.linkedin || '',
+          github: personalData[0]?.github || '',
+        },
+        workExperience: workExperienceData.map((exp) => ({
+          jobTitle: exp.jobTitle || '',
+          company: exp.company || '',
+          startDate: formatDateForBackend(exp.startDate),
+          endDate: formatDateForBackend(exp.endDate),
+          description: exp.description || '',
+        })),
+        education: educationData.map((edu) => ({
+          degree: edu.degree || '',
+          school: edu.school || '',
+          startDate: formatDateForBackend(edu.startDate),
+          endDate: formatDateForBackend(edu.endDate),
+        })),
+        skills: skillData.map((skill) => skill.skillName).filter(Boolean),
+        achievements: achievementData.map((ach) => ({
+          achievementDescription: ach.achievementName || '',
+        })),
+        projects: projectData.map((proj) => ({
+          title: proj.title || '',
+          description: proj.description || '',
+        })),
+        professionalSummary: summaryData.join(' '),
+        selectedTemplate,
+        selectedColor,
+      };
 
-      if (resumeContentElement) {
-        // Render only the content inside the resume container (exclude buttons and color options)
-        const canvas = await html2canvas(resumeContentElement, { scale: 2 }); // Ensure scale is set to 2 for better resolution
-        const imgData = canvas.toDataURL('image/png');
-
-        const pdf = new jsPDF('portrait', 'mm', 'a4');
-        const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        // Add the image to the PDF at full size
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('Resume.pdf');
+      if (initialResume?._id) {
+        await axiosInstance.put(`/resume/${initialResume._id}`, resumeData);
+        toast({
+          title: 'Success',
+          description: 'Resume updated successfully!',
+        });
       } else {
-        console.error('No .resumeContent element found.');
+        await axiosInstance.post('/resume', resumeData);
+        toast({
+          title: 'Success',
+          description: 'Resume created successfully!',
+        });
       }
-    } else {
-      console.error('Resume element is not available.');
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save resume',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const colorOptions = ['#000000', '#31572c', '#1e40af', '#9d0208', '#fb8500'];
+  const downloadPDF = async () => {
+    if (!resumeRef.current) return;
+    setIsGeneratingPDF(true);
+
+    try {
+      const element = resumeRef.current.querySelector(
+        '.resumeContent',
+      ) as HTMLElement;
+      const canvas = await html2canvas(element, {
+        scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
+        backgroundColor: '#FFFFFF',
+        logging: true, // Enable to see console logs for debugging
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // Check if content exceeds page height
+      const heightLeft = pdfHeight;
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      if (heightLeft >= pageHeight) {
+        while (position < heightLeft) {
+          position += pageHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, -position, pdfWidth, pdfHeight);
+        }
+      }
+
+      pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
-      {/* Sidebar */}
       <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
+        menuItemsTop={[]}
+        menuItemsBottom={[]}
         active="Resume Editor"
       />
 
-      {/* Main Content Area */}
       <div className="flex flex-1 flex-col sm:gap-8 sm:py-0 sm:pl-14">
         <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
           activeMenu="Resume Editor"
           breadcrumbItems={[
             { label: 'Settings', link: '#' },
             { label: 'Resume Building', link: '#' },
             { label: 'Resume Editor', link: '#' },
           ]}
+          menuItemsTop={[]}
+          menuItemsBottom={[]}
         />
-        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
-          {/* Left section - Form */}
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Design your Resume</h1>
-            <p className="text-sm text-muted-foreground mb-5">
-              Follow the steps below to create your resume.
-            </p>
 
-            <div className="mt-5">{renderContent()}</div>
+        <main className="flex-1 p-4 sm:px-6 sm:py-0 md:gap-6 lg:grid lg:grid-cols-2">
+          {/* Form Section */}
+          <div className="p-6 relative">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <Button onClick={onCancel}>← Back to Resumes</Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => setShowAtsScore(!showAtsScore)}>
+                  {showAtsScore ? 'Back to Editor' : 'Check ATS Score'}
+                </Button>
+              </div>
+            </div>
+
+            {showAtsScore ? (
+              <AtsScore
+                name={`${personalData[0]?.firstName} ${personalData[0]?.lastName}`}
+                resumeText={JSON.stringify({
+                  personalData,
+                  workExperienceData,
+                  educationData,
+                  skills: skillData,
+                  achievements: achievementData,
+                  summaryData,
+                })}
+                jobKeywords={[]}
+              />
+            ) : (
+              <>
+                <div className="flex justify-between mb-4">
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() =>
+                      setCurrentStep((prev) => Math.max(prev - 1, 0))
+                    }
+                    disabled={currentStep === 0}
+                  >
+                    <ChevronLeft className="mr-2" />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() =>
+                      setCurrentStep((prev) =>
+                        Math.min(prev + 1, steps.length - 1),
+                      )
+                    }
+                    disabled={currentStep === steps.length - 1}
+                  >
+                    <ChevronRight className="ml-2" />
+                  </Button>
+                </div>
+
+                {steps[currentStep]}
+
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    onClick={handleSubmitResume}
+                    disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Resume'}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Right section - Resume Preview */}
-          <div ref={resumeRef} className="p-6 " style={{ minHeight: '1100px' }}>
-            <div className="flex justify-end gap-3 mb-4">
-              <Button
-                onClick={() => setShowAtsScore(!showAtsScore)}
-                className="p-2"
-              >
-                {showAtsScore ? 'Hide ATS Score' : 'Check ATS Score'}
-              </Button>
-              <Button onClick={downloadPDF} className="p-2">
-                Download PDF
-              </Button>
-            </div>
-            <section className="flex justify-start gap-3">
-              {colorOptions.map((color, index) => (
-                <div
-                  key={index}
-                  onClick={() => setSelectedColor(color)}
-                  className="w-8 h-8 rounded-full cursor-pointer"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </section>
+          {/* Preview Section */}
+          <div className="relative p-6">
+            <div
+              ref={resumeRef}
+              className="relative mt-10"
+              style={{ minHeight: '1100px' }}
+            >
+              <div className="absolute -top-10 right-2 z-10 flex gap-2 bg-white p-2 rounded shadow">
+                <Button
+                  size="sm"
+                  variant={
+                    selectedTemplate === 'ResumePreview1'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  onClick={() => setSelectedTemplate('ResumePreview1')}
+                >
+                  Template 1
+                </Button>
+                <Button
+                  size="sm"
+                  variant={
+                    selectedTemplate === 'ResumePreview2'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  onClick={() => setSelectedTemplate('ResumePreview2')}
+                >
+                  Template 2
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={downloadPDF}
+                  disabled={isGeneratingPDF}
+                >
+                  <Download className="mr-2" /> PDF
+                </Button>
+              </div>
 
-            <div className="resumeContent ">
-              {selectedTemplate === 'ResumePreview1' ? (
-                <ResumePreview1
-                  educationData={educationData}
-                  workExperienceData={workExperienceData}
-                  personalData={personalData}
-                  projectData={projectData}
-                  skillData={skillData}
-                  achievementData={achievementData}
-                  headingColor={selectedColor}
-                  summaryData={summaryData}
-                />
-              ) : (
-                <ResumePreview2
-                  educationData={educationData}
-                  workExperienceData={workExperienceData}
-                  personalData={personalData}
-                  projectData={projectData}
-                  skillData={skillData}
-                  achievementData={achievementData}
-                  headingColor={selectedColor}
-                  summaryData={summaryData}
-                />
-              )}
-            </div>
-
-            <div className="flex justify-center gap-3">
-              <Button
-                onClick={() => handleTemplateChange(1)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview1' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
-              >
-                Template 1
-              </Button>
-              <Button
-                onClick={() => handleTemplateChange(2)}
-                className={`p-2 ${selectedTemplate === 'ResumePreview2' ? 'dark:bg-white light:text-black' : 'bg-gray-500 text-white'}`}
-              >
-                Template 2
-              </Button>
+              <div className="resumeContent">
+                {selectedTemplate === 'ResumePreview1' ? (
+                  <ResumePreview1
+                    personalData={personalData}
+                    workExperienceData={workExperienceData}
+                    educationData={educationData}
+                    skillData={skillData}
+                    achievementData={achievementData}
+                    projectData={projectData}
+                    summaryData={summaryData}
+                    headingColor={selectedColor}
+                  />
+                ) : (
+                  <ResumePreview2
+                    personalData={personalData}
+                    workExperienceData={workExperienceData}
+                    educationData={educationData}
+                    skillData={skillData}
+                    achievementData={achievementData}
+                    projectData={projectData}
+                    summaryData={summaryData}
+                    headingColor={selectedColor}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </main>
