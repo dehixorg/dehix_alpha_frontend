@@ -29,6 +29,8 @@ export interface UserProfile {
     status: string;
     frontImageUrl?: string;
     backImageUrl?: string;
+    liveCaptureUrl?: string;
+    businessProof?: string;
   };
   professionalInfo: Record<string, any>;
 }

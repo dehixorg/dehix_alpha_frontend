@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { kycBadgeColors } from '@/utils/freelancer/enum';
 
 const kycFormSchema = z.object({
-  aadharOrGovtId: z.string().optional(),
+  businessProof: z.string().optional(),
   frontImageUrl: z
     .union([
       typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
@@ -57,7 +57,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
   const form = useForm<KYCFormValues>({
     resolver: zodResolver(kycFormSchema),
     defaultValues: {
-      aadharOrGovtId: '',
+      businessProof: '',
       frontImageUrl: '',
       backImageUrl: '',
       liveCaptureUrl: '',
@@ -88,7 +88,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
 
   useEffect(() => {
     form.reset({
-      aadharOrGovtId: user?.kyc?.aadharOrGovtId || '',
+      businessProof: user?.kyc?.businessProof || '',
       frontImageUrl: user?.kyc?.frontImageUrl || '',
       backImageUrl: user?.kyc?.backImageUrl || '',
       liveCaptureUrl: user?.kyc?.liveCaptureUrl || '',
@@ -136,7 +136,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
       }
 
       const kyc = {
-        aadharOrGovtId: data.aadharOrGovtId,
+        businessProof: data.businessProof,
         frontImageUrl: uploadedUrls.frontImageUrl,
         backImageUrl: uploadedUrls.backImageUrl,
         liveCaptureUrl: uploadedUrls.liveCaptureUrl,
@@ -185,12 +185,12 @@ export function KYCForm({ user_id }: { user_id: string }) {
             <div className="space-y-2">
               <FormField
                 control={form.control}
-                name="aadharOrGovtId"
+                name="businessProof"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Aadhar or Govt Id</FormLabel>
+                    <FormLabel>Business Proof</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your Aadhar Id" {...field} />
+                      <Input placeholder="Enter a Business Proof" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

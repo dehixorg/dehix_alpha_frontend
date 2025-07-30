@@ -479,6 +479,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
         role: data.role,
         personalWebsite: data.personalWebsite,
         coverLetter: data.coverLetter,
+        description: data.description,
         skills: updatedSkills,
         domain: currDomains,
         projectDomains: currProjectDomains,
