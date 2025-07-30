@@ -132,7 +132,8 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                       disabled
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-gray-100 cursor-not-allowed h-9">
+                        {/* CHANGE 1: Replaced `bg-gray-100` with `bg-muted` for disabled inputs */}
+                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -162,7 +163,8 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                       disabled
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-gray-100 cursor-not-allowed h-9">
+                        {/* CHANGE 1 (repeated): Replaced `bg-gray-100` with `bg-muted` */}
+                        <SelectTrigger className="bg-muted cursor-not-allowed h-9">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -212,7 +214,6 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
           />
 
           {/* 🖼 Image Upload */}
-          {/* 🖼 Image Upload with Preview and Validation */}
           <FormItem>
             <Label>Upload Screenshots (up to 3)</Label>
             <FormControl>
@@ -226,7 +227,7 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                     : [];
                   if (files.length > 3) {
                     setFileError('You can only upload up to 3 images.');
-                    setImageFiles([]); // Optional: clear if over limit
+                    setImageFiles([]);
                   } else {
                     setFileError(null);
                     setImageFiles(files);
@@ -237,9 +238,11 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
 
             {/* 🔴 File error message */}
             {fileError && (
-              <p className="text-sm text-red-600 mt-1">{fileError}</p>
+              // CHANGE 2: Used `text-destructive` for error messages.
+              <p className="text-sm text-destructive mt-1">{fileError}</p>
             )}
 
+            {/* 🖼 Image Preview with Delete and View */}
             {/* 🖼 Image Preview with Delete and View */}
             {imageFiles.length > 0 && (
               <div className="mt-3 flex gap-4 flex-wrap">
@@ -248,26 +251,28 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                   return (
                     <div
                       key={idx}
-                      className="relative w-24 h-24 border rounded overflow-hidden group"
+                      className="relative w-24 h-24 border rounded-md overflow-hidden group"
                     >
-                      {/* 🖼 Click to view */}
                       <a
                         href={imageUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
+                        {/* ✅ FIX: Added the `fill` prop and removed `className` */}
                         <Image
                           src={imageUrl}
                           alt={`screenshot-${idx}`}
-                          className="object-cover w-full h-full hover:opacity-80 cursor-pointer"
+                          fill
+                          sizes="96px" // Tells browser the image is 96px wide
+                          className="object-cover" // Keep object-cover for correct scaling
                         />
                       </a>
 
-                      {/* ❌ Cancel Button */}
+                      {/* ❌ Cancel Button (no changes here) */}
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        className="absolute top-1 right-1 bg-white rounded-full p-1 text-red-600 hover:bg-red-100 transition"
+                        className="absolute top-1 right-1 bg-background rounded-full p-1 text-destructive hover:bg-accent transition"
                         title="Remove"
                       >
                         ✕

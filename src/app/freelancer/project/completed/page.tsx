@@ -52,7 +52,7 @@ export default function CompletedProject() {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=COMPLETED`,
+          `/freelancer/project?status=COMPLETED`,
         ); // Fetch data from API
         setProjects(response.data.data); // Store all projects initially
       } catch (error) {

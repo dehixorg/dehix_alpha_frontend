@@ -53,7 +53,7 @@ export default function CurrentProject() {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(
-          `/freelancer/${user.uid}/project?status=ACTIVE`,
+          `/freelancer/project?status=ACTIVE`,
         );
 
         setProjects(response.data.data);

@@ -12,32 +12,56 @@ import {
 } from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
-// import { axiosInstance } from '@/lib/axiosinstance';
+import { axiosInstance } from '@/lib/axiosinstance';
+import ResumeInfoCard from '@/components/cards/resumeInfoCard';
+import { Button } from '@/components/ui/button';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
+  const [resumeData, setResumeData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedResume, setSelectedResume] = useState<any>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchResumeData = async () => {
+      setIsLoading(true);
       try {
-        // const response = await axiosInstance.get(`/freelancer/${user.uid}`);
+        const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
+        setResumeData(res.data.resumes || []);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Failed to fetch resume data. Please try again.',
+        });
         console.error('API Error:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchData();
+    fetchResumeData();
   }, [user.uid, refresh]);
 
+  const handleNewResume = () => {
+    setSelectedResume(null);
+    setShowResumeEditor(true);
+  };
+
+  const handleEditResume = (resume: any) => {
+    setSelectedResume(resume);
+    setShowResumeEditor(true);
+  };
+
   if (showResumeEditor) {
-    return <ResumeEditor />;
+    return (
+      <ResumeEditor
+        initialResume={selectedResume}
+        onCancel={() => setShowResumeEditor(false)}
+      />
+    );
   }
 
   return (
@@ -59,17 +83,41 @@ export default function Resume() {
             { label: 'Resume Building', link: '#' },
           ]}
         />
-        <div className="flex flex-col h-screen">
-          <h1 className="text-2xl font-bold mb-6 mt-5 ml-8">
-            Start Building Your Resume
-          </h1>
-          <div className="ml-10">
-            <button
-              onClick={() => setShowResumeEditor(true)}
-              className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-200"
-            >
-              <span className="text-4xl text-gray-600">+</span>
-            </button>
+        <div className="flex flex-col">
+          <div className="flex justify-between items-center mx-8 mt-5 mb-6">
+            <h1 className="text-2xl font-bold">
+              {resumeData.length > 0
+                ? 'Your Resumes'
+                : 'Start Building Your Resume'}
+            </h1>
+            <Button onClick={handleNewResume} className="ml-4">
+              + New Resume
+            </Button>
+          </div>
+          <div className="mx-8">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <p>Loading resume data...</p>
+              </div>
+            ) : (
+              <div className="grid flex-1 items-start gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {resumeData.map((resume) => (
+                  <ResumeInfoCard
+                    key={resume._id}
+                    {...resume}
+                    onClick={() => handleEditResume(resume)}
+                  />
+                ))}
+                {resumeData.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12">
+                    <p className="text-gray-500 mb-4">No resumes found</p>
+                    <Button onClick={handleNewResume}>
+                      Create Your First Resume
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

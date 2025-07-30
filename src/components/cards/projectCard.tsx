@@ -28,6 +28,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+
 interface ProjectType {
   _id: string;
   projectName: string;
@@ -93,27 +100,21 @@ export function ProjectCard({
     >
       {/* 3-dot menu */}
       <div className="absolute top-3 right-3 z-20">
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <MoreVertical className="w-5 h-5 text-gray-500" />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow-md z-50">
-              <button
-                onClick={() => {
-                  setOpenReport(true);
-                  setMenuOpen(false);
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Report
-              </button>
-            </div>
-          )}
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none">
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem
+              onClick={() => setOpenReport(true)} 
+              className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Report
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <CardHeader>

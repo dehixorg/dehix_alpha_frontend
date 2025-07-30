@@ -26,12 +26,14 @@ import { TableSelect } from './TableSelect';
 
 import { apiHelperService } from '@/services/custumTable';
 import { Messages } from '@/utils/common/enum';
+import { cn } from '@/lib/utils';
 
 export const CustomTable = ({
   title,
   fields,
   filterData,
   api,
+  data: externalData,
   uniqueId,
   tableHeaderActions,
   mainTableActions,
@@ -40,7 +42,7 @@ export const CustomTable = ({
   isFilter = true,
   isDownload = false,
 }: Params) => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState<FiltersArrayElem[]>(
     [],
@@ -58,6 +60,45 @@ export const CustomTable = ({
     try {
       setLoading(true);
       window.scrollTo(0, 0);
+
+      // If external data is provided, use it instead of fetching from API
+      if (externalData) {
+        let filteredData = [...externalData];
+
+        // Apply search filter if search term exists
+        if (search && searchColumn && searchColumn.length > 0) {
+          filteredData = filteredData.filter((item) =>
+            searchColumn.some((column) =>
+              String(item[column] || '')
+                .toLowerCase()
+                .includes(search.toLowerCase()),
+            ),
+          );
+        }
+
+        // Apply custom filters
+        selectedFilters.forEach((filter) => {
+          filteredData = filteredData.filter((item) => {
+            const fieldValue = filter.arrayName
+              ? item[filter.fieldName]?.[filter.arrayName]
+              : item[filter.fieldName];
+            return String(fieldValue || '')
+              .toLowerCase()
+              .includes(filter.value.toLowerCase());
+          });
+        });
+
+        setData(filteredData);
+        setLoading(false);
+        return;
+      }
+
+      // Only fetch from API if api prop is provided
+      if (!api) {
+        setLoading(false);
+        return;
+      }
+
       const params: Record<string, any> = {
         filters: '',
         page: page,
@@ -81,7 +122,6 @@ export const CustomTable = ({
 
       params['filter[sortBy]'] = sortByValue;
       params['filter[sortOrder]'] = sortOrder;
-      console.log(params);
       const response = await apiHelperService.fetchData(api, params);
       setData(response.data.data);
     } catch (error) {
@@ -98,7 +138,15 @@ export const CustomTable = ({
 
   useEffect(() => {
     fetchData();
-  }, [selectedFilters, search, page, limit, sortByValue, sortOrder]);
+  }, [
+    selectedFilters,
+    search,
+    page,
+    limit,
+    sortByValue,
+    sortOrder,
+    externalData,
+  ]);
 
   useEffect(() => {
     setPage(1);
@@ -140,7 +188,6 @@ export const CustomTable = ({
       });
       content += fieldValues.join(',') + '\n';
     });
-    console.log(content);
 
     const blob = new Blob([content], { type: 'text/csv' });
 
@@ -207,7 +254,10 @@ export const CustomTable = ({
               <TableHeader>
                 <TableRow>
                   {fields.map((field, _) => (
-                    <TableHead key={field.fieldName}>
+                    <TableHead
+                      key={field.fieldName}
+                      className={cn('text-center', field.className)}
+                    >
                       {field.tooltip ? (
                         <ToolTip
                           trigger={field.textValue}
@@ -238,9 +288,9 @@ export const CustomTable = ({
                     <TableRow key={elem._id}>
                       {fields.map((field, index) => (
                         <TableCell
-                          key={field.fieldName}
-                          className={twMerge(
-                            'text-gray-900 dark:text-gray-300',
+                          key={field.fieldName || index}
+                          className={cn(
+                            'text-gray-900 dark:text-gray-100 text-center [&>*]:text-gray-900 [&>*]:dark:text-gray-100',
                             field.className,
                           )}
                           width={field.width}
@@ -264,17 +314,17 @@ export const CustomTable = ({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
-                      <div className="text-center py-10 w-full mt-10">
+                    <TableCell
+                      colSpan={fields.length}
+                      className="text-center py-10"
+                    >
+                      <div className="flex flex-col items-center gap-2">
                         <PackageOpen
-                          className="mx-auto text-gray-500"
-                          size="100"
+                          className="text-muted-foreground"
+                          size={48}
                         />
-                        <p className="text-gray-500">
-                          No data available.
-                          <br /> This feature will be available soon.
-                          <br />
-                          Here you can get directly hired for different roles.
+                        <p className="text-muted-foreground text-sm">
+                          No data available
                         </p>
                       </div>
                     </TableCell>

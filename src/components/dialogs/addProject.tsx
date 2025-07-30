@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 import DraftDialog from '../shared/DraftDialog';
 
@@ -38,6 +38,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
+import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
+import { RootState } from '@/lib/store';
 
 // Schema for form validation using zod
 const projectFormSchema = z
@@ -51,6 +53,12 @@ const projectFormSchema = z
       .refine((url) => (url ? url.startsWith('https://github.com/') : true), {
         message: 'GitHub repository URL must start with https://github.com/',
       }),
+    liveDemoLink: z
+      .string()
+      .url({ message: 'Live demo link must be a valid URL.' })
+      .optional()
+      .or(z.literal('')),
+    thumbnail: z.string().min(1, { message: 'Project thumbnail is required.' }),
     start: z.string().min(1, { message: 'Start date is required.' }),
     end: z.string().min(1, { message: 'End date is required.' }),
     refer: z.string().min(1, { message: 'Reference is required.' }),
@@ -97,13 +105,15 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
-  const { freelancer_id } = useParams<{ freelancer_id: string }>();
+  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
       projectName: '',
       description: '',
       githubLink: '',
+      liveDemoLink: '',
+      thumbnail: '',
       start: '',
       end: '',
       refer: '',
@@ -231,24 +241,61 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
     setCurrSkills,
   });
 
+  // Reset form function
+  const resetForm = () => {
+    form.reset({
+      projectName: '',
+      description: '',
+      githubLink: '',
+      liveDemoLink: '',
+      thumbnail: '',
+      start: '',
+      end: '',
+      refer: '',
+      techUsed: [],
+      role: '',
+      projectType: '',
+      verificationStatus: 'ADDED',
+      comments: '',
+    });
+    setCurrSkills([]);
+    setTmpSkill('');
+    setStep(1);
+  };
+
   // Submit handler for the form
   async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
     try {
       // Join currSkills array into comma-separated string for form submission
 
-      // Submit with the skills from our state
-      await axiosInstance.post(`/freelancer/${freelancer_id}/project`, {
-        ...data,
+      // Prepare the payload
+      const payload = {
+        projectName: data.projectName,
+        description: data.description,
+        githubLink: data.githubLink,
+        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
+        thumbnail: data.thumbnail, // Now required
         techUsed: currSkills,
         verified: false,
         oracleAssigned: '',
         start: data.start ? new Date(data.start).toISOString() : null,
         end: data.end ? new Date(data.end).toISOString() : null,
+        refer: data.refer,
+        role: data.role,
+        projectType: data.projectType,
+        comments: data.comments || '',
         verificationUpdateTime: new Date().toISOString(),
-      });
+      };
+
+      // Submit with the skills from our state
+      const response = await axiosInstance.post(
+        `/freelancer/${user.uid}/project`,
+        payload,
+      );
 
       onFormSubmit();
+      resetForm(); // Reset form after successful submission
       setIsDialogOpen(false);
       toast({
         title: 'Project Added',
@@ -439,6 +486,43 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
                       </FormControl>
                       <FormDescription>
                         Enter the GitHub repository link (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="liveDemoLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Live Demo Link</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter live demo link" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the live demo link (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="thumbnail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Thumbnail</FormLabel>
+                      <FormControl>
+                        <ThumbnailUpload
+                          onThumbnailUpdate={(url) => field.onChange(url)}
+                          existingThumbnailUrl={field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload a thumbnail image for your project (required)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

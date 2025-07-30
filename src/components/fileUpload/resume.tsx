@@ -14,13 +14,11 @@ const maxResumeSize = 5 * 1024 * 1024; // 5MB
 
 interface ResumeUploadProps {
   onResumeUpdate?: () => void;
-  refreshTrigger?: number; // Add this to trigger refresh from parent
   userId?: string; // Add userId to ensure we fetch the correct user's data
 }
 
 const ResumeUpload: React.FC<ResumeUploadProps> = ({
   onResumeUpdate,
-  refreshTrigger,
   userId,
 }) => {
   const [selectedResume, setSelectedResume] = useState<File | null>(null);
