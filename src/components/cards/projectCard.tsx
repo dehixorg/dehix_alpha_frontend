@@ -27,13 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 interface ProjectType {
   _id: string;
@@ -108,7 +107,7 @@ export function ProjectCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuItem
-              onClick={() => setOpenReport(true)} 
+              onClick={() => setOpenReport(true)}
               className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               Report

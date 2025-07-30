@@ -954,7 +954,9 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                 <FormLabel className="ml-2">Upload Resume</FormLabel>
                 <div className="w-full">
                   <ResumeUpload
-                    refreshTrigger={resumeRefreshTrigger}
+                    onResumeUpdate={() =>
+                      setResumeRefreshTrigger((prev) => prev + 1)
+                    }
                     userId={user_id}
                   />
                 </div>

@@ -26,13 +26,12 @@ import {
   addDraftedProject,
   removeDraftedProject,
 } from '@/lib/projectDraftSlice';
-
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 
 // Simple loader/spinner component (you can replace with your own)
 const Loader = () => (
@@ -193,7 +192,7 @@ const JobCard: React.FC<JobCardProps> = ({
                   className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Report
-                </DropdownMenuItem> 
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
