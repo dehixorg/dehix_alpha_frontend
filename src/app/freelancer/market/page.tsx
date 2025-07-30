@@ -251,6 +251,13 @@ const Market: React.FC = () => {
           );
         }
 
+        // Sort projects by creation date (newest first)
+        filteredJobs.sort((a: Project, b: Project) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
+
         setJobs(filteredJobs);
       } catch (err) {
         console.error('Fetch jobs error:', err);
