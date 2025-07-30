@@ -27,6 +27,13 @@ import {
   removeDraftedProject,
 } from '@/lib/projectDraftSlice';
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+
 // Simple loader/spinner component (you can replace with your own)
 const Loader = () => (
   <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
@@ -144,11 +151,11 @@ const JobCard: React.FC<JobCardProps> = ({
                 }
               />
             )}
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gray-500 hover:text-gray-800 p-0 h-6 w-6"
+              className="text-gray-500 hover:text-gray-100 p-0 h-6 w-6"
             >
               <MoreVertical className="w-4 h-4" />
             </Button>
@@ -165,7 +172,30 @@ const JobCard: React.FC<JobCardProps> = ({
                   Report
                 </button>
               </div>
-            )}
+            )} */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-500 hover:text-gray-100 p-0 h-6 w-6 focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-32 z-50"
+                sideOffset={4}
+              >
+                <DropdownMenuItem
+                  onClick={() => setOpenReport(true)}
+                  className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Report
+                </DropdownMenuItem> 
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </CardHeader>
