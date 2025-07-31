@@ -40,12 +40,14 @@ const Loader = () => (
 
 interface JobCardProps {
   job: Project;
+  onApply: () => void;
   onNotInterested: () => void;
   bidExist: boolean;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
+  onApply,
   onNotInterested,
   bidExist,
 }) => {
@@ -263,19 +265,15 @@ const JobCard: React.FC<JobCardProps> = ({
             text="View"
             isSizeSmall={true}
           />
-          <Link
-            href={`/freelancer/market/project/${job._id}/apply`}
-            className="flex-1 sm:flex-none"
+          <Button
+            type="submit"
+            className="w-full flex-1 sm:flex-none"
+            size="sm"
+            disabled={bidExist}
+            onClick={onApply}
           >
-            <Button
-              type="submit"
-              className="w-full"
-              size="sm"
-              disabled={bidExist}
-            >
-              {bidExist ? 'Applied' : 'Bid'}
-            </Button>
-          </Link>
+            {bidExist ? 'Applied' : 'Bid'}
+          </Button>
         </div>
       </CardFooter>
       {openReport && (
