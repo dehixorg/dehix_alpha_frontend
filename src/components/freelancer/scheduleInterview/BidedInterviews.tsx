@@ -62,7 +62,13 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   if (error) return <p className="text-red-500 text-sm">{error}</p>;
 
   if (bids.length === 0) {
-    return <p className="text-muted-foreground text-sm">No bids yet.</p>;
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600 dark:text-gray-400">
+          No bidded interviews found.
+        </p>
+      </div>
+    );
   }
 
   return (
