@@ -143,10 +143,6 @@
     );
     color: var(--foreground);
   }
-  .chat-emoji {
-    font-size: 1.4em;
-    line-height: 1;
-  }
 
   .dark .dynamic-card {
     background: rgba(173, 177, 179, 0.74);

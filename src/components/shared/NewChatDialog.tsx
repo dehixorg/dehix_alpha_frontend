@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { X as LucideX, LoaderCircle } from 'lucide-react'; // Using X & LoaderCircle
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X as LucideX, LoaderCircle } from 'lucide-react'; // Using X & LoaderCircle
 import { cn } from '@/lib/utils';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers'; // Import hook and CombinedUser type
 import { toast } from '@/components/ui/use-toast';
@@ -19,20 +28,32 @@ interface NewChatDialogProps {
   currentUserUid: string;
 }
 
-export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }: NewChatDialogProps) {
+export function NewChatDialog({
+  isOpen,
+  onClose,
+  onSelectUser,
+  currentUserUid,
+}: NewChatDialogProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const {
+    users: allFetchedUsers,
+    isLoading: isLoadingUsers,
+    error: usersError,
+    refetchUsers,
+  } = useAllUsers();
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleUserSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUserSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setUserSearchTerm(event.target.value);
   };
 
   // Effect for filtering users based on search term
   useEffect(() => {
     const term = userSearchTerm.trim().toLowerCase();
-    
+
     // Only search if term is at least 3 characters
     if (term.length < 3) {
       setSearchResults([]);
@@ -42,22 +63,21 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
     setIsSearching(true);
     try {
       // Filter users based on search term
-      const filtered = allFetchedUsers.filter(user =>
-        user.id !== currentUserUid && // Exclude current user
-        (
-          (user.displayName.toLowerCase().includes(term)) ||
-          (user.email.toLowerCase().includes(term)) ||
-          (user.rawUserName?.toLowerCase().includes(term)) ||
-          (user.rawName?.toLowerCase().includes(term))
-        )
+      const filtered = allFetchedUsers.filter(
+        (user) =>
+          user.id !== currentUserUid && // Exclude current user
+          (user.displayName.toLowerCase().includes(term) ||
+            user.email.toLowerCase().includes(term) ||
+            user.rawUserName?.toLowerCase().includes(term) ||
+            user.rawName?.toLowerCase().includes(term)),
       );
       setSearchResults(filtered);
     } catch (error) {
       console.error('Error filtering users:', error);
-      toast({ 
-        variant: "destructive", 
-        title: "Error", 
-        description: "Failed to search users. Please try again." 
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to search users. Please try again.',
       });
     } finally {
       setIsSearching(false);
@@ -81,15 +101,27 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
         // aria-describedby="new-chat-dialog-description"
       >
         <DialogHeader>
-          <DialogTitle id="new-chat-dialog-title" className="text-[hsl(var(--card-foreground))]">Start a new chat</DialogTitle>
-          <DialogDescription id="new-chat-dialog-description" className="text-[hsl(var(--muted-foreground))] pt-1">
-            Search for a user by name or email to begin a one-on-one conversation.
+          <DialogTitle
+            id="new-chat-dialog-title"
+            className="text-[hsl(var(--card-foreground))]"
+          >
+            Start a new chat
+          </DialogTitle>
+          <DialogDescription
+            id="new-chat-dialog-description"
+            className="text-[hsl(var(--muted-foreground))] pt-1"
+          >
+            Search for a user by name or email to begin a one-on-one
+            conversation.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="searchUser" className="text-right col-span-1 text-[hsl(var(--foreground))]">
+            <Label
+              htmlFor="searchUser"
+              className="text-right col-span-1 text-[hsl(var(--foreground))]"
+            >
               Search
             </Label>
             <Input
@@ -111,7 +143,13 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
             ) : usersError ? (
               <div className="text-center text-sm text-red-500 dark:text-red-400 p-4">
                 Error loading users: {usersError}
-                <Button variant="link" onClick={() => refetchUsers()} className="ml-2">Retry</Button>
+                <Button
+                  variant="link"
+                  onClick={() => refetchUsers()}
+                  className="ml-2"
+                >
+                  Retry
+                </Button>
               </div>
             ) : userSearchTerm.length > 0 && userSearchTerm.length < 3 ? (
               <div className="text-sm text-[hsl(var(--muted-foreground))] p-4">
@@ -131,12 +169,23 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
                       className="w-full flex items-center justify-start space-x-3 p-2 text-left h-auto hover:bg-[hsl(var(--accent))]"
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={foundUser.profilePic} alt={foundUser.displayName} />
-                        <AvatarFallback>{foundUser.displayName ? foundUser.displayName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                        <AvatarImage
+                          src={foundUser.profilePic}
+                          alt={foundUser.displayName}
+                        />
+                        <AvatarFallback>
+                          {foundUser.displayName
+                            ? foundUser.displayName.charAt(0).toUpperCase()
+                            : 'U'}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-grow">
-                        <p className="text-sm font-medium text-[hsl(var(--foreground))]">{foundUser.displayName}</p>
-                        <p className="text-xs text-[hsl(var(--muted-foreground))]">{foundUser.email}</p>
+                        <p className="text-sm font-medium text-[hsl(var(--foreground))]">
+                          {foundUser.displayName}
+                        </p>
+                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                          {foundUser.email}
+                        </p>
                       </div>
                     </Button>
                   ))}
@@ -144,7 +193,9 @@ export function NewChatDialog({ isOpen, onClose, onSelectUser, currentUserUid }:
               </ScrollArea>
             ) : (
               <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
-                {userSearchTerm ? "No users found matching your search." : "Type to search for users."}
+                {userSearchTerm
+                  ? 'No users found matching your search.'
+                  : 'Type to search for users.'}
               </div>
             )}
           </div>

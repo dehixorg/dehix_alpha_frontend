@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   Dialog,
   DialogContent,
@@ -65,15 +66,28 @@ export function ChangeGroupInfoDialog({
         aria-describedby="change-group-info-description"
       >
         <DialogHeader>
-          <DialogTitle id="change-group-info-title" className="text-[hsl(var(--card-foreground))]">Change Group Information</DialogTitle>
-          <DialogDescription id="change-group-info-description" className="text-[hsl(var(--muted-foreground))] pt-1">
-            Update the group's name and avatar URL.
+          <DialogTitle
+            id="change-group-info-title"
+            className="text-[hsl(var(--card-foreground))]"
+          >
+            Change Group Information
+          </DialogTitle>
+          <DialogDescription
+            id="change-group-info-description"
+            className="text-[hsl(var(--muted-foreground))] pt-1"
+          >
+            Update the group name and avatar URL.
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="groupName" className="text-[hsl(var(--foreground))]">Group Name</Label>
+            <Label
+              htmlFor="groupName"
+              className="text-[hsl(var(--foreground))]"
+            >
+              Group Name
+            </Label>
             <Input
               id="groupName"
               value={groupName}
@@ -84,15 +98,25 @@ export function ChangeGroupInfoDialog({
                 }
               }}
               className={cn(
-                "bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]",
-                nameError && "border-red-500 dark:border-red-400 focus:ring-red-500"
+                'bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]',
+                nameError &&
+                  'border-red-500 dark:border-red-400 focus:ring-red-500',
               )}
             />
-            {nameError && <p className="text-xs text-red-500 dark:text-red-400 mt-1">{nameError}</p>}
+            {nameError && (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                {nameError}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="avatarUrl" className="text-[hsl(var(--foreground))]">Avatar URL (Optional)</Label>
+            <Label
+              htmlFor="avatarUrl"
+              className="text-[hsl(var(--foreground))]"
+            >
+              Avatar URL (Optional)
+            </Label>
             <Input
               id="avatarUrl"
               placeholder="https://example.com/avatar.png"
@@ -103,7 +127,9 @@ export function ChangeGroupInfoDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[hsl(var(--foreground))]">Avatar Preview</Label>
+            <Label className="text-[hsl(var(--foreground))]">
+              Avatar Preview
+            </Label>
             <Avatar className="w-20 h-20 mt-1 border border-[hsl(var(--border))]">
               <AvatarImage src={avatarUrl} alt="Avatar Preview" />
               <AvatarFallback className="text-2xl bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]">

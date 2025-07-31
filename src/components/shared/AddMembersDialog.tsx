@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { LoaderCircle } from 'lucide-react'; // For loading state
+
 import {
   Dialog,
   DialogContent,
@@ -16,7 +18,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers'; // Import hook and type
-import { LoaderCircle } from 'lucide-react'; // For loading state
 
 // Local User type and MOCK_USERS_LIST are no longer needed.
 
@@ -36,9 +37,16 @@ export function AddMembersDialog({
   groupId,
 }: AddMembersDialogProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const {
+    users: allFetchedUsers,
+    isLoading: isLoadingUsers,
+    error: usersError,
+    refetchUsers,
+  } = useAllUsers();
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
-  const [selectedUsersState, setSelectedUsersState] = useState<CombinedUser[]>([]); // Changed state name and type
+  const [selectedUsersState, setSelectedUsersState] = useState<CombinedUser[]>(
+    [],
+  ); // Changed state name and type
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -61,29 +69,36 @@ export function AddMembersDialog({
     const term = userSearchTerm.toLowerCase().trim();
 
     if (term !== '') {
-      filtered = filtered.filter(user =>
-        (user.displayName.toLowerCase().includes(term)) ||
-        (user.email.toLowerCase().includes(term)) ||
-        (user.rawUserName?.toLowerCase().includes(term)) ||
-        (user.rawName?.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (user) =>
+          user.displayName.toLowerCase().includes(term) ||
+          user.email.toLowerCase().includes(term) ||
+          user.rawUserName?.toLowerCase().includes(term) ||
+          user.rawName?.toLowerCase().includes(term),
       );
     }
 
     // Filter out users already in currentMemberIds
     if (currentMemberIds && currentMemberIds.length > 0) {
       const currentMemberIdSet = new Set(currentMemberIds);
-      filtered = filtered.filter(user => !currentMemberIdSet.has(user.id));
+      filtered = filtered.filter((user) => !currentMemberIdSet.has(user.id));
     }
 
     setSearchResults(filtered);
-  }, [allFetchedUsers, userSearchTerm, currentMemberIds, isOpen, isLoadingUsers]);
+  }, [
+    allFetchedUsers,
+    userSearchTerm,
+    currentMemberIds,
+    isOpen,
+    isLoadingUsers,
+  ]);
 
-
-  const handleUserSelection = (user: CombinedUser, isChecked: boolean) => { // Takes CombinedUser object
+  const handleUserSelection = (user: CombinedUser, isChecked: boolean) => {
+    // Takes CombinedUser object
     setSelectedUsersState((prevSelected) => {
       if (isChecked) {
         // Add user if not already present
-        if (!prevSelected.find(u => u.id === user.id)) {
+        if (!prevSelected.find((u) => u.id === user.id)) {
           return [...prevSelected, user];
         }
         return prevSelected;
@@ -107,8 +122,16 @@ export function AddMembersDialog({
         aria-describedby="add-members-description"
       >
         <DialogHeader>
-          <DialogTitle id="add-members-title" className="text-[hsl(var(--card-foreground))]">Add New Members</DialogTitle>
-          <DialogDescription id="add-members-description" className="text-[hsl(var(--muted-foreground))] pt-1">
+          <DialogTitle
+            id="add-members-title"
+            className="text-[hsl(var(--card-foreground))]"
+          >
+            Add New Members
+          </DialogTitle>
+          <DialogDescription
+            id="add-members-description"
+            className="text-[hsl(var(--muted-foreground))] pt-1"
+          >
             Search for users by name or email to add them to the group.
           </DialogDescription>
         </DialogHeader>
@@ -123,7 +146,9 @@ export function AddMembersDialog({
             disabled={isLoadingUsers}
           />
 
-          <div className="min-h-[240px]"> {/* Ensures ScrollArea or messages have space */}
+          <div className="min-h-[240px]">
+            {' '}
+            {/* Ensures ScrollArea or messages have space */}
             {isLoadingUsers ? (
               <div className="flex items-center justify-center h-full">
                 <LoaderCircle className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
@@ -131,7 +156,13 @@ export function AddMembersDialog({
             ) : usersError ? (
               <div className="text-center text-sm text-red-500 dark:text-red-400 p-4">
                 Error loading users: {usersError}
-                <Button variant="link" onClick={() => refetchUsers()} className="ml-2">Retry</Button>
+                <Button
+                  variant="link"
+                  onClick={() => refetchUsers()}
+                  className="ml-2"
+                >
+                  Retry
+                </Button>
               </div>
             ) : searchResults.length > 0 ? (
               <ScrollArea className="max-h-60 overflow-y-auto border border-[hsl(var(--border))] rounded-md p-2 bg-[hsl(var(--background))]">
@@ -144,19 +175,34 @@ export function AddMembersDialog({
                     >
                       <Checkbox
                         id={user.id} // Use user.id
-                        checked={selectedUsersState.some(su => su.id === user.id)} // Check if user object is in state
+                        checked={selectedUsersState.some(
+                          (su) => su.id === user.id,
+                        )} // Check if user object is in state
                         onCheckedChange={(checked) => {
                           handleUserSelection(user, !!checked); // Pass CombinedUser object
                         }}
                         className="border-[hsl(var(--border))]"
                       />
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={user.profilePic} alt={user.displayName} />
-                        <AvatarFallback>{user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                        <AvatarImage
+                          src={user.profilePic}
+                          alt={user.displayName}
+                        />
+                        <AvatarFallback>
+                          {user.displayName
+                            ? user.displayName.charAt(0).toUpperCase()
+                            : 'U'}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="flex-grow">
-                        <p className="text-sm font-medium text-[hsl(var(--foreground))]">{user.displayName}</p>
-                        {user.email && <p className="text-xs text-[hsl(var(--muted-foreground))]">{user.email}</p>}
+                        <p className="text-sm font-medium text-[hsl(var(--foreground))]">
+                          {user.displayName}
+                        </p>
+                        {user.email && (
+                          <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                            {user.email}
+                          </p>
+                        )}
                       </div>
                     </Label>
                   ))}
@@ -164,7 +210,9 @@ export function AddMembersDialog({
               </ScrollArea>
             ) : (
               <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
-                {userSearchTerm ? "No users found matching your search." : "Type to search for users to add."}
+                {userSearchTerm
+                  ? 'No users found matching your search.'
+                  : 'Type to search for users to add.'}
               </div>
             )}
           </div>
@@ -182,7 +230,8 @@ export function AddMembersDialog({
             disabled={selectedUsersState.length === 0} // Check length of selectedUsersState
             className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]"
           >
-            Add Selected ({selectedUsersState.length}) {/* Show length of selectedUsersState */}
+            Add Selected ({selectedUsersState.length}){' '}
+            {/* Show length of selectedUsersState */}
           </Button>
         </DialogFooter>
       </DialogContent>

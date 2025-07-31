@@ -41,13 +41,14 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+// Update the import path below if the file is located elsewhere
+import CustomTable from '@/components/ui/CustomTable';
 
 interface ProjectProfile {
   selectedFreelancer?: string[];
   totalBid?: number[];
-  domain?: string;
   freelancersRequired?: string;
-  skills?: string[];
   experience?: number;
   minConnect?: number;
   rate?: number;
@@ -1077,7 +1078,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   }
 
   return (
-    <>
+    <React.Fragment>
       <div className="max-w-5xl mx-auto p-4">
         <div className="mb-8 mt-4">
           <Accordion type="single" collapsible>
@@ -1141,12 +1142,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               </AccordionItem>
             ))}
           </Accordion>
-        ) : (
-          <div className="text-center py-10 w-full mt-10">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500 text-lg">No bid profiles found</p>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Profile Dialog */}
@@ -1178,7 +1174,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </React.Fragment>
   );
 };
 

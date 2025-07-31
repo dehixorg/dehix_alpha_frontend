@@ -1,14 +1,20 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react'; // Import useRef
-import { DocumentData, addDoc, collection, doc, getDoc } from 'firebase/firestore'; // Added addDoc, collection, doc, getDoc
+import {
+  DocumentData,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+} from 'firebase/firestore'; // Added addDoc, collection, doc, getDoc
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
+
 import { cn } from '@/lib/utils'; // Added cn
 import { Button } from '@/components/ui/button';
 import { db } from '@/config/firebaseConfig'; // Added db
 import { toast } from '@/hooks/use-toast'; // Added toast
-
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { CardsChat } from '@/components/shared/chat';
@@ -43,7 +49,8 @@ const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   // Initialize activeConversation with null
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
   // const activeConversationRef = useRef<Conversation | null>(null); // Ref to track active conversation - REMOVED
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
@@ -51,8 +58,12 @@ const HomePage = () => {
   // State for ProfileSidebar
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
-  const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
-  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<{ userName?: string; email?: string; profilePic?: string } | undefined>(undefined);
+  const [profileSidebarType, setProfileSidebarType] = useState<
+    'user' | 'group' | null
+  >(null);
+  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<
+    { userName?: string; email?: string; profilePic?: string } | undefined
+  >(undefined);
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
@@ -61,7 +72,7 @@ const HomePage = () => {
   const handleOpenProfileSidebar = (
     id: string,
     type: 'user' | 'group',
-    initialDetails?: { userName?: string; email?: string; profilePic?: string }
+    initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => {
     setProfileSidebarId(id);
     setProfileSidebarType(type);
@@ -78,9 +89,12 @@ const HomePage = () => {
   };
 
   const toggleChatExpanded = () => {
-    console.log("[page.tsx] toggleChatExpanded called. Current isChatExpanded:", isChatExpanded);
-    setIsChatExpanded(prev => {
-      console.log("[page.tsx] setIsChatExpanded. New value will be:", !prev);
+    console.log(
+      '[page.tsx] toggleChatExpanded called. Current isChatExpanded:',
+      isChatExpanded,
+    );
+    setIsChatExpanded((prev) => {
+      console.log('[page.tsx] setIsChatExpanded. New value will be:', !prev);
       return !prev;
     });
   };
@@ -89,28 +103,36 @@ const HomePage = () => {
     // This logic is now duplicated from chatList.tsx and should be unified
     // For now, let's keep it here to make the dialog functional from the page level.
     if (!user || !user.uid) {
-      toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to start a new chat.',
+      });
       return;
     }
 
-    const existingConversation = conversations.find(conv =>
-      conv.type === 'individual' &&
-      conv.participants.length === 2 &&
-      // Use arraysHaveSameElements to ensure participant check is order-agnostic
-      arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id])
+    const existingConversation = conversations.find(
+      (conv) =>
+        conv.type === 'individual' &&
+        conv.participants.length === 2 &&
+        // Use arraysHaveSameElements to ensure participant check is order-agnostic
+        arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id]),
     );
 
     if (existingConversation) {
       setActiveConversation(existingConversation);
       setIsNewChatDialogOpen(false);
-      toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      toast({
+        title: 'Info',
+        description: 'Conversation already exists, switching to it.',
+      });
       return;
     }
-    
+
     // Create new conversation
     const now = new Date().toISOString();
     // Ensure newConversationData is typed correctly, using Partial<Conversation> or a more specific type
-    const newConversationData: Partial<Conversation> = { 
+    const newConversationData: Partial<Conversation> = {
       participants: [user.uid, selectedUser.id].sort(),
       type: 'individual',
       createdAt: now,
@@ -121,33 +143,48 @@ const HomePage = () => {
           userName: user.displayName || user.email || 'Current User',
           profilePic: user.photoURL || undefined,
           email: user.email || undefined,
-          userType: user.type // Assuming user from Redux has 'type'
+          userType: user.type, // Assuming user from Redux has 'type'
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
           profilePic: selectedUser.profilePic,
           email: selectedUser.email,
-          userType: selectedUser.userType
+          userType: selectedUser.userType,
         },
-      }
+      },
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
-      toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
-      
-      const newDocSnap = await getDoc(doc(db, "conversations", docRef.id));
+      const docRef = await addDoc(
+        collection(db, 'conversations'),
+        newConversationData,
+      );
+      toast({
+        title: 'Success',
+        description: `New chat started with ${selectedUser.displayName}.`,
+      });
+
+      const newDocSnap = await getDoc(doc(db, 'conversations', docRef.id));
       if (newDocSnap.exists()) {
-        const conversationDataForState = { id: newDocSnap.id, ...newDocSnap.data() } as Conversation;
+        const conversationDataForState = {
+          id: newDocSnap.id,
+          ...newDocSnap.data(),
+        } as Conversation;
         setActiveConversation(conversationDataForState);
       } else {
-        console.warn("Newly created conversation document not found immediately after creation.");
+        console.warn(
+          'Newly created conversation document not found immediately after creation.',
+        );
         // Potentially trigger a refresh of conversations list if direct setting fails
       }
       setIsNewChatDialogOpen(false); // Close dialog after successful creation
     } catch (error) {
-      console.error("Error starting new chat: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to start new chat." });
+      console.error('Error starting new chat: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to start new chat.',
+      });
       setIsNewChatDialogOpen(false); // Ensure dialog closes even on error
     }
   };
@@ -188,13 +225,25 @@ const HomePage = () => {
     // Only set a default active conversation if:
     // 1. There are conversations available.
     // 2. The `activeConversation` state is currently null (or undefined).
-    if (conversations.length > 0 && !activeConversation && conversations[0]?.id) {
-      console.log('[Page Effect - Default Setter] Setting default active conversation:', conversations[0]);
+    if (
+      conversations.length > 0 &&
+      !activeConversation &&
+      conversations[0]?.id
+    ) {
+      console.log(
+        '[Page Effect - Default Setter] Setting default active conversation:',
+        conversations[0],
+      );
       setActiveConversation(conversations[0]);
     } else if (activeConversation) {
-      console.log('[Page Effect - Default Setter] Active conversation IS SET, not changing default. Active ID:', activeConversation.id);
+      console.log(
+        '[Page Effect - Default Setter] Active conversation IS SET, not changing default. Active ID:',
+        activeConversation.id,
+      );
     } else {
-      console.log('[Page Effect - Default Setter] No conversations or no active conversation to set, or conversations[0] is invalid.');
+      console.log(
+        '[Page Effect - Default Setter] No conversations or no active conversation to set, or conversations[0] is invalid.',
+      );
     }
   }, [conversations, activeConversation]); // Now depends on both
 
@@ -222,7 +271,9 @@ const HomePage = () => {
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">No conversations</p>
         <p className="text-sm">New chats will appear here.</p>
-        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">Start a Chat</Button>
+        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">
+          Start a Chat
+        </Button>
       </div>
     );
   }
@@ -255,15 +306,20 @@ const HomePage = () => {
       <div className="flex flex-col h-full items-center justify-center text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">Select a conversation</p>
-        <p className="text-sm">Choose a conversation from the list to start chatting.</p>
+        <p className="text-sm">
+          Choose a conversation from the list to start chatting.
+        </p>
       </div>
     );
-  } else { // No conversations and not loading
+  } else {
+    // No conversations and not loading
     chatWindowComponentContent = (
       <div className="flex flex-col h-full items-center justify-center text-center text-[hsl(var(--muted-foreground))] bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">No conversations found</p>
-        <p className="text-sm">Start a new chat or wait for others to connect!</p>
+        <p className="text-sm">
+          Start a new chat or wait for others to connect!
+        </p>
       </div>
     );
   }
@@ -300,7 +356,10 @@ const HomePage = () => {
           // setActiveConversation={setActiveConversation}
           // activeConversation={activeConversation}
           breadcrumbItems={[
-            { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
+            {
+              label: user.type === 'business' ? 'Business' : 'Freelancer',
+              link: '/dashboard',
+            },
             { label: 'Chats', link: '/chat' },
           ]}
           searchPlaceholder="Search chats..."

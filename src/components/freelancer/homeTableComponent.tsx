@@ -241,11 +241,11 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                             <div className="flex justify-between">
                               <strong>Skills Required :</strong>
                               <span>
-                                {selectedProject?.skillsRequired?.length ??
-                                0 > 0
-                                  ? selectedProject?.skillsRequired?.join(
+                                {(selectedProject?.skillsRequired?.length ??
+                                0 > 0)
+                                  ? (selectedProject?.skillsRequired?.join(
                                       ', ',
-                                    ) ?? 'Not specified'
+                                    ) ?? 'Not specified')
                                   : 'Not specified'}
                               </span>
                             </div>

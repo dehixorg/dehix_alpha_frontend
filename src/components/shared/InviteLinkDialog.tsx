@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Copy, RefreshCw, Check, LoaderCircle } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -12,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 // Label might not be strictly needed if input has an id and is self-descriptive, but can be added for accessibility.
 // import { Label } from '@/components/ui/label';
-import { Copy, RefreshCw, Check, LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast'; // Corrected import path
 
@@ -62,7 +63,7 @@ export function InviteLinkDialog({
         });
       }
     } catch (error) {
-      console.error("Error generating invite link:", error);
+      console.error('Error generating invite link:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -103,7 +104,6 @@ export function InviteLinkDialog({
   const dialogTitle = `Invite Link for "${groupName}"`;
   const dialogDescription = `Share this link to invite others to join the group. The link will grant access to join "${groupName}".`;
 
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
@@ -112,8 +112,16 @@ export function InviteLinkDialog({
         aria-describedby="invite-link-description"
       >
         <DialogHeader>
-          <DialogTitle id="invite-link-title" className="text-[hsl(var(--card-foreground))]">{dialogTitle}</DialogTitle>
-          <DialogDescription id="invite-link-description" className="text-[hsl(var(--muted-foreground))] pt-1">
+          <DialogTitle
+            id="invite-link-title"
+            className="text-[hsl(var(--card-foreground))]"
+          >
+            {dialogTitle}
+          </DialogTitle>
+          <DialogDescription
+            id="invite-link-description"
+            className="text-[hsl(var(--muted-foreground))] pt-1"
+          >
             {dialogDescription}
           </DialogDescription>
         </DialogHeader>
@@ -122,7 +130,10 @@ export function InviteLinkDialog({
           <div className="flex items-center space-x-2">
             <Input
               id="inviteLink"
-              value={displayedLink || 'No link generated yet. Click "Generate Link" to create one.'}
+              value={
+                displayedLink ||
+                'No link generated yet. Click "Generate Link" to create one.'
+              }
               readOnly
               className="flex-1 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))]"
               aria-label="Group Invite Link"
@@ -135,7 +146,11 @@ export function InviteLinkDialog({
               aria-label="Copy invite link"
               className="border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             >
-              {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              {isCopied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
             </Button>
           </div>
 
@@ -155,7 +170,12 @@ export function InviteLinkDialog({
 
         <DialogFooter className="border-t border-[hsl(var(--border))] pt-4">
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
               Close
             </Button>
           </DialogClose>
