@@ -21,8 +21,8 @@ export default function BidedInterviews() {
     if (!intervieweeId) return;
     try {
       setLoading(true);
-      const data = await fetchPendingBids(intervieweeId);
-      setBids(data);
+              const data = await fetchPendingBids(intervieweeId);
+        setBids(data);
     } catch (e) {
       setError("Failed to load bids");
     } finally {
@@ -31,7 +31,6 @@ export default function BidedInterviews() {
   };
 
   useEffect(() => {
-    console.log("Aditya hiiiiii");
     loadBids();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervieweeId]);
@@ -70,7 +69,7 @@ export default function BidedInterviews() {
           className="border rounded-md p-4 flex items-center justify-between"
         >
           <div>
-            <p className="font-medium">{bid.bidder?.name ?? "Unnamed"}</p>
+            <p className="font-medium">{bid.interviewer?.userName ?? "Unnamed"}</p>
             <p className="text-xs text-muted-foreground">{bid.description}</p>
           </div>
           <div className="flex items-center gap-4">

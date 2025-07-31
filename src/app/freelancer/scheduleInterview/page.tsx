@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   GraduationCap, 
   Briefcase, 
@@ -15,9 +16,29 @@ import CurrentInterviews from '@/components/freelancer/scheduleInterview/Current
 import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
 
 export default function ScheduleInterviewPage() {
-  const [activeTab, setActiveTab] = React.useState('upskill');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = React.useState(() => {
+    const tab = searchParams.get('tab');
+    return tab || 'upskill';
+  });
 
-  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(setActiveTab, activeTab);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
+
+  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(handleTabChange, activeTab);
+
+  // Update active tab when URL changes
+  React.useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, activeTab]);
 
   const renderContent = () => {
     switch (activeTab) {
