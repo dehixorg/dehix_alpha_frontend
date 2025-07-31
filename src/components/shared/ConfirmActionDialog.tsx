@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,15 @@ interface ConfirmActionDialogProps {
   title: string;
   description: string;
   confirmButtonText?: string; // Optional: Default to "Confirm"
-  confirmButtonVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined; // Optional: Default to "destructive"
+  confirmButtonVariant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link'
+    | null
+    | undefined; // Optional: Default to "destructive"
 }
 
 export function ConfirmActionDialog({
@@ -27,8 +36,8 @@ export function ConfirmActionDialog({
   onConfirm,
   title,
   description,
-  confirmButtonText = "Confirm",
-  confirmButtonVariant = "destructive",
+  confirmButtonText = 'Confirm',
+  confirmButtonVariant = 'destructive',
 }: ConfirmActionDialogProps) {
   if (!isOpen) {
     return null;
@@ -44,12 +53,22 @@ export function ConfirmActionDialog({
       <DialogContent
         className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"
         aria-labelledby="confirm-action-title"
-        aria-describedby={description ? "confirm-action-description" : undefined}
+        aria-describedby={
+          description ? 'confirm-action-description' : undefined
+        }
       >
         <DialogHeader>
-          <DialogTitle id="confirm-action-title" className="text-[hsl(var(--card-foreground))]">{title}</DialogTitle>
+          <DialogTitle
+            id="confirm-action-title"
+            className="text-[hsl(var(--card-foreground))]"
+          >
+            {title}
+          </DialogTitle>
           {description && (
-            <DialogDescription id="confirm-action-description" className="text-[hsl(var(--muted-foreground))] pt-2">
+            <DialogDescription
+              id="confirm-action-description"
+              className="text-[hsl(var(--muted-foreground))] pt-2"
+            >
               {description}
             </DialogDescription>
           )}
@@ -69,8 +88,10 @@ export function ConfirmActionDialog({
             variant={confirmButtonVariant}
             onClick={handleConfirm}
             className={cn(
-              confirmButtonVariant === "destructive" && "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive)_/_0.9)]",
-              confirmButtonVariant === "default" && "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]"
+              confirmButtonVariant === 'destructive' &&
+                'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive)_/_0.9)]',
+              confirmButtonVariant === 'default' &&
+                'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]',
             )}
           >
             {confirmButtonText}

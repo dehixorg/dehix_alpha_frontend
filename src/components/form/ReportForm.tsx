@@ -1,14 +1,13 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -16,25 +15,25 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
-
+} from '@/components/ui/form';
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
-
-import { apiHelperService } from "@/services/report";
-import { apiHelperService as profileService } from "@/services/profilepic";
+} from '@/components/ui/select';
+import { apiHelperService } from '@/services/report';
+import { apiHelperService as profileService } from '@/services/profilepic';
 
 const reportSchema = z.object({
-  subject: z.string().min(3, { message: "Subject is required" }),
-  description: z.string().min(10, { message: "Description must be more detailed" }),
-  report_role: z.string().min(1, { message: "Report role is required" }),
-  report_type: z.string().min(1, { message: "Report type is required" }),
-  reportedId: z.string().min(1, { message: "Reported ID is required" }),
+  subject: z.string().min(3, { message: 'Subject is required' }),
+  description: z
+    .string()
+    .min(10, { message: 'Description must be more detailed' }),
+  report_role: z.string().min(1, { message: 'Report role is required' }),
+  report_type: z.string().min(1, { message: 'Report type is required' }),
+  reportedId: z.string().min(1, { message: 'Reported ID is required' }),
   status: z.string().optional(),
   reportedById: z.string().optional(),
   imageMeta: z
@@ -43,7 +42,7 @@ const reportSchema = z.object({
         Location: z.string(),
         Key: z.string(),
         Bucket: z.string(),
-      })
+      }),
     )
     .optional(),
 });
@@ -55,12 +54,11 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
     resolver: zodResolver(reportSchema),
     defaultValues: initialData,
   });
-const removeImage = (index: number) => {
-  setImageFiles((prev) => prev.filter((_, i) => i !== index));
-};
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
-const [fileError, setFileError] = useState<string | null>(null);
-
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,42 +77,45 @@ const [fileError, setFileError] = useState<string | null>(null);
       const finalPayload = {
         ...data,
         reportedById: initialData.reportedId,
-        status: "OPEN",
+        status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
       const res = await apiHelperService.createReport(finalPayload);
-      console.log("Report submitted successfully:", res);
+      console.log('Report submitted successfully:', res);
     } catch (error) {
-      console.error("Failed to submit report:", error);
+      console.error('Failed to submit report:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
- return (
-  <Card className="p-6 rounded-lg border-none shadow-none">
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-        {/* 🧾 Subject, Report Type & Role in One Row */}
-        <div className="flex flex-wrap gap-4">
-          {/* Subject - 50% */}
-          <div className="flex-[2] min-w-[200px]">
-            <FormField
-              control={form.control}
-              name="subject"
-              render={({ field }) => (
-                <FormItem>
-                  <Label>Subject</Label>
-                  <FormControl>
-                    <Input className="h-9" placeholder="Issue subject" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+  return (
+    <Card className="p-6 rounded-lg border-none shadow-none">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* 🧾 Subject, Report Type & Role in One Row */}
+          <div className="flex flex-wrap gap-4">
+            {/* Subject - 50% */}
+            <div className="flex-[2] min-w-[200px]">
+              <FormField
+                control={form.control}
+                name="subject"
+                render={({ field }) => (
+                  <FormItem>
+                    <Label>Subject</Label>
+                    <FormControl>
+                      <Input
+                        className="h-9"
+                        placeholder="Issue subject"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Report Type - 25% */}
             <div className="flex-1 min-w-[150px]">
@@ -179,37 +180,37 @@ const [fileError, setFileError] = useState<string | null>(null);
             </div>
           </div>
 
-        {/* 📄 Description */}
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <Label>Description</Label>
-              <FormControl>
-                <Textarea
-                  className="min-h-[80px]"
-                  placeholder="Describe the issue in detail..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* 📄 Description */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <Label>Description</Label>
+                <FormControl>
+                  <Textarea
+                    className="min-h-[80px]"
+                    placeholder="Describe the issue in detail..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* 🔒 Hidden reportedId */}
-        <FormField
-          control={form.control}
-          name="reportedId"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input type="hidden" readOnly {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+          {/* 🔒 Hidden reportedId */}
+          <FormField
+            control={form.control}
+            name="reportedId"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input type="hidden" readOnly {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
           {/* 🖼 Image Upload */}
           <FormItem>
@@ -281,18 +282,17 @@ const [fileError, setFileError] = useState<string | null>(null);
               </div>
             )}
 
-  <FormDescription>
-    Attach up to 3 optional screenshots of the issue.
-  </FormDescription>
-</FormItem>
+            <FormDescription>
+              Attach up to 3 optional screenshots of the issue.
+            </FormDescription>
+          </FormItem>
 
-
-        {/* 🚀 Submit Button */}
-        <Button type="submit" className="h-9 px-4" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit Report"}
-        </Button>
-      </form>
-    </Form>
-  </Card>
-);
+          {/* 🚀 Submit Button */}
+          <Button type="submit" className="h-9 px-4" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit Report'}
+          </Button>
+        </form>
+      </Form>
+    </Card>
+  );
 }

@@ -1,30 +1,51 @@
 import React, { useEffect, useRef } from 'react'; // Added useEffect, useRef
-import { Panel, PanelGroup, PanelResizeHandle, PanelRef } from "react-resizable-panels"; // Added PanelRef
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  PanelRef,
+} from 'react-resizable-panels'; // Added PanelRef
+
 import { cn } from '@/lib/utils';
 
 interface ChatLayoutProps {
   chatListComponent: React.ReactNode;
   chatWindowComponent: React.ReactNode;
   isChatAreaExpanded: boolean;
-  onOpenProfileSidebar?: (id: string, type: 'user' | 'group', initialDetails?: { userName?: string; email?: string; profilePic?: string }) => void;
+  onOpenProfileSidebar?: (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: { userName?: string; email?: string; profilePic?: string },
+  ) => void;
 }
 
-const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowComponent, isChatAreaExpanded, onOpenProfileSidebar }) => {
+const ChatLayout: React.FC<ChatLayoutProps> = ({
+  chatListComponent,
+  chatWindowComponent,
+  isChatAreaExpanded,
+  onOpenProfileSidebar,
+}) => {
   const sidebarPanelRef = useRef<PanelRef>(null);
   const defaultSidebarSize = 25;
 
-  console.log("[ChatLayout.tsx] Received isChatAreaExpanded:", isChatAreaExpanded);
+  console.log(
+    '[ChatLayout.tsx] Received isChatAreaExpanded:',
+    isChatAreaExpanded,
+  );
 
   useEffect(() => {
-    console.log("[ChatLayout.tsx] useEffect triggered. isChatAreaExpanded:", isChatAreaExpanded);
+    console.log(
+      '[ChatLayout.tsx] useEffect triggered. isChatAreaExpanded:',
+      isChatAreaExpanded,
+    );
     const panel = sidebarPanelRef.current;
     if (panel) {
-      console.log("[ChatLayout.tsx] sidebarPanelRef.current IS valid.");
+      console.log('[ChatLayout.tsx] sidebarPanelRef.current IS valid.');
       if (isChatAreaExpanded) {
-        console.log("[ChatLayout.tsx] Calling panel.collapse()");
+        console.log('[ChatLayout.tsx] Calling panel.collapse()');
         panel.collapse();
       } else {
-        console.log("[ChatLayout.tsx] Calling panel.expand()");
+        console.log('[ChatLayout.tsx] Calling panel.expand()');
         panel.expand();
         // Optional: If expand() doesn't restore to a specific size,
         // and you want it to reset to its default size when re-expanding:
@@ -32,12 +53,16 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
         // panel.resize(defaultSidebarSize);
       }
     } else {
-      console.error("[ChatLayout.tsx] sidebarPanelRef.current IS NULL or UNDEFINED.");
+      console.error(
+        '[ChatLayout.tsx] sidebarPanelRef.current IS NULL or UNDEFINED.',
+      );
     }
   }, [isChatAreaExpanded]);
 
   return (
-    <PanelGroup direction="horizontal" className="flex-1 h-full"> {/* Removed purple border */}
+    <PanelGroup direction="horizontal" className="flex-1 h-full">
+      {' '}
+      {/* Removed purple border */}
       <Panel
         ref={sidebarPanelRef}
         defaultSize={defaultSidebarSize}
@@ -51,12 +76,16 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
       >
         <aside
           className={cn(
-            "h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg" // Removed lime border
+            'h-full bg-[hsl(var(--card))] p-4 overflow-y-auto shadow-xl dark:shadow-lg', // Removed lime border
           )}
           aria-label="Chat List Sidebar"
         >
           {/* Pass onOpenProfileSidebar to chatListComponent if it's a React element that can accept it */}
-          {React.isValidElement(chatListComponent) ? React.cloneElement(chatListComponent as React.ReactElement<any>, { onOpenProfileSidebar }) : chatListComponent}
+          {React.isValidElement(chatListComponent)
+            ? React.cloneElement(chatListComponent as React.ReactElement<any>, {
+                onOpenProfileSidebar,
+              })
+            : chatListComponent}
         </aside>
       </Panel>
       <PanelResizeHandle
@@ -70,9 +99,19 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ chatListComponent, chatWindowCo
         className="h-full"
         order={2}
       >
-        <main className="h-full bg-[hsl(var(--background))] p-4" aria-label="Main Chat Area"> {/* Removed yellow border */}
+        <main
+          className="h-full bg-[hsl(var(--background))] p-4"
+          aria-label="Main Chat Area"
+        >
+          {' '}
+          {/* Removed yellow border */}
           {/* Pass onOpenProfileSidebar to chatWindowComponent if it's a React element that can accept it */}
-          {React.isValidElement(chatWindowComponent) ? React.cloneElement(chatWindowComponent as React.ReactElement<any>, { onOpenProfileSidebar }) : chatWindowComponent}
+          {React.isValidElement(chatWindowComponent)
+            ? React.cloneElement(
+                chatWindowComponent as React.ReactElement<any>,
+                { onOpenProfileSidebar },
+              )
+            : chatWindowComponent}
         </main>
       </Panel>
     </PanelGroup>

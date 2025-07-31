@@ -1,5 +1,11 @@
 import React from 'react';
-import { Image as ImageIcon, Video as VideoIcon, FileText as FileTextIcon, AlertTriangle } from 'lucide-react'; // Added AlertTriangle for unknown
+import {
+  Image as ImageIcon,
+  Video as VideoIcon,
+  FileText as FileTextIcon,
+  AlertTriangle,
+} from 'lucide-react'; // Added AlertTriangle for unknown
+
 import { cn } from '@/lib/utils';
 // If using next/image:
 // import Image from 'next/image';
@@ -24,7 +30,12 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
 }) => {
   if (!mediaItems || mediaItems.length === 0) {
     return (
-      <div className={cn("text-center text-sm text-[hsl(var(--muted-foreground))] p-4", className)}>
+      <div
+        className={cn(
+          'text-center text-sm text-[hsl(var(--muted-foreground))] p-4',
+          className,
+        )}
+      >
         <p>No media to display.</p>
       </div>
     );
@@ -32,15 +43,21 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
 
   const renderMediaItem = (item: MediaItem) => {
     let content;
-    const commonIconContainerClasses = "flex flex-col items-center justify-center h-full p-2 text-[hsl(var(--muted-foreground))]";
-    const commonIconClasses = "w-1/2 h-1/2";
-    const commonFileNameClasses = "text-xs text-center truncate mt-1 w-full px-1";
+    const commonIconContainerClasses =
+      'flex flex-col items-center justify-center h-full p-2 text-[hsl(var(--muted-foreground))]';
+    const commonIconClasses = 'w-1/2 h-1/2';
+    const commonFileNameClasses =
+      'text-xs text-center truncate mt-1 w-full px-1';
 
     if (item.type.startsWith('image/')) {
       content = (
         // Using standard <img> for now. Replace with Next.js <Image /> if the project is set up for it.
         // <Image src={item.url} alt={item.fileName} layout="fill" objectFit="cover" className="rounded-md" />
-        <img src={item.url} alt={item.fileName} className="object-cover w-full h-full rounded-md" />
+        <img
+          src={item.url}
+          alt={item.fileName}
+          className="object-cover w-full h-full rounded-md"
+        />
       );
     } else if (item.type.startsWith('video/')) {
       content = (
@@ -49,7 +66,10 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
           <p className={commonFileNameClasses}>{item.fileName}</p>
         </div>
       );
-    } else if (item.type.startsWith('application/pdf') || item.type.startsWith('text/')) {
+    } else if (
+      item.type.startsWith('application/pdf') ||
+      item.type.startsWith('text/')
+    ) {
       content = (
         <div className={commonIconContainerClasses}>
           <FileTextIcon className={commonIconClasses} />
@@ -67,8 +87,8 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
     }
 
     const itemContainerClasses = cn(
-      "aspect-square relative overflow-hidden rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted)_/_0.3)] hover:bg-[hsl(var(--muted)_/_0.5)] transition-colors",
-      onMediaItemClick ? "cursor-pointer" : ""
+      'aspect-square relative overflow-hidden rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted)_/_0.3)] hover:bg-[hsl(var(--muted)_/_0.5)] transition-colors',
+      onMediaItemClick ? 'cursor-pointer' : '',
     );
 
     if (onMediaItemClick) {
@@ -92,7 +112,12 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
   };
 
   return (
-    <div className={cn("grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2", className)}>
+    <div
+      className={cn(
+        'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2',
+        className,
+      )}
+    >
       {mediaItems.map(renderMediaItem)}
     </div>
   );

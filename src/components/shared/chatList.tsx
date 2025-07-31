@@ -2,17 +2,34 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { DocumentData } from 'firebase/firestore';
-import { MessageSquare, Search, SquarePen, Users, X as LucideX } from 'lucide-react'; // Added X
+import {
+  DocumentData,
+  getFirestore,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
+import {
+  MessageSquare,
+  Search,
+  SquarePen,
+  Users,
+  X as LucideX,
+} from 'lucide-react'; // Added X
+import { useSelector } from 'react-redux'; // Added
+import { LoaderCircle } from 'lucide-react';
+
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
+import { NewChatDialog } from './NewChatDialog'; // User as NewChatUser removed, CombinedUser will be inferred
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
-import { useSelector } from 'react-redux'; // Added
+import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { RootState } from '@/lib/store'; // Added
-import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebaseConfig';
 import { toast } from '@/hooks/use-toast';
-import { NewChatDialog } from './NewChatDialog'; // User as NewChatUser removed, CombinedUser will be inferred
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
 import { useAllUsers } from '@/hooks/useAllUsers';
 // ProfileSidebar is no longer imported or rendered here
@@ -21,7 +38,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -30,13 +47,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils'; // Utility class names
-import { LoaderCircle } from 'lucide-react';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 export interface Conversation extends DocumentData {
@@ -50,7 +64,14 @@ export interface Conversation extends DocumentData {
     senderId?: string;
     timestamp?: string;
   } | null; // Allow null
-  participantDetails?: { [uid: string]: { userName: string; profilePic?: string; email?: string; userType?: 'freelancer' | 'business' } };
+  participantDetails?: {
+    [uid: string]: {
+      userName: string;
+      profilePic?: string;
+      email?: string;
+      userType?: 'freelancer' | 'business';
+    };
+  };
   // Group specific fields
   groupName?: string;
   description?: string; // Added group description
@@ -83,7 +104,12 @@ export function ChatList({
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState(''); // State for group description
-  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const {
+    users: allFetchedUsers,
+    isLoading: isLoadingUsers,
+    error: usersError,
+    refetchUsers,
+  } = useAllUsers();
   const currentUser = useSelector((state: RootState) => state.user);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
@@ -97,14 +123,38 @@ export function ChatList({
 
   // Mock Users (replace with actual data source/API call in a real app)
   const MOCK_USERS = [
-    { uid: 'user1_uid_alice', userName: 'Alice Wonderland', email: 'alice@example.com' },
-    { uid: 'user2_uid_bob', userName: 'Bob The Builder', email: 'bob@example.com' },
-    { uid: 'user3_uid_charlie', userName: 'Charlie Brown', email: 'charlie@example.com' },
-    { uid: 'user4_uid_diana', userName: 'Diana Prince', email: 'diana@example.com' },
-    { uid: 'user5_uid_edward', userName: 'Edward Scissorhands', email: 'edward@example.com' },
+    {
+      uid: 'user1_uid_alice',
+      userName: 'Alice Wonderland',
+      email: 'alice@example.com',
+    },
+    {
+      uid: 'user2_uid_bob',
+      userName: 'Bob The Builder',
+      email: 'bob@example.com',
+    },
+    {
+      uid: 'user3_uid_charlie',
+      userName: 'Charlie Brown',
+      email: 'charlie@example.com',
+    },
+    {
+      uid: 'user4_uid_diana',
+      userName: 'Diana Prince',
+      email: 'diana@example.com',
+    },
+    {
+      uid: 'user5_uid_edward',
+      userName: 'Edward Scissorhands',
+      email: 'edward@example.com',
+    },
   ];
 
-  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  const stripHtml = (html: string) =>
+    html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation(); // Prevent triggering setConversation if this is nested
@@ -113,11 +163,15 @@ export function ChatList({
     if (conv.type === 'group') {
       onOpenProfileSidebar(conv.id, 'group');
     } else {
-      const otherParticipantUid = conv.participants.find(p => p !== currentUser.uid);
+      const otherParticipantUid = conv.participants.find(
+        (p) => p !== currentUser.uid,
+      );
       if (otherParticipantUid) {
         onOpenProfileSidebar(otherParticipantUid, 'user');
       } else {
-        console.error("Could not determine other participant for profile view in ChatList.");
+        console.error(
+          'Could not determine other participant for profile view in ChatList.',
+        );
       }
     }
   };
@@ -125,7 +179,7 @@ export function ChatList({
   // Effect for filtering users based on search term
   useEffect(() => {
     const term = userSearchTerm.trim().toLowerCase();
-    
+
     // Only search if term is at least 3 characters
     if (term.length < 3) {
       setSearchResults([]);
@@ -135,23 +189,22 @@ export function ChatList({
     setIsSearching(true);
     try {
       // Filter users based on search term
-      const filtered = allFetchedUsers.filter(user =>
-        user.id !== currentUser.uid && // Exclude current user using Redux state
-        !selectedUsers.find(selected => selected.id === user.id) && // Exclude already selected users
-        (
-          (user.displayName.toLowerCase().includes(term)) ||
-          (user.email.toLowerCase().includes(term)) ||
-          (user.rawUserName?.toLowerCase().includes(term)) ||
-          (user.rawName?.toLowerCase().includes(term))
-        )
+      const filtered = allFetchedUsers.filter(
+        (user) =>
+          user.id !== currentUser.uid && // Exclude current user using Redux state
+          !selectedUsers.find((selected) => selected.id === user.id) && // Exclude already selected users
+          (user.displayName.toLowerCase().includes(term) ||
+            user.email.toLowerCase().includes(term) ||
+            user.rawUserName?.toLowerCase().includes(term) ||
+            user.rawName?.toLowerCase().includes(term)),
       );
       setSearchResults(filtered);
     } catch (error) {
       console.error('Error filtering users:', error);
-      toast({ 
-        variant: "destructive", 
-        title: "Error", 
-        description: "Failed to search users. Please try again." 
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to search users. Please try again.',
       });
     } finally {
       setIsSearching(false);
@@ -163,14 +216,14 @@ export function ChatList({
   };
 
   const handleSelectUser = (user: CombinedUser) => {
-    if (!selectedUsers.find(selected => selected.id === user.id)) {
+    if (!selectedUsers.find((selected) => selected.id === user.id)) {
       setSelectedUsers([...selectedUsers, user]);
     }
     setUserSearchTerm('');
   };
 
   const handleRemoveUser = (userId: string) => {
-    setSelectedUsers(selectedUsers.filter(user => user.id !== userId));
+    setSelectedUsers(selectedUsers.filter((user) => user.id !== userId));
   };
 
   // Function to update the last updated time for each conversation
@@ -196,7 +249,7 @@ export function ChatList({
     return () => clearInterval(intervalId);
   }, [updateLastUpdated]);
 
-  const filteredConversations = conversations.filter(conversation => {
+  const filteredConversations = conversations.filter((conversation) => {
     const name = conversation.project_name || 'Unnamed Project';
     const lastMessageContent = conversation.lastMessage?.content || '';
     return (
@@ -207,22 +260,36 @@ export function ChatList({
 
   const handleCreateGroup = async () => {
     if (!currentUser || !currentUser.uid) {
-      toast({ variant: "destructive", title: "Error", description: "You must be logged in to create a group." });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to create a group.',
+      });
       return;
     }
 
     if (selectedUsers.length === 0) {
-      toast({ variant: "destructive", title: "Error", description: "Please select at least one user to create a group." });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select at least one user to create a group.',
+      });
       return;
     }
 
     if (!groupName.trim()) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter a group name." });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a group name.',
+      });
       return;
     }
 
     const currentUserUID = currentUser.uid;
-    const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.id)]));
+    const participantUIDs = Array.from(
+      new Set([currentUserUID, ...selectedUsers.map((su) => su.id)]),
+    );
 
     const now = new Date().toISOString();
     const newGroup: Conversation = {
@@ -241,21 +308,24 @@ export function ChatList({
       },
       participantDetails: {
         [currentUserUID]: {
-          userName: currentUser.displayName || currentUser.email || 'Current User',
+          userName:
+            currentUser.displayName || currentUser.email || 'Current User',
           profilePic: currentUser.photoURL || undefined,
           email: currentUser.email || undefined,
-          userType: currentUser.type
+          userType: currentUser.type,
         },
-        ...Object.fromEntries(selectedUsers.map(user => [
-          user.id,
-          {
-            userName: user.displayName,
-            profilePic: user.profilePic,
-            email: user.email,
-            userType: user.userType
-          }
-        ]))
-      }
+        ...Object.fromEntries(
+          selectedUsers.map((user) => [
+            user.id,
+            {
+              userName: user.displayName,
+              profilePic: user.profilePic,
+              email: user.email,
+              userType: user.userType,
+            },
+          ]),
+        ),
+      },
     };
 
     setConversation(newGroup);
@@ -276,10 +346,11 @@ export function ChatList({
             className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
             onClick={() => setShowCreateGroupDialog(true)}
           >
-            <Users className="h-4 w-4 mr-2" /> {/* Icon color will be primary-foreground */}
-            Create Group 
+            <Users className="h-4 w-4 mr-2" />{' '}
+            {/* Icon color will be primary-foreground */}
+            Create Group
           </Button>
-          <Button 
+          <Button
             variant="default" // Or "outline"
             className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
             onClick={onOpenNewChatDialog} // Use the prop here
@@ -291,7 +362,10 @@ export function ChatList({
 
         {/* Existing Search Bar Div */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" aria-hidden="true" />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]"
+            aria-hidden="true"
+          />
           <Input
             placeholder="Search or start new chat"
             aria-label="Search conversations"
@@ -302,13 +376,23 @@ export function ChatList({
         </div>
       </div>
 
-      <ScrollArea className="flex-grow"> {/* ScrollArea will take remaining height */}
-        <div className="p-2 space-y-1" role="listbox" aria-label="Conversations list"> {/* Container for conversation items */}
+      <ScrollArea className="flex-grow">
+        {' '}
+        {/* ScrollArea will take remaining height */}
+        <div
+          className="p-2 space-y-1"
+          role="listbox"
+          aria-label="Conversations list"
+        >
+          {' '}
+          {/* Container for conversation items */}
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conversation) => {
               const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
               const isActive = active?.id === conversation.id;
-              const lastMessageText = stripHtml(conversation.lastMessage?.content || '');
+              const lastMessageText = stripHtml(
+                conversation.lastMessage?.content || '',
+              );
               const displayText = lastMessageText || 'No messages yet';
 
               return (
@@ -320,42 +404,79 @@ export function ChatList({
                   className={cn(
                     'flex items-start p-3 rounded-lg cursor-pointer space-x-3 focus:outline-none',
                     'hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
-                    isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e] focus:ring-0 focus:outline-none',
+                    isActive &&
+                      'bg-[#d6dae2a8] dark:bg-[#35383b9e] focus:ring-0 focus:outline-none',
                   )}
                   onClick={() => setConversation(conversation)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setConversation(conversation); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ')
+                      setConversation(conversation);
+                  }}
                 >
-                  <div className="flex items-center space-x-3 flex-shrink-0" onClick={(e) => handleProfileIconClick(e, conversation)} role="button" aria-label="View profile">
+                  <div
+                    className="flex items-center space-x-3 flex-shrink-0"
+                    onClick={(e) => handleProfileIconClick(e, conversation)}
+                    role="button"
+                    aria-label="View profile"
+                  >
                     <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
                       <AvatarImage
                         src={
                           conversation.type === 'group'
-                            ? conversation.participantDetails?.[conversation.id]?.profilePic || `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.profilePic || `https://api.adorable.io/avatars/285/${conversation.participants.find(p => p !== currentUser.uid)}.png`
+                            ? conversation.participantDetails?.[conversation.id]
+                                ?.profilePic ||
+                              `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                            : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.profilePic ||
+                              `https://api.adorable.io/avatars/285/${conversation.participants.find((p) => p !== currentUser.uid)}.png`
                         }
-                        alt={conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName}
+                        alt={
+                          conversation.type === 'group'
+                            ? conversation.groupName
+                            : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.userName
+                        }
                       />
                       <AvatarFallback className="bg-[#d6dae2] dark:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]">
-                        {
-                          (conversation.type === 'group'
-                            ? conversation.groupName?.charAt(0)
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName?.charAt(0)
-                          )?.toUpperCase() || 'P'
-                        }
+                        {(conversation.type === 'group'
+                          ? conversation.groupName?.charAt(0)
+                          : conversation.participantDetails?.[
+                              conversation.participants.find(
+                                (p) => p !== currentUser.uid,
+                              ) || ''
+                            ]?.userName?.charAt(0)
+                        )?.toUpperCase() || 'P'}
                       </AvatarFallback>
                     </Avatar>
                   </div>
-                  <div className="flex-grow overflow-hidden" onClick={() => setConversation(conversation)}>
+                  <div
+                    className="flex-grow overflow-hidden"
+                    onClick={() => setConversation(conversation)}
+                  >
                     <div className="flex justify-between items-baseline">
                       <p className="text-sm font-medium truncate text-[hsl(var(--foreground))]">
-                        {conversation.type === 'group' ? conversation.groupName : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName || 'Chat User'}
+                        {conversation.type === 'group'
+                          ? conversation.groupName
+                          : conversation.participantDetails?.[
+                              conversation.participants.find(
+                                (p) => p !== currentUser.uid,
+                              ) || ''
+                            ]?.userName || 'Chat User'}
                       </p>
                       <p className="text-xs flex-shrink-0 ml-2 text-[hsl(var(--muted-foreground))]">
                         {lastUpdated}
                       </p>
                     </div>
                     <p className="text-xs truncate text-[hsl(var(--muted-foreground))]">
-                      {displayText.length > 40 ? displayText.substring(0, 40) + '...' : displayText}
+                      {displayText.length > 40
+                        ? displayText.substring(0, 40) + '...'
+                        : displayText}
                     </p>
                   </div>
                 </div>
@@ -365,12 +486,14 @@ export function ChatList({
             <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
               <MessageSquare className="w-10 h-10 mb-2" />
               <p className="text-lg font-medium text-[hsl(var(--foreground))]">
-                {searchTerm ? 'No matching conversations' : 'No conversations found'}
+                {searchTerm
+                  ? 'No matching conversations'
+                  : 'No conversations found'}
               </p>
               {!searchTerm && (
-                 <p className="text-sm">
-                   Start a new chat or wait for others to connect!
-                 </p>
+                <p className="text-sm">
+                  Start a new chat or wait for others to connect!
+                </p>
               )}
             </div>
           )}
@@ -378,7 +501,10 @@ export function ChatList({
       </ScrollArea>
 
       {showCreateGroupDialog && (
-        <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
+        <Dialog
+          open={showCreateGroupDialog}
+          onOpenChange={setShowCreateGroupDialog}
+        >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Create New Group</DialogTitle>
@@ -441,25 +567,39 @@ export function ChatList({
                         >
                           <div className="flex items-center space-x-2">
                             <Avatar className="w-6 h-6">
-                              <AvatarImage src={foundUser.profilePic} alt={foundUser.displayName} />
-                              <AvatarFallback>{foundUser.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                              <AvatarImage
+                                src={foundUser.profilePic}
+                                alt={foundUser.displayName}
+                              />
+                              <AvatarFallback>
+                                {foundUser.displayName
+                                  ?.charAt(0)
+                                  .toUpperCase() || 'U'}
+                              </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{foundUser.displayName}</p>
-                              <p className="text-xs text-[hsl(var(--muted-foreground))]">{foundUser.email}</p>
+                              <p className="font-medium">
+                                {foundUser.displayName}
+                              </p>
+                              <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                                {foundUser.email}
+                              </p>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  ) : userSearchTerm.length >= 3 && searchResults.length === 0 ? (
+                  ) : userSearchTerm.length >= 3 &&
+                    searchResults.length === 0 ? (
                     <div className="text-sm text-[hsl(var(--muted-foreground))] p-2">
                       No users found matching your search
                     </div>
                   ) : null}
                   {selectedUsers.length > 0 && (
                     <div className="mt-2">
-                      <Label className="text-xs text-[hsl(var(--muted-foreground))] mb-1">Selected Members:</Label>
+                      <Label className="text-xs text-[hsl(var(--muted-foreground))] mb-1">
+                        Selected Members:
+                      </Label>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedUsers.map((selected) => (
                           <span
@@ -469,7 +609,10 @@ export function ChatList({
                             {selected.displayName}
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); handleRemoveUser(selected.id); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveUser(selected.id);
+                              }}
                               className="ml-1.5 text-[hsl(var(--primary)_/_0.7)] hover:text-[hsl(var(--primary))]"
                               aria-label={`Remove ${selected.displayName}`}
                             >
@@ -485,13 +628,19 @@ export function ChatList({
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={() => {
-                  setGroupName('');
-                  setGroupDescription('');
-                  setSelectedUsers([]);
-                  setUserSearchTerm('');
-                  setSearchResults([]);
-                }}>Cancel</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setGroupName('');
+                    setGroupDescription('');
+                    setSelectedUsers([]);
+                    setUserSearchTerm('');
+                    setSearchResults([]);
+                  }}
+                >
+                  Cancel
+                </Button>
               </DialogClose>
               <Button
                 type="button"

@@ -33,7 +33,7 @@ axiosInstance.interceptors.request.use(
       url: config.url,
       method: config.method,
       headers: config.headers,
-      data: config.data instanceof FormData ? 'FormData' : config.data
+      data: config.data instanceof FormData ? 'FormData' : config.data,
     });
     return config;
   },
@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
     console.log('Response:', {
       status: response.status,
       statusText: response.statusText,
-      data: response.data
+      data: response.data,
     });
     return response;
   },
@@ -65,8 +65,11 @@ axiosInstance.interceptors.response.use(
         url: error.config?.url,
         method: error.config?.method,
         headers: error.config?.headers,
-        data: error.config?.data instanceof FormData ? 'FormData' : error.config?.data
-      }
+        data:
+          error.config?.data instanceof FormData
+            ? 'FormData'
+            : error.config?.data,
+      },
     });
     return Promise.reject(error);
   },
