@@ -41,36 +41,46 @@ export interface PendingBid extends PopulatedBid {
   description: string;
   talentId: string;
   fee: number;
+  suggestedDateTime: string;
+  meetingLink?: string;
 }
 export async function fetchPendingBids(intervieweeId: string) {
-  // Get all interviews for this interviewee
   const { data: resp } = await axios.get<any>(
     `${BASE_URL}/interview`,
     {
       params: { intervieweeId },
-    },
-  );
-  const interviews = Array.isArray(resp) ? resp : resp.data;
-  // data is array of interviews; each may have interviewBids object
-  const pending: PendingBid[] = [];
-  for (const interview of interviews) {
-    if (!interview.interviewBids || Object.keys(interview.interviewBids).length === 0) {
-      continue;
     }
-    const bidsObj = interview.interviewBids;
-    if (Array.isArray(bidsObj)) {
-      for (const bid of bidsObj) {
-        pending.push({ ...bid, interviewId: interview._id, bidKey: bid._id });
-      }
-    } else {
-      for (const bidId in bidsObj) {
-        const bid = bidsObj[bidId];
-        pending.push({ ...bid, interviewId: interview._id, bidKey: bidId });
+  );
+
+  const interviews = Array.isArray(resp) ? resp : resp.data;
+
+  const pending: PendingBid[] = [];
+
+  for (const interview of interviews) {
+    const interviewId = interview._id;
+  
+    const bidsObj = interview.interviewBids as Record<string, PendingBid>;
+
+    if (!bidsObj || typeof bidsObj !== 'object') continue;
+    console.log(bidsObj,"finding");
+
+    for (const bid of Object.values(bidsObj)) {
+      if (typeof bid === 'object' && bid !== null) {
+        pending.push({
+          ...bid,
+          interviewId,
+          bidKey: bid._id,
+          description: interview.description || bid.description || '', // Add description from interview
+        });
       }
     }
   }
+  console.log("Pending bids fetched:", pending);
   return pending;
 }
+
+
+
 
 export async function acceptBid(interviewId: string, bidId: string) {
   const { data } = await axios.post(
