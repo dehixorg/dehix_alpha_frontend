@@ -45,7 +45,7 @@ export interface PendingBid extends PopulatedBid {
   fee: number;
   interviewer?: InterviewerInfo;
 }
-export async function fetchPendingBids(intervieweeId: string) {
+export async function fetchPendingBids(intervieweeId: string, interviewType?: string) {
   // Get all interviews for this interviewee
   const { data: resp } = await axios.get<any>(
     `${BASE_URL}/interview`,
@@ -53,7 +53,15 @@ export async function fetchPendingBids(intervieweeId: string) {
       params: { intervieweeId },
     },
   );
-  const interviews = Array.isArray(resp) ? resp : resp.data;
+  const allInterviews = Array.isArray(resp) ? resp : resp.data;
+  
+  // Filter interviews by type if specified
+  const interviews = interviewType 
+    ? allInterviews.filter((interview: any) => {
+        console.log("🔍 Filtering interview:", interview.interviewType, "against:", interviewType);
+        return interview.interviewType === interviewType;
+      })
+    : allInterviews;
   
   console.log("🔍 fetchPendingBids - All interviews:", interviews.length);
   console.log("🔍 fetchPendingBids - Sample interview:", interviews[0]);

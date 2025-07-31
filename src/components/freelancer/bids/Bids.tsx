@@ -49,6 +49,7 @@ type Interview = {
   description?: string;
   interviewBids?: InterviewBid[]; // Array of bids
   InterviewStatus?: string;
+  skillName?: string;
 };
 
 const BidsPage = ({ userId }: { userId?: string }) => {
@@ -76,12 +77,29 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         const allInterviews: any[] = Array.isArray(interviewRes) ? interviewRes : (interviewRes?.data ?? []);
         console.log('interviews fetched for user as interviewee:', allInterviews.length);
         console.log('Sample interview structure:', allInterviews[0]);
+        console.log('All interview fields:', allInterviews[0] ? Object.keys(allInterviews[0]) : 'No interviews');
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
         console.log('dehixTalentObj', dehixTalentObj);
         console.log('dehixTalentObj keys:', Object.keys(dehixTalentObj));
         console.log('dehixTalentObj values:', Object.values(dehixTalentObj));
         const verifierSkills: string[] = Object.values(dehixTalentObj).map((t: any) => t.talentId);
         console.log('User skills:', verifierSkills);
+        
+                    // Create a mapping from talent _id and talentId to skill name
+        const talentToSkillMap: Record<string, string> = {};
+        Object.values(dehixTalentObj).forEach((talent: any) => {
+          console.log('Talent object:', talent);
+          if (talent._id) {
+            // Use talentName as the primary source for skill name
+            const skillName = talent.talentName || talent.skillName || talent.name || talent.label || talent.skill || talent.talentId;
+            // Map both _id and talentId to the same skill name
+            talentToSkillMap[talent._id] = skillName;
+            if (talent.talentId) {
+              talentToSkillMap[talent.talentId] = skillName;
+            }
+          }
+        });
+        console.log('Talent to skill mapping:', talentToSkillMap);
         
         // Check if user has any talents
         if (verifierSkills.length === 0) {
@@ -153,23 +171,57 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           };
         });
 
-        // Fetch skill names for each talentId
-        const talentIds = Array.from(new Set(enriched.map((iv: any) => iv.talentId).filter(Boolean)));
-        let skillMap: Record<string, any> = {};
-        if (talentIds.length) {
-          const skillPromises = talentIds.map((id) => axiosInstance.get(`/skill/${id}`).catch(() => null));
-          const skillResults = await Promise.all(skillPromises);
-          skillResults.forEach((res, idx) => {
-            if (res?.data) {
-              skillMap[talentIds[idx]] = res.data;
-            }
+        // Use the talentId label or talentType as skill name since skill API is not working
+        const finalList = enriched.map((iv: any) => {
+          console.log('Full interview object:', iv);
+          console.log('Interview data for skill name:', {
+            talentId: iv.talentId,
+            talentType: iv.talentType,
+            skill: iv.skill,
+            level: iv.level,
+            interviewType: iv.interviewType
           });
-        }
-
-        const finalList = enriched.map((iv: any) => ({
-          ...iv,
-          skillName: skillMap[iv.talentId]?.name || iv.talentType || iv.talentId,
-        }));
+          
+                      // Try to get skill name from user's talent mapping first
+            const talentId = iv.talentId; // This is the _id of the talent object
+            const skillFromMapping = talentToSkillMap[talentId];
+          
+          console.log('=== SKILL NAME DEBUGGING ===');
+          console.log('Interview ID:', iv._id);
+          console.log('Talent ID from interview:', talentId);
+          console.log('Talent ID type:', typeof talentId);
+          console.log('Available talent IDs in mapping:', Object.keys(talentToSkillMap));
+          console.log('Available talent IDs types:', Object.keys(talentToSkillMap).map(id => typeof id));
+          console.log('Skill from mapping for this talentId:', skillFromMapping);
+          console.log('Talent ID exists in mapping:', talentToSkillMap.hasOwnProperty(talentId));
+          
+          // Try different variations of the talentId
+                      const variations = [
+              talentId,
+              talentId?.toString(),
+              talentId?.toLowerCase(),
+              talentId?.toUpperCase()
+            ].filter(Boolean);
+          
+          console.log('Trying talentId variations:', variations);
+          let foundSkillName = null;
+          for (const variation of variations) {
+            if (talentToSkillMap[variation]) {
+              foundSkillName = talentToSkillMap[variation];
+              console.log('Found skill name with variation:', variation, '=', foundSkillName);
+              break;
+            }
+          }
+          
+          const skillName = foundSkillName || iv.talentId?.label || iv.talentType || iv.skill || iv.level || talentId || 'Unknown Skill';
+          console.log('Final resolved skill name:', skillName);
+          console.log('=== END DEBUGGING ===');
+          
+          return {
+            ...iv,
+            skillName,
+          };
+        });
 
         setBidsData(finalList);
       } catch (error) {
@@ -310,15 +362,12 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             <AccordionItem key={interview?._id} value={interview?._id || ''}>
               <AccordionTrigger className="text-xl w-full font-semibold hover:no-underline">
                 <div className="flex justify-between items-center w-full mx-3">
-                  <div className="flex flex-col text-left">
-                    <span className="font-medium">{interview?.talentType || 'Unknown Skill'}</span>
-                    {interview?.intervieweeName && (
-                      <span className="text-sm text-muted-foreground">{interview.intervieweeName}</span>
-                    )}
-                    {interview?.interviewType && (
-                      <span className="text-sm text-muted-foreground">{interview.interviewType}</span>
-                    )}
-                  </div>
+                                     <div className="flex flex-col text-left">
+                     <span className="font-medium">{interview?.skillName || 'Unknown Skill'}</span>
+                     {interview?.intervieweeName && (
+                       <span className="text-sm text-muted-foreground">{interview.intervieweeName}</span>
+                     )}
+                   </div>
                   <div className="flex flex-col items-end text-right">
                     {interview?.interviewDate && (
                       <span className="text-sm text-muted-foreground">{new Date(interview.interviewDate).toLocaleDateString()}</span>

@@ -6,7 +6,11 @@ import { fetchPendingBids, acceptBid, PendingBid } from "@/lib/api/interviews";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-export default function BidedInterviews() {
+interface BidedInterviewsProps {
+  interviewType?: string;
+}
+
+export default function BidedInterviews({ interviewType }: BidedInterviewsProps) {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
 
@@ -21,8 +25,8 @@ export default function BidedInterviews() {
     if (!intervieweeId) return;
     try {
       setLoading(true);
-              const data = await fetchPendingBids(intervieweeId);
-        setBids(data);
+      const data = await fetchPendingBids(intervieweeId, interviewType);
+      setBids(data);
     } catch (e) {
       setError("Failed to load bids");
     } finally {
@@ -33,7 +37,7 @@ export default function BidedInterviews() {
   useEffect(() => {
     loadBids();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intervieweeId]);
+  }, [intervieweeId, interviewType]);
 
   const handleAccept = async (bid: PendingBid) => {
     try {
