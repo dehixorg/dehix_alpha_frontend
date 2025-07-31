@@ -928,19 +928,37 @@ export function ProfileForm({ user_id }: { user_id: string }) {
           </div>
           <Separator className="col-span-2 mt-0" />
           <div className="col-span-2">
-            <FormField
-              control={form.control}
-              name="resume"
-              render={() => (
-                <FormItem className="flex flex-col items-start ">
-                  <FormLabel className="ml-2">Upload Resume</FormLabel>
-                  <div className="w-full sm:w-auto sm:mr-26">
-                    <ResumeUpload />
-                  </div>
-                </FormItem>
-              )}
-            />
-            <Separator className="sm:col-span-2 mt-0" />
+            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2">
+              <div className="flex flex-col items-start">
+                <FormLabel className="ml-2">Upload Resume</FormLabel>
+                <div className="w-full">
+                  <ResumeUpload
+                    onResumeUpdate={() =>
+                      setResumeRefreshTrigger((prev) => prev + 1)
+                    }
+                    userId={user_id}
+                  />
+                </div>
+              </div>
+              <FormField
+                control={form.control}
+                name="coverLetter"
+                render={({ field, fieldState }) => (
+                  <FormItem className="flex flex-col items-start">
+                    <FormLabel className="ml-2">
+                      Cover Letter (Optional)
+                    </FormLabel>
+                    <div className="w-full">
+                      <CoverLetterTextarea
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        error={fieldState.error?.message}
+                      />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
           <div className="col-span-2">
             <Button
