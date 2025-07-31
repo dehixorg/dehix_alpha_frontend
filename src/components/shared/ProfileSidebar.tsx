@@ -33,7 +33,7 @@ import { AddMembersDialog } from './AddMembersDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
-import { SharedMediaDisplay, type MediaItem } from './SharedMediaDisplay';
+import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
 import {
   Sheet,

@@ -257,10 +257,9 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <Image
+                        <img
                           src={imageUrl}
                           alt={`screenshot-${idx}`}
-                          fill
                           style={{
                             objectFit: 'cover',
                             width: '100%',

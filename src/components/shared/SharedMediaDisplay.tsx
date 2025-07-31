@@ -16,10 +16,6 @@ export type MediaItem = {
   type: string; // e.g., 'image/jpeg', 'application/pdf', 'video/mp4'
   fileName: string;
 };
-<<<<<<< HEAD
-=======
-
->>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
 interface SharedMediaDisplayProps {
   mediaItems: MediaItem[];
   onMediaItemClick?: (item: MediaItem) => void;

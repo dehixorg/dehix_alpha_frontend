@@ -949,11 +949,18 @@ export function ProfileForm({ user_id }: { user_id: string }) {
                       Cover Letter (Optional)
                     </FormLabel>
                     <div className="w-full">
-                      <CoverLetterTextarea
+                      <Textarea
+                        placeholder="Enter your cover letter"
                         value={field.value || ''}
                         onChange={field.onChange}
-                        error={fieldState.error?.message}
+                        className={fieldState.error ? 'border-red-500' : ''}
+                        rows={6}
                       />
+                      {fieldState.error && (
+                        <span className="text-red-500 text-xs">
+                          {fieldState.error.message}
+                        </span>
+                      )}
                     </div>
                   </FormItem>
                 )}
