@@ -76,7 +76,7 @@ export function ChangeGroupInfoDialog({
             id="change-group-info-description"
             className="text-[hsl(var(--muted-foreground))] pt-1"
           >
-            Update the group name and avatar URL.
+            Update the group's name and avatar URL.
           </DialogDescription>
         </DialogHeader>
 

@@ -32,6 +32,15 @@ import {
   CarouselNext,
 } from '@/components/ui/carousel';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Card } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -1142,7 +1151,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        ) : (
+          <div className="text-center py-10 w-full mt-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500 text-lg">No bid profiles found</p>
+          </div>
+        )}
       </div>
 
       {/* Profile Dialog */}

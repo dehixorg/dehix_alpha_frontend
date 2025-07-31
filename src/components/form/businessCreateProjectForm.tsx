@@ -43,7 +43,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Badge } from '@/components/ui/badge';
 import { RootState } from '@/lib/store';
 import useDraft from '@/hooks/useDraft';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const profileFormSchema = z.object({
   projectName: z.string().min(2, {

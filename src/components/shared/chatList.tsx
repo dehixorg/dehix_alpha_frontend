@@ -417,7 +417,10 @@ export function ChatList({
                     className="flex items-center space-x-3 flex-shrink-0"
                     onClick={(e) => handleProfileIconClick(e, conversation)}
                     role="button"
+<<<<<<< HEAD
                     tabIndex={0}
+=======
+>>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
                     aria-label="View profile"
                   >
                     <Avatar className="w-10 h-10 flex-shrink-0 mt-1">

@@ -48,12 +48,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
+<<<<<<< HEAD
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
+=======
+>>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
@@ -61,6 +64,17 @@ import { FileAttachment } from './fileAttachment';
 // Added
 // ProfileSidebar is no longer imported or rendered here
 
+<<<<<<< HEAD
+=======
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'; // Added
+// ProfileSidebar is no longer imported or rendered here
+
+>>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -440,11 +454,16 @@ export function CardsChat({
     }
   }
 
+<<<<<<< HEAD
   // Always call hooks at the top level, not conditionally.
   // Move this conditional return after all hooks.
   let shouldReturnNull = false;
   if (!conversation) {
     shouldReturnNull = true;
+=======
+  if (!conversation) {
+    return null;
+>>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
   }
 
   async function handleFileUpload() {
@@ -643,7 +662,11 @@ export function CardsChat({
   const handleInsertEmoji = (emoji: string) => {
     if (composerRef.current) {
       composerRef.current.focus();
+<<<<<<< HEAD
       const htmlEmoji = `<span class="chat-emoji">${emoji}</span>&nbsp;`;
+=======
+      const htmlEmoji = `<span class=\"chat-emoji\">${emoji}</span>&nbsp;`;
+>>>>>>> 3cef0431dffa3caee32e25c03f753a9681db9e52
       document.execCommand('insertHTML', false, htmlEmoji);
       // Update input state with new HTML
       const html = composerRef.current.innerHTML;

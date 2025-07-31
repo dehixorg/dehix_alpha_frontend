@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import Image from 'next/image';
 
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
