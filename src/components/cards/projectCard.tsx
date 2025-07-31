@@ -75,7 +75,6 @@ export function ProjectCard({
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
   const pathname = usePathname();

@@ -40,14 +40,12 @@ const Loader = () => (
 
 interface JobCardProps {
   job: Project;
-  onApply: () => void;
   onNotInterested: () => void;
   bidExist: boolean;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
-  onApply,
   onNotInterested,
   bidExist,
 }) => {
@@ -65,7 +63,6 @@ const JobCard: React.FC<JobCardProps> = ({
 
   const toggleExpand = () => setExpanded(!expanded);
   const [openReport, setOpenReport] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const reportType = getReportTypeFromPath(pathname);
   const reportData = {
@@ -116,12 +113,14 @@ const JobCard: React.FC<JobCardProps> = ({
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
 
   return (
-    <Card className="w-[97%]">
-      <CardHeader>
+    <Card className="w-[80%] max-w-2xl lg:max-w-3xl mx-auto shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl">{job.projectName} </CardTitle>
-            <CardDescription className="mt-1">
+          <div className="flex-1 pr-4">
+            <CardTitle className="text-xl lg:text-2xl font-semibold">
+              {job.projectName}{' '}
+            </CardTitle>
+            <CardDescription className="mt-2 text-sm lg:text-base">
               Position: {job.position || 'Web developer'} · Exp:{' '}
               {profile?.years || '2'} yrs
             </CardDescription>
@@ -150,28 +149,6 @@ const JobCard: React.FC<JobCardProps> = ({
                 }
               />
             )}
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="text-gray-500 hover:text-gray-100 p-0 h-6 w-6"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-6 w-32 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
-                <button
-                  onClick={() => {
-                    setOpenReport(true);
-                    setMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  Report
-                </button>
-              </div>
-            )} */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -198,75 +175,108 @@ const JobCard: React.FC<JobCardProps> = ({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className={`text-sm text-gray-500 ${!expanded && 'line-clamp-3'}`}>
-          {job.description}
-        </p>
-        {job.description && job.description.length > 150 && (
-          <button
-            onClick={toggleExpand}
-            className="text-primary text-sm mt-1 hover:underline"
-          >
-            {expanded ? 'less' : 'more'}
-          </button>
-        )}
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Description Section */}
+          <div className="lg:col-span-3">
+            <p
+              className={`text-sm lg:text-base text-gray-500 leading-relaxed ${!expanded && 'line-clamp-3'}`}
+            >
+              {job.description}
+            </p>
+            {job.description && job.description.length > 150 && (
+              <button
+                onClick={toggleExpand}
+                className="text-primary text-sm mt-2 hover:underline font-medium"
+              >
+                {expanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
 
-        <div className="mt-4">
-          <h4 className="text-sm font-medium mb-2">Skills required</h4>
-          <div className="flex flex-wrap gap-2">
-            {job.skillsRequired &&
-              job.skillsRequired.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="rounded-md">
-                  {skill}
-                </Badge>
-              ))}
-          </div>
-        </div>
-
-        {profile && (
-          <div className="mt-4">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              {profile.positions && (
-                <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
-                  {profile.positions} Positions
-                </span>
-              )}
-              {profile.years && (
-                <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
-                  {profile.years} Years
-                </span>
-              )}
+            <div className="mt-6">
+              <h4 className="text-sm lg:text-base font-semibold mb-3">
+                Skills required
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {job.skillsRequired &&
+                  job.skillsRequired.map((skill, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="rounded-md text-xs lg:text-sm px-3 py-1"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+              </div>
             </div>
-            {profile.connectsRequired && (
-              <div className="mt-2 text-sm">
-                Connects required:{' '}
-                <span className="font-medium">{profile.connectsRequired}</span>
+          </div>
+
+          {/* Project Details Section */}
+          <div className="lg:col-span-1">
+            {profile && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {profile.positions && (
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
+                      {profile.positions} Positions
+                    </span>
+                  )}
+                  {profile.years && (
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
+                      {profile.years} Years
+                    </span>
+                  )}
+                </div>
+                {profile.connectsRequired && (
+                  <div className="text-sm lg:text-base">
+                    <span className="text-muted-foreground">
+                      Connects required:
+                    </span>{' '}
+                    <span className="font-semibold text-foreground">
+                      {profile.connectsRequired}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNotInterested}
-          className="text-gray-500"
-        >
-          <EyeOff className="h-4 w-4 mr-1" />
-          Not Interested
-        </Button>
-        <ProjectDrawer
-          icon={<Eye className="h-4 w-4 mr-1" />}
-          project={job}
-          text="View"
-          isSizeSmall={true}
-        />
-        <Link href={`/freelancer/market/project/${job._id}/apply`}>
-          <Button type="submit" className="" size="sm" disabled={bidExist}>
-            {bidExist ? 'Applied' : 'Bid'}
+      <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-6">
+        <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground">
+          <span>Posted: {new Date(job.createdAt).toLocaleDateString()}</span>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNotInterested}
+            className="text-gray-500 flex-1 sm:flex-none"
+          >
+            <EyeOff className="h-4 w-4 mr-1" />
+            Not Interested
           </Button>
-        </Link>
+          <ProjectDrawer
+            icon={<Eye className="h-4 w-4 mr-1" />}
+            project={job}
+            text="View"
+            isSizeSmall={true}
+          />
+          <Link
+            href={`/freelancer/market/project/${job._id}/apply`}
+            className="flex-1 sm:flex-none"
+          >
+            <Button
+              type="submit"
+              className="w-full"
+              size="sm"
+              disabled={bidExist}
+            >
+              {bidExist ? 'Applied' : 'Bid'}
+            </Button>
+          </Link>
+        </div>
       </CardFooter>
       {openReport && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
