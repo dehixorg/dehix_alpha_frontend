@@ -72,6 +72,22 @@ export function ProjectCard({
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
+  const [openReport, setOpenReport] = useState(false);
+
+  const pathname = usePathname();
+  const user = useSelector((state: RootState) => state.user);
+
+  const reportType = getReportTypeFromPath(pathname);
+  const reportData = {
+    subject: '',
+    description: '',
+    report_role: user?.type || 'STUDENT',
+    report_type: reportType,
+    status: 'OPEN',
+    reportedbyId: user?.uid || 'user123',
+    reportedId: user?.uid || 'user123',
+  };
+
   return (
     <Card
       className={cn('flex flex-col h-[400px] relative', cardClassName)}
