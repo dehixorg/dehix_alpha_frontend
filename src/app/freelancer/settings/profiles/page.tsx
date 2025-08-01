@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Eye, User, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Eye, User, Briefcase, Pencil } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
@@ -363,11 +363,23 @@ export default function ProfilesPage() {
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-4 mt-auto">
                         <Button
-                          onClick={() => handleViewProfile(profile._id!)}
+                          onClick={() =>
+                            router.push(
+                              `/freelancer/settings/profiles/view/${profile._id!}`,
+                            )
+                          }
+                          variant="outline"
                           className="flex-1 flex items-center gap-2"
                         >
                           <Eye className="h-4 w-4" />
-                          View & Edit
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => handleViewProfile(profile._id!)}
+                          className="flex-1 flex items-center gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
                         </Button>
                         <Button
                           variant="destructive"
