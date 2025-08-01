@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { Github, ExternalLink } from 'lucide-react';
+import { Github, ExternalLink, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
-import { Card, CardContent } from '@/components/ui/card';
+import DateRange from './dateRange';
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 
 interface ProjectProps {
@@ -22,39 +31,24 @@ interface ProjectProps {
   oracleAssigned: string | null;
   verificationUpdateTime: string;
   comments: string;
-  isViewOnly?: boolean; // New prop to disable edit functionality
+  isViewOnly?: boolean;
   onClick?: () => void;
 }
 
 const ProjectCard: React.FC<ProjectProps> = ({
   projectName,
+  description,
   githubLink,
   liveDemoLink,
   thumbnail,
+  start,
+  end,
+  techUsed,
+  comments,
   isViewOnly = false,
   onClick,
 }) => {
   const [imageError, setImageError] = useState(false);
-
-  // Debug what ProjectCard is receiving
-  console.log('🔍 ProjectCard received props:', {
-    projectName,
-    liveDemoLink,
-    githubLink,
-    hasLiveDemoLink: !!liveDemoLink,
-    liveDemoLinkType: typeof liveDemoLink,
-    liveDemoLinkTrimmed: liveDemoLink?.trim(),
-    liveDemoLinkLength: liveDemoLink?.length,
-  });
-
-  // Debug logging for thumbnails
-  if (!thumbnail || !thumbnail.trim()) {
-    console.log('⚠️ Missing thumbnail for project:', projectName);
-  } else {
-    console.log('✅ Project has thumbnail:', projectName);
-    console.log('🔗 Thumbnail URL:', thumbnail);
-    console.log('🔍 URL type:', typeof thumbnail, 'Length:', thumbnail.length);
-  }
 
   const handleLinkClick = (e: React.MouseEvent, url: string) => {
     e.stopPropagation();
@@ -71,31 +65,22 @@ const ProjectCard: React.FC<ProjectProps> = ({
   };
 
   return (
-    <Card
-      className="w-full h-full cursor-pointer hover:shadow-lg transition-shadow duration-200"
-      onClick={onClick}
-    >
-      <CardContent className="p-0">
+    <Card className="w-full h-full mx-auto cursor-pointer hover:shadow-lg transition-shadow duration-200">
+      <CardHeader className="p-0">
         {/* Project Thumbnail */}
         <div className="relative">
           {thumbnail && thumbnail.trim() && !imageError ? (
-            <div className="relative w-full h-32 sm:h-40 md:h-48">
+            <div className="relative w-full h-56">
               <Image
                 src={thumbnail}
                 alt={`${projectName} thumbnail`}
                 fill
                 className="object-cover rounded-t-lg"
-                onError={() => {
-                  console.error('❌ Image failed to load:', thumbnail);
-                  setImageError(true);
-                }}
-                onLoad={() => {
-                  console.log('✅ Image loaded successfully:', thumbnail);
-                }}
+                onError={() => setImageError(true)}
               />
             </div>
           ) : (
-            <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700 rounded-t-lg flex flex-col items-center justify-center relative group">
+            <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-700 rounded-t-lg flex flex-col items-center justify-center relative group">
               <div className="w-12 h-12 bg-blue-100 dark:bg-gray-600 rounded-full flex items-center justify-center mb-2">
                 <svg
                   className="w-6 h-6 text-blue-500 dark:text-gray-400"
@@ -129,49 +114,79 @@ const ProjectCard: React.FC<ProjectProps> = ({
             </div>
           )}
         </div>
+      </CardHeader>
 
-        {/* Project Name and Links */}
-        <div className="p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-sm sm:text-base md:text-lg truncate flex-1">
-              {projectName}
-            </h3>
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              {githubLink && githubLink.trim() && (
+      <CardContent className="p-4" onClick={onClick}>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <CardTitle className="font-semibold text-lg truncate flex-1">
+            {projectName}
+          </CardTitle>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {githubLink && githubLink.trim() && (
+              <button
+                onClick={(e) => handleLinkClick(e, githubLink)}
+                className="p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                title="View GitHub Repository"
+              >
+                <Github className="h-4 w-4" />
+              </button>
+            )}
+            {liveDemoLink && liveDemoLink.trim() ? (
+              <button
+                onClick={(e) => handleLinkClick(e, liveDemoLink)}
+                className="p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+                title="View Live Demo"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </button>
+            ) : (
+              !isViewOnly && (
                 <button
-                  onClick={(e) => handleLinkClick(e, githubLink)}
-                  className="p-1 sm:p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  title="View GitHub Repository"
+                  onClick={(e) => handleMissingFieldClick(e, 'Live Demo Link')}
+                  className="p-1.5 bg-gray-100/50 dark:bg-gray-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors border border-dashed border-gray-300 dark:border-gray-600"
+                  title="Add Live Demo Link"
                 >
-                  <Github className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <ExternalLink className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </button>
-              )}
-              {liveDemoLink && liveDemoLink.trim() ? (
-                <button
-                  onClick={(e) => handleLinkClick(e, liveDemoLink)}
-                  className="p-1 sm:p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  title="View Live Demo"
-                >
-                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
-              ) : (
-                !isViewOnly && (
-                  <button
-                    onClick={(e) =>
-                      handleMissingFieldClick(e, 'Live Demo Link')
-                    }
-                    className="p-1 sm:p-1.5 bg-gray-100/50 dark:bg-gray-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-full transition-colors border border-dashed border-gray-300 dark:border-gray-600"
-                    title="Add Live Demo Link"
-                  >
-                    <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 dark:text-gray-500" />
-                  </button>
-                )
-              )}
-            </div>
+              )
+            )}
           </div>
         </div>
+
+        {/* Tech Stack Badges */}
+        {techUsed && techUsed.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {techUsed.map((tech, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tech}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Project Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">
+          {description || (
+            <span className="text-gray-400 italic">
+              No description provided. Click to add one.
+            </span>
+          )}
+        </p>
+
+        {/* Comments */}
+        {comments && (
+          <p className="mt-2 flex items-start text-gray-500 border p-3 rounded text-sm">
+            <MessageSquare className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+            {comments}
+          </p>
+        )}
       </CardContent>
+
+      <CardFooter className="p-4 pt-0">
+        <DateRange startDate={start} endDate={end} />
+      </CardFooter>
     </Card>
   );
 };
+
 export default ProjectCard;
