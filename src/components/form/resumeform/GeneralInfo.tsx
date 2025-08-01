@@ -85,6 +85,14 @@ export const GeneralInfo: React.FC<GeneralInfoProps> = ({
 
       <div className="flex justify-center mt-4">
         <Button
+          onClick={handleAddProject}
+          className="text-center justify-items-center dark:text-black  light:bg-black"
+        >
+          <PlusCircle />
+        </Button>
+      </div>
+      <div className="flex justify-center mt-4">
+        <Button
           onClick={onAddProject}
           className="text-center justify-items-center dark:text-black light:bg-black"
           type="button"

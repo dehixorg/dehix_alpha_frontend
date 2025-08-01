@@ -2,7 +2,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import Image from 'next/image';
 
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -258,17 +257,16 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        {/* ✅ FIX: Added the `fill` prop and removed `className` */}
-                        <Image
+                        <img
                           src={imageUrl}
                           alt={`screenshot-${idx}`}
-                          fill
-                          sizes="96px" // Tells browser the image is 96px wide
-                          className="object-cover" // Keep object-cover for correct scaling
+                          style={{
+                            objectFit: 'cover',
+                            width: '100%',
+                            height: '100%',
+                          }}
                         />
                       </a>
-
-                      {/* ❌ Cancel Button (no changes here) */}
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}

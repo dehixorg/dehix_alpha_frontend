@@ -60,11 +60,6 @@ export const menuItemsTop: MenuItem[] = [
     icon: <ImagePlus className="h-5 w-5" />,
     label: 'Portfolio',
   },
-  {
-    href: '/reports', // Link to your new Reports page
-    icon: <Package className="h-5 w-5" />, // You can change icon
-    label: 'Reports',
-  },
 ];
 
 export const menuItemsBottom: MenuItem[] = [];

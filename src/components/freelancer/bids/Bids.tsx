@@ -40,7 +40,6 @@ type Interview = {
     id: string;
     label?: string;
   };
-  talentType?: string;
   interviewBids?: Record<string, InterviewBid>; // Object of objects
   InterviewStatus?: string;
 };
@@ -162,7 +161,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             <AccordionItem key={interview?._id} value={interview?._id || ''}>
               <AccordionTrigger className="text-xl w-full font-semibold hover:no-underline">
                 <div className="flex justify-between items-center w-full mx-3">
-                  <div>{interview?.talentType || 'No Talent Label'}</div>
+                  <div>{interview?.talentId?.label || 'No Talent Label'}</div>
                   <div>
                     {Object.keys(interview?.interviewBids || {}).length} Bids
                   </div>

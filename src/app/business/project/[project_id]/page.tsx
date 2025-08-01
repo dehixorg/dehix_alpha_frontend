@@ -26,7 +26,6 @@ import BidsDetails from '@/components/freelancer/project/bidsDetail';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
-import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
 interface ProjectProfile {
   _id?: string;
@@ -73,7 +72,6 @@ interface Project {
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -312,20 +310,12 @@ export default function Dashboard() {
             <CardTitle className="group flex items-center gap-2 text-xl">
               Interviews
             </CardTitle>
-            <div className="text-center py-6">
-              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="80" />
-              <p className="text-gray-500 text-sm">No interviews scheduled</p>
+            <div className="text-center py-10">
+              <CalendarX2 className="mx-auto mb-2 text-gray-500" size="100" />
+              <p className="text-gray-500">No interviews scheduled</p>
             </div>
           </div>
         </main>
-
-        {/* Add Profile Dialog */}
-        <AddProfileDialog
-          projectId={project_id || ''}
-          onProfileAdded={handleProfileAdded}
-          open={isAddProfileDialogOpen}
-          onOpenChange={setIsAddProfileDialogOpen}
-        />
       </div>
     </div>
   );
