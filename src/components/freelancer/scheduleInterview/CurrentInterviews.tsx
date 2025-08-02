@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
-import { axiosInstance } from "@/lib/axiosinstance";
+import { fetchScheduledInterviews } from "@/lib/api/interviews";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, Clock, Video, ExternalLink } from "lucide-react";
 
@@ -34,15 +34,9 @@ export default function CurrentInterviews() {
     
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/interview`, {
-        params: { 
-          intervieweeId: user.uid,
-          InterviewStatus: 'SCHEDULED'
-        }
-      });
-      
-      const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+      const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
+      console.log(data,"valueeeeeeeeeeeeeeeeeeeee");
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
@@ -112,7 +106,17 @@ export default function CurrentInterviews() {
                   
                   <div className="flex items-center gap-2">
                     <Video className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span 
+                      className={`text-sm text-gray-600 dark:text-gray-400 ${
+                        interview.meetingLink ? 'cursor-pointer hover:text-blue-600 hover:underline' : ''
+                      }`}
+                      onClick={() => {
+                        if (interview.meetingLink) {
+                          window.open(interview.meetingLink, '_blank');
+                        }
+                      }}
+                      title={interview.meetingLink ? "Click to join meeting" : ""}
+                    >
                       {interview.interviewer?.name || "Interviewer"}
                     </span>
                   </div>

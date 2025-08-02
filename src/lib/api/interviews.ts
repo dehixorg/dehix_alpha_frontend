@@ -44,11 +44,15 @@ export interface PendingBid extends PopulatedBid {
   suggestedDateTime: string;
   meetingLink?: string;
 }
+
 export async function fetchPendingBids(intervieweeId: string) {
   const { data: resp } = await axios.get<any>(
     `${BASE_URL}/interview`,
     {
-      params: { intervieweeId },
+      params: { 
+        intervieweeId,
+        InterviewStatus: 'BIDDING' // Only get interviews that are still bidding
+      },
     }
   );
 
@@ -77,6 +81,23 @@ export async function fetchPendingBids(intervieweeId: string) {
   }
   console.log("Pending bids fetched:", pending);
   return pending;
+}
+
+// Fetch scheduled interviews for the given interviewee
+export async function fetchScheduledInterviews(intervieweeId: string) {
+  const { data: resp } = await axios.get<any>(
+    `${BASE_URL}/interview`,
+    {
+      params: { 
+        intervieweeId,
+        InterviewStatus: 'SCHEDULED' // Only get scheduled interviews
+      },
+    }
+  );
+
+    console.log(resp,"interviewsaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  const interviews = Array.isArray(resp) ? resp : resp.data;
+  return interviews;
 }
 
 
