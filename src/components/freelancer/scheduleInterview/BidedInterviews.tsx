@@ -7,6 +7,14 @@ import { fetchPendingBids, acceptBid, PendingBid } from "@/lib/api/interviews";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, Clock, DollarSign, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface BidedInterviewsProps {
   interviewType?: string;
@@ -92,71 +100,97 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   }
 
   return (
-    <div className="space-y-4">
-      {bids.map((bid) => {
-        const { date, time } = formatDateTime(bid.suggestedDateTime);
-        return (
-          <div
-            key={getRowKey(bid)}
-            className="border rounded-lg p-6 bg-white dark:bg-gray-800 shadow-sm"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    {bid.interviewer?.userName ?? "Unnamed Interviewer"}
-                  </h3>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
+    <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-[#09090B]">
+            <TableHead className="w-[200px] text-center font-medium">
+              Interviewer
+            </TableHead>
+            <TableHead className="w-[150px] text-center font-medium">
+              Date
+            </TableHead>
+            <TableHead className="w-[150px] text-center font-medium">
+              Time
+            </TableHead>
+            <TableHead className="w-[150px] text-center font-medium">
+              Fee
+            </TableHead>
+            <TableHead className="w-[300px] text-center font-medium">
+              Description
+            </TableHead>
+            <TableHead className="w-[200px] text-center font-medium">
+              Actions
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {bids.map((bid) => {
+            const { date, time } = formatDateTime(bid.suggestedDateTime);
+            return (
+              <TableRow key={getRowKey(bid)} className="transition">
+                <TableCell className="py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {bid.interviewer?.userName ?? "Unnamed Interviewer"}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
                     <Calendar className="h-4 w-4 text-blue-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {date}
                     </span>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
                     <Clock className="h-4 w-4 text-green-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {time}
                     </span>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
                     <DollarSign className="h-4 w-4 text-yellow-500" />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       ${bid.fee}
                     </span>
                   </div>
-                </div>
-                
-                {bid.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {bid.description}
-                  </p>
-                )}
-              </div>
-              
-              <div className="ml-4">
-                <Button
-                  size="sm"
-                  disabled={!!acceptingId}
-                  onClick={() => handleAccept(bid)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {acceptingId === getRowKey(bid) ? (
-                    <Loader2 className="animate-spin h-4 w-4" />
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  {bid.description && bid.description !== 'description' ? (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {bid.description}
+                    </p>
                   ) : (
-                    "Accept & Schedule"
+                    <span className="text-sm text-gray-400">
+                      No description available
+                    </span>
                   )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+                </TableCell>
+                <TableCell className="py-3 text-center">
+                  <Button
+                    size="sm"
+                    disabled={!!acceptingId}
+                    onClick={() => handleAccept(bid)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {acceptingId === getRowKey(bid) ? (
+                      <Loader2 className="animate-spin h-4 w-4" />
+                    ) : (
+                      "Accept & Schedule"
+                    )}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }

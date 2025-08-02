@@ -20,6 +20,7 @@ import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/
 import Header from '@/components/header/header';
 import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
 import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
+import HistoryInterviews from '@/components/freelancer/scheduleInterview/HistoryInterviews';
 
 export default function ScheduleInterviewPage() {
   const searchParams = useSearchParams();
@@ -268,11 +269,7 @@ export default function ScheduleInterviewPage() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No talent interview history available.
-                      </p>
-                    </div>
+                    <HistoryInterviews />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

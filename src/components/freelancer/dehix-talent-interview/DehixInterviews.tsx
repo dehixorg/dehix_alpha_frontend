@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Briefcase, Calendar, DollarSign } from 'lucide-react';
+import { Briefcase, Calendar, DollarSign, ExternalLink, Bell } from 'lucide-react';
 
 import {
   Table,
@@ -38,6 +38,11 @@ const DehixInterviews = ({
             ? domainData
             : [];
 
+    console.log('Filtered data:', data);
+    console.log('isTableView:', isTableView);
+    console.log('skillData:', skillData);
+    console.log('domainData:', domainData);
+
     return searchQuery
       ? data.filter(({ talentType }: any) =>
           talentType?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -57,6 +62,31 @@ const DehixInterviews = ({
     return diffDays > 0 ? `${diffDays}d` : 'Today';
   };
 
+  const formatDateTime = (dateString: string | undefined): string => {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const handleSetReminder = (bid: any) => {
+    // TODO: Implement reminder functionality
+    console.log('Setting reminder for bid:', bid);
+    // This could open a modal or trigger a notification system
+  };
+
+  const handleJoinMeeting = (meetingLink: string) => {
+    if (meetingLink) {
+      window.open(meetingLink, '_blank');
+    }
+  };
+
   return (
     <div className="p-6 w-full">
       <div className="mb-8  ml-0 md:ml-5 ">
@@ -70,74 +100,146 @@ const DehixInterviews = ({
             </div>
           ) : isTableView ? (
             <div className="w-full bg-card  mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+              <div>DEBUG: Table view is active</div>
               <Table>
                 <TableHeader>
                   <TableRow className=" hover:bg-[#09090B">
-                    <TableHead className="w-[180px] text-center font-medium">
-                      Interviwer
+                    <TableHead className="w-[200px] text-center font-medium">
+                      Interviewer
                     </TableHead>
-                    <TableHead className="w-[180px] text-center font-medium">
-                      Talent Name
+                    <TableHead className="w-[200px] text-center font-medium">
+                      Time
                     </TableHead>
-                    <TableHead className=" font-medium text-center ">
-                      Experience
+                    <TableHead className="w-[150px] text-center font-medium">
+                      Link
                     </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Interview Fees
-                    </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Level
-                    </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Status
-                    </TableHead>
-                    <TableHead className="  font-medium text-center">
-                      Actions
+                    <TableHead className="w-[120px] text-center font-medium">
+                      Reminder
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredData()!.map((interview: any) =>
-                    Object.values(interview?.interviewBids || {})
-                      .filter((bid: any) => bid?.status === 'ACCEPTED')
-                      .map((bid: any) => (
-                        <TableRow key={interview._id} className=" transition">
+                  {(() => {
+                    const data = filteredData();
+                    console.log('Rendering table with data:', data);
+                    return data.map((interview: any) => {
+                      const bids = Object.values(interview?.interviewBids || {});
+                      // Show all bids for debugging, not just accepted ones
+                      const allBids = bids;
+                      console.log('Interview:', interview);
+                      console.log('All bids:', bids);
+                      console.log('Interview keys:', Object.keys(interview || {}));
+                      // If no bids, show the interview itself
+                      if (allBids.length === 0) {
+                        console.log('No bids found, showing interview directly');
+                        return (
+                          <TableRow key={interview?._id} className=" transition">
+                            <TableCell className="py-3 text-center">
+                              <div className="flex flex-col items-center">
+                                <span className="font-medium">
+                                  {interview?.interviewer?.userName || 'Unknown'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {interview.talentType} • {interview.level}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 text-center">
+                              <div className="flex flex-col items-center">
+                                <span className="font-medium">
+                                  {formatDateTime(interview?.suggestedDateTime)}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {getRemainingDays(interview?.suggestedDateTime)} remaining
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 text-center">
+                              {interview?.meetingLink ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleJoinMeeting(interview.meetingLink)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <ExternalLink size={14} />
+                                  Join Meeting
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">
+                                  No link available
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-3 text-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSetReminder(interview)}
+                                className="flex items-center gap-2"
+                              >
+                                <Bell size={14} />
+                                Set Reminder
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+                      
+                      return allBids.map((bid: any) => (
+                        <TableRow key={bid?._id} className=" transition">
                           <TableCell className="py-3 text-center">
-                            {bid?.interviewer?.userName || 'Unknown'}
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">
+                                {bid?.interviewer?.userName || 'Unknown'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {interview.talentType} • {interview.level}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="py-3 text-center">
-                            {interview.talentType}
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium">
+                                {formatDateTime(bid?.suggestedDateTime)}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {getRemainingDays(bid?.suggestedDateTime)} remaining
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="py-3 text-center">
-                            {bid?.interviewer?.workExperience}
+                            {bid?.meetingLink ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleJoinMeeting(bid.meetingLink)}
+                                className="flex items-center gap-2"
+                              >
+                                <ExternalLink size={14} />
+                                Join Meeting
+                              </Button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">
+                                No link available
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="py-3 text-center">
-                            {bid?.fee}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {interview.level}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            <Badge
-                              variant={'default'}
-                              className="px-1 py-1 text-xs"
-                            >
-                              {interview?.InterviewStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right py-3">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="mr-3"
+                              onClick={() => handleSetReminder(bid)}
+                              className="flex items-center gap-2"
                             >
-                              Edit
+                              <Bell size={14} />
+                              Set Reminder
                             </Button>
-                            <Button size="sm">View</Button>
                           </TableCell>
                         </TableRow>
-                      )),
-                  )}
+                      ));
+                    });
+                  })()}
                 </TableBody>
               </Table>
             </div>
