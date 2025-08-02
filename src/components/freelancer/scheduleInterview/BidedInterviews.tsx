@@ -28,6 +28,7 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   const [bids, setBids] = useState<PendingBid[]>([]);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(5);
 
   const getRowKey = (bid: PendingBid) => `${bid.interviewId}-${bid.bidKey}`;
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +82,13 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
     };
   };
 
+  const handleShowMore = () => {
+    setDisplayCount(prev => prev + 5);
+  };
+
+  const displayedBids = bids.slice(0, displayCount);
+  const hasMoreBids = displayCount < bids.length;
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -100,97 +108,111 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   }
 
   return (
-    <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-[#09090B]">
-            <TableHead className="w-[200px] text-center font-medium">
-              Interviewer
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Date
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Time
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Fee
-            </TableHead>
-            <TableHead className="w-[300px] text-center font-medium">
-              Description
-            </TableHead>
-            <TableHead className="w-[200px] text-center font-medium">
-              Actions
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bids.map((bid) => {
-            const { date, time } = formatDateTime(bid.suggestedDateTime);
-            return (
-              <TableRow key={getRowKey(bid)} className="transition">
-                <TableCell className="py-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      {bid.interviewer?.userName ?? "Unnamed Interviewer"}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Calendar className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {date}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {time}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <DollarSign className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      ${bid.fee}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  {bid.description && bid.description !== 'description' ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {bid.description}
-                    </p>
-                  ) : (
-                    <span className="text-sm text-gray-400">
-                      No description available
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="py-3 text-center">
-                  <Button
-                    size="sm"
-                    disabled={!!acceptingId}
-                    onClick={() => handleAccept(bid)}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {acceptingId === getRowKey(bid) ? (
-                      <Loader2 className="animate-spin h-4 w-4" />
+    <div className="space-y-4">
+      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-[#09090B]">
+              <TableHead className="w-[200px] text-center font-medium">
+                Interviewer
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Date
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Time
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Fee
+              </TableHead>
+              <TableHead className="w-[300px] text-center font-medium">
+                Description
+              </TableHead>
+              <TableHead className="w-[200px] text-center font-medium">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {displayedBids.map((bid) => {
+              const { date, time } = formatDateTime(bid.suggestedDateTime);
+              return (
+                <TableRow key={getRowKey(bid)} className="transition">
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {bid.interviewer?.userName ?? "Unnamed Interviewer"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {date}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {time}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <DollarSign className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        ${bid.fee}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    {bid.description && bid.description !== 'description' ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {bid.description}
+                      </p>
                     ) : (
-                      "Accept & Schedule"
+                      <span className="text-sm text-gray-400">
+                        No description available
+                      </span>
                     )}
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <Button
+                      size="sm"
+                      disabled={!!acceptingId}
+                      onClick={() => handleAccept(bid)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {acceptingId === getRowKey(bid) ? (
+                        <Loader2 className="animate-spin h-4 w-4" />
+                      ) : (
+                        "Accept & Schedule"
+                      )}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {hasMoreBids && (
+        <div className="flex justify-center">
+          <Button
+            onClick={handleShowMore}
+            variant="outline"
+            className="px-6 py-2"
+          >
+            Show More ({bids.length - displayCount} remaining)
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

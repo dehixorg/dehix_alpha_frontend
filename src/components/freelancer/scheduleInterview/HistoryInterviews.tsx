@@ -38,6 +38,7 @@ export default function HistoryInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const [interviews, setInterviews] = useState<HistoryInterview[]>([]);
   const [loading, setLoading] = useState(false);
+  const [displayCount, setDisplayCount] = useState(5);
 
   const loadHistoryInterviews = async () => {
     if (!user?.uid) return;
@@ -99,6 +100,13 @@ export default function HistoryInterviews() {
     }
   };
 
+  const handleShowMore = () => {
+    setDisplayCount(prev => prev + 5);
+  };
+
+  const displayedInterviews = interviews.slice(0, displayCount);
+  const hasMoreInterviews = displayCount < interviews.length;
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -108,130 +116,144 @@ export default function HistoryInterviews() {
   }
 
   return (
-    <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-[#09090B]">
-            <TableHead className="w-[200px] text-center font-medium">
-              Interviewer
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Date
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Time
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Status
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Rating
-            </TableHead>
-            <TableHead className="w-[300px] text-center font-medium">
-              Feedback
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-medium">
-              Actions
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {interviews.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="py-8 text-center">
-                <div className="text-center">
-                  <p className="text-muted-foreground text-sm">
-                    No completed interviews found in history.
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Your completed interviews will appear here once you have some.
-                  </p>
-                </div>
-              </TableCell>
+    <div className="space-y-4">
+      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-[#09090B]">
+              <TableHead className="w-[200px] text-center font-medium">
+                Interviewer
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Date
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Time
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Status
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Rating
+              </TableHead>
+              <TableHead className="w-[300px] text-center font-medium">
+                Feedback
+              </TableHead>
+              <TableHead className="w-[150px] text-center font-medium">
+                Actions
+              </TableHead>
             </TableRow>
-          ) : (
-            interviews.map((interview) => {
-              const { date, time } = formatDateTime(interview.interviewDate);
-              const interviewerName = getInterviewerName(interview);
-              
-              return (
-                <TableRow key={interview._id} className="transition">
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {interviewerName}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {date}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {time}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {getStatusIcon(interview.InterviewStatus)}
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {getStatusText(interview.InterviewStatus)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {interview.rating ? (
-                      <div className="flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {interview.rating}/5
+          </TableHeader>
+          <TableBody>
+            {displayedInterviews.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center">
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-sm">
+                      No completed interviews found in history.
+                    </p>
+                    <p className="text-muted-foreground text-xs mt-1">
+                      Your completed interviews will appear here once you have some.
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              displayedInterviews.map((interview) => {
+                const { date, time } = formatDateTime(interview.interviewDate);
+                const interviewerName = getInterviewerName(interview);
+                
+                return (
+                  <TableRow key={interview._id} className="transition">
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {interviewerName}
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No rating
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {interview.feedback ? (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {interview.feedback}
-                      </p>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No feedback
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex flex-col gap-2 items-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          // View details functionality
-                          console.log('View interview details:', interview);
-                        }}
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {date}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Clock className="h-4 w-4 text-green-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {time}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        {getStatusIcon(interview.InterviewStatus)}
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {getStatusText(interview.InterviewStatus)}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      {interview.rating ? (
+                        <div className="flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {interview.rating}/5
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          No rating
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      {interview.feedback ? (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {interview.feedback}
+                        </p>
+                      ) : (
+                        <span className="text-sm text-gray-400">
+                          No feedback
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <div className="flex flex-col gap-2 items-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            // View details functionality
+                            console.log('View interview details:', interview);
+                          }}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {hasMoreInterviews && (
+        <div className="flex justify-center">
+          <Button
+            onClick={handleShowMore}
+            variant="outline"
+            className="px-6 py-2"
+          >
+            Show More ({interviews.length - displayCount} remaining)
+          </Button>
+        </div>
+      )}
     </div>
   );
 } 
