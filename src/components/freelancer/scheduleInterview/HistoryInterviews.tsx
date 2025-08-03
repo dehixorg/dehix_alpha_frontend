@@ -39,6 +39,60 @@ export default function HistoryInterviews() {
   const [interviews, setInterviews] = useState<HistoryInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
+  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+
+  const fetchInterviewerDetails = async (interviewData: HistoryInterview[]) => {
+    console.log('Fetching interviewer details for history interviews:', interviewData.length, 'interviews');
+    
+    // Log the first interview to see its structure
+    if (interviewData.length > 0) {
+      console.log('Sample history interview structure:', interviewData[0]);
+    }
+    
+    // Try different possible fields for interviewer ID
+    const interviewerIds = interviewData
+      .filter(interview => {
+        const hasInterviewerId = interview.interviewerId;
+        const hasCreatorId = interview.creatorId;
+        
+        console.log('History Interview', interview._id, 'fields:', {
+          interviewerId: hasInterviewerId,
+          creatorId: hasCreatorId
+        });
+        
+        return interview.interviewerId || interview.creatorId;
+      })
+      .map(interview => interview.interviewerId || interview.creatorId);
+    
+    console.log('Interviewer IDs found for history:', interviewerIds);
+    
+    if (interviewerIds.length === 0) return;
+    
+    try {
+      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
+      console.log('Unique interviewer IDs for history:', uniqueIds);
+      const detailsMap: {[key: string]: any} = {};
+      
+      for (const interviewerId of uniqueIds) {
+        if (!interviewerId) continue;
+        try {
+          console.log('Fetching details for interviewer ID:', interviewerId);
+          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
+          console.log('Response for interviewer', interviewerId, ':', response.data);
+          if (response.data?.data) {
+            detailsMap[interviewerId] = response.data.data;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
+        }
+      }
+      
+      console.log('Final interviewer details map for history:', detailsMap);
+      setInterviewerDetails(detailsMap);
+    } catch (error) {
+      console.error('Failed to fetch interviewer details:', error);
+    }
+  };
 
   const loadHistoryInterviews = async () => {
     if (!user?.uid) return;
@@ -55,6 +109,9 @@ export default function HistoryInterviews() {
       const data = Array.isArray(response.data) ? response.data : response.data.data || [];
       
       setInterviews(data);
+      
+      // Fetch interviewer details for interviews that don't have them
+      await fetchInterviewerDetails(data);
     } catch (error) {
       console.error('Failed to load history interviews:', error);
     } finally {
@@ -75,7 +132,33 @@ export default function HistoryInterviews() {
   };
 
   const getInterviewerName = (interview: HistoryInterview): string => {
-    return interview.interviewer?.name || 'Interviewer';
+    const interviewerId = interview.interviewerId || interview.creatorId;
+    console.log('Getting name for history interview:', interview._id, 'interviewerId:', interviewerId);
+    
+    // First try to get name from the interview data
+    if (interview.interviewer?.name) {
+      console.log('Using name from interview data:', interview.interviewer.name);
+      return interview.interviewer.name;
+    }
+    
+    // If we have interviewerId, try to get from fetched details
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      console.log('Using fetched details for interviewer:', interviewerId, details);
+      const name = details.name || details.userName || details.email?.split('@')[0];
+      if (name) {
+        return name;
+      }
+    }
+    
+    // If we have interviewerId but no details yet
+    if (interviewerId) {
+      console.log('No details found for interviewer ID:', interviewerId);
+      return `Interviewer (${interviewerId})`;
+    }
+    
+    console.log('No interviewer ID found, using default');
+    return 'Interviewer';
   };
 
   const getStatusIcon = (status: string) => {

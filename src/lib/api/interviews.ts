@@ -21,6 +21,10 @@ export interface InterviewBid {
 export interface InterviewerInfo {
   _id?: string;
   userName?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   skills?: string[];
   workExperience?: number;
 }
@@ -40,6 +44,7 @@ export async function fetchBids(interviewId: string) {
 export interface PendingBid extends PopulatedBid {
   bidKey: string;
   interviewId: string;
+  interviewerId?: string; // Add this field for the interviewer ID
   description: string;
   talentId: string;
   fee: number;
@@ -68,12 +73,17 @@ export async function fetchPendingBids(intervieweeId: string) {
 
     for (const bid of Object.values(bidsObj)) {
       if (typeof bid === 'object' && bid !== null) {
-        pending.push({
+        console.log('Original bid data:', bid);
+        console.log('Original bid interviewerId:', bid.interviewerId);
+        const processedBid = {
           ...bid,
           interviewId,
           bidKey: bid._id,
           description: interview.description || bid.description || '', // Add description from interview
-        });
+        };
+        console.log('Processed bid data:', processedBid);
+        console.log('Processed bid interviewerId:', processedBid.interviewerId);
+        pending.push(processedBid);
       }
     }
   }

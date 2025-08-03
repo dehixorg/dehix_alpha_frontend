@@ -27,8 +27,10 @@ interface ScheduledInterview {
   interviewDate: string;
   meetingLink?: string;
   interviewer?: {
-    name: string;
-    email: string;
+    _id?: string;
+    name?: string;
+    email?: string;
+    userName?: string;
   };
 }
 
@@ -37,6 +39,7 @@ export default function CurrentInterviews() {
   const [interviews, setInterviews] = useState<ScheduledInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
+  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
@@ -52,11 +55,73 @@ export default function CurrentInterviews() {
       
       const data = Array.isArray(response.data) ? response.data : response.data.data || [];
       
+      console.log('Current interviews data:', data);
+      
       setInterviews(data);
+      
+      // Fetch interviewer details for interviews that don't have them
+      await fetchInterviewerDetails(data);
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
+    console.log('Fetching interviewer details for:', interviewData.length, 'interviews');
+    
+    // Log the first interview to see its structure
+    if (interviewData.length > 0) {
+      console.log('Sample interview structure:', interviewData[0]);
+    }
+    
+    // Try different possible fields for interviewer ID
+    const interviewerIds = interviewData
+      .filter(interview => {
+        const hasInterviewerId = interview.interviewerId;
+        const hasInterviewer = interview.interviewer?._id;
+        const hasCreatorId = (interview as any).creatorId;
+        const hasInterviewerObject = interview.interviewer;
+        
+        console.log('Interview', interview._id, 'fields:', {
+          interviewerId: hasInterviewerId,
+          interviewer_id: hasInterviewer,
+          creatorId: hasCreatorId,
+          interviewerObject: hasInterviewerObject
+        });
+        
+        return interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+      })
+      .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
+    
+    console.log('Interviewer IDs found:', interviewerIds);
+    
+    if (interviewerIds.length === 0) return;
+    
+    try {
+      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
+      console.log('Unique interviewer IDs:', uniqueIds);
+      const detailsMap: {[key: string]: any} = {};
+      
+      for (const interviewerId of uniqueIds) {
+        if (!interviewerId) continue;
+        try {
+          console.log('Fetching details for interviewer ID:', interviewerId);
+          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
+          console.log('Response for interviewer', interviewerId, ':', response.data);
+          if (response.data?.data) {
+            detailsMap[interviewerId] = response.data.data;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
+        }
+      }
+      
+      console.log('Final interviewer details map:', detailsMap);
+      setInterviewerDetails(detailsMap);
+    } catch (error) {
+      console.error('Failed to fetch interviewer details:', error);
     }
   };
 
@@ -73,7 +138,44 @@ export default function CurrentInterviews() {
   };
 
   const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
-    return interview.interviewer?.name || 'Interviewer';
+    const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+    console.log('Getting name for interview:', interview._id, 'interviewerId:', interviewerId);
+    
+    // First try to get name from the interview data
+    if (interview.interviewer?.name) {
+      console.log('Using name from interview data:', interview.interviewer.name);
+      return interview.interviewer.name;
+    }
+    
+    if (interview.interviewer?.userName) {
+      console.log('Using userName from interview data:', interview.interviewer.userName);
+      return interview.interviewer.userName;
+    }
+    
+    if (interview.interviewer?.email) {
+      const emailName = interview.interviewer.email.split('@')[0];
+      console.log('Using email prefix as name:', emailName);
+      return emailName;
+    }
+    
+    // If we have interviewerId, try to get from fetched details
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      console.log('Using fetched details for interviewer:', interviewerId, details);
+      const name = details.name || details.userName || details.email?.split('@')[0];
+      if (name) {
+        return name;
+      }
+    }
+    
+    // If we have interviewerId but no details yet
+    if (interviewerId) {
+      console.log('No details found for interviewer ID:', interviewerId);
+      return `Interviewer (${interviewerId})`;
+    }
+    
+    console.log('No interviewer ID found, using default');
+    return 'Interviewer';
   };
 
   const handleShowMore = () => {
@@ -136,7 +238,7 @@ export default function CurrentInterviews() {
                 <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {interviewerName}
+                      {getAcceptedInterviewerName(interview)}
                     </span>
                   </TableCell>
                   <TableCell className="py-3 text-center">
@@ -159,7 +261,7 @@ export default function CurrentInterviews() {
                     <div className="flex items-center justify-center gap-2">
                       <Video className="h-4 w-4 text-purple-500" />
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {interviewerName}
+                        {interview.interviewType || 'Interview'}
                       </span>
                     </div>
                   </TableCell>

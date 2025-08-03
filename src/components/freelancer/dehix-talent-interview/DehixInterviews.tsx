@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Briefcase, Calendar, DollarSign, ExternalLink, Bell } from 'lucide-react';
 
 import {
@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 const DehixInterviews = ({
   filter,
@@ -28,6 +29,156 @@ const DehixInterviews = ({
   skillData,
   domainData,
 }: any) => {
+  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+
+  const fetchInterviewerDetails = async (data: any[]) => {
+    console.log('Fetching interviewer details for interviews:', data.length, 'interviews');
+    
+    // Extract interviewer IDs from both interviews and bids
+    const interviewerIds: string[] = [];
+    
+          data.forEach((interview: any) => {
+        // Check interview level interviewer
+        if (interview.interviewer?._id) {
+          interviewerIds.push(interview.interviewer._id);
+        }
+        
+        // Check bids level interviewer
+        const bids = Object.values(interview?.interviewBids || {});
+        bids.forEach((bid: any) => {
+          if (bid.interviewer?._id) {
+            interviewerIds.push(bid.interviewer._id);
+          }
+          if (bid.creatorId) {
+            interviewerIds.push(bid.creatorId);
+          }
+          if (bid.interviewerId) {
+            interviewerIds.push(bid.interviewerId);
+          }
+        });
+      });
+    
+    console.log('Interviewer IDs found:', interviewerIds);
+    
+    if (interviewerIds.length === 0) return;
+    
+    try {
+      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
+      console.log('Unique interviewer IDs:', uniqueIds);
+      const detailsMap: {[key: string]: any} = {};
+      
+      for (const interviewerId of uniqueIds) {
+        if (!interviewerId) continue;
+        try {
+          console.log('Fetching details for interviewer ID:', interviewerId);
+          // Use the public endpoint which returns data directly
+          const response = await axiosInstance.get(`/public/freelancer/${interviewerId}`);
+          console.log('Response for interviewer', interviewerId, ':', response.data);
+          // Handle both response formats (with and without data wrapper)
+          const freelancerData = response.data?.data || response.data;
+          if (freelancerData) {
+            detailsMap[interviewerId] = freelancerData;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
+        }
+      }
+      
+      console.log('Final interviewer details map:', detailsMap);
+      setInterviewerDetails(detailsMap);
+    } catch (error) {
+      console.error('Failed to fetch interviewer details:', error);
+    }
+  };
+
+  const getInterviewerName = (interview: any, bid?: any): string => {
+    // First try to get name from the bid data if available
+    if (bid) {
+      if (bid.interviewer?.userName) {
+        console.log('Using userName from bid data:', bid.interviewer.userName);
+        return bid.interviewer.userName;
+      }
+      
+      if (bid.interviewer?.name) {
+        console.log('Using name from bid data:', bid.interviewer.name);
+        return bid.interviewer.name;
+      }
+      
+      if (bid.interviewer?.firstName) {
+        const fullName = bid.interviewer.lastName 
+          ? `${bid.interviewer.firstName} ${bid.interviewer.lastName}`
+          : bid.interviewer.firstName;
+        console.log('Using firstName/lastName from bid data:', fullName);
+        return fullName;
+      }
+      
+      const interviewerId = bid.interviewer?._id || bid.creatorId || bid.interviewerId;
+      if (interviewerId && interviewerDetails[interviewerId]) {
+        const details = interviewerDetails[interviewerId];
+        console.log('Using fetched details for bid interviewer:', interviewerId, details);
+        const name = details.name || details.userName || details.firstName || details.email?.split('@')[0];
+        if (name) {
+          if (details.lastName && !details.name && !details.userName) {
+            return `${details.firstName} ${details.lastName}`;
+          }
+          return name;
+        }
+      }
+      
+      if (interviewerId) {
+        console.log('No details found for bid interviewer ID:', interviewerId);
+        return `Interviewer (${interviewerId})`;
+      }
+    }
+    
+    // Try to get name from the interview data
+    if (interview.interviewer?.userName) {
+      console.log('Using userName from interview data:', interview.interviewer.userName);
+      return interview.interviewer.userName;
+    }
+    
+    if (interview.interviewer?.name) {
+      console.log('Using name from interview data:', interview.interviewer.name);
+      return interview.interviewer.name;
+    }
+    
+    if (interview.interviewer?.firstName) {
+      const fullName = interview.interviewer.lastName 
+        ? `${interview.interviewer.firstName} ${interview.interviewer.lastName}`
+        : interview.interviewer.firstName;
+      console.log('Using firstName/lastName from interview data:', fullName);
+      return fullName;
+    }
+    
+    const interviewerId = interview.interviewer?._id || interview.creatorId || interview.interviewerId;
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      console.log('Using fetched details for interviewer:', interviewerId, details);
+      const name = details.name || details.userName || details.firstName || details.email?.split('@')[0];
+      if (name) {
+        if (details.lastName && !details.name && !details.userName) {
+          return `${details.firstName} ${details.lastName}`;
+        }
+        return name;
+      }
+    }
+    
+    if (interviewerId) {
+      console.log('No details found for interviewer ID:', interviewerId);
+      return `Interviewer (${interviewerId})`;
+    }
+    
+    console.log('No interviewer ID found, using default');
+    return 'Unnamed Interviewer';
+  };
+
+  useEffect(() => {
+    const data = filteredData();
+    if (data.length > 0) {
+      fetchInterviewerDetails(data);
+    }
+  }, [skillData, domainData, filter]);
+
   const filteredData = () => {
     const data =
       filter === 'All'
@@ -137,7 +288,7 @@ const DehixInterviews = ({
                             <TableCell className="py-3 text-center">
                               <div className="flex flex-col items-center">
                                 <span className="font-medium">
-                                  {interview?.interviewer?.userName || 'Unknown'}
+                                  {getInterviewerName(interview)}
                                 </span>
                                 <span className="text-xs text-gray-500">
                                   {interview.talentType} • {interview.level}
@@ -191,7 +342,7 @@ const DehixInterviews = ({
                           <TableCell className="py-3 text-center">
                             <div className="flex flex-col items-center">
                               <span className="font-medium">
-                                {bid?.interviewer?.userName || 'Unknown'}
+                                {getInterviewerName(interview, bid)}
                               </span>
                               <span className="text-xs text-gray-500">
                                 {interview.talentType} • {interview.level}
@@ -255,7 +406,7 @@ const DehixInterviews = ({
                     >
                       <CardHeader className="p-4 border-b  rounded-t-2xl">
                         <CardTitle className="text-xl font-semibold ">
-                          {bid?.interviewer?.userName || 'Unknown'}
+                          {getInterviewerName(interview, bid)}
                         </CardTitle>
                         <CardDescription className="text-sm ">
                           {interview?.level}
