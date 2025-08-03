@@ -53,7 +53,7 @@ export default function ScheduleInterviewPage() {
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -78,7 +78,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -103,7 +103,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* History Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -133,7 +133,7 @@ export default function ScheduleInterviewPage() {
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews-project">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -158,7 +158,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-project">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -183,7 +183,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* History Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-project">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -213,7 +213,7 @@ export default function ScheduleInterviewPage() {
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -234,7 +234,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bided-interviews">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -255,7 +255,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* History Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="history">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -281,7 +281,7 @@ export default function ScheduleInterviewPage() {
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews-dehix">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -306,7 +306,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-dehix">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -331,7 +331,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* History Segment */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-[#151518] dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-dehix">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">

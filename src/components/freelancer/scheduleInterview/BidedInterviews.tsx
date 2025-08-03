@@ -31,6 +31,7 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(5);
   const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: string]: boolean}>({});
 
   const getRowKey = (bid: PendingBid) => `${bid.interviewId}-${bid.bidKey}`;
   const [error, setError] = useState<string | null>(null);
@@ -237,6 +238,21 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
     setDisplayCount(prev => prev + 5);
   };
 
+  const truncateDescription = (description: string, maxWords: number = 2) => {
+    const words = description.split(' ');
+    if (words.length <= maxWords) {
+      return description;
+    }
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+
+  const toggleDescription = (bidId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [bidId]: !prev[bidId]
+    }));
+  };
+
   const displayedBids = bids.slice(0, displayCount);
   const hasMoreBids = displayCount < bids.length;
 
@@ -287,6 +303,8 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
           <TableBody>
             {displayedBids.map((bid) => {
               const { date, time } = formatDateTime(bid.suggestedDateTime);
+              const isDescriptionExpanded = expandedDescriptions[getRowKey(bid)];
+              const descriptionToDisplay = isDescriptionExpanded ? bid.description : truncateDescription(bid.description || '', 2);
               return (
                 <TableRow key={getRowKey(bid)} className="transition">
                   <TableCell className="py-3 text-center">
@@ -323,10 +341,13 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     {bid.description && bid.description !== 'description' ? (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {bid.description}
-                      </p>
-                    ) : (
+                        <p 
+                          className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                          onClick={() => toggleDescription(getRowKey(bid))}
+                        >
+                          {descriptionToDisplay}
+                        </p>
+                      ) : (
                       <span className="text-sm text-gray-400">
                         No description available
                       </span>
