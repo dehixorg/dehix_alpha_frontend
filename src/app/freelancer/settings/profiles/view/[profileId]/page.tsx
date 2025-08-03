@@ -109,12 +109,8 @@ export default function ProfileViewPage() {
       const skillsData = freelancerData.skills || [];
       const skillsArray = Array.isArray(skillsData) ? skillsData : [];
       setSkillsOptions(skillsArray);
-      //   console.log(skillsArray);
-      //   console.log(skillsOptions);
-
       const domainsData = freelancerData.domain || [];
       const domainsArray = Array.isArray(domainsData) ? domainsData : [];
-      console.log(domainsArray);
       setDomainsOptions(domainsArray);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
