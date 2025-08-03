@@ -40,7 +40,6 @@ export default function CurrentInterviews() {
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
   const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
-  const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: string]: boolean}>({});
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
@@ -183,21 +182,6 @@ export default function CurrentInterviews() {
     setDisplayCount(prev => prev + 5);
   };
 
-  const truncateDescription = (description: string, maxWords: number = 2) => {
-    const words = description.split(' ');
-    if (words.length <= maxWords) {
-      return description;
-    }
-    return words.slice(0, maxWords).join(' ') + '...';
-  };
-
-  const toggleDescription = (interviewId: string) => {
-    setExpandedDescriptions(prev => ({
-      ...prev,
-      [interviewId]: !prev[interviewId]
-    }));
-  };
-
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
@@ -249,8 +233,6 @@ export default function CurrentInterviews() {
             {displayedInterviews.map((interview) => {
               const { date, time } = formatDateTime(interview.interviewDate);
               const interviewerName = getAcceptedInterviewerName(interview);
-              const isDescriptionExpanded = expandedDescriptions[interview._id] || false;
-              const truncatedDescription = truncateDescription(interview.description || '');
               
               return (
                 <TableRow key={interview._id} className="transition">
@@ -285,11 +267,8 @@ export default function CurrentInterviews() {
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     {interview.description && (
-                      <p 
-                        className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                        onClick={() => toggleDescription(interview._id)}
-                      >
-                        {isDescriptionExpanded ? interview.description : truncatedDescription}
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {interview.description}
                       </p>
                     )}
                   </TableCell>
