@@ -6,7 +6,7 @@ import { RootState } from "@/lib/store";
 import { fetchPendingBids, acceptBid, PendingBid } from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, DollarSign, User } from "lucide-react";
+import { Loader2, Calendar, Clock, DollarSign, User, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -31,6 +31,7 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(5);
   const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
 
   const getRowKey = (bid: PendingBid) => `${bid.interviewId}-${bid.bidKey}`;
   const [error, setError] = useState<string | null>(null);
@@ -222,8 +223,8 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
               <TableHead className="w-[150px] text-center font-medium">
                 Fee
               </TableHead>
-              <TableHead className="w-[300px] text-center font-medium">
-                Description
+              <TableHead className="w-[50px] text-center font-medium">
+                {/* Info button column */}
               </TableHead>
               <TableHead className="w-[200px] text-center font-medium">
                 Actions
@@ -231,7 +232,7 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayedBids.map((bid) => {
+            {displayedBids.map((bid, idx) => {
               const { date, time } = formatDateTime(bid.suggestedDateTime);
               return (
                 <TableRow key={getRowKey(bid)} className="transition">
@@ -267,15 +268,20 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {bid.description && bid.description !== 'description' ? (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {bid.description}
-                      </p>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No description available
-                      </span>
+                  {/* Info button cell */}
+                  <TableCell className="py-3 text-center relative">
+                    <button
+                      onClick={() => setOpenDescIdx(openDescIdx === idx ? null : idx)}
+                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                    >
+                      <Info size={16} color="white" />
+                    </button>
+                    {openDescIdx === idx && (
+                      <div className="mt-2 p-2 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[200px]">
+                        {bid.description && bid.description !== 'description'
+                          ? bid.description
+                          : "No description available"}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="py-3 text-center">

@@ -187,8 +187,15 @@ export default function HistoryInterviews() {
     setDisplayCount(prev => prev + 5);
   };
 
-  const displayedInterviews = interviews.slice(0, displayCount);
-  const hasMoreInterviews = displayCount < interviews.length;
+  // Only show interviews with status ACCEPTED or REJECTED
+  const filteredInterviews = interviews.filter(
+    interview =>
+      interview.InterviewStatus === "ACCEPTED" ||
+      interview.InterviewStatus === "REJECTED"
+  );
+
+  const displayedInterviews = filteredInterviews.slice(0, displayCount);
+  const hasMoreInterviews = displayCount < filteredInterviews.length;
 
   if (loading) {
     return (
@@ -233,10 +240,7 @@ export default function HistoryInterviews() {
                 <TableCell colSpan={7} className="py-8 text-center">
                   <div className="text-center">
                     <p className="text-muted-foreground text-sm">
-                      No completed interviews found in history.
-                    </p>
-                    <p className="text-muted-foreground text-xs mt-1">
-                      Your completed interviews will appear here once you have some.
+                      No accepted or rejected interviews found in history.
                     </p>
                   </div>
                 </TableCell>
@@ -333,10 +337,10 @@ export default function HistoryInterviews() {
             variant="outline"
             className="px-6 py-2"
           >
-            Show More ({interviews.length - displayCount} remaining)
+            Show More ({filteredInterviews.length - displayCount} remaining)
           </Button>
         </div>
       )}
     </div>
   );
-} 
+}

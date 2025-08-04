@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, Video, ExternalLink } from "lucide-react";
+import { Loader2, Calendar, Clock, Video, ExternalLink, Info } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,6 +31,7 @@ interface ScheduledInterview {
     name?: string;
     email?: string;
     userName?: string;
+    description?: string;
   };
 }
 
@@ -40,6 +41,7 @@ export default function CurrentInterviews() {
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
   const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
@@ -139,42 +141,14 @@ export default function CurrentInterviews() {
 
   const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
     const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
-    console.log('Getting name for interview:', interview._id, 'interviewerId:', interviewerId);
-    
-    // First try to get name from the interview data
-    if (interview.interviewer?.name) {
-      console.log('Using name from interview data:', interview.interviewer.name);
-      return interview.interviewer.name;
-    }
-    
-    if (interview.interviewer?.userName) {
-      console.log('Using userName from interview data:', interview.interviewer.userName);
-      return interview.interviewer.userName;
-    }
-    
-    if (interview.interviewer?.email) {
-      const emailName = interview.interviewer.email.split('@')[0];
-      console.log('Using email prefix as name:', emailName);
-      return emailName;
-    }
-    
-    // If we have interviewerId, try to get from fetched details
+    if (interview.interviewer?.name) return interview.interviewer.name;
+    if (interview.interviewer?.userName) return interview.interviewer.userName;
+    if (interview.interviewer?.email) return interview.interviewer.email.split('@')[0];
     if (interviewerId && interviewerDetails[interviewerId]) {
       const details = interviewerDetails[interviewerId];
-      console.log('Using fetched details for interviewer:', interviewerId, details);
-      const name = details.name || details.userName || details.email?.split('@')[0];
-      if (name) {
-        return name;
-      }
+      return details.name || details.userName || details.email?.split('@')[0];
     }
-    
-    // If we have interviewerId but no details yet
-    if (interviewerId) {
-      console.log('No details found for interviewer ID:', interviewerId);
-      return `Interviewer (${interviewerId})`;
-    }
-    
-    console.log('No interviewer ID found, using default');
+    if (interviewerId) return `Interviewer (${interviewerId})`;
     return 'Interviewer';
   };
 
@@ -221,24 +195,21 @@ export default function CurrentInterviews() {
               <TableHead className="w-[150px] text-center font-medium">
                 Link
               </TableHead>
-              <TableHead className="w-[300px] text-center font-medium">
-                Description
-              </TableHead>
-              <TableHead className="w-[200px] text-center font-medium">
-                Actions
+              <TableHead className="w-[50px] text-center font-medium">
+                {/* Info button column */}
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayedInterviews.map((interview) => {
+            {displayedInterviews.map((interview, idx) => {
               const { date, time } = formatDateTime(interview.interviewDate);
               const interviewerName = getAcceptedInterviewerName(interview);
-              
+
               return (
                 <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {getAcceptedInterviewerName(interview)}
+                      {interviewerName}
                     </span>
                   </TableCell>
                   <TableCell className="py-3 text-center">
@@ -260,52 +231,40 @@ export default function CurrentInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Video className="h-4 w-4 text-purple-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {interview.interviewType || 'Interview'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {interview.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {interview.description}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex flex-col gap-2 items-center">
-                      {interview.meetingLink && (
+                      {interview.meetingLink ? (
                         <Button
-                          size="sm"
                           variant="outline"
-                          onClick={() => window.open(interview.meetingLink, '_blank')}
+                          size="sm"
+                          onClick={() => window.open(interview.meetingLink, "_blank")}
                           className="flex items-center gap-2"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                          Join Meeting
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Join Meeting
+                          </span>
                         </Button>
+                      ) : (
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          No Link
+                        </span>
                       )}
-                      
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          // Add to calendar functionality
-                          const event = {
-                            title: `Interview with ${interviewerName}`,
-                            description: interview.description,
-                            start: interview.interviewDate,
-                            end: new Date(new Date(interview.interviewDate).getTime() + 60 * 60 * 1000).toISOString(),
-                          };
-                          
-                          const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&details=${encodeURIComponent(event.description)}&dates=${new Date(event.start).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${new Date(event.end).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`;
-                          
-                          window.open(calendarUrl, '_blank');
-                        }}
-                      >
-                        Add to Calendar
-                      </Button>
                     </div>
+                  </TableCell>
+                  {/* Info button cell */}
+                  <TableCell className="py-3 text-center relative">
+                    <button
+                      onClick={() => setOpenDescIdx(openDescIdx === idx ? null : idx)}
+                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                    >
+                      <Info size={16} color="white" />
+                    </button>
+                    {openDescIdx === idx && (
+                      <div
+                        className="p-2 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[200px]"
+                        style={{ top: '-40px', left: '50%', transform: 'translateX(-50%)' }}
+                      >
+                        {(interview.interviewer?.description || interview.description) || "No description"}
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -313,7 +272,6 @@ export default function CurrentInterviews() {
           </TableBody>
         </Table>
       </div>
-      
       {hasMoreInterviews && (
         <div className="flex justify-center">
           <Button
