@@ -48,28 +48,19 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
       .filter(bid => {
         const hasInterviewerId = bid.interviewer?._id;
         const hasCreatorId = bid.creatorId;
-        const hasInterviewerIdDirect = bid.interviewerId;
         
         console.log('Bid', bid._id, 'fields:', {
           interviewer_id: hasInterviewerId,
-          creatorId: hasCreatorId,
-          interviewerId: hasInterviewerIdDirect
+          creatorId: hasCreatorId
         });
         
-        // Log all available fields in the bid object
-        console.log('All bid fields:', Object.keys(bid));
-        console.log('Full bid object:', bid);
-        
-        return bid.interviewer?._id || bid.creatorId || bid.interviewerId;
+        return bid.interviewer?._id || bid.creatorId;
       })
-      .map(bid => bid.interviewer?._id || bid.creatorId || bid.interviewerId);
+      .map(bid => bid.interviewer?._id || bid.creatorId);
     
-          console.log('Interviewer IDs found for bids:', interviewerIds);
-      
-      if (interviewerIds.length === 0) {
-        console.log('No interviewer IDs found, skipping API calls');
-        return;
-      }
+    console.log('Interviewer IDs found for bids:', interviewerIds);
+    
+    if (interviewerIds.length === 0) return;
     
     try {
       const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
@@ -79,24 +70,14 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
       for (const interviewerId of uniqueIds) {
         if (!interviewerId) continue;
         try {
-          console.log('=== FETCHING INTERVIEWER DETAILS ===');
           console.log('Fetching details for interviewer ID:', interviewerId);
-          // Use the public endpoint which returns data directly
-          const response = await axiosInstance.get(`/public/freelancer/${interviewerId}`);
-          console.log('Full response for interviewer', interviewerId, ':', response);
-          console.log('Response data:', response.data);
-          console.log('Response status:', response.status);
-          // Handle both response formats (with and without data wrapper)
-          const freelancerData = response.data?.data || response.data;
-          if (freelancerData) {
-            detailsMap[interviewerId] = freelancerData;
-            console.log('Using freelancer data for interviewer:', interviewerId, 'Data:', freelancerData);
-          } else {
-            console.log('No data found in response for interviewer:', interviewerId);
+          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
+          console.log('Response for interviewer', interviewerId, ':', response.data);
+          if (response.data?.data) {
+            detailsMap[interviewerId] = response.data.data;
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
-          console.error('Error details:', error.response?.data || error.message);
         }
       }
       
@@ -129,21 +110,6 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
     loadBids();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intervieweeId, interviewType]);
-
-  // Test API call to verify endpoint is working
-  useEffect(() => {
-    const testApiCall = async () => {
-      try {
-        console.log('=== TESTING API ENDPOINT ===');
-        const testResponse = await axiosInstance.get('/public/freelancer/ud0YP6N72bcE6YNxrsyz0z7lXEY2');
-        console.log('Test API response:', testResponse.data);
-      } catch (error: any) {
-        console.error('Test API call failed:', error.response?.data || error.message);
-      }
-    };
-    
-    testApiCall();
-  }, []);
 
   // Debug effect to see when interviewerDetails changes
   useEffect(() => {
@@ -181,15 +147,11 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
   };
 
   const getInterviewerName = (bid: PendingBid): string => {
-    const interviewerId = bid.interviewer?._id || bid.creatorId || bid.interviewerId;
-    console.log('=== DEBUGGING INTERVIEWER NAME ===');
-    console.log('Getting name for bid:', bid._id);
-    console.log('InterviewerId:', interviewerId);
+    const interviewerId = bid.interviewer?._id || bid.creatorId;
+    console.log('Getting name for bid:', bid._id, 'interviewerId:', interviewerId);
     console.log('Bid interviewer object:', bid.interviewer);
     console.log('Bid creatorId:', bid.creatorId);
-    console.log('Bid interviewerId:', bid.interviewerId);
     console.log('Current interviewerDetails state:', interviewerDetails);
-    console.log('Full bid object:', bid);
     
     // First try to get name from the bid data
     if (bid.interviewer?.userName) {
@@ -197,28 +159,12 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
       return bid.interviewer.userName;
     }
     
-    if (bid.interviewer?.name) {
-      console.log('Using name from bid data:', bid.interviewer.name);
-      return bid.interviewer.name;
-    }
-    
-    if (bid.interviewer?.firstName) {
-      const fullName = bid.interviewer.lastName 
-        ? `${bid.interviewer.firstName} ${bid.interviewer.lastName}`
-        : bid.interviewer.firstName;
-      console.log('Using firstName/lastName from bid data:', fullName);
-      return fullName;
-    }
-    
     // If we have interviewerId, try to get from fetched details
     if (interviewerId && interviewerDetails[interviewerId]) {
       const details = interviewerDetails[interviewerId];
       console.log('Using fetched details for interviewer:', interviewerId, details);
-      const name = details.name || details.userName || details.firstName || details.email?.split('@')[0];
+      const name = details.name || details.userName || details.email?.split('@')[0];
       if (name) {
-        if (details.lastName && !details.name && !details.userName) {
-          return `${details.firstName} ${details.lastName}`;
-        }
         return name;
       }
     }
