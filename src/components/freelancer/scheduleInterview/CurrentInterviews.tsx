@@ -259,10 +259,17 @@ export default function CurrentInterviews() {
                     </button>
                     {openDescIdx === idx && (
                       <div
-                        className="p-2 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[200px]"
-                        style={{ top: '-40px', left: '50%', transform: 'translateX(-50%)' }}
+                        className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
+                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
                       >
-                        {(interview.interviewer?.description || interview.description) || "No description"}
+                        <div className="text-sm leading-relaxed">
+                          {(interview.interviewer?.description || interview.description) || "No description available"}
+                        </div>
+                        {/* Arrow pointing to the button */}
+                        <div 
+                          className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                        ></div>
                       </div>
                     )}
                   </TableCell>
