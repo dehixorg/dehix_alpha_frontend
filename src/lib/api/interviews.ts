@@ -46,17 +46,14 @@ export interface PendingBid extends PopulatedBid {
 }
 
 export async function fetchPendingBids(intervieweeId: string) {
-  const { data: resp } = await axios.get<any>(
-    `${BASE_URL}/interview`,
-    {
-      params: { 
-        intervieweeId,
-        InterviewStatus: 'BIDDING' // Only get interviews that are still bidding
-      },
-    }
-  );
+  const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
+    params: {
+      intervieweeId,
+      InterviewStatus: "BIDDING",
+    },
+  });
 
-  const interviews = Array.isArray(resp) ? resp : resp.data;
+  const interviews = Array.isArray(response.data) ? response.data : response.data.data;
 
   const pending: PendingBid[] = [];
 
@@ -85,19 +82,17 @@ export async function fetchPendingBids(intervieweeId: string) {
 
 // Fetch scheduled interviews for the given interviewee
 export async function fetchScheduledInterviews(intervieweeId: string) {
-  const { data: resp } = await axios.get<any>(
-    `${BASE_URL}/interview`,
-    {
-      params: { 
-        intervieweeId,
-        InterviewStatus: 'SCHEDULED' // Only get scheduled interviews
-      },
-    }
-  );
+  const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
+    params: {
+      intervieweeId,
+      InterviewStatus: "SCHEDULED",
+    },
+  });
 
-    console.log(resp,"interviewsaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-  const interviews = Array.isArray(resp) ? resp : resp.data;
-  return interviews;
+  // The backend returns { data: [...] }, so unwrap once and return the array.
+  // FIX: Remove unnecessary Array.isArray check.
+  console.log(response.data.data,"response");
+  return response.data.data;
 }
 
 
