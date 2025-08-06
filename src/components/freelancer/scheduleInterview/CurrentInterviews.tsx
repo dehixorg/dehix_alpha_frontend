@@ -50,19 +50,22 @@ export default function CurrentInterviews() {
       setLoading(true);
       const response = await axiosInstance.get(`/interview`, {
         params: { 
-          intervieweeId: user.uid,
+          intervieweeId: user.intervieweeId || user.uid,
           InterviewStatus: 'SCHEDULED'
         }
       });
       
       const data = Array.isArray(response.data) ? response.data : response.data.data || [];
+      // Filter only scheduled interviews (extra safety)
+      const scheduledInterviews = data.filter(
+        (interview: ScheduledInterview) => interview.InterviewStatus === 'SCHEDULED'
+      );
+      console.log('Current interviews data:', scheduledInterviews);
       
-      console.log('Current interviews data:', data);
-      
-      setInterviews(data);
+      setInterviews(scheduledInterviews);
       
       // Fetch interviewer details for interviews that don't have them
-      await fetchInterviewerDetails(data);
+      await fetchInterviewerDetails(scheduledInterviews);
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
