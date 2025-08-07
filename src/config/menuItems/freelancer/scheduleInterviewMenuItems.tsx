@@ -11,7 +11,9 @@ import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
-export const createScheduleInterviewMenuItems = (setActiveTab: (tab: string) => void, activeTab: string) => {
+export const createScheduleInterviewMenuItems = (
+  setActiveTab: (tab: string) => void
+) => {
   const menuItemsTop: MenuItem[] = [
     {
       href: '#',

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -13,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface ScheduledInterview {
   _id: string;
@@ -50,6 +52,7 @@ export default function CurrentInterviews() {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
+       await fetchInterviewerDetails(data);
       console.log(data,"valueeeeeeeeeeeeeeeeeeeee");
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
@@ -57,7 +60,12 @@ export default function CurrentInterviews() {
       setLoading(false);
     }
   };
-
+  
+  
+  useEffect(() => {
+    loadScheduledInterviews();
+  }, [user?.uid]);
+  
   const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
     console.log('Fetching interviewer details for:', interviewData.length, 'interviews');
     
@@ -114,11 +122,6 @@ export default function CurrentInterviews() {
       console.error('Failed to fetch interviewer details:', error);
     }
   };
-
-  useEffect(() => {
-    loadScheduledInterviews();
-  }, [user?.uid]);
-
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -127,18 +130,43 @@ export default function CurrentInterviews() {
     };
   };
 
-  const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
-    const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
-    if (interview.interviewer?.name) return interview.interviewer.name;
-    if (interview.interviewer?.userName) return interview.interviewer.userName;
-    if (interview.interviewer?.email) return interview.interviewer.email.split('@')[0];
-    if (interviewerId && interviewerDetails[interviewerId]) {
-      const details = interviewerDetails[interviewerId];
-      return details.name || details.userName || details.email?.split('@')[0];
+// Helper function for capitalization
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+// Your updated function
+const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
+  const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+  
+  // Check the interview object directly
+  if (interview.interviewer?.name) {
+    return capitalizeFirstLetter(interview.interviewer.name);
+  }
+  if (interview.interviewer?.userName) {
+    return capitalizeFirstLetter(interview.interviewer.userName);
+  }
+  if (interview.interviewer?.email) {
+    const emailPrefix = interview.interviewer.email.split('@')[0];
+    return capitalizeFirstLetter(emailPrefix);
+  }
+  
+  // Check the pre-fetched details map
+  if (interviewerId && interviewerDetails[interviewerId]) {
+    const details = interviewerDetails[interviewerId];
+    // Find the best name from the details
+    const name = details.name || details.userName || details.email?.split('@')[0];
+    if (name) {
+      return capitalizeFirstLetter(name);
     }
-    if (interviewerId) return `Interviewer (${interviewerId})`;
-    return 'Interviewer';
-  };
+  }
+  
+  // Fallbacks don't need capitalization as they are already capitalized
+  if (interviewerId) return `Interviewer (${interviewerId})`;
+  
+  return 'Interviewer';
+};
 
   const handleShowMore = () => {
     setDisplayCount(prev => prev + 5);
