@@ -40,14 +40,12 @@ const Loader = () => (
 
 interface JobCardProps {
   job: Project;
-  onApply: () => void;
   onNotInterested: () => void;
   bidExist: boolean;
 }
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
-  onApply,
   onNotInterested,
   bidExist,
 }) => {
@@ -115,7 +113,7 @@ const JobCard: React.FC<JobCardProps> = ({
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
 
   return (
-    <Card className="w-[80%] max-w-2xl lg:max-w-3xl mx-auto shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="w-[100%] max-w-3xl lg:max-w-4xl mx-auto shadow-sm hover:shadow-md transition-shadow duration-200">
       <CardHeader className="pb-4">
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-4">
@@ -215,7 +213,7 @@ const JobCard: React.FC<JobCardProps> = ({
           </div>
 
           {/* Project Details Section */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 flex flex-col justify-between">
             {profile && (
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
@@ -245,16 +243,16 @@ const JobCard: React.FC<JobCardProps> = ({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-6">
+      <CardFooter className="flex justify-between items-center pt-6">
         <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground">
           <span>Posted: {new Date(job.createdAt).toLocaleDateString()}</span>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={onNotInterested}
-            className="text-gray-500 flex-1 sm:flex-none"
+            className="text-gray-500"
           >
             <EyeOff className="h-4 w-4 mr-1" />
             Not Interested
@@ -265,15 +263,19 @@ const JobCard: React.FC<JobCardProps> = ({
             text="View"
             isSizeSmall={true}
           />
-          <Button
-            type="submit"
-            className="w-full flex-1 sm:flex-none"
-            size="sm"
-            disabled={bidExist}
-            onClick={onApply}
+          <Link
+            href={`/freelancer/market/project/${job._id}/apply`}
+            className="flex-1 w-flex-none"
           >
-            {bidExist ? 'Applied' : 'Bid'}
-          </Button>
+            <Button
+              type="submit"
+              className="w-full"
+              size="sm"
+              disabled={bidExist}
+            >
+              {bidExist ? 'Applied' : 'Bid'}
+            </Button>
+          </Link>
         </div>
       </CardFooter>
       {openReport && (
