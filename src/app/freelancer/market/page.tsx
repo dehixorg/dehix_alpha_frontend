@@ -320,23 +320,6 @@ const Market: React.FC = () => {
     }
   };
 
-  const handleApplyToJob = async (id: string) => {
-    try {
-      await axiosInstance.post(`/project/apply/${id}`);
-      toast({
-        title: 'Success',
-        description: 'Application submitted successfully.',
-      });
-    } catch (error) {
-      console.error('Application error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to apply to the project.',
-      });
-    }
-  };
-
   if (!isClient) return null;
 
   return (
@@ -542,7 +525,6 @@ const Market: React.FC = () => {
                     <JobCard
                       key={job._id}
                       job={job}
-                      onApply={() => handleApplyToJob(job._id)}
                       onNotInterested={() => handleRemoveJob(job._id)}
                       bidExist={
                         Array.isArray(job.profiles) &&

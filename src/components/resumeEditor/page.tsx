@@ -18,6 +18,10 @@ import { ResumePreview1 } from './ResumePreview1';
 import { ResumePreview2 } from './ResumePreview2';
 import { AtsScore } from './atsScore';
 
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/settingsMenuItems';
 import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -361,8 +365,8 @@ export default function ResumeEditor({
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
       <SidebarMenu
-        menuItemsTop={[]}
-        menuItemsBottom={[]}
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
         active="Resume Editor"
       />
 
@@ -456,7 +460,7 @@ export default function ResumeEditor({
               className="relative mt-10"
               style={{ minHeight: '1100px' }}
             >
-              <div className="absolute -top-10 right-2 z-10 flex gap-2 bg-white p-2 rounded shadow">
+              <div className="absolute -top-8 right-6 z-10 flex gap-2 bg-white p-2 rounded shadow-md">
                 <Button
                   size="sm"
                   variant={
@@ -485,11 +489,11 @@ export default function ResumeEditor({
                   onClick={downloadPDF}
                   disabled={isGeneratingPDF}
                 >
-                  <Download className="mr-2" /> PDF
+                  <Download className="mr-2 h-4 w-4" /> PDF
                 </Button>
               </div>
 
-              <div className="resumeContent">
+              <div className="resumeContent pt-4">
                 {selectedTemplate === 'ResumePreview1' ? (
                   <ResumePreview1
                     personalData={personalData}

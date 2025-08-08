@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Plus } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
@@ -57,10 +58,20 @@ export default function Resume() {
 
   if (showResumeEditor) {
     return (
-      <ResumeEditor
-        initialResume={selectedResume}
-        onCancel={() => setShowResumeEditor(false)}
-      />
+      <>
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+          <SidebarMenu
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            active="Resume"
+            isKycCheck={true}
+          />
+          <ResumeEditor
+            initialResume={selectedResume}
+            onCancel={() => setShowResumeEditor(false)}
+          />
+        </div>
+      </>
     );
   }
 
@@ -83,43 +94,34 @@ export default function Resume() {
             { label: 'Resume Building', link: '#' },
           ]}
         />
-        <div className="flex flex-col">
-          <div className="flex justify-between items-center mx-8 mt-5 mb-6">
-            <h1 className="text-2xl font-bold">
-              {resumeData.length > 0
-                ? 'Your Resumes'
-                : 'Start Building Your Resume'}
-            </h1>
-            <Button onClick={handleNewResume} className="ml-4">
-              + New Resume
-            </Button>
-          </div>
-          <div className="mx-8">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <p>Loading resume data...</p>
-              </div>
-            ) : (
-              <div className="grid flex-1 items-start gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                {resumeData.map((resume) => (
-                  <ResumeInfoCard
-                    key={resume._id}
-                    {...resume}
-                    onClick={() => handleEditResume(resume)}
-                  />
-                ))}
-                {resumeData.length === 0 && (
-                  <div className="col-span-full flex flex-col items-center justify-center py-12">
-                    <p className="text-gray-500 mb-4">No resumes found</p>
-                    <Button onClick={handleNewResume}>
-                      Create Your First Resume
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        <main
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+        >
+          {resumeData.map((resume) => (
+            <ResumeInfoCard
+              key={resume._id}
+              {...resume}
+              onClick={() => handleEditResume(resume)}
+            />
+          ))}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNewResume}
+            className="my-auto"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          {resumeData.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center py-12">
+              <p className="text-gray-500 mb-4">No resumes found</p>
+              <Button variant="outline" size="icon" onClick={handleNewResume}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

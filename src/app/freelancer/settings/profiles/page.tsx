@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Eye, User, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Eye, User, Briefcase, Pencil } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
@@ -204,13 +204,6 @@ export default function ProfilesPage() {
                   different aspects of your expertise.
                 </p>
               </div>
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Profile
-              </Button>
             </div>
 
             {isLoading ? (
@@ -218,13 +211,15 @@ export default function ProfilesPage() {
                 <p>Loading profiles...</p>
               </div>
             ) : profiles.length === 0 ? (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">
-                  No profiles added
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Create your first professional profile to get started.
-                </p>
+              <div className="col-span-full flex flex-col items-center justify-center py-12">
+                <p className="text-gray-500 mb-4">No profiles found</p>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -368,11 +363,23 @@ export default function ProfilesPage() {
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-4 mt-auto">
                         <Button
-                          onClick={() => handleViewProfile(profile._id!)}
+                          onClick={() =>
+                            router.push(
+                              `/freelancer/settings/profiles/view/${profile._id!}`,
+                            )
+                          }
+                          variant="outline"
                           className="flex-1 flex items-center gap-2"
                         >
                           <Eye className="h-4 w-4" />
-                          View & Edit
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => handleViewProfile(profile._id!)}
+                          className="flex-1 flex items-center gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
                         </Button>
                         <Button
                           variant="destructive"
@@ -386,6 +393,14 @@ export default function ProfilesPage() {
                     </CardContent>
                   </Card>
                 ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="my-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
