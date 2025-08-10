@@ -103,7 +103,23 @@ export async function fetchScheduledInterviews(intervieweeId: string) {
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
   // FIX: Remove unnecessary Array.isArray check.
-  console.log(response.data.data,"response");
+  console.log('=== API CALL DEBUGGING ===');
+  console.log('fetchScheduledInterviews called with intervieweeId:', intervieweeId);
+  console.log('API response:', response.data);
+  console.log('response.data.data:', response.data.data);
+  
+  if (response.data.data && response.data.data.length > 0) {
+    response.data.data.forEach((interview, index) => {
+      console.log(`API Interview ${index + 1}:`, {
+        _id: interview._id,
+        interviewerId: interview.interviewerId,
+        intervieweeId: interview.intervieweeId,
+        creatorId: interview.creatorId,
+        talentId: interview.talentId
+      });
+    });
+  }
+  
   return response.data.data;
 }
 
