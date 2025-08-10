@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'; // Simplified imports
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { LoaderCircle, MessageSquare } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
@@ -73,14 +73,12 @@ const HomePage = () => {
     setIsChatExpanded(prev => !prev);
   };
 
-  // --- FIXED AND UNIFIED handleStartNewChat FUNCTION ---
   const handleStartNewChat = async (selectedUser: NewChatUser) => {
     if (!user || !user.uid) {
       toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
       return;
     }
 
-    // 1. Check if a conversation with this user already exists
     const existingConversation = conversations.find(conv =>
       conv.type === 'individual' &&
       arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id])
@@ -93,12 +91,11 @@ const HomePage = () => {
       return;
     }
 
-    // 2. Prepare the data for the new conversation
     const newConversationData = {
       participants: [user.uid, selectedUser.id].sort(),
-      type: 'individual',
-      createdAt: serverTimestamp(), // Use server timestamp for accuracy
-      updatedAt: serverTimestamp(), // Use server timestamp for accuracy
+      type: 'individual' as const,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       lastMessage: null,
       participantDetails: {
         [user.uid]: {
@@ -116,33 +113,18 @@ const HomePage = () => {
       },
     };
 
-    // 3. Create the new conversation in Firestore
     try {
       const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
       toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
 
-      // Optimistically update UI without an extra database read
+      // ** CORRECTED THIS BLOCK **
+      // Optimistically update UI using the clean data we already have
       const conversationDataForState: Conversation = {
-  id: docRef.id,
-  ...newConversationData,
-  createdAt: new Date().toISOString(), // Use client date for immediate UI display
-  updatedAt: new Date().toISOString(),
-  type: 'individual',
-  participantDetails: {
-    [user.uid]: {
-      userName: user.displayName || user.email || 'Current User',
-      profilePic: user.photoURL || undefined,
-      email: user.email || undefined,
-      userType: user.type,
-    },
-    [selectedUser.id]: {
-      userName: selectedUser.displayName,
-      profilePic: selectedUser.profilePic || undefined,
-      email: selectedUser.email || undefined,
-      userType: selectedUser.userType,
-    },
-  },
-};
+        id: docRef.id,
+        ...newConversationData,
+        createdAt: new Date().toISOString(), // Use client date for immediate UI display
+        updatedAt: new Date().toISOString(),
+      };
 
       setActiveConversation(conversationDataForState);
       setIsNewChatDialogOpen(false);
@@ -152,15 +134,82 @@ const HomePage = () => {
       setIsNewChatDialogOpen(false);
     }
   };
-  
-  // Effect for subscribing to and fetching conversation data
+
+  // ** NEW FUNCTION TO CREATE GROUPS **
+  async function handleCreateGroupChat(
+    selectedUsers: NewChatUser[],
+    groupName: string,
+  ) {
+    if (!user || !user.uid) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+      return;
+    }
+    if (!groupName.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
+      return;
+    }
+    if (selectedUsers.length < 1) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must select at least one other member.' });
+      return;
+    }
+
+    const allParticipantIds = [user.uid, ...selectedUsers.map(u => u.id)];
+    const participantDetails = {
+      [user.uid]: {
+        userName: user.displayName || user.email,
+        profilePic: user.photoURL || null,
+        email: user.email || null,
+        userType: user.type,
+      },
+    };
+    selectedUsers.forEach(selected => {
+      participantDetails[selected.id] = {
+        userName: selected.displayName,
+        profilePic: selected.profilePic || null,
+        email: selected.email || null,
+        userType: selected.userType,
+      };
+    });
+
+    const newGroupData = {
+      groupName: groupName.trim(),
+      avatar: null, // You can add a default group avatar URL here
+      participants: allParticipantIds,
+      participantDetails: participantDetails,
+      type: 'group' as const,
+      admins: [user.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      lastMessage: null,
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'conversations'), newGroupData);
+      toast({ title: 'Success', description: `Group "${groupName}" created.` });
+
+      const groupDataForState: Conversation = {
+        id: docRef.id,
+        ...newGroupData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setActiveConversation(groupDataForState);
+      setIsNewChatDialogOpen(false);
+
+    } catch (error) {
+      console.error("Error creating group chat: ", error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to create group." });
+    }
+  }
+
   useEffect(() => {
     if (!user.uid) return;
 
     setLoading(true);
     const unsubscribe = subscribeToUserConversations(
        'conversations',
-      user.uid,
+       user.uid,
       (data) => {
         const typedData = data as Conversation[];
         setConversations(typedData);
@@ -173,15 +222,13 @@ const HomePage = () => {
     };
   }, [user.uid]);
 
-  // Effect to set a default active conversation once data is loaded
   useEffect(() => {
     if (!loading && conversations.length > 0 && !activeConversation) {
       setActiveConversation(conversations[0]);
     }
   }, [conversations, loading, activeConversation]);
 
-  // --- JSX Rendering Logic (Unchanged but relies on fixed state logic) ---
-  
+  // --- JSX Rendering Logic ---
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
@@ -279,10 +326,12 @@ const HomePage = () => {
           initialData={profileSidebarInitialData}
         />
         {user && (
+          // You will need to update this component
           <NewChatDialog
             isOpen={isNewChatDialogOpen}
             onClose={() => setIsNewChatDialogOpen(false)}
             onSelectUser={handleStartNewChat}
+            onCreateGroup={handleCreateGroupChat} // Pass the new function here
             currentUserUid={user.uid}
           />
         )}

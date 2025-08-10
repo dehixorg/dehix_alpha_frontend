@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from 'react';
-import { X as LucideX, LoaderCircle } from 'lucide-react'; // Using X & LoaderCircle
+import { X as LucideX, LoaderCircle, Check } from 'lucide-react';
 
 import {
   Dialog,
@@ -15,16 +16,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers'; // Import hook and CombinedUser type
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs
+import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers';
 import { toast } from '@/components/ui/use-toast';
-
-// Local User type and MOCK_USERS are no longer needed.
 
 interface NewChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectUser: (user: CombinedUser) => void; // Updated to use CombinedUser
+  onSelectUser: (user: CombinedUser) => void;
+  onCreateGroup: (users: CombinedUser[], groupName: string) => void; // Add new prop
   currentUserUid: string;
 }
 
@@ -32,185 +32,196 @@ export function NewChatDialog({
   isOpen,
   onClose,
   onSelectUser,
+  onCreateGroup, // Destructure new prop
   currentUserUid,
 }: NewChatDialogProps) {
+  const [mode, setMode] = useState<'individual' | 'group'>('individual');
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [groupName, setGroupName] = useState('');
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState<CombinedUser[]>([]);
+
   const {
     users: allFetchedUsers,
     isLoading: isLoadingUsers,
     error: usersError,
-    refetchUsers,
   } = useAllUsers();
-  const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
-  const handleUserSearchChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setUserSearchTerm(event.target.value);
+  const filteredUsers = userSearchTerm.length > 0
+    ? allFetchedUsers.filter(
+        (user) =>
+          user.id !== currentUserUid &&
+          (user.displayName?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+            user.email?.toLowerCase().includes(userSearchTerm.toLowerCase()))
+      )
+    : allFetchedUsers.filter(user => user.id !== currentUserUid);
+
+  // Function to add/remove a user from the group selection
+  const handleToggleGroupMember = (user: CombinedUser) => {
+    setSelectedGroupMembers((prev) => {
+      const isAlreadySelected = prev.some((member) => member.id === user.id);
+      if (isAlreadySelected) {
+        return prev.filter((member) => member.id !== user.id);
+      } else {
+        return [...prev, user];
+      }
+    });
   };
 
-  // Effect for filtering users based on search term
-  useEffect(() => {
-    const term = userSearchTerm.trim().toLowerCase();
-
-    // Only search if term is at least 3 characters
-    if (term.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      // Filter users based on search term
-      const filtered = allFetchedUsers.filter(
-        (user) =>
-          user.id !== currentUserUid && // Exclude current user
-          (user.displayName.toLowerCase().includes(term) ||
-            user.email.toLowerCase().includes(term) ||
-            user.rawUserName?.toLowerCase().includes(term) ||
-            user.rawName?.toLowerCase().includes(term)),
-      );
-      setSearchResults(filtered);
-    } catch (error) {
-      console.error('Error filtering users:', error);
+  // Function to handle the final "Create Group" button click
+  const handleCreateGroup = () => {
+    if (groupName.trim() === '') {
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to search users. Please try again.',
+        title: 'Group Name Required',
+        description: 'Please enter a name for your group.',
       });
-    } finally {
-      setIsSearching(false);
+      return;
     }
-  }, [userSearchTerm, allFetchedUsers, currentUserUid]);
+    if (selectedGroupMembers.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Members Selected',
+        description: 'Please select at least one member to form a group.',
+      });
+      return;
+    }
+    onCreateGroup(selectedGroupMembers, groupName);
+    onClose(); // Close the dialog after creation
+  };
 
-  // Reset search term and results when dialog is closed/opened
+  // Reset all local state when the dialog is opened or closed
   useEffect(() => {
     if (isOpen) {
+      setMode('individual');
       setUserSearchTerm('');
-      setSearchResults([]);
+      setGroupName('');
+      setSelectedGroupMembers([]);
     }
   }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className="sm:max-w-[450px] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl"
-        // Add ARIA attributes if not already present in ui/dialog
-        // aria-labelledby="new-chat-dialog-title"
-        // aria-describedby="new-chat-dialog-description"
-      >
+      <DialogContent className="sm:max-w-[450px] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] border-[hsl(var(--border))] shadow-xl">
         <DialogHeader>
-          <DialogTitle
-            id="new-chat-dialog-title"
-            className="text-[hsl(var(--card-foreground))]"
-          >
-            Start a new chat
-          </DialogTitle>
-          <DialogDescription
-            id="new-chat-dialog-description"
-            className="text-[hsl(var(--muted-foreground))] pt-1"
-          >
-            Search for a user by name or email to begin a one-on-one
-            conversation.
+          <DialogTitle>Start a Conversation</DialogTitle>
+          <DialogDescription className="text-[hsl(var(--muted-foreground))] pt-1">
+            Select a user for a one-on-one chat or create a new group.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label
-              htmlFor="searchUser"
-              className="text-right col-span-1 text-[hsl(var(--foreground))]"
-            >
-              Search
-            </Label>
+        <Tabs value={mode} onValueChange={(value) => setMode(value as 'individual' | 'group')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="individual">Individual</TabsTrigger>
+            <TabsTrigger value="group">Group</TabsTrigger>
+          </TabsList>
+
+          {/* INDIVIDUAL CHAT TAB */}
+          <TabsContent value="individual" className="space-y-4 pt-4">
             <Input
-              id="searchUser"
-              placeholder="Enter name or email..."
-              className="col-span-3 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]"
+              id="searchUserIndividual"
+              placeholder="Search by name or email..."
+              className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
               value={userSearchTerm}
-              onChange={handleUserSearchChange}
-              aria-label="Search for a user"
+              onChange={(e) => setUserSearchTerm(e.target.value)}
               disabled={isLoadingUsers}
             />
-          </div>
+            <div className="min-h-[240px]">
+              {isLoadingUsers ? <LoaderCircle className="w-8 h-8 mx-auto my-10 animate-spin text-[hsl(var(--primary))]" /> :
+               (
+                <ScrollArea className="h-60">
+                  <div className="p-2 space-y-1">
+                    {filteredUsers.map((foundUser) => (
+                      <Button
+                        variant="ghost"
+                        key={foundUser.id}
+                        onClick={() => onSelectUser(foundUser)}
+                        className="w-full flex items-center justify-start space-x-3 p-2 text-left h-auto"
+                      >
+                        <Avatar className="w-8 h-8"><AvatarImage src={foundUser.profilePic} /><AvatarFallback>{foundUser.displayName?.charAt(0)}</AvatarFallback></Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{foundUser.displayName}</p>
+                          <p className="text-xs text-[hsl(var(--muted-foreground))]">{foundUser.email}</p>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+               )}
+            </div>
+          </TabsContent>
 
-          <div className="min-h-[200px]">
-            {isLoadingUsers ? (
-              <div className="flex items-center justify-center h-full">
-                <LoaderCircle className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
-              </div>
-            ) : usersError ? (
-              <div className="text-center text-sm text-red-500 dark:text-red-400 p-4">
-                Error loading users: {usersError}
-                <Button
-                  variant="link"
-                  onClick={() => refetchUsers()}
-                  className="ml-2"
-                >
-                  Retry
-                </Button>
-              </div>
-            ) : userSearchTerm.length > 0 && userSearchTerm.length < 3 ? (
-              <div className="text-sm text-[hsl(var(--muted-foreground))] p-4">
-                Type at least 3 characters to search users
-              </div>
-            ) : searchResults.length > 0 ? (
-              <ScrollArea className="max-h-48 overflow-y-auto border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--background))]">
-                <div className="p-2 space-y-1">
-                  {searchResults.map((foundUser) => (
-                    <Button
-                      variant="ghost"
-                      key={foundUser.id}
-                      onClick={() => {
-                        onSelectUser(foundUser);
-                        onClose();
-                      }}
-                      className="w-full flex items-center justify-start space-x-3 p-2 text-left h-auto hover:bg-[hsl(var(--accent))]"
-                    >
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src={foundUser.profilePic}
-                          alt={foundUser.displayName}
-                        />
-                        <AvatarFallback>
-                          {foundUser.displayName
-                            ? foundUser.displayName.charAt(0).toUpperCase()
-                            : 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-grow">
-                        <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                          {foundUser.displayName}
-                        </p>
-                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                          {foundUser.email}
-                        </p>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </ScrollArea>
-            ) : (
-              <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4">
-                {userSearchTerm
-                  ? 'No users found matching your search.'
-                  : 'Type to search for users.'}
-              </div>
-            )}
-          </div>
-        </div>
+          {/* GROUP CHAT TAB */}
+          <TabsContent value="group" className="space-y-4 pt-4">
+             <div className="space-y-2">
+                <Label htmlFor="groupName">Group Name</Label>
+                <Input
+                    id="groupName"
+                    placeholder="Enter group name..."
+                    className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                />
+            </div>
+            <Input
+              id="searchUserGroup"
+              placeholder="Search members to add..."
+              className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
+              value={userSearchTerm}
+              onChange={(e) => setUserSearchTerm(e.target.value)}
+              disabled={isLoadingUsers}
+            />
+            <div className="min-h-[200px]">
+             {isLoadingUsers ? <LoaderCircle className="w-8 h-8 mx-auto my-10 animate-spin text-[hsl(var(--primary))]" /> :
+              (
+                <ScrollArea className="h-48">
+                  {/* Display selected members as pills */}
+                  {selectedGroupMembers.length > 0 && (
+                     <div className="p-2 border-b">
+                        <p className="text-xs font-semibold mb-2 text-[hsl(var(--muted-foreground))]">SELECTED</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {selectedGroupMembers.map(member => (
+                                <span key={member.id} className="flex items-center gap-1.5 bg-[hsl(var(--accent))] text-xs font-medium px-2 py-1 rounded-full">
+                                    {member.displayName}
+                                    <button onClick={() => handleToggleGroupMember(member)}><LucideX className="w-3 h-3" /></button>
+                                </span>
+                            ))}
+                        </div>
+                     </div>
+                  )}
+                  <div className="p-2 space-y-1">
+                    {filteredUsers.map((foundUser) => {
+                      const isSelected = selectedGroupMembers.some(m => m.id === foundUser.id);
+                      return (
+                        <div
+                          key={foundUser.id}
+                          onClick={() => handleToggleGroupMember(foundUser)}
+                          className="w-full flex items-center justify-start space-x-3 p-2 text-left h-auto rounded-md cursor-pointer hover:bg-[hsl(var(--accent))]"
+                        >
+                            <div className={`w-4 h-4 rounded-sm border flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-gray-400'}`}>
+                                {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                            </div>
+                            <Avatar className="w-8 h-8"><AvatarImage src={foundUser.profilePic} /><AvatarFallback>{foundUser.displayName?.charAt(0)}</AvatarFallback></Avatar>
+                            <div className="flex-grow">
+                              <p className="text-sm font-medium">{foundUser.displayName}</p>
+                              <p className="text-xs text-[hsl(var(--muted-foreground))]">{foundUser.email}</p>
+                            </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <DialogFooter className="border-t border-[hsl(var(--border))] pt-4">
-          <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+          {mode === 'group' && (
+            <Button type="button" onClick={handleCreateGroup}>Create Group</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-export default NewChatDialog;

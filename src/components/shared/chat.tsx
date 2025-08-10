@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 //chat.tsx
 import * as React from 'react';
 import {
@@ -389,56 +390,56 @@ export function CardsChat({
   }, [messages.length]);
 
   async function sendMessage(
-    conversation: Conversation,
-    message: Partial<Message>,
-    setInput: React.Dispatch<React.SetStateAction<string>>,
-  ) {
-    try {
-      setIsSending(true);
-      const datentime = new Date().toISOString();
+  conversation: Conversation,
+  message: Partial<Message>,
+  setInput: React.Dispatch<React.SetStateAction<string>>,
+) {
+  try {
+    setIsSending(true);
+    const datentime = new Date().toISOString();
 
-      console.log('Sending message to Firestore:', {
-        conversationId: conversation?.id,
-        message: message,
+    console.log('Sending message to Firestore:', {
+      conversationId: conversation?.id,
+      message: message,
+      timestamp: datentime,
+      replyTo: replyToMessageId || null,
+    });
+
+    const result = await updateConversationWithMessageTransaction(
+      'conversations',
+      conversation?.id,
+      {
+        ...message,
         timestamp: datentime,
         replyTo: replyToMessageId || null,
-      });
+      },
+      datentime,
+    );
 
-      const result = await updateConversationWithMessageTransaction(
-        'conversations',
-        conversation?.id,
-        {
-          ...message,
-          timestamp: datentime,
-          replyTo: replyToMessageId || null,
-        },
-        datentime,
-      );
+    console.log('Firestore transaction result:', result);
 
-      console.log('Firestore transaction result:', result);
-
-      if (result === 'Transaction successful') {
-        setInput('');
-        setIsSending(false);
-        console.log('Message sent successfully');
-      } else {
-        console.error('Failed to send message - unexpected result:', result);
-        throw new Error(`Failed to send message: ${result}`);
-      }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        conversationId: conversation?.id,
-        messageContent: message.content,
-        hasVoiceMessage: !!message.voiceMessage,
-      });
-      throw error; // Re-throw the error so it can be caught by the calling function
-    } finally {
+    if (result === 'Transaction successful') {
+      setInput('');
       setIsSending(false);
+      console.log('Message sent successfully');
+    } else {
+      console.error('Failed to send message - unexpected result:', result);
+      throw new Error(`Failed to send message: ${result}`);
     }
+  } catch (error: any) {
+    console.error('Error sending message:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      conversationId: conversation?.id,
+      messageContent: message.content,
+      hasVoiceMessage: !!message.voiceMessage,
+    });
+    throw error; // Re-throw the error so it can be caught by the calling function
+  } finally {
+    setIsSending(false);
   }
+}
 
   // Always call hooks at the top level, not conditionally.
   // Move this conditional return after all hooks.

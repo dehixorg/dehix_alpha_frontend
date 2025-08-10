@@ -342,15 +342,6 @@ export function ChatList({
         {/* New "Create Group Chat" Button - "New Chat" dropdown removed as it became empty */}
         <div className="flex space-x-2 mb-3">
           <Button
-            variant="default" // Or "outline" depending on desired prominence
-            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
-            onClick={() => setShowCreateGroupDialog(true)}
-          >
-            <Users className="h-4 w-4 mr-2" />{' '}
-            {/* Icon color will be primary-foreground */}
-            Create Group
-          </Button>
-          <Button
             variant="default" // Or "outline"
             className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
             onClick={onOpenNewChatDialog} // Use the prop here
