@@ -94,6 +94,7 @@ const HomePage = () => {
     const newConversationData = {
       participants: [user.uid, selectedUser.id].sort(),
       type: 'individual' as const,
+      description: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastMessage: null,
@@ -117,12 +118,10 @@ const HomePage = () => {
       const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
       toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
 
-      // ** CORRECTED THIS BLOCK **
-      // Optimistically update UI using the clean data we already have
       const conversationDataForState: Conversation = {
         id: docRef.id,
         ...newConversationData,
-        createdAt: new Date().toISOString(), // Use client date for immediate UI display
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
@@ -135,10 +134,11 @@ const HomePage = () => {
     }
   };
 
-  // ** NEW FUNCTION TO CREATE GROUPS **
+  // ** THE FIX IS ON THE NEXT LINE **
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
     groupName: string,
+    description: string, // FIXED: Added the missing 'description' parameter
   ) {
     if (!user || !user.uid) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
@@ -173,7 +173,8 @@ const HomePage = () => {
 
     const newGroupData = {
       groupName: groupName.trim(),
-      avatar: null, // You can add a default group avatar URL here
+      description: description.trim(), // This line will now work correctly
+      avatar: null,
       participants: allParticipantIds,
       participantDetails: participantDetails,
       type: 'group' as const,
@@ -326,12 +327,11 @@ const HomePage = () => {
           initialData={profileSidebarInitialData}
         />
         {user && (
-          // You will need to update this component
           <NewChatDialog
             isOpen={isNewChatDialogOpen}
             onClose={() => setIsNewChatDialogOpen(false)}
             onSelectUser={handleStartNewChat}
-            onCreateGroup={handleCreateGroupChat} // Pass the new function here
+            onCreateGroup={handleCreateGroupChat}
             currentUserUid={user.uid}
           />
         )}
