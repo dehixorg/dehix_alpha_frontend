@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from 'react';
 import { X as LucideX, LoaderCircle, Check } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers';
 import { toast } from '@/components/ui/use-toast';
-import { Description } from '@radix-ui/react-toast';
+
+
 
 interface NewChatDialogProps {
   isOpen: boolean;
