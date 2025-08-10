@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
 import remarkGfm from 'remark-gfm';
 import {
@@ -1088,10 +1088,13 @@ export function CardsChat({
                       <Flag className="h-4 w-4" />
                       <span className="text-sm font-medium">Report</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-black dark:text-[hsl(var(--popover-foreground))] hover:!bg-transparent focus:!bg-transparent  cursor-pointer">
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuItem>
+                   <DropdownMenuItem 
+                        className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
+                        onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
+                      >
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        <span>Help</span>
+                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
