@@ -171,9 +171,10 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
 
 
 
-export async function completeBid(interviewId: string, bidId: string) {
-  const { data } = await axios.post(
-    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+export async function completeBid(interviewId: string, bidId: string, feedback: string) {
+  const { data } = await axios.put(
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
+    { feedback } // This sends the feedback text to the backend
   );
   return data;
 }

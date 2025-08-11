@@ -17,7 +17,7 @@ import {
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/header/header';
-import HistoryInterviews from '@/components/freelancer/scheduleInterview/HistoryInterviews';
+import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInterviews';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
