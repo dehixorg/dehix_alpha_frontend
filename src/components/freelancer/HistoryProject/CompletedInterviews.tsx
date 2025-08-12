@@ -201,8 +201,8 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
-          <Table className="bg-white text-black dark:bg-black dark:text-white">
+      <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
+        <Table className="bg-white text-black dark:bg-black dark:text-white">
             <TableHeader>
               <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
                 <TableHead className="w-[200px] text-center font-medium">
