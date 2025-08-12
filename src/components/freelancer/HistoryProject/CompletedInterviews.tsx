@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { RatingModal } from '@/components/ui/rating-modal';
 
 interface CompletedInterview {
   _id: string;
@@ -45,6 +46,8 @@ export default function HistoryInterviews() {
   const [displayCount, setDisplayCount] = useState(5);
   const [intervieweeDetails, setIntervieweeDetails] = useState<{[key: string]: any}>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState<CompletedInterview | null>(null);
 
   const loadCompletedInterviews = async () => {
     if (!user?.uid) return;
@@ -157,13 +160,109 @@ export default function HistoryInterviews() {
     setDisplayCount(prev => prev + 5);
   };
 
+const handleOpenRatingModal = (interview: CompletedInterview) => {
+    console.log('Rate button clicked for interview:', interview._id, 'Current rating:', interview.rating);
+    setSelectedInterview(interview);
+    setIsRatingModalOpen(true);
+  };
+
+  const handleCloseRatingModal = () => {
+    setIsRatingModalOpen(false);
+    setSelectedInterview(null);
+  };
+
+  const handleSubmitRating = async (rating: number) => {
+    if (!selectedInterview || !user?.uid) return;
+
+    try {
+      await axiosInstance.put(`/interview/${selectedInterview._id}`, {
+        rating,
+      });
+      
+      // Update the local state to reflect the new rating
+      setInterviews(prev => 
+        prev.map(interview => 
+          interview._id === selectedInterview._id 
+            ? { ...interview, rating }
+            : interview
+        )
+      );
+      
+      console.log('Rating submitted successfully:', rating);
+    } catch (error) {
+      console.error('Failed to submit rating:', error);
+      throw error;
+    }
+  };
+
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="animate-spin" />
+      <div className="space-y-4">
+        <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
+          <Table className="bg-white text-black dark:bg-black dark:text-white">
+            <TableHeader>
+              <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
+                <TableHead className="w-[200px] text-center font-medium">
+                  Interviewee
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Date
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Time
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Status
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Rating
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Feedback
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, index) => (
+                <TableRow key={index} className="transition bg-white text-black dark:bg-black dark:text-white">
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
+                      <div className="h-4 w-20 bg-gray-300 animate-pulse rounded"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-300 animate-pulse rounded"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
+                      <div className="h-4 w-12 bg-gray-300 animate-pulse rounded"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-300 animate-pulse rounded"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-8 w-16 bg-gray-300 animate-pulse rounded"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-8 w-20 bg-gray-300 animate-pulse rounded"></div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }
@@ -180,10 +279,10 @@ export default function HistoryInterviews() {
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-        <Table>
+      <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
+        <Table className="bg-white text-black dark:bg-black dark:text-white">
           <TableHeader>
-            <TableRow className="hover:bg-[#09090B]">
+            <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
               <TableHead className="w-[200px] text-center font-medium">
                 Interviewee
               </TableHead>
@@ -196,12 +295,9 @@ export default function HistoryInterviews() {
               <TableHead className="w-[150px] text-center font-medium">
                 Status
               </TableHead>
-              {/* <TableHead className="w-[150px] text-center font-medium">
+              <TableHead className="w-[150px] text-center font-medium">
                 Rating
-              </TableHead> */}
-              {/* <TableHead className="w-[300px] text-center font-medium">
-                Feedback
-              </TableHead> */}
+              </TableHead>
               <TableHead className="w-[150px] text-center font-medium">
                 Feedback
               </TableHead>
@@ -213,11 +309,11 @@ export default function HistoryInterviews() {
               const intervieweeName = getAcceptedIntervieweeName(interview);
               
               return (
-                <TableRow key={interview._id} className="transition">
+                <TableRow key={interview._id} className="transition bg-white text-black dark:bg-transparent dark:text-white">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                      <span className="font-semibold text-black dark:text-white">
                         {intervieweeName}
                       </span>
                     </div>
@@ -225,7 +321,7 @@ export default function HistoryInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-black dark:text-gray-400">
                         {date}
                       </span>
                     </div>
@@ -233,7 +329,7 @@ export default function HistoryInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Clock className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-black dark:text-gray-400">
                         {time}
                       </span>
                     </div>
@@ -241,35 +337,27 @@ export default function HistoryInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {getStatusIcon(interview.InterviewStatus)}
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-black dark:text-gray-400">
                         {getStatusText(interview.InterviewStatus)}
                       </span>
                     </div>
                   </TableCell>
-                  {/* <TableCell className="py-3 text-center">
-                    {interview.rating ? (
-                      <div className="flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {interview.rating}/5
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No rating
-                      </span>
-                    )}
-                  </TableCell> */}
-                  {/* <TableCell className="py-3 text-center">
-                    {interview.feedback ? (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {interview.feedback}
-                      </p>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No feedback
-                      </span>
-                    )}
-                  </TableCell> */}
+                  <TableCell className="py-3 text-center">
+                    <div className="flex flex-col gap-2 items-center">
+                      <Button
+                        size="sm"
+                        className="bg-blue-500"
+                        variant="outline"
+                        onClick={() => {
+                          console.log('Rate button clicked for interview:', interview._id, 'Current rating:', interview.rating);
+                          handleOpenRatingModal(interview);
+                        }}
+                        disabled={typeof interview.rating === 'number' && interview.rating > 0}
+                      >
+                        {interview.rating ? `${interview.rating}/5` : 'Rate'}
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex flex-col gap-2 items-center">
                       <Button
@@ -296,12 +384,19 @@ export default function HistoryInterviews() {
           <Button
             onClick={handleShowMore}
             variant="outline"
-            className="px-6 py-2"
+            className="px-6 py-2 text-black dark:text-white"
           >
             Show More ({interviews.length - displayCount} remaining)
           </Button>
         </div>
       )}
+      
+      <RatingModal
+        isOpen={isRatingModalOpen}
+        onClose={handleCloseRatingModal}
+        onSubmit={handleSubmitRating}
+        intervieweeName={selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''}
+      />
     </div>
   );
-}
+};

@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
-import { fetchPendingBids, acceptBid, PendingBid } from "@/lib/api/interviews";
+import { fetchPendingBids, acceptBid, PendingBid as ApiPendingBid } from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, Clock, DollarSign, User, Info } from "lucide-react";
@@ -17,25 +17,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-// The PendingBid type might need to be updated to reflect all possible ID fields
-// This is an example based on the logic we are implementing.
-interface PendingBid {
-    _id: string;
-    interviewId: string;
-    bidKey: string;
-    suggestedDateTime: string;
-    fee: number;
-    description: string;
-    creatorId?: string; // It might have creatorId
-    interviewerId?: string; // Or interviewerId
-    interviewer?: {
-      _id?: string;
-      name?: string;
-      userName?: string;
-      email?: string;
-    };
-}
-
+// Use the imported type instead of redefining it
+type PendingBid = ApiPendingBid;
 
 interface BidedInterviewsProps {
   interviewType?: string;
@@ -90,7 +73,6 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
     // 4. Last resort. If you see this, the API is not sending ANY id for the interviewer.
     return 'Unnamed Interviewer';
   }, [interviewerDetails]);
-
 
   useEffect(() => {
     // This function now uses the more robust ID extraction logic.
@@ -149,7 +131,6 @@ export default function BidedInterviews({ interviewType }: BidedInterviewsProps)
 
     loadBids();
   }, [intervieweeId]);
-
 
   const handleAccept = async (bid: PendingBid) => {
     try {

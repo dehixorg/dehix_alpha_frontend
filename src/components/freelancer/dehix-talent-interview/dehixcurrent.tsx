@@ -152,8 +152,51 @@ const getAcceptedIntervieweeName = (interview: ScheduledInterview): string => {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="animate-spin" />
+      <div className="space-y-4">
+        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-[#09090B]">
+                <TableHead className="w-[200px] text-center font-medium">
+                  Interviewee
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Date
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Time
+                </TableHead>
+                <TableHead className="w-[150px] text-center font-medium">
+                  Link
+                </TableHead>
+                <TableHead className="w-[50px] text-center font-medium">
+                  {/* Info button column */}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, index) => (
+                <TableRow key={index} className="transition">
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mx-auto"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-16 mx-auto"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-8 bg-gray-200 rounded animate-pulse w-24 mx-auto"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-8 bg-gray-200 rounded-full animate-pulse w-8 mx-auto"></div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }

@@ -41,6 +41,7 @@ export async function fetchBids(interviewId: string) {
 }
 
 // Fetch all PENDING interview bids addressed to the given interviewee
+// Fetch all PENDING interview bids addressed to the given interviewee
 export interface PendingBid extends PopulatedBid {
   bidKey: string;
   interviewId: string;
@@ -95,6 +96,7 @@ export async function fetchPendingBids(intervieweeId: string) {
     return [];
   }
 }
+
 
 // Fetch scheduled interviews for the given interviewee
 export async function fetchScheduledInterviews(intervieweeId: string) {
@@ -171,10 +173,10 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
 
 
 
-export async function completeBid(interviewId: string, bidId: string, feedback: string) {
+export async function completeBid(interviewId: string, bidId: string, feedback: string, rating: number) {
   const { data } = await axios.put(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
-    { feedback } // This sends the feedback text to the backend
+    { feedback, rating } // This sends the feedback text to the backend
   );
   return data;
 }

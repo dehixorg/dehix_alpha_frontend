@@ -12,7 +12,7 @@ const AccordionSection = ({ title, children }: { title: React.ReactNode; childre
       {/* Accordion Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center p-10 bg-[#151518] hover:bg-[#1f1f23] rounded-lg shadow-sm transition-colors"
+        className="w-full flex justify-between items-center p-10 light:bg-white dark:bg-[#151518]  rounded-lg shadow-sm transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="bg-[#2c2c38] rounded-full p-2 flex items-center justify-center">
@@ -44,7 +44,8 @@ export default function InterviewsPage() {
       <AccordionSection title={
         <div className="flex items-center gap-2">
           <GraduationCap size={20} color="white" />
-          <span>History</span>
+          <span className="text-black dark:text-white">History</span>
+
         </div>
       }>
         <div className="space-y-2">
