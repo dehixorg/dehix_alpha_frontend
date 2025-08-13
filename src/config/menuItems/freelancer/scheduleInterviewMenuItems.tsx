@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const createScheduleInterviewMenuItems = (
-  setActiveTab: (tab: string) => void
+  setActiveTab: (tab: string) => void,
 ) => {
   const menuItemsTop: MenuItem[] = [
     {
@@ -69,4 +69,4 @@ export const createScheduleInterviewMenuItems = (
   ];
 
   return { menuItemsTop, menuItemsBottom };
-}; 
+};

@@ -2,11 +2,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
+
 import { RootState } from "@/lib/store";
 import { fetchCompletedInterviews } from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
 import {
   Table,
   TableBody,

@@ -29,7 +29,6 @@ import { toast } from '@/components/ui/use-toast';
 interface Skill {
   _id: string;
   label: string;
-  label: string;
 }
 
 interface Domain {
@@ -172,13 +171,13 @@ const SkillDomainForm: React.FC = () => {
           filteredSkills.map((skill: any) => ({
             _id: skill._id,
             label: skill.label,
-          }))
+          })),
         );
         setDomains(
           filteredDomains.map((domain: any) => ({
             _id: domain._id,
             label: domain.label,
-          }))
+          })),
         );
 
         // Initialize skill and domain counters (by label) - improved logic
@@ -345,12 +344,12 @@ const SkillDomainForm: React.FC = () => {
               <SkillDialog
                 setSkills={setSkills}
                 skills={skills}
-                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+                onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
               <DomainDialog
                 setDomains={setDomains}
                 domains={domains}
-                onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+                onSuccess={() => setRefreshTrigger((prev) => prev + 1)}
               />
             </div>
           </div>
@@ -394,9 +393,9 @@ const SkillDomainForm: React.FC = () => {
                       <TableCell className="text-center">
                         ${item.monthlyPay}
                       </TableCell>
-                        
                       <TableCell>
-                        {item.status.toUpperCase() === StatusEnum.PENDING && item.uid ? (
+                        {item.status.toUpperCase() === StatusEnum.PENDING &&
+                        item.uid ? (
                           <VerifyDialog
                             talentType={item.type}
                             _id={item.uid}

@@ -1,11 +1,12 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/store";
-import { fetchCompletedInterviews } from "@/lib/api/interviews";
-import { axiosInstance } from "@/lib/axiosinstance";
-import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, User, CheckCircle, XCircle } from "lucide-react";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Calendar, Clock, User, CheckCircle, XCircle } from 'lucide-react';
+
+import { RootState } from '@/lib/store';
+import { fetchCompletedInterviews } from '@/lib/api/interviews';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -45,7 +46,9 @@ export default function HistoryInterviews() {
   const [interviews, setInterviews] = useState<CompletedInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
-  const [intervieweeDetails, setIntervieweeDetails] = useState<{[key: string]: any}>({});
+  const [intervieweeDetails, setIntervieweeDetails] = useState<{
+    [key: string]: any}>({});
+
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -53,13 +56,11 @@ export default function HistoryInterviews() {
 
   const loadCompletedInterviews = async () => {
     if (!user?.uid) return;
-    
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
       setInterviews(data);
       await fetchIntervieweeDetails(data);
-      console.log(data,"valueeeeeeeeeeeeeeeeeeeee");
     } catch (error) {
       console.error('Failed to load completed interviews:', error);
     } finally {
@@ -70,33 +71,26 @@ export default function HistoryInterviews() {
   useEffect(() => {
     loadCompletedInterviews();
   }, [user?.uid]);
-  
-  const fetchIntervieweeDetails = async (interviewData: CompletedInterview[]) => {
-    console.log('Fetching interviewee details for:', interviewData.length, 'interviews');
-    
-    if (interviewData.length > 0) {
-      console.log('Sample interview structure:', interviewData[0]);
-    }
-    
+  const fetchIntervieweeDetails = async (
+    interviewData: CompletedInterview[],
+  ) => {
     const intervieweeIds = interviewData
-      .filter(interview => interview.intervieweeId)
-      .map(interview => interview.intervieweeId);
-    
-    console.log('Interviewee IDs found:', intervieweeIds);
-    
+      .filter((interview) => interview.intervieweeId)
+      .map((interview) => interview.intervieweeId);
     if (intervieweeIds.length === 0) return;
-    
     try {
-      const uniqueIds = Array.from(new Set(intervieweeIds.filter(id => id && id !== undefined)));
+      const uniqueIds = Array.from(
+        new Set(intervieweeIds.filter((id) => id && id !== undefined)),
+      );
       console.log('Unique interviewee IDs:', uniqueIds);
-      const detailsMap: {[key: string]: any} = {};
-      
+      const detailsMap: { [key: string]: any } = {};
       for (const intervieweeId of uniqueIds) {
         if (!intervieweeId) continue;
         try {
           console.log('Fetching details for interviewee ID:', intervieweeId);
-          const response = await axiosInstance.get(`/freelancer/${intervieweeId}`);
-          console.log('Response for interviewee', intervieweeId, ':', response.data);
+          const response = await axiosInstance.get(
+            `/freelancer/${intervieweeId}`,
+          );
           if (response.data?.data) {
             detailsMap[intervieweeId] = response.data.data;
           }
@@ -104,7 +98,6 @@ export default function HistoryInterviews() {
           console.error(`Failed to fetch interviewee ${intervieweeId}:`, error);
         }
       }
-      
       console.log('Final interviewee details map:', detailsMap);
       setIntervieweeDetails(detailsMap);
     } catch (error) {
@@ -139,31 +132,33 @@ export default function HistoryInterviews() {
   };
 
   const getStatusText = (status: string) => {
-    return status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
+    return status
+      ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+      : 'Unknown';
   };
 
-  const getAcceptedIntervieweeName = (interview: CompletedInterview): string => {
+  const getAcceptedIntervieweeName = (
+    interview: CompletedInterview,
+  ): string => {
     const intervieweeId = interview.intervieweeId;
-    
     // Check the pre-fetched details map
     if (intervieweeId && intervieweeDetails[intervieweeId]) {
       const details = intervieweeDetails[intervieweeId];
-      const name = details.name || details.userName || details.email?.split('@')[0];
+      const name =
+        details.name || details.userName || details.email?.split('@')[0];
       if (name) {
         return capitalizeFirstLetter(name);
       }
     }
-    
     if (intervieweeId) return `Interviewee (${intervieweeId})`;
     return 'Interviewee';
   };
 
   const handleShowMore = () => {
-    setDisplayCount(prev => prev + 5);
+    setDisplayCount((prev) => prev + 5);
   };
 
-const handleOpenRatingModal = (interview: CompletedInterview) => {
-    console.log('Rate button clicked for interview:', interview._id, 'Current rating:', interview.rating);
+  const handleOpenRatingModal = (interview: CompletedInterview) => {
     setSelectedInterview(interview);
     setIsRatingModalOpen(true);
   };
@@ -180,17 +175,14 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
       await axiosInstance.put(`/interview/${selectedInterview._id}`, {
         rating,
       });
-      
       // Update the local state to reflect the new rating
-      setInterviews(prev => 
-        prev.map(interview => 
-          interview._id === selectedInterview._id 
+      setInterviews((prev) =>
+        prev.map((interview) =>
+          interview._id === selectedInterview._id
             ? { ...interview, rating }
-            : interview
-        )
+            : interview,
+        ),
       );
-      
-      console.log('Rating submitted successfully:', rating);
     } catch (error) {
       console.error('Failed to submit rating:', error);
       throw error;
@@ -212,28 +204,31 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
     if (!selectedInterview || !user?.uid) return;
 
     try {
-      const response = await axiosInstance.put(`/interview/${selectedInterview._id}`, {
-        feedback: feedback,
-      });
-      
+      const response = await axiosInstance.put(
+        `/interview/${selectedInterview._id}`,
+        {
+          feedback: feedback,
+        },
+      );
       // Check if the response indicates success
       if (response.data && response.data.success !== false) {
         // Update the local state to reflect the new feedback
-        setInterviews(prev => 
-          prev.map(interview => 
-            interview._id === selectedInterview._id 
+        setInterviews((prev) =>
+          prev.map((interview) =>
+            interview._id === selectedInterview._id
               ? { ...interview, feedback }
-              : interview
-          )
+              : interview,
+          ),
         );
-        
         console.log('Feedback submitted successfully:', feedback);
-        
         // Remove the automatic refresh to prevent feedback from being overwritten
         // The local state update is sufficient for immediate UI feedback
         // If needed, we can add a manual refresh button or handle it differently
       } else {
-        throw new Error('Failed to save feedback: ' + (response.data?.message || 'Unknown error'));
+        throw new Error(
+          'Failed to save feedback: ' +
+            (response.data?.message || 'Unknown error'),
+        );
       }
     } catch (error) {
       console.error('Failed to submit feedback:', error);
@@ -247,8 +242,8 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
   if (loading) {
     return (
       <div className="space-y-4">
-      <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
-        <Table className="bg-white text-black dark:bg-black dark:text-white">
+        <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
+          <Table className="bg-white text-black dark:bg-black dark:text-white">
             <TableHeader>
               <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
                 <TableHead className="w-[200px] text-center font-medium">
@@ -273,7 +268,9 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
             </TableHeader>
             <TableBody>
               {[...Array(5)].map((_, index) => (
-                <TableRow key={index} className="transition bg-white text-black dark:bg-black dark:text-white">
+                <TableRow
+                  key={index}
+                  className="transition bg-white text-black dark:bg-black dark:text-white">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
@@ -353,9 +350,10 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
             {displayedInterviews.map((interview) => {
               const { date, time } = formatDateTime(interview.interviewDate);
               const intervieweeName = getAcceptedIntervieweeName(interview);
-              
               return (
-                <TableRow key={interview._id} className="transition bg-white text-black dark:bg-transparent dark:text-white">
+                <TableRow
+                  key={interview._id}
+                  className="transition bg-white text-black dark:bg-transparent dark:text-white">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <User className="h-4 w-4 text-gray-500" />
@@ -395,10 +393,12 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
                         className="bg-blue-500"
                         variant="outline"
                         onClick={() => {
-                          console.log('Rate button clicked for interview:', interview._id, 'Current rating:', interview.rating);
                           handleOpenRatingModal(interview);
                         }}
-                        disabled={typeof interview.rating === 'number' && interview.rating > 0}
+                        disabled={
+                          typeof interview.rating === 'number' &&
+                          interview.rating > 0
+                        }
                       >
                         {interview.rating ? `${interview.rating}/5` : 'Rate'}
                       </Button>
@@ -411,9 +411,14 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
                         className="bg-blue-500"
                         variant="outline"
                         onClick={() => handleOpenFeedbackModal(interview)}
-                        disabled={Boolean(interview.feedback && interview.feedback.trim().length > 0)}
+                        disabled={Boolean(
+                          interview.feedback &&
+                            interview.feedback.trim().length > 0)}
                       >
-                        {interview.feedback && interview.feedback.trim().length > 0 ? 'Submitted' : 'Feedback'}
+                        {interview.feedback &&
+                        interview.feedback.trim().length > 0
+                          ? 'Submitted'
+                          : 'Feedback'}
                       </Button>
                     </div>
                   </TableCell>
@@ -423,7 +428,6 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
           </TableBody>
         </Table>
       </div>
-      
       {hasMoreInterviews && (
         <div className="flex justify-center">
           <Button
@@ -435,19 +439,21 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
           </Button>
         </div>
       )}
-      
       <RatingModal
         isOpen={isRatingModalOpen}
         onClose={handleCloseRatingModal}
         onSubmit={handleSubmitRating}
-        intervieweeName={selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''}
+        intervieweeName={
+          selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''
+        }
       />
-      
       <FeedbackModal
         isOpen={isFeedbackModalOpen}
         onClose={handleCloseFeedbackModal}
         onSubmit={handleSubmitFeedback}
-        intervieweeName={selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''}
+        intervieweeName={
+          selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''
+        }
       />
     </div>
   );

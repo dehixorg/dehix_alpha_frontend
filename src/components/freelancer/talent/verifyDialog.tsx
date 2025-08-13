@@ -35,7 +35,6 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
   userId,
   originalTalentId,
 }) => {
-  console.log('VerifyDialog _id prop:', _id, 'originalTalentId:', originalTalentId);
   const [date, setDate] = React.useState<Date>();
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);

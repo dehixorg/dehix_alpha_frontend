@@ -67,10 +67,7 @@ const domainSchema = z.object({
   status: z.string(),
 });
 
-const DomainDialog: React.FC<DomainDialogProps> = ({
-  domains,
-  onSuccess,
-}) => {
+const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {

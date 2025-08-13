@@ -67,7 +67,7 @@ const skillSchema = z.object({
   status: z.string(),
 });
 
-const SkillDialog: React.FC<SkillDialogProps> = ({ skills, setSkills, onSuccess }) => {
+const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {

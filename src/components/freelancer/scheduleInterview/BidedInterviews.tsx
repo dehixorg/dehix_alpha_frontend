@@ -2,11 +2,13 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
+
+import { Calendar, Clock, DollarSign, User, Info } from "lucide-react";
+
 import { RootState } from "@/lib/store";
 import { fetchPendingBids, acceptBid, PendingBid as ApiPendingBid } from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, DollarSign, User, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
