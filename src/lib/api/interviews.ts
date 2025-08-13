@@ -176,7 +176,7 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
 export async function completeBid(interviewId: string, bidId: string, feedback: string, rating: number) {
   const { data } = await axios.put(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
-    { feedback, rating } // This sends the feedback text to the backend
+    { feedback, rating } 
   );
   return data;
 }

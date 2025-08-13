@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -261,10 +262,10 @@ export default function HistoryInterviews() {
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+      <div className="w-full bg-card mx-auto px-5 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-[#09090B]">
+            <TableRow className="dark:hover:bg-[#09090B]">
               <TableHead className="w-[200px] text-center font-medium">
                 Interviewer
               </TableHead>
@@ -282,9 +283,6 @@ export default function HistoryInterviews() {
               </TableHead>
               <TableHead className="w-[300px] text-center font-medium">
                 Feedback
-              </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
-                Actions
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -362,19 +360,6 @@ export default function HistoryInterviews() {
                         ></div>
                       </div>
                     )}
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex flex-col gap-2 items-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          console.log('View interview details:', interview);
-                        }}
-                      >
-                        View Details
-                      </Button>
-                    </div>
                   </TableCell>
                 </TableRow>
               );

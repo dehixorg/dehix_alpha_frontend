@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 "use client";
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
