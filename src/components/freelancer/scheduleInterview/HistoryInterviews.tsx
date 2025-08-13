@@ -5,7 +5,7 @@ import { RootState } from "@/lib/store";
 import { fetchCompletedInterviews } from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, User, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -289,7 +289,7 @@ export default function HistoryInterviews() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayedInterviews.map((interview) => {
+            {displayedInterviews.map((interview, index) => {
               const { date, time } = formatDateTime(interview.interviewDate);
               const interviewerName = getAcceptedInterviewerName(interview);
               
@@ -340,15 +340,27 @@ export default function HistoryInterviews() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="py-3 text-center">
-                    {interview.feedback ? (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {interview.feedback}
-                      </p>
-                    ) : (
-                      <span className="text-sm text-gray-400">
-                        No feedback
-                      </span>
+                  <TableCell className="py-3 text-center relative">
+                    <button
+                      onClick={() => setOpenDescIdx(openDescIdx === index ? null : index)}
+                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                    >
+                      <Info size={16} color="white" />
+                    </button>
+                    {openDescIdx === index && (
+                      <div
+                        className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
+                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
+                      >
+                        <div className="text-sm leading-relaxed">
+                          {(interview.feedback) || "No feedback available"}
+                        </div>
+                        {/* Arrow pointing to the button */}
+                        <div 
+                          className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                        ></div>
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="py-3 text-center">
