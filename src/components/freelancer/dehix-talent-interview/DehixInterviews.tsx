@@ -1,216 +1,83 @@
-'use client';
-import React from 'react';
-import { Briefcase, Calendar, DollarSign } from 'lucide-react';
-
+"use client";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import CurrentInterviews from '@/components/freelancer/dehix-talent-interview/dehixcurrent';
+// import BidedInterviews from '@/components/freelancer/dehix-talent-interview/dehixbided';
 
-const DehixInterviews = ({
-  filter,
-  isTableView,
-  searchQuery,
-  skillData,
-  domainData,
-}: any) => {
-  const filteredData = () => {
-    const data =
-      filter === 'All'
-        ? [...skillData, ...domainData]
-        : filter === 'Skills'
-          ? skillData
-          : filter === 'Domain'
-            ? domainData
-            : [];
-
-    return searchQuery
-      ? data.filter(({ talentType }: any) =>
-          talentType?.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : data;
-  };
-
-  const getRemainingDays = (dateString: string | undefined): string => {
-    if (!dateString) return 'N/A';
-
-    const today = new Date().getTime(); // Get timestamp in milliseconds
-    const scheduledDate = new Date(dateString).getTime(); // Convert to timestamp
-
-    const diffTime = scheduledDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? `${diffDays}d` : 'Today';
-  };
+const AccordionSection = ({ title, children }: { title: React.ReactNode; children: React.ReactNode }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="p-6 w-full">
-      <div className="mb-8  ml-0 md:ml-5 ">
-        <h1 className="text-2xl font-bold">Dehix-talent interview</h1>
-      </div>
-      <div className=" p-0 md:p-6 flex flex-col gap-4  sm:px-6 sm:py-0 md:gap-8  pt-2 pl-0 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8  relative">
-        <div>
-          {filteredData().length === 0 ? (
-            <div className="text-center text-gray-500 py-6">
-              No related data found.
-            </div>
-          ) : isTableView ? (
-            <div className="w-full bg-card  mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
-              <Table>
-                <TableHeader>
-                  <TableRow className=" hover:bg-[#09090B">
-                    <TableHead className="w-[180px] text-center font-medium">
-                      Interviwer
-                    </TableHead>
-                    <TableHead className="w-[180px] text-center font-medium">
-                      Talent Name
-                    </TableHead>
-                    <TableHead className=" font-medium text-center ">
-                      Experience
-                    </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Interview Fees
-                    </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Level
-                    </TableHead>
-                    <TableHead className=" font-medium text-center">
-                      Status
-                    </TableHead>
-                    <TableHead className="  font-medium text-center">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData()!.map((interview: any) =>
-                    Object.values(interview?.interviewBids || {})
-                      .filter((bid: any) => bid?.status === 'ACCEPTED')
-                      .map((bid: any) => (
-                        <TableRow key={interview._id} className=" transition">
-                          <TableCell className="py-3 text-center">
-                            {bid?.interviewer?.userName || 'Unknown'}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {interview.talentType}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {bid?.interviewer?.workExperience}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {bid?.fee}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            {interview.level}
-                          </TableCell>
-                          <TableCell className="py-3 text-center">
-                            <Badge
-                              variant={'default'}
-                              className="px-1 py-1 text-xs"
-                            >
-                              {interview?.InterviewStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right py-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="mr-3"
-                            >
-                              Edit
-                            </Button>
-                            <Button size="sm">View</Button>
-                          </TableCell>
-                        </TableRow>
-                      )),
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredData()!.map((interview: any) =>
-                Object.values(interview?.interviewBids || {})
-                  .filter((bid: any) => bid?.status === 'ACCEPTED') // Filter only accepted bids
-                  .map((bid: any) => (
-                    <Card
-                      key={bid?._id}
-                      className="p-6 relative rounded-2xl shadow-xl border border-gray-300 hover:shadow-2xl "
-                    >
-                      <CardHeader className="p-4 border-b  rounded-t-2xl">
-                        <CardTitle className="text-xl font-semibold ">
-                          {bid?.interviewer?.userName || 'Unknown'}
-                        </CardTitle>
-                        <CardDescription className="text-sm ">
-                          {interview?.level}
-                        </CardDescription>
-                        <p className="text-sm absolute top-1 right-3 flex items-center gap-2">
-                          <Badge
-                            variant={'default'}
-                            className="px-1 py-1 text-xs"
-                          >
-                            {interview?.InterviewStatus}
-                          </Badge>
-                        </p>
-                      </CardHeader>
-                      <CardContent className="p-4 space-y-3">
-                        <p className="text-sm flex items-center gap-2">
-                          <Briefcase size={16} className="" />
-                          <span className="font-medium">Experience :</span>
-                          {bid?.interviewer?.workExperience} years
-                        </p>
-                        <p className="text-sm flex items-center gap-2">
-                          <DollarSign size={16} className="" />
-                          <span className="font-medium">Interview Fees :</span>₹
-                          {bid?.fee}
-                        </p>
-                        <p className="text-sm flex items-center whitespace-nowrap gap-2">
-                          <Calendar size={16} className="" />
-                          <span className="font-medium">Schedule Date :</span>
-                          {new Date(bid?.suggestedDateTime).toLocaleDateString(
-                            'en-US',
-                            {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            },
-                          )}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="flex  justify-between p-4 border-t  rounded-b-2xl">
-                        <Button variant="outline" size="sm" className="">
-                          Edit
-                        </Button>
-                        <Button size="sm" className="">
-                          View
-                        </Button>
-                        <span className="absolute bottom-3 right-4 text-xs font-medium text-gray-600  px-2 py-1 rounded-md">
-                          {getRemainingDays(bid?.suggestedDateTime)}
-                        </span>
-                      </CardFooter>
-                    </Card>
-                  )),
-              )}
-            </div>
-          )}
+    <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      {/* Accordion Header */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center p-10 bg-[#151518] hover:bg-[#1f1f23] rounded-lg shadow-sm transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="bg-[#2c2c38] rounded-full p-2 flex items-center justify-center">
+            {React.isValidElement(title) && title.props.children ? title.props.children[0] : null}
+          </div>
+          <span className="font-semibold text-white text-lg">
+            {React.isValidElement(title) && title.props.children ? title.props.children[1] : null}
+          </span>
         </div>
-      </div>
+        {isOpen ? <ChevronUp size={20} color="white" /> : <ChevronDown size={20} color="white" />}
+      </button>
+
+      {/* Accordion Body */}
+      {isOpen && (
+        <div className="p-4 bg-[#151518] text-white">
+          {children}
+        </div>
+      )}
     </div>
   );
 };
 
-export default DehixInterviews;
+export default function InterviewsPage() {
+  return (
+    <div className="max-w-3/4 mx-auto p-6">
+      {/* <h1 className="text-2xl font-bold mb-6">Interviews</h1> */}
+
+      {/* Current Interview Section */}
+        <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+       
+                     <Accordion type="single" collapsible>
+                       <AccordionItem value="current-interviews-upskill">
+                         <AccordionTrigger className="text-xl font-semibold hover:no-underline">
+                           <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                               <GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                             </div>
+                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                               Current Interview
+                             </h2>
+                           </div>
+                         </AccordionTrigger>
+                         <AccordionContent>
+                           <div className="text-center py-8">
+                             <p className="text-gray-600 dark:text-gray-400">
+                              <CurrentInterviews />
+                             </p>
+                           </div>
+                         </AccordionContent>
+                       </AccordionItem>
+                     </Accordion>
+                   </div>
+
+      {/* Bided Interview Section
+      <AccordionSection title="Bided Interview">
+        <div className="space-y-2">
+        <BidedInterviews/>
+        </div>
+      </AccordionSection> */}
+    </div>
+  );
+}

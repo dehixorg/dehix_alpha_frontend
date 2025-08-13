@@ -24,15 +24,18 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface VerifyDialogProps {
   talentType: string;
-  talentId: string;
+  _id: string;
   userId: string;
+  originalTalentId: string;
 }
 
 const VerifyDialog: React.FC<VerifyDialogProps> = ({
   talentType,
-  talentId,
+  _id,
   userId,
+  originalTalentId,
 }) => {
+  console.log('VerifyDialog _id prop:', _id, 'originalTalentId:', originalTalentId);
   const [date, setDate] = React.useState<Date>();
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -59,7 +62,7 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       intervieweeId: userId,
       interviewType: 'INTERVIEWER',
       talentType: talentType.toUpperCase(),
-      talentId: talentId,
+      talentId: originalTalentId, // Use the global skill id
       interviewDate: localDate.toISOString(), // Using the adjusted date
       description: (event.target as any).description.value,
     };

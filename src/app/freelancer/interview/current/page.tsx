@@ -6,6 +6,7 @@ import { ListFilter, Search, Table, PackageOpen } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
+// import CurrentInterviews from "@/components/freelancer/scheduleInterview/CurrentInterviews";
 
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ import type { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
+import InterviewCard from '@/components/shared/interviewCard';
 
 // interface Interview {
 //   reference: string;
@@ -171,7 +173,7 @@ export default function CurrentPage() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
-  const [isTableView, setIsTableView] = useState(false);
+  const [isTableView, setIsTableView] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -302,7 +304,7 @@ export default function CurrentPage() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
+    <div className="flex min-h-screen w-full bg-#151518">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -458,7 +460,10 @@ export default function CurrentPage() {
                       Dehix Talent Interviews
                     </h2>
                   </div>
-                  {skillData.length === 0 && domainData.length === 0 ? (
+                   <DehixInterviews />
+                    
+
+                 {/* {skillData.length === 0 && domainData.length === 0 ? (
                     <div className="text-center py-8 w-full ">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -480,7 +485,9 @@ export default function CurrentPage() {
                       isTableView={isTableView}
                       filter={filter}
                     />
-                  )}
+                  )} */}
+
+                  
                 </div>
 
                 {/* Project Interviews Section */}
@@ -490,7 +497,8 @@ export default function CurrentPage() {
                       Project Interviews
                     </h2>
                   </div>
-                  {projectSkill.length === 0 && projectDomain.length === 0 ? (
+                   <Projects />
+                  {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
                     <div className="text-center py-8 w-full">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -512,7 +520,7 @@ export default function CurrentPage() {
                       domainData={projectDomain}
                       filter={filter}
                     />
-                  )}
+                  )} */}
                 </div>
               </div>
             )}
