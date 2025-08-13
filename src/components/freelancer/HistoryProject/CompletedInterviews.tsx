@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { RatingModal } from '@/components/ui/rating-modal';
+import { FeedbackModal } from '@/components/ui/feedback-modal';
 
 interface CompletedInterview {
   _id: string;
@@ -47,6 +48,7 @@ export default function HistoryInterviews() {
   const [intervieweeDetails, setIntervieweeDetails] = useState<{[key: string]: any}>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<CompletedInterview | null>(null);
 
   const loadCompletedInterviews = async () => {
@@ -191,6 +193,50 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
       console.log('Rating submitted successfully:', rating);
     } catch (error) {
       console.error('Failed to submit rating:', error);
+      throw error;
+    }
+  };
+
+  const handleOpenFeedbackModal = (interview: CompletedInterview) => {
+    console.log('Feedback button clicked for interview:', interview._id);
+    setSelectedInterview(interview);
+    setIsFeedbackModalOpen(true);
+  };
+
+  const handleCloseFeedbackModal = () => {
+    setIsFeedbackModalOpen(false);
+    setSelectedInterview(null);
+  };
+
+  const handleSubmitFeedback = async (feedback: string) => {
+    if (!selectedInterview || !user?.uid) return;
+
+    try {
+      const response = await axiosInstance.put(`/interview/${selectedInterview._id}`, {
+        feedback: feedback,
+      });
+      
+      // Check if the response indicates success
+      if (response.data && response.data.success !== false) {
+        // Update the local state to reflect the new feedback
+        setInterviews(prev => 
+          prev.map(interview => 
+            interview._id === selectedInterview._id 
+              ? { ...interview, feedback }
+              : interview
+          )
+        );
+        
+        console.log('Feedback submitted successfully:', feedback);
+        
+        // Remove the automatic refresh to prevent feedback from being overwritten
+        // The local state update is sufficient for immediate UI feedback
+        // If needed, we can add a manual refresh button or handle it differently
+      } else {
+        throw new Error('Failed to save feedback: ' + (response.data?.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
       throw error;
     }
   };
@@ -364,11 +410,10 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
                         size="sm"
                         className="bg-blue-500"
                         variant="outline"
-                        onClick={() => {
-                          console.log('View interview details:', interview);
-                        }}
+                        onClick={() => handleOpenFeedbackModal(interview)}
+                        disabled={Boolean(interview.feedback && interview.feedback.trim().length > 0)}
                       >
-                        feedback
+                        {interview.feedback && interview.feedback.trim().length > 0 ? 'Submitted' : 'Feedback'}
                       </Button>
                     </div>
                   </TableCell>
@@ -395,6 +440,13 @@ const handleOpenRatingModal = (interview: CompletedInterview) => {
         isOpen={isRatingModalOpen}
         onClose={handleCloseRatingModal}
         onSubmit={handleSubmitRating}
+        intervieweeName={selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''}
+      />
+      
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={handleCloseFeedbackModal}
+        onSubmit={handleSubmitFeedback}
         intervieweeName={selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''}
       />
     </div>

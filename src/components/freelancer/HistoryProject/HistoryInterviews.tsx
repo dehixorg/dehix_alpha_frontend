@@ -45,10 +45,8 @@ export default function InterviewsPage() {
   return (
     <div className="max-w-3/4 mx-auto p-6">
       {/* <h1 className="text-2xl font-bold mb-6">Interviews</h1> */}
-
       {/* Current Interview Section */}
       <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
