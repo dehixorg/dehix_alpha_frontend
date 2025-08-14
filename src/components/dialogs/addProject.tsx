@@ -290,7 +290,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
 
       // Submit with the skills from our state
       const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/project`,
+        `/freelancer/project`,
         payload,
       );
 
