@@ -18,7 +18,7 @@ import { Button } from '../ui/button';
 import ProjectDrawer from './ProjectDrawer';
 
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 import { Project } from '@/app/freelancer/market/page';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';

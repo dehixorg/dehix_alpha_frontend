@@ -3,8 +3,8 @@ import {
   Panel,
   PanelGroup,
   PanelResizeHandle,
-  PanelRef,
-} from 'react-resizable-panels'; // Added PanelRef
+  type ImperativePanelHandle,
+} from 'react-resizable-panels'; // Use ImperativePanelHandle for ref
 
 import { cn } from '@/lib/utils';
 
@@ -25,7 +25,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
   isChatAreaExpanded,
   onOpenProfileSidebar,
 }) => {
-  const sidebarPanelRef = useRef<PanelRef>(null);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const defaultSidebarSize = 25;
 
   console.log(

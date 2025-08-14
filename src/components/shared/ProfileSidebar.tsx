@@ -35,6 +35,15 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
+// Simple file item type for shared files list
+export type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size?: number | string;
+  url: string;
+};
+
 import {
   Sheet,
   SheetContent,

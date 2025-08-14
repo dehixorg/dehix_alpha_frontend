@@ -37,21 +37,37 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FreelancerProfile } from '@/types/freelancer';
+// Extended interface to handle mixed string/object types during editing
+interface EditableFreelancerProfile
+  extends Omit<FreelancerProfile, 'skills' | 'domains'> {
+  skills?: (
+    | string
+    | { _id?: string; name: string; level?: string; experience?: string }
+  )[];
+  domains?: (string | { _id?: string; name: string; level?: string })[];
+}
 import ProjectSelectionDialog from '@/components/dialogs/ProjectSelectionDialog';
 import ExperienceSelectionDialog from '@/components/dialogs/ExperienceSelectionDialog';
-
 export default function ProfileDetailPage() {
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
   const params = useParams();
   const profileId = params.profileId as string;
 
-  const [profile, setProfile] = useState<FreelancerProfile | null>(null);
+  const [profile, setProfile] = useState<EditableFreelancerProfile | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editingProfileData, setEditingProfileData] = useState<any>({});
   const [skillsOptions, setSkillsOptions] = useState<any[]>([]);
   const [domainsOptions, setDomainsOptions] = useState<any[]>([]);
+  const [freelancerSkillsOptions, setFreelancerSkillsOptions] = useState<any[]>(
+    [],
+  );
+  const [freelancerDomainsOptions, setFreelancerDomainsOptions] = useState<
+    any[]
+  >([]);
   const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
@@ -202,7 +218,7 @@ export default function ProfileDetailPage() {
         }
       }
 
-      // Ensure skills and domains are properly formatted as arrays of strings
+      // Ensure skills and domains are properly formatted as arrays
       const processedProfileData = {
         ...profileData,
         skills: Array.isArray(profileData.skills) ? profileData.skills : [],
@@ -226,18 +242,36 @@ export default function ProfileDetailPage() {
 
   const fetchSkillsAndDomains = async () => {
     try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
-      );
+      // Fetch both complete collections and freelancer data
+      const [skillsResponse, domainsResponse, freelancerResponse] =
+        await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'),
+          axiosInstance.get(`/freelancer/${user.uid}`),
+        ]);
+
+      // Complete skills and domains for ID resolution
+      const allSkills = skillsResponse.data.data || [];
+      const allDomains = domainsResponse.data.data || [];
+
+      // Freelancer's personal skills and domains for dropdown
       const freelancerData = freelancerResponse.data.data || {};
+      const freelancerSkills = freelancerData.skills || [];
+      const freelancerDomains = freelancerData.domain || [];
 
-      const skillsData = freelancerData.skills || [];
-      const skillsArray = Array.isArray(skillsData) ? skillsData : [];
-      setSkillsOptions(skillsArray);
+      // Extract skill names from skill objects
+      const skillNames = freelancerSkills
+        .map((skill: any) => skill.name || skill)
+        .filter(Boolean);
+      const domainNames = freelancerDomains
+        .map((domain: any) => domain.name || domain)
+        .filter(Boolean);
 
-      const domainsData = freelancerData.domain || [];
-      const domainsArray = Array.isArray(domainsData) ? domainsData : [];
-      setDomainsOptions(domainsArray);
+      // Set all data
+      setSkillsOptions(allSkills);
+      setDomainsOptions(allDomains);
+      setFreelancerSkillsOptions(skillNames);
+      setFreelancerDomainsOptions(domainNames);
 
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
@@ -338,86 +372,69 @@ export default function ProfileDetailPage() {
   };
 
   const handleAddSkill = () => {
-    if (!tmpSkill || !profile || !skillsOptions || skillsOptions.length === 0)
+    if (
+      !tmpSkill ||
+      !profile ||
+      !freelancerSkillsOptions ||
+      freelancerSkillsOptions.length === 0
+    )
       return;
 
-    const selectedSkill = skillsOptions.find(
-      (skill: any) =>
-        (skill.name || skill.label || skill.skillName) === tmpSkill,
-    );
+    // tmpSkill is now the skill name directly from freelancer's skills
+    const skillNameToAdd = tmpSkill;
 
-    if (selectedSkill) {
-      // Add the skillId (string) to the profile, not the entire object
-      const skillIdToAdd =
-        selectedSkill.skillId ||
-        selectedSkill._id ||
-        selectedSkill.id ||
-        selectedSkill.name;
+    // Check if skill is already added
+    const isAlreadyAdded = profile.skills?.some((skill: any) => {
+      const existingSkillId =
+        typeof skill === 'string'
+          ? skill
+          : skill.skillId || skill._id || skill.id || skill.name;
+      return existingSkillId === skillNameToAdd;
+    });
 
-      // Check if skill is already added by comparing IDs
-      const isAlreadyAdded = profile.skills?.some((skill: any) => {
-        const existingSkillId =
-          typeof skill === 'string'
-            ? skill
-            : skill.skillId || skill._id || skill.id || skill.name;
-        return existingSkillId === skillIdToAdd;
+    if (!isAlreadyAdded) {
+      const updatedSkills = [...(profile.skills || []), skillNameToAdd];
+      setProfile({ ...profile, skills: updatedSkills });
+      setEditingProfileData({
+        ...editingProfileData,
+        skills: updatedSkills,
       });
-
-      if (!isAlreadyAdded) {
-        const updatedSkills = [...(profile.skills || []), skillIdToAdd];
-        setProfile({ ...profile, skills: updatedSkills });
-        setEditingProfileData({
-          ...editingProfileData,
-          skills: updatedSkills,
-        });
-      }
-      setTmpSkill('');
-      setSearchQuery('');
     }
+    setTmpSkill('');
+    setSearchQuery('');
   };
 
   const handleAddDomain = () => {
     if (
       !tmpDomain ||
       !profile ||
-      !domainsOptions ||
-      domainsOptions.length === 0
+      !freelancerDomainsOptions ||
+      freelancerDomainsOptions.length === 0
     )
       return;
 
-    const selectedDomain = domainsOptions.find(
-      (domain: any) =>
-        (domain.name || domain.label || domain.domainName) === tmpDomain,
-    );
+    // tmpDomain is now the domain name directly from freelancer's domains
+    const domainNameToAdd = tmpDomain;
 
-    if (selectedDomain) {
-      // Add the domainId (string) to the profile, not the entire object
-      const domainIdToAdd =
-        selectedDomain.domainId ||
-        selectedDomain._id ||
-        selectedDomain.id ||
-        selectedDomain.name;
+    // Check if domain is already added
+    const isAlreadyAdded = profile.domains?.some((domain: any) => {
+      const existingDomainId =
+        typeof domain === 'string'
+          ? domain
+          : domain.domainId || domain._id || domain.id || domain.name;
+      return existingDomainId === domainNameToAdd;
+    });
 
-      // Check if domain is already added by comparing IDs
-      const isAlreadyAdded = profile.domains?.some((domain: any) => {
-        const existingDomainId =
-          typeof domain === 'string'
-            ? domain
-            : domain.domainId || domain._id || domain.id || domain.name;
-        return existingDomainId === domainIdToAdd;
+    if (!isAlreadyAdded) {
+      const updatedDomains = [...(profile.domains || []), domainNameToAdd];
+      setProfile({ ...profile, domains: updatedDomains });
+      setEditingProfileData({
+        ...editingProfileData,
+        domains: updatedDomains,
       });
-
-      if (!isAlreadyAdded) {
-        const updatedDomains = [...(profile.domains || []), domainIdToAdd];
-        setProfile({ ...profile, domains: updatedDomains });
-        setEditingProfileData({
-          ...editingProfileData,
-          domains: updatedDomains,
-        });
-      }
-      setTmpDomain('');
-      setSearchQuery('');
     }
+    setTmpDomain('');
+    setSearchQuery('');
   };
 
   const handleDeleteSkill = (skillIdToDelete: string) => {
@@ -811,12 +828,10 @@ export default function ProfileDetailPage() {
                             )}
                           </div>
                           {/* Filtered skill list */}
-                          {skillsOptions &&
-                            skillsOptions.length > 0 &&
-                            skillsOptions
-                              .filter((skill: any) => {
-                                const skillName =
-                                  skill.name || skill.label || skill.skillName;
+                          {freelancerSkillsOptions &&
+                            freelancerSkillsOptions.length > 0 &&
+                            freelancerSkillsOptions
+                              .filter((skillName: string) => {
                                 if (!skillName) return false;
 
                                 const matchesSearch = skillName
@@ -829,61 +844,41 @@ export default function ProfileDetailPage() {
                                       typeof s === 'string'
                                         ? s
                                         : s.skillId || s._id || s.id || s.name;
-                                    const currentSkillId =
-                                      skill.skillId ||
-                                      skill._id ||
-                                      skill.id ||
-                                      skill.name;
-                                    return existingSkillId === currentSkillId;
+                                    return existingSkillId === skillName;
                                   },
                                 );
 
                                 return matchesSearch && !isAlreadySelected;
                               })
-                              .map((skill: any, index: number) => (
-                                <SelectItem
-                                  key={
-                                    skill.skillId ||
-                                    skill._id ||
-                                    skill.id ||
-                                    index
-                                  }
-                                  value={
-                                    skill.name || skill.label || skill.skillName
-                                  }
-                                >
-                                  {skill.name || skill.label || skill.skillName}
+                              .map((skillName: string, index: number) => (
+                                <SelectItem key={index} value={skillName}>
+                                  {skillName}
                                 </SelectItem>
                               ))}
                           {/* No matching skills */}
-                          {skillsOptions &&
-                            skillsOptions.length > 0 &&
-                            skillsOptions.filter((skill: any) => {
-                              const skillName =
-                                skill.name || skill.label || skill.skillName;
-                              if (!skillName) return false;
+                          {freelancerSkillsOptions &&
+                            freelancerSkillsOptions.length > 0 &&
+                            freelancerSkillsOptions.filter(
+                              (skillName: string) => {
+                                if (!skillName) return false;
 
-                              const matchesSearch = skillName
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase());
+                                const matchesSearch = skillName
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase());
 
-                              const isAlreadySelected = profile?.skills?.some(
-                                (s: any) => {
-                                  const existingSkillId =
-                                    typeof s === 'string'
-                                      ? s
-                                      : s.skillId || s._id || s.id || s.name;
-                                  const currentSkillId =
-                                    skill.skillId ||
-                                    skill._id ||
-                                    skill.id ||
-                                    skill.name;
-                                  return existingSkillId === currentSkillId;
-                                },
-                              );
+                                const isAlreadySelected = profile?.skills?.some(
+                                  (s: any) => {
+                                    const existingSkillId =
+                                      typeof s === 'string'
+                                        ? s
+                                        : s.skillId || s._id || s.id || s.name;
+                                    return existingSkillId === skillName;
+                                  },
+                                );
 
-                              return matchesSearch && !isAlreadySelected;
-                            }).length === 0 && (
+                                return matchesSearch && !isAlreadySelected;
+                              },
+                            ).length === 0 && (
                               <div className="p-2 text-gray-500 italic text-center">
                                 No matching skills
                               </div>
@@ -908,15 +903,13 @@ export default function ProfileDetailPage() {
                     <div className="flex flex-wrap gap-2 mt-5">
                       {profile.skills && profile.skills.length > 0 ? (
                         profile.skills.map((skill: any, index: number) => {
+                          // Handle both populated objects and ID strings
                           const skillId =
+                            typeof skill === 'string' ? skill : skill._id;
+                          const skillName =
                             typeof skill === 'string'
-                              ? skill
-                              : skill.skillId ||
-                                skill._id ||
-                                skill.id ||
-                                skill.name;
-                          const skillName = getSkillNameById(skillId);
-
+                              ? getSkillNameById(skill)
+                              : skill.label || skill.name || skill._id;
                           return (
                             <Badge
                               key={index}
@@ -977,14 +970,10 @@ export default function ProfileDetailPage() {
                             )}
                           </div>
                           {/* Filtered domain list */}
-                          {domainsOptions &&
-                            domainsOptions.length > 0 &&
-                            domainsOptions
-                              .filter((domain: any) => {
-                                const domainName =
-                                  domain.name ||
-                                  domain.label ||
-                                  domain.domainName;
+                          {freelancerDomainsOptions &&
+                            freelancerDomainsOptions.length > 0 &&
+                            freelancerDomainsOptions
+                              .filter((domainName: string) => {
                                 if (!domainName) return false;
 
                                 const matchesSearch = domainName
@@ -997,66 +986,39 @@ export default function ProfileDetailPage() {
                                       typeof d === 'string'
                                         ? d
                                         : d.domainId || d._id || d.id || d.name;
-                                    const currentDomainId =
-                                      domain.domainId ||
-                                      domain._id ||
-                                      domain.id ||
-                                      domain.name;
-                                    return existingDomainId === currentDomainId;
+                                    return existingDomainId === domainName;
                                   });
 
                                 return matchesSearch && !isAlreadySelected;
                               })
-                              .map((domain: any, index: number) => (
-                                <SelectItem
-                                  key={
-                                    domain.domainId ||
-                                    domain._id ||
-                                    domain.id ||
-                                    index
-                                  }
-                                  value={
-                                    domain.name ||
-                                    domain.label ||
-                                    domain.domainName
-                                  }
-                                >
-                                  {domain.name ||
-                                    domain.label ||
-                                    domain.domainName}
+                              .map((domainName: string, index: number) => (
+                                <SelectItem key={index} value={domainName}>
+                                  {domainName}
                                 </SelectItem>
                               ))}
                           {/* No matching domains */}
-                          {domainsOptions &&
-                            domainsOptions.length > 0 &&
-                            domainsOptions.filter((domain: any) => {
-                              const domainName =
-                                domain.name ||
-                                domain.label ||
-                                domain.domainName;
-                              if (!domainName) return false;
+                          {freelancerDomainsOptions &&
+                            freelancerDomainsOptions.length > 0 &&
+                            freelancerDomainsOptions.filter(
+                              (domainName: string) => {
+                                if (!domainName) return false;
 
-                              const matchesSearch = domainName
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase());
+                                const matchesSearch = domainName
+                                  .toLowerCase()
+                                  .includes(searchQuery.toLowerCase());
 
-                              const isAlreadySelected = profile?.domains?.some(
-                                (d: any) => {
-                                  const existingDomainId =
-                                    typeof d === 'string'
-                                      ? d
-                                      : d.domainId || d._id || d.id || d.name;
-                                  const currentDomainId =
-                                    domain.domainId ||
-                                    domain._id ||
-                                    domain.id ||
-                                    domain.name;
-                                  return existingDomainId === currentDomainId;
-                                },
-                              );
+                                const isAlreadySelected =
+                                  profile?.domains?.some((d: any) => {
+                                    const existingDomainId =
+                                      typeof d === 'string'
+                                        ? d
+                                        : d.domainId || d._id || d.id || d.name;
+                                    return existingDomainId === domainName;
+                                  });
 
-                              return matchesSearch && !isAlreadySelected;
-                            }).length === 0 && (
+                                return matchesSearch && !isAlreadySelected;
+                              },
+                            ).length === 0 && (
                               <div className="p-2 text-gray-500 italic text-center">
                                 No matching domains
                               </div>
@@ -1081,14 +1043,13 @@ export default function ProfileDetailPage() {
                     <div className="flex flex-wrap gap-2 mt-5">
                       {profile.domains && profile.domains.length > 0 ? (
                         profile.domains.map((domain: any, index: number) => {
+                          // Handle both populated objects and ID strings
                           const domainId =
+                            typeof domain === 'string' ? domain : domain._id;
+                          const domainName =
                             typeof domain === 'string'
-                              ? domain
-                              : domain.domainId ||
-                                domain._id ||
-                                domain.id ||
-                                domain.name;
-                          const domainName = getDomainNameById(domainId);
+                              ? getDomainNameById(domain)
+                              : domain.label || domain.name || domain._id;
 
                           return (
                             <Badge

@@ -19,8 +19,8 @@ export const getReportTypeFromPath = (path: string): string => {
     return 'Freelancer Oracle Work Experience Verification';
   if (path.includes('/freelancer/oracleDashboard'))
     return 'Freelancer Oracle Dashboard';
-  if (path.includes('/freelancer/')) return 'Freelancer profile'; // fallback for /freelancer/[freelancer_id]
-  if (path.includes('/chat')) return 'Chat'; // fallback for /freelancer/[freelancer_id]
+  if (path.includes('/freelancer/')) return 'Freelancer profile';
+  if (path.includes('/chat')) return 'Chat';
 
   // Business paths
   if (path.includes('/dashboard/business')) return 'Business profile';
@@ -28,3 +28,4 @@ export const getReportTypeFromPath = (path: string): string => {
 
   return 'General';
 };
+

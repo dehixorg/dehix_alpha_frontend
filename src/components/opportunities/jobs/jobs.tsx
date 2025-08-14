@@ -21,7 +21,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/components/ui/use-toast';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 
 interface Profile {
   _id?: string;
