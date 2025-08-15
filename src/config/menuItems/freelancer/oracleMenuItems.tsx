@@ -36,7 +36,7 @@ export const menuItemsTop: MenuItem[] = [
     icon: <HomeIcon className="h-5 w-5" />,
     label: 'Home',
   },
-     {
+  {
     href: '/freelancer/market',
     icon: <Store className="h-5 w-5" />,
     label: 'Market',
@@ -109,4 +109,4 @@ export const menuItemsBottom: MenuItem[] = [
     icon: <Settings className="h-5 w-5" />,
     label: 'Settings',
   },
- ];
+];

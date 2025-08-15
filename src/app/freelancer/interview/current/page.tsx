@@ -308,13 +308,13 @@ export default function CurrentPage() {
         menuItemsBottom={menuItemsBottom}
         active="Current"
       />
-       <div className="flex flex-col mb-8 sm:gap-4 sm:py-0 sm:pl-14 w-full">
+      <div className="flex flex-col mb-8 sm:gap-4 sm:py-0 sm:pl-14 w-full">
         {/* <Header
           breadcrumbItems={breadcrumbItems}
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Current"
-        /> */} 
+        /> */}
         <div className="ml-10">
           <h1 className="text-3xl font-bold">Current Interviews</h1>
           <p className="text-gray-400 mt-2">
@@ -519,6 +519,6 @@ export default function CurrentPage() {
           </div>
         </div>
       </div>
-    // </div>
+    </div>
   );
 }

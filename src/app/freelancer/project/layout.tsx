@@ -14,14 +14,17 @@ import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems'
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Header from '@/components/header/header';
 interface projectLayoutProps {
   children: ReactNode;
   activeTab: string;
 }
 
-const projectLayout: React.FC<projectLayoutProps> = ({ children, activeTab }) => {
+const projectLayout: React.FC<projectLayoutProps> = ({
+  children,
+  activeTab,
+}) => {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -43,74 +46,71 @@ const projectLayout: React.FC<projectLayoutProps> = ({ children, activeTab }) =>
             { label: 'projectDashboard', link: '#' },
           ]}
         />
-      
-      {/* Main Content */}
-      <div className="flex-1">
-        <header className="border-b">
-          <div className="w-full flex-1 h-16 items-center justify-between px-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold">Project</h1>
+        {/* Main Content */}
+        <div className="flex-1">
+          <header className="border-b">
+            <div className="w-full flex-1 h-16 items-center justify-between px-4">
+              <div className="flex items-center gap-4">
+                <h1 className="text-xl font-bold">Project</h1>
+              </div>
+              <div className="flex items-center gap-4"></div>
             </div>
-            <div className="flex items-center gap-4">
-            </div>
+          </header>
+
+          <div className="w-full px-4 py-4">
+            <Tabs defaultValue={activeTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger
+                  value="Current"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a href="/freelancer/project/current">
+                    <FolderDot className="h-4 w-4" />
+                    <span>Current Projects</span>
+                  </a>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="applied"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a href="/freelancer/project/applied">
+                    <Pointer className="h-4 w-4" />
+                    <span>Applied</span>
+                  </a>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="completed"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a href="/freelancer/project/completed">
+                    <FileCheck className="h-4 w-4" />
+                    <span>Completed</span>
+                  </a>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Rejected"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a href="/freelancer/project/rejected">
+                    <CircleX className="h-4 w-4" />
+                    <span>Rejected</span>
+                  </a>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-        </header>
-
-        <div className="w-full px-4 py-4">
-          <Tabs defaultValue={activeTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger
-                value="Current"
-                className="flex items-center gap-2"
-                asChild
-              >
-                <a href="/freelancer/project/current">
-                  <FolderDot className="h-4 w-4" />
-                  <span>Current Projects</span>
-                </a>
-              </TabsTrigger>
-              <TabsTrigger
-                value="applied"
-                className="flex items-center gap-2"
-                asChild
-              >
-                <a href="/freelancer/project/applied">
-                  <Pointer className="h-4 w-4" />
-                  <span>Applied</span>
-                </a>
-              </TabsTrigger>
-              <TabsTrigger
-                value="completed"
-                className="flex items-center gap-2"
-                asChild
-              >
-                <a href="/freelancer/project/completed">
-                  <FileCheck className="h-4 w-4" />
-                  <span>Completed</span>
-                </a>
-              </TabsTrigger>
-              <TabsTrigger
-                value="Rejected"
-                className="flex items-center gap-2"
-                asChild
-              >
-                <a href="/freelancer/project/rejected">
-                  <CircleX className="h-4 w-4" />
-                  <span>Rejected</span>
-                </a>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <div className="w-full flex-1 items-start px-4 py-6">
-          <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-12">{children}</div>
+          <div className="w-full flex-1 items-start px-4 py-6">
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12">{children}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-      </div>
   );
 };
 

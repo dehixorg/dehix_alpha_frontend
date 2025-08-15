@@ -36,7 +36,7 @@ export const menuItemsTop: MenuItem[] = [
     icon: <Home className="h-5 w-5" />,
     label: 'Home',
   },
-    {
+  {
     href: '/freelancer/market',
     icon: <Store className="h-5 w-5" />,
     label: 'Market',

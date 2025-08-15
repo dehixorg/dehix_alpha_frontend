@@ -39,6 +39,6 @@ export default function ProfilePage() {
         </div>
         <Bids userId={user.uid} />
       </div>
-    // </div>
+    </div>
   );
 }
