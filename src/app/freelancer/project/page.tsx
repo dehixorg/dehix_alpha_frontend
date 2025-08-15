@@ -2,11 +2,11 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function interviewPage() {
+export default function projectDashboardPage() {
   const router = useRouter();
   
   useEffect(() => {
-    router.replace('/freelancer/interview/profile');
+    router.replace('/freelancer/project/current');
   }, [router]);
 
   return null;

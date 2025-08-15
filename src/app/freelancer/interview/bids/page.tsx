@@ -21,7 +21,7 @@ export default function ProfilePage() {
         active="Bids"
       />
       <div className="flex mb-8 flex-col sm:pl-14 w-full">
-        <Header
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
@@ -30,7 +30,7 @@ export default function ProfilePage() {
             { label: 'Interview', link: '/freelancer/interview/profile' },
             { label: 'Bids', link: '#' },
           ]}
-        />
+        /> */}
         <div className="ml-10 mt-6 mb-10">
           <h1 className="text-3xl font-bold">Interview Bid&apos;s</h1>
           <p className="text-gray-400 mt-2">
@@ -39,6 +39,6 @@ export default function ProfilePage() {
         </div>
         <Bids userId={user.uid} />
       </div>
-    </div>
+    // </div>
   );
 }
