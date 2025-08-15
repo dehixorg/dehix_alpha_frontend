@@ -28,4 +28,3 @@ export const getReportTypeFromPath = (path: string): string => {
 
   return 'General';
 };
-

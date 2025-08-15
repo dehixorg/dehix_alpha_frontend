@@ -88,6 +88,7 @@ export type ProfileGroup = {
   avatar?: string; // From API (S3 URL)
   description?: string; // From API
   createdAt: string; // ISO String from API
+  createdBy?: string; // Add this missing property
   members: ProfileGroupMember[]; // From API
   admins: string[]; // Array of user IDs from API
   participantDetails?: {
@@ -145,6 +146,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     title: '',
     description: '',
     onConfirm: () => {},
+    confirmButtonText: '', // Add this missing property
     confirmButtonVariant: 'destructive' as
       | 'default'
       | 'destructive'
@@ -224,17 +226,24 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             id,
             userName: details.userName || 'Unknown Member',
             profilePic: details.profilePic,
-            status: Math.random() > 0.5 ? 'online' : 'offline', // Keep mock status for now
+            status: (Math.random() > 0.5 ? 'online' : 'offline') as
+              | 'online'
+              | 'offline',
           }));
 
           setProfileData({
+            _id: conversationDoc.id,
             id: conversationDoc.id,
-            name: groupData.groupName || 'Unnamed Group',
+            groupName: groupData.groupName || 'Unnamed Group',
+            displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             createdBy: groupData.createdBy || '',
             admins: groupData.admins || [],
+            participantDetails: groupData.participantDetails,
+            inviteLink: groupData.inviteLink,
+            avatar: groupData.avatar,
           });
         } else {
           throw new Error('Group not found');
@@ -638,7 +647,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   };
 
   const handleLeaveGroup = async (groupId: string, userIdToLeave: string) => {
-    // ... (existing implementation)
     if (!groupId || !userIdToLeave) {
       toast({
         variant: 'destructive',
@@ -687,7 +695,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -1004,6 +1011,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                       description: `Are you sure you want to remove ${member.userName} from the group?`,
                                       onConfirm: () =>
                                         handleConfirmRemoveMember(member.id),
+                                      confirmButtonText: 'Remove Member',
                                       confirmButtonVariant: 'destructive',
                                     });
                                     setIsConfirmDialogOpen(true);
@@ -1089,7 +1097,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           if (
                             profileData &&
                             profileType === 'group' &&
-                            currentUser?.uid
+                            user?.uid
                           ) {
                             // Ensure currentUser.uid for safety
                             handleToggleMuteGroup(
