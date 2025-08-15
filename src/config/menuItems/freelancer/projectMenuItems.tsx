@@ -1,10 +1,17 @@
 import {
-  HomeIcon,
-  FileCheck,
-  Pointer,
-  FolderDot,
-  CircleX,
+  Home,
+  LineChart,
   Settings,
+  Sparkles,
+  BriefcaseBusiness,
+  Store,
+  TabletSmartphone,
+  ShieldCheck,
+  CalendarClock,
+  MessageSquare,
+  Archive,
+  StickyNote,
+  Trash2,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -26,29 +33,74 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/dashboard/freelancer',
-    icon: <HomeIcon className="h-5 w-5" />,
+    icon: <Home className="h-5 w-5" />,
     label: 'Home',
   },
-  {
-    href: '/freelancer/project/current',
-    icon: <FolderDot className="h-5 w-5" />,
-    label: 'Current Projects',
+    {
+    href: '/freelancer/market',
+    icon: <Store className="h-5 w-5" />,
+    label: 'Market',
   },
   {
-    href: '/freelancer/project/applied',
-    icon: <Pointer className="h-5 w-5" />,
-    label: 'Under Verification',
+    href: '/freelancer/project',
+    icon: <BriefcaseBusiness className="h-5 w-5" />,
+    label: 'Projects',
   },
   {
-    href: '/freelancer/project/completed',
-    icon: <FileCheck className="h-5 w-5" />,
-    label: 'Completed Projects',
+    href: '#',
+    icon: <LineChart className="h-5 w-5 cursor-not-allowed" />,
+    label: 'Analytics',
   },
   {
-    href: '/freelancer/project/rejected',
-    icon: <CircleX className="h-5 w-5" />,
-    label: 'Rejected Projects',
+    href: '/freelancer/interview',
+    icon: <TabletSmartphone className="h-5 w-5" />,
+    label: 'Interviews',
   },
+  {
+    href: '#',
+    icon: <CalendarClock className="h-5 w-5 cursor-not-allowed" />,
+    label: 'Schedule Interviews',
+  },
+  {
+    href: '/freelancer/oracleDashboard',
+    icon: <ShieldCheck className="h-5 w-5" />,
+    label: 'Oracle',
+  },
+  {
+    href: '/freelancer/talent',
+    icon: <Sparkles className="h-5 w-5" />,
+    label: 'Talent',
+  },
+  {
+    href: '/chat',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'Chats',
+  },
+  {
+    href: '/notes',
+    icon: <StickyNote className="h-5 w-5" />,
+    label: 'Notes',
+  },
+  // {
+  //   href: '/freelancer/project/current',
+  //   icon: <FolderDot className="h-5 w-5" />,
+  //   label: 'Current Projects',
+  // },
+  // {
+  //   href: '/freelancer/project/applied',
+  //   icon: <Pointer className="h-5 w-5" />,
+  //   label: 'Under Verification',
+  // },
+  // {
+  //   href: '/freelancer/project/completed',
+  //   icon: <FileCheck className="h-5 w-5" />,
+  //   label: 'Completed Projects',
+  // },
+  // {
+  //   href: '/freelancer/project/rejected',
+  //   icon: <CircleX className="h-5 w-5" />,
+  //   label: 'Rejected Projects',
+  // },
 ];
 
 export const menuItemsBottom: MenuItem[] = [

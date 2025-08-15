@@ -47,12 +47,12 @@ export default function HistoryPage() {
         active="History"
       />
       <div className="flex flex-col sm:gap-4 mb-8 sm:py-0 sm:pl-14 w-full">
-        <Header
+        {/* <Header
           breadcrumbItems={breadcrumbItems}
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="History"
-        />
+        /> */}
         <div className="ml-10">
           <h1 className="text-3xl font-bold">History Interviews</h1>
           <p className="text-gray-400 mt-2">

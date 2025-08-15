@@ -112,8 +112,8 @@ export default function ProfessionalInfo() {
         menuItemsBottom={menuItemsBottom}
         active="Experience Verification"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
+      {/* <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8"> */}
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
@@ -126,9 +126,8 @@ export default function ProfessionalInfo() {
               link: '#',
             },
           ]}
-        />
-        <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
-          <div className="mb-8 ">
+        /> */}
+        
             <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
               <div className="mb-8 ">
                 <h1 className="text-3xl font-bold">Experience Verification</h1>
@@ -221,8 +220,8 @@ export default function ProfessionalInfo() {
               ) : null}
             </main>
           </div>
-        </div>
-      </div>
-    </div>
+      //   </div>
+      // </div>
+    // </div>
   );
 }
