@@ -5,20 +5,44 @@ import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 import { cn } from '@/lib/utils';
 
+export type ScrollAreaProps = React.ComponentPropsWithoutRef<
+  typeof ScrollAreaPrimitive.Root
+> & {
+  hideScrollbar?: boolean;
+};
+
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => (
+  ScrollAreaProps
+>(({ className, children, hideScrollbar = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn('relative overflow-hidden', className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    <ScrollAreaPrimitive.Viewport
+      data-hide-scrollbar={hideScrollbar ? 'true' : undefined}
+      className="h-full w-full rounded-[inherit]"
+      style={hideScrollbar ? ({ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties) : undefined}
+    >
       {children}
     </ScrollAreaPrimitive.Viewport>
-    <ScrollBar />
+    {!hideScrollbar && <ScrollBar />}
     <ScrollAreaPrimitive.Corner />
+    {hideScrollbar ? (
+      <style jsx>{`
+        [data-hide-scrollbar]::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+          background: transparent;
+        }
+        [data-hide-scrollbar] {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+      `}</style>
+    ) : null}
   </ScrollAreaPrimitive.Root>
 ));
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;

@@ -367,7 +367,7 @@ export function ChatList({
         </div>
       </div>
 
-      <ScrollArea className="flex-grow">
+      <ScrollArea hideScrollbar>
         {' '}
         {/* ScrollArea will take remaining height */}
         <div
