@@ -1,6 +1,7 @@
 'use client';
 import { BookOpen, Briefcase, User, Package } from 'lucide-react';
 import React, { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -12,10 +13,19 @@ import Header from '@/components/header/header';
 
 interface OracleLayoutProps {
   children: ReactNode;
-  activeTab: string;
 }
 
-const OracleLayout: React.FC<OracleLayoutProps> = ({ children, activeTab }) => {
+const OracleLayout: React.FC<OracleLayoutProps> = ({ children }) => {
+  const pathname = usePathname();
+  const activeTab = pathname.includes('/business')
+    ? 'business'
+    : pathname.includes('/workExp') || pathname.includes('/workExpVerification')
+      ? 'experience'
+      : pathname.includes('/project')
+        ? 'project'
+        : pathname.includes('/education')
+          ? 'education'
+          : 'business';
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}

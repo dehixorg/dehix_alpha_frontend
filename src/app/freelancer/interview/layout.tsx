@@ -1,6 +1,7 @@
 'use client';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
 import React, { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -9,15 +10,15 @@ import {
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Header from '@/components/header/header';
-interface interviewLayoutProps {
-  children: ReactNode;
-  activeTab: string;
-}
-
-const interviewLayout: React.FC<interviewLayoutProps> = ({
-  children,
-  activeTab,
-}) => {
+const InterviewLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const pathname = usePathname();
+  const activeTab = pathname.includes('/current')
+    ? 'Current'
+    : pathname.includes('/bids')
+      ? 'bids'
+      : pathname.includes('/history')
+        ? 'history'
+        : 'profile';
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -108,4 +109,4 @@ const interviewLayout: React.FC<interviewLayoutProps> = ({
   );
 };
 
-export default interviewLayout;
+export default InterviewLayout;

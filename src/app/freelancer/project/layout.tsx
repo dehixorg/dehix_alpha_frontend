@@ -8,6 +8,7 @@ import {
   Settings,
 } from 'lucide-react';
 import React, { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -16,15 +17,20 @@ import {
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Header from '@/components/header/header';
-interface projectLayoutProps {
+interface ProjectLayoutProps {
   children: ReactNode;
-  activeTab: string;
 }
 
-const projectLayout: React.FC<projectLayoutProps> = ({
-  children,
-  activeTab,
-}) => {
+const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
+  const pathname = usePathname();
+  const activeTab = pathname.includes('/freelancer/project/applied')
+    ? 'applied'
+    : pathname.includes('/freelancer/project/completed')
+    ? 'completed'
+    : pathname.includes('/freelancer/project/rejected')
+    ? 'Rejected'
+    : 'Current';
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -58,7 +64,7 @@ const projectLayout: React.FC<projectLayoutProps> = ({
           </header>
 
           <div className="w-full px-4 py-4">
-            <Tabs defaultValue={activeTab} className="w-full">
+            <Tabs value={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="Current"
@@ -114,4 +120,4 @@ const projectLayout: React.FC<projectLayoutProps> = ({
   );
 };
 
-export default projectLayout;
+export default ProjectLayout;
