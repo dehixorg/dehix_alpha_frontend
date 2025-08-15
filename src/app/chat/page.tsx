@@ -21,6 +21,10 @@ import {
   menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsBottom as freelancerMenuItemsBottom,
+  menuItemsTop as freelancerMenuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems'
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 import {
@@ -162,7 +166,7 @@ const HomePage = () => {
         userType: user.type,
       },
     };
-    selectedUsers.forEach(selected => {
+    selectedUsers.forEach((selected:any) => {
       participantDetails[selected.id] = {
         userName: selected.displayName,
         profilePic: selected.profilePic || null,
@@ -294,16 +298,16 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
+    <div className="flex min-h-screen w-full flex-col bg-[#09090b]">
       <SidebarMenu
-        menuItemsTop={user.type === 'business' ? businessMenuItemsTop : chatsMenu}
-        menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom}
+        menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
+        menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
         active="Chats"
       />
       <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
         <Header
-          menuItemsTop={user.type === 'business' ? businessMenuItemsTop : chatsMenu}
-          menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom}
+          menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
+          menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
           activeMenu="Chats"
           breadcrumbItems={[
             { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
@@ -311,7 +315,7 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[90vh] p-1 sm:p-2 md:p-4">
+        <main className="h-[93vh] p-1 sm:p-2 md:p-0">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}
