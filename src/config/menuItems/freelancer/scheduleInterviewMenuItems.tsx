@@ -13,6 +13,7 @@ import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const createScheduleInterviewMenuItems = (
   setActiveTab: (tab: string) => void,
+  activeTab: string,
 ) => {
   const menuItemsTop: MenuItem[] = [
     {
