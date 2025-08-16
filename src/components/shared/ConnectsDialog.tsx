@@ -29,7 +29,6 @@ interface ConnectsDialogProps {
 }
 
 export default function ConnectsDialog({
-  form,
   loading,
   setLoading,
   onSubmit,

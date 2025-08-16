@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 
-import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,

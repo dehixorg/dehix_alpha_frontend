@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import DraftDialog from '../shared/DraftDialog';
 
@@ -39,8 +38,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
-import { RootState } from '@/lib/store';
-
 // Schema for form validation using zod
 const projectFormSchema = z
   .object({
@@ -105,7 +102,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
-  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -270,29 +266,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       // Join currSkills array into comma-separated string for form submission
 
       // Prepare the payload
-      const payload = {
-        projectName: data.projectName,
-        description: data.description,
-        githubLink: data.githubLink,
-        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
-        thumbnail: data.thumbnail, // Now required
-        techUsed: currSkills,
-        verified: false,
-        oracleAssigned: '',
-        start: data.start ? new Date(data.start).toISOString() : null,
-        end: data.end ? new Date(data.end).toISOString() : null,
-        refer: data.refer,
-        role: data.role,
-        projectType: data.projectType,
-        comments: data.comments || '',
-        verificationUpdateTime: new Date().toISOString(),
-      };
-
-      // Submit with the skills from our state
-      const response = await axiosInstance.post(
-        `/freelancer/${user.uid}/project`,
-        payload,
-      );
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission

@@ -1,5 +1,3 @@
-import BidCard from './BidCard';
-
 type InterviewBid = {
   _id?: string;
   interviewerId?: string;

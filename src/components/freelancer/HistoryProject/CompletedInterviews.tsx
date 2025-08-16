@@ -50,7 +50,6 @@ export default function HistoryInterviews() {
     [key: string]: any;
   }>({});
 
-  const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] =
@@ -71,7 +70,7 @@ export default function HistoryInterviews() {
   };
   useEffect(() => {
     loadCompletedInterviews();
-  }, [user?.uid]);
+  });
   const fetchIntervieweeDetails = async (
     interviewData: CompletedInterview[],
   ) => {

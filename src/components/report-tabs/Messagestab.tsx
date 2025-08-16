@@ -67,7 +67,7 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [id]);
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

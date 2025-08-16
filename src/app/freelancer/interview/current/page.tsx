@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
-import { ListFilter, Search, Table, PackageOpen } from 'lucide-react';
+import { ListFilter, Search, Table } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
@@ -16,7 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Header from '@/components/header/header';
 // import {
 //   Card,
 //   CardContent,
@@ -40,7 +39,6 @@ import type { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
-import InterviewCard from '@/components/shared/interviewCard';
 
 // interface Interview {
 //   reference: string;
@@ -293,15 +291,6 @@ export default function CurrentPage() {
   //   if (filter === 'Domain' && interview.domain) return true;
   //   return false;
   // });
-
-  const breadcrumbItems = [
-    { label: 'Freelancer', link: '/dashboard/freelancer' },
-    {
-      label: 'Interview',
-      link: '/freelancer/interview/profile',
-    },
-    { label: 'Current Interviews', link: '#' },
-  ];
 
   return (
     <div className="flex min-h-screen w-full bg-#151518">

@@ -31,7 +31,6 @@ interface VerifyDialogProps {
 
 const VerifyDialog: React.FC<VerifyDialogProps> = ({
   talentType,
-  _id,
   userId,
   originalTalentId,
 }) => {

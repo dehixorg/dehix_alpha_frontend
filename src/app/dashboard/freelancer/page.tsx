@@ -1,6 +1,6 @@
 'use client';
 import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import {
@@ -27,7 +27,6 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { toast } from '@/components/ui/use-toast';
-import { setDraftedProjects } from '@/lib/projectDraftSlice';
 
 interface Project {
   _id: string;
@@ -69,7 +68,6 @@ interface Project {
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjects, setActiveProjects] = useState<Project[]>([]);
   const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
@@ -100,17 +98,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const fetchDrafts = async () => {
-      try {
-        const res = await axiosInstance.get(`/freelancer/draft`);
-        dispatch(setDraftedProjects([res.data.projectDraft]));
-      } catch (err) {
-        console.error('Failed to fetch drafts', err);
-      }
-
-      fetchDrafts();
-    };
-  }, []);
+    fetchProjectData(currentTab);
+  }, [user.uid, currentTab]);
 
   const fetchProjectStats = async () => {
     setLoadingStats(true);

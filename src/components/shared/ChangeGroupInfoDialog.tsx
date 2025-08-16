@@ -30,7 +30,6 @@ export function ChangeGroupInfoDialog({
   onSave,
   currentName,
   currentAvatarUrl,
-  groupId,
 }: ChangeGroupInfoDialogProps) {
   const [groupName, setGroupName] = useState(currentName);
   const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl || '');

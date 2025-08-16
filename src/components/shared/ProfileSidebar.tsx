@@ -8,7 +8,6 @@ import {
   Edit3,
   Link2,
   LogOut,
-  Users,
   MinusCircle,
   Volume2,
   LoaderCircle,
@@ -16,7 +15,6 @@ import {
 import {
   doc,
   getDoc,
-  DocumentData,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -45,7 +43,6 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
@@ -119,7 +116,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   onClose,
   profileId,
   profileType,
-  currentUser: propCurrentUser,
   initialData,
 }) => {
   const [profileData, setProfileData] = useState<
@@ -127,9 +123,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'info' | 'media' | 'files'>(
-    'info',
-  );
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
   const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);

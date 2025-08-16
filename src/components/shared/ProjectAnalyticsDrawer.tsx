@@ -86,13 +86,9 @@ interface ProjectAnalyticsDrawerProps {
 
 const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
   projectData,
-  onClose,
   setShowAnalyticsDrawer,
 }) => {
   const [activeTab, setActiveTab] = useState<string>('insights');
-  const [exporting, setExporting] = useState<boolean>(false);
-  const [exportError, setExportError] = useState<string | null>(null);
-
   // If projectData is not provided, render a loading state or a message
   if (!projectData) {
     return (
@@ -150,12 +146,6 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
       maxRate > 0 ? Math.max(0, 100 - (avgRate / maxRate) * 50) : 0;
     const bidScore = Math.round((experienceScore + rateCompetitiveness) / 2);
 
-    const daysSincePosted = project.createdAt
-      ? Math.floor(
-          (new Date().getTime() - new Date(project.createdAt).getTime()) /
-            (1000 * 60 * 60 * 24),
-        )
-      : 'N/A';
     const daysUntilDeadline = project.maxBidDate
       ? Math.floor(
           (new Date(project.maxBidDate).getTime() - new Date().getTime()) /
@@ -249,28 +239,27 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
     },
   ];
 
-  const handleExport = () => {
-    setExporting(true);
-    setExportError(null);
-    try {
-      const dataStr = JSON.stringify(project, null, 2); // Converts project object to a JSON string
-      const dataUri =
-        'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr); // Sets the MIME type to JSON
-      const exportFileDefaultName = `${project.projectName}_analytics.json`; // Sets the file extension to .json
+  //   setExporting(true);
+  //   setExportError(null);
+  //   try {
+  //     const dataStr = JSON.stringify(project, null, 2); // Converts project object to a JSON string
+  //     const dataUri =
+  //       'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr); // Sets the MIME type to JSON
+  //     const exportFileDefaultName = `${project.projectName}_analytics.json`; // Sets the file extension to .json
 
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      document.body.appendChild(linkElement);
-      linkElement.click();
-      document.body.removeChild(linkElement);
-    } catch (error) {
-      console.error('Failed to export project data:', error);
-      setExportError('Failed to export data. Please try again.');
-    } finally {
-      setExporting(false);
-    }
-  };
+  //     const linkElement = document.createElement('a');
+  //     linkElement.setAttribute('href', dataUri);
+  //     linkElement.setAttribute('download', exportFileDefaultName);
+  //     document.body.appendChild(linkElement);
+  //     linkElement.click();
+  //     document.body.removeChild(linkElement);
+  //   } catch (error) {
+  //     console.error('Failed to export project data:', error);
+  //     setExportError('Failed to export data. Please try again.');
+  //   } finally {
+  //     setExporting(false);
+  //   }
+  // };
 
   return (
     <Card className="flex flex-col h-full w-full overflow-auto text-white  ">
@@ -445,7 +434,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Project Profiles</p>
                     {project.profiles && project.profiles.length > 0 ? (
-                      project.profiles.map((profile, index) => (
+                      project.profiles.map((profile) => (
                         <div
                           key={profile._id}
                           className="border border-gray-700 rounded-lg p-3"
@@ -710,7 +699,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   <h3 className="text-sm font-medium mb-2">Bid Distribution</h3>
                   {project.profiles && project.profiles.length > 0 ? (
                     <div className="space-y-2">
-                      {project.profiles.map((profile, index) => (
+                      {project.profiles.map((profile) => (
                         <div
                           key={profile._id}
                           className="flex justify-between items-center"

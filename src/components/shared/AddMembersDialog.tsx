@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoaderCircle } from 'lucide-react'; // For loading state
 
 import {
@@ -16,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
 import { useAllUsers, type CombinedUser } from '@/hooks/useAllUsers'; // Import hook and type
 
 // Local User type and MOCK_USERS_LIST are no longer needed.
@@ -34,7 +33,6 @@ export function AddMembersDialog({
   onClose,
   onAddMembers,
   currentMemberIds,
-  groupId,
 }: AddMembersDialogProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const {

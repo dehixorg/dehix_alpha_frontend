@@ -2,7 +2,6 @@
 
 import { DownloadIcon, PackageOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
@@ -135,19 +134,6 @@ export const CustomTable = ({
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [
-    selectedFilters,
-    search,
-    page,
-    limit,
-    sortByValue,
-    sortOrder,
-    externalData,
-  ]);
-
   useEffect(() => {
     setPage(1);
   }, [selectedFilters, search, limit]);
