@@ -34,7 +34,6 @@ const useNotes = (fetchNotes: () => Promise<void>, notes: Note[]) => {
       showError('Missing required fields for updating the note.');
       return;
     }
-    console.log(note);
 
     try {
       const response = await axiosInstance.put(`/notes/${note._id}`, {

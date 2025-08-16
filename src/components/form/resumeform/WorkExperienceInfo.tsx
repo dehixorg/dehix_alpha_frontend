@@ -43,12 +43,12 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     setWorkExperienceData(updatedWorkExperience);
   };
   //
-  useEffect(() => {
-    console.log(
-      'Updated Work Experience Data in SummaryInfo:',
-      workExperienceData,
-    );
-  }, [workExperienceData]);
+  // useEffect(() => {
+  //   console.log(
+  //     'Updated Work Experience Data in SummaryInfo:',
+  //     workExperienceData,
+  //   );
+  // }, [workExperienceData]);
 
   // useEffect(() => {
   //   if (workExperienceData.length > 0) {

@@ -63,7 +63,6 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             intervieweeId: userId,
           },
         });
-        console.log(response);
         setBidsData(response?.data?.data || []);
       } catch (error) {
         console.error('Error fetching interview bids', error);

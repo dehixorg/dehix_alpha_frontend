@@ -202,11 +202,11 @@ export default function ProfessionalInfo() {
               status={data.verificationStatus}
               onStatusUpdate={(newStatus) => {
                 // Handle status update
-                console.log('Status updated to:', newStatus);
+                // console.log('Status updated to:', newStatus);
               }}
               onCommentUpdate={(newComment) => {
                 // Handle comment update
-                console.log('Comment updated to:', newComment);
+                // console.log('Comment updated to:', newComment);
               }}
             />
           ))}

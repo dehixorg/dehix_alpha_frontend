@@ -8,7 +8,6 @@ import { ReportForm } from '@/components/form/ReportForm';
 
 export const ReportDetails = ({ id, data }: CustomComponentProps) => {
   const searchParams = useSearchParams();
-  console.log('Report ID: ', id);
   const reportedId = searchParams.get('id') || '';
   const reportRole = searchParams.get('role') || 'user';
   const reportType = searchParams.get('type') || 'bug';

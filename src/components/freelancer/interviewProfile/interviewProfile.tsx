@@ -330,7 +330,6 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   };
 
   const handleSkillDomainDialog = (data: any, type: string) => {
-    console.log('Opening dialog for', type, 'with ID:', data?._id);
     setShowMeetingDialog(true);
     setDocId(data?._id);
     setDocType(type);

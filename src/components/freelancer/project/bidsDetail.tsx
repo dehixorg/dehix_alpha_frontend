@@ -228,10 +228,6 @@ const ProfileDialog = React.memo(
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  // Placeholder function - no action for now
-                  console.log('View Profile clicked');
-                }}
                 className="flex items-center gap-2"
               >
                 <UserCircle className="w-4 h-4" />

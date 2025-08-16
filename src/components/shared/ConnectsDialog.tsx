@@ -86,7 +86,6 @@ export default function ConnectsDialog({
   const dialogOpen = async () => {
     const isValid = await isValidCheck();
     if (!isValid) return;
-    console.log(requiredConnects);
 
     if (userConnects < requiredConnects) {
       setLowConnects(true);
@@ -99,8 +98,6 @@ export default function ConnectsDialog({
   };
 
   const handleConfirm = async () => {
-    console.log(lowConnects);
-
     if (lowConnects) return;
     setLoading(true);
     try {

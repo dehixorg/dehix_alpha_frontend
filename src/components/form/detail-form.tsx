@@ -40,15 +40,15 @@ export default function DetailForm() {
     },
   });
 
-  const handleSubmit = (values: FormSchema) => {
-    console.log({ values });
-  };
+  // const handleSubmit = (values: FormSchema) => {
+  //   console.log({ values });
+  // };
 
   return (
     <main className="flex min-h-screen items-center justify-center p-24">
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          // onSubmit={form.handleSubmit(handleSubmit)}
           className="max-w-md w-full grid gap-4"
           style={{ gridTemplateColumns: '1fr 1fr' }}
         >
