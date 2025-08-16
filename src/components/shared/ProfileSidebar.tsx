@@ -61,6 +61,15 @@ import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
 
+// Local type used for listing shared files in a conversation
+type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size: string | number;
+  url: string;
+};
+
 export type ProfileUser = {
   _id: string;
   id: string;
@@ -95,6 +104,7 @@ export type ProfileGroup = {
     [uid: string]: { userName: string; profilePic?: string; email?: string };
   }; // From API
   inviteLink?: string; // From API
+  createdBy?: string; // From API (optional)
   // Derived/processed fields
   displayName: string;
   createdAtFormatted?: string;
@@ -142,12 +152,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [confirmDialogProps, setConfirmDialogProps] = useState({
-    title: '',
-    description: '',
-    onConfirm: () => {},
-    confirmButtonText: '', // Add this missing property
-    confirmButtonVariant: 'destructive' as
+  const [confirmDialogProps, setConfirmDialogProps] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    confirmButtonVariant:
       | 'default'
       | 'destructive'
       | 'outline'
@@ -155,7 +164,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       | 'ghost'
       | 'link'
       | null
-      | undefined,
+      | undefined;
+    confirmButtonText?: string;
+  }>({
+    title: '',
+    description: '',
+    onConfirm: () => {},
+    confirmButtonVariant: 'destructive',
   });
 
   const [refreshDataKey, setRefreshDataKey] = useState(0);
@@ -220,30 +235,33 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         );
         if (conversationDoc.exists()) {
           const groupData = conversationDoc.data();
-          const members = Object.entries(
+          const members: ProfileGroupMember[] = Object.entries(
             groupData.participantDetails || {},
           ).map(([id, details]: [string, any]) => ({
             id,
             userName: details.userName || 'Unknown Member',
             profilePic: details.profilePic,
-            status: (Math.random() > 0.5 ? 'online' : 'offline') as
-              | 'online'
-              | 'offline',
+            status:
+              Math.random() > 0.5
+                ? 'online'
+                : ('offline' as 'online' | 'offline'), // Keep mock status for now
           }));
 
           setProfileData({
-            _id: conversationDoc.id,
+            _id: groupData._id || conversationDoc.id,
             id: conversationDoc.id,
             groupName: groupData.groupName || 'Unnamed Group',
-            displayName: groupData.groupName || 'Unnamed Group',
+            avatar: groupData.avatar || undefined,
+            name: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
-            createdBy: groupData.createdBy || '',
             admins: groupData.admins || [],
-            participantDetails: groupData.participantDetails,
-            inviteLink: groupData.inviteLink,
-            avatar: groupData.avatar,
+            participantDetails: groupData.participantDetails || undefined,
+            inviteLink: groupData.inviteLink || undefined,
+            createdBy: groupData.createdBy || '',
+            // Derived fields
+            displayName: groupData.groupName || 'Unnamed Group',
           });
         } else {
           throw new Error('Group not found');
@@ -1099,7 +1117,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             profileType === 'group' &&
                             user?.uid
                           ) {
-                            // Ensure currentUser.uid for safety
+                            // Ensure user.uid for safety
                             handleToggleMuteGroup(
                               (profileData as ProfileGroup).id,
                               !!isCurrentlyMuted,

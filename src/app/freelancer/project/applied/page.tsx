@@ -78,7 +78,7 @@ export default function AppliedProject() {
         active="Under Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Under Verification"
@@ -93,7 +93,7 @@ export default function AppliedProject() {
               link: '#',
             },
           ]}
-        />
+        /> */}
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">Projects Under Verification</h1>
           <p className="text-gray-400 mt-2">

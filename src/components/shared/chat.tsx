@@ -79,7 +79,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
-import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
   DialogContent,

@@ -19,7 +19,7 @@ interface HeaderProps {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
   activeMenu: string;
-  breadcrumbItems: BreadcrumbMenuItem[];
+  breadcrumbItems?: BreadcrumbMenuItem[];
   searchPlaceholder?: string;
   setActiveConversation?: any;
   conversations?: any;
@@ -88,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({
       />
 
       {/* Breadcrumb Navigation */}
-      <Breadcrumb items={breadcrumbItems} />
+      <Breadcrumb items={breadcrumbItems || []} />
 
       {/* Search Bar */}
       <div className="relative ml-auto flex-1 md:grow-0">
