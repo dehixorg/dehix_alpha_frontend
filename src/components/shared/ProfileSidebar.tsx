@@ -35,6 +35,15 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
+// Simple file item type for shared files list
+export type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size?: number | string;
+  url: string;
+};
+
 import {
   Sheet,
   SheetContent,
@@ -88,6 +97,7 @@ export type ProfileGroup = {
   avatar?: string; // From API (S3 URL)
   description?: string; // From API
   createdAt: string; // ISO String from API
+  createdBy?: string; // Add this missing property
   members: ProfileGroupMember[]; // From API
   admins: string[]; // Array of user IDs from API
   participantDetails?: {
@@ -655,7 +665,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   };
 
   const handleLeaveGroup = async (groupId: string, userIdToLeave: string) => {
-    // ... (existing implementation)
     if (!groupId || !userIdToLeave) {
       toast({
         variant: 'destructive',
@@ -704,7 +713,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -1021,6 +1029,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                       description: `Are you sure you want to remove ${member.userName} from the group?`,
                                       onConfirm: () =>
                                         handleConfirmRemoveMember(member.id),
+                                      confirmButtonText: 'Remove Member',
                                       confirmButtonVariant: 'destructive',
                                     });
                                     setIsConfirmDialogOpen(true);

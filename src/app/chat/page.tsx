@@ -39,15 +39,20 @@ const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
 const HomePage = () => {
   const user = useSelector((state: RootState) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] =
+    useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
 
   // State for ProfileSidebar
   const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
-  const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
-  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<object | undefined>(undefined);
+  const [profileSidebarType, setProfileSidebarType] = useState<
+    'user' | 'group' | null
+  >(null);
+  const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<
+    object | undefined
+  >(undefined);
 
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
@@ -55,7 +60,7 @@ const HomePage = () => {
   const handleOpenProfileSidebar = (
     id: string,
     type: 'user' | 'group',
-    initialDetails?: object
+    initialDetails?: object,
   ) => {
     setProfileSidebarId(id);
     setProfileSidebarType(type);
@@ -69,53 +74,82 @@ const HomePage = () => {
   };
 
   const toggleChatExpanded = () => {
-    setIsChatExpanded(prev => !prev);
+    setIsChatExpanded((prev) => !prev);
   };
 
   const handleStartNewChat = async (selectedUser: NewChatUser) => {
     if (!user || !user.uid) {
-      toast({ variant: "destructive", title: "Error", description: "You must be logged in to start a new chat." });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to start a new chat.',
+      });
       return;
     }
 
-    const existingConversation = conversations.find(conv =>
-      conv.type === 'individual' &&
-      arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id])
+    const existingConversation = conversations.find(
+      (conv) =>
+        conv.type === 'individual' &&
+        arraysHaveSameElements(conv.participants, [user.uid, selectedUser.id]),
     );
 
     if (existingConversation) {
       setActiveConversation(existingConversation);
       setIsNewChatDialogOpen(false);
-      toast({ title: "Info", description: "Conversation already exists, switching to it." });
+      toast({
+        title: 'Info',
+        description: 'Conversation already exists, switching to it.',
+      });
       return;
     }
+
+    const participantDetails: NonNullable<Conversation['participantDetails']> =
+      {
+        [user.uid]: {
+          userName: user?.displayName || user?.email || 'Current User',
+          profilePic: user?.photoURL || undefined,
+          email: user?.email || undefined,
+          userType: user?.type,
+        },
+        [selectedUser.id]: {
+          userName: selectedUser.displayName,
+          profilePic: selectedUser.profilePic || undefined,
+          email: selectedUser.email || undefined,
+          userType: selectedUser.userType,
+        },
+      };
 
     const newConversationData = {
       participants: [user.uid, selectedUser.id].sort(),
       type: 'individual' as const,
-      description: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       lastMessage: null,
       participantDetails: {
         [user.uid]: {
-          userName: user.displayName || user.email || 'Current User',
-          profilePic: user.photoURL || null,
-          email: user.email || null,
-          userType: user.type,
+          userName: user?.displayName || user?.email || 'Current User',
+          profilePic: user?.photoURL || undefined,
+          email: user?.email || undefined,
+          userType: user?.type,
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
-          profilePic: selectedUser.profilePic || null,
-          email: selectedUser.email || null,
+          profilePic: selectedUser.profilePic || undefined,
+          email: selectedUser.email || undefined,
           userType: selectedUser.userType,
         },
       },
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'conversations'), newConversationData);
-      toast({ title: "Success", description: `New chat started with ${selectedUser.displayName}.` });
+      const docRef = await addDoc(
+        collection(db, 'conversations'),
+        newConversationData,
+      );
+      toast({
+        title: 'Success',
+        description: `New chat started with ${selectedUser.displayName}.`,
+      });
 
       const conversationDataForState: Conversation = {
         id: docRef.id,
@@ -125,10 +159,10 @@ const HomePage = () => {
         lastMessage: null,
         participantDetails: {
           [user.uid]: {
-            userName: user.displayName || user.email || 'Current User',
-            profilePic: user.photoURL || undefined,
-            email: user.email || undefined,
-            userType: user.type,
+            userName: user?.displayName || user?.email || 'Current User',
+            profilePic: user?.photoURL || undefined,
+            email: user?.email || undefined,
+            userType: user?.type,
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
@@ -144,8 +178,12 @@ const HomePage = () => {
       setActiveConversation(conversationDataForState);
       setIsNewChatDialogOpen(false);
     } catch (error) {
-      console.error("Error starting new chat: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to start new chat." });
+      console.error('Error starting new chat: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to start new chat.',
+      });
       setIsNewChatDialogOpen(false);
     }
   };
@@ -156,15 +194,27 @@ const HomePage = () => {
     description: string,
   ) {
     if (!user || !user.uid) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in.',
+      });
       return;
     }
     if (!groupName.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Group name cannot be empty.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Group name cannot be empty.',
+      });
       return;
     }
     if (selectedUsers.length < 1) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must select at least one other member.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must select at least one other member.',
+      });
       return;
     }
 
@@ -180,8 +230,8 @@ const HomePage = () => {
     selectedUsers.forEach((selected: any) => {
       participantDetails[selected.id] = {
         userName: selected.displayName,
-        profilePic: selected.profilePic || null,
-        email: selected.email || null,
+        profilePic: selected.profilePic || undefined,
+        email: selected.email || undefined,
         userType: selected.userType,
       };
     });
@@ -200,7 +250,10 @@ const HomePage = () => {
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'conversations'), newGroupData);
+      const docRef = await addDoc(
+        collection(db, 'conversations'),
+        newGroupData,
+      );
       toast({ title: 'Success', description: `Group "${groupName}" created.` });
 
       const participantDetailsForState: NonNullable<Conversation['participantDetails']> = Object.fromEntries(
@@ -230,10 +283,13 @@ const HomePage = () => {
 
       setActiveConversation(groupDataForState);
       setIsNewChatDialogOpen(false);
-
     } catch (error) {
-      console.error("Error creating group chat: ", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to create group." });
+      console.error('Error creating group chat: ', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to create group.',
+      });
     }
   }
 
@@ -242,8 +298,8 @@ const HomePage = () => {
 
     setLoading(true);
     const unsubscribe = subscribeToUserConversations(
-       'conversations',
-       user.uid,
+      'conversations',
+      user.uid,
       (data) => {
         const typedData = data as Conversation[];
         setConversations(typedData);
@@ -286,7 +342,9 @@ const HomePage = () => {
         <MessageSquare className="w-10 h-10 mb-2" />
         <p className="text-lg font-medium">No conversations</p>
         <p className="text-sm">New chats will appear here.</p>
-        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">Start a Chat</Button>
+        <Button onClick={() => setIsNewChatDialogOpen(true)} className="mt-4">
+          Start a Chat
+        </Button>
       </div>
     );
   }
@@ -339,7 +397,10 @@ const HomePage = () => {
           menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
           activeMenu="Chats"
           breadcrumbItems={[
-            { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
+            {
+              label: user.type === 'business' ? 'Business' : 'Freelancer',
+              link: '/dashboard',
+            },
             { label: 'Chats', link: '/chat' },
           ]}
           searchPlaceholder="Search chats..."

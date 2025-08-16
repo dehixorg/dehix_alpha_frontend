@@ -35,7 +35,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
 interface EducationProps {

@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react'; // Added useEffect, useRef
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'; // Added PanelRef
-import type { ImperativePanelHandle } from 'react-resizable-panels';
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+  type ImperativePanelHandle,
+} from 'react-resizable-panels'; // Use ImperativePanelHandle for ref
 
 import { cn } from '@/lib/utils';
 

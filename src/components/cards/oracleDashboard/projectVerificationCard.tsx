@@ -36,7 +36,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 interface ProjectProps {
   _id: string;
   projectName: string;

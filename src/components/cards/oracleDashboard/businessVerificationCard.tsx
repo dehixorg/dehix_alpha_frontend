@@ -43,7 +43,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 
 interface BusinessProps {
   _id: string;

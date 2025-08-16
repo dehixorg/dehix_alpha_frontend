@@ -18,7 +18,7 @@ import {
   menuItemsTop as businessMenuItemsTop,
   menuItemsBottom as businessMenuItemsBottom,
 } from '@/config/menuItems/business/settingsMenuItems';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 
 export default function NewReportPage() {
   const user = useSelector((state: RootState) => state.user);

@@ -20,7 +20,7 @@ import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 import {
   Dialog,
   DialogContent,

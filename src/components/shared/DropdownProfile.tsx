@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 
 import { truncateDescription } from './MilestoneTimeline';
 
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
 import {
   DropdownMenu,
   DropdownMenuContent,
