@@ -24,10 +24,7 @@ import {
 import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
-
-  menuItemsBottom,
-  menuItemsTop,
-  chatsMenu} from '@/config/menuItems/freelancer/dashboardMenuItems'
+} from '@/config/menuItems/freelancer/dashboardMenuItems'
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 

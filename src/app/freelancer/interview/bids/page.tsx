@@ -8,7 +8,6 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { RootState } from '@/lib/store';
-import Header from '@/components/header/header';
 import Bids from '@/components/freelancer/bids/Bids';
 
 export default function ProfilePage() {
