@@ -21,7 +21,7 @@ export default function ProfilePage() {
         active="Profile"
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
-        <Header
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
@@ -29,7 +29,7 @@ export default function ProfilePage() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Interview', link: '#' },
           ]}
-        />
+        /> */}
         <InterviewProfile freelancerId={user?.uid} />
       </div>
     </div>

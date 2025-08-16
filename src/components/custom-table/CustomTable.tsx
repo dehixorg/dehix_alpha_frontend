@@ -2,7 +2,6 @@
 
 import { DownloadIcon, PackageOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';

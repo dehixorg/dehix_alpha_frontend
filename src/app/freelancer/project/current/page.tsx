@@ -80,7 +80,7 @@ export default function CurrentProject() {
         active="Current Projects"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Current Projects"
@@ -95,7 +95,7 @@ export default function CurrentProject() {
               link: '#',
             },
           ]}
-        />
+        /> */}
 
         <div className="mb-8 mx-4 lg:mx-10 flex flex-col lg:flex-row justify-between items-start lg:items-center p-3">
           <div>

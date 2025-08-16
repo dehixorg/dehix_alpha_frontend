@@ -6,13 +6,6 @@ import { Plus, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '../ui/dialog';
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';

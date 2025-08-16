@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 import { Label } from '@/components/ui/label';
 import { RootState } from '@/lib/store';
@@ -506,7 +507,7 @@ export default function ProfileViewPage() {
               {/* Project Image */}
               {selectedProject.thumbnail && (
                 <div className="w-full">
-                  <img
+                  <Image
                     src={selectedProject.thumbnail}
                     alt={`${selectedProject.projectName} thumbnail`}
                     className="w-full h-64 object-cover rounded-lg"
