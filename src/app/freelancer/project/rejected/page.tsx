@@ -78,7 +78,7 @@ export default function RejectedProject() {
         active="Rejected Verification"
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
+        {/* <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Rejected Verification"
@@ -93,7 +93,7 @@ export default function RejectedProject() {
               link: '/#',
             },
           ]}
-        />
+        /> */}
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">Rejected Projects</h1>
           <p className="text-gray-400 mt-2">

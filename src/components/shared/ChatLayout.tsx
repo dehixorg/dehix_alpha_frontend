@@ -1,10 +1,6 @@
 import React, { useEffect, useRef } from 'react'; // Added useEffect, useRef
-import {
-  Panel,
-  PanelGroup,
-  PanelResizeHandle,
-  PanelRef,
-} from 'react-resizable-panels'; // Added PanelRef
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'; // Added PanelRef
+import type { ImperativePanelHandle } from 'react-resizable-panels';
 
 import { cn } from '@/lib/utils';
 
@@ -25,7 +21,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
   isChatAreaExpanded,
   onOpenProfileSidebar,
 }) => {
-  const sidebarPanelRef = useRef<PanelRef>(null);
+  const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const defaultSidebarSize = 25;
 
   console.log(

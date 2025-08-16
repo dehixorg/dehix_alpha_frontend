@@ -42,7 +42,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Market',
   },
   {
-    href: '/freelancer/project/current',
+    href: '/freelancer/project',
     icon: <BriefcaseBusiness className="h-5 w-5" />,
     label: 'Projects',
   },
@@ -52,7 +52,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Analytics',
   },
   {
-    href: '/freelancer/interview/profile',
+    href: '/freelancer/interview',
     icon: <TabletSmartphone className="h-5 w-5" />,
     label: 'Interviews',
   },
@@ -62,7 +62,7 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Schedule Interviews',
   },
   {
-    href: '/freelancer/oracleDashboard/businessVerification',
+    href: '/freelancer/oracleDashboard',
     icon: <ShieldCheck className="h-5 w-5" />,
     label: 'Oracle',
   },

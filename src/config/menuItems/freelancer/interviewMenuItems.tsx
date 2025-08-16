@@ -1,10 +1,17 @@
 import {
   Home,
-  ListVideo,
-  Users2,
-  History,
+  LineChart,
   Settings,
-  Briefcase,
+  Sparkles,
+  BriefcaseBusiness,
+  Store,
+  TabletSmartphone,
+  ShieldCheck,
+  CalendarClock,
+  MessageSquare,
+  Archive,
+  StickyNote,
+  Trash2,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -30,25 +37,70 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Home',
   },
   {
-    href: '/freelancer/interview/profile',
-    icon: <Users2 className="h-5 w-5" />,
-    label: 'Profile',
+    href: '/freelancer/market',
+    icon: <Store className="h-5 w-5" />,
+    label: 'Market',
   },
   {
-    href: '/freelancer/interview/current',
-    icon: <ListVideo className="h-5 w-5" />,
-    label: 'Current',
+    href: '/freelancer/project',
+    icon: <BriefcaseBusiness className="h-5 w-5" />,
+    label: 'Projects',
   },
   {
-    href: '/freelancer/interview/bids',
-    icon: <Briefcase className="h-5 w-5" />,
-    label: 'Bids',
+    href: '#',
+    icon: <LineChart className="h-5 w-5 cursor-not-allowed" />,
+    label: 'Analytics',
   },
   {
-    href: '/freelancer/interview/history',
-    icon: <History className="h-5 w-5" />,
-    label: 'History',
+    href: '/freelancer/interview',
+    icon: <TabletSmartphone className="h-5 w-5" />,
+    label: 'Interviews',
   },
+  {
+    href: '#',
+    icon: <CalendarClock className="h-5 w-5 cursor-not-allowed" />,
+    label: 'Schedule Interviews',
+  },
+  {
+    href: '/freelancer/oracleDashboard',
+    icon: <ShieldCheck className="h-5 w-5" />,
+    label: 'Oracle',
+  },
+  {
+    href: '/freelancer/talent',
+    icon: <Sparkles className="h-5 w-5" />,
+    label: 'Talent',
+  },
+  {
+    href: '/chat',
+    icon: <MessageSquare className="h-5 w-5" />,
+    label: 'Chats',
+  },
+  {
+    href: '/notes',
+    icon: <StickyNote className="h-5 w-5" />,
+    label: 'Notes',
+  },
+  // {
+  //   href: '/freelancer/interview/profile',
+  //   icon: <Users2 className="h-5 w-5" />,
+  //   label: 'Profile',
+  // },
+  // {
+  //   href: '/freelancer/interview/current',
+  //   icon: <ListVideo className="h-5 w-5" />,
+  //   label: 'Current',
+  // },
+  // {
+  //   href: '/freelancer/interview/bids',
+  //   icon: <Briefcase className="h-5 w-5" />,
+  //   label: 'Bids',
+  // },
+  // {
+  //   href: '/freelancer/interview/history',
+  //   icon: <History className="h-5 w-5" />,
+  //   label: 'History',
+  // },
 ];
 
 export const menuItemsBottom: MenuItem[] = [
