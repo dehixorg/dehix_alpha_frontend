@@ -460,10 +460,9 @@ export default function CurrentPage() {
                       Dehix Talent Interviews
                     </h2>
                   </div>
-                   <DehixInterviews />
-                    
+                  <DehixInterviews />
 
-                 {/* {skillData.length === 0 && domainData.length === 0 ? (
+                  {/* {skillData.length === 0 && domainData.length === 0 ? (
                     <div className="text-center py-8 w-full ">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -486,8 +485,6 @@ export default function CurrentPage() {
                       filter={filter}
                     />
                   )} */}
-
-                  
                 </div>
 
                 {/* Project Interviews Section */}
@@ -497,7 +494,7 @@ export default function CurrentPage() {
                       Project Interviews
                     </h2>
                   </div>
-                   <Projects />
+                  <Projects />
                   {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
                     <div className="text-center py-8 w-full">
                       <PackageOpen

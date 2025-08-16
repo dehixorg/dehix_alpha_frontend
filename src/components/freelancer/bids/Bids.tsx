@@ -119,7 +119,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         // If all interviews are for the current user, we can use the current user's profile
         const isAllCurrentUser = intervieweeIds.length === 1 && intervieweeIds[0] === userId;
         
-        let intervieweeMap: Record<string, any> = {};
+        const intervieweeMap: Record<string, any> = {};
         if (isAllCurrentUser && userId) {
           // If all interviews are for the current user, use the current user's profile
           intervieweeMap[userId] = freelancerRes?.data;
@@ -186,15 +186,6 @@ const BidsPage = ({ userId }: { userId?: string }) => {
                       // Try to get skill name from user's talent mapping first
             const talentId = iv.talentId; // This is the _id of the talent object
             const skillFromMapping = talentToSkillMap[talentId];
-          
-          console.log('=== SKILL NAME DEBUGGING ===');
-          console.log('Interview ID:', iv._id);
-          console.log('Talent ID from interview:', talentId);
-          console.log('Talent ID type:', typeof talentId);
-          console.log('Available talent IDs in mapping:', Object.keys(talentToSkillMap));
-          console.log('Available talent IDs types:', Object.keys(talentToSkillMap).map(id => typeof id));
-          console.log('Skill from mapping for this talentId:', skillFromMapping);
-          console.log('Talent ID exists in mapping:', talentToSkillMap.hasOwnProperty(talentId));
           
           // Try different variations of the talentId
                       const variations = [

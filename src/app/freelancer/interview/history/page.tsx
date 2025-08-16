@@ -56,7 +56,11 @@ export default function HistoryPage() {
           <div className="flex justify-between items-center w-full">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-sm"
+                >
                   <ListFilter className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only">Filter</span>
                 </Button>
@@ -86,7 +90,7 @@ export default function HistoryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           <div className="w-full">
             <HistoryInterviews />
           </div>

@@ -49,7 +49,10 @@ const BidList = ({
         <button
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
           onClick={() =>
-            setConfirmAction({ interviewId: interview?._id, action: 'PLACE_BID' })
+            setConfirmAction({
+              interviewId: interview?._id,
+              action: 'PLACE_BID',
+            })
           }
         >
           Place Bid

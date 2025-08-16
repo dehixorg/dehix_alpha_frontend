@@ -47,12 +47,14 @@ export default function HistoryInterviews() {
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
   const [intervieweeDetails, setIntervieweeDetails] = useState<{
-    [key: string]: any}>({});
+    [key: string]: any;
+  }>({});
 
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-  const [selectedInterview, setSelectedInterview] = useState<CompletedInterview | null>(null);
+  const [selectedInterview, setSelectedInterview] =
+    useState<CompletedInterview | null>(null);
 
   const loadCompletedInterviews = async () => {
     if (!user?.uid) return;
@@ -67,7 +69,7 @@ export default function HistoryInterviews() {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     loadCompletedInterviews();
   }, [user?.uid]);
@@ -109,7 +111,7 @@ export default function HistoryInterviews() {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   };
 
@@ -270,7 +272,8 @@ export default function HistoryInterviews() {
               {[...Array(5)].map((_, index) => (
                 <TableRow
                   key={index}
-                  className="transition bg-white text-black dark:bg-black dark:text-white">
+                  className="transition bg-white text-black dark:bg-black dark:text-white"
+                >
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
@@ -353,7 +356,8 @@ export default function HistoryInterviews() {
               return (
                 <TableRow
                   key={interview._id}
-                  className="transition bg-white text-black dark:bg-transparent dark:text-white">
+                  className="transition bg-white text-black dark:bg-transparent dark:text-white"
+                >
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <User className="h-4 w-4 text-gray-500" />
@@ -413,7 +417,8 @@ export default function HistoryInterviews() {
                         onClick={() => handleOpenFeedbackModal(interview)}
                         disabled={Boolean(
                           interview.feedback &&
-                            interview.feedback.trim().length > 0)}
+                            interview.feedback.trim().length > 0,
+                        )}
                       >
                         {interview.feedback &&
                         interview.feedback.trim().length > 0
@@ -457,4 +462,4 @@ export default function HistoryInterviews() {
       />
     </div>
   );
-};
+}
