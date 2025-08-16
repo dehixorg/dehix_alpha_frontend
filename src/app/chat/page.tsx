@@ -24,14 +24,12 @@ import {
 import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
-} from '@/config/menuItems/freelancer/dashboardMenuItems'
-import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
-import { RootState } from '@/lib/store';
-import {
+
   menuItemsBottom,
   menuItemsTop,
-  chatsMenu,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
+  chatsMenu} from '@/config/menuItems/freelancer/dashboardMenuItems'
+import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
+import { RootState } from '@/lib/store';
 
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {

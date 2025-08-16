@@ -26,10 +26,10 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
   const activeTab = pathname.includes('/freelancer/project/applied')
     ? 'applied'
     : pathname.includes('/freelancer/project/completed')
-    ? 'completed'
-    : pathname.includes('/freelancer/project/rejected')
-    ? 'Rejected'
-    : 'Current';
+      ? 'completed'
+      : pathname.includes('/freelancer/project/rejected')
+        ? 'Rejected'
+        : 'Current';
 
   return (
     <div className="flex min-h-screen bg-background">
