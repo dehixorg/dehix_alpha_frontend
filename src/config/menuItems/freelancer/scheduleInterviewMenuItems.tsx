@@ -5,7 +5,6 @@ import {
   Users,
   UserCheck,
   Settings,
-  Calendar,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -13,7 +12,6 @@ import { MenuItem } from '@/components/menu/sidebarMenu';
 
 export const createScheduleInterviewMenuItems = (
   setActiveTab: (tab: string) => void,
-  activeTab: string,
 ) => {
   const menuItemsTop: MenuItem[] = [
     {

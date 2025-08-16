@@ -6,13 +6,6 @@ import { Plus, Save, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '../ui/dialog';
 import { Card } from '../ui/card';
 import ConnectsDialog from '../shared/ConnectsDialog';
 import DraftDialog from '../shared/DraftDialog';
@@ -528,14 +521,6 @@ export function CreateProjectBusinessForm() {
   const prevStep = () => {
     if (currentStep === FormSteps.ProfileInfo)
       setCurrentStep(FormSteps.ProjectInfo);
-  };
-
-  const removeProfileByIndex = (indexToRemove: number) => {
-    if (profileFields.length === 1) return;
-    removeProfile(indexToRemove);
-    form.unregister(`profiles.${indexToRemove}`);
-    if (activeProfile >= indexToRemove)
-      setActiveProfile((prev) => Math.max(0, prev - 1));
   };
 
   // UI render helpers

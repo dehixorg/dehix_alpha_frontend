@@ -16,14 +16,10 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/freelancer/oracleMenuItems';
-// import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
-// import dummyData from '@/dummydata.json';
-import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
-// Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
 interface EducationData {
   _id: string;

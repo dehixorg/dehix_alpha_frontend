@@ -16,21 +16,10 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
-import Header from '@/components/header/header';
 import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInterviews';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
-
-  const breadcrumbItems = [
-    { label: 'Freelancer', link: '/dashboard/freelancer' },
-    {
-      label: 'Interview',
-      link: '/freelancer/interview/profile',
-    },
-    { label: 'History Interviews', link: '#' },
-  ];
-
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu

@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { Plus, X, Save, ArrowLeft, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -86,7 +87,7 @@ export default function ProfileDetailPage() {
         fetchFreelancerProjects();
       });
     }
-  }, [profileId, user.uid]);
+  });
 
   // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {
@@ -1349,7 +1350,7 @@ export default function ProfileDetailPage() {
               {/* Project Image */}
               {selectedProject.thumbnail && (
                 <div className="w-full">
-                  <img
+                  <Image
                     src={selectedProject.thumbnail}
                     alt={`${selectedProject.projectName} thumbnail`}
                     className="w-full h-64 object-cover rounded-lg"

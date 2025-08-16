@@ -119,7 +119,6 @@ const EditProjectDialog: React.FC<EditProjectDialogProps> = ({
   );
   const [tmpSkill, setTmpSkill] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const user = useSelector((state: RootState) => state.user);
 
   const form = useForm<EditProjectFormValues>({
     resolver: zodResolver(editProjectFormSchema),

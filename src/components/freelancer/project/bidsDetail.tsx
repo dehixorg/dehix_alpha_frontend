@@ -196,7 +196,7 @@ const ProfileDialog = React.memo(
               <div className="flex items-center gap-3">
                 {profileData?.profilePic ||
                 profileData?.freelancerId?.profilePic ? (
-                  <img
+                  <Image
                     src={
                       profileData?.profilePic ||
                       profileData?.freelancerId?.profilePic
@@ -900,10 +900,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setIsInterviewDialogOpen(true);
   }, []);
 
-  const handleCloseInterviewDialog = useCallback(() => {
-    setIsInterviewDialogOpen(false);
-  }, []);
-
   // Update bid status
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
@@ -1150,7 +1146,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         },
       ],
     }),
-    [bids, getActionOptions, handleOpenProfileDialog],
+    [],
   );
 
   if (loading) {

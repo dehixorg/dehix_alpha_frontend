@@ -66,7 +66,7 @@ export default function HistoryInterviews() {
   
   useEffect(() => {
     loadCompletedInterviews();
-  }, [user?.uid]);
+  });
   
   const fetchInterviewerDetails = async (interviewData: CompletedInterview[]) => {
     console.log('Fetching interviewer details for:', interviewData.length, 'interviews');

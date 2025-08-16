@@ -45,7 +45,7 @@ export function NewChatDialog({
   const [selectedGroupMembers, setSelectedGroupMembers] = useState<CombinedUser[]>([]);
 
   // Use the hook you provided. It fetches all users on mount.
-  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError, refetchUsers } = useAllUsers();
+  const { users: allFetchedUsers, isLoading: isLoadingUsers, error: usersError } = useAllUsers();
 
   // Perform client-side filtering based on the search term
   const searchResults = userSearchTerm.length >= 3
