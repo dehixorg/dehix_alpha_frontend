@@ -2,8 +2,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
-
-import { Calendar, Clock, DollarSign, User, Info } from "lucide-react";
+import { Calendar, Clock, DollarSign, User, Info, Loader2 } from "lucide-react";
 
 import { RootState } from "@/lib/store";
 import { fetchPendingBids, acceptBid, PendingBid as ApiPendingBid } from "@/lib/api/interviews";

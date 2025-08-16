@@ -1,19 +1,14 @@
 'use client';
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { 
-  GraduationCap, 
-  Briefcase, 
-  Users, 
-  UserCheck
-} from 'lucide-react';
+import { GraduationCap, Briefcase, Users, UserCheck } from 'lucide-react';
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-
+} from '@/components/ui/accordion';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
@@ -37,7 +32,10 @@ export default function ScheduleInterviewPage() {
     router.push(`?${params.toString()}`);
   };
 
-  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(handleTabChange, activeTab);
+  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(
+    handleTabChange,
+    activeTab,
+  );
 
   // Update active tab when URL changes
   React.useEffect(() => {
@@ -53,8 +51,7 @@ export default function ScheduleInterviewPage() {
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
-           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
+            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -79,8 +76,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
+            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -106,7 +102,6 @@ export default function ScheduleInterviewPage() {
 
             {/* History Segment */}
             <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-upskill">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -131,13 +126,11 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
-      
       case 'project':
         return (
           <div className="space-y-6">
             {/* Current Interview Segment */}
             <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
               <Accordion type="single" collapsible>
                 <AccordionItem value="current-interviews-project">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -162,8 +155,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
+            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-project">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -213,7 +205,7 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
-      
+
       case 'talent':
         return (
           <div className="space-y-6">
@@ -281,7 +273,6 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
-      
       case 'dehix':
         return (
           <div className="space-y-6">
@@ -311,7 +302,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* Bidded Interview Segment */}
-           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="bidded-interviews-dehix">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -336,8 +327,7 @@ export default function ScheduleInterviewPage() {
             </div>
 
             {/* History Segment */}
-           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-
+            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <Accordion type="single" collapsible>
                 <AccordionItem value="history-dehix">
                   <AccordionTrigger className="text-xl font-semibold hover:no-underline">
@@ -362,7 +352,6 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
-      
       default:
         return <ScheduleInterviewDialog />;
     }
@@ -373,7 +362,19 @@ export default function ScheduleInterviewPage() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active={activeTab === 'main' ? 'Schedule Interview' : activeTab === 'upskill' ? 'Upskill Interview' : activeTab === 'project' ? 'Project Interview' : activeTab === 'talent' ? 'Dehix Talent Interview' : activeTab === 'dehix' ? 'Dehix Interview' : 'Schedule Interview'}
+        active={
+          activeTab === 'main'
+            ? 'Schedule Interview'
+            : activeTab === 'upskill'
+              ? 'Upskill Interview'
+              : activeTab === 'project'
+                ? 'Project Interview'
+                : activeTab === 'talent'
+                  ? 'Dehix Talent Interview'
+                  : activeTab === 'dehix'
+                    ? 'Dehix Interview'
+                    : 'Schedule Interview'
+        }
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
         <Header
@@ -395,11 +396,14 @@ export default function ScheduleInterviewPage() {
               {activeTab === 'main' && 'Schedule Interview'}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              {activeTab === 'upskill' && 'Enhance your skills through specialized interviews'}
-              {activeTab === 'project' && 'Project-based interviews for specific opportunities'}
+              {activeTab === 'upskill' &&
+                'Enhance your skills through specialized interviews'}
+              {activeTab === 'project' &&
+                'Project-based interviews for specific opportunities'}
               {activeTab === 'talent' && 'Talent assessment interviews'}
               {activeTab === 'dehix' && 'Platform verification interviews'}
-              {activeTab === 'main' && 'Manage your interview scheduling and preparation'}
+              {activeTab === 'main' &&
+                'Manage your interview scheduling and preparation'}
             </p>
           </div>
           {renderContent()}
@@ -408,4 +412,3 @@ export default function ScheduleInterviewPage() {
     </div>
   );
 }
-
