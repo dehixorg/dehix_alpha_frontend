@@ -251,13 +251,13 @@ export default function ProfileDetailPage() {
         ]);
 
       // Complete skills and domains for ID resolution
-      const allSkills = skillsResponse.data.data || [];
-      const allDomains = domainsResponse.data.data || [];
+      const allSkills = skillsResponse?.data.data || [];
+      const allDomains = domainsResponse?.data.data || [];
 
       // Freelancer's personal skills and domains for dropdown
-      const freelancerData = freelancerResponse.data.data || {};
-      const freelancerSkills = freelancerData.skills || [];
-      const freelancerDomains = freelancerData.domain || [];
+      const freelancerData = freelancerResponse?.data.data || {};
+      const freelancerSkills = freelancerData?.skills || [];
+      const freelancerDomains = freelancerData?.domain || [];
 
       // Extract skill names from skill objects
       const skillNames = freelancerSkills
