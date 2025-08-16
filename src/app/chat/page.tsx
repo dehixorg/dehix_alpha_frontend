@@ -127,10 +127,10 @@ const HomePage = () => {
       lastMessage: null,
       participantDetails: {
         [user.uid]: {
-          userName: user.displayName || user.email || 'Current User',
-          profilePic: user.photoURL || undefined,
-          email: user.email || undefined,
-          userType: user.type,
+          userName: user?.displayName || user?.email || 'Current User',
+          profilePic: user?.photoURL || undefined,
+          email: user?.email || undefined,
+          userType: user?.type,
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
@@ -159,10 +159,10 @@ const HomePage = () => {
         lastMessage: null,
         participantDetails: {
           [user.uid]: {
-            userName: user.displayName || user.email || 'Current User',
-            profilePic: user.photoURL || undefined,
-            email: user.email || undefined,
-            userType: user.type,
+            userName: user?.displayName || user?.email || 'Current User',
+            profilePic: user?.photoURL || undefined,
+            email: user?.email || undefined,
+            userType: user?.type,
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
