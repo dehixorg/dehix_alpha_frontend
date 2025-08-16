@@ -106,10 +106,10 @@ const HomePage = () => {
     const participantDetails: NonNullable<Conversation['participantDetails']> =
       {
         [user.uid]: {
-          userName: user.displayName || user.email || 'Current User',
-          profilePic: user.photoURL || undefined,
-          email: user.email || undefined,
-          userType: user.type,
+          userName: user?.displayName || user?.email || 'Current User',
+          profilePic: user?.photoURL || undefined,
+          email: user?.email || undefined,
+          userType: user?.type,
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
