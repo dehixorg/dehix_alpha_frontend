@@ -21,7 +21,6 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 // Define a union type for the filter options
 type FilterOption = 'all' | 'current' | 'verified' | 'rejected';

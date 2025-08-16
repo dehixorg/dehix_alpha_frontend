@@ -2,43 +2,25 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  DocumentData,
-  getFirestore,
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
+import { DocumentData } from 'firebase/firestore';
 import {
   MessageSquare,
   Search,
   SquarePen,
-  Users,
   X as LucideX,
-} from 'lucide-react'; // Added X
-import { useSelector } from 'react-redux'; // Added
-import { LoaderCircle } from 'lucide-react';
+  LoaderCircle,
+} from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-
-import { NewChatDialog } from './NewChatDialog'; // User as NewChatUser removed, CombinedUser will be inferred
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
-import { RootState } from '@/lib/store'; // Added
-import { db } from '@/config/firebaseConfig';
+import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
 import { useAllUsers } from '@/hooks/useAllUsers';
-// ProfileSidebar is no longer imported or rendered here
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -50,8 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils'; // Utility class names
-import { axiosInstance } from '@/lib/axiosinstance';
+import { cn } from '@/lib/utils';
 
 export interface Conversation extends DocumentData {
   id: string;

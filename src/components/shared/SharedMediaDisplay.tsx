@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  Image as ImageIcon,
   Video as VideoIcon,
   FileText as FileTextIcon,
   AlertTriangle,
 } from 'lucide-react'; // Added AlertTriangle for unknown
+import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 // If using next/image:
@@ -50,12 +50,12 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
 
     if (item.type.startsWith('image/')) {
       content = (
-        // Using standard <img> for now. Replace with Next.js <Image /> if the project is set up for it.
-        // <Image src={item.url} alt={item.fileName} layout="fill" objectFit="cover" className="rounded-md" />
-        <img
+        <Image
           src={item.url}
           alt={item.fileName}
-          className="object-cover w-full h-full rounded-md"
+          layout="fill"
+          objectFit="cover"
+          className="w-full h-full rounded-md"
         />
       );
     } else if (item.type.startsWith('video/')) {

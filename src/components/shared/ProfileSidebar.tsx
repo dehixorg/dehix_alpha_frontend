@@ -8,7 +8,6 @@ import {
   Edit3,
   Link2,
   LogOut,
-  Users,
   MinusCircle,
   Volume2,
   LoaderCircle,
@@ -16,7 +15,6 @@ import {
 import {
   doc,
   getDoc,
-  DocumentData,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -45,7 +43,6 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';

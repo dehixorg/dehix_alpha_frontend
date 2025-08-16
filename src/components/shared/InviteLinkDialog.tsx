@@ -12,9 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-// Label might not be strictly needed if input has an id and is self-descriptive, but can be added for accessibility.
-// import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast'; // Corrected import path
 
 interface InviteLinkDialogProps {

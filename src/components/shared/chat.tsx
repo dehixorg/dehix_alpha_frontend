@@ -28,9 +28,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { useRouter, usePathname, redirect } from 'next/navigation';
-import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
-import remarkGfm from 'remark-gfm';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,

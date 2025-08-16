@@ -1,12 +1,5 @@
 'use client';
-import {
-  HomeIcon,
-  FileCheck,
-  Pointer,
-  FolderDot,
-  CircleX,
-  Settings,
-} from 'lucide-react';
+import { FileCheck, Pointer, FolderDot, CircleX } from 'lucide-react';
 import React, { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 

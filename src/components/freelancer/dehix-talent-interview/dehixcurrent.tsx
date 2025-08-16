@@ -2,7 +2,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Loader2, Calendar, Clock, Video, ExternalLink, Info } from "lucide-react";
+import { Calendar, Clock, Video, ExternalLink, Info } from "lucide-react";
 
 import { RootState } from "@/lib/store";
 import { fetchScheduledInterviews } from "@/lib/api/interviews";

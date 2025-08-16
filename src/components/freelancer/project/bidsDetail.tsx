@@ -196,7 +196,7 @@ const ProfileDialog = React.memo(
               <div className="flex items-center gap-3">
                 {profileData?.profilePic ||
                 profileData?.freelancerId?.profilePic ? (
-                  <img
+                  <Image
                     src={
                       profileData?.profilePic ||
                       profileData?.freelancerId?.profilePic

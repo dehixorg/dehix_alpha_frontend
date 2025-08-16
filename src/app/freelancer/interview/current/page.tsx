@@ -16,15 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Header from '@/components/header/header';
-// import {
-//   Card,
-//   CardContent,
-//   CardHeader,
-//   CardTitle,
-//   CardDescription,
-//   CardFooter,
-// } from '@/components/ui/card';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,

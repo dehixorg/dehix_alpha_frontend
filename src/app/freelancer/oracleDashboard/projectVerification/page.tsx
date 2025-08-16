@@ -3,7 +3,6 @@ import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
-import Header from '@/components/header/header';
 import {
   Dialog,
   DialogContent,
