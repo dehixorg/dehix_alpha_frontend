@@ -50,7 +50,7 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
-        {description && <p className="mb-2">{description}</p>}
+        {description && <p className="mb-2 text-gray-700 line-clamp-2">{description}</p>}
         {urls && urls.length > 0 && (
           <div className="mb-2">
             <p className="font-semibold text-gray-300 mb-1">URLs:</p>
@@ -61,7 +61,7 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({
                     href={url.value}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 flex items-center"
+                    className="text-blue-400 hover:text-blue-300 flex items-center truncate block"
                   >
                     <ExternalLink className="mr-1 w-4 h-4 text-gray-400" />
                     {url.value}

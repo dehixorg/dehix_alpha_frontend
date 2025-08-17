@@ -90,32 +90,42 @@ export default function ConsultancyDomainPage() {
   const user = useSelector((state: RootState) => state.user);
   const [consultancies, setConsultancies] = useState<ConsultancyFormValues[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [consultancyIds, setConsultancyIds] = useState<string[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
   const fetchData = async () => {
     try {
       const [skillsResponse, domainsResponse, consultantsResponse] = await Promise.all([
         axiosInstance.get('/skills'),
         axiosInstance.get('/domain'),
-        axiosInstance.get(`/freelancer/${user.uid}`) // Adjust endpoint as needed
+        axiosInstance.get(`/freelancer/consultant`)
       ]);
-      console.log(consultantsResponse);
+
+      console.log('Raw consultants response:', consultantsResponse.data);
 
       setAllSkills(skillsResponse.data.data);
       setAllDomains(domainsResponse.data.data);
-      
+
+      // Normalize consultantsResponse.data
+      const consultantsArray = Array.isArray(consultantsResponse.data) 
+        ? consultantsResponse.data 
+        : Object.values(consultantsResponse.data);
+
+      // Extract ids
+      setConsultancyIds(consultantsArray.map((c: any) => c._id));
+
       // Transform the API response to match your local state format
-      if (consultantsResponse.data?.data) {
-        const formattedConsultants = consultantsResponse.data.data.map((consultant: any) => ({
-          name: consultant.name || '',
-          skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
-          domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
-          description: consultant.description || '',
-          urls: consultant.links?.map((u: string) => ({ value: u })) || [],
-          perHourRate: consultant.price
-        }));
-        setConsultancies(formattedConsultants);
-      }
+      const formattedConsultants = consultantsArray.map((consultant: any) => ({
+        name: consultant.name || '',
+        skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
+        domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
+        description: consultant.description || '',
+        urls: consultant.links?.map((u: string) => ({ value: u })) || [],
+        perHourRate: consultant.price
+      }));
+
+      setConsultancies(formattedConsultants);
+      console.log('Formatted consultants:', formattedConsultants);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -128,6 +138,7 @@ export default function ConsultancyDomainPage() {
 
   fetchData();
 }, [user.uid]);
+
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
@@ -199,14 +210,29 @@ export default function ConsultancyDomainPage() {
     setIsDialogOpen(true);
   };
 
-  const deleteConsultancy = (index: number) => {
-    const updatedConsultancies = consultancies.filter((_, i) => i !== index);
-    setConsultancies(updatedConsultancies);
+  const deleteConsultancy = async (index: number) => {
+  const consultant_id = consultancyIds[index];
+
+  try {
+    await axiosInstance.delete(`/freelancer/consultant/${consultant_id}`);
+
+    setConsultancies(prev => prev.filter((_, i) => i !== index));
+    setConsultancyIds(prev => prev.filter((_, i) => i !== index));
+
     toast({
-      title: 'Success',
-      description: 'Consultancy removed successfully',
+      title: "Success",
+      description: "Consultancy removed successfully",
     });
-  };
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to remove consultancy",
+      variant: "destructive",
+    });
+    console.error(error);
+  }
+};
+
 
   const onSubmit = async (data: ConsultancyFormValues) => {
   try {
@@ -607,11 +633,13 @@ export default function ConsultancyDomainPage() {
                 </DialogContent>
               </Dialog>
             </div>
-
+            <div className="flex flex-wrap gap-6">
             {consultancies.length > 0 ? (
-              <div className="flex flex-wrap gap-8">
-                {consultancies.map((consultancy, index) => (
-                  <div key={index} className="relative group">
+                consultancies.map((consultancy, index) => (
+                  <div
+        key={index}
+        className="relative group w-[380px] p-4 rounded-xl shadow-md bg-black border border-gray-800"
+      >
                     <ConsultantCard
                       name={consultancy.name}
                       skills={consultancy.skills.map(s => s.name)}
@@ -637,8 +665,8 @@ export default function ConsultancyDomainPage() {
                       </Button>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              
             ) : (
               <div className="flex flex-col items-center justify-center mt-[5rem]">
                 <PackageOpen className="mx-auto text-gray-500" size="100" />
@@ -647,6 +675,7 @@ export default function ConsultancyDomainPage() {
                 </p>
               </div>
             )}
+            </div>
           </div>
         </main>
       </div>
