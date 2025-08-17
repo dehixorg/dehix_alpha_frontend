@@ -12,7 +12,6 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 
 interface Project {

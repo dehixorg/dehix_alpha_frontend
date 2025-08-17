@@ -65,7 +65,7 @@ export default function CurrentInterviews() {
   
   useEffect(() => {
     loadScheduledInterviews();
-  }, [user?.uid]);
+  });
   
   const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
     console.log('Fetching interviewer details for:', interviewData.length, 'interviews');

@@ -5,7 +5,6 @@ import {
   Users,
   UserCheck,
   Settings,
-  Calendar,
 } from 'lucide-react';
 import Image from 'next/image';
 

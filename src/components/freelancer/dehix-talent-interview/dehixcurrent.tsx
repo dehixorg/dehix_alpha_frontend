@@ -2,14 +2,15 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { Calendar, Clock, Video, Info } from "lucide-react";
+
 import { RootState } from "@/lib/store";
 import { fetchScheduledInterviews } from "@/lib/api/interviews";
 import { Button } from "@/components/ui/button";
-import { Loader2, Calendar, Clock, Video, ExternalLink, Info } from "lucide-react";
 import {
   Table,
   TableBody,
-  TableCell,
+  TableCell,  
   TableHead,
   TableHeader,
   TableRow,
@@ -64,7 +65,7 @@ export default function CurrentInterviews() {
   
   useEffect(() => {
     loadScheduledInterviews();
-  }, [user?.uid]);
+  });
   
   const fetchIntervieweeDetails = async (interviewData: ScheduledInterview[]) => {
     console.log('Fetching interviewee details for:', interviewData.length, 'interviews');

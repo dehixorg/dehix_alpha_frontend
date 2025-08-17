@@ -16,21 +16,10 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
-import Header from '@/components/header/header';
 import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInterviews';
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
-
-  const breadcrumbItems = [
-    { label: 'Freelancer', link: '/dashboard/freelancer' },
-    {
-      label: 'Interview',
-      link: '/freelancer/interview/profile',
-    },
-    { label: 'History Interviews', link: '#' },
-  ];
-
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -56,7 +45,11 @@ export default function HistoryPage() {
           <div className="flex justify-between items-center w-full">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 gap-1 text-sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 text-sm"
+                >
                   <ListFilter className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only">Filter</span>
                 </Button>
@@ -86,7 +79,6 @@ export default function HistoryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
           <div className="w-full">
             <HistoryInterviews />
           </div>

@@ -54,7 +54,7 @@ const SkillDomainForm: React.FC = () => {
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [, setRefreshTrigger] = useState(0);
 
   // Function to remove duplicate entries
   const removeDuplicates = (data: SkillDomainData[]) => {
@@ -207,100 +207,6 @@ const SkillDomainForm: React.FC = () => {
 
     fetchData();
   }, [user?.uid]);
-
-  const onSubmitSkill = (data: SkillDomainData) => {
-    const normalizedLabel = data.label
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ');
-
-    // Check if skill already exists in current data
-    const existsInData = skillDomainData.some((item) => {
-      const normalizedItemLabel = item.label
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, ' ');
-      return normalizedItemLabel === normalizedLabel && item.type === 'SKILL';
-    });
-
-    if (existsInData) {
-      toast({
-        variant: 'destructive',
-        title: 'Duplicate Skill',
-        description: 'This skill has already been added.',
-      });
-      return false;
-    }
-
-    const newData = {
-      ...data,
-      status: StatusEnum.PENDING,
-      activeStatus: false,
-      type: 'SKILL',
-    };
-    setSkillDomainData([...skillDomainData, newData]);
-    setStatusVisibility([...statusVisibility, false]);
-
-    // Remove the skill from available skills list using normalized comparison
-    setSkills((prevSkills) =>
-      prevSkills.filter((skill) => {
-        const normalizedSkillName = skill.label
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ' ');
-        return normalizedSkillName !== normalizedLabel;
-      }),
-    );
-
-    return true;
-  };
-
-  const onSubmitDomain = (data: SkillDomainData) => {
-    const normalizedLabel = data.label
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ');
-
-    // Check if domain already exists in current data
-    const existsInData = skillDomainData.some((item) => {
-      const normalizedItemLabel = item.label
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, ' ');
-      return normalizedItemLabel === normalizedLabel && item.type === 'DOMAIN';
-    });
-
-    if (existsInData) {
-      toast({
-        variant: 'destructive',
-        title: 'Duplicate Domain',
-        description: 'This domain has already been added.',
-      });
-      return false;
-    }
-
-    const newData = {
-      ...data,
-      status: StatusEnum.PENDING,
-      activeStatus: false,
-      type: 'DOMAIN',
-    };
-    setSkillDomainData([...skillDomainData, newData]);
-    setStatusVisibility([...statusVisibility, false]);
-
-    // Remove the domain from available domains list using normalized comparison
-    setDomains((prevDomains) =>
-      prevDomains.filter((domain) => {
-        const normalizedDomainName = domain.label
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, ' ');
-        return normalizedDomainName !== normalizedLabel;
-      }),
-    );
-
-    return true;
-  };
 
   const handleToggleVisibility = async (
     index: number,

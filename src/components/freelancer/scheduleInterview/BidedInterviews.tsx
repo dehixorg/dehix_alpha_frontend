@@ -2,8 +2,7 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
-
-import { Calendar, Clock, DollarSign, User, Info } from "lucide-react";
+import { Calendar, Clock, DollarSign, User, Info, Loader2 } from "lucide-react";
 
 import { RootState } from "@/lib/store";
 import { fetchPendingBids, acceptBid, PendingBid as ApiPendingBid } from "@/lib/api/interviews";
@@ -22,17 +21,13 @@ import {
 // Use the imported type instead of redefining it
 type PendingBid = ApiPendingBid;
 
-interface BidedInterviewsProps {
-  interviewType?: string;
-}
-
 // Helper function for capitalization
 const capitalizeFirstLetter = (str: string): string => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-export default function BidedInterviews({ interviewType }: BidedInterviewsProps) {
+export default function BidedInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
   const { toast } = useToast();
