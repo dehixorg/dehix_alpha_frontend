@@ -19,10 +19,10 @@ import { Button } from '@/components/ui/button';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh, setRefresh] = useState(false);
+  const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
   const [resumeData, setResumeData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [selectedResume, setSelectedResume] = useState<any>(null);
 
   useEffect(() => {

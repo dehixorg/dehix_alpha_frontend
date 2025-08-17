@@ -56,7 +56,7 @@ export default function ProfileDetailPage() {
   const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
-  const [freelancerProjects, setFreelancerProjects] = useState<any>({});
+  const [, setFreelancerProjects] = useState<any>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);

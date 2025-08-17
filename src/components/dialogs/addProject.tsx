@@ -260,7 +260,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   };
 
   // Submit handler for the form
-  async function onSubmit(data: ProjectFormValues) {
+  async function onSubmit() {
     setLoading(true);
     try {
       // Join currSkills array into comma-separated string for form submission

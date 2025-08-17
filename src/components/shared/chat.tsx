@@ -161,13 +161,13 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
-  const [openDrawer, setOpenDrawer] = useState(false);
+  const [, setOpenDrawer] = useState(false);
 
   // States for voice recording
   type RecordingStatus =
@@ -184,7 +184,7 @@ export function CardsChat({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
+  const [, setRecordingStartTime] = useState<number | null>(
     null,
   );
   const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
@@ -247,7 +247,7 @@ export function CardsChat({
       }
     });
   };
-  const [audioDurations, setAudioDurations] = useState<{
+  const [, setAudioDurations] = useState<{
     [key: string]: number;
   }>({});
 
@@ -293,7 +293,42 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Subscribe to messages for this conversation and manage loading state
+  useEffect(() => {
+    if (!conversation?.id) return;
+    setLoading(true);
+    const unsubscribe = subscribeToFirestoreCollection(
+      `conversations/${conversation.id}/messages/`,
+      (data) => {
+        setMessages(data);
+        setLoading(false);
+      },
+      'asc',
+    );
+    return () => {
+      try {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      } catch {
+        // no-op
+      }
+    };
+  }, [conversation?.id]);
 
+  // Resolve and set primary user details for 1:1 chats
+  useEffect(() => {
+    if (!conversation) return;
+    if (conversation.type === 'group') return;
+    const otherParticipantUid = conversation.participants?.find(
+      (p: string) => p !== user.uid,
+    );
+    if (!otherParticipantUid) return;
+    const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+    setPrimaryUser({
+      userName: participantDetails?.userName || '',
+      email: participantDetails?.email || '',
+      profilePic: participantDetails?.profilePic || '',
+    });
+  }, [conversation, user.uid]);
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -303,13 +338,13 @@ export function CardsChat({
   }, [messages.length]);
 
   async function sendMessage(
-  conversation: Conversation,
-  message: Partial<Message>,
-  setInput: React.Dispatch<React.SetStateAction<string>>,
-) {
-  try {
-    setIsSending(true);
-    const datentime = new Date().toISOString();
+    conversation: Conversation,
+    message: Partial<Message>,
+    setInput: React.Dispatch<React.SetStateAction<string>>,
+  ) {
+    try {
+      setIsSending(true);
+      const datentime = new Date().toISOString();
 
     console.log('Sending message to Firestore:', {
       conversationId: conversation?.id,
@@ -339,20 +374,20 @@ export function CardsChat({
       console.error('Failed to send message - unexpected result:', result);
       throw new Error(`Failed to send message: ${result}`);
     }
-  } catch (error: any) {
-    console.error('Error sending message:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      conversationId: conversation?.id,
-      messageContent: message.content,
-      hasVoiceMessage: !!message.voiceMessage,
-    });
-    throw error; // Re-throw the error so it can be caught by the calling function
-  } finally {
-    setIsSending(false);
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        conversationId: conversation?.id,
+        messageContent: message.content,
+        hasVoiceMessage: !!message.voiceMessage,
+      });
+      throw error; // Re-throw the error so it can be caught by the calling function
+    } finally {
+      setIsSending(false);
+    }
   }
-}
 
   // Always call hooks at the top level, not conditionally.
   // Move this conditional return after all hooks.

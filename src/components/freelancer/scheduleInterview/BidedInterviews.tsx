@@ -21,17 +21,13 @@ import {
 // Use the imported type instead of redefining it
 type PendingBid = ApiPendingBid;
 
-interface BidedInterviewsProps {
-  interviewType?: string;
-}
-
 // Helper function for capitalization
 const capitalizeFirstLetter = (str: string): string => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-export default function BidedInterviews({ interviewType }: BidedInterviewsProps) {
+export default function BidedInterviews() {
   const user = useSelector((state: RootState) => state.user);
   const intervieweeId = user?.uid;
   const { toast } = useToast();

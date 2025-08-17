@@ -122,9 +122,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     ProfileUser | ProfileGroup | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
+  const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const user = useSelector((state: RootState) => state.user);
@@ -189,7 +189,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
         if (response.data && response.data.data) {
           const apiData = response.data.data as ProfileUser;
-          setProfileData((prevData) => ({
+          setProfileData({
             ...apiData, // API data as base
             // Prioritize initialData for specific fields if initialData was provided
             userName: initialData?.userName || apiData.userName,
@@ -202,7 +202,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
             // name might need specific handling depending on your data structure
             name: initialData?.userName || apiData.name || apiData.userName,
-          }));
+          });
         } else {
           // If API call fails or returns no data, but we had initialData, retain it.
           // This part depends on whether an error should clear initialData or not.
