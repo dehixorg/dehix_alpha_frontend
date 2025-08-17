@@ -32,10 +32,8 @@ export default function ScheduleInterviewPage() {
     router.push(`?${params.toString()}`);
   };
 
-  const { menuItemsTop, menuItemsBottom } = createScheduleInterviewMenuItems(
-    handleTabChange,
-    activeTab,
-  );
+  const { menuItemsTop, menuItemsBottom } =
+    createScheduleInterviewMenuItems(handleTabChange);
 
   // Update active tab when URL changes
   React.useEffect(() => {

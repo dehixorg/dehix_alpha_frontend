@@ -88,7 +88,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
   projectData,
   setShowAnalyticsDrawer,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('insights');
+  const [, setActiveTab] = useState<string>('insights');
   // If projectData is not provided, render a loading state or a message
   if (!projectData) {
     return (

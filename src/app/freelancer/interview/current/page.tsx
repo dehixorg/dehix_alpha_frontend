@@ -176,10 +176,10 @@ export default function CurrentPage() {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const [skillData, setSkillData] = useState<any>([]);
-  const [domainData, setDomainData] = useState<any>([]);
-  const [projectSkill, setProjectSkill] = useState<any>([]);
-  const [projectDomain, setProjectDomain] = useState<any>([]);
+  const [, setSkillData] = useState<any>([]);
+  const [, setDomainData] = useState<any>([]);
+  const [, setProjectSkill] = useState<any>([]);
+  const [, setProjectDomain] = useState<any>([]);
 
   const [isLoading, setIsloading] = useState(false);
 

@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import {
   Dialog,
@@ -34,7 +33,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { RootState } from '@/lib/store';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
 
 // Schema for form validation using zod
