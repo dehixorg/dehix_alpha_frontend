@@ -234,28 +234,34 @@ export default function ConsultancyDomainPage() {
 };
 
 
-  const onSubmit = async (data: ConsultancyFormValues) => {
+ const onSubmit = async (data: ConsultancyFormValues) => {
   try {
-    // Payload for API request - must match schema exactly
     const apiPayload = {
-      status: "NOT_APPLIED", // Default status as per schema
+      status: "NOT_APPLIED",
       description: data.description || '',
-      price: data.perHourRate, // Note: your schema uses 'price' but frontend uses 'perHourRate'
-      domain: data.domains.map(d => d.name), // Array of strings
-      skills: data.skills.map(s => s.name), // Array of strings
-      links: data.urls?.map(u => u.value).filter(Boolean) || [], // Array of strings
-      // experience: "" // Optional since not in your form
+      price: data.perHourRate,
+      domain: data.domains.map(d => d.name),
+      skills: data.skills.map(s => s.name),
+      links: data.urls?.map(u => u.value).filter(Boolean) || [],
     };
 
-    // Debug the payload before sending
     console.log("Sending payload:", apiPayload);
 
-    const response = await axiosInstance.post('/freelancer/consultant', apiPayload);
+    let response;
+    if (editingIndex !== null) {
+      // Update existing consultancy
+      const consultant_id = consultancyIds[editingIndex];
+      response = await axiosInstance.put(`/freelancer/consultant/${consultant_id}`, apiPayload);
+    } else {
+      // Create new consultancy
+      response = await axiosInstance.post('/freelancer/consultant', apiPayload);
+    }
+
     console.log('API Response:', response.data);
 
-    // Update local state (keep original format)
+    // Update local state
     const statePayload = {
-      name: data.name, // Not in schema but kept for local state
+      name: data.name,
       skills: data.skills,
       domains: data.domains,
       description: data.description || '',
@@ -264,14 +270,18 @@ export default function ConsultancyDomainPage() {
     };
 
     if (editingIndex !== null) {
+      // Update existing item in state
       const updated = [...consultancies];
       updated[editingIndex] = statePayload;
       setConsultancies(updated);
     } else {
+      // Add new item to state
       setConsultancies([...consultancies, statePayload]);
+      // Also add the new ID if this was a create operation
+      setConsultancyIds([...consultancyIds, response.data._id]);
     }
 
-    // Reset form
+    // Reset form and close dialog
     form.reset({
       name: '',
       skills: [],
