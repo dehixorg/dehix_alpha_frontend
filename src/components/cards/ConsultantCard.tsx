@@ -13,8 +13,8 @@ import { Badge } from '@/components/ui/badge';
 
 interface ConsultantCardProps {
   name: string;
-  skills: string;
-  domains: string;
+  skills: string[];
+  domains: string[];
   description?: string;
   urls?: { value: string }[];
   perHourRate?: number;
@@ -28,8 +28,9 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({
   urls,
   perHourRate,
 }) => {
-  const skillList = skills.split(',').map((skill) => skill.trim());
-  const domainList = domains.split(',').map((domain) => domain.trim());
+  // No split, data already array
+  const skillList = skills;
+  const domainList = domains;
 
   return (
     <Card className="mb-4 bg-black text-white">

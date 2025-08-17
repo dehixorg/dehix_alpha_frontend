@@ -8,8 +8,6 @@ import { z } from 'zod';
 import { useSelector } from 'react-redux';
 
 import ConsultantCard from '@/components/cards/ConsultantCard';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogTrigger,
@@ -34,16 +32,14 @@ import {
   SelectValue,
   SelectContent,
 } from '@/components/ui/select';
-import { CardTitle } from '@/components/ui/card';
-import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { ProjectCard } from '@/components/cards/projectCard';
-import { Separator } from '@/components/ui/separator';
-import { ProjectStatus } from '@/utils/freelancer/enum';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import Header from '@/components/header/header';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface Skill {
   label: string;
@@ -53,7 +49,6 @@ interface Domain {
   label: string;
 }
 
-// Define the schema for the form using Zod
 const consultancyFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   skills: z.array(
@@ -84,10 +79,8 @@ const consultancyFormSchema = z.object({
 
 type ConsultancyFormValues = z.infer<typeof consultancyFormSchema>;
 
-export default function ConsultancyPage() {
-  const experience = 5;
+export default function ConsultancyDomainPage() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [consultants, setConsultants] = useState<ConsultancyFormValues[]>([]);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [allDomains, setAllDomains] = useState<Domain[]>([]);
   const [tmpSkill, setTmpSkill] = useState<string>('');
@@ -95,41 +88,46 @@ export default function ConsultancyPage() {
   const [searchSkillQuery, setSearchSkillQuery] = useState<string>('');
   const [searchDomainQuery, setSearchDomainQuery] = useState<string>('');
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>([]);
+  const [consultancies, setConsultancies] = useState<ConsultancyFormValues[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // const response = await axiosInstance.get(`/project/business`);
-        // setResponseData(response.data.data);
+   useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [skillsResponse, domainsResponse, consultantsResponse] = await Promise.all([
+        axiosInstance.get('/skills'),
+        axiosInstance.get('/domain'),
+        axiosInstance.get(`/freelancer/${user.uid}`) // Adjust endpoint as needed
+      ]);
+      console.log(consultantsResponse);
 
-        const skillsResponse = await axiosInstance.get('/skills');
-        setAllSkills(skillsResponse.data.data);
-
-        const domainsResponse = await axiosInstance.get('/domain');
-        setAllDomains(domainsResponse.data.data);
-                      console.log("All Skills:", allSkills);
-                    console.log("Search Query:", searchSkillQuery);
-                    console.log("Skill Fields:", allDomains);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        });
-        console.error('API Error:', error);
+      setAllSkills(skillsResponse.data.data);
+      setAllDomains(domainsResponse.data.data);
+      
+      // Transform the API response to match your local state format
+      if (consultantsResponse.data?.data) {
+        const formattedConsultants = consultantsResponse.data.data.map((consultant: any) => ({
+          name: consultant.name || '',
+          skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
+          domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
+          description: consultant.description || '',
+          urls: consultant.links?.map((u: string) => ({ value: u })) || [],
+          perHourRate: consultant.price
+        }));
+        setConsultancies(formattedConsultants);
       }
-    };
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load data. Please try again.',
+      });
+      console.error('API Error:', error);
+    }
+  };
 
-    fetchData();
-  }, [user.uid]);
-
-  const completedProjects = responseData.filter(
-    (project: any) => project.status == ProjectStatus.COMPLETED,
-  );
-  const pendingProjects = responseData.filter(
-    (project: any) => project.status !== ProjectStatus.COMPLETED,
-  );
+  fetchData();
+}, [user.uid]);
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
@@ -195,6 +193,89 @@ export default function ConsultancyPage() {
     removeDomain(index);
   };
 
+  const startEditing = (index: number) => {
+    setEditingIndex(index);
+    form.reset(consultancies[index]);
+    setIsDialogOpen(true);
+  };
+
+  const deleteConsultancy = (index: number) => {
+    const updatedConsultancies = consultancies.filter((_, i) => i !== index);
+    setConsultancies(updatedConsultancies);
+    toast({
+      title: 'Success',
+      description: 'Consultancy removed successfully',
+    });
+  };
+
+  const onSubmit = async (data: ConsultancyFormValues) => {
+  try {
+    // Payload for API request - must match schema exactly
+    const apiPayload = {
+      status: "NOT_APPLIED", // Default status as per schema
+      description: data.description || '',
+      price: data.perHourRate, // Note: your schema uses 'price' but frontend uses 'perHourRate'
+      domain: data.domains.map(d => d.name), // Array of strings
+      skills: data.skills.map(s => s.name), // Array of strings
+      links: data.urls?.map(u => u.value).filter(Boolean) || [], // Array of strings
+      // experience: "" // Optional since not in your form
+    };
+
+    // Debug the payload before sending
+    console.log("Sending payload:", apiPayload);
+
+    const response = await axiosInstance.post('/freelancer/consultant', apiPayload);
+    console.log('API Response:', response.data);
+
+    // Update local state (keep original format)
+    const statePayload = {
+      name: data.name, // Not in schema but kept for local state
+      skills: data.skills,
+      domains: data.domains,
+      description: data.description || '',
+      urls: data.urls || [],
+      perHourRate: data.perHourRate
+    };
+
+    if (editingIndex !== null) {
+      const updated = [...consultancies];
+      updated[editingIndex] = statePayload;
+      setConsultancies(updated);
+    } else {
+      setConsultancies([...consultancies, statePayload]);
+    }
+
+    // Reset form
+    form.reset({
+      name: '',
+      skills: [],
+      domains: [],
+      description: '',
+      urls: [{ value: '' }],
+      perHourRate: undefined,
+    });
+    
+    setEditingIndex(null);
+    setIsDialogOpen(false);
+    
+    toast({
+      title: 'Success',
+      description: `Consultancy ${editingIndex !== null ? 'updated' : 'added'} successfully`,
+    });
+  } catch (error: any) {
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      stack: error.stack
+    });
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: error.response?.data?.message || 'Failed to save consultancy data',
+    });
+  }
+};
+
   const menuItemsTop = [
     {
       href: '#',
@@ -211,64 +292,46 @@ export default function ConsultancyPage() {
     },
   ];
 
-  const onSubmit = async (data: ConsultancyFormValues) => {
-    try {
-      setConsultants([...consultants, data]);
-      form.reset();
-      setIsDialogOpen(false);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      });
-      console.error('Error:', error);
-    }
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Consultancy Info"
+        active="Consultancy Domain"
       />
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Consultancy Info"
+          activeMenu="Consultancy Domain"
           breadcrumbItems={[
             { label: 'Consultancy', link: '#' },
-            { label: 'Consultancy Info', link: '#' },
+            { label: 'Domain', link: '#' },
           ]}
         />
-        {experience < 5 ? (
-          <div className="flex flex-col items-center justify-center mt-[10rem]">
-            <PackageOpen className="mx-auto text-gray-500" size="100" />
-            <p className="text-gray-500 mt-4">
-              Your Experience is not Eligible for Consultancy
-            </p>
-          </div>
-        ) : (
-          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-            <div className="lg:col-span-2 xl:col-span-2 space-y-4">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold">Consultancy Domains</h1>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>Add Consultancy</Button>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Consultancy Domain
+                  </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl overflow-y-auto max-h-screen">
                   <DialogHeader>
-                    <DialogTitle>Add Consultancy</DialogTitle>
+                    <DialogTitle>
+                      {editingIndex !== null ? 'Edit Consultancy Domain' : 'Add Consultancy Domain'}
+                    </DialogTitle>
                     <DialogDescription>
-                      Fill in the details of the consultancy below.
+                      {editingIndex !== null ? 'Update your consultancy profile' : 'Create a new consultancy profile'}
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-4"
-                    >
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      {/* Form fields remain the same as before */}
                       <FormField
                         control={form.control}
                         name="name"
@@ -537,96 +600,55 @@ export default function ConsultancyPage() {
                         </Button>
                       </FormItem>
                       <DialogFooter>
-                        <Button type="submit">Submit</Button>
+                        <Button type="submit">Save</Button>
                       </DialogFooter>
                     </form>
                   </Form>
                 </DialogContent>
               </Dialog>
+            </div>
+
+            {consultancies.length > 0 ? (
               <div className="flex flex-wrap gap-8">
-                {consultants.length == 0 ? (
-                  <div className="flex flex-col items-center justify-center w-full">
-                    <PackageOpen className="text-gray-500" size="100" />
-                    <p className="text-gray-500">No consultancy added</p>
-                  </div>
-                ) : (
-                  <div>
-
-                    {consultants.map((consultant, index) => (
-                      <ConsultantCard
-                        key={index}
-                        name={consultant.name}
-                        skills={consultant.skills.map(s => s.name)}
-                        domains={consultant.domains.map(d => d.name)}
-                        description={consultant.description}
-                        urls={consultant.urls}
-                        perHourRate={consultant.perHourRate}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-              <Separator className="my-1" />
-              <div className="grid grid-cols-1 gap-4">
-                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-                  Current Projects {`(${pendingProjects.length})`}
-                </h2>
-                <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  {pendingProjects.length > 0 ? (
-                    pendingProjects.map((project: any, index: number) => (
-                      <ProjectCard
-                        key={index}
-                        cardClassName="min-w-[45%]"
-                        project={project}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-10 w-[100%] ">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">No projects available</p>
+                {consultancies.map((consultancy, index) => (
+                  <div key={index} className="relative group">
+                    <ConsultantCard
+                      name={consultancy.name}
+                      skills={consultancy.skills.map(s => s.name)}
+                      domains={consultancy.domains.map(d => d.name)}
+                      description={consultancy.description}
+                      urls={consultancy.urls?.filter(u => u.value)}
+                      perHourRate={consultancy.perHourRate}
+                    />
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => startEditing(index)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteConsultancy(index)}
+                      >
+                        Delete
+                      </Button>
                     </div>
-                  )}
-                </div>
-
-                <Separator className="my-1" />
-                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-                  Completed Projects {`(${completedProjects.length})`}
-                </h2>
-                <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  {completedProjects.length > 0 ? (
-                    completedProjects.map((project: any, index: number) => (
-                      <ProjectCard
-                        key={index}
-                        cardClassName="min-w-[45%]"
-                        project={project}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-10 w-[100%] ">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">No projects available</p>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="lg:col-span-1 xl:col-span-1 space-y-4">
-              <CardTitle className="group flex items-center gap-2 text-2xl">
-                Consultancy Invitations
-              </CardTitle>
-              <div className="text-center py-10">
+            ) : (
+              <div className="flex flex-col items-center justify-center mt-[5rem]">
                 <PackageOpen className="mx-auto text-gray-500" size="100" />
-                <p className="text-gray-500">No Consultancy Invitation</p>
+                <p className="text-gray-500 mt-4">
+                  No consultancy domains created yet. Click "Add Consultancy Domain" to get started.
+                </p>
               </div>
-            </div>
-          </main>
-        )}
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
