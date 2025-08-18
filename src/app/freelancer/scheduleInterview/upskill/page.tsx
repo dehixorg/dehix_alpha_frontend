@@ -24,6 +24,7 @@ export default function UpskillInterviewPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -38,7 +39,9 @@ export default function UpskillInterviewPage() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               This feature will help you enhance your skills through specialized
-              interviews with industry experts.
+              interviews with industry experts. This feature will help you
+              enhance your skills through specialized interviews with industry
+              experts.
             </p>
           </div>
         </div>

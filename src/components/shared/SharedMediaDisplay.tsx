@@ -55,7 +55,9 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
         <Image
           src={item.url}
           alt={item.fileName}
-          className="object-cover w-full h-full rounded-md"
+          layout="fill"
+          objectFit="cover"
+          className="w-full h-full rounded-md"
         />
       );
     } else if (item.type.startsWith('video/')) {

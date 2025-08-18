@@ -38,7 +38,8 @@ export default function ProjectInterviewPage() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               Connect with clients through project-specific interviews to
-              showcase your expertise.
+              showcase your expertise. Connect with clients through
+              project-specific interviews to showcase your expertise.
             </p>
           </div>
         </div>
