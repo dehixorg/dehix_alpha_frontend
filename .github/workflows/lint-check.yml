@@ -27,19 +27,39 @@ jobs:
       - name: Run lint and check for warnings/errors
         id: lint-check
         run: |
-          # Run lint and capture output
-          LINT_OUTPUT=$(npm run lint -- --format=json 2>/dev/null || true)
+          # Create a temporary file for lint output
+          LINT_OUTPUT_FILE=$(mktemp)
           
-          # Count errors and warnings
-          ERRORS=$(echo $LINT_OUTPUT | jq -r '.[0].errorCount // 0')
-          WARNINGS=$(echo $LINT_OUTPUT | jq -r '.[0].warningCount // 0')
+          # Run lint and save output to file
+          npm run lint -- --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
+          
+          # Initialize counters
+          TOTAL_ERRORS=0
+          TOTAL_WARNINGS=0
+          
+          # Check if file is not empty
+          if [ -s "$LINT_OUTPUT_FILE" ]; then
+            # Sum up errors and warnings from all files
+            TOTAL_ERRORS=$(jq -r '.[] | .errorCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s}')
+            TOTAL_WARNINGS=$(jq -r '.[] | .warningCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s}')
+            
+            # If the above fails (not an array), try direct access
+            if [ -z "$TOTAL_ERRORS" ] || [ -z "$TOTAL_WARNINGS" ]; then
+              TOTAL_ERRORS=$(jq -r '.errorCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+              TOTAL_WARNINGS=$(jq -r '.warningCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+            fi
+          fi
+          
+          # Convert to integers
+          TOTAL_ERRORS=${TOTAL_ERRORS:-0}
+          TOTAL_WARNINGS=${TOTAL_WARNINGS:-0}
           
           # Output the lint results
-          echo "Lint results: $ERRORS errors, $WARNINGS warnings"
+          echo "Lint results: $TOTAL_ERRORS errors, $TOTAL_WARNINGS warnings"
           
           # Check if there are any errors or more than 5 warnings
-          if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 5 ]; then
-            echo "::error::Lint check failed: $ERRORS errors and $WARNINGS warnings found"
+          if [ "$TOTAL_ERRORS" -gt 0 ] || [ "$TOTAL_WARNINGS" -gt 5 ]; then
+            echo "::error::Lint check failed: $TOTAL_ERRORS errors and $TOTAL_WARNINGS warnings found"
             echo "::group::Lint Output"
             npm run lint
             echo "::endgroup::"
@@ -47,4 +67,4 @@ jobs:
           fi
           
           # If we get here, the check passed
-          echo "Lint check passed with $WARNINGS warnings (max allowed: 5)"
+          echo "Lint check passed with $TOTAL_WARNINGS warnings (max allowed: 5)"
