@@ -1,0 +1,50 @@
+name: Lint Check
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run lint and check for warnings/errors
+        id: lint-check
+        run: |
+          # Run lint and capture output
+          LINT_OUTPUT=$(npm run lint -- --format=json 2>/dev/null || true)
+          
+          # Count errors and warnings
+          ERRORS=$(echo $LINT_OUTPUT | jq -r '.[0].errorCount // 0')
+          WARNINGS=$(echo $LINT_OUTPUT | jq -r '.[0].warningCount // 0')
+          
+          # Output the lint results
+          echo "Lint results: $ERRORS errors, $WARNINGS warnings"
+          
+          # Check if there are any errors or more than 5 warnings
+          if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 5 ]; then
+            echo "::error::Lint check failed: $ERRORS errors and $WARNINGS warnings found"
+            echo "::group::Lint Output"
+            npm run lint
+            echo "::endgroup::"
+            exit 1
+          fi
+          
+          # If we get here, the check passed
+          echo "Lint check passed with $WARNINGS warnings (max allowed: 5)"
