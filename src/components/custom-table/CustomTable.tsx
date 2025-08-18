@@ -18,7 +18,7 @@ import { useToast } from '../ui/use-toast';
 
 import { FieldType, FiltersArrayElem, Params } from './FieldTypes';
 import { CustomTableCell } from './FieldComponents';
-import FilterTable from './FilterTable';
+import { FilterTable } from './FilterTable';
 import { HeaderActionComponent } from './HeaderActionsComponent';
 import { TablePagination } from './Pagination';
 import { TableSelect } from './TableSelect';

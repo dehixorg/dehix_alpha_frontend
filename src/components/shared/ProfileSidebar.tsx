@@ -8,7 +8,6 @@ import {
   Edit3,
   Link2,
   LogOut,
-  Users,
   MinusCircle,
   Volume2,
   LoaderCircle,
@@ -16,7 +15,6 @@ import {
 import {
   doc,
   getDoc,
-  DocumentData,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -54,7 +52,6 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
@@ -118,19 +115,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   onClose,
   profileId,
   profileType,
-  currentUser: propCurrentUser,
+  // currentUser prop is available via Redux store
   initialData,
 }) => {
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'info' | 'media' | 'files'>(
-    'info',
-  );
+  const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
+  const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const user = useSelector((state: RootState) => state.user);
@@ -190,7 +184,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
         if (response.data && response.data.data) {
           const apiData = response.data.data as ProfileUser;
-          setProfileData((prevData) => ({
+          setProfileData({
             ...apiData, // API data as base
             // Prioritize initialData for specific fields if initialData was provided
             userName: initialData?.userName || apiData.userName,
@@ -203,7 +197,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
             // name might need specific handling depending on your data structure
             name: initialData?.userName || apiData.name || apiData.userName,
-          }));
+          });
         } else {
           // If API call fails or returns no data, but we had initialData, retain it.
           // This part depends on whether an error should clear initialData or not.
