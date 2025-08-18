@@ -37,16 +37,19 @@ jobs:
           TOTAL_ERRORS=0
           TOTAL_WARNINGS=0
           
-          # Check if file is not empty
+          # Check if file exists and has content
           if [ -s "$LINT_OUTPUT_FILE" ]; then
-            # Sum up errors and warnings from all files
-            TOTAL_ERRORS=$(jq -r '.[] | .errorCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s}')
-            TOTAL_WARNINGS=$(jq -r '.[] | .warningCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s}')
-            
-            # If the above fails (not an array), try direct access
-            if [ -z "$TOTAL_ERRORS" ] || [ -z "$TOTAL_WARNINGS" ]; then
-              TOTAL_ERRORS=$(jq -r '.errorCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
-              TOTAL_WARNINGS=$(jq -r '.warningCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+            # First check if the file contains valid JSON
+            if jq -e . "$LINT_OUTPUT_FILE" >/dev/null 2>&1; then
+              # Try to process as an array first
+              if jq -e 'type == "array"' "$LINT_OUTPUT_FILE" >/dev/null; then
+                TOTAL_ERRORS=$(jq -r '.[] | .errorCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s+0}')
+                TOTAL_WARNINGS=$(jq -r '.[] | .warningCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s+0}')
+              else
+                # Process as a single object
+                TOTAL_ERRORS=$(jq -r '.errorCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+                TOTAL_WARNINGS=$(jq -r '.warningCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+              fi
             fi
           fi
           
