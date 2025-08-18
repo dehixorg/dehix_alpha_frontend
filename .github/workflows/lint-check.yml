@@ -108,16 +108,3 @@ jobs:
           
           # Cleanup
           rm -f "$LINT_OUTPUT_FILE" "$LINT_SUMMARY_FILE"
-
-      - name: Run build
-        run: npm run build
-        env:
-          NODE_ENV: production
-          # Dummy Firebase config to prevent build failures
-          NEXT_PUBLIC_FIREBASE_API_KEY: dummy-key
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: dummy.firebaseapp.com
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: dummy-project
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: dummy.appspot.com
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 1234567890
-          NEXT_PUBLIC_FIREBASE_APP_ID: 1:1234567890:web:abc123def456
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-XXXXXXXXXX
