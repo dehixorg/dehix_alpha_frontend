@@ -124,6 +124,7 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
+
       case 'project':
         return (
           <div className="space-y-6">
@@ -271,6 +272,7 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
+
       case 'dehix':
         return (
           <div className="space-y-6">
@@ -350,6 +352,7 @@ export default function ScheduleInterviewPage() {
             </div>
           </div>
         );
+
       default:
         return <ScheduleInterviewDialog />;
     }

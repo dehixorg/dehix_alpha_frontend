@@ -109,8 +109,20 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         const response = await axiosInstance.get(
           `/project/get-freelancer/${project_id}`,
         );
-        setFreelancersData(response.data.freelancers.freelancerData);
-        setFilteredFreelancers(response.data.freelancers.freelancerData);
+        const freelancerData = response.data.freelancers.freelancerData || [];
+
+        if (freelancerData.length === 0) {
+          toast({
+            title: 'No Freelancers Available',
+            description:
+              'No freelancers with accepted bids found for this project. Please accept some bids first.',
+            variant: 'destructive',
+            duration: 5000,
+          });
+        }
+
+        setFreelancersData(freelancerData);
+        setFilteredFreelancers(freelancerData);
       } catch (error) {
         console.error('Failed to fetch freelancers:', error);
         toast({
@@ -250,6 +262,14 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
               )}
 
               {/* Freelancer Selection */}
+              {freelancersData.length === 0 && (
+                <div className="col-span-2 mb-2">
+                  <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded-md border border-amber-200">
+                    ⚠️ No freelancers with accepted bids found for this project.
+                    You need to accept some bids before you can assign tasks.
+                  </p>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <label
                   htmlFor="freelancer"
@@ -274,7 +294,11 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                       />
                       <CommandList className=" overflow-x-visible max-h-[300px]">
                         {filteredFreelancers.length === 0 ? (
-                          <CommandEmpty>No freelancers found.</CommandEmpty>
+                          <CommandEmpty>
+                            {freelancersData.length === 0
+                              ? 'No freelancers with accepted bids found. Please accept some bids first.'
+                              : 'No freelancers match your search.'}
+                          </CommandEmpty>
                         ) : (
                           <CommandGroup className=" block overflow-auto">
                             <div className="space-y-2 px-4 py-2">
@@ -330,7 +354,17 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
             </div>
 
             <DialogFooter>
-              <Button type="submit">Add Task</Button>
+              <Button
+                type="submit"
+                disabled={freelancersData.length === 0}
+                title={
+                  freelancersData.length === 0
+                    ? 'No freelancers available to assign tasks to'
+                    : ''
+                }
+              >
+                Add Task
+              </Button>
               <Button
                 type="button"
                 variant="secondary"
