@@ -1,9 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { Plus, X, Save, ArrowLeft, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -56,7 +56,7 @@ export default function ProfileDetailPage() {
   const [skillsAndDomainsLoaded, setSkillsAndDomainsLoaded] = useState(false);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [showExperienceDialog, setShowExperienceDialog] = useState(false);
-  const [freelancerProjects, setFreelancerProjects] = useState<any>({});
+  const [, setFreelancerProjects] = useState<any>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
@@ -71,7 +71,7 @@ export default function ProfileDetailPage() {
         fetchFreelancerProjects();
       });
     }
-  }, [profileId, user.uid]);
+  });
 
   // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {

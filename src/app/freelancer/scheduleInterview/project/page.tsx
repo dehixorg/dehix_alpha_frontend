@@ -16,7 +16,6 @@ export default function ProjectInterviewPage() {
             Project-based interviews for specific opportunities
           </p>
         </div>
-
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -39,7 +38,8 @@ export default function ProjectInterviewPage() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               Connect with clients through project-specific interviews to
-              showcase your expertise.
+              showcase your expertise. Connect with clients through
+              project-specific interviews to showcase your expertise.
             </p>
           </div>
         </div>

@@ -1,9 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 import { Label } from '@/components/ui/label';
 import { RootState } from '@/lib/store';
@@ -47,7 +47,7 @@ export default function ProfileViewPage() {
         fetchProfile();
       });
     }
-  }, [profileId, user.uid]);
+  });
 
   const fetchProfile = async () => {
     if (!profileId) return;

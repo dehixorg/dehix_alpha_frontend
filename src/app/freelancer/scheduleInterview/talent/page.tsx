@@ -3,17 +3,17 @@ import * as React from 'react';
 
 import ScheduleInterviewNavbar from '@/components/freelancer/scheduleInterview/ScheduleInterviewNavbar';
 
-export default function UpskillInterviewPage() {
+export default function TalentInterviewPage() {
   return (
     <div className="flex min-h-screen w-full">
       <ScheduleInterviewNavbar />
       <div className="flex-1 p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Upskill Interview
+            Talent Interview
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Enhance your skills through specialized interviews
+            Manage and prepare for your talent interviews
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -24,7 +24,6 @@ export default function UpskillInterviewPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -35,13 +34,11 @@ export default function UpskillInterviewPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-              Upskill Interview Coming Soon
+              Talent Interview Coming Soon
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-              This feature will help you enhance your skills through specialized
-              interviews with industry experts. This feature will help you
-              enhance your skills through specialized interviews with industry
-              experts.
+              This section will help you manage and prepare for talent
+              interviews with streamlined tools and workflows.
             </p>
           </div>
         </div>

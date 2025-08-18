@@ -24,7 +24,7 @@ export default function PastReportsTab() {
   const [pastReports, setPastReports] = useState<PastReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewingReport, setViewingReport] = useState<null | PastReport>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [, setMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -63,7 +63,7 @@ export default function PastReportsTab() {
     if (!viewingReport && user?.uid) {
       fetchReports();
     }
-  }, [page, limit, viewingReport, user?.uid]);
+  });
 
   const handleViewMessages = async (report: PastReport) => {
     setMessagesLoading(true);

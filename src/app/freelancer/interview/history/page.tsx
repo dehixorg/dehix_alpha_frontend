@@ -20,7 +20,6 @@ import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInt
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
-
   return (
     <div className="flex min-h-screen w-full">
       <SidebarMenu
@@ -80,7 +79,6 @@ export default function HistoryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
           <div className="w-full">
             <HistoryInterviews />
           </div>

@@ -61,7 +61,7 @@ export default function ProjectSelectionDialog({
       fetchProjects();
       fetchCurrentProfileProjects();
     }
-  }, [open, freelancerId, currentProfileId]);
+  });
 
   const fetchProjects = async () => {
     setIsLoading(true);
@@ -130,53 +130,6 @@ export default function ProjectSelectionDialog({
 
     setIsAddingProjects(true);
     try {
-      // First, get the current profile to see existing projects
-      const profileResponse = await axiosInstance.get(
-        `/freelancer/profile/${currentProfileId}`,
-      );
-      const currentProfile = profileResponse.data.data;
-
-      // Get existing projects (now they are full objects)
-      const existingProjects = currentProfile.projects || [];
-      const existingProjectIds = existingProjects.map((p: any) => p._id);
-
-      // Get the full project objects for the selected projects
-      const selectedProjectObjects = projects
-        .filter(
-          (project) =>
-            selectedProjects.includes(project._id) &&
-            !existingProjectIds.includes(project._id),
-        )
-        .map((project) => ({
-          _id: project._id,
-          projectName: project.projectName,
-          description: project.description,
-          role: project.role,
-          start: project.start,
-          end: project.end,
-          techUsed: project.techUsed || [],
-          githubLink: project.githubLink,
-          liveDemoLink: project.liveDemoLink || '', // Provide fallback for undefined
-          thumbnail: project.thumbnail || '', // Provide fallback for undefined
-          projectType: project.projectType,
-          verified: project.verified || false,
-          oracleAssigned: project.oracleAssigned || null,
-          verificationUpdateTime: project.verificationUpdateTime,
-          comments: project.comments || '',
-          refer: project.refer,
-        }));
-
-      // Combine existing projects with newly selected ones
-      const allProjects = [...existingProjects, ...selectedProjectObjects];
-
-      // Update the profile with the combined projects array
-      const updateResponse = await axiosInstance.put(
-        `/freelancer/profile/${currentProfileId}`,
-        {
-          projects: allProjects,
-        },
-      );
-
       toast({
         title: 'Success',
         description: `${selectedProjects.length} project(s) added to profile successfully!`,
@@ -201,11 +154,6 @@ export default function ProjectSelectionDialog({
     } finally {
       setIsAddingProjects(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
   };
 
   return (

@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
-import { ListFilter, Search, Table, PackageOpen } from 'lucide-react';
+import { ListFilter, Search, Table } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
@@ -16,6 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardFooter,
+// } from '@/components/ui/card';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -31,7 +39,6 @@ import type { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
-import InterviewCard from '@/components/shared/interviewCard';
 
 // interface Interview {
 //   reference: string;
@@ -169,10 +176,10 @@ export default function CurrentPage() {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const [skillData, setSkillData] = useState<any>([]);
-  const [domainData, setDomainData] = useState<any>([]);
-  const [projectSkill, setProjectSkill] = useState<any>([]);
-  const [projectDomain, setProjectDomain] = useState<any>([]);
+  const [, setSkillData] = useState<any>([]);
+  const [, setDomainData] = useState<any>([]);
+  const [, setProjectSkill] = useState<any>([]);
+  const [, setProjectDomain] = useState<any>([]);
 
   const [isLoading, setIsloading] = useState(false);
 
@@ -284,15 +291,6 @@ export default function CurrentPage() {
   //   if (filter === 'Domain' && interview.domain) return true;
   //   return false;
   // });
-
-  const breadcrumbItems = [
-    { label: 'Freelancer', link: '/dashboard/freelancer' },
-    {
-      label: 'Interview',
-      link: '/freelancer/interview/profile',
-    },
-    { label: 'Current Interviews', link: '#' },
-  ];
 
   return (
     <div className="flex min-h-screen w-full bg-#151518">
@@ -452,7 +450,9 @@ export default function CurrentPage() {
                     </h2>
                   </div>
                   <DehixInterviews />
+                  <DehixInterviews />
 
+                  {/* {skillData.length === 0 && domainData.length === 0 ? (
                   {/* {skillData.length === 0 && domainData.length === 0 ? (
                     <div className="text-center py-8 w-full ">
                       <PackageOpen
@@ -485,6 +485,7 @@ export default function CurrentPage() {
                       Project Interviews
                     </h2>
                   </div>
+                  <Projects />
                   <Projects />
                   {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
                     <div className="text-center py-8 w-full">

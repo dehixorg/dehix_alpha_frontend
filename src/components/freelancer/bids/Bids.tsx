@@ -187,6 +187,15 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             const talentId = iv.talentId; // This is the _id of the talent object
             const skillFromMapping = talentToSkillMap[talentId];
           
+          console.log('=== SKILL NAME DEBUGGING ===');
+          console.log('Interview ID:', iv._id);
+          console.log('Talent ID from interview:', talentId);
+          console.log('Talent ID type:', typeof talentId);
+          console.log('Available talent IDs in mapping:', Object.keys(talentToSkillMap));
+          console.log('Available talent IDs types:', Object.keys(talentToSkillMap).map(id => typeof id));
+          console.log('Skill from mapping for this talentId:', skillFromMapping);
+          console.log('Talent ID exists in mapping:', Object.prototype.hasOwnProperty.call(talentToSkillMap, talentId as any));
+          
           // Try different variations of the talentId
                       const variations = [
               talentId,

@@ -10,17 +10,18 @@ import {
   X as LucideX,
   LoaderCircle,
 } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useSelector } from 'react-redux'; // Added
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea'; // Import Textarea
-import { RootState } from '@/lib/store';
+import { RootState } from '@/lib/store'; // Added
 import { toast } from '@/hooks/use-toast';
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser for type hint
 import { useAllUsers } from '@/hooks/useAllUsers';
+// ProfileSidebar is no longer imported or rendered here
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'; // Utility class names
 
 export interface Conversation extends DocumentData {
   id: string;
@@ -85,51 +86,12 @@ export function ChatList({
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState(''); // State for group description
-  const {
-    users: allFetchedUsers,
-    isLoading: isLoadingUsers,
-    error: usersError,
-    refetchUsers,
-  } = useAllUsers();
+  const { users: allFetchedUsers } = useAllUsers();
   const currentUser = useSelector((state: RootState) => state.user);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  // Removed local ProfileSidebar state:
-  // const [isProfileSidebarOpen, setIsProfileSidebarOpen] = useState(false);
-  // const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  // const [selectedProfileType, setSelectedProfileType] = useState<'user' | 'group' | null>(null);
-
-  // Mock Users (replace with actual data source/API call in a real app)
-  const MOCK_USERS = [
-    {
-      uid: 'user1_uid_alice',
-      userName: 'Alice Wonderland',
-      email: 'alice@example.com',
-    },
-    {
-      uid: 'user2_uid_bob',
-      userName: 'Bob The Builder',
-      email: 'bob@example.com',
-    },
-    {
-      uid: 'user3_uid_charlie',
-      userName: 'Charlie Brown',
-      email: 'charlie@example.com',
-    },
-    {
-      uid: 'user4_uid_diana',
-      userName: 'Diana Prince',
-      email: 'diana@example.com',
-    },
-    {
-      uid: 'user5_uid_edward',
-      userName: 'Edward Scissorhands',
-      email: 'edward@example.com',
-    },
-  ];
 
   const stripHtml = (html: string) =>
     html

@@ -523,14 +523,6 @@ export function CreateProjectBusinessForm() {
       setCurrentStep(FormSteps.ProjectInfo);
   };
 
-  const removeProfileByIndex = (indexToRemove: number) => {
-    if (profileFields.length === 1) return;
-    removeProfile(indexToRemove);
-    form.unregister(`profiles.${indexToRemove}`);
-    if (activeProfile >= indexToRemove)
-      setActiveProfile((prev) => Math.max(0, prev - 1));
-  };
-
   // UI render helpers
   const ProfileTabs = () => (
     <ScrollArea>

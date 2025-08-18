@@ -50,7 +50,6 @@ export default function HistoryInterviews() {
     [key: string]: any;
   }>({});
 
-  const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] =
@@ -69,10 +68,9 @@ export default function HistoryInterviews() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadCompletedInterviews();
-  }, [user?.uid]);
+  });
   const fetchIntervieweeDetails = async (
     interviewData: CompletedInterview[],
   ) => {
@@ -415,10 +413,12 @@ export default function HistoryInterviews() {
                         className="bg-blue-500"
                         variant="outline"
                         onClick={() => handleOpenFeedbackModal(interview)}
-                        disabled={Boolean(
-                          interview.feedback &&
-                            interview.feedback.trim().length > 0,
-                        )}
+                        disabled={
+                          !!(
+                            interview.feedback &&
+                            interview.feedback.trim().length > 0
+                          )
+                        }
                       >
                         {interview.feedback &&
                         interview.feedback.trim().length > 0
@@ -444,22 +444,22 @@ export default function HistoryInterviews() {
           </Button>
         </div>
       )}
-      <RatingModal
-        isOpen={isRatingModalOpen}
-        onClose={handleCloseRatingModal}
-        onSubmit={handleSubmitRating}
-        intervieweeName={
-          selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''
-        }
-      />
-      <FeedbackModal
-        isOpen={isFeedbackModalOpen}
-        onClose={handleCloseFeedbackModal}
-        onSubmit={handleSubmitFeedback}
-        intervieweeName={
-          selectedInterview ? getAcceptedIntervieweeName(selectedInterview) : ''
-        }
-      />
+      {selectedInterview && (
+        <>
+          <RatingModal
+            isOpen={isRatingModalOpen}
+            onClose={handleCloseRatingModal}
+            onSubmit={handleSubmitRating}
+            intervieweeName={getAcceptedIntervieweeName(selectedInterview)}
+          />
+          <FeedbackModal
+            isOpen={isFeedbackModalOpen}
+            onClose={handleCloseFeedbackModal}
+            onSubmit={handleSubmitFeedback}
+            intervieweeName={getAcceptedIntervieweeName(selectedInterview)}
+          />
+        </>
+      )}
     </div>
   );
 }

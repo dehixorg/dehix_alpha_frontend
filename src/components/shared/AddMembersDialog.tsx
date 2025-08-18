@@ -33,7 +33,6 @@ export function AddMembersDialog({
   onClose,
   onAddMembers,
   currentMemberIds,
-  groupId,
 }: AddMembersDialogProps) {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const {
