@@ -1,0 +1,73 @@
+name: Lint Check
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run lint and check for warnings/errors
+        id: lint-check
+        run: |
+          # Create a temporary file for lint output
+          LINT_OUTPUT_FILE=$(mktemp)
+          
+          # Run lint and save output to file
+          npm run lint -- --format=json > "$LINT_OUTPUT_FILE" 2>/dev/null || true
+          
+          # Initialize counters
+          TOTAL_ERRORS=0
+          TOTAL_WARNINGS=0
+          
+          # Check if file exists and has content
+          if [ -s "$LINT_OUTPUT_FILE" ]; then
+            # First check if the file contains valid JSON
+            if jq -e . "$LINT_OUTPUT_FILE" >/dev/null 2>&1; then
+              # Try to process as an array first
+              if jq -e 'type == "array"' "$LINT_OUTPUT_FILE" >/dev/null; then
+                TOTAL_ERRORS=$(jq -r '.[] | .errorCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s+0}')
+                TOTAL_WARNINGS=$(jq -r '.[] | .warningCount // 0' "$LINT_OUTPUT_FILE" | awk '{s+=$1} END {print s+0}')
+              else
+                # Process as a single object
+                TOTAL_ERRORS=$(jq -r '.errorCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+                TOTAL_WARNINGS=$(jq -r '.warningCount // 0' "$LINT_OUTPUT_FILE" 2>/dev/null || echo 0)
+              fi
+            fi
+          fi
+          
+          # Convert to integers
+          TOTAL_ERRORS=${TOTAL_ERRORS:-0}
+          TOTAL_WARNINGS=${TOTAL_WARNINGS:-0}
+          
+          # Output the lint results
+          echo "Lint results: $TOTAL_ERRORS errors, $TOTAL_WARNINGS warnings"
+          
+          # Check if there are any errors or more than 5 warnings
+          if [ "$TOTAL_ERRORS" -gt 0 ] || [ "$TOTAL_WARNINGS" -gt 5 ]; then
+            echo "::error::Lint check failed: $TOTAL_ERRORS errors and $TOTAL_WARNINGS warnings found"
+            echo "::group::Lint Output"
+            npm run lint
+            echo "::endgroup::"
+            exit 1
+          fi
+          
+          # If we get here, the check passed
+          echo "Lint check passed with $TOTAL_WARNINGS warnings (max allowed: 5)"
