@@ -9,6 +9,11 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import Header from '@/components/header/header';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 interface ProjectLayoutProps {
   children: ReactNode;
 }
@@ -16,9 +21,9 @@ interface ProjectLayoutProps {
 const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
   const pathname = usePathname();
   const activeTab = pathname.includes('/freelancer/project/applied')
-    ? 'applied'
+    ? 'Applied'
     : pathname.includes('/freelancer/project/completed')
-      ? 'completed'
+      ? 'Completed'
       : pathname.includes('/freelancer/project/rejected')
         ? 'Rejected'
         : 'Current';
@@ -34,6 +39,15 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
         />
       </div>
       <div className="flex mb-8 flex-col sm:pl-14 w-full">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Projects', link: '/freelancer/project' },
+          ]}
+        />
         {/* Main Content */}
         <div className="flex-1">
           <div className="w-full p-4">
@@ -46,11 +60,11 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
                 >
                   <a href="/freelancer/project/current">
                     <FolderDot className="h-4 w-4" />
-                    <span>Current Projects</span>
+                    <span>Current</span>
                   </a>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="applied"
+                  value="Applied"
                   className="flex items-center gap-2"
                   asChild
                 >
@@ -60,7 +74,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
                   </a>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="completed"
+                  value="Completed"
                   className="flex items-center gap-2"
                   asChild
                 >

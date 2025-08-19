@@ -227,7 +227,6 @@ const ProfileDialog = React.memo(
                 size="sm"
                 onClick={() => {
                   // Placeholder function - no action for now
-                  console.log('View Profile clicked');
                 }}
                 className="flex items-center gap-2"
               >

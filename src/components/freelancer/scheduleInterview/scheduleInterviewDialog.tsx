@@ -156,7 +156,6 @@ const ScheduleInterviewDialog: React.FC = () => {
   };
 
   const onSubmitDomain = (data: DomainFormData) => {
-    console.log('Domain data:', data);
     setDomainData([
       ...domainData,
       {

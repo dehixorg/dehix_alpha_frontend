@@ -50,7 +50,7 @@ export const useAllUsers = () => {
       // The API returns the array inside a `data` property. Check for its existence.
       if (response.data && Array.isArray(response.data.data)) {
         const freelancerData = response.data.data as ApiUser[];
-        console.log('Fetched freelancers:', freelancerData.length); // Debug log
+        // Debug log
         const processedUsers = freelancerData.map((user) => ({
           id: user._id,
           displayName: (user.firstName && user.lastName
@@ -65,7 +65,7 @@ export const useAllUsers = () => {
           rawFirstName: user.firstName,
           rawLastName: user.lastName,
         }));
-        console.log('Processed users:', processedUsers.length); // Debug log
+        // Debug log
         setUsers(processedUsers);
       } else {
         // Handle cases where response.data.data is not an array

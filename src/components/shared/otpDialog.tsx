@@ -102,7 +102,6 @@ function OtpLogin({ phoneNumber, isModalOpen, setIsModalOpen }: OtpLoginProps) {
         dispatch(setUser({ ...user, type: claims.type }));
         router.replace(`/dashboard/${claims.type}`);
       } catch (error) {
-        console.log(error);
         setError('Failed to verify OTP. Please check the OTP.');
         toast({
           variant: 'destructive',

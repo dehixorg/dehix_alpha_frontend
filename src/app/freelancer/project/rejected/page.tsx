@@ -66,8 +66,8 @@ export default function RejectedProject() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <div className="mb-8 ml-10">
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
+        <div className="mb-8 ml-6">
           <h1 className="text-3xl font-bold">Rejected Projects</h1>
           <p className="text-gray-400 mt-2">
             Explore and Review projects that were not selected and gain insights

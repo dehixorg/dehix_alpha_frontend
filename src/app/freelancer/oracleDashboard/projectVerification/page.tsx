@@ -79,7 +79,6 @@ export default function ProfessionalInfo() {
         title: 'Error',
         description: 'Something went wrong. Please try again.',
       }); // Error toast
-      console.log(error, 'error in getting verification data');
     }
   }, []);
 

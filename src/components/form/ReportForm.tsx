@@ -82,8 +82,7 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
-      const res = await apiHelperService.createReport(finalPayload);
-      console.log('Report submitted successfully:', res);
+      await apiHelperService.createReport(finalPayload);
     } catch (error) {
       console.error('Failed to submit report:', error);
     } finally {

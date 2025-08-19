@@ -64,7 +64,6 @@ const VerifyDialog: React.FC<VerifyDialogProps> = ({
       interviewDate: localDate.toISOString(), // Using the adjusted date
       description: (event.target as any).description.value,
     };
-    console.log(formData);
 
     try {
       const response = await axiosInstance.post(

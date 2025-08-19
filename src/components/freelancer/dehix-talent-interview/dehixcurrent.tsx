@@ -55,7 +55,7 @@ export default function CurrentInterviews() {
       const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
       await fetchIntervieweeDetails(data);
-      console.log(data,"valueeeeeeeeeeeeeeeeeeeee");
+      
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
@@ -69,33 +69,27 @@ export default function CurrentInterviews() {
   },[user?.uid]);
   
   const fetchIntervieweeDetails = async (interviewData: ScheduledInterview[]) => {
-    console.log('Fetching interviewee details for:', interviewData.length, 'interviews');
-    
-    // Log the first interview to see its structure
-    if (interviewData.length > 0) {
-      console.log('Sample interview structure:', interviewData[0]);
-    }
     
     // Get interviewee IDs
     const intervieweeIds = interviewData
       .filter(interview => interview.intervieweeId)
       .map(interview => interview.intervieweeId);
     
-    console.log('Interviewee IDs found:', intervieweeIds);
+    
     
     if (intervieweeIds.length === 0) return;
     
     try {
       const uniqueIds = Array.from(new Set(intervieweeIds.filter(id => id && id !== undefined)));
-      console.log('Unique interviewee IDs:', uniqueIds);
+      
       const detailsMap: {[key: string]: any} = {};
       
       for (const intervieweeId of uniqueIds) {
         if (!intervieweeId) continue;
         try {
-          console.log('Fetching details for interviewee ID:', intervieweeId);
+          
           const response = await axiosInstance.get(`/freelancer/${intervieweeId}`);
-          console.log('Response for interviewee', intervieweeId, ':', response.data);
+          
           if (response.data?.data) {
             detailsMap[intervieweeId] = response.data.data;
           }
@@ -104,7 +98,7 @@ export default function CurrentInterviews() {
         }
       }
       
-      console.log('Final interviewee details map:', detailsMap);
+      
       setIntervieweeDetails(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewee details:', error);

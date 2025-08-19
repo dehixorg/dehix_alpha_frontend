@@ -106,20 +106,20 @@ export default function Dashboard() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Market"
+        active="Projects"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
+      <div className="flex mb-8 flex-col sm:pl-14 w-full">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Dashboard"
+          activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Marketplace', link: '/freelancer/market' },
+            { label: 'Projects', link: '/freelancer/project' },
             { label: project_id, link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3 mt-6">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
             <div>
               <ProjectDetailCard

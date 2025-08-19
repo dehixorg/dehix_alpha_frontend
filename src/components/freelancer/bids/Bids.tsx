@@ -72,24 +72,18 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           axiosInstance.get(`/interview?intervieweeId=${userId}`),
           axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
         ]);
-        console.log('interviewRes', interviewRes);
-        console.log('freelancerRes', freelancerRes);
+        
+        
 
         const allInterviews: any[] = Array.isArray(interviewRes) ? interviewRes : (interviewRes?.data ?? []);
-        console.log('interviews fetched for user as interviewee:', allInterviews.length);
-        console.log('Sample interview structure:', allInterviews[0]);
+        
+        
         console.log('All interview fields:', allInterviews[0] ? Object.keys(allInterviews[0]) : 'No interviews');
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
-        console.log('dehixTalentObj', dehixTalentObj);
-        console.log('dehixTalentObj keys:', Object.keys(dehixTalentObj));
-        console.log('dehixTalentObj values:', Object.values(dehixTalentObj));
-        const verifierSkills: string[] = Object.values(dehixTalentObj).map((t: any) => t.talentId);
-        console.log('User skills:', verifierSkills);
         
-                    // Create a mapping from talent _id and talentId to skill name
         const talentToSkillMap: Record<string, string> = {};
         Object.values(dehixTalentObj).forEach((talent: any) => {
-          console.log('Talent object:', talent);
+          
           if (talent._id) {
             // Use talentName as the primary source for skill name
             const skillName = talent.talentName || talent.skillName || talent.name || talent.label || talent.skill || talent.talentId;
@@ -100,21 +94,15 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             }
           }
         });
-        console.log('Talent to skill mapping:', talentToSkillMap);
         
-        // Check if user has any talents
-        if (verifierSkills.length === 0) {
-          console.log('User has no talents, showing all interviews');
-        }
         // TEMP FIX: Show all interviews for the user as interviewee, regardless of talentId or status
         const eligibleInterviews = allInterviews;
-        console.log('Eligible interviews (no filter):', eligibleInterviews.length);
 
         // Fetch interviewee profiles to get their names/headlines
         const intervieweeIds = Array.from(
           new Set(eligibleInterviews.map((iv: any) => iv.intervieweeId).filter(Boolean)),
         );
-        console.log('Interviewee IDs to fetch:', intervieweeIds);
+        
         
         // If all interviews are for the current user, we can use the current user's profile
         const isAllCurrentUser = intervieweeIds.length === 1 && intervieweeIds[0] === userId;
@@ -123,7 +111,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
         if (isAllCurrentUser && userId) {
           // If all interviews are for the current user, use the current user's profile
           intervieweeMap[userId] = freelancerRes?.data;
-          console.log('Using current user profile for all interviews:', freelancerRes?.data);
+          
         } else if (intervieweeIds.length) {
           const profilePromises = intervieweeIds.map((id) => axiosInstance.get(`/freelancer/${id}`).catch((err) => {
             console.error(`Failed to fetch profile for ${id}:`, err);
@@ -133,17 +121,15 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           profileResults.forEach((res, idx) => {
             if (res?.data) {
               intervieweeMap[intervieweeIds[idx]] = res.data;
-              console.log(`Profile for ${intervieweeIds[idx]}:`, res.data);
-            } else {
-              console.log(`No profile data for ${intervieweeIds[idx]}`);
+              
             }
           });
         }
-        console.log('Final intervieweeMap:', intervieweeMap);
+        
 
         const enriched = eligibleInterviews.map((iv: any) => {
           const intervieweeProfile = intervieweeMap[iv.intervieweeId];
-          console.log(`Looking up intervieweeId: ${iv.intervieweeId}, found:`, intervieweeProfile);
+          
           
           let intervieweeName = 'Unknown';
           if (intervieweeProfile) {
@@ -159,9 +145,9 @@ const BidsPage = ({ userId }: { userId?: string }) => {
             } else if (profile.name) {
               intervieweeName = profile.name;
             }
-            console.log(`Resolved name for ${iv.intervieweeId}: ${intervieweeName}`);
+            
           } else {
-            console.log(`No profile found for ${iv.intervieweeId}`);
+            
             // Fallback to showing the ID if no profile is found
             intervieweeName = `User ${iv.intervieweeId.substring(0, 8)}...`;
           }
@@ -174,7 +160,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
 
         // Use the talentId label or talentType as skill name since skill API is not working
         const finalList = enriched.map((iv: any) => {
-          console.log('Full interview object:', iv);
+          
           console.log('Interview data for skill name:', {
             talentId: iv.talentId,
             talentType: iv.talentType,
@@ -185,16 +171,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           
                       // Try to get skill name from user's talent mapping first
             const talentId = iv.talentId; // This is the _id of the talent object
-            const skillFromMapping = talentToSkillMap[talentId];
           
-          console.log('=== SKILL NAME DEBUGGING ===');
-          console.log('Interview ID:', iv._id);
-          console.log('Talent ID from interview:', talentId);
-          console.log('Talent ID type:', typeof talentId);
-          console.log('Available talent IDs in mapping:', Object.keys(talentToSkillMap));
-          console.log('Available talent IDs types:', Object.keys(talentToSkillMap).map(id => typeof id));
-          console.log('Skill from mapping for this talentId:', skillFromMapping);
-          console.log('Talent ID exists in mapping:', Object.prototype.hasOwnProperty.call(talentToSkillMap, talentId as any));
           
           // Try different variations of the talentId
                       const variations = [
@@ -204,19 +181,19 @@ const BidsPage = ({ userId }: { userId?: string }) => {
               talentId?.toUpperCase()
             ].filter(Boolean);
           
-          console.log('Trying talentId variations:', variations);
+          
           let foundSkillName = null;
           for (const variation of variations) {
             if (talentToSkillMap[variation]) {
               foundSkillName = talentToSkillMap[variation];
-              console.log('Found skill name with variation:', variation, '=', foundSkillName);
+              
               break;
             }
           }
           
           const skillName = foundSkillName || iv.talentId?.label || iv.talentType || iv.skill || iv.level || talentId || 'Unknown Skill';
-          console.log('Final resolved skill name:', skillName);
-          console.log('=== END DEBUGGING ===');
+          
+          
           
           return {
             ...iv,
