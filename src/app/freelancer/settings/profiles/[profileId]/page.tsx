@@ -65,23 +65,23 @@ export default function ProfileDetailPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
-  if (profileId) {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        await fetchSkillsAndDomains();
-        await fetchProfile();
-        await fetchFreelancerProjects();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchData();
-  }
-}, [profileId]); // Make sure to include all dependencies
+    if (profileId) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          await fetchSkillsAndDomains();
+          await fetchProfile();
+          await fetchFreelancerProjects();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [profileId]); // Make sure to include all dependencies
 
   // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {
@@ -171,13 +171,13 @@ export default function ProfileDetailPage() {
   };
 
   const fetchProfile = async () => {
-  if (!profileId) return;
+    if (!profileId) return;
 
-  try {
-    const response = await axiosInstance.get(
-      `/freelancer/profile/${profileId}`,
-    );
-    const profileData = response.data.data;
+    try {
+      const response = await axiosInstance.get(
+        `/freelancer/profile/${profileId}`,
+      );
+      const profileData = response.data.data;
 
       // If profile has projects, fetch complete project data to ensure we have thumbnails
       if (profileData.projects && profileData.projects.length > 0) {
@@ -220,17 +220,17 @@ export default function ProfileDetailPage() {
       };
 
       setProfile(processedProfileData);
-    setEditingProfileData(processedProfileData);
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    toast({
-      title: 'Error',
-      description: 'Failed to load profile',
-      variant: 'destructive',
-    });
-    router.push('/freelancer/settings/profiles');
-  }
-};
+      setEditingProfileData(processedProfileData);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load profile',
+        variant: 'destructive',
+      });
+      router.push('/freelancer/settings/profiles');
+    }
+  };
 
   const fetchSkillsAndDomains = async () => {
     try {
