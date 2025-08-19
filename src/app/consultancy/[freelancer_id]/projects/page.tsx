@@ -7,9 +7,9 @@ import { useSelector } from 'react-redux';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import { RootState } from '@/lib/store';
-import { axiosInstance } from '@/lib/axiosinstance';
+// import { axiosInstance } from '@/lib/axiosinstance';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/components/ui/use-toast';
+// import { toast } from '@/components/ui/use-toast';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 
 interface Project {

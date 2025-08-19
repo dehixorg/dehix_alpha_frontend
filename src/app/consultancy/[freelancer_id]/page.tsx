@@ -37,9 +37,9 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { ProjectCard } from '@/components/cards/projectCard';
+// import { ProjectCard } from '@/components/cards/projectCard';
 import { Separator } from '@/components/ui/separator';
-import { ProjectStatus } from '@/utils/freelancer/enum';
+// import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
@@ -95,7 +95,7 @@ export default function ConsultancyPage() {
   const [searchSkillQuery, setSearchSkillQuery] = useState<string>('');
   const [searchDomainQuery, setSearchDomainQuery] = useState<string>('');
   const user = useSelector((state: RootState) => state.user);
-  const [responseData, setResponseData] = useState<any>([]);
+  // const [responseData, setResponseData] = useState<any>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,12 +124,12 @@ export default function ConsultancyPage() {
     fetchData();
   }, [user.uid]);
 
-  const completedProjects = responseData.filter(
-    (project: any) => project.status == ProjectStatus.COMPLETED,
-  );
-  const pendingProjects = responseData.filter(
-    (project: any) => project.status !== ProjectStatus.COMPLETED,
-  );
+  // const completedProjects = responseData.filter(
+  //   (project: any) => project.status == ProjectStatus.COMPLETED,
+  // );
+  // const pendingProjects = responseData.filter(
+  //   (project: any) => project.status !== ProjectStatus.COMPLETED,
+  // );
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
@@ -593,11 +593,15 @@ export default function ConsultancyPage() {
               </div>
               <Separator className="my-1" />
               <div className="grid grid-cols-1 gap-4">
-                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                {/* <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                   Current Projects {`(${pendingProjects.length})`}
-                </h2>
+                </h2> */}
                 <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  {pendingProjects.length > 0 ? (
+                  <div className="text-center py-10 w-[100%] ">
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
+                    <p className="text-gray-500">No projects available</p>
+                  </div>
+                  {/* {pendingProjects.length > 0 ? (
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
@@ -606,22 +610,19 @@ export default function ConsultancyPage() {
                       />
                     ))
                   ) : (
-                    <div className="text-center py-10 w-[100%] ">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">No projects available</p>
-                    </div>
-                  )}
+                  )} */}
                 </div>
 
                 <Separator className="my-1" />
-                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                {/* <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                   Completed Projects {`(${completedProjects.length})`}
-                </h2>
+                </h2> */}
                 <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  {completedProjects.length > 0 ? (
+                  <div className="text-center py-10 w-[100%] ">
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
+                    <p className="text-gray-500">No projects available</p>
+                  </div>
+                  {/* {completedProjects.length > 0 ? (
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
@@ -630,14 +631,8 @@ export default function ConsultancyPage() {
                       />
                     ))
                   ) : (
-                    <div className="text-center py-10 w-[100%] ">
-                      <PackageOpen
-                        className="mx-auto text-gray-500"
-                        size="100"
-                      />
-                      <p className="text-gray-500">No projects available</p>
-                    </div>
-                  )}
+                    
+                  )} */}
                 </div>
               </div>
             </div>
