@@ -147,13 +147,6 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
       InterviewStatus: "COMPLETED",
     },
   });
-
-  // The backend returns { data: [...] }, so unwrap once and return the array.
-  // FIX: Remove unnecessary Array.isArray check.
-  console.log('=== API CALL DEBUGGING ===');
-  console.log('fetchCompletesInterviews called with intervieweeId:', intervieweeId);
-  console.log('API response:', response.data);
-  console.log('response.data.data:', response.data.data);
   
   if (response.data.data && response.data.data.length > 0) {
     response.data.data.forEach((interview, index) => {

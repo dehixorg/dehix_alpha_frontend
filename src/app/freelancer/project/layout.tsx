@@ -9,7 +9,6 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import Header from '@/components/header/header';
 interface ProjectLayoutProps {
   children: ReactNode;
 }
@@ -27,36 +26,17 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-10 bg-background border-r">
+      <div className="bg-background border-r">
         <SidebarMenu
           menuItemsTop={freelancerMenuItemsTop}
           menuItemsBottom={freelancerMenuItemsBottom}
-          active="profile"
+          active="Projects"
         />
       </div>
       <div className="flex mb-8 flex-col sm:pl-14 w-full">
-        <Header
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'project', link: '#' },
-            { label: 'projectDashboard', link: '#' },
-          ]}
-        />
         {/* Main Content */}
         <div className="flex-1">
-          <header className="border-b">
-            <div className="w-full flex-1 h-16 items-center justify-between px-4">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold">Project</h1>
-              </div>
-              <div className="flex items-center gap-4"></div>
-            </div>
-          </header>
-
-          <div className="w-full px-4 py-4">
+          <div className="w-full p-4">
             <Tabs value={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger

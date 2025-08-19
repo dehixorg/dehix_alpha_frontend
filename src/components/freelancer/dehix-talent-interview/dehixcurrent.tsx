@@ -65,7 +65,7 @@ export default function CurrentInterviews() {
   
   useEffect(() => {
     loadScheduledInterviews();
-  });
+  },[user?.uid]);
   
   const fetchIntervieweeDetails = async (interviewData: ScheduledInterview[]) => {
     console.log('Fetching interviewee details for:', interviewData.length, 'interviews');
@@ -154,7 +154,7 @@ const getAcceptedIntervieweeName = (interview: ScheduledInterview): string => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border-none rounded-xl shadow-md">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-[#09090B]">
