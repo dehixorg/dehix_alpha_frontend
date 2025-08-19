@@ -40,6 +40,7 @@ import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { AxiosResponse } from 'axios';
 
 interface Skill {
   label: string;
@@ -78,6 +79,9 @@ const consultancyFormSchema = z.object({
 });
 
 type ConsultancyFormValues = z.infer<typeof consultancyFormSchema>;
+interface Consultancy extends ConsultancyFormValues {
+  _id?: string; // Make it optional since new entries won't have it initially
+}
 
 export default function ConsultancyDomainPage() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -88,7 +92,7 @@ export default function ConsultancyDomainPage() {
   const [searchSkillQuery, setSearchSkillQuery] = useState<string>('');
   const [searchDomainQuery, setSearchDomainQuery] = useState<string>('');
   const user = useSelector((state: RootState) => state.user);
-  const [consultancies, setConsultancies] = useState<ConsultancyFormValues[]>([]);
+  const [consultancies, setConsultancies] = useState<Consultancy[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [consultancyIds, setConsultancyIds] = useState<string[]>([]);
 
@@ -101,21 +105,16 @@ export default function ConsultancyDomainPage() {
         axiosInstance.get(`/freelancer/consultant`)
       ]);
 
-      console.log('Raw consultants response:', consultantsResponse.data);
-
       setAllSkills(skillsResponse.data.data);
       setAllDomains(domainsResponse.data.data);
 
-      // Normalize consultantsResponse.data
+      // Transform the API response
       const consultantsArray = Array.isArray(consultantsResponse.data) 
         ? consultantsResponse.data 
         : Object.values(consultantsResponse.data);
 
-      // Extract ids
-      setConsultancyIds(consultantsArray.map((c: any) => c._id));
-
-      // Transform the API response to match your local state format
       const formattedConsultants = consultantsArray.map((consultant: any) => ({
+        _id: consultant._id, // Keep the ID
         name: consultant.name || '',
         skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
         domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
@@ -123,9 +122,8 @@ export default function ConsultancyDomainPage() {
         urls: consultant.links?.map((u: string) => ({ value: u })) || [],
         perHourRate: consultant.price
       }));
-
+      console.log(formattedConsultants);
       setConsultancies(formattedConsultants);
-      console.log('Formatted consultants:', formattedConsultants);
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -205,20 +203,26 @@ export default function ConsultancyDomainPage() {
   };
 
   const startEditing = (index: number) => {
-    setEditingIndex(index);
-    form.reset(consultancies[index]);
-    setIsDialogOpen(true);
-  };
+  setEditingIndex(index);
+  // Reset form with the existing consultancy data including _id
+  form.reset(consultancies[index]);
+  setIsDialogOpen(true);
+};
 
   const deleteConsultancy = async (index: number) => {
-  const consultant_id = consultancyIds[index];
+  const consultant = consultancies[index];
+  if (!consultant._id) {
+    toast({
+      title: "Error",
+      description: "Missing consultant ID",
+      variant: "destructive",
+    });
+    return;
+  }
 
   try {
-    await axiosInstance.delete(`/freelancer/consultant/${consultant_id}`);
-
+    await axiosInstance.delete(`/freelancer/consultant/${consultant._id}`);
     setConsultancies(prev => prev.filter((_, i) => i !== index));
-    setConsultancyIds(prev => prev.filter((_, i) => i !== index));
-
     toast({
       title: "Success",
       description: "Consultancy removed successfully",
@@ -234,9 +238,10 @@ export default function ConsultancyDomainPage() {
 };
 
 
- const onSubmit = async (data: ConsultancyFormValues) => {
+const onSubmit = async (data: ConsultancyFormValues) => {
   try {
     const apiPayload = {
+      name: data.name || '',
       status: "NOT_APPLIED",
       description: data.description || '',
       price: data.perHourRate,
@@ -245,43 +250,33 @@ export default function ConsultancyDomainPage() {
       links: data.urls?.map(u => u.value).filter(Boolean) || [],
     };
 
-    console.log("Sending payload:", apiPayload);
-
-    let response;
+    let response: AxiosResponse<any>;
     if (editingIndex !== null) {
-      // Update existing consultancy
-      const consultant_id = consultancyIds[editingIndex];
-      response = await axiosInstance.put(`/freelancer/consultant/${consultant_id}`, apiPayload);
+      // Update existing consultancy - use the _id from the existing item
+      const consultantId = consultancies[editingIndex]._id;
+      if (!consultantId) throw new Error("Missing consultant ID for update");
+      
+      response = await axiosInstance.put(`/freelancer/consultant/${consultantId}`, apiPayload);
+      
+      // Update local state - preserve all existing fields and merge with new data
+      setConsultancies(prev =>
+        prev.map((item, index) =>
+          index === editingIndex
+            ? { ...item, ...data } // keep existing fields like _id, only update changed ones
+            : item
+        )
+      );
     } else {
       // Create new consultancy
       response = await axiosInstance.post('/freelancer/consultant', apiPayload);
+      
+      // Add new item to state with the _id from response
+      setConsultancies(prev => [...prev, { 
+        ...data, 
+        _id: response.data._id 
+      }]);
     }
 
-    console.log('API Response:', response.data);
-
-    // Update local state
-    const statePayload = {
-      name: data.name,
-      skills: data.skills,
-      domains: data.domains,
-      description: data.description || '',
-      urls: data.urls || [],
-      perHourRate: data.perHourRate
-    };
-
-    if (editingIndex !== null) {
-      // Update existing item in state
-      const updated = [...consultancies];
-      updated[editingIndex] = statePayload;
-      setConsultancies(updated);
-    } else {
-      // Add new item to state
-      setConsultancies([...consultancies, statePayload]);
-      // Also add the new ID if this was a create operation
-      setConsultancyIds([...consultancyIds, response.data._id]);
-    }
-
-    // Reset form and close dialog
     form.reset({
       name: '',
       skills: [],
@@ -299,11 +294,7 @@ export default function ConsultancyDomainPage() {
       description: `Consultancy ${editingIndex !== null ? 'updated' : 'added'} successfully`,
     });
   } catch (error: any) {
-    console.error('Error details:', {
-      message: error.message,
-      response: error.response?.data,
-      stack: error.stack
-    });
+    console.error('Error details:', error);
     toast({
       variant: 'destructive',
       title: 'Error',
