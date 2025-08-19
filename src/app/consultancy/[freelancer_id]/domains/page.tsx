@@ -94,7 +94,6 @@ export default function ConsultancyDomainPage() {
   const user = useSelector((state: RootState) => state.user);
   const [consultancies, setConsultancies] = useState<Consultancy[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [consultancyIds, setConsultancyIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
