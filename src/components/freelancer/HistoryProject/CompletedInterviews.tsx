@@ -69,8 +69,9 @@ export default function HistoryInterviews() {
     }
   };
   useEffect(() => {
+    console.log('useEffect called');
     loadCompletedInterviews();
-  });
+  }, [user.uid]);
   const fetchIntervieweeDetails = async (
     interviewData: CompletedInterview[],
   ) => {

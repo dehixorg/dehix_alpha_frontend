@@ -10,11 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/interviewMenuItems';
 import { Button } from '@/components/ui/button';
 import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInterviews';
 
@@ -22,18 +17,7 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState('All');
   return (
     <div className="flex min-h-screen w-full">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="History"
-      />
       <div className="flex flex-col sm:gap-4 mb-8 sm:py-0 sm:pl-14 w-full">
-        {/* <Header
-          breadcrumbItems={breadcrumbItems}
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="History"
-        /> */}
         <div className="ml-10">
           <h1 className="text-3xl font-bold">History Interviews</h1>
           <p className="text-gray-400 mt-2">
