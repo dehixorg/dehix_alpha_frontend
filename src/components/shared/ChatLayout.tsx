@@ -36,7 +36,6 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
     );
     const panel = sidebarPanelRef.current;
     if (panel) {
-      console.log('[ChatLayout.tsx] sidebarPanelRef.current IS valid.');
       if (isChatAreaExpanded) {
         console.log('[ChatLayout.tsx] Calling panel.collapse()');
         panel.collapse();
@@ -45,7 +44,7 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
         panel.expand();
         // Optional: If expand() doesn't restore to a specific size,
         // and you want it to reset to its default size when re-expanding:
-        // console.log("[ChatLayout.tsx] Resizing panel to default:", defaultSidebarSize);
+        //
         // panel.resize(defaultSidebarSize);
       }
     } else {

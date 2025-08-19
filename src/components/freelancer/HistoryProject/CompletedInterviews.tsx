@@ -69,7 +69,6 @@ export default function HistoryInterviews() {
     }
   };
   useEffect(() => {
-    console.log('useEffect called');
     loadCompletedInterviews();
   }, [user.uid]);
   const fetchIntervieweeDetails = async (
@@ -83,12 +82,11 @@ export default function HistoryInterviews() {
       const uniqueIds = Array.from(
         new Set(intervieweeIds.filter((id) => id && id !== undefined)),
       );
-      console.log('Unique interviewee IDs:', uniqueIds);
+
       const detailsMap: { [key: string]: any } = {};
       for (const intervieweeId of uniqueIds) {
         if (!intervieweeId) continue;
         try {
-          console.log('Fetching details for interviewee ID:', intervieweeId);
           const response = await axiosInstance.get(
             `/freelancer/${intervieweeId}`,
           );
@@ -99,7 +97,7 @@ export default function HistoryInterviews() {
           console.error(`Failed to fetch interviewee ${intervieweeId}:`, error);
         }
       }
-      console.log('Final interviewee details map:', detailsMap);
+
       setIntervieweeDetails(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewee details:', error);
@@ -191,7 +189,6 @@ export default function HistoryInterviews() {
   };
 
   const handleOpenFeedbackModal = (interview: CompletedInterview) => {
-    console.log('Feedback button clicked for interview:', interview._id);
     setSelectedInterview(interview);
     setIsFeedbackModalOpen(true);
   };
@@ -221,7 +218,7 @@ export default function HistoryInterviews() {
               : interview,
           ),
         );
-        console.log('Feedback submitted successfully:', feedback);
+
         // Remove the automatic refresh to prevent feedback from being overwritten
         // The local state update is sufficient for immediate UI feedback
         // If needed, we can add a manual refresh button or handle it differently

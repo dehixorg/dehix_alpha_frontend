@@ -6,11 +6,9 @@ let axiosInstance: AxiosInstance = axios.create({
 });
 
 // Log the base URL for debugging
-console.log('Base URL:', process.env.NEXT_PUBLIC__BASE_URL);
 
 // Function to initialize Axios with Bearer token
 const initializeAxiosWithToken = (token: string | null) => {
-  console.log('Initializing Axios with token:', token);
   axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC__BASE_URL,
     headers: {
@@ -23,7 +21,7 @@ const initializeAxiosWithToken = (token: string | null) => {
 axiosInstance.interceptors.request.use(
   (config) => {
     // Log the config for debugging
-    console.log('Request config:', config);
+
     return config;
   },
   (error) => {
@@ -37,7 +35,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log the response for debugging
-    console.log('Response:', response.data);
+
     return response;
   },
   (error) => {

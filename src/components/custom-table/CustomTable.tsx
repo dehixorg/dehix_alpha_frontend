@@ -124,7 +124,6 @@ export const CustomTable = ({
       const response = await apiHelperService.fetchData(api, params);
       setData(response.data.data);
     } catch (error) {
-      console.log(error);
       toast({
         title: 'Error',
         description: Messages.FETCH_ERROR(title || ''),

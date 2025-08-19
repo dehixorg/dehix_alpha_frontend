@@ -69,7 +69,6 @@ export default function ProfessionalInfo() {
       );
       setEducationData(flattenedData);
     } catch (error) {
-      console.log(error, 'error in getting verification data');
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -80,7 +79,7 @@ export default function ProfessionalInfo() {
 
   // Log the requesterId state after it updates
   // useEffect(() => {
-  //   console.log(requesterId);
+  //
   // }, [requesterId]);
 
   useEffect(() => {
@@ -171,14 +170,12 @@ export default function ProfessionalInfo() {
             fieldOfStudy={data.fieldOfStudy}
             comments={data.comments}
             status={data.verificationStatus}
-            onStatusUpdate={(newStatus) => {
-              // Handle status update
-              console.log('Status updated to:', newStatus);
-            }}
-            onCommentUpdate={(newComment) => {
-              // Handle comment update
-              console.log('Comment updated to:', newComment);
-            }}
+            // onStatusUpdate={(newStatus) => {
+            //   // Handle status update
+            // }}
+            // onCommentUpdate={(newComment) => {
+            //   // Handle comment update
+            // }}
           />
         ))}
         {educationdata.length === 0 ? (

@@ -154,7 +154,7 @@ export default function CurrentPage() {
   // const handleCommentSubmit = (index: number, comment: string) => {
   //   const updatedInterviews = [...sampleInterviews];
 
-  //   console.log('Before update:', updatedInterviews[index]);
+  //
 
   //   updatedInterviews[index] = {
   //     ...updatedInterviews[index],
@@ -162,7 +162,7 @@ export default function CurrentPage() {
   //     status: 'Complete',
   //   };
 
-  //   console.log('After update:', updatedInterviews[index]);
+  //
 
   //   setSampleInterviews(updatedInterviews);
   // };

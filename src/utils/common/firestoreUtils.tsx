@@ -150,7 +150,7 @@ export async function addDataToFirestore(
 ): Promise<string | null> {
   try {
     const docRef = await addDoc(collection(db, collectionPath), data);
-    console.log('Document added with ID:', docRef.id);
+
     return docRef.id;
   } catch (error) {
     console.error('Error adding document:', (error as FirestoreError).message);
@@ -196,8 +196,6 @@ export async function updateConversationWithMessageTransaction(
         ...message,
         timestamp: datentime,
       });
-
-      console.log(`Transaction committed: Message ID - ${newMessageRef.id}`);
     });
 
     return 'Transaction successful';
@@ -217,7 +215,6 @@ export async function setDataToFirestore(
 ): Promise<void> {
   try {
     await setDoc(doc(db, collectionPath, docId), data);
-    console.log('Document written with ID:', docId);
   } catch (error) {
     console.error('Error setting document:', (error as FirestoreError).message);
   }
@@ -234,7 +231,6 @@ export async function updateDataInFirestore(
   try {
     const docRef = doc(db, collectionPath, docId);
     await updateDoc(docRef, data);
-    console.log('Document updated with ID:', docId);
   } catch (error) {
     console.error(
       'Error updating document:',

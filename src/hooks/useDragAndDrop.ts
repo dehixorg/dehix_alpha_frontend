@@ -52,7 +52,7 @@ const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
           );
 
           if (response.status === 200) {
-            console.log('Notes order updated successfully:', response.data);
+            console.log('Success:', response.statusText);
           } else {
             console.error('Failed to update note order:', response.statusText);
             toast({
@@ -63,7 +63,6 @@ const useDragAndDrop = (notes: Note[], setNotes: (notes: Note[]) => void) => {
           }
         } catch (error: any) {
           console.error('Error updating note order:', error.message);
-          console.log(error);
 
           toast({
             variant: 'destructive',
