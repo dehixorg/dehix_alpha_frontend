@@ -81,7 +81,7 @@ export default function ProfileDetailPage() {
 
       fetchData();
     }
-  }, [profileId]); // Make sure to include all dependencies
+  }, [profileId]);
 
   // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {
