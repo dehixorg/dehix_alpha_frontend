@@ -49,15 +49,6 @@ const OracleLayout: React.FC<OracleLayoutProps> = ({ children }) => {
         />
         {/* Main Content */}
         <div className="flex-1">
-          <header className="border-b">
-            <div className="w-full flex-1 h-16 items-center justify-between px-4">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold">Oracle Verification</h1>
-              </div>
-              <div className="flex items-center gap-4"></div>
-            </div>
-          </header>
-
           <div className="w-full px-4 py-4">
             <Tabs defaultValue={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
