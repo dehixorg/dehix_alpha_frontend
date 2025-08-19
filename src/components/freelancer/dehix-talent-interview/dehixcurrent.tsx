@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { ButtonIcon } from "@/components/shared/buttonIcon";
 
 interface ScheduledInterview {
   _id: string;
@@ -265,7 +266,6 @@ const getAcceptedIntervieweeName = (interview: ScheduledInterview): string => {
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Video className="h-4 w-4 text-purple-500" />
                       {interview.meetingLink ? (
                         <Button
                           variant="outline"
@@ -273,6 +273,7 @@ const getAcceptedIntervieweeName = (interview: ScheduledInterview): string => {
                           onClick={() => window.open(interview.meetingLink, "_blank")}
                           className="flex items-center gap-2"
                         >
+                      <Video className="h-4 w-4 text-purple-500" />
                           <span className="text-sm text-gray-600 dark:text-gray-400">
                             Join Meeting
                           </span>
@@ -286,12 +287,11 @@ const getAcceptedIntervieweeName = (interview: ScheduledInterview): string => {
                   </TableCell>
                   {/* Info button cell */}
                   <TableCell className="py-3 text-center relative">
-                    <button
+                    <ButtonIcon
                       onClick={() => setOpenDescIdx(openDescIdx === idx ? null : idx)}
-                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
-                    >
-                      <Info size={16} color="white" />
-                    </button>
+                      className="rounded-full p-2 hover:bg-gray-600"
+                      icon={<Info size={16} color="white" />}
+                    />
                     {openDescIdx === idx && (
                       <div
                         className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"

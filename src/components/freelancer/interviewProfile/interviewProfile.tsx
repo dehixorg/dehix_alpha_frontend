@@ -347,16 +347,9 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-8 ml-5">
-        <h1 className="text-3xl font-bold">Interview Profile</h1>
-        <p className="text-gray-400 mt-2">
-          Manage and track your skills and domains. Add new skills or domains
-          and provide your experience levels.
-        </p>
-      </div>
+    <>
       <div className="flex flex-col gap-4 p-2 sm:px-6 sm:py-0 md:gap-8  pt-2 pl-4 sm:pt-4 sm:pl-6 md:pt-6 md:pl-8 min-h-screen relative">
-        <div className="w-1/5">
+        <div className="w-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -479,7 +472,11 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
                 : filteredData()!.map((item) => (
                     <TableRow key={item._id}>
                       <TableCell className="">{item.name}</TableCell>
-                      <TableCell className="">{item.level}</TableCell>
+                      <TableCell className="">
+                        <Badge className={getBadgeColor(item.level)}>
+                          {item?.level?.toUpperCase()}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="">
                         {typeof item.experience === 'number' &&
                         item.experience > 0
@@ -517,7 +514,7 @@ const InterviewProfile: React.FC<{ freelancerId: string }> = ({
         doc_id={docId || ''}
         doc_type={docType || ''}
       />
-    </div>
+    </>
   );
 };
 

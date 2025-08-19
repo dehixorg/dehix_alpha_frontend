@@ -8,10 +8,15 @@ import { RootState } from '@/lib/store';
 export default function ProfilePage() {
   const user = useSelector((state: RootState) => state.user);
   return (
-    <div className="flex min-h-screen w-full">
-      <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
-        <InterviewProfile freelancerId={user?.uid} />
+    <>
+      <div className="ml-5 md:ml-10">
+        <h1 className="text-3xl font-bold">Interview Profile</h1>
+        <p className="text-gray-400 mt-2">
+          Manage and track your skills and domains. Add new skills or domains
+          and provide your experience levels.
+        </p>
       </div>
-    </div>
+      <InterviewProfile freelancerId={user?.uid} />
+    </>
   );
 }

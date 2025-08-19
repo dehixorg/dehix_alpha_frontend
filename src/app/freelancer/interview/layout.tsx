@@ -28,11 +28,11 @@ const InterviewLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
           active="Interviews"
         />
       </div>
-      <div className="flex mb-8 flex-col sm:pl-14 w-full">
+      <div className="flex mb-8 flex-col md:pl-0 sm:pl-14 w-full">
         {/* Main Content */}
         <div className="flex-1">
           <div className="w-full p-4">
-            <Tabs value={activeTab} className="w-full">
+            <Tabs value={activeTab} className="md:pl-14 pl-0 w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="profile"
@@ -80,7 +80,13 @@ const InterviewLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
 
           <div className="w-full flex-1 items-start px-4 py-6">
             <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12">{children}</div>
+              <div className="col-span-12">
+                <div className="flex min-h-screen w-full">
+                  <div className="flex flex-col mb-8 sm:gap-4 sm:py-0 sm:pl-14 w-full">
+                    {children}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
