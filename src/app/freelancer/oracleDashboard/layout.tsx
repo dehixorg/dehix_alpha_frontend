@@ -9,7 +9,6 @@ import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
-import Header from '@/components/header/header';
 
 interface OracleLayoutProps {
   children: ReactNode;
@@ -27,39 +26,20 @@ const OracleLayout: React.FC<OracleLayoutProps> = ({ children }) => {
           ? 'education'
           : 'business';
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-muted/40">
       {/* Sidebar */}
-      <div className="w-10 bg-background border-r">
+      <div className="bg-background border-r">
         <SidebarMenu
           menuItemsTop={freelancerMenuItemsTop}
           menuItemsBottom={freelancerMenuItemsBottom}
-          active="Business Verification"
+          active="Oracle"
         />
       </div>
-      <div className="flex mb-8 flex-col sm:pl-14 w-full">
-        <Header
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'oracle', link: '#' },
-            { label: 'oracleDashboard', link: '#' },
-          ]}
-        />
+      <div className="flex mb-8 flex-col md:pl-0 sm:pl-14 w-full">
         {/* Main Content */}
         <div className="flex-1">
-          <header className="border-b">
-            <div className="w-full flex-1 h-16 items-center justify-between px-4">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold">Oracle Verification</h1>
-              </div>
-              <div className="flex items-center gap-4"></div>
-            </div>
-          </header>
-
-          <div className="w-full px-4 py-4">
-            <Tabs defaultValue={activeTab} className="w-full">
+          <div className="w-full p-4">
+            <Tabs defaultValue={activeTab} className="md:pl-14 pl-0 w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="business"
@@ -107,7 +87,13 @@ const OracleLayout: React.FC<OracleLayoutProps> = ({ children }) => {
 
           <div className="w-full flex-1 items-start px-4 py-6">
             <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12">{children}</div>
+              <div className="col-span-12">
+                <div className="flex min-h-screen w-full">
+                  <div className="flex flex-col mb-8 sm:gap-4 sm:py-0 sm:pl-14 w-full">
+                    {children}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

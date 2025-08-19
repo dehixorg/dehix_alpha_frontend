@@ -11,11 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/oracleMenuItems';
 // import dummyData from '@/dummydata.json';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
@@ -105,18 +100,7 @@ export default function ProfessionalInfo() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop} // Assuming these are defined elsewhere
-        menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
-        active="Project Verification"
-      />
-      {/* <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8"> */}
-      {/* <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Dashboard"
-        /> */}
+    <div className="flex min-h-screen w-full flex-col">
       <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
         <div className="mb-8 ">
           <h1 className="text-3xl font-bold">Project Verification</h1>
