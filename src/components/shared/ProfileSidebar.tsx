@@ -8,7 +8,6 @@ import {
   Edit3,
   Link2,
   LogOut,
-  Users,
   MinusCircle,
   Volume2,
   LoaderCircle,
@@ -16,7 +15,6 @@ import {
 import {
   doc,
   getDoc,
-  DocumentData,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -35,6 +33,15 @@ import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
+// Simple file item type for shared files list
+export type FileItem = {
+  id: string;
+  name: string;
+  type: string;
+  size?: number | string;
+  url: string;
+};
+
 import {
   Sheet,
   SheetContent,
@@ -45,7 +52,6 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
@@ -109,19 +115,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   onClose,
   profileId,
   profileType,
-  currentUser: propCurrentUser,
+  // currentUser prop is available via Redux store
   initialData,
 }) => {
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'info' | 'media' | 'files'>(
-    'info',
-  );
+  const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
+  const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const user = useSelector((state: RootState) => state.user);
@@ -136,6 +139,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     title: '',
     description: '',
     onConfirm: () => {},
+    confirmButtonText: '', // Add missing property
     confirmButtonVariant: 'destructive' as
       | 'default'
       | 'destructive'
@@ -180,7 +184,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         const response = await axiosInstance.get(`/freelancer/${profileId}`);
         if (response.data && response.data.data) {
           const apiData = response.data.data as ProfileUser;
-          setProfileData((prevData) => ({
+          setProfileData({
             ...apiData, // API data as base
             // Prioritize initialData for specific fields if initialData was provided
             userName: initialData?.userName || apiData.userName,
@@ -193,7 +197,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             _id: apiData._id || profileId, // Prefer API's _id if available, else fallback to profileId
             // name might need specific handling depending on your data structure
             name: initialData?.userName || apiData.name || apiData.userName,
-          }));
+          });
         } else {
           // If API call fails or returns no data, but we had initialData, retain it.
           // This part depends on whether an error should clear initialData or not.
@@ -215,17 +219,21 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             id,
             userName: details.userName || 'Unknown Member',
             profilePic: details.profilePic,
-            status: Math.random() > 0.5 ? 'online' : 'offline', // Keep mock status for now
+            status: (Math.random() > 0.5 ? 'online' : 'offline') as
+              | 'online'
+              | 'offline', // Type assertion to fix the error
           }));
 
           setProfileData({
+            _id: conversationDoc.id, // Add the missing _id field
             id: conversationDoc.id,
-            name: groupData.groupName || 'Unnamed Group',
+            groupName: groupData.groupName || 'Unnamed Group', // Add the missing groupName field
+            displayName: groupData.groupName || 'Unnamed Group', // Add the missing displayName field
             description: groupData.description || '',
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
-            createdBy: groupData.createdBy || '',
             admins: groupData.admins || [],
+            participantDetails: groupData.participantDetails, // Add the missing participantDetails field
           });
         } else {
           throw new Error('Group not found');
@@ -995,6 +1003,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                       description: `Are you sure you want to remove ${member.userName} from the group?`,
                                       onConfirm: () =>
                                         handleConfirmRemoveMember(member.id),
+                                      confirmButtonText: 'Remove Member',
                                       confirmButtonVariant: 'destructive',
                                     });
                                     setIsConfirmDialogOpen(true);
@@ -1080,9 +1089,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           if (
                             profileData &&
                             profileType === 'group' &&
-                            currentUser?.uid
+                            user?.uid // Use Redux user instead of currentUser prop
                           ) {
-                            // Ensure currentUser.uid for safety
                             handleToggleMuteGroup(
                               (profileData as ProfileGroup).id,
                               !!isCurrentlyMuted,

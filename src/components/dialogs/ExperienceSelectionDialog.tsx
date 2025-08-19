@@ -56,7 +56,7 @@ export default function ExperienceSelectionDialog({
       fetchExperiences();
       fetchCurrentProfileExperiences();
     }
-  }, [open, freelancerId, currentProfileId]);
+  });
 
   const fetchExperiences = async () => {
     setIsLoading(true);
@@ -130,68 +130,6 @@ export default function ExperienceSelectionDialog({
 
     setIsAddingExperiences(true);
     try {
-      // Get current profile to see existing experiences
-      const profileResponse = await axiosInstance.get(
-        `/freelancer/profile/${currentProfileId}`,
-      );
-      const currentProfile = profileResponse.data.data;
-
-      // Get existing experiences (now they are full objects)
-      const existingExperiences = currentProfile.experiences || [];
-      const existingExperienceIds = existingExperiences.map(
-        (exp: any) => exp._id,
-      );
-
-      // Get the full experience objects for the selected experiences
-      const selectedExperienceObjects = experiences
-        .filter(
-          (experience) =>
-            selectedExperiences.includes(experience._id) &&
-            !existingExperienceIds.includes(experience._id),
-        )
-        .map((experience) => {
-          // Ensure all required fields are present and not empty
-          const experienceObj = {
-            _id: experience._id || '',
-            company: experience.company || '',
-            jobTitle: experience.jobTitle || '',
-            workDescription: experience.workDescription || '',
-            workFrom:
-              experience.workFrom instanceof Date
-                ? experience.workFrom.toISOString()
-                : experience.workFrom || '',
-            workTo:
-              experience.workTo instanceof Date
-                ? experience.workTo.toISOString()
-                : experience.workTo || '',
-            referencePersonName: experience.referencePersonName || undefined,
-            referencePersonContact:
-              experience.referencePersonContact || undefined,
-            githubRepoLink: experience.githubRepoLink || undefined,
-          };
-
-          return experienceObj;
-        });
-
-      // Combine existing experiences with newly selected ones
-      const allExperiences = [
-        ...existingExperiences,
-        ...selectedExperienceObjects,
-      ];
-
-      // Update the profile with the combined experiences array
-      try {
-        const updateResponse = await axiosInstance.put(
-          `/freelancer/profile/${currentProfileId}`,
-          {
-            experiences: allExperiences,
-          },
-        );
-      } catch (updateError: any) {
-        console.error('Profile update failed:', updateError);
-        throw updateError;
-      }
-
       toast({
         title: 'Success',
         description: `${selectedExperiences.length} experience(s) added to profile successfully!`,

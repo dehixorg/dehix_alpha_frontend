@@ -1,9 +1,10 @@
 'use client';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-
-
 import Header from '@/components/header/header';
-import { menuItemsBottom, menuItemsTop } from '@/config/menuItems/freelancer/dashboardMenuItems';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 import RequestManagementTable from '@/components/freelancer/consultant/RequestManagementTable';
 
 export default function RequestManagement() {

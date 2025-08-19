@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -46,7 +47,7 @@ export default function ProfileViewPage() {
         fetchProfile();
       });
     }
-  }, [profileId, user.uid]);
+  });
 
   const fetchProfile = async () => {
     if (!profileId) return;
@@ -506,7 +507,7 @@ export default function ProfileViewPage() {
               {/* Project Image */}
               {selectedProject.thumbnail && (
                 <div className="w-full">
-                  <img
+                  <Image
                     src={selectedProject.thumbnail}
                     alt={`${selectedProject.projectName} thumbnail`}
                     className="w-full h-64 object-cover rounded-lg"

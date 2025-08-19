@@ -4,15 +4,9 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import { RootState } from '@/lib/store';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 
 interface Project {
@@ -73,30 +67,8 @@ export default function CurrentProject() {
   }, [user.uid]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Current Projects"
-      />
+    <div className="flex min-h-screen w-full flex-col">
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Current Projects"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            {
-              label: 'Projects',
-              link: '/freelancer/project/current',
-            },
-            {
-              label: 'Current Projects',
-              link: '#',
-            },
-          ]}
-        />
-
         <div className="mb-8 mx-4 lg:mx-10 flex flex-col lg:flex-row justify-between items-start lg:items-center p-3">
           <div>
             <h1 className="text-3xl font-bold">Current Projects</h1>

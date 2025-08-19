@@ -50,7 +50,9 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4">
-        {description && <p className="mb-2 text-gray-700 line-clamp-2">{description}</p>}
+        {description && (
+          <p className="mb-2 text-gray-700 line-clamp-2">{description}</p>
+        )}
         {urls && urls.length > 0 && (
           <div className="mb-2">
             <p className="font-semibold text-gray-300 mb-1">URLs:</p>

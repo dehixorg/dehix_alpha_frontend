@@ -41,64 +41,68 @@ export default function ProjectManagementPage() {
     // Mock data - replace with actual API call
     const mockProjects: Project[] = [
       {
-        _id: "7326a104-9b14-4149-9075-ff7b992e92e8",
-        projectName: "waveshare",
-        description: "A project involving wave sharing technology for energy distribution",
+        _id: '7326a104-9b14-4149-9075-ff7b992e92e8',
+        projectName: 'waveshare',
+        description:
+          'A project involving wave sharing technology for energy distribution',
         verified: false,
-        githubLink: "https://github.com/StrawhatLuffy500m",
-        liveDemoLink: "https://waveshare-demo.example.com",
-        thumbnail: "https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/1752",
-        start: "2025-07-06T00:00:00.000+00:00",
-        end: "2025-08-09T00:00:00.000+00:00",
-        refer: "trial",
-        techUsed: ["React", "Node.js", "MongoDB"],
-        role: "dev",
-        projectType: "Web Application",
-        oracleAssigned: "8797685f-767e-4bc7-87b0-87c36a4509d5",
-        verificationStatus: "ADDED",
-        verificationUpdateTime: "2025-07-09T15:51:43.920+00:00",
-        comments: "Project is currently in development phase",
-        status: "IN_PROGRESS"
+        githubLink: 'https://github.com/StrawhatLuffy500m',
+        liveDemoLink: 'https://waveshare-demo.example.com',
+        thumbnail:
+          'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/1752',
+        start: '2025-07-06T00:00:00.000+00:00',
+        end: '2025-08-09T00:00:00.000+00:00',
+        refer: 'trial',
+        techUsed: ['React', 'Node.js', 'MongoDB'],
+        role: 'dev',
+        projectType: 'Web Application',
+        oracleAssigned: '8797685f-767e-4bc7-87b0-87c36a4509d5',
+        verificationStatus: 'ADDED',
+        verificationUpdateTime: '2025-07-09T15:51:43.920+00:00',
+        comments: 'Project is currently in development phase',
+        status: 'IN_PROGRESS',
       },
       {
-        _id: "02dac6f9-c5e9-4eaa-9ebe-c45387f4796a",
-        projectName: "LoRa Waveshare",
-        description: "Implementation of LoRa technology for wave sharing systems",
+        _id: '02dac6f9-c5e9-4eaa-9ebe-c45387f4796a',
+        projectName: 'LoRa Waveshare',
+        description:
+          'Implementation of LoRa technology for wave sharing systems',
         verified: false,
-        githubLink: "https://github.com/StrawhatLuffy500m",
-        liveDemoLink: "https://lora-waveshare-demo.example.com",
-        thumbnail: "https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/1752",
-        start: "2025-06-29T00:00:00.000+00:00",
-        end: "2025-08-09T00:00:00.000+00:00",
-        refer: "trial",
-        techUsed: ["Azure", "IoT", "Python"],
-        role: "dev",
-        projectType: "IoT Solution",
-        oracleAssigned: "8797685f-767e-4bc7-87b0-87c36a4509d5",
-        verificationStatus: "ADDED",
-        verificationUpdateTime: "2025-07-09T15:52:24.373+00:00",
-        comments: "Final testing phase",
-        status: "COMPLETED"
+        githubLink: 'https://github.com/StrawhatLuffy500m',
+        liveDemoLink: 'https://lora-waveshare-demo.example.com',
+        thumbnail:
+          'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/1752',
+        start: '2025-06-29T00:00:00.000+00:00',
+        end: '2025-08-09T00:00:00.000+00:00',
+        refer: 'trial',
+        techUsed: ['Azure', 'IoT', 'Python'],
+        role: 'dev',
+        projectType: 'IoT Solution',
+        oracleAssigned: '8797685f-767e-4bc7-87b0-87c36a4509d5',
+        verificationStatus: 'ADDED',
+        verificationUpdateTime: '2025-07-09T15:52:24.373+00:00',
+        comments: 'Final testing phase',
+        status: 'COMPLETED',
       },
       {
-        _id: "3a7b8c9d-0e1f-2g3h-4i5j-6k7l8m9n0o1p",
-        projectName: "Ocean Energy Monitor",
-        description: "Monitoring system for ocean energy platforms",
+        _id: '3a7b8c9d-0e1f-2g3h-4i5j-6k7l8m9n0o1p',
+        projectName: 'Ocean Energy Monitor',
+        description: 'Monitoring system for ocean energy platforms',
         verified: true,
-        githubLink: "https://github.com/StrawhatLuffy500m/ocean-energy",
-        thumbnail: "https://example.com/ocean-energy-thumbnail.jpg",
-        start: "2025-05-15T00:00:00.000+00:00",
-        end: "2025-07-30T00:00:00.000+00:00",
-        refer: "production",
-        techUsed: ["TypeScript", "Docker", "Kubernetes"],
-        role: "lead developer",
-        projectType: "Monitoring System",
+        githubLink: 'https://github.com/StrawhatLuffy500m/ocean-energy',
+        thumbnail: 'https://example.com/ocean-energy-thumbnail.jpg',
+        start: '2025-05-15T00:00:00.000+00:00',
+        end: '2025-07-30T00:00:00.000+00:00',
+        refer: 'production',
+        techUsed: ['TypeScript', 'Docker', 'Kubernetes'],
+        role: 'lead developer',
+        projectType: 'Monitoring System',
         oracleAssigned: null,
-        verificationStatus: "VERIFIED",
-        verificationUpdateTime: "2025-06-20T10:15:30.000+00:00",
-        comments: "Successfully deployed to production",
-        status: "COMPLETED"
-      }
+        verificationStatus: 'VERIFIED',
+        verificationUpdateTime: '2025-06-20T10:15:30.000+00:00',
+        comments: 'Successfully deployed to production',
+        status: 'COMPLETED',
+      },
     ];
 
     setProjects(mockProjects);
@@ -123,10 +127,10 @@ export default function ProjectManagementPage() {
   }, [user.uid]);
 
   const currentProjects = projects.filter(
-    (project) => project.status !== 'COMPLETED'
+    (project) => project.status !== 'COMPLETED',
   );
   const completedProjects = projects.filter(
-    (project) => project.status === 'COMPLETED'
+    (project) => project.status === 'COMPLETED',
   );
 
   const menuItemsTop = [
@@ -193,10 +197,7 @@ export default function ProjectManagementPage() {
                   ))
                 ) : (
                   <div className="text-center py-10 col-span-full">
-                    <PackageOpen
-                      className="mx-auto text-gray-500"
-                      size="100"
-                    />
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
                     <p className="text-gray-500">No current projects</p>
                   </div>
                 )}
@@ -232,10 +233,7 @@ export default function ProjectManagementPage() {
                   ))
                 ) : (
                   <div className="text-center py-10 col-span-full">
-                    <PackageOpen
-                      className="mx-auto text-gray-500"
-                      size="100"
-                    />
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
                     <p className="text-gray-500">No completed projects</p>
                   </div>
                 )}

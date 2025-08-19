@@ -37,8 +37,8 @@ const RequestManagementTable: React.FC = () => {
     const fetchData = async () => {
       try {
         // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         // Dummy data
         const dummyData: ProjectRequest[] = [
           {
@@ -49,7 +49,7 @@ const RequestManagementTable: React.FC = () => {
             status: 'pending',
             clientName: 'TechCorp Inc.',
             startDate: '2023-11-01',
-            duration: '6 months'
+            duration: '6 months',
           },
           {
             id: '2',
@@ -59,7 +59,7 @@ const RequestManagementTable: React.FC = () => {
             status: 'pending',
             clientName: 'Global Bank',
             startDate: '2023-12-15',
-            duration: '9 months'
+            duration: '9 months',
           },
           {
             id: '3',
@@ -69,7 +69,7 @@ const RequestManagementTable: React.FC = () => {
             status: 'pending',
             clientName: 'InnovateAI',
             startDate: '2024-01-10',
-            duration: '4 months'
+            duration: '4 months',
           },
           {
             id: '4',
@@ -79,7 +79,7 @@ const RequestManagementTable: React.FC = () => {
             status: 'pending',
             clientName: 'LogiSolutions',
             startDate: '2023-11-20',
-            duration: '12 months'
+            duration: '12 months',
           },
           {
             id: '5',
@@ -89,17 +89,18 @@ const RequestManagementTable: React.FC = () => {
             status: 'pending',
             clientName: 'MediTech Systems',
             startDate: '2024-02-01',
-            duration: '8 months'
-          }
+            duration: '8 months',
+          },
         ];
-        
+
         setRequests(dummyData);
       } catch (error) {
         console.error('Error fetching requests:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to load project requests. Please try again later.',
+          description:
+            'Failed to load project requests. Please try again later.',
         });
       } finally {
         setLoading(false);
@@ -112,14 +113,14 @@ const RequestManagementTable: React.FC = () => {
   const handleAccept = async (id: string) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setRequests(prevRequests =>
-        prevRequests.map(request =>
-          request.id === id ? { ...request, status: 'accepted' } : request
-        )
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setRequests((prevRequests) =>
+        prevRequests.map((request) =>
+          request.id === id ? { ...request, status: 'accepted' } : request,
+        ),
       );
-      
+
       toast({
         title: 'Project Accepted',
         description: 'You have successfully accepted this project request.',
@@ -137,14 +138,14 @@ const RequestManagementTable: React.FC = () => {
   const handleReject = async (id: string) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setRequests(prevRequests =>
-        prevRequests.map(request =>
-          request.id === id ? { ...request, status: 'rejected' } : request
-        )
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setRequests((prevRequests) =>
+        prevRequests.map((request) =>
+          request.id === id ? { ...request, status: 'rejected' } : request,
+        ),
       );
-      
+
       toast({
         title: 'Project Rejected',
         description: 'You have declined this project request.',
@@ -162,11 +163,15 @@ const RequestManagementTable: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
-        return <Badge className="bg-green-500 hover:bg-green-600">Accepted</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600">Accepted</Badge>
+        );
       case 'rejected':
         return <Badge className="bg-red-500 hover:bg-red-600">Rejected</Badge>;
       default:
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
+        );
     }
   };
 
@@ -175,7 +180,8 @@ const RequestManagementTable: React.FC = () => {
       <div className="mb-8 mt-1 ml-2">
         <h1 className="text-3xl font-bold">Project Requests</h1>
         <p className="text-gray-400 mt-2">
-          Manage incoming project requests from clients. Accept or reject based on your availability.
+          Manage incoming project requests from clients. Accept or reject based
+          on your availability.
         </p>
       </div>
       <div className="px-4">
@@ -230,25 +236,31 @@ const RequestManagementTable: React.FC = () => {
                 ) : requests.length > 0 ? (
                   requests.map((request) => (
                     <TableRow key={request.id}>
-                      <TableCell className="font-medium">{request.projectName}</TableCell>
+                      <TableCell className="font-medium">
+                        {request.projectName}
+                      </TableCell>
                       <TableCell>{request.clientName}</TableCell>
                       <TableCell>{request.projectDomain}</TableCell>
-                      <TableCell className="text-center">{request.monthlyPay.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        {request.monthlyPay.toLocaleString()}
+                      </TableCell>
                       <TableCell>{request.duration}</TableCell>
-                      <TableCell>{new Date(request.startDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(request.startDate).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
                         {request.status === 'pending' ? (
                           <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               onClick={() => handleAccept(request.id)}
                               className="bg-green-600 hover:bg-green-700"
                             >
                               Accept
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => handleReject(request.id)}
                             >
@@ -256,7 +268,9 @@ const RequestManagementTable: React.FC = () => {
                             </Button>
                           </div>
                         ) : (
-                          <span className="text-gray-500">Action completed</span>
+                          <span className="text-gray-500">
+                            Action completed
+                          </span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -271,7 +285,8 @@ const RequestManagementTable: React.FC = () => {
                         />
                         <p className="text-gray-500">
                           No project requests available.
-                          <br /> When clients send you project requests, they will appear here.
+                          <br /> When clients send you project requests, they
+                          will appear here.
                         </p>
                       </div>
                     </TableCell>

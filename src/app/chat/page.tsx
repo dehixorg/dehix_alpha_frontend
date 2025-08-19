@@ -21,13 +21,12 @@ import {
   menuItemsBottom as businessMenuItemsBottom,
   menuItemsTop as businessMenuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import {
+  menuItemsBottom as freelancerMenuItemsBottom,
+  menuItemsTop as freelancerMenuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems'
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-  chatsMenu,
-} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
@@ -120,7 +119,24 @@ const HomePage = () => {
 
       const conversationDataForState: Conversation = {
         id: docRef.id,
-        ...newConversationData,
+        participants: newConversationData.participants,
+        type: 'individual',
+        description: undefined,
+        lastMessage: null,
+        participantDetails: {
+          [user.uid]: {
+            userName: user.displayName || user.email || 'Current User',
+            profilePic: user.photoURL || undefined,
+            email: user.email || undefined,
+            userType: user.type,
+          },
+          [selectedUser.id]: {
+            userName: selectedUser.displayName,
+            profilePic: selectedUser.profilePic || undefined,
+            email: selectedUser.email || undefined,
+            userType: selectedUser.userType,
+          },
+        },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -134,11 +150,10 @@ const HomePage = () => {
     }
   };
 
-  // ** THE FIX IS ON THE NEXT LINE **
   async function handleCreateGroupChat(
     selectedUsers: NewChatUser[],
     groupName: string,
-    description: string, // FIXED: Added the missing 'description' parameter
+    description: string,
   ) {
     if (!user || !user.uid) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
@@ -162,7 +177,7 @@ const HomePage = () => {
         userType: user.type,
       },
     };
-    selectedUsers.forEach(selected => {
+    selectedUsers.forEach((selected: any) => {
       participantDetails[selected.id] = {
         userName: selected.displayName,
         profilePic: selected.profilePic || null,
@@ -173,7 +188,7 @@ const HomePage = () => {
 
     const newGroupData = {
       groupName: groupName.trim(),
-      description: description.trim(), // This line will now work correctly
+      description: description.trim(),
       avatar: null,
       participants: allParticipantIds,
       participantDetails: participantDetails,
@@ -188,9 +203,27 @@ const HomePage = () => {
       const docRef = await addDoc(collection(db, 'conversations'), newGroupData);
       toast({ title: 'Success', description: `Group "${groupName}" created.` });
 
+      const participantDetailsForState: NonNullable<Conversation['participantDetails']> = Object.fromEntries(
+        Object.entries(participantDetails as Record<string, any>).map(([k, v]) => [
+          k,
+          {
+            userName: v.userName,
+            profilePic: v.profilePic || undefined,
+            email: v.email || undefined,
+            userType: v.userType,
+          },
+        ]),
+      );
+
       const groupDataForState: Conversation = {
         id: docRef.id,
-        ...newGroupData,
+        participants: newGroupData.participants,
+        participantDetails: participantDetailsForState,
+        type: 'group',
+        groupName: newGroupData.groupName,
+        description: newGroupData.description,
+        admins: newGroupData.admins,
+        lastMessage: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -294,16 +327,16 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[hsl(var(--muted)_/_0.4)]">
+    <div className="flex min-h-screen w-full flex-col bg-[#09090b]">
       <SidebarMenu
-        menuItemsTop={user.type === 'business' ? businessMenuItemsTop : chatsMenu}
-        menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom}
+        menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
+        menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
         active="Chats"
       />
       <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
         <Header
-          menuItemsTop={user.type === 'business' ? businessMenuItemsTop : chatsMenu}
-          menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : menuItemsBottom}
+          menuItemsTop={user.type === 'business' ? businessMenuItemsTop : freelancerMenuItemsTop}
+          menuItemsBottom={user.type === 'business' ? businessMenuItemsBottom : freelancerMenuItemsBottom}
           activeMenu="Chats"
           breadcrumbItems={[
             { label: user.type === 'business' ? 'Business' : 'Freelancer', link: '/dashboard' },
@@ -311,7 +344,7 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[90vh] p-1 sm:p-2 md:p-4">
+        <main className="h-[93vh] p-1 sm:p-2 md:p-0">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}

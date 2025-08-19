@@ -32,7 +32,7 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 
 interface Domain {
   _id: string;
-  name: string;
+  label: string;
 }
 
 interface SkillDomainData {
@@ -48,8 +48,8 @@ interface SkillDomainData {
 
 interface DomainDialogProps {
   domains: Domain[];
-  onSubmitDomain: (data: SkillDomainData) => boolean;
   setDomains: any;
+  onSuccess: () => void;
 }
 
 const domainSchema = z.object({
@@ -67,10 +67,7 @@ const domainSchema = z.object({
   status: z.string(),
 });
 
-const DomainDialog: React.FC<DomainDialogProps> = ({
-  domains,
-  onSubmitDomain,
-}) => {
+const DomainDialog: React.FC<DomainDialogProps> = ({ domains, onSuccess }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -93,19 +90,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
 
   const onSubmit = async (data: SkillDomainData) => {
     setLoading(true);
-
-    // Check for duplicate before making API call
-    const isUnique = onSubmitDomain({
-      ...data,
-      uid: '', // Will be set after API call
-      type: 'DOMAIN',
-    });
-
-    if (!isUnique) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await axiosInstance.post(`/freelancer/dehix-talent`, {
         talentId: data.domainId,
@@ -116,7 +100,6 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
         status: data.status,
         type: 'DOMAIN',
       });
-
       if (response.status === 200) {
         reset();
         setOpen(false);
@@ -124,6 +107,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
           title: 'Talent Added',
           description: 'The Talent has been successfully added.',
         });
+        onSuccess(); // Trigger parent to re-fetch
       }
     } catch (error) {
       console.error('Error submitting domain data', error);
@@ -162,7 +146,7 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   value={field.value}
                   onValueChange={(selectedLabel) => {
                     const selectedDomain = domains.find(
-                      (domain) => domain.name === selectedLabel,
+                      (domain) => domain.label === selectedLabel,
                     );
                     field.onChange(selectedLabel);
                     setValue('domainId', selectedDomain?._id || '');
@@ -174,8 +158,8 @@ const DomainDialog: React.FC<DomainDialogProps> = ({
                   <SelectContent>
                     {domains.length > 0 ? (
                       domains.map((domain) => (
-                        <SelectItem key={domain._id} value={domain.name}>
-                          {domain.name}
+                        <SelectItem key={domain._id} value={domain.label}>
+                          {domain.label}
                         </SelectItem>
                       ))
                     ) : (

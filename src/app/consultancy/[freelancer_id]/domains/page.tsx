@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
+import { AxiosResponse } from 'axios';
 
 import ConsultantCard from '@/components/cards/ConsultantCard';
 import {
@@ -40,7 +41,6 @@ import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { AxiosResponse } from 'axios';
 
 interface Skill {
   label: string;
@@ -55,12 +55,12 @@ const consultancyFormSchema = z.object({
   skills: z.array(
     z.object({
       name: z.string().min(1, 'Skill is required'),
-    })
+    }),
   ),
   domains: z.array(
     z.object({
       name: z.string().min(1, 'Domain is required'),
-    })
+    }),
   ),
   description: z.string().optional(),
   urls: z
@@ -97,46 +97,48 @@ export default function ConsultancyDomainPage() {
   const [consultancyIds, setConsultancyIds] = useState<string[]>([]);
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [skillsResponse, domainsResponse, consultantsResponse] = await Promise.all([
-        axiosInstance.get('/skills'),
-        axiosInstance.get('/domain'),
-        axiosInstance.get(`/freelancer/consultant`)
-      ]);
+    const fetchData = async () => {
+      try {
+        const [skillsResponse, domainsResponse, consultantsResponse] =
+          await Promise.all([
+            axiosInstance.get('/skills'),
+            axiosInstance.get('/domain'),
+            axiosInstance.get(`/freelancer/consultant`),
+          ]);
 
-      setAllSkills(skillsResponse.data.data);
-      setAllDomains(domainsResponse.data.data);
+        setAllSkills(skillsResponse.data.data);
+        setAllDomains(domainsResponse.data.data);
 
-      // Transform the API response
-      const consultantsArray = Array.isArray(consultantsResponse.data) 
-        ? consultantsResponse.data 
-        : Object.values(consultantsResponse.data);
+        // Transform the API response
+        const consultantsArray = Array.isArray(consultantsResponse.data)
+          ? consultantsResponse.data
+          : Object.values(consultantsResponse.data);
 
-      const formattedConsultants = consultantsArray.map((consultant: any) => ({
-        _id: consultant._id, // Keep the ID
-        name: consultant.name || '',
-        skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
-        domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
-        description: consultant.description || '',
-        urls: consultant.links?.map((u: string) => ({ value: u })) || [],
-        perHourRate: consultant.price
-      }));
-      console.log(formattedConsultants);
-      setConsultancies(formattedConsultants);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load data. Please try again.',
-      });
-      console.error('API Error:', error);
-    }
-  };
+        const formattedConsultants = consultantsArray.map(
+          (consultant: any) => ({
+            _id: consultant._id, // Keep the ID
+            name: consultant.name || '',
+            skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
+            domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
+            description: consultant.description || '',
+            urls: consultant.links?.map((u: string) => ({ value: u })) || [],
+            perHourRate: consultant.price,
+          }),
+        );
+        console.log(formattedConsultants);
+        setConsultancies(formattedConsultants);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load data. Please try again.',
+        });
+        console.error('API Error:', error);
+      }
+    };
 
-  fetchData();
-}, [user.uid]);
-
+    fetchData();
+  }, [user.uid]);
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
@@ -179,7 +181,7 @@ export default function ConsultancyDomainPage() {
   });
 
   const handleAddSkill = () => {
-    if (tmpSkill && !skillFields.some(field => field.name === tmpSkill)) {
+    if (tmpSkill && !skillFields.some((field) => field.name === tmpSkill)) {
       appendSkill({ name: tmpSkill });
       setTmpSkill('');
       setSearchSkillQuery('');
@@ -187,7 +189,7 @@ export default function ConsultancyDomainPage() {
   };
 
   const handleAddDomain = () => {
-    if (tmpDomain && !domainFields.some(field => field.name === tmpDomain)) {
+    if (tmpDomain && !domainFields.some((field) => field.name === tmpDomain)) {
       appendDomain({ name: tmpDomain });
       setTmpDomain('');
       setSearchDomainQuery('');
@@ -203,105 +205,114 @@ export default function ConsultancyDomainPage() {
   };
 
   const startEditing = (index: number) => {
-  setEditingIndex(index);
-  // Reset form with the existing consultancy data including _id
-  form.reset(consultancies[index]);
-  setIsDialogOpen(true);
-};
+    setEditingIndex(index);
+    // Reset form with the existing consultancy data including _id
+    form.reset(consultancies[index]);
+    setIsDialogOpen(true);
+  };
 
   const deleteConsultancy = async (index: number) => {
-  const consultant = consultancies[index];
-  if (!consultant._id) {
-    toast({
-      title: "Error",
-      description: "Missing consultant ID",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  try {
-    await axiosInstance.delete(`/freelancer/consultant/${consultant._id}`);
-    setConsultancies(prev => prev.filter((_, i) => i !== index));
-    toast({
-      title: "Success",
-      description: "Consultancy removed successfully",
-    });
-  } catch (error) {
-    toast({
-      title: "Error",
-      description: "Failed to remove consultancy",
-      variant: "destructive",
-    });
-    console.error(error);
-  }
-};
-
-
-const onSubmit = async (data: ConsultancyFormValues) => {
-  try {
-    const apiPayload = {
-      name: data.name || '',
-      status: "NOT_APPLIED",
-      description: data.description || '',
-      price: data.perHourRate,
-      domain: data.domains.map(d => d.name),
-      skills: data.skills.map(s => s.name),
-      links: data.urls?.map(u => u.value).filter(Boolean) || [],
-    };
-
-    let response: AxiosResponse<any>;
-    if (editingIndex !== null) {
-      // Update existing consultancy - use the _id from the existing item
-      const consultantId = consultancies[editingIndex]._id;
-      if (!consultantId) throw new Error("Missing consultant ID for update");
-      
-      response = await axiosInstance.put(`/freelancer/consultant/${consultantId}`, apiPayload);
-      
-      // Update local state - preserve all existing fields and merge with new data
-      setConsultancies(prev =>
-        prev.map((item, index) =>
-          index === editingIndex
-            ? { ...item, ...data } // keep existing fields like _id, only update changed ones
-            : item
-        )
-      );
-    } else {
-      // Create new consultancy
-      response = await axiosInstance.post('/freelancer/consultant', apiPayload);
-      
-      // Add new item to state with the _id from response
-      setConsultancies(prev => [...prev, { 
-        ...data, 
-        _id: response.data._id 
-      }]);
+    const consultant = consultancies[index];
+    if (!consultant._id) {
+      toast({
+        title: 'Error',
+        description: 'Missing consultant ID',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    form.reset({
-      name: '',
-      skills: [],
-      domains: [],
-      description: '',
-      urls: [{ value: '' }],
-      perHourRate: undefined,
-    });
-    
-    setEditingIndex(null);
-    setIsDialogOpen(false);
-    
-    toast({
-      title: 'Success',
-      description: `Consultancy ${editingIndex !== null ? 'updated' : 'added'} successfully`,
-    });
-  } catch (error: any) {
-    console.error('Error details:', error);
-    toast({
-      variant: 'destructive',
-      title: 'Error',
-      description: error.response?.data?.message || 'Failed to save consultancy data',
-    });
-  }
-};
+    try {
+      await axiosInstance.delete(`/freelancer/consultant/${consultant._id}`);
+      setConsultancies((prev) => prev.filter((_, i) => i !== index));
+      toast({
+        title: 'Success',
+        description: 'Consultancy removed successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove consultancy',
+        variant: 'destructive',
+      });
+      console.error(error);
+    }
+  };
+
+  const onSubmit = async (data: ConsultancyFormValues) => {
+    try {
+      const apiPayload = {
+        name: data.name || '',
+        status: 'NOT_APPLIED',
+        description: data.description || '',
+        price: data.perHourRate,
+        domain: data.domains.map((d) => d.name),
+        skills: data.skills.map((s) => s.name),
+        links: data.urls?.map((u) => u.value).filter(Boolean) || [],
+      };
+
+      let response: AxiosResponse<any>;
+      if (editingIndex !== null) {
+        // Update existing consultancy - use the _id from the existing item
+        const consultantId = consultancies[editingIndex]._id;
+        if (!consultantId) throw new Error('Missing consultant ID for update');
+
+        response = await axiosInstance.put(
+          `/freelancer/consultant/${consultantId}`,
+          apiPayload,
+        );
+
+        // Update local state - preserve all existing fields and merge with new data
+        setConsultancies((prev) =>
+          prev.map((item, index) =>
+            index === editingIndex
+              ? { ...item, ...data } // keep existing fields like _id, only update changed ones
+              : item,
+          ),
+        );
+      } else {
+        // Create new consultancy
+        response = await axiosInstance.post(
+          '/freelancer/consultant',
+          apiPayload,
+        );
+
+        // Add new item to state with the _id from response
+        setConsultancies((prev) => [
+          ...prev,
+          {
+            ...data,
+            _id: response.data._id,
+          },
+        ]);
+      }
+
+      form.reset({
+        name: '',
+        skills: [],
+        domains: [],
+        description: '',
+        urls: [{ value: '' }],
+        perHourRate: undefined,
+      });
+
+      setEditingIndex(null);
+      setIsDialogOpen(false);
+
+      toast({
+        title: 'Success',
+        description: `Consultancy ${editingIndex !== null ? 'updated' : 'added'} successfully`,
+      });
+    } catch (error: any) {
+      console.error('Error details:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          error.response?.data?.message || 'Failed to save consultancy data',
+      });
+    }
+  };
 
   const menuItemsTop = [
     {
@@ -350,14 +361,21 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                 <DialogContent className="max-w-2xl overflow-y-auto max-h-screen">
                   <DialogHeader>
                     <DialogTitle>
-                      {editingIndex !== null ? 'Edit Consultancy Domain' : 'Add Consultancy Domain'}
+                      {editingIndex !== null
+                        ? 'Edit Consultancy Domain'
+                        : 'Add Consultancy Domain'}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingIndex !== null ? 'Update your consultancy profile' : 'Create a new consultancy profile'}
+                      {editingIndex !== null
+                        ? 'Update your consultancy profile'
+                        : 'Create a new consultancy profile'}
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form
+                      onSubmit={form.handleSubmit(onSubmit)}
+                      className="space-y-4"
+                    >
                       {/* Form fields remain the same as before */}
                       <FormField
                         control={form.control}
@@ -372,7 +390,7 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                           </FormItem>
                         )}
                       />
-                      
+
                       {/* Skills Section */}
                       <FormItem>
                         <FormLabel>Skills</FormLabel>
@@ -388,14 +406,20 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={tmpSkill ? tmpSkill : 'Select skill'} />
+                              <SelectValue
+                                placeholder={
+                                  tmpSkill ? tmpSkill : 'Select skill'
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               <div className="p-2 relative">
                                 <input
                                   type="text"
                                   value={searchSkillQuery}
-                                  onChange={(e) => setSearchSkillQuery(e.target.value)}
+                                  onChange={(e) =>
+                                    setSearchSkillQuery(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                                   placeholder="Search skills"
                                 />
@@ -413,8 +437,12 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                                   (skill) =>
                                     skill.label
                                       .toLowerCase()
-                                      .includes(searchSkillQuery.toLowerCase()) &&
-                                    !skillFields.some(field => field.name === skill.label)
+                                      .includes(
+                                        searchSkillQuery.toLowerCase(),
+                                      ) &&
+                                    !skillFields.some(
+                                      (field) => field.name === skill.label,
+                                    ),
                                 )
                                 .map((skill, index) => (
                                   <SelectItem key={index} value={skill.label}>
@@ -426,7 +454,9 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                                   skill.label
                                     .toLowerCase()
                                     .includes(searchSkillQuery.toLowerCase()) &&
-                                  !skillFields.some(field => field.name === skill.label)
+                                  !skillFields.some(
+                                    (field) => field.name === skill.label,
+                                  ),
                               ).length === 0 && (
                                 <div className="p-2 text-gray-500 italic text-center">
                                   No matching skills
@@ -479,14 +509,20 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={tmpDomain ? tmpDomain : 'Select domain'} />
+                              <SelectValue
+                                placeholder={
+                                  tmpDomain ? tmpDomain : 'Select domain'
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               <div className="p-2 relative">
                                 <input
                                   type="text"
                                   value={searchDomainQuery}
-                                  onChange={(e) => setSearchDomainQuery(e.target.value)}
+                                  onChange={(e) =>
+                                    setSearchDomainQuery(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                                   placeholder="Search domains"
                                 />
@@ -504,8 +540,12 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                                   (domain) =>
                                     domain.label
                                       .toLowerCase()
-                                      .includes(searchDomainQuery.toLowerCase()) &&
-                                    !domainFields.some(field => field.name === domain.label)
+                                      .includes(
+                                        searchDomainQuery.toLowerCase(),
+                                      ) &&
+                                    !domainFields.some(
+                                      (field) => field.name === domain.label,
+                                    ),
                                 )
                                 .map((domain, index) => (
                                   <SelectItem key={index} value={domain.label}>
@@ -516,8 +556,12 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                                 (domain) =>
                                   domain.label
                                     .toLowerCase()
-                                    .includes(searchDomainQuery.toLowerCase()) &&
-                                  !domainFields.some(field => field.name === domain.label)
+                                    .includes(
+                                      searchDomainQuery.toLowerCase(),
+                                    ) &&
+                                  !domainFields.some(
+                                    (field) => field.name === domain.label,
+                                  ),
                               ).length === 0 && (
                                 <div className="p-2 text-gray-500 italic text-center">
                                   No matching domains
@@ -635,18 +679,18 @@ const onSubmit = async (data: ConsultancyFormValues) => {
               </Dialog>
             </div>
             <div className="flex flex-wrap gap-6">
-            {consultancies.length > 0 ? (
+              {consultancies.length > 0 ? (
                 consultancies.map((consultancy, index) => (
                   <div
-        key={index}
-        className="relative group w-[380px] p-4 rounded-xl shadow-md bg-black border border-gray-800"
-      >
+                    key={index}
+                    className="relative group w-[380px] p-4 rounded-xl shadow-md bg-black border border-gray-800"
+                  >
                     <ConsultantCard
                       name={consultancy.name}
-                      skills={consultancy.skills.map(s => s.name)}
-                      domains={consultancy.domains.map(d => d.name)}
+                      skills={consultancy.skills.map((s) => s.name)}
+                      domains={consultancy.domains.map((d) => d.name)}
                       description={consultancy.description}
-                      urls={consultancy.urls?.filter(u => u.value)}
+                      urls={consultancy.urls?.filter((u) => u.value)}
                       perHourRate={consultancy.perHourRate}
                     />
                     <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -667,15 +711,15 @@ const onSubmit = async (data: ConsultancyFormValues) => {
                     </div>
                   </div>
                 ))
-              
-            ) : (
-              <div className="flex flex-col items-center justify-center mt-[5rem]">
-                <PackageOpen className="mx-auto text-gray-500" size="100" />
-                <p className="text-gray-500 mt-4">
-                  No consultancy domains created yet. Click "Add Consultancy Domain" to get started.
-                </p>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center justify-center mt-[5rem]">
+                  <PackageOpen className="mx-auto text-gray-500" size="100" />
+                  <p className="text-gray-500 mt-4">
+                    No consultancy domains created yet. Click Add Consultancy
+                    Domain to get started.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </main>

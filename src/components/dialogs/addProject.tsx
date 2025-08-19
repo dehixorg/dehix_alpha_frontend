@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Plus, X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useSelector } from 'react-redux';
 
 import DraftDialog from '../shared/DraftDialog';
 
@@ -39,8 +38,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import useDraft from '@/hooks/useDraft';
 import ThumbnailUpload from '@/components/fileUpload/thumbnailUpload';
-import { RootState } from '@/lib/store';
-
 // Schema for form validation using zod
 const projectFormSchema = z
   .object({
@@ -105,7 +102,6 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const currentDate = new Date().toISOString().split('T')[0];
   const restoredDraft = useRef<any>(null);
-  const user = useSelector((state: RootState) => state.user);
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -289,10 +285,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       };
 
       // Submit with the skills from our state
-      const response = await axiosInstance.post(
-        `/freelancer/project`,
-        payload,
-      );
+      const response = await axiosInstance.post(`/freelancer/project`, payload);
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission

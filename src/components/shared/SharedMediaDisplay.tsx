@@ -1,6 +1,6 @@
 import React from 'react';
+import Image from 'next/image';
 import {
-  Image as ImageIcon,
   Video as VideoIcon,
   FileText as FileTextIcon,
   AlertTriangle,
@@ -52,10 +52,12 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
       content = (
         // Using standard <img> for now. Replace with Next.js <Image /> if the project is set up for it.
         // <Image src={item.url} alt={item.fileName} layout="fill" objectFit="cover" className="rounded-md" />
-        <img
+        <Image
           src={item.url}
           alt={item.fileName}
-          className="object-cover w-full h-full rounded-md"
+          layout="fill"
+          objectFit="cover"
+          className="w-full h-full rounded-md"
         />
       );
     } else if (item.type.startsWith('video/')) {

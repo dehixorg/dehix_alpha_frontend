@@ -59,12 +59,12 @@ const consultancyFormSchema = z.object({
   skills: z.array(
     z.object({
       name: z.string().min(1, 'Skill is required'),
-    })
+    }),
   ),
   domains: z.array(
     z.object({
       name: z.string().min(1, 'Domain is required'),
-    })
+    }),
   ),
   description: z.string().optional(),
   urls: z
@@ -108,9 +108,9 @@ export default function ConsultancyPage() {
 
         const domainsResponse = await axiosInstance.get('/domain');
         setAllDomains(domainsResponse.data.data);
-                      console.log("All Skills:", allSkills);
-                    console.log("Search Query:", searchSkillQuery);
-                    console.log("Skill Fields:", allDomains);
+        console.log('All Skills:', allSkills);
+        console.log('Search Query:', searchSkillQuery);
+        console.log('Skill Fields:', allDomains);
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -172,7 +172,7 @@ export default function ConsultancyPage() {
   });
 
   const handleAddSkill = () => {
-    if (tmpSkill && !skillFields.some(field => field.name === tmpSkill)) {
+    if (tmpSkill && !skillFields.some((field) => field.name === tmpSkill)) {
       appendSkill({ name: tmpSkill });
       setTmpSkill('');
       setSearchSkillQuery('');
@@ -180,7 +180,7 @@ export default function ConsultancyPage() {
   };
 
   const handleAddDomain = () => {
-    if (tmpDomain && !domainFields.some(field => field.name === tmpDomain)) {
+    if (tmpDomain && !domainFields.some((field) => field.name === tmpDomain)) {
       appendDomain({ name: tmpDomain });
       setTmpDomain('');
       setSearchDomainQuery('');
@@ -282,7 +282,7 @@ export default function ConsultancyPage() {
                           </FormItem>
                         )}
                       />
-                      
+
                       {/* Skills Section */}
                       <FormItem>
                         <FormLabel>Skills</FormLabel>
@@ -298,14 +298,20 @@ export default function ConsultancyPage() {
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={tmpSkill ? tmpSkill : 'Select skill'} />
+                              <SelectValue
+                                placeholder={
+                                  tmpSkill ? tmpSkill : 'Select skill'
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               <div className="p-2 relative">
                                 <input
                                   type="text"
                                   value={searchSkillQuery}
-                                  onChange={(e) => setSearchSkillQuery(e.target.value)}
+                                  onChange={(e) =>
+                                    setSearchSkillQuery(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                                   placeholder="Search skills"
                                 />
@@ -323,8 +329,12 @@ export default function ConsultancyPage() {
                                   (skill) =>
                                     skill.label
                                       .toLowerCase()
-                                      .includes(searchSkillQuery.toLowerCase()) &&
-                                    !skillFields.some(field => field.name === skill.label)
+                                      .includes(
+                                        searchSkillQuery.toLowerCase(),
+                                      ) &&
+                                    !skillFields.some(
+                                      (field) => field.name === skill.label,
+                                    ),
                                 )
                                 .map((skill, index) => (
                                   <SelectItem key={index} value={skill.label}>
@@ -336,7 +346,9 @@ export default function ConsultancyPage() {
                                   skill.label
                                     .toLowerCase()
                                     .includes(searchSkillQuery.toLowerCase()) &&
-                                  !skillFields.some(field => field.name === skill.label)
+                                  !skillFields.some(
+                                    (field) => field.name === skill.label,
+                                  ),
                               ).length === 0 && (
                                 <div className="p-2 text-gray-500 italic text-center">
                                   No matching skills
@@ -389,14 +401,20 @@ export default function ConsultancyPage() {
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder={tmpDomain ? tmpDomain : 'Select domain'} />
+                              <SelectValue
+                                placeholder={
+                                  tmpDomain ? tmpDomain : 'Select domain'
+                                }
+                              />
                             </SelectTrigger>
                             <SelectContent>
                               <div className="p-2 relative">
                                 <input
                                   type="text"
                                   value={searchDomainQuery}
-                                  onChange={(e) => setSearchDomainQuery(e.target.value)}
+                                  onChange={(e) =>
+                                    setSearchDomainQuery(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                                   placeholder="Search domains"
                                 />
@@ -414,8 +432,12 @@ export default function ConsultancyPage() {
                                   (domain) =>
                                     domain.label
                                       .toLowerCase()
-                                      .includes(searchDomainQuery.toLowerCase()) &&
-                                    !domainFields.some(field => field.name === domain.label)
+                                      .includes(
+                                        searchDomainQuery.toLowerCase(),
+                                      ) &&
+                                    !domainFields.some(
+                                      (field) => field.name === domain.label,
+                                    ),
                                 )
                                 .map((domain, index) => (
                                   <SelectItem key={index} value={domain.label}>
@@ -426,8 +448,12 @@ export default function ConsultancyPage() {
                                 (domain) =>
                                   domain.label
                                     .toLowerCase()
-                                    .includes(searchDomainQuery.toLowerCase()) &&
-                                  !domainFields.some(field => field.name === domain.label)
+                                    .includes(
+                                      searchDomainQuery.toLowerCase(),
+                                    ) &&
+                                  !domainFields.some(
+                                    (field) => field.name === domain.label,
+                                  ),
                               ).length === 0 && (
                                 <div className="p-2 text-gray-500 italic text-center">
                                   No matching domains
@@ -551,13 +577,12 @@ export default function ConsultancyPage() {
                   </div>
                 ) : (
                   <div>
-
                     {consultants.map((consultant, index) => (
                       <ConsultantCard
                         key={index}
                         name={consultant.name}
-                        skills={consultant.skills.map(s => s.name)}
-                        domains={consultant.domains.map(d => d.name)}
+                        skills={consultant.skills.map((s) => s.name)}
+                        domains={consultant.domains.map((d) => d.name)}
                         description={consultant.description}
                         urls={consultant.urls}
                         perHourRate={consultant.perHourRate}

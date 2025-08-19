@@ -20,17 +20,12 @@ import {
   HelpCircle,
   Mic, // Added for voice recording
   StopCircle, // Added for stopping recording
-  PlayCircle, // Added for playing preview
-  PauseCircle, // Added for pausing preview
   Trash2, // Added for discarding recording
-  Paperclip, // Existing, or could be Upload if that's preferred for general attachments
   X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { useRouter, usePathname, redirect } from 'next/navigation';
-import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
-import remarkGfm from 'remark-gfm';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,
@@ -79,12 +74,11 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
-import { getReportTypeFromPath } from '@/utils/getReportTypeFromPath';
+import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogPortal,
   DialogOverlay,
 } from '@/components/ui/dialog';
@@ -149,8 +143,6 @@ interface CardsChatProps {
 
 export function CardsChat({
   conversation,
-  conversations,
-  setActiveConversation,
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
@@ -166,17 +158,16 @@ export function CardsChat({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const inputLength = input.trim().length;
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
 
   const prevMessagesLength = useRef(messages.length);
-  const [openDrawer, setOpenDrawer] = useState(false);
+  const [, setOpenDrawer] = useState(false);
 
   // States for voice recording
   type RecordingStatus =
@@ -193,7 +184,7 @@ export function CardsChat({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
+  const [, setRecordingStartTime] = useState<number | null>(
     null,
   );
   const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
@@ -256,14 +247,9 @@ export function CardsChat({
       }
     });
   };
-  const [audioDurations, setAudioDurations] = useState<{
+  const [, setAudioDurations] = useState<{
     [key: string]: number;
   }>({});
-
-  // Helper to check for valid duration
-  function isValidDuration(val: number | undefined) {
-    return typeof val === 'number' && isFinite(val) && !isNaN(val) && val > 0;
-  }
 
   const handleHeaderClick = () => {
     if (!onOpenProfileSidebar) return;
@@ -307,80 +293,42 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Subscribe to messages for this conversation and manage loading state
   useEffect(() => {
-    let unsubscribeMessages: (() => void) | undefined;
-
-    // Only run effect if conversation exists
-    if (!conversation) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchPrimaryUserAndMessages = async () => {
-      const primaryUid = conversation.participants.find(
-        (participant: string) => participant !== user.uid,
-      );
-
-      let userDetailsFoundInConversation = false;
-      if (
-        primaryUid &&
-        conversation.participantDetails &&
-        conversation.participantDetails[primaryUid] &&
-        conversation.participantDetails[primaryUid].userName
-      ) {
-        const details = conversation.participantDetails[primaryUid];
-        setPrimaryUser({
-          userName: details.userName,
-          email: details.email || '',
-          profilePic: details.profilePic || '',
-        });
-        userDetailsFoundInConversation = true;
-      }
-
-      if (primaryUid && !userDetailsFoundInConversation) {
-        try {
-          const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
-          setPrimaryUser(response.data.data);
-        } catch (error) {
-          console.error('Error fetching primary user via API:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to load user details. Please try again.',
-          });
-        }
-      }
-    };
-
-    const fetchMessages = async () => {
-      setLoading(true);
-      unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversation.id}/messages`,
-        (messagesData) => {
-          setMessages(messagesData);
-          setLoading(false);
-        },
-        'desc',
-      );
-    };
-
-    fetchPrimaryUserAndMessages();
-    fetchMessages();
-
+    if (!conversation?.id) return;
+    setLoading(true);
+    const unsubscribe = subscribeToFirestoreCollection(
+      `conversations/${conversation.id}/messages/`,
+      (data) => {
+        setMessages(data);
+        setLoading(false);
+      },
+      'asc',
+    );
     return () => {
-      if (unsubscribeMessages) unsubscribeMessages();
-      // Cleanup for voice recording
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-      if (recordingDurationIntervalRef.current) {
-        clearInterval(recordingDurationIntervalRef.current);
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl); // Clean up preview URL
+      try {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      } catch {
+        // no-op
       }
     };
-  }, [conversation, user.uid]); // <-- FIXED: removed mediaRecorder and audioUrl from dependencies
+  }, [conversation?.id]);
+
+  // Resolve and set primary user details for 1:1 chats
+  useEffect(() => {
+    if (!conversation) return;
+    if (conversation.type === 'group') return;
+    const otherParticipantUid = conversation.participants?.find(
+      (p: string) => p !== user.uid,
+    );
+    if (!otherParticipantUid) return;
+    const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+    setPrimaryUser({
+      userName: participantDetails?.userName || '',
+      email: participantDetails?.email || '',
+      profilePic: participantDetails?.profilePic || '',
+    });
+  }, [conversation, user.uid]);
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -390,13 +338,13 @@ export function CardsChat({
   }, [messages.length]);
 
   async function sendMessage(
-  conversation: Conversation,
-  message: Partial<Message>,
-  setInput: React.Dispatch<React.SetStateAction<string>>,
-) {
-  try {
-    setIsSending(true);
-    const datentime = new Date().toISOString();
+    conversation: Conversation,
+    message: Partial<Message>,
+    setInput: React.Dispatch<React.SetStateAction<string>>,
+  ) {
+    try {
+      setIsSending(true);
+      const datentime = new Date().toISOString();
 
     console.log('Sending message to Firestore:', {
       conversationId: conversation?.id,
@@ -426,27 +374,23 @@ export function CardsChat({
       console.error('Failed to send message - unexpected result:', result);
       throw new Error(`Failed to send message: ${result}`);
     }
-  } catch (error: any) {
-    console.error('Error sending message:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      conversationId: conversation?.id,
-      messageContent: message.content,
-      hasVoiceMessage: !!message.voiceMessage,
-    });
-    throw error; // Re-throw the error so it can be caught by the calling function
-  } finally {
-    setIsSending(false);
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        conversationId: conversation?.id,
+        messageContent: message.content,
+        hasVoiceMessage: !!message.voiceMessage,
+      });
+      throw error; // Re-throw the error so it can be caught by the calling function
+    } finally {
+      setIsSending(false);
+    }
   }
-}
 
   // Always call hooks at the top level, not conditionally.
   // Move this conditional return after all hooks.
-  let shouldReturnNull = false;
-  if (!conversation) {
-    shouldReturnNull = true;
-  }
 
   async function handleFileUpload() {
     const fileInput = document.createElement('input');

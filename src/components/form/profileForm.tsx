@@ -100,7 +100,7 @@ export function ProfileForm({ user_id }: { user_id: string }) {
   const [tmpProjectDomains, setTmpProjectDomains] = useState<any>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [resumeRefreshTrigger, setResumeRefreshTrigger] = useState(0);
+  const [, setResumeRefreshTrigger] = useState(0);
   const [, setLastAddedItems] = useState<{
     skills: { name: string }[];
     projectsDomains: { name: string }[];

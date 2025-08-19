@@ -2,10 +2,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 // import { z } from 'zod';
 // import { useForm } from 'react-hook-form';
-import { ListFilter, Search, Table, PackageOpen } from 'lucide-react';
+import { ListFilter, Search, Table } from 'lucide-react';
 // import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
+// import CurrentInterviews from "@/components/freelancer/scheduleInterview/CurrentInterviews";
 
 import {
   DropdownMenu,
@@ -15,132 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Header from '@/components/header/header';
-// import {
-//   Card,
-//   CardContent,
-//   CardHeader,
-//   CardTitle,
-//   CardDescription,
-//   CardFooter,
-// } from '@/components/ui/card';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/interviewMenuItems';
-// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DehixInterviews from '@/components/freelancer/dehix-talent-interview/DehixInterviews';
-// import DropdownProfile from '@/components/shared/DropdownProfile';
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
-
-// interface Interview {
-//   reference: string;
-//   skill?: string;
-//   domain?: string;
-//   interviewDate: string;
-//   rating: number;
-//   comments: string;
-//   status: 'Pending' | 'Complete';
-//   description: string;
-//   contact: string;
-// }
-
-// const CommentSchema = z.object({
-//   comment: z.string().min(1, 'Comment is required'),
-// });
-
-// interface CommentFormData {
-//   comment: string;
-// }
-
-// interface InterviewCardProps {
-//   index: number;
-//   interview: Interview;
-//   handleCommentSubmit: (index: number, comment: string) => void;
-// }
-
-// const InterviewCard: React.FC<InterviewCardProps> = ({
-//   index,
-//   interview,
-//   handleCommentSubmit,
-// }) => {
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { errors },
-//     reset,
-//   } = useForm<CommentFormData>({
-//     resolver: zodResolver(CommentSchema),
-//   });
-
-//   const onSubmit = (data: CommentFormData) => {
-//     handleCommentSubmit(index, data.comment);
-//     reset();
-//   };
-
-//   return (
-//     <Card className="max-w-full mx-auto md:max-w-lg">
-//       <CardHeader>
-//         <CardTitle className="flex text-2xl">{interview.reference}</CardTitle>
-//         <CardDescription className="block mt-1 uppercase tracking-wide leading-tight font-medium text-gray-700 text-sm">
-//           {interview.skill || interview.domain}
-//         </CardDescription>
-//       </CardHeader>
-//       <CardContent>
-//         <Badge
-//           className={`bg-${interview.status === 'Pending' ? 'warning' : 'success'} hover:bg-${
-//             interview.status === 'Pending' ? 'warning' : 'success'
-//           } text-xs`}
-//         >
-//           {interview.status.toUpperCase()}
-//         </Badge>
-//         <p className="text-gray-300 pt-4 text-sm">{interview.description}</p>
-//         {interview.status === 'Pending' && (
-//           <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-//             <Input
-//               type="text"
-//               placeholder="Enter comment..."
-//               className="p-2 border rounded"
-//               {...register('comment')}
-//             />
-//             {errors.comment && (
-//               <p className="text-red-500 text-xs mt-1">
-//                 {errors.comment.message}
-//               </p>
-//             )}
-//             <Button type="submit" className="mt-2">
-//               Submit Comment
-//             </Button>
-//           </form>
-//         )}
-//         {interview.status === 'Complete' && (
-//           <p className="mt-4 flex text-gray-500 border p-3 rounded text-sm">
-//             <MessageSquare className="pr-1 mr-1 h-5 w-5" />
-//             {interview.comments}
-//           </p>
-//         )}
-//         <div className="mt-4">
-//           <p className="text-sm text-gray-600">
-//             Reference: {interview.reference}
-//           </p>
-//           <p className="text-sm text-gray-600">Contact: {interview.contact}</p>
-//         </div>
-//       </CardContent>
-//       <CardFooter className="flex">
-//         <p className="text-sm font-semibold text-black bg-white px-3 py-1 rounded">
-//           {new Date(interview.interviewDate).toLocaleDateString()}
-//         </p>
-//       </CardFooter>
-//     </Card>
-//   );
-// };
 
 export default function CurrentPage() {
   // const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
@@ -171,15 +54,15 @@ export default function CurrentPage() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
-  const [isTableView, setIsTableView] = useState(false);
+  const [isTableView, setIsTableView] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const [skillData, setSkillData] = useState<any>([]);
-  const [domainData, setDomainData] = useState<any>([]);
-  const [projectSkill, setProjectSkill] = useState<any>([]);
-  const [projectDomain, setProjectDomain] = useState<any>([]);
+  const [, setSkillData] = useState<any>([]);
+  const [, setDomainData] = useState<any>([]);
+  const [, setProjectSkill] = useState<any>([]);
+  const [, setProjectDomain] = useState<any>([]);
 
   const [isLoading, setIsloading] = useState(false);
 
@@ -292,29 +175,9 @@ export default function CurrentPage() {
   //   return false;
   // });
 
-  const breadcrumbItems = [
-    { label: 'Freelancer', link: '/dashboard/freelancer' },
-    {
-      label: 'Interview',
-      link: '/freelancer/interview/profile',
-    },
-    { label: 'Current Interviews', link: '#' },
-  ];
-
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Current"
-      />
+    <div className="flex min-h-screen w-full">
       <div className="flex flex-col mb-8 sm:gap-4 sm:py-0 sm:pl-14 w-full">
-        <Header
-          breadcrumbItems={breadcrumbItems}
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Current"
-        />
         <div className="ml-10">
           <h1 className="text-3xl font-bold">Current Interviews</h1>
           <p className="text-gray-400 mt-2">
@@ -458,7 +321,10 @@ export default function CurrentPage() {
                       Dehix Talent Interviews
                     </h2>
                   </div>
-                  {skillData.length === 0 && domainData.length === 0 ? (
+                  <DehixInterviews />
+
+                  {/* {skillData.length === 0 && domainData.length === 0 ? (
+                  {/* {skillData.length === 0 && domainData.length === 0 ? (
                     <div className="text-center py-8 w-full ">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -480,7 +346,7 @@ export default function CurrentPage() {
                       isTableView={isTableView}
                       filter={filter}
                     />
-                  )}
+                  )} */}
                 </div>
 
                 {/* Project Interviews Section */}
@@ -490,7 +356,9 @@ export default function CurrentPage() {
                       Project Interviews
                     </h2>
                   </div>
-                  {projectSkill.length === 0 && projectDomain.length === 0 ? (
+                  <Projects />
+                  <Projects />
+                  {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
                     <div className="text-center py-8 w-full">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -512,7 +380,7 @@ export default function CurrentPage() {
                       domainData={projectDomain}
                       filter={filter}
                     />
-                  )}
+                  )} */}
                 </div>
               </div>
             )}

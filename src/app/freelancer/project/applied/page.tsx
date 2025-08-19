@@ -4,15 +4,9 @@ import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
 import { RootState } from '@/lib/store';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/projectMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
-import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
 
 interface Project {
@@ -71,29 +65,8 @@ export default function AppliedProject() {
   }, [user.uid]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Under Verification"
-      />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Under Verification"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            {
-              label: 'Projects',
-              link: '/freelancer/project/current',
-            },
-            {
-              label: 'Under Verification',
-              link: '#',
-            },
-          ]}
-        />
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <div className="mb-8 ml-10">
           <h1 className="text-3xl font-bold">Projects Under Verification</h1>
           <p className="text-gray-400 mt-2">
