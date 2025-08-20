@@ -87,7 +87,7 @@ export function ReportForm({
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
-      
+
       await apiHelperService.createReport(finalPayload);
       onSubmitted?.();
     } catch (error) {
