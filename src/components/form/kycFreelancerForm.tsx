@@ -182,7 +182,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-4 sm:p-6 md:p-10 shadow-md relative rounded-lg w-full max-w-3xl mx-auto">
+    <Card className="p-10 shadow-lg relative rounded-2xl w-full max-w-7xl min-h-[80vh] mx-auto">
       <Form {...form}>
         <div className="flex flex-col mb-4 sm:mb-6 text-center sm:text-left">
           <div className="text-sm sm:text-base font-medium">
@@ -213,7 +213,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                   <Input
                     placeholder="Enter your Aadhar Id"
                     {...field}
-                    className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-2/3 border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                   />
                 </FormControl>
                 <FormMessage />
@@ -236,9 +236,9 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                         <Image
                           src={field.value}
                           alt="Front Document"
-                          width={128}
-                          height={128}
-                          className="rounded-md object-cover border"
+                          width={250}
+                          height={250}
+                          className="rounded-lg object-contain border shadow-sm"
                         />
                         <Button
                           type="button"
@@ -282,9 +282,9 @@ export default function KYCForm({ user_id }: { user_id: string }) {
                         <Image
                           src={field.value}
                           alt="Back Document"
-                          width={128}
-                          height={128}
-                          className="rounded-md object-cover border"
+                          width={250}
+                          height={250}
+                          className="rounded-lg object-contain border shadow-sm"
                         />
                         <Button
                           type="button"
@@ -312,10 +312,11 @@ export default function KYCForm({ user_id }: { user_id: string }) {
               </FormItem>
             )}
           />
-
-          <div className="col-span-1  md:col-span-2">
+          <FormLabel className="font-semibold text-sm sm:text-base">
+                  {/* Document Front Img */}
             <LiveCaptureField form={form} />
-          </div>
+                </FormLabel>
+          
 
           <Separator className="col-span-1 md:col-span-2" />
 
