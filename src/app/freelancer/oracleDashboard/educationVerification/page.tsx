@@ -86,17 +86,21 @@ export default function ProfessionalInfo() {
     fetchData();
   }, [fetchData]);
 
-  // const updateEducationStatus = (index: number, newStatus: string) => {
-  //   const updatedData = [...educationdata];
-  //   updatedData[index].verificationStatus = newStatus;
-  //   setEducationData(updatedData); // Update state with new status
-  // };
+  const updateEducationStatus = (index: number, newStatus: string) => {
+    setEducationData((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, verificationStatus: newStatus } : item,
+      ),
+    );
+  };
 
-  // const updateCommentStatus = (index: number, newComment: string) => {
-  //   const updatedData = [...educationdata];
-  //   updatedData[index].comments = newComment;
-  //   setEducationData(updatedData); // Update state with new comment
-  // };
+  const updateCommentStatus = (index: number, newComment: string) => {
+    setEducationData((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, comments: newComment } : item,
+      ),
+    );
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -170,12 +174,12 @@ export default function ProfessionalInfo() {
             fieldOfStudy={data.fieldOfStudy}
             comments={data.comments}
             status={data.verificationStatus}
-            onStatusUpdate={() => {
-              // Handle status update
-            }}
-            onCommentUpdate={() => {
-              // Handle comment update
-            }}
+            onStatusUpdate={(newStatus) =>
+              updateEducationStatus(index, newStatus)
+            }
+            onCommentUpdate={(newComment) =>
+              updateCommentStatus(index, newComment)
+            }
           />
         ))}
         {educationdata.length === 0 ? (
