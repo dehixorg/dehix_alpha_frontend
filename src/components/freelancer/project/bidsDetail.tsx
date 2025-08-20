@@ -191,34 +191,46 @@ const ProfileDialog = React.memo(
     const getProfileDisplayName = (
       profileData: any,
       bidData: any,
-      isFreelancerProfile: boolean
+      isFreelancerProfile: boolean,
     ): string => {
       if (isFreelancerProfile) {
-        const fullName = `${profileData?.firstName ?? ''} ${profileData?.lastName ?? ''}`.trim();
-        return fullName || bidData?.userName || profileData?.userName || "Freelancer Profile";
+        const fullName =
+          `${profileData?.firstName ?? ''} ${profileData?.lastName ?? ''}`.trim();
+        return (
+          fullName ||
+          bidData?.userName ||
+          profileData?.userName ||
+          'Freelancer Profile'
+        );
       }
 
-      const freelancerName = `${profileData?.freelancerId?.firstName ?? ''} ${profileData?.freelancerId?.lastName ?? ''}`.trim();
-      return freelancerName || bidData?.userName || profileData?.profileName || "Profile Details";
+      const freelancerName =
+        `${profileData?.freelancerId?.firstName ?? ''} ${profileData?.freelancerId?.lastName ?? ''}`.trim();
+      return (
+        freelancerName ||
+        bidData?.userName ||
+        profileData?.profileName ||
+        'Profile Details'
+      );
     };
 
     const getProfileUsername = (
       profileData: any,
       bidData: any,
-      isFreelancerProfile: boolean
+      isFreelancerProfile: boolean,
     ): string => {
       if (bidData?.userName) {
         return bidData.userName;
       }
 
       if (isFreelancerProfile) {
-        return profileData?.userName || "freelancer";
+        return profileData?.userName || 'freelancer';
       }
 
       return (
         profileData?.freelancerId?.userName ||
         profileData?.userName ||
-        "freelancer"
+        'freelancer'
       );
     };
 
@@ -243,12 +255,21 @@ const ProfileDialog = React.memo(
                     <UserCircle className="w-8 h-8 text-white" />
                   </div>
                 )}
-                                 <div>
-                   <h2 className="text-xl font-bold">
-                     {getProfileDisplayName(profileData, bidData, isFreelancerProfile)}
-                   </h2>
+                <div>
+                  <h2 className="text-xl font-bold">
+                    {getProfileDisplayName(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
+                  </h2>
                   <p className="text-sm text-muted-foreground">
-                    @{getProfileUsername(profileData, bidData, isFreelancerProfile)}
+                    @
+                    {getProfileUsername(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
                   </p>
                 </div>
               </div>
@@ -424,7 +445,11 @@ const ProfileDialog = React.memo(
                     <div className="flex flex-wrap gap-2">
                       {profileData.skills.map((skill: any) => (
                         <Badge
-                          key={skill._id || skill.id || `skill-${skill.name}-${skill.level}`}
+                          key={
+                            skill._id ||
+                            skill.id ||
+                            `skill-${skill.name}-${skill.level}`
+                          }
                           className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
                           variant="outline"
                         >
