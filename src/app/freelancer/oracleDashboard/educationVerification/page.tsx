@@ -170,12 +170,12 @@ export default function ProfessionalInfo() {
             fieldOfStudy={data.fieldOfStudy}
             comments={data.comments}
             status={data.verificationStatus}
-            // onStatusUpdate={(newStatus) => {
-            //   // Handle status update
-            // }}
-            // onCommentUpdate={(newComment) => {
-            //   // Handle comment update
-            // }}
+            onStatusUpdate={() => {
+              // Handle status update
+            }}
+            onCommentUpdate={() => {
+              // Handle comment update
+            }}
           />
         ))}
         {educationdata.length === 0 ? (

@@ -704,10 +704,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [, setSelectedProfileId] = useState<string | null>(null);
-  const [selectedFreelancerId, setSelectedFreelancerId] = useState<
-    string | null
-  >(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
+    null,
+  );
+  const [, setSelectedFreelancerId] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedBidData, setSelectedBidData] = useState<any>(null);
