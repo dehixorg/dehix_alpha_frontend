@@ -185,6 +185,52 @@ const ProfileDialog = React.memo(
   }) => {
     if (!profileData && !loading) return null;
 
+    const getProfileDisplayName = (
+      profileData: any,
+      bidData: any,
+      isFreelancerProfile: boolean,
+    ): string => {
+      if (isFreelancerProfile) {
+        const fullName =
+          `${profileData?.firstName ?? ''} ${profileData?.lastName ?? ''}`.trim();
+        return (
+          fullName ||
+          bidData?.userName ||
+          profileData?.userName ||
+          'Freelancer Profile'
+        );
+      }
+
+      const freelancerName =
+        `${profileData?.freelancerId?.firstName ?? ''} ${profileData?.freelancerId?.lastName ?? ''}`.trim();
+      return (
+        freelancerName ||
+        bidData?.userName ||
+        profileData?.profileName ||
+        'Profile Details'
+      );
+    };
+
+    const getProfileUsername = (
+      profileData: any,
+      bidData: any,
+      isFreelancerProfile: boolean,
+    ): string => {
+      if (bidData?.userName) {
+        return bidData.userName;
+      }
+
+      if (isFreelancerProfile) {
+        return profileData?.userName || 'freelancer';
+      }
+
+      return (
+        profileData?.freelancerId?.userName ||
+        profileData?.userName ||
+        'freelancer'
+      );
+    };
+
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -208,15 +254,19 @@ const ProfileDialog = React.memo(
                 )}
                 <div>
                   <h2 className="text-xl font-bold">
-                    {isFreelancerProfile
-                      ? `${profileData?.firstName || ''} ${profileData?.lastName || ''}`.trim() ||
-                        profileData?.userName
-                      : profileData?.profileName || 'Profile Details'}
+                    {getProfileDisplayName(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {isFreelancerProfile
-                      ? `@${profileData?.userName}`
-                      : `@${profileData?.freelancerId?.userName || 'freelancer'}`}
+                    @
+                    {getProfileUsername(
+                      profileData,
+                      bidData,
+                      isFreelancerProfile,
+                    )}
                   </p>
                 </div>
               </div>
@@ -271,6 +321,13 @@ const ProfileDialog = React.memo(
                       <span className="font-medium">
                         {profileData.workExperience} years experience
                       </span>
+                    </div>
+                  )}
+                  {/* Show role if available for freelancer profile */}
+                  {isFreelancerProfile && profileData?.role && (
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="w-4 h-4 text-indigo-600" />
+                      <span className="font-medium">{profileData.role}</span>
                     </div>
                   )}
                 </div>
@@ -372,6 +429,34 @@ const ProfileDialog = React.memo(
                   </div>
                 )}
 
+              {/* Skills for freelancer profile */}
+              {isFreelancerProfile &&
+                profileData?.skills &&
+                profileData.skills.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Code className="w-5 h-5" />
+                      Skills
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.skills.map((skill: any) => (
+                        <Badge
+                          key={
+                            skill._id ||
+                            skill.id ||
+                            `skill-${skill.name}-${skill.level}`
+                          }
+                          className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
+                          variant="outline"
+                        >
+                          {skill.name}
+                          {skill.level && ` (${skill.level})`}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               {/* Projects */}
               {profileData?.projects && profileData.projects.length > 0 && (
                 <div>
@@ -414,32 +499,46 @@ const ProfileDialog = React.memo(
                         .map((experience: any, index: number) => (
                           <div
                             key={index}
-                            className="border-l-4 border-green-500 pl-4 bg-gray-50 dark:bg-gray-800 p-3 rounded"
+                            className="bg-muted/50 p-4 rounded-lg border border-border"
                           >
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-semibold">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-foreground text-base">
                                   {experience.jobTitle}
                                 </h4>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
                                   {experience.company}
                                 </p>
                               </div>
                               {experience.workFrom && experience.workTo && (
-                                <span className="text-sm text-muted-foreground">
-                                  {experience.workFrom} - {experience.workTo}
+                                <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
+                                  {new Date(
+                                    experience.workFrom,
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                  })}{' '}
+                                  -{' '}
+                                  {new Date(
+                                    experience.workTo,
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                  })}
                                 </span>
                               )}
                             </div>
                             {experience.workDescription && (
-                              <p className="text-sm text-muted-foreground">
-                                {experience.workDescription}
-                              </p>
+                              <div className="mt-3">
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {experience.workDescription}
+                                </p>
+                              </div>
                             )}
                           </div>
                         ))}
                       {profileData.experiences.length > 3 && (
-                        <p className="text-sm text-muted-foreground text-center">
+                        <p className="text-sm text-muted-foreground text-center mt-4">
                           And {profileData.experiences.length - 3} more
                           experiences...
                         </p>
@@ -463,30 +562,64 @@ const ProfileDialog = React.memo(
                         .map((exp: any, index: number) => (
                           <div
                             key={index}
-                            className="border-l-4 border-green-500 pl-4 bg-gray-50 dark:bg-gray-800 p-3 rounded"
+                            className="bg-muted/50 p-4 rounded-lg border border-border"
                           >
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-semibold">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-foreground text-base">
                                   {exp.jobTitle}
                                 </h4>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm">
+                                <p className="text-blue-600 dark:text-blue-400 font-medium text-sm mt-1">
                                   {exp.company}
                                 </p>
                               </div>
                               {exp.workFrom && exp.workTo && (
-                                <span className="text-sm text-muted-foreground">
-                                  {exp.workFrom} - {exp.workTo}
+                                <span className="text-sm text-muted-foreground font-medium ml-4 whitespace-nowrap">
+                                  {new Date(exp.workFrom).toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    },
+                                  )}{' '}
+                                  -{' '}
+                                  {new Date(exp.workTo).toLocaleDateString(
+                                    'en-US',
+                                    {
+                                      year: 'numeric',
+                                      month: 'short',
+                                    },
+                                  )}
                                 </span>
                               )}
                             </div>
                             {exp.workDescription && (
-                              <p className="text-sm text-muted-foreground">
-                                {exp.workDescription}
-                              </p>
+                              <div className="mt-3">
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {exp.workDescription}
+                                </p>
+                              </div>
                             )}
                           </div>
                         ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Work Experience for freelancer profile */}
+              {isFreelancerProfile &&
+                profileData?.workExperience &&
+                profileData.workExperience > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Briefcase className="w-5 h-5" />
+                      Work Experience
+                    </h3>
+                    <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                      <p className="text-foreground leading-relaxed">
+                        {profileData.workExperience} years of professional
+                        experience
+                      </p>
                     </div>
                   </div>
                 )}
@@ -754,6 +887,35 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         if (response.status === 200) {
           const profileData = response.data.data || response.data;
 
+          console.log('Profile data fetched:', {
+            isFreelancerProfile,
+            profileData,
+          });
+
+          // For specific profiles, enrich with freelancer information if we have a freelancer ID
+          if (!isFreelancerProfile && freelancerIdOverride) {
+            try {
+              const freelancerResponse = await axiosInstance.get(
+                `/public/freelancer/${freelancerIdOverride}`,
+              );
+              if (freelancerResponse.status === 200) {
+                const freelancerData =
+                  freelancerResponse.data?.data || freelancerResponse.data;
+                // Merge freelancer data with profile data for better display
+                profileData.freelancerId = freelancerData;
+                console.log(
+                  'Enriched profile data with freelancer info:',
+                  profileData,
+                );
+              }
+            } catch (enrichError) {
+              console.warn(
+                'Could not enrich profile with freelancer data:',
+                enrichError,
+              );
+            }
+          }
+
           // If this profile has projects, enrich project data with complete freelancer data
           if (profileData.projects && profileData.projects.length > 0) {
             try {
@@ -845,6 +1007,26 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
+
+        // If fetching specific profile failed and we have a freelancer ID, try fetching general freelancer profile
+        if (!isFreelancerProfile && freelancerIdOverride) {
+          console.log('Falling back to general freelancer profile...');
+          try {
+            const fallbackResponse = await axiosInstance.get(
+              `/public/freelancer/${freelancerIdOverride}`,
+            );
+            if (fallbackResponse.status === 200) {
+              const fallbackData =
+                fallbackResponse.data.data || fallbackResponse.data;
+              console.log('Fallback data fetched:', fallbackData);
+              setProfileData(fallbackData);
+              return;
+            }
+          } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+          }
+        }
+
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -866,13 +1048,15 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
       bidData?: any,
     ) => {
       if (hasProfile) {
+        // If freelancer has a profile, show the specific profile
         setSelectedProfileId(profileId);
         setSelectedFreelancerId(freelancerId); // Store freelancer ID for enrichment
-        fetchProfileData(profileId, false, freelancerId); // Pass freelancer ID
+        fetchProfileData(profileId, false, freelancerId); // false = specific profile
       } else {
+        // If freelancer has no profile, show general freelancer profile
         setSelectedProfileId(null);
         setSelectedFreelancerId(freelancerId);
-        fetchProfileData(freelancerId, true);
+        fetchProfileData(freelancerId, true); // true = general freelancer profile
       }
       setSelectedBidData(bidData);
       setIsProfileDialogOpen(true);
@@ -1090,12 +1274,17 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 handleOpenProfileDialog(
                   freelancerProfile._id,
                   freelancerId,
-                  true,
+                  true, // true = has profile, false = no profile
                   data,
                 );
               } else if (freelancerId) {
                 // If no profile selected, show general freelancer profile
-                handleOpenProfileDialog('', freelancerId, false, data);
+                handleOpenProfileDialog(
+                  freelancerId,
+                  freelancerId,
+                  false,
+                  data,
+                );
               }
             };
 
@@ -1250,7 +1439,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         onClose={handleCloseProfileDialog}
         profileData={profileData}
         loading={loadingProfile}
-        isFreelancerProfile={!!selectedFreelancerId}
+        isFreelancerProfile={!selectedProfileId} // true if no profile selected, false if specific profile
         bidData={selectedBidData}
       />
 
