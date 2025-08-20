@@ -11,11 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/oracleMenuItems';
 import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -81,7 +76,6 @@ export default function ProfessionalInfo() {
         title: 'Error',
         description: 'Something went wrong.Please try again.',
       }); // Error toast
-      console.log(error, 'error in getting verification data');
     }
   }, []);
 
@@ -102,27 +96,7 @@ export default function ProfessionalInfo() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Experience Verification"
-      />
-      {/* <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8"> */}
-      {/* <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Oracle', link: '#' },
-
-            {
-              label: 'Experience Verification',
-              link: '#',
-            },
-          ]}
-        /> */}
+    <div className="flex min-h-screen w-full flex-col">
       <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
         <div className="mb-8 ">
           <h1 className="text-3xl font-bold">Experience Verification</h1>

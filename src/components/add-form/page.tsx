@@ -67,7 +67,6 @@ export default function ProjectForm() {
     values.verificationUpdateTime = new Date(
       values.verificationUpdateTime,
     ).toISOString();
-    console.log({ values });
   };
 
   return (

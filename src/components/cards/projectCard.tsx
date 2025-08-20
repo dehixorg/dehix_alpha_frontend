@@ -76,7 +76,7 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
   const [openReport, setOpenReport] = useState(false);
-
+  console.log('user type:', type);
   const pathname = usePathname();
   const user = useSelector((state: RootState) => state.user);
 
@@ -160,10 +160,7 @@ export function ProjectCard({
       </CardContent>
 
       <CardFooter>
-        <Link
-          href={`/${type.toLowerCase()}/project/${project._id}`}
-          className="w-full"
-        >
+        <Link href={`/project/${project._id}`} className="w-full">
           <Button
             className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >
@@ -178,7 +175,13 @@ export function ProjectCard({
           <DialogHeader>
             <DialogTitle>Create New Report</DialogTitle>
           </DialogHeader>
-          <NewReportTab reportData={reportData} />
+          <NewReportTab
+            reportData={reportData}
+            onSubmitted={() => {
+              setOpenReport(false);
+              return true;
+            }}
+          />
         </DialogContent>
       </Dialog>
     </Card>

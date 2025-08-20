@@ -24,12 +24,10 @@ export function cn(...inputs: ClassValue[]) {
 export const resetPassword = async (email: string): Promise<void> => {
   try {
     await sendPasswordResetEmail(auth, email);
-    console.log('Password reset email sent successfully.');
   } catch (error: any) {
     // Handle the error here
-    const errorCode = error.code;
     const errorMessage = error.message;
-    console.log(errorCode, errorMessage);
+
     throw new Error(errorMessage);
   }
 };
@@ -44,9 +42,8 @@ export const loginUser = async (email: string, password: string) => {
     return userCredential;
   } catch (error: any) {
     // Handle the error here
-    const errorCode = error.code;
     const errorMessage = error.message;
-    console.log(errorCode, errorMessage);
+
     throw new Error(errorMessage);
   }
 };

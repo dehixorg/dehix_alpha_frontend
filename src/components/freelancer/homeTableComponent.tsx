@@ -2,14 +2,23 @@ import React, { useState } from 'react';
 import { PackageOpen } from 'lucide-react';
 import Link from 'next/link';
 
-import { getStatusBadge } from '@/utils/statusBadge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -18,17 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { getStatusBadge } from '@/utils/statusBadge';
 
 interface Project {
   _id: string;
@@ -81,11 +81,18 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
 }) => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Calculate if description should be truncated based on length
+  const shouldTruncate = (text: string) => text.length > 25;
+  const truncateLength = 25;
 
   const handleDialogClose = () => {
     setIsDialogOpen(false); // Close the dialog
     setSelectedProject(null); // Clear the selected project (optional)
+    setExpandedProjects(new Set()); // Reset all expanded projects
   };
 
   const handleDialogOpen = (project: Project) => {
@@ -129,9 +136,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   </TableCell>
                   <TableCell className="text-center">
                     <Skeleton className="h-8 w-24" />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Skeleton className="h-4 w-20" />
                   </TableCell>
                 </TableRow>
               ))
@@ -184,14 +188,14 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                             </span>
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="rounded-lg shadow-md p-6 w-96 mx-auto border border-gray-200">
+                        <DialogContent className="rounded-lg shadow-md p-6 w-96 max-w-[90vw] mx-auto border border-gray-200 overflow-hidden [&_[data-radix-dialog-overlay]]:bg-black/30">
                           <DialogHeader className="mb-4 text-center">
                             <DialogTitle className="text-lg font-semibold leading-tight flex items-center gap-2 justify-center">
                               <i className="fas fa-project-diagram"></i>
                               <span>Project Details</span>
                             </DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-3 text-sm">
+                          <div className="space-y-4 text-sm max-h-[60vh] overflow-y-auto">
                             <div className="flex justify-between">
                               <strong>Project Name :</strong>
                               <span>{selectedProject?.projectName}</span>
@@ -200,49 +204,96 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                               <strong>Company :</strong>
                               <span>{selectedProject?.companyName}</span>
                             </div>
-                            <div className="flex justify-between items-center gap-2">
-                              <strong className="w-1/3">Description :</strong>
-                              <p className="w-2/3">
-                                {selectedProject?.description &&
-                                selectedProject.description.length > 55 &&
-                                !isExpanded ? (
-                                  <span>
-                                    {selectedProject?.description.substring(
-                                      0,
-                                      55,
-                                    )}
-                                    ...
-                                    <button
-                                      onClick={() => setIsExpanded(!isExpanded)}
-                                      className="ml-2 text-blue-500 cursor-pointer"
-                                    >
-                                      See More
-                                    </button>
-                                  </span>
-                                ) : (
-                                  <span>
-                                    {selectedProject?.description}
-                                    {selectedProject?.description &&
-                                      selectedProject.description.length >
-                                        55 && (
-                                        <button
-                                          onClick={() =>
-                                            setIsExpanded(!isExpanded)
+                            <div className="flex items-start gap-2">
+                              <strong className="flex-shrink-0">
+                                Description :
+                              </strong>
+                              <div className="text-sm text-gray-700 break-words flex-1 max-w-full overflow-hidden">
+                                {selectedProject?.description ? (
+                                  shouldTruncate(selectedProject.description) &&
+                                  !(
+                                    selectedProject?._id &&
+                                    expandedProjects.has(selectedProject._id)
+                                  ) ? (
+                                    <div className="w-full">
+                                      <span className="inline-block max-w-full">
+                                        {selectedProject.description.substring(
+                                          0,
+                                          truncateLength,
+                                        )}
+                                        ...
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          if (selectedProject?._id) {
+                                            const newExpanded = new Set(
+                                              expandedProjects,
+                                            );
+                                            newExpanded.add(
+                                              selectedProject._id,
+                                            );
+                                            setExpandedProjects(newExpanded);
                                           }
-                                          className="ml-2 text-blue-500 cursor-pointer"
+                                        }}
+                                        className="ml-2 text-blue-500 cursor-pointer hover:text-blue-700"
+                                      >
+                                        See More
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="w-full">
+                                      <span className="inline-block max-w-full break-words">
+                                        {selectedProject.description}
+                                      </span>
+                                      {shouldTruncate(
+                                        selectedProject.description,
+                                      ) && (
+                                        <button
+                                          onClick={() => {
+                                            if (selectedProject?._id) {
+                                              const newExpanded = new Set(
+                                                expandedProjects,
+                                              );
+                                              if (
+                                                newExpanded.has(
+                                                  selectedProject._id,
+                                                )
+                                              ) {
+                                                newExpanded.delete(
+                                                  selectedProject._id,
+                                                );
+                                              } else {
+                                                newExpanded.add(
+                                                  selectedProject._id,
+                                                );
+                                              }
+                                              setExpandedProjects(newExpanded);
+                                            }
+                                          }}
+                                          className="ml-2 text-blue-500 cursor-pointer hover:text-blue-700"
                                         >
-                                          {isExpanded ? 'See Less' : 'See More'}
+                                          {selectedProject?._id &&
+                                          expandedProjects.has(
+                                            selectedProject._id,
+                                          )
+                                            ? 'See Less'
+                                            : 'See More'}
                                         </button>
                                       )}
-                                  </span>
+                                    </div>
+                                  )
+                                ) : (
+                                  'No description available'
                                 )}
-                              </p>
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <strong>Skills Required :</strong>
-                              <span>
-                                {selectedProject?.skillsRequired?.length ??
-                                0 > 0
+                            <div className="flex items-start gap-2">
+                              <strong className="flex-shrink-0">
+                                Skills Required :
+                              </strong>
+                              <span className="text-sm text-gray-700 break-words flex-1">
+                                {(selectedProject?.skillsRequired?.length ??
+                                  0) > 0
                                   ? selectedProject?.skillsRequired?.join(
                                       ', ',
                                     ) ?? 'Not specified'
