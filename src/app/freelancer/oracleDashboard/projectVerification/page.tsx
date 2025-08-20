@@ -3,7 +3,6 @@ import { Filter, PackageOpen } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
-import Header from '@/components/header/header';
 import {
   Dialog,
   DialogContent,
@@ -12,11 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/oracleMenuItems';
 // import dummyData from '@/dummydata.json';
 import { axiosInstance } from '@/lib/axiosinstance';
 import ProjectVerificationCard from '@/components/cards/oracleDashboard/projectVerificationCard';
@@ -85,7 +79,6 @@ export default function ProfessionalInfo() {
         title: 'Error',
         description: 'Something went wrong. Please try again.',
       }); // Error toast
-      console.log(error, 'error in getting verification data');
     }
   }, []);
 
@@ -106,113 +99,93 @@ export default function ProfessionalInfo() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop} // Assuming these are defined elsewhere
-        menuItemsBottom={menuItemsBottom} // Assuming these are defined elsewhere
-        active="Project Verification"
-      />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="Dashboard"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Oracle', link: '#' },
-            {
-              label: 'Project Verification',
-              link: '#',
-            },
-          ]}
-        />
-        <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
-          <div className="mb-8 ">
-            <h1 className="text-3xl font-bold">Project Verification</h1>
-            <p className="text-gray-400 mt-2">
-              Monitor the status of your project verifications.
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+        <div className="mb-8 ">
+          <h1 className="text-3xl font-bold">Project Verification</h1>
+          <p className="text-gray-400 mt-2">
+            Monitor the status of your project verifications.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="mr-8 mb-12"
+          onClick={() => setIsDialogOpen(true)}
+        >
+          <Filter className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filter Project Status</DialogTitle>
+          </DialogHeader>
+          <RadioGroup
+            defaultValue="all"
+            value={filter}
+            onValueChange={(value: FilterOption) => handleFilterChange(value)}
+            className="space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="all" id="filter-all" />
+              <label htmlFor="filter-all">All</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="current" id="filter-current" />
+              <label htmlFor="filter-current">Pending</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="verified" id="filter-verified" />
+              <label htmlFor="filter-verified">Verified</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="rejected" id="filter-rejected" />
+              <label htmlFor="filter-rejected">Rejected</label>
+            </div>
+          </RadioGroup>
+          <DialogFooter>
+            <Button type="button" onClick={() => setIsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+        {filteredData.map((data, index) => (
+          <ProjectVerificationCard
+            key={index}
+            _id={data._id}
+            projectName={data.projectName}
+            description={data.description}
+            githubLink={data.githubLink}
+            startFrom={data.start}
+            endTo={data.end}
+            role={data.role}
+            projectType={data.projectType}
+            reference={data.refer}
+            techUsed={data.techUsed}
+            comments={data.comments}
+            status={data.verificationStatus}
+            onStatusUpdate={(newStatus) =>
+              updateProjectStatus(index, newStatus)
+            }
+            onCommentUpdate={(newComment) =>
+              updateCommentStatus(index, newComment)
+            }
+          />
+        ))}
+        {projectData.length === 0 ? (
+          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+            <PackageOpen className="mx-auto text-gray-500" size="100" />
+            <p className="text-gray-500">
+              No Project verification for you now.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="mr-8 mb-12"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Filter Project Status</DialogTitle>
-            </DialogHeader>
-            <RadioGroup
-              defaultValue="all"
-              value={filter}
-              onValueChange={(value: FilterOption) => handleFilterChange(value)}
-              className="space-y-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="all" id="filter-all" />
-                <label htmlFor="filter-all">All</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="current" id="filter-current" />
-                <label htmlFor="filter-current">Pending</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="verified" id="filter-verified" />
-                <label htmlFor="filter-verified">Verified</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="rejected" id="filter-rejected" />
-                <label htmlFor="filter-rejected">Rejected</label>
-              </div>
-            </RadioGroup>
-            <DialogFooter>
-              <Button type="button" onClick={() => setIsDialogOpen(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {filteredData.map((data, index) => (
-            <ProjectVerificationCard
-              key={index}
-              _id={data._id}
-              projectName={data.projectName}
-              description={data.description}
-              githubLink={data.githubLink}
-              startFrom={data.start}
-              endTo={data.end}
-              role={data.role}
-              projectType={data.projectType}
-              reference={data.refer}
-              techUsed={data.techUsed}
-              comments={data.comments}
-              status={data.verificationStatus}
-              onStatusUpdate={(newStatus) =>
-                updateProjectStatus(index, newStatus)
-              }
-              onCommentUpdate={(newComment) =>
-                updateCommentStatus(index, newComment)
-              }
-            />
-          ))}
-          {projectData.length === 0 ? (
-            <div className="text-center w-[90vw] px-auto mt-20 py-10">
-              <PackageOpen className="mx-auto text-gray-500" size="100" />
-              <p className="text-gray-500">
-                No Project verification for you now.
-              </p>
-            </div>
-          ) : null}
-        </main>
-      </div>
+        ) : null}
+      </main>
     </div>
   );
 }

@@ -70,6 +70,7 @@
     "react-hook-form": "^7.52.1",
     "react-markdown": "^9.0.3",
     "react-redux": "^9.1.2",
+    "react-resizable-panels": "^3.0.4",
     "react-select": "^5.8.0",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.2.2",

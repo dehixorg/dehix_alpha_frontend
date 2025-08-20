@@ -2,7 +2,6 @@
 
 import { DownloadIcon, PackageOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 
 import { Card } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
@@ -19,7 +18,7 @@ import { useToast } from '../ui/use-toast';
 
 import { FieldType, FiltersArrayElem, Params } from './FieldTypes';
 import { CustomTableCell } from './FieldComponents';
-import FilterTable from './FilterTable';
+import { FilterTable } from './FilterTable';
 import { HeaderActionComponent } from './HeaderActionsComponent';
 import { TablePagination } from './Pagination';
 import { TableSelect } from './TableSelect';
@@ -125,7 +124,6 @@ export const CustomTable = ({
       const response = await apiHelperService.fetchData(api, params);
       setData(response.data.data);
     } catch (error) {
-      console.log(error);
       toast({
         title: 'Error',
         description: Messages.FETCH_ERROR(title || ''),
@@ -135,19 +133,6 @@ export const CustomTable = ({
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [
-    selectedFilters,
-    search,
-    page,
-    limit,
-    sortByValue,
-    sortOrder,
-    externalData,
-  ]);
-
   useEffect(() => {
     setPage(1);
   }, [selectedFilters, search, limit]);
@@ -253,7 +238,7 @@ export const CustomTable = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  {fields.map((field, _) => (
+                  {fields.map((field) => (
                     <TableHead
                       key={field.fieldName}
                       className={cn('text-center', field.className)}
@@ -275,7 +260,7 @@ export const CustomTable = ({
                   <>
                     {[...Array(10)].map((_, i) => (
                       <TableRow key={i}>
-                        {fields.map((field, _) => (
+                        {fields.map((field) => (
                           <TableCell key={field.fieldName}>
                             <Skeleton className="h-5 w-20" />
                           </TableCell>
@@ -284,7 +269,7 @@ export const CustomTable = ({
                     ))}
                   </>
                 ) : data?.length > 0 ? (
-                  data.map((elem: any, _: number) => (
+                  data.map((elem: any) => (
                     <TableRow key={elem._id}>
                       {fields.map((field, index) => (
                         <TableCell

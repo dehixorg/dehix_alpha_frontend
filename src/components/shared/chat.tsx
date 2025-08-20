@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 //chat.tsx
 import * as React from 'react';
 import {
@@ -11,7 +12,6 @@ import {
   Minimize2,
   Reply,
   Text,
-  X,
   Bold,
   Italic,
   Underline,
@@ -21,12 +21,11 @@ import {
   Mic, // Added for voice recording
   StopCircle, // Added for stopping recording
   Trash2, // Added for discarding recording
+  X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { usePathname } from 'next/navigation'; // Added
-import ReactMarkdown from 'react-markdown'; // Import react-markdown to render markdown
-import remarkGfm from 'remark-gfm';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,
@@ -37,12 +36,6 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify'; // <-- add import later
-import {
-  Dialog,
-  DialogContent,
-  DialogOverlay,
-  DialogPortal,
-} from '@radix-ui/react-dialog';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -51,19 +44,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
-import { DialogHeader } from '../ui/dialog';
-import { NewReportTab } from '../report-tabs/NewReportTabs';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '../ui/dropdown-menu';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
 import { FileAttachment } from './fileAttachment';
+// Added
+// ProfileSidebar is no longer imported or rendered here
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -82,23 +75,36 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogOverlay,
+} from '@/components/ui/dialog';
+import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 
+// Format only the time (e.g., 10:30 AM) for in-bubble timestamps
 function formatChatTimestamp(timestamp: string) {
+  return format(new Date(timestamp), 'hh:mm a');
+}
+
+// Helper for date header (Today, Yesterday, Oct 12 2023 …)
+function formatDateHeader(timestamp: string) {
   const date = new Date(timestamp);
+  if (isToday(date)) return 'Today';
+  if (isYesterday(date)) return 'Yesterday';
+  return isThisYear(date)
+    ? format(date, 'MMM dd')
+    : format(date, 'yyyy MMM dd');
+}
 
-  if (isToday(date)) {
-    return format(date, 'hh:mm a'); // Example: "10:30 AM"
-  }
-
-  if (isYesterday(date)) {
-    return `Yesterday, ${format(date, 'hh:mm a')}`; // Example: "Yesterday, 10:30 AM"
-  }
-
-  if (isThisYear(date)) {
-    return format(date, 'MMM dd, hh:mm a'); // Example: "Oct 12, 10:30 AM"
-  }
-
-  return format(date, 'yyyy MMM dd, hh:mm a'); // Example: "2023 Oct 12, 10:30 AM"
+function isSameDay(d1: Date, d2: Date) {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
 }
 
 type User = {
@@ -116,6 +122,10 @@ type Message = {
   timestamp: string;
   replyTo?: string | null;
   reactions?: MessageReaction;
+  voiceMessage?: {
+    duration: number;
+    type: 'voice';
+  };
 };
 
 interface CardsChatProps {
@@ -133,12 +143,11 @@ interface CardsChatProps {
 
 export function CardsChat({
   conversation,
-  conversations,
-  setActiveConversation,
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
 }: CardsChatProps) {
+  const router = useRouter();
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -152,18 +161,14 @@ export function CardsChat({
   const user = useSelector((state: RootState) => state.user);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [replyToMessageId, setReplyToMessageId] = useState<string>('');
-  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [, setHoveredMessageId] = useState(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [showFormattingOptions, setShowFormattingOptions] =
     useState<boolean>(false);
-  const user1 = useSelector((state: RootState) => state.user);
 
   const prevMessagesLength = useRef(messages.length);
-  const [openDrawer, setOpenDrawer] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
+  const [, setOpenDrawer] = useState(false);
 
-  const pathname = usePathname();
-  const reportType = getReportTypeFromPath(pathname);
   // States for voice recording
   type RecordingStatus =
     | 'idle'
@@ -179,22 +184,72 @@ export function CardsChat({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
+  const [, setRecordingStartTime] = useState<number | null>(
     null,
   );
   const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
   const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
+  // State for image modal
+  const [modalImage, setModalImage] = useState<string | null>(null);
+
+  // Reporting modal state & helpers
+  const [openReport, setOpenReport] = useState(false);
+  const pathname = usePathname();
+  const reportType = getReportTypeFromPath(pathname);
+
   const reportData = {
     subject: '',
     description: '',
-    report_role: user1?.type || 'STUDENT',
+    report_role: user.type || 'STUDENT',
     report_type: reportType,
     status: 'OPEN',
-    reportedbyId: user1?.uid || '',
-    reportedId: user1?.uid || '',
+    reportedbyId: user.uid,
+    reportedId: user.uid,
   };
+  // For robust force update
+  const [, forceUpdate] = useState(0);
+
+  // For voice message duration display
+  const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
+  const handleLoadedMetadata = (id: string) => {
+    const audio = audioRefs.current[id];
+    if (
+      audio &&
+      isFinite(audio.duration) &&
+      !isNaN(audio.duration) &&
+      audio.duration > 0
+    ) {
+      setAudioDurations((prev) => ({ ...prev, [id]: audio.duration }));
+    } else {
+      // Try again after a short delay if duration is not available yet
+      setTimeout(() => {
+        const audioRetry = audioRefs.current[id];
+        if (
+          audioRetry &&
+          isFinite(audioRetry.duration) &&
+          !isNaN(audioRetry.duration) &&
+          audioRetry.duration > 0
+        ) {
+          setAudioDurations((prev) => ({ ...prev, [id]: audioRetry.duration }));
+          forceUpdate((n) => n + 1); // force re-render
+        }
+      }, 500);
+    }
+  };
+
+  // Pause any other playing audio when a new one starts
+  const handlePlay = (id: string) => {
+    Object.entries(audioRefs.current).forEach(([key, audio]) => {
+      if (key !== id && audio && !audio.paused) {
+        audio.pause();
+      }
+    });
+  };
+  const [, setAudioDurations] = useState<{
+    [key: string]: number;
+  }>({});
 
   const handleHeaderClick = () => {
     if (!onOpenProfileSidebar) return;
@@ -238,84 +293,42 @@ export function CardsChat({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Subscribe to messages for this conversation and manage loading state
   useEffect(() => {
-    const fetchPrimaryUserAndMessages = async () => {
-      const primaryUid = conversation.participants.find(
-        (participant: string) => participant !== user.uid,
-      );
-
-      let userDetailsFoundInConversation = false;
-      if (
-        primaryUid &&
-        conversation.participantDetails &&
-        conversation.participantDetails[primaryUid] &&
-        conversation.participantDetails[primaryUid].userName
-      ) {
-        const details = conversation.participantDetails[primaryUid];
-        setPrimaryUser({
-          userName: details.userName,
-          email: details.email || '',
-          profilePic: details.profilePic || '',
-        });
-        userDetailsFoundInConversation = true;
-      }
-
-      if (primaryUid && !userDetailsFoundInConversation) {
-        try {
-          const response = await axiosInstance.get(`/freelancer/${primaryUid}`);
-          setPrimaryUser(response.data.data);
-        } catch (error) {
-          console.error('Error fetching primary user via API:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to load user details. Please try again.',
-          });
-        }
-      }
-    };
-
-    let unsubscribeMessages: (() => void) | undefined;
-    const fetchMessages = async () => {
-      setLoading(true);
-      unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversation.id}/messages`,
-        (messagesData) => {
-          setMessages(messagesData);
-          setLoading(false);
-        },
-        'desc',
-      );
-    };
-
-    if (conversation) {
-      fetchPrimaryUserAndMessages();
-      unsubscribeMessages = subscribeToFirestoreCollection(
-        `conversations/${conversation.id}/messages`,
-        (messagesData) => {
-          setMessages(messagesData);
-          setLoading(false);
-        },
-        'desc',
-      );
-    } else {
-      setLoading(false);
-    }
-
+    if (!conversation?.id) return;
+    setLoading(true);
+    const unsubscribe = subscribeToFirestoreCollection(
+      `conversations/${conversation.id}/messages/`,
+      (data) => {
+        setMessages(data);
+        setLoading(false);
+      },
+      'asc',
+    );
     return () => {
-      if (unsubscribeMessages) unsubscribeMessages();
-      // Cleanup for voice recording
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
-      if (recordingDurationIntervalRef.current) {
-        clearInterval(recordingDurationIntervalRef.current);
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl); // Clean up preview URL
+      try {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      } catch {
+        // no-op
       }
     };
-  }, [conversation, user.uid, mediaRecorder, audioUrl]); // Added mediaRecorder and audioUrl to dependency array
+  }, [conversation?.id]);
+
+  // Resolve and set primary user details for 1:1 chats
+  useEffect(() => {
+    if (!conversation) return;
+    if (conversation.type === 'group') return;
+    const otherParticipantUid = conversation.participants?.find(
+      (p: string) => p !== user.uid,
+    );
+    if (!otherParticipantUid) return;
+    const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+    setPrimaryUser({
+      userName: participantDetails?.userName || '',
+      email: participantDetails?.email || '',
+      profilePic: participantDetails?.profilePic || '',
+    });
+  }, [conversation, user.uid]);
 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
@@ -333,29 +346,51 @@ export function CardsChat({
       setIsSending(true);
       const datentime = new Date().toISOString();
 
-      const messageId = await updateConversationWithMessageTransaction(
-        'conversations',
-        conversation?.id,
-        {
-          ...message,
-          timestamp: datentime,
-          replyTo: replyToMessageId || null,
-        },
-        datentime,
-      );
+    console.log('Sending message to Firestore:', {
+      conversationId: conversation?.id,
+      message: message,
+      timestamp: datentime,
+      replyTo: replyToMessageId || null,
+    });
 
-      if (messageId) {
-        setInput('');
-        setIsSending(false);
-      } else {
-        console.error('Failed to send message');
-      }
-    } catch (error) {
+    const result = await updateConversationWithMessageTransaction(
+      'conversations',
+      conversation?.id,
+      {
+        ...message,
+        timestamp: datentime,
+        replyTo: replyToMessageId || null,
+      },
+      datentime,
+    );
+
+    
+
+    if (result === 'Transaction successful') {
+      setInput('');
+      setIsSending(false);
+      
+    } else {
+      console.error('Failed to send message - unexpected result:', result);
+      throw new Error(`Failed to send message: ${result}`);
+    }
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        conversationId: conversation?.id,
+        messageContent: message.content,
+        hasVoiceMessage: !!message.voiceMessage,
+      });
+      throw error; // Re-throw the error so it can be caught by the calling function
     } finally {
       setIsSending(false);
     }
   }
+
+  // Always call hooks at the top level, not conditionally.
+  // Move this conditional return after all hooks.
 
   async function handleFileUpload() {
     const fileInput = document.createElement('input');
@@ -549,6 +584,18 @@ export function CardsChat({
     setShowFormattingOptions((prev) => !prev);
   };
 
+  // Insert emoji into composer at caret position
+  const handleInsertEmoji = (emoji: string) => {
+    if (composerRef.current) {
+      composerRef.current.focus();
+      const htmlEmoji = `<span class="chat-emoji">${emoji}</span>&nbsp;`;
+      document.execCommand('insertHTML', false, htmlEmoji);
+      // Update input state with new HTML
+      const html = composerRef.current.innerHTML;
+      setInput(html);
+    }
+  };
+
   // Voice Recording Functions
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -615,6 +662,7 @@ export function CardsChat({
   };
 
   useEffect(() => {
+    // This effect runs when audioChunks changes, specifically after recording stops and all chunks are in.
     if (recordingStatus === 'recorded' && audioChunks.length > 0) {
       const blob = new Blob(audioChunks, {
         type: mediaRecorder?.mimeType || 'audio/webm',
@@ -622,12 +670,9 @@ export function CardsChat({
       setAudioBlob(blob);
       const url = URL.createObjectURL(blob);
       setAudioUrl(url);
-      setAudioChunks([]);
+      setAudioChunks([]); // Clear chunks after creating blob
     }
   }, [audioChunks, recordingStatus, mediaRecorder?.mimeType]);
-  if (!conversation) {
-    return null;
-  }
 
   const discardRecording = () => {
     if (audioUrl) {
@@ -656,50 +701,136 @@ export function CardsChat({
     }
 
     setRecordingStatus('uploading');
-    const formData = new FormData();
-    formData.append(
-      'file',
-      audioBlob,
-      `voice-message.${audioBlob.type.split('/')[1] || 'webm'}`,
-    );
-    formData.append('senderId', user.uid);
-    // For individual chats, receiverId is the other participant. For group chats, it's the conversation ID.
-    const receiverId =
-      conversation.type === 'group'
-        ? conversation.id
-        : conversation.participants.find((p) => p !== user.uid) ||
-          conversation.id;
-    formData.append('receiverId', receiverId);
-    formData.append('conversationId', conversation.id);
-    formData.append('duration', recordingDuration.toString());
 
     try {
-      // Using axiosInstance from the project
-      const response = await axiosInstance.post(
-        '/v1/voice-messages/upload',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      // Step 1: Convert audio blob to file (same as before)
+      const extPart = audioBlob.type.split('/')[1] || 'webm';
+      const cleanExt = extPart.split(';')[0]; // remove codec parameters like 'webm;codecs=opus'
+      const audioFile = new File([audioBlob], `voice-message.${cleanExt}`, {
+        type: audioBlob.type,
+      });
 
-      if (response.status === 201) {
-        toast({ title: 'Success', description: 'Voice message sent!' });
-        // Message should appear via Firestore listener.
-        // If not, one might need to manually add it or trigger a refetch.
-      } else {
-        throw new Error(
-          response.data.error || 'Failed to upload voice message',
-        );
-      }
+      // Step 2: Create FormData (same as regular file upload)
+      const formData = new FormData();
+      formData.append('file', audioFile);
+
+      
+      console.log(
+        'File:',
+        audioFile,
+        'Type:',
+        audioFile.type,
+        'Size:',
+        audioFile.size,
+      );
+      console.log('Duration:', recordingDuration.toString());
+
+      // Step 3: Use the same working file upload endpoint with retry mechanism
+      const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
+        try {
+          const postFileResponse = await axiosInstance.post(
+            '/register/upload-image',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                Accept: 'application/json',
+              },
+              onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total!,
+                );
+                console.log('Voice upload progress:', {
+                  percent: percentCompleted,
+                  loaded: progressEvent.loaded,
+                  total: progressEvent.total,
+                  timestamp: new Date().toISOString(),
+                });
+              },
+            },
+          );
+
+          return postFileResponse;
+        } catch (error: any) {
+          if (
+            retryCount < maxRetries &&
+            (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
+          ) {
+            console.log(
+              `Retrying voice upload (attempt ${retryCount + 1} of ${maxRetries})`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            return attemptUpload(retryCount + 1, maxRetries);
+          }
+          throw error;
+        }
+      };
+
+      const postFileResponse = await attemptUpload();
+      console.log('Voice upload response:', {
+        data: postFileResponse.data,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Step 4: Get the file URL from response
+      const fileUrl = postFileResponse.data.data.Location;
+
+      // Step 5: Create message with voice file URL and duration metadata
+      const message: Partial<Message> = {
+        senderId: user.uid,
+        content: fileUrl, // Voice file URL becomes message content
+        timestamp: new Date().toISOString(),
+        // Add voice message metadata
+        voiceMessage: {
+          duration: recordingDuration,
+          type: 'voice',
+        },
+      };
+
+      // Step 6: Send message using the same working sendMessage function
+      await sendMessage(conversation, message, setInput);
+
+      toast({ title: 'Success', description: 'Voice message sent!' });
     } catch (error: any) {
       console.error('Error sending voice message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        response: error.response?.data,
+        conversationId: conversation?.id,
+        duration: recordingDuration,
+      });
+
+      let errorMessage = 'Failed to upload voice message. Please try again.';
+
+      // Check if it's a file upload error
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      // Check if it's a network error
+      else if (error.code === 'ERR_CANCELED') {
+        errorMessage = 'Upload was canceled. Please try again.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage =
+          'Connection was aborted. Please check your network connection and try again.';
+      }
+      // Check if it's a Firestore error
+      else if (
+        error.message &&
+        error.message.includes('Failed to send message')
+      ) {
+        errorMessage = 'Failed to save message to chat. Please try again.';
+      }
+      // Check if it's a general error
+      else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+
       toast({
         variant: 'destructive',
         title: 'Upload Failed',
-        description: error.message || 'Could not send voice message.',
+        description: errorMessage,
       });
     } finally {
       discardRecording(); // Clean up states regardless of success/failure
@@ -755,6 +886,32 @@ export function CardsChat({
 
   return (
     <>
+      {/* Image Modal */}
+      {modalImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          onClick={() => setModalImage(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 z-10"
+              onClick={() => setModalImage(null)}
+            >
+              <X className="w-6 h-6 text-black" />
+            </button>
+            <Image
+              src={modalImage}
+              alt="Full Image"
+              width={800}
+              height={800}
+              className="rounded-lg max-h-[80vh] w-auto h-auto object-contain bg-white"
+            />
+          </div>
+        </div>
+      )}
       {loading ? (
         <div className="flex justify-center items-center p-5 col-span-3">
           <LoaderCircle className="h-6 w-6 text-white animate-spin" />
@@ -832,7 +989,7 @@ export function CardsChat({
                   size="icon"
                   aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
                   onClick={() => {
-                    console.log('[CardsChat] Expand/collapse button clicked!');
+                    
                     if (onToggleExpand) {
                       onToggleExpand();
                     } else {
@@ -865,7 +1022,9 @@ export function CardsChat({
                   >
                     <DropdownMenuItem
                       onClick={() => {
-                        // message object should be available in scope
+                        console.log(
+                          'Report button clicked, setting openReport to true',
+                        );
                         setOpenReport(true);
                       }}
                       className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
@@ -873,11 +1032,13 @@ export function CardsChat({
                       <Flag className="h-4 w-4" />
                       <span className="text-sm font-medium">Report</span>
                     </DropdownMenuItem>
-
-                    <DropdownMenuItem className="text-black dark:text-[hsl(var(--popover-foreground))] hover:!bg-transparent focus:!bg-transparent  cursor-pointer">
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuItem>
+                   <DropdownMenuItem 
+                        className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
+                        onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
+                      >
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        <span>Help</span>
+                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -889,215 +1050,357 @@ export function CardsChat({
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
                   );
+
+                  // Helper: detect if the content contains ONLY emojis that were inserted via <span class="chat-emoji">…</span>
+                  const { isEmojiOnly, isSingleEmoji } = (() => {
+                    if (
+                      message.voiceMessage ||
+                      message.content.match(
+                        /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                      )
+                    ) {
+                      return { isEmojiOnly: false, isSingleEmoji: false };
+                    }
+
+                    const emojiSpanRegex =
+                      /<span[^>]*class="chat-emoji"[^>]*>[^<]*<\/span>/g;
+                    const emojiMatches =
+                      message.content.match(emojiSpanRegex) || [];
+
+                    // Remove emoji spans and markup to see if any non-emoji text remains
+                    const stripped = message.content
+                      .replace(emojiSpanRegex, '')
+                      .replace(/&nbsp;|<br\s*\/?>/gi, '')
+                      .replace(/\s+/g, '')
+                      .trim();
+
+                    const onlyEmojis =
+                      stripped.length === 0 && emojiMatches.length > 0;
+                    return {
+                      isEmojiOnly: onlyEmojis,
+                      isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
+                    };
+                  })();
+                  // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
+                  const nextMsg = messages[index + 1];
+                  const showDateHeader =
+                    !nextMsg ||
+                    !isSameDay(
+                      new Date(message.timestamp),
+                      new Date(nextMsg.timestamp),
+                    );
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
 
                   return (
-                    <div
-                      id={message.id}
-                      key={index}
-                      className={cn(
-                        'flex flex-row items-start relative group',
-                        isSender ? 'justify-end' : 'justify-start',
-                      )}
-                      onMouseEnter={() => setHoveredMessageId(message.id)}
-                      onMouseLeave={() => setHoveredMessageId(null)}
-                    >
-                      {!isSender && (
-                        <Avatar
-                          key={index}
-                          className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
-                        >
-                          <AvatarImage
-                            src={primaryUser.profilePic}
-                            alt={message.senderId}
-                          />
-                          <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                            {primaryUser.userName
-                              ? primaryUser.userName.charAt(0).toUpperCase()
-                              : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                    <>
                       <div
+                        id={message.id}
+                        key={index}
                         className={cn(
-                          'flex w-max max-w-[70%] md:max-w-[60%] flex-col gap-1 rounded-2xl px-4 py-3 text-sm shadow-sm',
-                          isSender
-                            ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none'
-                            : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none',
+                          'flex flex-row items-start relative group',
+                          isSender ? 'justify-end' : 'justify-start',
                         )}
-                        onClick={() => {
-                          if (message.replyTo) {
-                            const replyMessageElement = document.getElementById(
-                              message.replyTo,
-                            );
-                            if (replyMessageElement) {
-                              replyMessageElement.classList.add(
-                                'ring-2',
-                                'ring-primary',
-                                'ring-offset-2',
-                                'dark:ring-offset-gray-800',
-                                'transition-all',
-                                'duration-300',
-                              );
-                              replyMessageElement.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center',
-                              });
-                              setTimeout(() => {
-                                replyMessageElement.classList.remove(
+                        onMouseEnter={() => setHoveredMessageId(message.id)}
+                        onMouseLeave={() => setHoveredMessageId(null)}
+                      >
+                        {!isSender && (
+                          <Avatar
+                            key={index}
+                            className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
+                          >
+                            <AvatarImage
+                              src={primaryUser.profilePic}
+                              alt={message.senderId}
+                            />
+                            <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                              {primaryUser.userName
+                                ? primaryUser.userName.charAt(0).toUpperCase()
+                                : 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div
+                          className={cn(
+                            'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
+                            message.content.match(
+                              /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                            ) ||
+                              isEmojiOnly ||
+                              (message.voiceMessage &&
+                                message.voiceMessage.type === 'voice')
+                              ? isSender
+                                ? 'ml-auto bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
+                                : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
+                              : isSender
+                                ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                                : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                          )}
+                          onClick={() => {
+                            if (message.replyTo) {
+                              const replyMessageElement =
+                                document.getElementById(message.replyTo);
+                              if (replyMessageElement) {
+                                replyMessageElement.classList.add(
                                   'ring-2',
                                   'ring-primary',
                                   'ring-offset-2',
                                   'dark:ring-offset-gray-800',
+                                  'transition-all',
+                                  'duration-300',
                                 );
-                              }, 2500);
+                                replyMessageElement.scrollIntoView({
+                                  behavior: 'smooth',
+                                  block: 'center',
+                                });
+                                setTimeout(() => {
+                                  replyMessageElement.classList.remove(
+                                    'ring-2',
+                                    'ring-primary',
+                                    'ring-offset-2',
+                                    'dark:ring-offset-gray-800',
+                                  );
+                                }, 2500);
+                              }
                             }
-                          }
-                        }}
-                      >
-                        <TooltipProvider delayDuration={300}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="break-words w-full">
-                                {message.replyTo && (
-                                  <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
-                                    <div
-                                      className={cn(
-                                        'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
-                                        isSender
-                                          ? 'text-primary-foreground dark:text-primary-foreground'
-                                          : 'text-primary dark:text-primary',
-                                      )}
-                                    >
-                                      <span className="font-medium">
-                                        {messages
-                                          .find(
+                          }}
+                        >
+                          <TooltipProvider delayDuration={300}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="break-words w-full">
+                                  {message.replyTo && (
+                                    <div className="p-1.5 bg-primary/10 dark:bg-primary/40 rounded-md border-l-2 border-primary/60 dark:border-primary/70 mb-1.5 text-xs">
+                                      <div
+                                        className={cn(
+                                          'italic overflow-hidden whitespace-pre-wrap text-ellipsis max-h-[3em] line-clamp-2',
+                                          isSender
+                                            ? 'text-primary-foreground dark:text-primary-foreground'
+                                            : 'text-primary dark:text-primary',
+                                        )}
+                                      >
+                                        <span className="font-medium">
+                                          {messages
+                                            .find(
+                                              (msg) =>
+                                                msg.id === message.replyTo,
+                                            )
+                                            ?.content.substring(0, 100) ||
+                                            'Original message'}
+                                          {(messages.find(
                                             (msg) => msg.id === message.replyTo,
-                                          )
-                                          ?.content.substring(0, 100) ||
-                                          'Original message'}
-                                        {(messages.find(
-                                          (msg) => msg.id === message.replyTo,
-                                        )?.content?.length || 0) > 100 && '...'}
-                                      </span>
-                                    </div>
-                                  </div>
-                                )}
-                                {message.content.match(
-                                  /\.(jpeg|jpg|gif|png)(\?|$)/i,
-                                ) ? (
-                                  <Image
-                                    src={message.content || '/placeholder.svg'}
-                                    alt="Message Image"
-                                    width={300}
-                                    height={300}
-                                    className="rounded-md my-1"
-                                  />
-                                ) : message.content.match(
-                                    /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
-                                  ) ? (
-                                  <FileAttachment
-                                    fileName={
-                                      message.content.split('/').pop() || 'File'
-                                    }
-                                    fileUrl={message.content}
-                                    fileType={
-                                      message.content.split('.').pop() || 'file'
-                                    }
-                                  />
-                                ) : (
-                                  <ReactMarkdown
-                                    className={cn(
-                                      'prose prose-sm dark:prose-invert max-w-none',
-                                      isSender
-                                        ? 'text-[hsl(var(--foreground))] dark:text-gray-50'
-                                        : 'text-[hsl(var(--foreground))] dark:text-[hsl(var(--secondary-foreground))]',
-                                    )}
-                                    remarkPlugins={[remarkGfm]}
-                                  >
-                                    {message.content}
-                                  </ReactMarkdown>
-                                )}
-                                {/* Voice Message Player */}
-                                {message.audioUrl &&
-                                  message.duration !== undefined && (
-                                    <div className="mt-2">
-                                      <audio
-                                        src={message.audioUrl}
-                                        controls
-                                        className="w-full h-10 rounded-md"
-                                      />
-                                      <p className="text-xs text-right mt-1 text-[hsl(var(--muted-foreground))]">
-                                        Duration:{' '}
-                                        {formatDuration(message.duration)}
-                                      </p>
+                                          )?.content?.length || 0) > 100 &&
+                                            '...'}
+                                        </span>
+                                      </div>
                                     </div>
                                   )}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="bottom"
-                              sideOffset={5}
-                              className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
-                            >
-                              <p>{readableTimestamp}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <Reactions
-                          messageId={message.id}
-                          reactions={message.reactions || {}}
-                          toggleReaction={toggleReaction}
-                        />
+                                  {message.content.match(
+                                    /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                                  ) ? (
+                                    <div
+                                      className="relative inline-block w-full cursor-pointer"
+                                      onClick={() =>
+                                        setModalImage(message.content)
+                                      }
+                                    >
+                                      <Image
+                                        src={
+                                          message.content || '/placeholder.svg'
+                                        }
+                                        alt="Message Image"
+                                        width={300}
+                                        height={300}
+                                        className="rounded-md my-1 w-full object-contain"
+                                      />
+                                      <div className="absolute bottom-2 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded flex items-center space-x-1">
+                                        <span>{formattedTimestamp}</span>
+                                        {isSender && (
+                                          <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : message.content.match(
+                                      /\.(pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                                    ) ? (
+                                    <FileAttachment
+                                      fileName={
+                                        message.content.split('/').pop() ||
+                                        'File'
+                                      }
+                                      fileUrl={message.content}
+                                      fileType={
+                                        message.content.split('.').pop() ||
+                                        'file'
+                                      }
+                                    />
+                                  ) : (
+                                    !message.voiceMessage &&
+                                    !message.content.match(
+                                      /\.(jpeg|jpg|gif|png|pdf|doc|docx|ppt|pptx)(\?|$)/i,
+                                    ) && (
+                                      <>
+                                        <div
+                                          className={cn(
+                                            'w-full break-words',
+                                            isEmojiOnly &&
+                                              'text-4xl leading-snug text-center',
+                                          )}
+                                          dangerouslySetInnerHTML={{
+                                            __html: DOMPurify.sanitize(
+                                              message.content,
+                                              {
+                                                ALLOWED_TAGS: [
+                                                  'b',
+                                                  'strong',
+                                                  'i',
+                                                  'em',
+                                                  'u',
+                                                  'br',
+                                                  'div',
+                                                  'span',
+                                                  'a',
+                                                ],
+                                                ALLOWED_ATTR: [
+                                                  'href',
+                                                  'target',
+                                                  'rel',
+                                                  'style',
+                                                  'class',
+                                                ],
+                                              },
+                                            ),
+                                          }}
+                                        />
+                                        {/* Inline timestamp only for non-emoji messages */}
+                                        {!isEmojiOnly && (
+                                          <div
+                                            className={cn(
+                                              'absolute bottom-1 right-2 text-xs flex items-center space-x-1',
+                                              isSender
+                                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                                            )}
+                                          >
+                                            <span>{formattedTimestamp}</span>
+                                            {isSender && (
+                                              <CheckCheck className="w-3.5 h-3.5" />
+                                            )}
+                                          </div>
+                                        )}
+                                      </>
+                                    )
+                                  )}
+                                  {/* Voice Message Player */}
+                                  {message.voiceMessage &&
+                                    message.voiceMessage.type === 'voice' && (
+                                      <div className="mt-2 flex items-center space-x-2 max-w-full">
+                                        <audio
+                                          ref={(el) => {
+                                            audioRefs.current[message.id] = el;
+                                            return undefined;
+                                          }}
+                                          src={message.content}
+                                          controls
+                                          preload="metadata"
+                                          className="h-10 w-40 sm:w-44 md:w-56 lg:w-64 rounded-md"
+                                          onLoadedMetadata={() =>
+                                            handleLoadedMetadata(message.id)
+                                          }
+                                          onPlay={() => handlePlay(message.id)}
+                                        />
+                                        <span className="text-xs text-[hsl(var(--muted-foreground))] whitespace-nowrap flex items-center min-w-[48px] justify-end">
+                                          {formattedTimestamp}
+                                          {isSender && (
+                                            <CheckCheck className="w-3.5 h-3.5 ml-1 align-middle text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300" />
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="bottom"
+                                sideOffset={5}
+                                className="bg-[hsl(var(--popover))] text-[hsl(var(--popover-foreground))] text-xs p-1 rounded"
+                              >
+                                <p>{readableTimestamp}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <Reactions
+                            messageId={message.id}
+                            reactions={message.reactions || {}}
+                            toggleReaction={toggleReaction}
+                          />
+                          <div
+                            className={cn(
+                              'flex items-center text-xs mt-1',
+                              isSender
+                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-500'
+                                : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
+                              isSender ? 'justify-end' : 'justify-start',
+                            )}
+                          >
+                            {/* For emoji-only messages, display timestamp here */}
+                            {isEmojiOnly &&
+                              (isSingleEmoji ? (
+                                <div className="inline-flex items-center align-middle leading-none space-x-1 bg-[#c8a3ed] dark:bg-[#9966ccba] px-1.5 py-0.5 rounded text-[hsl(var(--foreground))]">
+                                  <span>{formattedTimestamp}</span>
+                                  {isSender && (
+                                    <CheckCheck className="w-3.5 h-3.5" />
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  <span>{formattedTimestamp}</span>
+                                  {isSender && (
+                                    <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                                  )}
+                                </>
+                              ))}
+                          </div>
+                        </div>
                         <div
                           className={cn(
-                            'flex items-center text-xs mt-1',
-                            isSender
-                              ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
-                              : 'text-[hsl(var(--foreground)_/_0.8)] dark:text-[hsl(var(--muted-foreground))]',
-                            isSender ? 'justify-end' : 'justify-start',
+                            'relative opacity-0 group-hover:opacity-100 transition-opacity',
+                            isSender ? 'mr-1' : 'ml-1',
                           )}
                         >
-                          {formattedTimestamp}
-                          {isSender && (
-                            <span className="ml-1">
-                              <CheckCheck className="w-3.5 h-3.5" />
-                            </span>
+                          {!isSender && (
+                            <EmojiPicker
+                              aria-label="Add reaction"
+                              onSelect={(emoji: string) =>
+                                toggleReaction(message.id, emoji)
+                              }
+                            />
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
+                              isSender
+                                ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
+                                : 'text-[hsl(var(--muted-foreground))]',
+                            )}
+                            onClick={() => setReplyToMessageId(message.id)}
+                            aria-label="Reply to message"
+                          >
+                            <Reply className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div
-                        className={cn(
-                          'relative opacity-0 group-hover:opacity-100 transition-opacity',
-                          isSender ? 'mr-1' : 'ml-1',
-                        )}
-                      >
-                        {!isSender && (
-                          <EmojiPicker
-                            aria-label="Add reaction"
-                            onSelect={(emoji: string) =>
-                              toggleReaction(message.id, emoji)
-                            }
-                          />
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            'h-7 w-7 hover:bg-primary-hover/10 dark:hover:bg-primary-hover/20',
-                            isSender
-                              ? 'text-[hsl(var(--foreground)_/_0.8)] dark:text-purple-300'
-                              : 'text-[hsl(var(--muted-foreground))]',
-                          )}
-                          onClick={() => setReplyToMessageId(message.id)}
-                          aria-label="Reply to message"
-                        >
-                          <Reply className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                      {/* Date header (appears below current bubble due to flex-col-reverse order) */}
+                      {showDateHeader && (
+                        <div className="w-full flex justify-center my-2 sticky bottom-2 z-10">
+                          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
+                            {formatDateHeader(message.timestamp)}
+                          </span>
+                        </div>
+                      )}
+                    </>
                   );
                 })}
               </div>
@@ -1143,52 +1446,70 @@ export function CardsChat({
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <div
-                    ref={composerRef}
-                    contentEditable
-                    aria-label="Type a message"
-                    aria-placeholder="Type a message..."
-                    data-placeholder="Type a message..."
-                    className="flex-1 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
-                    onInput={(e) => {
-                      const html = (e.currentTarget as HTMLElement).innerHTML;
-                      setInput(html);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-                        e.preventDefault();
-                        const html = composerRef.current?.innerHTML || '';
-                        const textContent =
-                          composerRef.current?.innerText || '';
-                        if (textContent.trim().length > 0) {
-                          const sanitized = DOMPurify.sanitize(html, {
-                            ALLOWED_TAGS: [
-                              'b',
-                              'strong',
-                              'i',
-                              'em',
-                              'u',
-                              'br',
-                              'div',
-                              'span',
-                              'a',
-                            ],
-                          });
-                          const newMessage = {
-                            senderId: user.uid,
-                            content: sanitized,
-                            timestamp: new Date().toISOString(),
-                            replyTo: replyToMessageId || null,
-                          };
-                          sendMessage(conversation, newMessage, setInput);
-                          setReplyToMessageId('');
-                          composerRef.current!.innerHTML = '';
-                          setInput('');
+                  <div className="relative flex-1">
+                    <div
+                      className="absolute inset-y-0 flex items-center justify-center 
+                    pl-0.1 z-10"
+                    >
+                      <EmojiPicker
+                        aria-label="Insert emoji"
+                        onSelect={handleInsertEmoji}
+                      />
+                    </div>
+                    <div
+                      ref={composerRef}
+                      contentEditable
+                      aria-label="Type a message"
+                      aria-placeholder="Type a message..."
+                      data-placeholder="Type a message..."
+                      className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                      onInput={(e) => {
+                        const html = (e.currentTarget as HTMLElement).innerHTML;
+                        setInput(html);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                          e.preventDefault();
+                          const html = composerRef.current?.innerHTML || '';
+                          const textContent =
+                            composerRef.current?.innerText || '';
+                          if (textContent.trim().length > 0) {
+                            const sanitized = DOMPurify.sanitize(html, {
+                              ALLOWED_TAGS: [
+                                'b',
+                                'strong',
+                                'i',
+                                'em',
+                                'u',
+                                'br',
+                                'div',
+                                'span',
+                                'a',
+                              ],
+                              ALLOWED_ATTR: [
+                                'href',
+                                'target',
+                                'rel',
+                                'style',
+                                'class',
+                              ],
+                            });
+                            const newMessage = {
+                              senderId: user.uid,
+                              content: sanitized,
+                              timestamp: new Date().toISOString(),
+                              replyTo: replyToMessageId || null,
+                            };
+                            sendMessage(conversation, newMessage, setInput);
+                            setReplyToMessageId('');
+                            composerRef.current!.innerHTML = '';
+                            setInput('');
+                          }
                         }
-                      }
-                    }}
-                    suppressContentEditableWarning
-                  />
+                      }}
+                      suppressContentEditableWarning
+                    />
+                  </div>
                   <Button
                     type="button"
                     size="icon"
@@ -1355,20 +1676,9 @@ export function CardsChat({
                   </TooltipProvider>
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleCreateMeet}
-                          title="Create Google Meet"
-                          aria-label="Create Google Meet"
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                        >
-                          {' '}
-                          <Video className="h-4 w-4" />{' '}
-                        </Button>
-                      </TooltipTrigger>
+                      {/* <TooltipTrigger asChild>
+                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
+                        </TooltipTrigger> */}
                       <TooltipContent side="top">
                         <p>Create Google Meet</p>
                       </TooltipContent>

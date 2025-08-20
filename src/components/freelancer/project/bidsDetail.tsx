@@ -35,10 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { CustomTable } from '@/components/custom-table/CustomTable';
-import {
-  FieldType,
-  Params as TableProps,
-} from '@/components/custom-table/FieldTypes';
+import { FieldType } from '@/components/custom-table/FieldTypes';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -242,7 +239,7 @@ const ProfileDialog = React.memo(
               <div className="flex items-center gap-3">
                 {profileData?.profilePic ||
                 profileData?.freelancerId?.profilePic ? (
-                  <img
+                  <Image
                     src={
                       profileData?.profilePic ||
                       profileData?.freelancerId?.profilePic
@@ -280,7 +277,6 @@ const ProfileDialog = React.memo(
                 size="sm"
                 onClick={() => {
                   // Placeholder function - no action for now
-                  console.log('View Profile clicked');
                 }}
                 className="flex items-center gap-2"
               >
@@ -708,9 +704,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
   const [loadingFreelancerDetails, setLoadingFreelancerDetails] =
     useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(
-    null,
-  );
+  const [, setSelectedProfileId] = useState<string | null>(null);
   const [selectedFreelancerId, setSelectedFreelancerId] = useState<
     string | null
   >(null);
@@ -1084,10 +1078,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     setIsInterviewDialogOpen(true);
   }, []);
 
-  const handleCloseInterviewDialog = useCallback(() => {
-    setIsInterviewDialogOpen(false);
-  }, []);
-
   // Update bid status
   const handleUpdateStatus = useCallback(
     async (bidId: string, status: BidStatus) => {
@@ -1339,7 +1329,12 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         },
       ],
     }),
-    [bids, getActionOptions, handleOpenProfileDialog],
+    [
+      bids,
+      getActionOptions,
+      handleOpenInterviewDialog,
+      handleOpenProfileDialog,
+    ],
   );
 
   if (loading) {

@@ -38,7 +38,7 @@ export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
   const [responseData, setResponseData] = useState<any>([]); // State to hold response data
   const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<'single' | 'multiple' | null>(null);
+  const [, setMode] = useState<'single' | 'multiple' | null>(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
