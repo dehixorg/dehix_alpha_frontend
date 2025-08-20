@@ -313,10 +313,9 @@ export default function KYCForm({ user_id }: { user_id: string }) {
             )}
           />
           <FormLabel className="font-semibold text-sm sm:text-base">
-                  {/* Document Front Img */}
+            {/* Document Front Img */}
             <LiveCaptureField form={form} />
-                </FormLabel>
-          
+          </FormLabel>
 
           <Separator className="col-span-1 md:col-span-2" />
 
