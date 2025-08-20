@@ -87,10 +87,8 @@ export function ReportForm({
         status: 'OPEN',
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
-
-      const res = await apiHelperService.createReport(finalPayload);
-      console.log('Report submitted successfully:', res);
-      // Close dialog if consumer provided a handler
+      
+      await apiHelperService.createReport(finalPayload);
       onSubmitted?.();
     } catch (error) {
       console.error('Failed to submit report:', error);

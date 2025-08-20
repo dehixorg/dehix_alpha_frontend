@@ -49,7 +49,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
   };
 
   // const generateFromAI = async () => {
-  //   console.log('Current Work Experience Data:', workExperienceData);
+  //
 
   // Ensure jobTitle is correctly extracted
   // const jobTitle = workExperienceData?.[0]?.jobTitle || 'Unknown Job Title';
@@ -62,7 +62,7 @@ export const SummaryInfo: React.FC<SummaryInfoProps> = ({
 
   //   try {
   //     const result = await generateAIResponse(PROMPT);
-  //     console.log('AI Response:', result);
+  //
   //     setAiResponse(result);
   //     setCompleted(true);
   //   } catch (error) {

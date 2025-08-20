@@ -11,11 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/oracleMenuItems';
 import EducationVerificationCard from '@/components/cards/oracleDashboard/educationVerificationCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
@@ -74,7 +69,6 @@ export default function ProfessionalInfo() {
       );
       setEducationData(flattenedData);
     } catch (error) {
-      console.log(error, 'error in getting verification data');
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -85,7 +79,7 @@ export default function ProfessionalInfo() {
 
   // Log the requesterId state after it updates
   // useEffect(() => {
-  //   console.log(requesterId);
+  //
   // }, [requesterId]);
 
   useEffect(() => {
@@ -105,12 +99,7 @@ export default function ProfessionalInfo() {
   // };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Education Verification"
-      />
+    <div className="flex min-h-screen w-full flex-col">
       <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Education Verification</h1>
@@ -181,14 +170,12 @@ export default function ProfessionalInfo() {
             fieldOfStudy={data.fieldOfStudy}
             comments={data.comments}
             status={data.verificationStatus}
-            onStatusUpdate={(newStatus) => {
-              // Handle status update
-              console.log('Status updated to:', newStatus);
-            }}
-            onCommentUpdate={(newComment) => {
-              // Handle comment update
-              console.log('Comment updated to:', newComment);
-            }}
+            // onStatusUpdate={(newStatus) => {
+            //   // Handle status update
+            // }}
+            // onCommentUpdate={(newComment) => {
+            //   // Handle comment update
+            // }}
           />
         ))}
         {educationdata.length === 0 ? (

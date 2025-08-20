@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Loader2, X } from 'lucide-react';
+import { Heart, Loader2, X } from 'lucide-react';
 
 import {
   Select,
@@ -21,10 +21,11 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import type { RootState } from '@/lib/store';
-import { toast } from '@/components/ui/use-toast';
-import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
+import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
@@ -354,32 +355,54 @@ const Market: React.FC = () => {
             {/* Favourites Filter */}
             <Card className="w-full">
               <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      id="favourites"
-                      checked={filters.favourites}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          favourites: e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 text-primary border-2 border-border rounded focus:ring-primary focus:ring-2 checked:bg-primary checked:border-primary"
-                    />
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="favourites"
+                    checked={filters.favourites}
+                    onCheckedChange={(checked) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        favourites: checked as boolean,
+                      }))
+                    }
+                  />
                   <label
                     htmlFor="favourites"
                     className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
                   >
-                    <span>❤️</span>
+                    <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
                     <span>Show Favourites Only</span>
                   </label>
                 </div>
               </CardContent>
             </Card>
 
+            <div className="mb-4">
+              <div className="mb-4">
+                <SkillDom
+                  heading="Filter by Domains"
+                  checkboxLabels={domains}
+                  selectedValues={filters.domain}
+                  setSelectedValues={(values) =>
+                    handleFilterChange('domain', values)
+                  }
+                  openItem={openItem}
+                  setOpenItem={setOpenItem}
+                  useAccordion={true}
+                />
+              </div>
+              <SkillDom
+                heading="Filter by Skills"
+                checkboxLabels={skills}
+                selectedValues={filters.skills}
+                setSelectedValues={(values) =>
+                  handleFilterChange('skills', values)
+                }
+                openItem={openItem}
+                setOpenItem={setOpenItem}
+                useAccordion={true}
+              />
+            </div>
             <div className="my-4">
               <SkillDom
                 heading="Filter by Project Domains"
@@ -387,19 +410,6 @@ const Market: React.FC = () => {
                 selectedValues={filters.projectDomain}
                 setSelectedValues={(values) =>
                   handleFilterChange('projectDomain', values)
-                }
-                openItem={openItem}
-                setOpenItem={setOpenItem}
-                useAccordion={true}
-              />
-            </div>
-            <div className="mb-4">
-              <SkillDom
-                heading="Filter by Skills"
-                checkboxLabels={skills}
-                selectedValues={filters.skills}
-                setSelectedValues={(values) =>
-                  handleFilterChange('skills', values)
                 }
                 openItem={openItem}
                 setOpenItem={setOpenItem}
@@ -463,19 +473,6 @@ const Market: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="mb-4">
-              <SkillDom
-                heading="Filter by Domains"
-                checkboxLabels={domains}
-                selectedValues={filters.domain}
-                setSelectedValues={(values) =>
-                  handleFilterChange('domain', values)
-                }
-                openItem={openItem}
-                setOpenItem={setOpenItem}
-                useAccordion={true}
-              />
-            </div>
           </div>
         </div>
 
@@ -514,29 +511,42 @@ const Market: React.FC = () => {
       {/* Mobile Filters Modal */}
       {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
-          <div className="border border-border rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg">
+          <div className="border border-border rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg  bg-black">
             <div className="flex justify-between items-center p-4 border-b border-border">
               <h2 className="text-xl font-semibold text-foreground">Filters</h2>
               <Button variant="ghost" size="sm" onClick={handleModalToggle}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div
-              className="overflow-y-auto p-4 flex-grow mobile-filters-scroll"
-              style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
-            >
-              <style>
-                {`
-                  .mobile-filters-scroll::-webkit-scrollbar {
-                    display: none;
-                  }
-                `}
-              </style>
-
+            <div className="overflow-y-auto p-4 flex-grow scrollbar-hide">
+              {/* Mobile Favourites Filter */}
+              <div className="border-b border-border py-4">
+                <div className="p-3 border border-border rounded-lg bg-card">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="mobile-favourites"
+                      checked={filters.favourites}
+                      onCheckedChange={(checked) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          favourites: checked as boolean,
+                        }))
+                      }
+                    />
+                    <label
+                      htmlFor="mobile-favourites"
+                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                    >
+                      <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                      <span>Show Favourites Only</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
               <div className="border-b border-border pb-4">
                 <MobileSkillDom
                   label="Domains"
-                  heading="Filter by domain"
+                  heading="Filter by Domains"
                   checkboxLabels={domains}
                   selectedValues={filters.domain}
                   setSelectedValues={(values) =>
@@ -548,7 +558,7 @@ const Market: React.FC = () => {
               <div className="border-b border-border py-4">
                 <MobileSkillDom
                   label="Skills"
-                  heading="Filter by skills"
+                  heading="Filter by Skills"
                   checkboxLabels={skills}
                   selectedValues={filters.skills}
                   setSelectedValues={(values) =>
@@ -557,44 +567,74 @@ const Market: React.FC = () => {
                 />
               </div>
 
-              {/* Mobile Favourites Filter */}
               <div className="border-b border-border py-4">
-                <div className="p-3 border border-border rounded-lg bg-card">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        id="mobile-favourites"
-                        checked={filters.favourites}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            favourites: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 text-primary bg-background border-2 border-border rounded focus:ring-primary focus:ring-2 checked:bg-primary checked:border-primary"
-                      />
-                    </div>
-                    <label
-                      htmlFor="mobile-favourites"
-                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
-                    >
-                      <span>❤️</span>
-                      <span>Show Favourites Only</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-4">
                 <MobileSkillDom
                   label="ProjectDomain"
-                  heading="Filter by project-domain"
+                  heading="Filter by Project Domains"
                   checkboxLabels={projectDomains}
                   selectedValues={filters.projectDomain}
                   setSelectedValues={(values) =>
                     handleFilterChange('projectDomain', values)
                   }
                 />
+              </div>
+
+              <div className="mb-4 bg-background shadow-sm">
+                <Label className="mb-4 block text-lg font-medium text-foreground">
+                  Filter by Rate
+                </Label>
+                <div className="flex gap-4">
+                  <div className="flex flex-col flex-1">
+                    <Label
+                      htmlFor="minRate"
+                      className="mb-1 text-sm text-muted-foreground"
+                    >
+                      Min Rate
+                    </Label>
+                    <Input
+                      id="minRate"
+                      type="number"
+                      min={0}
+                      max={100000}
+                      aria-label="Minimum Rate"
+                      placeholder="e.g. 10"
+                      value={filters.minRate}
+                      onChange={(e) => {
+                        setFilters((prev) => ({
+                          ...prev,
+                          minRate: e.target.value,
+                        }));
+                      }}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      className="bg-background border-border focus:border-primary"
+                    />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <Label
+                      htmlFor="maxRate"
+                      className="mb-1 text-sm text-muted-foreground"
+                    >
+                      Max Rate
+                    </Label>
+                    <Input
+                      id="maxRate"
+                      type="number"
+                      min={0}
+                      max={100000}
+                      aria-label="Maximum Rate"
+                      placeholder="e.g. 100"
+                      value={filters.maxRate}
+                      onChange={(e) => {
+                        setFilters((prev) => ({
+                          ...prev,
+                          maxRate: e.target.value,
+                        }));
+                      }}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      className="bg-background border-border focus:border-primary"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="p-4 border-t border-border bg-card">

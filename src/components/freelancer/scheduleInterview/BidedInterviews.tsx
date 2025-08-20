@@ -74,7 +74,7 @@ export default function BidedInterviews() {
   useEffect(() => {
     // This function now uses the more robust ID extraction logic.
     const fetchDetailsForBids = async (bidData: PendingBid[]) => {
-        console.log('Starting fetch for bid details. Sample bid:', bidData[0]);
+        
         const interviewerIds = bidData
             .map(bid => bid.interviewerId || bid.interviewer?._id || bid.creatorId)
             .filter(id => id); // Filter out any null/undefined IDs
@@ -84,7 +84,7 @@ export default function BidedInterviews() {
             return;
         }
         
-        console.log('Found Interviewer IDs to fetch:', interviewerIds);
+        
 
         try {
             const uniqueIds = Array.from(new Set(interviewerIds));
@@ -113,7 +113,7 @@ export default function BidedInterviews() {
             setError(null);
             const data = await fetchPendingBids(intervieweeId);
             setBids(data);
-            console.log("Bids data received from API:", data); // IMPORTANT LOG
+             // IMPORTANT LOG
 
             if (data.length > 0) {
                 await fetchDetailsForBids(data);

@@ -11,11 +11,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import {
-  menuItemsBottom,
-  menuItemsTop,
-} from '@/config/menuItems/freelancer/oracleMenuItems';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
@@ -85,13 +80,8 @@ export default function ProfessionalInfo() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <SidebarMenu
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        active="Business Verification"
-      />
-      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="mb-8 ml-4 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Business Verification</h1>
           <p className="text-gray-400 mt-2">

@@ -10,6 +10,10 @@ import {
   menuItemsTop as freelancerMenuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import Header from '@/components/header/header';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 interface ProjectLayoutProps {
   children: ReactNode;
 }
@@ -17,9 +21,9 @@ interface ProjectLayoutProps {
 const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
   const pathname = usePathname();
   const activeTab = pathname.includes('/freelancer/project/applied')
-    ? 'applied'
+    ? 'Applied'
     : pathname.includes('/freelancer/project/completed')
-      ? 'completed'
+      ? 'Completed'
       : pathname.includes('/freelancer/project/rejected')
         ? 'Rejected'
         : 'Current';
@@ -27,36 +31,26 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-10 bg-background border-r">
+      <div className="bg-background border-r">
         <SidebarMenu
           menuItemsTop={freelancerMenuItemsTop}
           menuItemsBottom={freelancerMenuItemsBottom}
-          active="profile"
+          active="Projects"
         />
       </div>
       <div className="flex mb-8 flex-col sm:pl-14 w-full">
         <Header
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
           activeMenu="Dashboard"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'project', link: '#' },
-            { label: 'projectDashboard', link: '#' },
+            { label: 'Projects', link: '/freelancer/project' },
           ]}
         />
         {/* Main Content */}
         <div className="flex-1">
-          <header className="border-b">
-            <div className="w-full flex-1 h-16 items-center justify-between px-4">
-              <div className="flex items-center gap-4">
-                <h1 className="text-xl font-bold">Project</h1>
-              </div>
-              <div className="flex items-center gap-4"></div>
-            </div>
-          </header>
-
-          <div className="w-full px-4 py-4">
+          <div className="w-full p-4">
             <Tabs value={activeTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
@@ -66,11 +60,11 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
                 >
                   <a href="/freelancer/project/current">
                     <FolderDot className="h-4 w-4" />
-                    <span>Current Projects</span>
+                    <span>Current</span>
                   </a>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="applied"
+                  value="Applied"
                   className="flex items-center gap-2"
                   asChild
                 >
@@ -80,7 +74,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
                   </a>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="completed"
+                  value="Completed"
                   className="flex items-center gap-2"
                   asChild
                 >
