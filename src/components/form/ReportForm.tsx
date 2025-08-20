@@ -50,7 +50,13 @@ const reportSchema = z.object({
 
 export type ReportFormValues = z.infer<typeof reportSchema>;
 
-export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
+export function ReportForm({
+  initialData,
+  onSubmitted,
+}: {
+  initialData: ReportFormValues;
+  onSubmitted?: () => boolean;
+}) {
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
     defaultValues: initialData,
@@ -84,6 +90,8 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
 
       const res = await apiHelperService.createReport(finalPayload);
       console.log('Report submitted successfully:', res);
+      // Close dialog if consumer provided a handler
+      onSubmitted?.();
     } catch (error) {
       console.error('Failed to submit report:', error);
     } finally {
