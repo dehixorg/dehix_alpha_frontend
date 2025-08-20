@@ -175,7 +175,13 @@ export function ProjectCard({
           <DialogHeader>
             <DialogTitle>Create New Report</DialogTitle>
           </DialogHeader>
-          <NewReportTab reportData={reportData} />
+          <NewReportTab
+            reportData={reportData}
+            onSubmitted={() => {
+              setOpenReport(false);
+              return true;
+            }}
+          />
         </DialogContent>
       </Dialog>
     </Card>

@@ -74,12 +74,12 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-[500px] border rounded overflow-hidden">
-      <div className="px-4 py-2 border-b bg-white text-center font-semibold">
+    <div className="flex flex-col h-[500px] border border-border rounded-md overflow-hidden bg-card text-card-foreground">
+      <div className="px-4 py-2 border-b border-border bg-card text-center font-semibold">
         Past Reports
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-gray-50 px-4 py-2 space-y-2 min-h-0">
+      <div className="flex-1 overflow-y-auto bg-background px-4 py-3 space-y-2 min-h-0">
         {messages.length === 0 && (
           <p className="text-sm text-muted-foreground text-center">
             No messages yet
@@ -89,10 +89,10 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
           {messages.map((m, i) => (
             <div
               key={i}
-              className={`max-w-[75%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
+              className={`max-w-[75%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap shadow-sm border ${
                 m.sender === 'admin'
-                  ? 'bg-blue-100 text-right self-end ml-auto'
-                  : 'bg-gray-200 text-left self-start mr-auto'
+                  ? 'bg-primary text-primary-foreground border-transparent text-right self-end ml-auto'
+                  : 'bg-muted text-foreground border-border text-left self-start mr-auto'
               }`}
             >
               <span className="block font-semibold mb-1">{m.sender}</span>
@@ -104,13 +104,13 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t p-4 bg-white">
+      <div className="border-t border-border p-4 bg-card">
         <div className="flex items-center space-x-2">
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isDisabled}
-            className="flex-1 border rounded px-3 py-2 disabled:bg-gray-100"
+            className="flex-1 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground px-3 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder={
               reportStatus !== 'IN_PROGRESS'
                 ? 'Messaging disabled'
@@ -120,7 +120,7 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
           <button
             onClick={sendMessage}
             disabled={isDisabled}
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
           >
             Send
           </button>
