@@ -188,6 +188,40 @@ const ProfileDialog = React.memo(
   }) => {
     if (!profileData && !loading) return null;
 
+    const getProfileDisplayName = (
+      profileData: any,
+      bidData: any,
+      isFreelancerProfile: boolean
+    ): string => {
+      if (isFreelancerProfile) {
+        const fullName = `${profileData?.firstName ?? ''} ${profileData?.lastName ?? ''}`.trim();
+        return fullName || bidData?.userName || profileData?.userName || "Freelancer Profile";
+      }
+
+      const freelancerName = `${profileData?.freelancerId?.firstName ?? ''} ${profileData?.freelancerId?.lastName ?? ''}`.trim();
+      return freelancerName || bidData?.userName || profileData?.profileName || "Profile Details";
+    };
+
+    const getProfileUsername = (
+      profileData: any,
+      bidData: any,
+      isFreelancerProfile: boolean
+    ): string => {
+      if (bidData?.userName) {
+        return bidData.userName;
+      }
+
+      if (isFreelancerProfile) {
+        return profileData?.userName || "freelancer";
+      }
+
+      return (
+        profileData?.freelancerId?.userName ||
+        profileData?.userName ||
+        "freelancer"
+      );
+    };
+
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -209,47 +243,12 @@ const ProfileDialog = React.memo(
                     <UserCircle className="w-8 h-8 text-white" />
                   </div>
                 )}
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {(() => {
-                      // For freelancer profiles, show freelancer name
-                      if (isFreelancerProfile) {
-                        const fullName =
-                          `${profileData?.firstName || ''} ${profileData?.lastName || ''}`.trim();
-                        return (
-                          fullName ||
-                          bidData?.userName ||
-                          profileData?.userName ||
-                          'Freelancer Profile'
-                        );
-                      }
-
-                      // For specific profiles, prioritize freelancer name over profile name
-                      const freelancerName =
-                        `${profileData?.freelancerId?.firstName || ''} ${profileData?.freelancerId?.lastName || ''}`.trim();
-                      return (
-                        freelancerName ||
-                        bidData?.userName ||
-                        profileData?.profileName ||
-                        'Profile Details'
-                      );
-                    })()}
-                  </h2>
+                                 <div>
+                   <h2 className="text-xl font-bold">
+                     {getProfileDisplayName(profileData, bidData, isFreelancerProfile)}
+                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {(() => {
-                      // Always prioritize bid data username first
-                      if (bidData?.userName) {
-                        return `@${bidData.userName}`;
-                      }
-
-                      // For freelancer profiles, show freelancer username
-                      if (isFreelancerProfile) {
-                        return `@${profileData?.userName || 'freelancer'}`;
-                      }
-
-                      // For specific profiles, show freelancer username from profile data
-                      return `@${profileData?.freelancerId?.userName || profileData?.userName || 'freelancer'}`;
-                    })()}
+                    @{getProfileUsername(profileData, bidData, isFreelancerProfile)}
                   </p>
                 </div>
               </div>
@@ -423,9 +422,9 @@ const ProfileDialog = React.memo(
                       Skills
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {profileData.skills.map((skill: any, index: number) => (
+                      {profileData.skills.map((skill: any) => (
                         <Badge
-                          key={index}
+                          key={skill._id || skill.id || `skill-${skill.name}-${skill.level}`}
                           className="bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground"
                           variant="outline"
                         >

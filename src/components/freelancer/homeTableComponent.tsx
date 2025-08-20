@@ -137,9 +137,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                   <TableCell className="text-center">
                     <Skeleton className="h-8 w-24" />
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
                 </TableRow>
               ))
             ) : projects.length > 0 ? (
