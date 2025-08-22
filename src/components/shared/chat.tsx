@@ -184,9 +184,7 @@ export function CardsChat({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
-  const [, setRecordingStartTime] = useState<number | null>(
-    null,
-  );
+  const [, setRecordingStartTime] = useState<number | null>(null);
   const [recordingDuration, setRecordingDuration] = useState<number>(0); // In seconds
   const recordingDurationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
@@ -322,7 +320,8 @@ export function CardsChat({
       (p: string) => p !== user.uid,
     );
     if (!otherParticipantUid) return;
-    const participantDetails = conversation.participantDetails?.[otherParticipantUid];
+    const participantDetails =
+      conversation.participantDetails?.[otherParticipantUid];
     setPrimaryUser({
       userName: participantDetails?.userName || '',
       email: participantDetails?.email || '',
@@ -346,34 +345,24 @@ export function CardsChat({
       setIsSending(true);
       const datentime = new Date().toISOString();
 
-    console.log('Sending message to Firestore:', {
-      conversationId: conversation?.id,
-      message: message,
-      timestamp: datentime,
-      replyTo: replyToMessageId || null,
-    });
+      const result = await updateConversationWithMessageTransaction(
+        'conversations',
+        conversation?.id,
+        {
+          ...message,
+          timestamp: datentime,
+          replyTo: replyToMessageId || null,
+        },
+        datentime,
+      );
 
-    const result = await updateConversationWithMessageTransaction(
-      'conversations',
-      conversation?.id,
-      {
-        ...message,
-        timestamp: datentime,
-        replyTo: replyToMessageId || null,
-      },
-      datentime,
-    );
-
-    
-
-    if (result === 'Transaction successful') {
-      setInput('');
-      setIsSending(false);
-      
-    } else {
-      console.error('Failed to send message - unexpected result:', result);
-      throw new Error(`Failed to send message: ${result}`);
-    }
+      if (result === 'Transaction successful') {
+        setInput('');
+        setIsSending(false);
+      } else {
+        console.error('Failed to send message - unexpected result:', result);
+        throw new Error(`Failed to send message: ${result}`);
+      }
     } catch (error: any) {
       console.error('Error sending message:', error);
       console.error('Error details:', {
@@ -437,13 +426,6 @@ export function CardsChat({
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('Starting file upload:', {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          timestamp: new Date().toISOString(),
-        });
-
         // Function to attempt upload with retries
         const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
           try {
@@ -459,12 +441,6 @@ export function CardsChat({
                   const percentCompleted = Math.round(
                     (progressEvent.loaded * 100) / progressEvent.total!,
                   );
-                  console.log('Upload progress:', {
-                    percent: percentCompleted,
-                    loaded: progressEvent.loaded,
-                    total: progressEvent.total,
-                    timestamp: new Date().toISOString(),
-                  });
                 },
               },
             );
@@ -475,9 +451,6 @@ export function CardsChat({
               retryCount < maxRetries &&
               (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
             ) {
-              console.log(
-                `Retrying upload (attempt ${retryCount + 1} of ${maxRetries})`,
-              );
               // Wait for 1 second before retrying
               await new Promise((resolve) => setTimeout(resolve, 1000));
               return attemptUpload(retryCount + 1, maxRetries);
@@ -487,10 +460,6 @@ export function CardsChat({
         };
 
         const postFileResponse = await attemptUpload();
-        console.log('Upload response:', {
-          data: postFileResponse.data,
-          timestamp: new Date().toISOString(),
-        });
 
         const fileUrl = postFileResponse.data.data.Location;
 
@@ -714,17 +683,6 @@ export function CardsChat({
       const formData = new FormData();
       formData.append('file', audioFile);
 
-      
-      console.log(
-        'File:',
-        audioFile,
-        'Type:',
-        audioFile.type,
-        'Size:',
-        audioFile.size,
-      );
-      console.log('Duration:', recordingDuration.toString());
-
       // Step 3: Use the same working file upload endpoint with retry mechanism
       const attemptUpload = async (retryCount = 0, maxRetries = 3) => {
         try {
@@ -740,12 +698,6 @@ export function CardsChat({
                 const percentCompleted = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total!,
                 );
-                console.log('Voice upload progress:', {
-                  percent: percentCompleted,
-                  loaded: progressEvent.loaded,
-                  total: progressEvent.total,
-                  timestamp: new Date().toISOString(),
-                });
               },
             },
           );
@@ -756,9 +708,6 @@ export function CardsChat({
             retryCount < maxRetries &&
             (error.code === 'ERR_CANCELED' || error.code === 'ECONNABORTED')
           ) {
-            console.log(
-              `Retrying voice upload (attempt ${retryCount + 1} of ${maxRetries})`,
-            );
             await new Promise((resolve) => setTimeout(resolve, 1000));
             return attemptUpload(retryCount + 1, maxRetries);
           }
@@ -767,10 +716,6 @@ export function CardsChat({
       };
 
       const postFileResponse = await attemptUpload();
-      console.log('Voice upload response:', {
-        data: postFileResponse.data,
-        timestamp: new Date().toISOString(),
-      });
 
       // Step 4: Get the file URL from response
       const fileUrl = postFileResponse.data.data.Location;
@@ -989,7 +934,6 @@ export function CardsChat({
                   size="icon"
                   aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
                   onClick={() => {
-                    
                     if (onToggleExpand) {
                       onToggleExpand();
                     } else {
@@ -1022,9 +966,6 @@ export function CardsChat({
                   >
                     <DropdownMenuItem
                       onClick={() => {
-                        console.log(
-                          'Report button clicked, setting openReport to true',
-                        );
                         setOpenReport(true);
                       }}
                       className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
@@ -1032,13 +973,13 @@ export function CardsChat({
                       <Flag className="h-4 w-4" />
                       <span className="text-sm font-medium">Report</span>
                     </DropdownMenuItem>
-                   <DropdownMenuItem 
-                        className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                        onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
-                      >
-                        <HelpCircle className="mr-2 h-4 w-4" />
-                        <span>Help</span>
-                      </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
+                      onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
+                    >
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

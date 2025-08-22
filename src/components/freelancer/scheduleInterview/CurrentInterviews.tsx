@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
-"use client";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Calendar, Clock, Video, Info } from "lucide-react";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Calendar, Clock, Video, Info } from 'lucide-react';
 
-import { RootState } from "@/lib/store";
-import { fetchScheduledInterviews } from "@/lib/api/interviews";
-import { Button } from "@/components/ui/button";
+import { RootState } from '@/lib/store';
+import { fetchScheduledInterviews } from '@/lib/api/interviews';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -43,66 +43,70 @@ export default function CurrentInterviews() {
   const [interviews, setInterviews] = useState<ScheduledInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
-  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [interviewerDetails, setInterviewerDetails] = useState<{
+    [key: string]: any;
+  }>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
-       await fetchInterviewerDetails(data);
-      
+      await fetchInterviewerDetails(data);
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
       setLoading(false);
     }
   };
-  
-  
+
   useEffect(() => {
     loadScheduledInterviews();
   });
-  
-  const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
-    
+
+  const fetchInterviewerDetails = async (
+    interviewData: ScheduledInterview[],
+  ) => {
     // Try different possible fields for interviewer ID
     const interviewerIds = interviewData
-      .filter(interview => {
+      .filter((interview) => {
         const hasInterviewerId = interview.interviewerId;
         const hasInterviewer = interview.interviewer?._id;
         const hasCreatorId = (interview as any).creatorId;
         const hasInterviewerObject = interview.interviewer;
-        
-        console.log('Interview', interview._id, 'fields:', {
-          interviewerId: hasInterviewerId,
-          interviewer_id: hasInterviewer,
-          creatorId: hasCreatorId,
-          interviewerObject: hasInterviewerObject
-        });
-        
-        return interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+
+        return (
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId
+        );
       })
-      .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
-    
-    
-    
+      .map(
+        (interview) =>
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId,
+      );
+
     if (interviewerIds.length === 0) return;
-    
+
     try {
-      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
-      
-      const detailsMap: {[key: string]: any} = {};
-      
+      const uniqueIds = Array.from(
+        new Set(interviewerIds.filter((id) => id && id !== undefined)),
+      );
+
+      const detailsMap: { [key: string]: any } = {};
+
       for (const interviewerId of uniqueIds) {
         if (!interviewerId) continue;
         try {
-          
-          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
-          
+          const response = await axiosInstance.get(
+            `/freelancer/${interviewerId}`,
+          );
+
           if (response.data?.data) {
             detailsMap[interviewerId] = response.data.data;
           }
@@ -110,8 +114,7 @@ export default function CurrentInterviews() {
           console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
         }
       }
-      
-      
+
       setInterviewerDetails(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
@@ -121,50 +124,56 @@ export default function CurrentInterviews() {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   };
 
-// Helper function for capitalization
-const capitalizeFirstLetter = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
+  // Helper function for capitalization
+  const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
 
-// Your updated function
-const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
-  const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
-  
-  // Check the interview object directly
-  if (interview.interviewer?.name) {
-    return capitalizeFirstLetter(interview.interviewer.name);
-  }
-  if (interview.interviewer?.userName) {
-    return capitalizeFirstLetter(interview.interviewer.userName);
-  }
-  if (interview.interviewer?.email) {
-    const emailPrefix = interview.interviewer.email.split('@')[0];
-    return capitalizeFirstLetter(emailPrefix);
-  }
-  
-  // Check the pre-fetched details map
-  if (interviewerId && interviewerDetails[interviewerId]) {
-    const details = interviewerDetails[interviewerId];
-    // Find the best name from the details
-    const name = details.name || details.userName || details.email?.split('@')[0];
-    if (name) {
-      return capitalizeFirstLetter(name);
+  // Your updated function
+  const getAcceptedInterviewerName = (
+    interview: ScheduledInterview,
+  ): string => {
+    const interviewerId =
+      interview.interviewerId ||
+      interview.interviewer?._id ||
+      (interview as any).creatorId;
+
+    // Check the interview object directly
+    if (interview.interviewer?.name) {
+      return capitalizeFirstLetter(interview.interviewer.name);
     }
-  }
-  
-  // Fallbacks don't need capitalization as they are already capitalized
-  if (interviewerId) return `Interviewer (${interviewerId})`;
-  
-  return 'Interviewer';
-};
+    if (interview.interviewer?.userName) {
+      return capitalizeFirstLetter(interview.interviewer.userName);
+    }
+    if (interview.interviewer?.email) {
+      const emailPrefix = interview.interviewer.email.split('@')[0];
+      return capitalizeFirstLetter(emailPrefix);
+    }
+
+    // Check the pre-fetched details map
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      // Find the best name from the details
+      const name =
+        details.name || details.userName || details.email?.split('@')[0];
+      if (name) {
+        return capitalizeFirstLetter(name);
+      }
+    }
+
+    // Fallbacks don't need capitalization as they are already capitalized
+    if (interviewerId) return `Interviewer (${interviewerId})`;
+
+    return 'Interviewer';
+  };
 
   const handleShowMore = () => {
-    setDisplayCount(prev => prev + 5);
+    setDisplayCount((prev) => prev + 5);
   };
 
   const displayedInterviews = interviews.slice(0, displayCount);
@@ -289,7 +298,9 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(interview.meetingLink, "_blank")}
+                          onClick={() =>
+                            window.open(interview.meetingLink, '_blank')
+                          }
                           className="flex items-center gap-2"
                         >
                           <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -306,7 +317,9 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                   {/* Info button cell */}
                   <TableCell className="py-3 text-center relative">
                     <button
-                      onClick={() => setOpenDescIdx(openDescIdx === idx ? null : idx)}
+                      onClick={() =>
+                        setOpenDescIdx(openDescIdx === idx ? null : idx)
+                      }
                       className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
                     >
                       <Info size={16} color="white" />
@@ -314,15 +327,26 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                     {openDescIdx === idx && (
                       <div
                         className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
-                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
+                        style={{
+                          top: '50%',
+                          right: '50%',
+                          transform: 'translateY(-50%)',
+                          marginRight: '8px',
+                        }}
                       >
                         <div className="text-sm leading-relaxed">
-                          {(interview.interviewer?.description || interview.description) || "No description available"}
+                          {interview.interviewer?.description ||
+                            interview.description ||
+                            'No description available'}
                         </div>
                         {/* Arrow pointing to the button */}
-                        <div 
+                        <div
                           className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
-                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                          style={{
+                            top: '50%',
+                            right: '-8px',
+                            transform: 'translateY(-50%)',
+                          }}
                         ></div>
                       </div>
                     )}
