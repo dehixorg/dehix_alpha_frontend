@@ -364,12 +364,12 @@ export function CardsChat({
       datentime,
     );
 
-    console.log('Firestore transaction result:', result);
+    
 
     if (result === 'Transaction successful') {
       setInput('');
       setIsSending(false);
-      console.log('Message sent successfully');
+      
     } else {
       console.error('Failed to send message - unexpected result:', result);
       throw new Error(`Failed to send message: ${result}`);
@@ -714,7 +714,7 @@ export function CardsChat({
       const formData = new FormData();
       formData.append('file', audioFile);
 
-      console.log('Voice message upload - FormData contents:');
+      
       console.log(
         'File:',
         audioFile,
@@ -989,7 +989,7 @@ export function CardsChat({
                   size="icon"
                   aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
                   onClick={() => {
-                    console.log('[CardsChat] Expand/collapse button clicked!');
+                    
                     if (onToggleExpand) {
                       onToggleExpand();
                     } else {

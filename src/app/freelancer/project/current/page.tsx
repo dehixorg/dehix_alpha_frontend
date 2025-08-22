@@ -68,9 +68,9 @@ export default function CurrentProject() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
-        <div className="mb-8 mx-4 lg:mx-10 flex flex-col lg:flex-row justify-between items-start lg:items-center p-3">
-          <div>
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
+        <div className="mb-8 ml-6">
+          <div className="w-full">
             <h1 className="text-3xl font-bold">Current Projects</h1>
             <p className="text-gray-400 mt-2">
               Browse and manage your active freelance projects

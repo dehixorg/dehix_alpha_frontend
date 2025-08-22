@@ -54,7 +54,7 @@ export default function CurrentInterviews() {
       const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
        await fetchInterviewerDetails(data);
-      console.log(data,"valueeeeeeeeeeeeeeeeeeeee");
+      
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
@@ -68,12 +68,6 @@ export default function CurrentInterviews() {
   });
   
   const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
-    console.log('Fetching interviewer details for:', interviewData.length, 'interviews');
-    
-    // Log the first interview to see its structure
-    if (interviewData.length > 0) {
-      console.log('Sample interview structure:', interviewData[0]);
-    }
     
     // Try different possible fields for interviewer ID
     const interviewerIds = interviewData
@@ -94,21 +88,21 @@ export default function CurrentInterviews() {
       })
       .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
     
-    console.log('Interviewer IDs found:', interviewerIds);
+    
     
     if (interviewerIds.length === 0) return;
     
     try {
       const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
-      console.log('Unique interviewer IDs:', uniqueIds);
+      
       const detailsMap: {[key: string]: any} = {};
       
       for (const interviewerId of uniqueIds) {
         if (!interviewerId) continue;
         try {
-          console.log('Fetching details for interviewer ID:', interviewerId);
+          
           const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
-          console.log('Response for interviewer', interviewerId, ':', response.data);
+          
           if (response.data?.data) {
             detailsMap[interviewerId] = response.data.data;
           }
@@ -117,7 +111,7 @@ export default function CurrentInterviews() {
         }
       }
       
-      console.log('Final interviewer details map:', detailsMap);
+      
       setInterviewerDetails(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);

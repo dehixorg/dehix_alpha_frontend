@@ -50,7 +50,13 @@ const reportSchema = z.object({
 
 export type ReportFormValues = z.infer<typeof reportSchema>;
 
-export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
+export function ReportForm({
+  initialData,
+  onSubmitted,
+}: {
+  initialData: ReportFormValues;
+  onSubmitted?: () => boolean;
+}) {
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
     defaultValues: initialData,
@@ -82,8 +88,8 @@ export function ReportForm({ initialData }: { initialData: ReportFormValues }) {
         ...(imageMetaArray.length > 0 && { imageMeta: imageMetaArray }),
       };
 
-      const res = await apiHelperService.createReport(finalPayload);
-      console.log('Report submitted successfully:', res);
+      await apiHelperService.createReport(finalPayload);
+      onSubmitted?.();
     } catch (error) {
       console.error('Failed to submit report:', error);
     } finally {

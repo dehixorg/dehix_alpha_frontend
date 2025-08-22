@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
 
@@ -30,7 +30,7 @@ export default function PastReportsTab() {
   const [limit, setLimit] = useState(10);
   const user = useSelector((state: RootState) => state.user);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     if (!user?.uid) return;
 
     setLoading(true);
@@ -57,13 +57,13 @@ export default function PastReportsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.uid, page, limit]);
 
   useEffect(() => {
     if (!viewingReport && user?.uid) {
       fetchReports();
     }
-  });
+  }, [fetchReports, viewingReport, user?.uid]);
 
   const handleViewMessages = async (report: PastReport) => {
     setMessagesLoading(true);

@@ -150,7 +150,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
   const [isLoading, setIsLoading] = useState<any>(false);
 
   const handleAddSkill = () => {
-    console.log(tmpSkill);
     if (tmpSkill && !currSkills.some((skill: any) => skill.name === tmpSkill)) {
       setCurrSkills([
         ...currSkills,
@@ -241,7 +240,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
             talentId: item.skillId || item.domainId,
           }),
         );
-        console.log(formattedHireTalentData);
 
         setSkillDomainData(formattedHireTalentData);
         setStatusVisibility(
@@ -462,7 +460,6 @@ const TalentCard: React.FC<TalentCardProps> = ({
         const label = talentEntry.skillName ? 'Skill' : 'Domain';
         const value = talentEntry.skillName || talentEntry.domainName || 'N/A';
         const isInvited = invitedTalents.has(talentEntry._id);
-        console.log(talent.freelancer_id);
 
         return (
           <Card
