@@ -37,13 +37,12 @@ import {
 import { CardTitle } from '@/components/ui/card';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-// import { ProjectCard } from '@/components/cards/projectCard';
+import { ProjectCard } from '@/components/cards/projectCard';
 import { Separator } from '@/components/ui/separator';
-// import { ProjectStatus } from '@/utils/freelancer/enum';
+import { ProjectStatus } from '@/utils/freelancer/enum';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/header/header';
 import { toast } from '@/components/ui/use-toast';
-import { Badge } from '@/components/ui/badge';
 
 interface Skill {
   label: string;
@@ -56,16 +55,8 @@ interface Domain {
 // Define the schema for the form using Zod
 const consultancyFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  skills: z.array(
-    z.object({
-      name: z.string().min(1, 'Skill is required'),
-    }),
-  ),
-  domains: z.array(
-    z.object({
-      name: z.string().min(1, 'Domain is required'),
-    }),
-  ),
+  skills: z.string().min(1, 'Skill is required'),
+  domains: z.string().min(1, 'Domain is required'),
   description: z.string().optional(),
   urls: z
     .array(
@@ -88,35 +79,28 @@ export default function ConsultancyPage() {
   const experience = 5;
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [consultants, setConsultants] = useState<ConsultancyFormValues[]>([]);
-  const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [allDomains, setAllDomains] = useState<Domain[]>([]);
-  const [tmpSkill, setTmpSkill] = useState<string>('');
-  const [tmpDomain, setTmpDomain] = useState<string>('');
-  const [searchSkillQuery, setSearchSkillQuery] = useState<string>('');
-  const [searchDomainQuery, setSearchDomainQuery] = useState<string>('');
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [domains, setDomains] = useState<Domain[]>([]);
   const user = useSelector((state: RootState) => state.user);
-  // const [responseData, setResponseData] = useState<any>([]);
+  const [responseData, setResponseData] = useState<any>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const response = await axiosInstance.get(`/project/business`);
-        // setResponseData(response.data.data);
+        const response = await axiosInstance.get(`/project/business`);
+        setResponseData(response.data.data);
 
         const skillsResponse = await axiosInstance.get('/skills');
-        setAllSkills(skillsResponse.data.data);
+        setSkills(skillsResponse.data.data);
 
         const domainsResponse = await axiosInstance.get('/domain');
-        setAllDomains(domainsResponse.data.data);
-        console.log('All Skills:', allSkills);
-        console.log('Search Query:', searchSkillQuery);
-        console.log('Skill Fields:', allDomains);
+        setDomains(domainsResponse.data.data);
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        });
+        }); // Error toast
         console.error('API Error:', error);
       }
     };
@@ -124,19 +108,18 @@ export default function ConsultancyPage() {
     fetchData();
   }, [user.uid]);
 
-  // const completedProjects = responseData.filter(
-  //   (project: any) => project.status == ProjectStatus.COMPLETED,
-  // );
-  // const pendingProjects = responseData.filter(
-  //   (project: any) => project.status !== ProjectStatus.COMPLETED,
-  // );
+  const completedProjects = responseData.filter(
+    (project: any) => project.status == ProjectStatus.COMPLETED,
+  );
+  const pendingProjects = responseData.filter(
+    (project: any) => project.status !== ProjectStatus.COMPLETED,
+  );
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
     defaultValues: {
       name: '',
-      skills: [],
-      domains: [],
+      skills: '',
       description: '',
       urls: [{ value: '' }],
       perHourRate: undefined,
@@ -152,48 +135,6 @@ export default function ConsultancyPage() {
     name: 'urls',
     control: form.control,
   });
-
-  const {
-    fields: skillFields,
-    append: appendSkill,
-    remove: removeSkill,
-  } = useFieldArray({
-    name: 'skills',
-    control: form.control,
-  });
-
-  const {
-    fields: domainFields,
-    append: appendDomain,
-    remove: removeDomain,
-  } = useFieldArray({
-    name: 'domains',
-    control: form.control,
-  });
-
-  const handleAddSkill = () => {
-    if (tmpSkill && !skillFields.some((field) => field.name === tmpSkill)) {
-      appendSkill({ name: tmpSkill });
-      setTmpSkill('');
-      setSearchSkillQuery('');
-    }
-  };
-
-  const handleAddDomain = () => {
-    if (tmpDomain && !domainFields.some((field) => field.name === tmpDomain)) {
-      appendDomain({ name: tmpDomain });
-      setTmpDomain('');
-      setSearchDomainQuery('');
-    }
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    removeSkill(index);
-  };
-
-  const handleRemoveDomain = (index: number) => {
-    removeDomain(index);
-  };
 
   const menuItemsTop = [
     {
@@ -221,7 +162,7 @@ export default function ConsultancyPage() {
         variant: 'destructive',
         title: 'Error',
         description: 'Something went wrong.Please try again.',
-      });
+      }); // Error toast
       console.error('Error:', error);
     }
   };
@@ -282,215 +223,66 @@ export default function ConsultancyPage() {
                           </FormItem>
                         )}
                       />
-
-                      {/* Skills Section */}
-                      <FormItem>
-                        <FormLabel>Skills</FormLabel>
-                        <div className="flex items-center mt-2">
-                          <Select
-                            onValueChange={(value) => {
-                              setTmpSkill(value);
-                              setSearchSkillQuery('');
-                            }}
-                            value={tmpSkill || ''}
-                            onOpenChange={(open) => {
-                              if (!open) setSearchSkillQuery('');
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  tmpSkill ? tmpSkill : 'Select skill'
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <div className="p-2 relative">
-                                <input
-                                  type="text"
-                                  value={searchSkillQuery}
-                                  onChange={(e) =>
-                                    setSearchSkillQuery(e.target.value)
-                                  }
-                                  className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                                  placeholder="Search skills"
-                                />
-                                {searchSkillQuery && (
-                                  <button
-                                    onClick={() => setSearchSkillQuery('')}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </div>
-                              {allSkills
-                                .filter(
-                                  (skill) =>
-                                    skill.label
-                                      .toLowerCase()
-                                      .includes(
-                                        searchSkillQuery.toLowerCase(),
-                                      ) &&
-                                    !skillFields.some(
-                                      (field) => field.name === skill.label,
-                                    ),
-                                )
-                                .map((skill, index) => (
-                                  <SelectItem key={index} value={skill.label}>
-                                    {skill.label}
-                                  </SelectItem>
-                                ))}
-                              {allSkills.filter(
-                                (skill) =>
-                                  skill.label
-                                    .toLowerCase()
-                                    .includes(searchSkillQuery.toLowerCase()) &&
-                                  !skillFields.some(
-                                    (field) => field.name === skill.label,
-                                  ),
-                              ).length === 0 && (
-                                <div className="p-2 text-gray-500 italic text-center">
-                                  No matching skills
-                                </div>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            size="icon"
-                            className="ml-2"
-                            disabled={!tmpSkill}
-                            onClick={handleAddSkill}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {skillFields.map((field, index) => (
-                            <Badge
-                              key={field.id}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {field.name}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(index)}
-                                className="ml-2 text-red-500 hover:text-red-700"
+                      <FormField
+                        control={form.control}
+                        name="skills"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Skills</FormLabel>
+                            <FormControl>
+                              <Select
+                                {...field}
+                                onValueChange={(value) => field.onChange(value)}
                               >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </FormItem>
-
-                      {/* Domains Section */}
-                      <FormItem>
-                        <FormLabel>Domains</FormLabel>
-                        <div className="flex items-center mt-2">
-                          <Select
-                            onValueChange={(value) => {
-                              setTmpDomain(value);
-                              setSearchDomainQuery('');
-                            }}
-                            value={tmpDomain || ''}
-                            onOpenChange={(open) => {
-                              if (!open) setSearchDomainQuery('');
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  tmpDomain ? tmpDomain : 'Select domain'
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <div className="p-2 relative">
-                                <input
-                                  type="text"
-                                  value={searchDomainQuery}
-                                  onChange={(e) =>
-                                    setSearchDomainQuery(e.target.value)
-                                  }
-                                  className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                                  placeholder="Search domains"
-                                />
-                                {searchDomainQuery && (
-                                  <button
-                                    onClick={() => setSearchDomainQuery('')}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </div>
-                              {allDomains
-                                .filter(
-                                  (domain) =>
-                                    domain.label
-                                      .toLowerCase()
-                                      .includes(
-                                        searchDomainQuery.toLowerCase(),
-                                      ) &&
-                                    !domainFields.some(
-                                      (field) => field.name === domain.label,
-                                    ),
-                                )
-                                .map((domain, index) => (
-                                  <SelectItem key={index} value={domain.label}>
-                                    {domain.label}
-                                  </SelectItem>
-                                ))}
-                              {allDomains.filter(
-                                (domain) =>
-                                  domain.label
-                                    .toLowerCase()
-                                    .includes(
-                                      searchDomainQuery.toLowerCase(),
-                                    ) &&
-                                  !domainFields.some(
-                                    (field) => field.name === domain.label,
-                                  ),
-                              ).length === 0 && (
-                                <div className="p-2 text-gray-500 italic text-center">
-                                  No matching domains
-                                </div>
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <Button
-                            variant="outline"
-                            type="button"
-                            size="icon"
-                            className="ml-2"
-                            disabled={!tmpDomain}
-                            onClick={handleAddDomain}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {domainFields.map((field, index) => (
-                            <Badge
-                              key={field.id}
-                              className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
-                            >
-                              {field.name}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveDomain(index)}
-                                className="ml-2 text-red-500 hover:text-red-700"
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a skill" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {skills.map((skill) => (
+                                    <SelectItem
+                                      key={skill.label}
+                                      value={skill.label}
+                                    >
+                                      {skill.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="domains"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Domains</FormLabel>
+                            <FormControl>
+                              <Select
+                                {...field}
+                                onValueChange={(value) => field.onChange(value)}
                               >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      </FormItem>
-
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a domain" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {domains.map((domain) => (
+                                    <SelectItem
+                                      key={domain.label}
+                                      value={domain.label}
+                                    >
+                                      {domain.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={form.control}
                         name="description"
@@ -581,8 +373,8 @@ export default function ConsultancyPage() {
                       <ConsultantCard
                         key={index}
                         name={consultant.name}
-                        skills={consultant.skills.map((s) => s.name)}
-                        domains={consultant.domains.map((d) => d.name)}
+                        skills={consultant.skills}
+                        domains={consultant.domains}
                         description={consultant.description}
                         urls={consultant.urls}
                         perHourRate={consultant.perHourRate}
@@ -593,15 +385,11 @@ export default function ConsultancyPage() {
               </div>
               <Separator className="my-1" />
               <div className="grid grid-cols-1 gap-4">
-                {/* <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                   Current Projects {`(${pendingProjects.length})`}
-                </h2> */}
+                </h2>
                 <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  <div className="text-center py-10 w-[100%] ">
-                    <PackageOpen className="mx-auto text-gray-500" size="100" />
-                    <p className="text-gray-500">No projects available</p>
-                  </div>
-                  {/* {pendingProjects.length > 0 ? (
+                  {pendingProjects.length > 0 ? (
                     pendingProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
@@ -610,19 +398,22 @@ export default function ConsultancyPage() {
                       />
                     ))
                   ) : (
-                  )} */}
+                    <div className="text-center py-10 w-[100%] ">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
+                      <p className="text-gray-500">No projects available</p>
+                    </div>
+                  )}
                 </div>
 
                 <Separator className="my-1" />
-                {/* <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                   Completed Projects {`(${completedProjects.length})`}
-                </h2> */}
+                </h2>
                 <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-                  <div className="text-center py-10 w-[100%] ">
-                    <PackageOpen className="mx-auto text-gray-500" size="100" />
-                    <p className="text-gray-500">No projects available</p>
-                  </div>
-                  {/* {completedProjects.length > 0 ? (
+                  {completedProjects.length > 0 ? (
                     completedProjects.map((project: any, index: number) => (
                       <ProjectCard
                         key={index}
@@ -631,8 +422,14 @@ export default function ConsultancyPage() {
                       />
                     ))
                   ) : (
-                    
-                  )} */}
+                    <div className="text-center py-10 w-[100%] ">
+                      <PackageOpen
+                        className="mx-auto text-gray-500"
+                        size="100"
+                      />
+                      <p className="text-gray-500">No projects available</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

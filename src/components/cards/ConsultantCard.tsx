@@ -28,7 +28,6 @@ const ConsultantCard: React.FC<ConsultantCardProps> = ({
   urls,
   perHourRate,
 }) => {
-  // No split, data already array
   const skillList = skills;
   const domainList = domains;
 

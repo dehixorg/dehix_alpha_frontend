@@ -129,7 +129,6 @@ const Market: React.FC = () => {
       setIsDataLoading(true);
       const queryString = constructQueryString(appliedFilters);
       const response = await axiosInstance.get(`/freelancer?${queryString}`);
-      console.log(response);
 
       setFreelancers(response.data.data);
     } catch (error) {
