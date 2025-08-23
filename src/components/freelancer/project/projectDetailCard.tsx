@@ -42,7 +42,7 @@ function ProjectDetailCard({
     getStatusBadge(status);
 
   // Construct the milestone route dynamically based on userRole and projectId
-  const milestoneRoute = `/${userRole.toLowerCase()}/project/${projectId}/milestone`;
+  const milestoneRoute = `/project/${projectId}/milestone`;
 
   return (
     <Card className="shadow-lg border border-gray-800 rounded-lg">

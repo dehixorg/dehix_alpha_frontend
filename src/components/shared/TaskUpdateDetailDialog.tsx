@@ -28,7 +28,7 @@ interface TaskUpdateDetailDialogProps {
   handleConfirmPermissionRequest: (
     updatePermissionBusiness: boolean,
     updatePermissionFreelancer: boolean,
-    acceptanceBusiness: boolean,
+    rejectionFreelancer: boolean,
     acceptanceFreelancer: boolean,
   ) => void;
   fetchMilestones: () => void;
@@ -63,25 +63,17 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   const updatePermissionBusiness =
     task?.freelancers[0]?.updatePermissionBusiness;
 
-  const acceptanceBusiness = task?.freelancers[0]?.acceptanceBusiness;
+  const rejectionFreelancer = task?.freelancers[0]?.rejectionFreelancer;
   const acceptanceFreelancer = task?.freelancers[0]?.acceptanceFreelancer;
 
   const isUpdatePermissionAllowed =
-    userType === 'business'
-      ? updatePermissionBusiness &&
-        updatePermissionFreelancer &&
-        acceptanceBusiness
-      : updatePermissionFreelancer &&
-        updatePermissionBusiness &&
-        acceptanceFreelancer;
+    userType === 'freelancer'
+      ? updatePermissionFreelancer && !rejectionFreelancer
+      : updatePermissionBusiness && !rejectionFreelancer;
 
   const isPermissionSent =
-    (userType === 'business' &&
-      updatePermissionBusiness &&
-      !updatePermissionFreelancer) ||
-    (userType === 'freelancer' &&
-      updatePermissionFreelancer &&
-      !updatePermissionBusiness);
+    (userType === 'freelancer' && !updatePermissionFreelancer) ||
+    (userType === 'business' && !updatePermissionBusiness);
 
   const handleTaskChange = (field: string, value: string) => {
     setTaskData((prevData) => ({
@@ -90,31 +82,77 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     }));
   };
 
-  const handleSendRequest = () => {
+  const handleSendRequest = async () => {
     const updatePermissionBusiness = userType === 'business';
     const updatePermissionFreelancer = userType === 'freelancer';
-    const acceptanceBusiness = userType === 'business';
-    const acceptanceFreelancer = userType === 'freelancer';
+    // Only set rejectionFreelancer to true if the user is actually rejecting the task
+    // For update requests, we should preserve the current acceptance/rejection status
+    const rejectionFreelancer = false; // Don't set rejection for update requests
+    const acceptanceFreelancer = userType === 'freelancer' 
+      ? task?.freelancers?.[0]?.acceptanceFreelancer // Preserve current acceptance status
+      : false;
 
-    handleConfirmPermissionRequest(
+    const payload = {
       updatePermissionBusiness,
       updatePermissionFreelancer,
-      acceptanceBusiness,
+      rejectionFreelancer,
       acceptanceFreelancer,
-    );
+    };
+
+    const url = `/milestones/${milestoneId}/story/${storyId}/task/${task._id}`;
+
+    try {
+      await axiosInstance.patch(url, payload);
+
+      setShowPermissionDialog(false);
+      
+      toast({
+        title: 'Success',
+        description: 'Update request sent successfully.',
+        duration: 3000,
+      });
+      fetchMilestones();
+    } catch (error) {
+      console.error('Error during update request:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send update request. Please try again.',
+        variant: 'destructive',
+        duration: 3000,
+      });
+    }
   };
 
   const handleSave = async () => {
+    console.log('User clicked update task details button');
+    console.log('Current task data:', taskData);
+    console.log('Initial task data:', initialTaskData);
+    
     // Check if any field has been updated
     if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
+      console.log('No changes detected, skipping update');
       toast({
         description: 'No changes detected. Task update not required.',
         duration: 3000,
       });
       return;
     }
+    
+    console.log('Changes detected, proceeding with update');
     const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
+    console.log('Update URL:', url);
+    console.log('Update payload:', {
+      milestoneId,
+      storyId,
+      taskId,
+      userType,
+      title: taskData.title,
+      summary: taskData.summary,
+      taskStatus: taskData.taskStatus,
+    });
+    
     try {
+      console.log('Sending update request...');
       await axiosInstance.patch(url, {
         milestoneId,
         storyId,
@@ -125,6 +163,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
         taskStatus: taskData.taskStatus,
       });
 
+      console.log('Task update successful');
       toast({
         description: 'Task updated',
         duration: 3000,
@@ -132,8 +171,9 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       setShowPermissionDialog(false);
       fetchMilestones();
     } catch (error) {
+      console.error('Task update failed:', error);
       toast({
-        description: 'Task not update , please try again .',
+        description: 'Task not updated, please try again.',
         duration: 3000,
       });
     }
@@ -160,23 +200,13 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
 
         {!isUpdatePermissionAllowed ? (
           <DialogFooter className="flex mt-2 justify-end gap-4">
-            {isPermissionSent ? (
-              <Button
-                variant="outline"
-                className="bg-gray-400 text-white px-4 py-2 rounded-md"
-                disabled
-              >
-                Request Sent
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSendRequest}
-                variant="outline"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                Send Permission Request
-              </Button>
-            )}
+            <Button
+              onClick={handleSendRequest}
+              variant="outline"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md"
+            >
+              Send Permission Request
+            </Button>
             <Button
               onClick={() => setShowPermissionDialog(false)}
               variant="outline"

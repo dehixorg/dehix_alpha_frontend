@@ -328,7 +328,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                         </DialogContent>
                       </Dialog>
                     ) : (
-                      <Link href={`/freelancer/project/${project._id}`}>
+                      <Link href={`/project/${project._id}`}>
                         <Button size="sm" variant="outline">
                           View Details
                         </Button>
