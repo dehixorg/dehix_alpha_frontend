@@ -260,12 +260,32 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
   };
 
   // Submit handler for the form
-  async function onSubmit() {
+  async function onSubmit(data: ProjectFormValues) {
     setLoading(true);
     try {
       // Join currSkills array into comma-separated string for form submission
 
       // Prepare the payload
+      const payload = {
+        projectName: data.projectName,
+        description: data.description,
+        githubLink: data.githubLink,
+        liveDemoLink: data.liveDemoLink || '', // Now supported by backend CREATE schema
+        thumbnail: data.thumbnail, // Now required
+        techUsed: currSkills,
+        verified: false,
+        oracleAssigned: '',
+        start: data.start ? new Date(data.start).toISOString() : null,
+        end: data.end ? new Date(data.end).toISOString() : null,
+        refer: data.refer,
+        role: data.role,
+        projectType: data.projectType,
+        comments: data.comments || '',
+        verificationUpdateTime: new Date().toISOString(),
+      };
+
+      // Submit with the skills from our state
+      const response = await axiosInstance.post(`/freelancer/project`, payload);
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission
