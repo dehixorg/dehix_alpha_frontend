@@ -88,9 +88,10 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     // Only set rejectionFreelancer to true if the user is actually rejecting the task
     // For update requests, we should preserve the current acceptance/rejection status
     const rejectionFreelancer = false; // Don't set rejection for update requests
-    const acceptanceFreelancer = userType === 'freelancer' 
-      ? task?.freelancers?.[0]?.acceptanceFreelancer // Preserve current acceptance status
-      : false;
+    const acceptanceFreelancer =
+      userType === 'freelancer'
+        ? task?.freelancers?.[0]?.acceptanceFreelancer
+        : false;
 
     const payload = {
       updatePermissionBusiness,
@@ -105,7 +106,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       await axiosInstance.patch(url, payload);
 
       setShowPermissionDialog(false);
-      
+
       toast({
         title: 'Success',
         description: 'Update request sent successfully.',
@@ -127,7 +128,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     console.log('User clicked update task details button');
     console.log('Current task data:', taskData);
     console.log('Initial task data:', initialTaskData);
-    
+
     // Check if any field has been updated
     if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
       console.log('No changes detected, skipping update');
@@ -137,8 +138,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       });
       return;
     }
-    
-    console.log('Changes detected, proceeding with update');
+
     const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
     console.log('Update URL:', url);
     console.log('Update payload:', {
@@ -150,9 +150,8 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       summary: taskData.summary,
       taskStatus: taskData.taskStatus,
     });
-    
+
     try {
-      console.log('Sending update request...');
       await axiosInstance.patch(url, {
         milestoneId,
         storyId,
