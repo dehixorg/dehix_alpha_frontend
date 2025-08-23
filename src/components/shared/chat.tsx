@@ -437,11 +437,7 @@ export function CardsChat({
                   'Content-Type': 'multipart/form-data',
                   Accept: 'application/json',
                 },
-                onUploadProgress: (progressEvent) => {
-                  const percentCompleted = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total!,
-                  );
-                },
+                onUploadProgress: () => {},
               },
             );
 
@@ -694,11 +690,7 @@ export function CardsChat({
                 'Content-Type': 'multipart/form-data',
                 Accept: 'application/json',
               },
-              onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round(
-                  (progressEvent.loaded * 100) / progressEvent.total!,
-                );
-              },
+              onUploadProgress: () => {},
             },
           );
 
