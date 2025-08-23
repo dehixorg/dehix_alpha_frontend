@@ -73,11 +73,6 @@ export default function CurrentInterviews() {
     // Try different possible fields for interviewer ID
     const interviewerIds = interviewData
       .filter((interview) => {
-        const hasInterviewerId = interview.interviewerId;
-        const hasInterviewer = interview.interviewer?._id;
-        const hasCreatorId = (interview as any).creatorId;
-        const hasInterviewerObject = interview.interviewer;
-
         return (
           interview.interviewerId ||
           interview.interviewer?._id ||
