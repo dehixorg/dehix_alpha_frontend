@@ -16,11 +16,53 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
 import { Milestone, Story } from '@/utils/types/Milestone';
 
+interface Project {
+  _id: string;
+  projectName: string;
+  projectDomain: string[];
+  description: string;
+  companyId: string;
+  email: string;
+  url?: { value: string }[];
+  verified?: any;
+  isVerified?: string;
+  companyName: string;
+  start?: Date;
+  end?: Date | null;
+  skillsRequired: string[];
+  experience?: string;
+  role?: string;
+  projectType?: string;
+  status?: string;
+  team?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
 
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [projectLoading, setProjectLoading] = useState(true);
+
+  const fetchProject = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/project/${project_id}`);
+      const projectData = response?.data?.data?.data || response?.data?.data;
+      setProject(projectData);
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch project data.',
+      });
+    } finally {
+      setProjectLoading(false);
+    }
+  }, [project_id]);
 
   const fetchMilestones = useCallback(async () => {
     try {
@@ -121,8 +163,9 @@ const Page = () => {
   };
 
   useEffect(() => {
+    fetchProject();
     fetchMilestones();
-  }, [fetchMilestones]);
+  }, [fetchProject, fetchMilestones]);
 
   return (
     <div className="flex min-h-screen h-auto w-full flex-col bg-muted/40">
@@ -131,15 +174,15 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 mb-8">
-        <Header
+      <div className="flex flex-col sm:gap-2 sm:py-0 sm:pl-14 mb-4">
+          <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
-            { label: project_id, link: `/business/project/${project_id}` },
+            { label: project ? project.projectName : project_id, link: `/business/project/${project_id}` },
             { label: 'Milestone', link: '#' },
           ]}
         />

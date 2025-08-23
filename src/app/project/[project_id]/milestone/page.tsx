@@ -16,18 +16,28 @@ import { axiosInstance } from '@/lib/axiosinstance';
 
 const Page = () => {
   const { project_id } = useParams<{ project_id: string }>();
+  const [projectName, setProjectName] = useState<string>('');
 
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMilestones = useCallback(async () => {
     try {
-      const response = await axiosInstance.get(`/milestones`, {
-        params: { projectId: project_id },
-      });
+      const [milestonesResponse, projectResponse] = await Promise.all([
+        axiosInstance.get(`/milestones`, {
+          params: { projectId: project_id },
+        }),
+        axiosInstance.get(`/project/${project_id}`)
+      ]);
+
+      // Fetch project name
+      const projectData = projectResponse?.data?.data?.data || projectResponse?.data?.data;
+      if (projectData) {
+        setProjectName(projectData.projectName);
+      }
 
       const allStories: { [key: string]: Story[] | null } = {};
-      const fetchedMilestones = response.data?.data.map(
+      const fetchedMilestones = milestonesResponse.data?.data.map(
         (milestone: Milestone) => {
           const storiesForMilestone = milestone.stories?.length
             ? milestone.stories
@@ -137,7 +147,7 @@ const Page = () => {
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/freelancer' },
             { label: 'Project', link: '/dashboard/freelancer' },
-            { label: project_id, link: `/freelancer/project/${project_id}` },
+            { label: projectName || project_id, link: `/freelancer/project/${project_id}` },
             { label: 'Milestone', link: '#' },
           ]}
         />
