@@ -60,7 +60,8 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.className =
+                  'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                 modal.innerHTML = `
                   <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
                     <div class="flex justify-between items-center mb-4">

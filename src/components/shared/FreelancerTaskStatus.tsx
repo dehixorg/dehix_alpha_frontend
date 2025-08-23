@@ -1,12 +1,15 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 
 interface FreelancerTaskStatusProps {
   task: any;
 }
 
-const FreelancerTaskStatus: React.FC<FreelancerTaskStatusProps> = ({ task }) => {
+const FreelancerTaskStatus: React.FC<FreelancerTaskStatusProps> = ({
+  task,
+}) => {
   if (!task?.freelancers?.[0]) {
     return null;
   }
@@ -46,7 +49,9 @@ const FreelancerTaskStatus: React.FC<FreelancerTaskStatusProps> = ({ task }) => 
 
   return (
     <div className="mt-2">
-      <Badge className={`${status.color} px-2 py-1 text-xs flex items-center gap-1`}>
+      <Badge
+        className={`${status.color} px-2 py-1 text-xs flex items-center gap-1`}
+      >
         {status.icon}
         {status.text}
       </Badge>

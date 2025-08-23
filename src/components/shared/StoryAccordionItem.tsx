@@ -55,7 +55,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Task } from '@/utils/types/Milestone';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -106,7 +105,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   useEffect(() => {
     const actedTasks = new Set<string>();
     story.tasks?.forEach((task: any) => {
-      if (task.freelancers?.[0]?.acceptanceFreelancer || task.freelancers?.[0]?.rejectionFreelancer) {
+      if (
+        task.freelancers?.[0]?.acceptanceFreelancer ||
+        task.freelancers?.[0]?.rejectionFreelancer
+      ) {
         actedTasks.add(task._id);
       }
     });
@@ -116,15 +118,18 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const handleAcceptTask = async (taskId: string) => {
     console.log('handleAcceptTask called with taskId:', taskId);
     // Immediately add to acted upon tasks to hide buttons
-    setActedUponTasks(prev => new Set(prev).add(taskId));
-    
+    setActedUponTasks((prev) => new Set(prev).add(taskId));
+
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleAcceptTask');
-        toast({ description: 'Missing milestone or story ID', variant: 'destructive' });
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
         return;
       }
-      
+
       console.log('Accepting task with payload:', {
         milestoneId,
         storyId: story._id,
@@ -132,7 +137,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         acceptanceFreelancer: true,
         rejectionFreelancer: false,
         updatePermissionFreelancer: false,
-                updatePermissionBusiness: false,
+        updatePermissionBusiness: false,
       });
 
       await axiosInstance.patch(
@@ -141,8 +146,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           acceptanceFreelancer: true,
           rejectionFreelancer: false,
           updatePermissionFreelancer: false,
-                updatePermissionBusiness: false,
-        }
+          updatePermissionBusiness: false,
+        },
       );
       console.log('Task accepted successfully');
       toast({ description: 'Task accepted!', duration: 3000 });
@@ -156,25 +161,30 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const handleRejectTask = async (taskId: string) => {
     console.log('handleRejectTask called with taskId:', taskId);
     // Immediately add to acted upon tasks to hide buttons
-    setActedUponTasks(prev => new Set(prev).add(taskId));
-    
+    setActedUponTasks((prev) => new Set(prev).add(taskId));
+
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleRejectTask');
-        toast({ description: 'Missing milestone or story ID', variant: 'destructive' });
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
         return;
       }
-      
+
       // Find the task to check current update permission state
       const taskToReject = story.tasks.find((task: any) => task._id === taskId);
-      const currentUpdatePermissionFreelancer = taskToReject?.freelancers?.[0]?.updatePermissionFreelancer;
-      const currentUpdatePermissionBusiness = taskToReject?.freelancers?.[0]?.updatePermissionBusiness;
-      
+      const currentUpdatePermissionFreelancer =
+        taskToReject?.freelancers?.[0]?.updatePermissionFreelancer;
+      const currentUpdatePermissionBusiness =
+        taskToReject?.freelancers?.[0]?.updatePermissionBusiness;
+
       console.log('Current update permission state before rejection:', {
         updatePermissionFreelancer: currentUpdatePermissionFreelancer,
-        updatePermissionBusiness: currentUpdatePermissionBusiness
+        updatePermissionBusiness: currentUpdatePermissionBusiness,
       });
-      
+
       console.log('Rejecting task and removing update requests with payload:', {
         milestoneId,
         storyId: story._id,
@@ -182,7 +192,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         acceptanceFreelancer: false,
         rejectionFreelancer: true,
         updatePermissionFreelancer: false, // Remove freelancer update permission
-        updatePermissionBusiness: false,   // Remove business update permission
+        updatePermissionBusiness: false, // Remove business update permission
       });
 
       await axiosInstance.patch(
@@ -191,11 +201,14 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           acceptanceFreelancer: false,
           rejectionFreelancer: true,
           updatePermissionFreelancer: false, // Clear any update permission requests
-          updatePermissionBusiness: false,   // Clear any update permission requests
-        }
+          updatePermissionBusiness: false, // Clear any update permission requests
+        },
       );
       console.log('Task rejected successfully - all update requests removed');
-      toast({ description: 'Task rejected and update requests removed!', duration: 3000 });
+      toast({
+        description: 'Task rejected and update requests removed!',
+        duration: 3000,
+      });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error rejecting task:', error);
@@ -205,16 +218,19 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
 
   const handleApproveUpdatePermission = async (taskId: string) => {
     console.log('handleApproveUpdatePermission called with taskId:', taskId);
-    
+
     try {
       if (!milestoneId || !story._id) {
-        console.warn('Missing milestone or story ID in handleApproveUpdatePermission');
-        toast({ description: 'Missing milestone or story ID', variant: 'destructive' });
+        console.warn(
+          'Missing milestone or story ID in handleApproveUpdatePermission',
+        );
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
         return;
       }
-      
-      const taskToApprove = story.tasks.find((task: any) => task._id === taskId);
-      
+
       // Determine the payload based on user type
       let payload;
       if (isFreelancer) {
@@ -223,7 +239,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
           rejectionFreelancer: true,
-          acceptanceFreelancer: false
+          acceptanceFreelancer: false,
         };
       } else {
         // Business approving freelancer's update request
@@ -231,40 +247,48 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
           rejectionFreelancer: false,
-          acceptanceBusiness: true
+          acceptanceBusiness: true,
         };
       }
-      
+
       console.log('Approving update permission with payload:', {
         milestoneId,
         storyId: story._id,
         taskId,
-        ...payload
+        ...payload,
       });
 
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
-        payload
+        payload,
       );
       console.log('Update permission approved successfully');
       toast({ description: 'Update permission approved!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error approving update permission:', error);
-      toast({ description: 'Failed to approve update permission.', variant: 'destructive' });
+      toast({
+        description: 'Failed to approve update permission.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleRejectUpdatePermission = async (taskId: string) => {
     console.log('handleRejectUpdatePermission called with taskId:', taskId);
-    
+
     try {
       if (!milestoneId || !story._id) {
-        console.warn('Missing milestone or story ID in handleRejectUpdatePermission');
-        toast({ description: 'Missing milestone or story ID', variant: 'destructive' });
+        console.warn(
+          'Missing milestone or story ID in handleRejectUpdatePermission',
+        );
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
         return;
       }
-      
+
       // Determine the payload based on user type
       let payload;
       if (isFreelancer) {
@@ -273,7 +297,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
           rejectionFreelancer: true,
-          acceptanceFreelancer: false
+          acceptanceFreelancer: false,
         };
       } else {
         // Business rejecting freelancer's update request
@@ -281,27 +305,30 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
           rejectionFreelancer: false,
-          acceptanceBusiness: false
+          acceptanceBusiness: false,
         };
       }
-      
+
       console.log('Rejecting update permission with payload:', {
         milestoneId,
         storyId: story._id,
         taskId,
-        ...payload
+        ...payload,
       });
 
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
-        payload
+        payload,
       );
       console.log('Update permission rejected successfully');
       toast({ description: 'Update permission rejected!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error rejecting update permission:', error);
-      toast({ description: 'Failed to reject update permission.', variant: 'destructive' });
+      toast({
+        description: 'Failed to reject update permission.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -331,9 +358,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       >
         <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
           <div className="flex items-center">
-            <h3 className="text-lg md:text-xl font-semibold">
-              {story.title}
-            </h3>
+            <h3 className="text-lg md:text-xl font-semibold">{story.title}</h3>
             <Button
               variant="ghost"
               size="sm"
@@ -341,7 +366,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.className =
+                  'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                 modal.innerHTML = `
                   <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
                     <div class="flex justify-between items-center mb-4">
@@ -382,8 +408,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
             {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
               ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
                 story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                !story?.tasks[0]?.freelancers[0]
-                  ?.updatePermissionFreelancer &&
+                !story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
                 story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
                   <>
                     {/* <span className="text-yellow-500 ml-5 hidden md:flex">
@@ -418,10 +443,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 )
               : story?.tasks?.[0]?.freelancers?.[0]
                   ?.updatePermissionFreelancer &&
-                story?.tasks?.[0]?.freelancers?.[0]
-                  ?.updatePermissionBusiness &&
-                !story?.tasks?.[0]?.freelancers?.[0]
-                  ?.acceptanceFreelancer && (
+                story?.tasks?.[0]?.freelancers?.[0]?.updatePermissionBusiness &&
+                !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
                   <>
                     <span className="text-green-500 ml-5 hidden md:flex">
                       Req Approve
@@ -438,9 +461,12 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         </div>
       </AccordionTrigger>
       <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border" style={{borderColor: '#09090b'}}>
+        <div
+          className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
+          style={{ borderColor: '#09090b' }}
+        >
           {/* <div className="px-6 py-4"> */}
-            {/* <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
               <h3 className="text-lg md:text-xl font-semibold">
                 {story.title}
               </h3> 
@@ -468,13 +494,17 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                       aria-expanded={open}
                       className="w-[300px] justify-between"
                     >
-                      {truncateDescription(value, 23) || 'Select or search URL...'}
+                      {truncateDescription(value, 23) ||
+                        'Select or search URL...'}
                       <ChevronsUpDown className="opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[300px] p-0">
                     <Command>
-                      <CommandInput placeholder="Search URL..." className="h-9" />
+                      <CommandInput
+                        placeholder="Search URL..."
+                        className="h-9"
+                      />
                       <CommandList>
                         <CommandEmpty>No URL found.</CommandEmpty>
                         <CommandGroup>
@@ -519,7 +549,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 </Popover>
               </div>
             </div>
-            <div className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border" style={{borderColor: '#09090b'}}>
+            <div
+              className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
+              style={{ borderColor: '#09090b' }}
+            >
               {story?.tasks?.length > 0 ? (
                 <div className="bg-transparent">
                   <div className="flex justify-between items-center px-3 mt-4">
@@ -562,8 +595,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                         className="p-1 h-auto ml-2"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const modal = document.createElement('div');
-                                          modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                                          const modal =
+                                            document.createElement('div');
+                                          modal.className =
+                                            'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                                           modal.innerHTML = `
                                             <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
                                               <div class="flex justify-between items-center mb-4">
@@ -580,9 +615,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                             </div>
                                           `;
                                           document.body.appendChild(modal);
-                                          modal.addEventListener('click', (e) => {
-                                            if (e.target === modal) modal.remove();
-                                          });
+                                          modal.addEventListener(
+                                            'click',
+                                            (e) => {
+                                              if (e.target === modal)
+                                                modal.remove();
+                                            },
+                                          );
                                         }}
                                       >
                                         <svg
@@ -607,7 +646,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                     </Badge>
                                   </div>
                                 </div>
-                                  <div onClick={(e) => e.stopPropagation()}>
+                                <div onClick={(e) => e.stopPropagation()}>
                                   <TaskDropdown
                                     fetchMilestones={fetchMilestones}
                                     milestoneId={milestoneId}
@@ -615,68 +654,101 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                     task={task}
                                   />
                                   {isFreelancer && (
-                                    <div className="flex flex-col gap-2 sm:pb-2 mt-2 px-4" style={{ minHeight: '2.5rem' }}>
-                                      {!actedUponTasks.has(task._id) && !task.freelancers?.[0]?.acceptanceFreelancer && !task.freelancers?.[0]?.rejectionFreelancer && (
-                                        <div className="flex justify-between items-center">
-                                          <Button 
-                                            onClick={() => handleAcceptTask(task._id)} 
-                                            className="w-20 md:w-16 h-7"
-                                          >
-                                            Accept
-                                          </Button>
-                                          <div className="flex-1 flex justify-center">
-                                            <Button 
-                                              onClick={() => handleRejectTask(task._id)} 
+                                    <div
+                                      className="flex flex-col gap-2 sm:pb-2 mt-2 px-4"
+                                      style={{ minHeight: '2.5rem' }}
+                                    >
+                                      {!actedUponTasks.has(task._id) &&
+                                        !task.freelancers?.[0]
+                                          ?.acceptanceFreelancer &&
+                                        !task.freelancers?.[0]
+                                          ?.rejectionFreelancer && (
+                                          <div className="flex justify-between items-center">
+                                            <Button
+                                              onClick={() =>
+                                                handleAcceptTask(task._id)
+                                              }
                                               className="w-20 md:w-16 h-7"
                                             >
-                                              Reject
+                                              Accept
+                                            </Button>
+                                            <div className="flex-1 flex justify-center">
+                                              <Button
+                                                onClick={() =>
+                                                  handleRejectTask(task._id)
+                                                }
+                                                className="w-20 md:w-16 h-7"
+                                              >
+                                                Reject
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      {/* Approve/Reject Update Permission buttons for freelancers */}
+                                      {!task.freelancers?.[0]
+                                        ?.updatePermissionFreelancer &&
+                                        task.freelancers?.[0]
+                                          ?.updatePermissionBusiness &&
+                                        !task.freelancers?.[0]
+                                          ?.acceptanceFreelancer && (
+                                          <div className="flex flex-col gap-2 mt-2">
+                                            <Button
+                                              onClick={() =>
+                                                handleApproveUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-yellow-500 hover:bg-yellow-600 text-white"
+                                            >
+                                              Approve Update Permission
+                                            </Button>
+                                            <Button
+                                              onClick={() =>
+                                                handleRejectUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-red-500 hover:bg-red-600 text-white"
+                                            >
+                                              Reject Update Permission
                                             </Button>
                                           </div>
-                                        </div>
-                                      )}
-                                      {/* Approve/Reject Update Permission buttons for freelancers */}
-                                      {!task.freelancers?.[0]?.updatePermissionFreelancer &&
-                                        task.freelancers?.[0]?.updatePermissionBusiness &&
-                                        !task.freelancers?.[0]?.acceptanceFreelancer && (
-                                        <div className="flex flex-col gap-2 mt-2">
-                                          <Button 
-                                            onClick={() => handleApproveUpdatePermission(task._id)} 
-                                            className="w-full h-7 bg-yellow-500 hover:bg-yellow-600 text-white"
-                                          >
-                                            Approve Update Permission
-                                          </Button>
-                                          <Button 
-                                            onClick={() => handleRejectUpdatePermission(task._id)} 
-                                            className="w-full h-7 bg-red-500 hover:bg-red-600 text-white"
-                                          >
-                                            Reject Update Permission
-                                          </Button>
-                                        </div>
-                                      )}
+                                        )}
                                     </div>
                                   )}
                                   {!isFreelancer && task.freelancers?.[0] && (
                                     <div className="mt-2 mr-7 mb-1">
                                       <FreelancerTaskStatus task={task} />
                                       {/* Approve/Reject Update Permission buttons for business */}
-                                      {!task.freelancers?.[0]?.updatePermissionBusiness &&
-                                        task.freelancers?.[0]?.updatePermissionFreelancer &&
-                                        !task.freelancers?.[0]?.acceptanceBusiness && (
-                                        <div className="flex flex-col gap-2 mt-2">
-                                          <Button 
-                                            onClick={() => handleApproveUpdatePermission(task._id)} 
-                                            className="w-full h-7 bg-gray-500 hover:bg-green-500 text-white"
-                                          >
-                                            Approve Update Permission
-                                          </Button>
-                                          <Button 
-                                            onClick={() => handleRejectUpdatePermission(task._id)} 
-                                            className="w-full h-7 bg-gray-500 hover:bg-red-600 text-white"
-                                          >
-                                            Reject Update Permission
-                                          </Button>
-                                        </div>
-                                      )}
+                                      {!task.freelancers?.[0]
+                                        ?.updatePermissionBusiness &&
+                                        task.freelancers?.[0]
+                                          ?.updatePermissionFreelancer &&
+                                        !task.freelancers?.[0]
+                                          ?.acceptanceBusiness && (
+                                          <div className="flex flex-col gap-2 mt-2">
+                                            <Button
+                                              onClick={() =>
+                                                handleApproveUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-gray-500 hover:bg-green-500 text-white"
+                                            >
+                                              Approve Update Permission
+                                            </Button>
+                                            <Button
+                                              onClick={() =>
+                                                handleRejectUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-gray-500 hover:bg-red-600 text-white"
+                                            >
+                                              Reject Update Permission
+                                            </Button>
+                                          </div>
+                                        )}
                                     </div>
                                   )}
                                 </div>
@@ -690,7 +762,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                       className={`${story?.tasks?.length > (typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1) ? 'block' : 'hidden'}`}
                     >
                       {story?.tasks?.length >
-                        (typeof window !== 'undefined' && window.innerWidth >= 768 ? 2 : 1) && (
+                        (typeof window !== 'undefined' &&
+                        window.innerWidth >= 768
+                          ? 2
+                          : 1) && (
                         <>
                           <CarouselPrevious className="absolute top-1 md:top-2 left-2 transform -translate-y-1/2 shadow rounded-full p-2" />
                           <CarouselNext className="absolute top-1 md:top-2  right-2 transform -translate-y-1/2 shadow rounded-full p-2" />
@@ -703,8 +778,8 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                 <div className="text-center mt-12 p-4 rounded-md">
                   {!isFreelancer ? (
                     <p>
-                      This {story.title} currently has no tasks. Add tasks to ensure
-                      smooth progress and better tracking.
+                      This {story.title} currently has no tasks. Add tasks to
+                      ensure smooth progress and better tracking.
                     </p>
                   ) : (
                     <p>

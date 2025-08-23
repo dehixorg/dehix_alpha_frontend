@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { MoreVertical, CheckCircle, Edit, UserCheck, X } from 'lucide-react';
+import { MoreVertical, Edit, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -46,7 +46,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
       await axiosInstance.patch(url, payload);
 
       setShowPermissionDialog(false);
-      
+
       // Provide specific feedback based on the action
       let successMessage = 'Permissions updated successfully.';
       if (rejectionFreelancer && !acceptanceFreelancer) {
@@ -54,7 +54,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
       } else if (acceptanceFreelancer && !rejectionFreelancer) {
         successMessage = 'Task accepted successfully.';
       }
-      
+
       toast({
         title: 'Success',
         description: successMessage,
@@ -117,28 +117,34 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                 className="flex items-center gap-2"
                 onClick={handleRequestPermission}
                 disabled={
-                  task?.freelancers[0]?.rejectionFreelancer || 
+                  task?.freelancers[0]?.rejectionFreelancer ||
                   !task?.freelancers[0]?.acceptanceFreelancer ||
-                  (task?.freelancers[0]?.updatePermissionFreelancer && 
-                   !task?.freelancers[0]?.updatePermissionBusiness)
+                  (task?.freelancers[0]?.updatePermissionFreelancer &&
+                    !task?.freelancers[0]?.updatePermissionBusiness)
                 }
               >
                 <Edit className="w-4 h-4 text-blue-500" />
                 Update Task Details
                 {task?.freelancers[0]?.rejectionFreelancer && (
-                  <span className="ml-2 text-xs text-gray-500">(Disabled - Task Rejected)</span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Disabled - Task Rejected)
+                  </span>
                 )}
-                {!task?.freelancers[0]?.acceptanceFreelancer && !task?.freelancers[0]?.rejectionFreelancer && (
-                  <span className="ml-2 text-xs text-gray-500">(Disabled - Task Not Accepted)</span>
-                )}
-                {task?.freelancers[0]?.updatePermissionFreelancer && 
-                 !task?.freelancers[0]?.updatePermissionBusiness && 
-                 task?.freelancers[0]?.acceptanceFreelancer && 
-                 !task?.freelancers[0]?.rejectionFreelancer && (
-                  <span className="ml-2 text-xs text-gray-500">(Disabled - Waiting for Business Approval)</span>
-                )}
+                {!task?.freelancers[0]?.acceptanceFreelancer &&
+                  !task?.freelancers[0]?.rejectionFreelancer && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Disabled - Task Not Accepted)
+                    </span>
+                  )}
+                {task?.freelancers[0]?.updatePermissionFreelancer &&
+                  !task?.freelancers[0]?.updatePermissionBusiness &&
+                  task?.freelancers[0]?.acceptanceFreelancer &&
+                  !task?.freelancers[0]?.rejectionFreelancer && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Disabled - Waiting for Business Approval)
+                    </span>
+                  )}
               </DropdownMenuItem>
-
 
               {/* Add Reject Task button for freelancers */}
               {/* {type === 'freelancer' && 
