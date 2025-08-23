@@ -27,11 +27,12 @@ const Page = () => {
         axiosInstance.get(`/milestones`, {
           params: { projectId: project_id },
         }),
-        axiosInstance.get(`/project/${project_id}`)
+        axiosInstance.get(`/project/${project_id}`),
       ]);
 
       // Fetch project name
-      const projectData = projectResponse?.data?.data?.data || projectResponse?.data?.data;
+      const projectData =
+        projectResponse?.data?.data?.data || projectResponse?.data?.data;
       if (projectData) {
         setProjectName(projectData.projectName);
       }
@@ -147,7 +148,10 @@ const Page = () => {
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/freelancer' },
             { label: 'Project', link: '/dashboard/freelancer' },
-            { label: projectName || project_id, link: `/freelancer/project/${project_id}` },
+            {
+              label: projectName || project_id,
+              link: `/freelancer/project/${project_id}`,
+            },
             { label: 'Milestone', link: '#' },
           ]}
         />
