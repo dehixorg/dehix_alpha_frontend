@@ -45,7 +45,6 @@ const Page = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [projectLoading, setProjectLoading] = useState(true);
 
   const fetchProject = useCallback(async () => {
     try {
@@ -59,8 +58,6 @@ const Page = () => {
         title: 'Error',
         description: 'Failed to fetch project data.',
       });
-    } finally {
-      setProjectLoading(false);
     }
   }, [project_id]);
 
@@ -175,14 +172,17 @@ const Page = () => {
         active=""
       />
       <div className="flex flex-col sm:gap-2 sm:py-0 sm:pl-14 mb-4">
-          <Header
+        <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
             { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
-            { label: project ? project.projectName : project_id, link: `/business/project/${project_id}` },
+            {
+              label: project ? project.projectName : project_id,
+              link: `/business/project/${project_id}`,
+            },
             { label: 'Milestone', link: '#' },
           ]}
         />
