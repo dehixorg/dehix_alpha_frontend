@@ -278,8 +278,8 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                 >
                   Freelancer
                 </label>
-                <Popover 
-                  open={isFreelancerPopoverOpen} 
+                <Popover
+                  open={isFreelancerPopoverOpen}
                   onOpenChange={setIsFreelancerPopoverOpen}
                 >
                   <PopoverTrigger className="overscroll-y-none" asChild>
