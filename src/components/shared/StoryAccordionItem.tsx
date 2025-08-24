@@ -83,15 +83,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   isFreelancer = false,
   fetchMilestones,
 }) => {
-  console.log('StoryAccordionItem rendered with props:', {
-    milestoneId,
-    storyId: story._id,
-    storyTitle: story.title,
-    idx,
-    milestoneStoriesLength,
-    isFreelancer,
-  });
-
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
     story.storyStatus,
   );
@@ -116,7 +107,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   }, [story.tasks]);
 
   const handleAcceptTask = async (taskId: string) => {
-    console.log('handleAcceptTask called with taskId:', taskId);
     // Immediately add to acted upon tasks to hide buttons
     setActedUponTasks((prev) => new Set(prev).add(taskId));
 
@@ -130,16 +120,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return;
       }
 
-      console.log('Accepting task with payload:', {
-        milestoneId,
-        storyId: story._id,
-        taskId,
-        acceptanceFreelancer: true,
-        rejectionFreelancer: false,
-        updatePermissionFreelancer: false,
-        updatePermissionBusiness: false,
-      });
-
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         {
@@ -149,7 +129,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionBusiness: false,
         },
       );
-      console.log('Task accepted successfully');
       toast({ description: 'Task accepted!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
@@ -159,7 +138,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   };
 
   const handleRejectTask = async (taskId: string) => {
-    console.log('handleRejectTask called with taskId:', taskId);
     // Immediately add to acted upon tasks to hide buttons
     setActedUponTasks((prev) => new Set(prev).add(taskId));
 
@@ -180,21 +158,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       const currentUpdatePermissionBusiness =
         taskToReject?.freelancers?.[0]?.updatePermissionBusiness;
 
-      console.log('Current update permission state before rejection:', {
-        updatePermissionFreelancer: currentUpdatePermissionFreelancer,
-        updatePermissionBusiness: currentUpdatePermissionBusiness,
-      });
-
-      console.log('Rejecting task and removing update requests with payload:', {
-        milestoneId,
-        storyId: story._id,
-        taskId,
-        acceptanceFreelancer: false,
-        rejectionFreelancer: true,
-        updatePermissionFreelancer: false, // Remove freelancer update permission
-        updatePermissionBusiness: false, // Remove business update permission
-      });
-
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         {
@@ -204,7 +167,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionBusiness: false, // Clear any update permission requests
         },
       );
-      console.log('Task rejected successfully - all update requests removed');
       toast({
         description: 'Task rejected and update requests removed!',
         duration: 3000,
@@ -217,8 +179,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   };
 
   const handleApproveUpdatePermission = async (taskId: string) => {
-    console.log('handleApproveUpdatePermission called with taskId:', taskId);
-
     try {
       if (!milestoneId || !story._id) {
         console.warn(
@@ -251,18 +211,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         };
       }
 
-      console.log('Approving update permission with payload:', {
-        milestoneId,
-        storyId: story._id,
-        taskId,
-        ...payload,
-      });
-
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      console.log('Update permission approved successfully');
       toast({ description: 'Update permission approved!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
@@ -275,8 +227,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   };
 
   const handleRejectUpdatePermission = async (taskId: string) => {
-    console.log('handleRejectUpdatePermission called with taskId:', taskId);
-
     try {
       if (!milestoneId || !story._id) {
         console.warn(
@@ -309,18 +259,10 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         };
       }
 
-      console.log('Rejecting update permission with payload:', {
-        milestoneId,
-        storyId: story._id,
-        taskId,
-        ...payload,
-      });
-
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         payload,
       );
-      console.log('Update permission rejected successfully');
       toast({ description: 'Update permission rejected!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
@@ -340,7 +282,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   };
 
   const truncateDescription = (text: string, maxLength = 50) => {
-    console.log('truncateDescription called with:', { text, maxLength });
     if (text?.length > maxLength) {
       return text.slice(0, maxLength) + '...';
     }

@@ -125,13 +125,8 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   };
 
   const handleSave = async () => {
-    console.log('User clicked update task details button');
-    console.log('Current task data:', taskData);
-    console.log('Initial task data:', initialTaskData);
-
     // Check if any field has been updated
     if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
-      console.log('No changes detected, skipping update');
       toast({
         description: 'No changes detected. Task update not required.',
         duration: 3000,
@@ -140,16 +135,6 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     }
 
     const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
-    console.log('Update URL:', url);
-    console.log('Update payload:', {
-      milestoneId,
-      storyId,
-      taskId,
-      userType,
-      title: taskData.title,
-      summary: taskData.summary,
-      taskStatus: taskData.taskStatus,
-    });
 
     try {
       await axiosInstance.patch(url, {
@@ -161,8 +146,6 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
         summary: taskData.summary,
         taskStatus: taskData.taskStatus,
       });
-
-      console.log('Task update successful');
       toast({
         description: 'Task updated',
         duration: 3000,
