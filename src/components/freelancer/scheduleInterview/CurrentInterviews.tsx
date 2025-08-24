@@ -1,12 +1,12 @@
 /* eslint-disable prettier/prettier */
-"use client";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Calendar, Clock, Video, Info } from "lucide-react";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Calendar, Clock, Video, Info } from 'lucide-react';
 
-import { RootState } from "@/lib/store";
-import { fetchScheduledInterviews } from "@/lib/api/interviews";
-import { Button } from "@/components/ui/button";
+import { RootState } from '@/lib/store';
+import { fetchScheduledInterviews, fetchBids, completeBid } from '@/lib/api/interviews';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -16,6 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Textarea } from '@/components/ui/textarea';
+import { Star } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface ScheduledInterview {
   _id: string;
@@ -29,6 +33,7 @@ interface ScheduledInterview {
   talentId: string;
   interviewDate: string;
   meetingLink?: string;
+  interviewBids?: any[];
   interviewer?: {
     _id?: string;
     name?: string;
@@ -43,66 +48,69 @@ export default function CurrentInterviews() {
   const [interviews, setInterviews] = useState<ScheduledInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
-  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [interviewerDetails, setInterviewerDetails] = useState<{
+    [key: string]: any;
+  }>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
+    const [rating, setRating] = useState<number>(0)
+  const [hover, setHover] = useState<number>(0)
+  const [comment, setComment] = useState<string>("")
+  const [submitting, setSubmitting] = useState<boolean>(false)
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
       setInterviews(data);
-       await fetchInterviewerDetails(data);
-      
+      await fetchInterviewerDetails(data);
     } catch (error) {
       console.error('Failed to load scheduled interviews:', error);
     } finally {
       setLoading(false);
     }
   };
-  
-  
+
   useEffect(() => {
     loadScheduledInterviews();
-  });
-  
-  const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
-    
+  }, [user.uid]);
+
+  const fetchInterviewerDetails = async (
+    interviewData: ScheduledInterview[],
+  ) => {
     // Try different possible fields for interviewer ID
     const interviewerIds = interviewData
-      .filter(interview => {
-        const hasInterviewerId = interview.interviewerId;
-        const hasInterviewer = interview.interviewer?._id;
-        const hasCreatorId = (interview as any).creatorId;
-        const hasInterviewerObject = interview.interviewer;
-        
-        console.log('Interview', interview._id, 'fields:', {
-          interviewerId: hasInterviewerId,
-          interviewer_id: hasInterviewer,
-          creatorId: hasCreatorId,
-          interviewerObject: hasInterviewerObject
-        });
-        
-        return interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+      .filter((interview) => {
+        return (
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId
+        );
       })
-      .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
-    
-    
-    
+      .map(
+        (interview) =>
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId,
+      );
+
     if (interviewerIds.length === 0) return;
-    
+
     try {
-      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
-      
-      const detailsMap: {[key: string]: any} = {};
-      
+      const uniqueIds = Array.from(
+        new Set(interviewerIds.filter((id) => id && id !== undefined)),
+      );
+
+      const detailsMap: { [key: string]: any } = {};
+
       for (const interviewerId of uniqueIds) {
         if (!interviewerId) continue;
         try {
-          
-          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
-          
+          const response = await axiosInstance.get(
+            `/freelancer/${interviewerId}`,
+          );
+
           if (response.data?.data) {
             detailsMap[interviewerId] = response.data.data;
           }
@@ -110,8 +118,7 @@ export default function CurrentInterviews() {
           console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
         }
       }
-      
-      
+
       setInterviewerDetails(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
@@ -121,50 +128,57 @@ export default function CurrentInterviews() {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      raw: date,
     };
   };
 
-// Helper function for capitalization
-const capitalizeFirstLetter = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
+  // Helper function for capitalization
+  const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
 
-// Your updated function
-const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
-  const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
-  
-  // Check the interview object directly
-  if (interview.interviewer?.name) {
-    return capitalizeFirstLetter(interview.interviewer.name);
-  }
-  if (interview.interviewer?.userName) {
-    return capitalizeFirstLetter(interview.interviewer.userName);
-  }
-  if (interview.interviewer?.email) {
-    const emailPrefix = interview.interviewer.email.split('@')[0];
-    return capitalizeFirstLetter(emailPrefix);
-  }
-  
-  // Check the pre-fetched details map
-  if (interviewerId && interviewerDetails[interviewerId]) {
-    const details = interviewerDetails[interviewerId];
-    // Find the best name from the details
-    const name = details.name || details.userName || details.email?.split('@')[0];
-    if (name) {
-      return capitalizeFirstLetter(name);
+  // Your updated function
+  const getAcceptedInterviewerName = (
+    interview: ScheduledInterview,
+  ): string => {
+    const interviewerId =
+      interview.interviewerId ||
+      interview.interviewer?._id ||
+      (interview as any).creatorId;
+
+    // Check the interview object directly
+    if (interview.interviewer?.name) {
+      return capitalizeFirstLetter(interview.interviewer.name);
     }
-  }
-  
-  // Fallbacks don't need capitalization as they are already capitalized
-  if (interviewerId) return `Interviewer (${interviewerId})`;
-  
-  return 'Interviewer';
-};
+    if (interview.interviewer?.userName) {
+      return capitalizeFirstLetter(interview.interviewer.userName);
+    }
+    if (interview.interviewer?.email) {
+      const emailPrefix = interview.interviewer.email.split('@')[0];
+      return capitalizeFirstLetter(emailPrefix);
+    }
+
+    // Check the pre-fetched details map
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      // Find the best name from the details
+      const name =
+        details.name || details.userName || details.email?.split('@')[0];
+      if (name) {
+        return capitalizeFirstLetter(name);
+      }
+    }
+
+    // Fallbacks don't need capitalization as they are already capitalized
+    if (interviewerId) return `Interviewer (${interviewerId})`;
+
+    return 'Interviewer';
+  };
 
   const handleShowMore = () => {
-    setDisplayCount(prev => prev + 5);
+    setDisplayCount((prev) => prev + 5);
   };
 
   const displayedInterviews = interviews.slice(0, displayCount);
@@ -230,7 +244,44 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
       </div>
     );
   }
+  
+    const handleSubmit = async (interview: ScheduledInterview) => {
+    try {
+      setSubmitting(true);
+      
+      if (!rating || rating < 1) {
+        toast({
+          variant: 'destructive',
+          title: 'Rating required',
+          description: 'Please select a rating before submitting.',
+        });
+        return;
+      }
+  
+      // Submit feedback directly using the interview ID
+      await completeBid(interview._id, '', comment, rating);
+  
+      toast({
+        title: 'Feedback submitted',
+        description: 'Your rating and feedback have been saved.',
+      });
 
+      setComment('');
+      setRating(0);
+      setHover(0);
+  
+    } catch (e: any) {
+      console.error('Error in handleSubmit:', e);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to submit',
+        description: e?.response?.data?.message || e?.message || 'Something went wrong.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
@@ -247,7 +298,7 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                 Time
               </TableHead>
               <TableHead className="w-[150px] text-center font-medium">
-                Link
+                Link/Feedback
               </TableHead>
               <TableHead className="w-[50px] text-center font-medium">
                 {/* Info button column */}
@@ -256,9 +307,25 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
           </TableHeader>
           <TableBody>
             {displayedInterviews.map((interview, idx) => {
-              const { date, time } = formatDateTime(interview.interviewDate);
+              const { date, time, raw } = formatDateTime(
+                interview.interviewDate,
+              );
               const interviewerName = getAcceptedInterviewerName(interview);
-
+              const today = new Date();
+              let status: any;
+              const todayDate = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+              );
+              const InterviewDate = new Date(
+                raw.getFullYear(),
+                raw.getMonth(),
+                raw.getDate(),
+              );
+              if (todayDate > InterviewDate) {
+                status = 'past';
+              }
               return (
                 <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
@@ -284,29 +351,82 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Video className="h-4 w-4 text-purple-500" />
-                      {interview.meetingLink ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(interview.meetingLink, "_blank")}
-                          className="flex items-center gap-2"
-                        >
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Join Meeting
-                          </span>
-                        </Button>
+                      {status === 'past' ? (
+                        <Dialog>
+                          <DialogTrigger>
+                            <Button variant="outline" size="sm">
+                              Feedback
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-80 p-4 space-y-4">
+                            <div className="flex flex-col gap-3">
+                              {/* Stars */}
+                              <div className="flex justify-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`h-6 w-6 cursor-pointer transition ${
+                                      (hover || rating) >= star
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-400'
+                                    }`}
+                                    onClick={() => setRating(star)}
+                                    onMouseEnter={() => setHover(star)}
+                                    onMouseLeave={() => setHover(0)}
+                                  />
+                                ))}
+                              </div>
+
+                              {/* Comment Box */}
+                              <Textarea
+                                placeholder="Write your feedback..."
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                className="resize-none"
+                              />
+
+                              {/* Submit */}
+                              <Button 
+                                onClick={() => handleSubmit(interview)} 
+                                className="w-full"
+                                disabled={submitting}
+                              >
+                                {submitting ? 'Submitting...' : 'Submit'}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ) : (
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          No Link
-                        </span>
+                        <>
+                          <Video className="h-4 w-4 text-purple-500" />
+                          {interview.meetingLink ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                window.open(interview.meetingLink, '_blank')
+                              }
+                              className="flex items-center gap-2"
+                            >
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Join Meeting
+                              </span>
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              No Link
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </TableCell>
                   {/* Info button cell */}
                   <TableCell className="py-3 text-center relative">
                     <button
-                      onClick={() => setOpenDescIdx(openDescIdx === idx ? null : idx)}
+                      onClick={() =>
+                        setOpenDescIdx(openDescIdx === idx ? null : idx)
+                      }
                       className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
                     >
                       <Info size={16} color="white" />
@@ -314,15 +434,26 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
                     {openDescIdx === idx && (
                       <div
                         className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
-                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
+                        style={{
+                          top: '50%',
+                          right: '50%',
+                          transform: 'translateY(-50%)',
+                          marginRight: '8px',
+                        }}
                       >
                         <div className="text-sm leading-relaxed">
-                          {(interview.interviewer?.description || interview.description) || "No description available"}
+                          {interview.interviewer?.description ||
+                            interview.description ||
+                            'No description available'}
                         </div>
                         {/* Arrow pointing to the button */}
-                        <div 
+                        <div
                           className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
-                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                          style={{
+                            top: '50%',
+                            right: '-8px',
+                            transform: 'translateY(-50%)',
+                          }}
                         ></div>
                       </div>
                     )}
@@ -347,3 +478,4 @@ const getAcceptedInterviewerName = (interview: ScheduledInterview): string => {
     </div>
   );
 }
+4

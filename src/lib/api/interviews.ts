@@ -34,10 +34,20 @@ export interface PopulatedBid extends InterviewBid {
 }
 
 export async function fetchBids(interviewId: string) {
-  const { data } = await axios.get<PopulatedBid[]>(
-    `${BASE_URL}/interview/${interviewId}/interview-bids`
-  );
-  return data;
+  try {
+    const response = await axios.get<any>(
+      `${BASE_URL}/interview/${interviewId}/interview-bids`
+    );
+    
+    // Handle nested data structure
+    if (response.data && response.data.data) {
+      return response.data.data;
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching bids:', error);
+    throw error;
+  }
 }
 
 // Fetch all PENDING interview bids addressed to the given interviewee
@@ -108,24 +118,6 @@ export async function fetchScheduledInterviews(intervieweeId: string) {
   });
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
-  // FIX: Remove unnecessary Array.isArray check.
-  
-  
-  
-  
-  
-  if (response.data.data && response.data.data.length > 0) {
-    response.data.data.forEach((interview, index) => {
-      console.log(`API Interview ${index + 1}:`, {
-        _id: interview._id,
-        interviewerId: interview.interviewerId,
-        intervieweeId: interview.intervieweeId,
-        creatorId: interview.creatorId,
-        talentId: interview.talentId
-      });
-    });
-  }
-  
   return response.data.data;
 }
 
@@ -148,28 +140,38 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
     },
   });
   
-  if (response.data.data && response.data.data.length > 0) {
-    response.data.data.forEach((interview, index) => {
-      console.log(`API Interview ${index + 1}:`, {
-        _id: interview._id,
-        interviewerId: interview.interviewerId,
-        intervieweeId: interview.intervieweeId,
-        creatorId: interview.creatorId,
-        talentId: interview.talentId
-      });
-    });
-  }
-  
   return response.data.data;
 }
 
 
 
 
-export async function completeBid(interviewId: string, bidId: string, feedback: string, rating: number) {
-  const { data } = await axios.put(
-    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
-    { feedback, rating } 
-  );
-  return data;
+
+export async function completeBid(
+  interviewId: string,
+  bidId: string = '',
+  comment: string,
+  rating: number
+) {
+  try {
+    const res = await axios.put(
+      `${BASE_URL}/interview/${interviewId}`,
+      {
+        rating: rating,
+        feedback: comment,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error: any) {
+    console.error('Complete bid error:', error);
+    throw new Error(
+      error.response?.data?.message || error.message || "Failed to update bid"
+    );
+  }
 }
