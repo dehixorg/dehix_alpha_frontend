@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle, Code2, FlagIcon, Mail, Play, Tag } from 'lucide-react';
 import Link from 'next/link';
+import { useSelector } from 'react-redux';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { Separator } from '@/components/ui/separator';
 import DateRange from '@/components/cards/dateRange';
 import { Button } from '@/components/ui/button';
+import { RootState } from '@/lib/store';
 
 export interface ProjectDetailCardProps {
   projectName: string;
@@ -33,7 +35,6 @@ function ProjectDetailCard({
   endDate,
   projectDomain,
   skills,
-  userRole = 'Business',
   projectId,
   handleCompleteProject,
   handleStartProject,
@@ -41,8 +42,10 @@ function ProjectDetailCard({
   const { text: projectStatus, className: statusBadgeStyle } =
     getStatusBadge(status);
 
+  const user = useSelector((state: RootState) => state.user);
+
   // Construct the milestone route dynamically based on userRole and projectId
-  const milestoneRoute = `/${userRole.toLowerCase()}/project/${projectId}/milestone`;
+  const milestoneRoute = `${user?.type === 'business' ? '/business' : ''}/project/${projectId}/milestone`;
 
   return (
     <Card className="shadow-lg border border-gray-800 rounded-lg">

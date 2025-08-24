@@ -29,6 +29,7 @@ import {
   markAllNotificationsAsRead,
   subscribeToUserNotifications,
 } from '@/utils/common/firestoreUtils';
+
 export const NotificationButton = () => {
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user);
@@ -57,6 +58,7 @@ export const NotificationButton = () => {
         setNotifications(data);
       });
     }
+
     // Clean up the listener when the component is unmounted
     return () => {
       if (unsubscribe) {
@@ -186,9 +188,20 @@ export const NotificationButton = () => {
             </div>
           ) : (
             <div
-              className="flex-1 overflow-y-auto overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              style={{ height: `${getScrollAreaHeight()}px` }}
+              className="flex-1 overflow-y-auto notification-scroll"
+              style={{
+                height: `${getScrollAreaHeight()}px`,
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
+              }}
             >
+              <style>
+                {`
+                  .notification-scroll::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}
+              </style>
               <div className="p-3 space-y-3">
                 {displayedNotifications.map((notification: any) => (
                   <div
