@@ -16,6 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Textarea } from '@/components/ui/textarea';
+import { Star } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 interface ScheduledInterview {
   _id: string;
@@ -29,6 +33,7 @@ interface ScheduledInterview {
   talentId: string;
   interviewDate: string;
   meetingLink?: string;
+  interviewBids?: any[];
   interviewer?: {
     _id?: string;
     name?: string;
@@ -47,6 +52,10 @@ export default function CurrentInterviews() {
     [key: string]: any;
   }>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
+    const [rating, setRating] = useState<number>(0)
+  const [hover, setHover] = useState<number>(0)
+  const [comment, setComment] = useState<string>("")
+  const [submitting, setSubmitting] = useState<boolean>(false)
 
   const loadScheduledInterviews = async () => {
     if (!user?.uid) return;
@@ -234,7 +243,44 @@ export default function CurrentInterviews() {
       </div>
     );
   }
+  
+    const handleSubmit = async (interview: ScheduledInterview) => {
+    try {
+      setSubmitting(true);
+      
+      if (!rating || rating < 1) {
+        toast({
+          variant: 'destructive',
+          title: 'Rating required',
+          description: 'Please select a rating before submitting.',
+        });
+        return;
+      }
+  
+      // Submit feedback directly using the interview ID
+      await completeBid(interview._id, '', comment, rating);
+  
+      toast({
+        title: 'Feedback submitted',
+        description: 'Your rating and feedback have been saved.',
+      });
 
+      setComment('');
+      setRating(0);
+      setHover(0);
+  
+    } catch (e: any) {
+      console.error('Error in handleSubmit:', e);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to submit',
+        description: e?.response?.data?.message || e?.message || 'Something went wrong.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
@@ -251,7 +297,7 @@ export default function CurrentInterviews() {
                 Time
               </TableHead>
               <TableHead className="w-[150px] text-center font-medium">
-                Link
+                Link/Feedback
               </TableHead>
               <TableHead className="w-[50px] text-center font-medium">
                 {/* Info button column */}
@@ -260,9 +306,25 @@ export default function CurrentInterviews() {
           </TableHeader>
           <TableBody>
             {displayedInterviews.map((interview, idx) => {
-              const { date, time } = formatDateTime(interview.interviewDate);
+              const { date, time, raw } = formatDateTime(
+                interview.interviewDate,
+              );
               const interviewerName = getAcceptedInterviewerName(interview);
-
+              const today = new Date();
+              let status: any;
+              const todayDate = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate(),
+              );
+              const InterviewDate = new Date(
+                raw.getFullYear(),
+                raw.getMonth(),
+                raw.getDate(),
+              );
+              if (todayDate > InterviewDate) {
+                status = 'past';
+              }
               return (
                 <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
@@ -366,3 +428,4 @@ export default function CurrentInterviews() {
     </div>
   );
 }
+4
