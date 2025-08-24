@@ -66,12 +66,22 @@ export default function ProfileDetailPage() {
 
   useEffect(() => {
     if (profileId) {
-      fetchSkillsAndDomains().then(() => {
-        fetchProfile();
-        fetchFreelancerProjects();
-      });
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          await fetchSkillsAndDomains();
+          await fetchProfile();
+          await fetchFreelancerProjects();
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
     }
-  });
+  }, [profileId]);
 
   // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {
@@ -163,7 +173,6 @@ export default function ProfileDetailPage() {
   const fetchProfile = async () => {
     if (!profileId) return;
 
-    setIsLoading(true);
     try {
       const response = await axiosInstance.get(
         `/freelancer/profile/${profileId}`,
@@ -220,8 +229,6 @@ export default function ProfileDetailPage() {
         variant: 'destructive',
       });
       router.push('/freelancer/settings/profiles');
-    } finally {
-      setIsLoading(false);
     }
   };
 

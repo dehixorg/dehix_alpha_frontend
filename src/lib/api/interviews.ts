@@ -34,20 +34,10 @@ export interface PopulatedBid extends InterviewBid {
 }
 
 export async function fetchBids(interviewId: string) {
-  try {
-    const response = await axios.get<any>(
-      `${BASE_URL}/interview/${interviewId}/interview-bids`
-    );
-    
-    // Handle nested data structure
-    if (response.data && response.data.data) {
-      return response.data.data;
-    }
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching bids:', error);
-    throw error;
-  }
+  const { data } = await axios.get<PopulatedBid[]>(
+    `${BASE_URL}/interview/${interviewId}/interview-bids`,
+  );
+  return data;
 }
 
 // Fetch all PENDING interview bids addressed to the given interviewee
@@ -71,20 +61,24 @@ export async function fetchPendingBids(intervieweeId: string) {
       },
     });
 
-    const interviews = Array.isArray(response.data) ? response.data : response.data.data || [];
+    const interviews = Array.isArray(response.data)
+      ? response.data
+      : response.data.data || [];
     const pending: PendingBid[] = [];
 
     for (const interview of interviews) {
       // Only process interviews with BIDDING status
       if (interview.InterviewStatus !== 'BIDDING') continue;
-      
+
       const interviewId = interview._id;
       const bidsData = interview.interviewBids;
-      
+
       if (!bidsData) continue;
 
       // Handle both array and object formats
-      const bidsArray = Array.isArray(bidsData) ? bidsData : Object.values(bidsData);
+      const bidsArray = Array.isArray(bidsData)
+        ? bidsData
+        : Object.values(bidsData);
 
       for (const bid of bidsArray) {
         if (typeof bid === 'object' && bid !== null) {
@@ -99,7 +93,7 @@ export async function fetchPendingBids(intervieweeId: string) {
         }
       }
     }
-    
+
     return pending;
   } catch (error) {
     console.error('Error fetching pending bids:', error);
@@ -107,26 +101,24 @@ export async function fetchPendingBids(intervieweeId: string) {
   }
 }
 
-
 // Fetch scheduled interviews for the given interviewee
 export async function fetchScheduledInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "SCHEDULED",
+      InterviewStatus: 'SCHEDULED',
     },
   });
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
+  // FIX: Remove unnecessary Array.isArray check.
+
   return response.data.data;
 }
 
-
-
-
 export async function acceptBid(interviewId: string, bidId: string) {
   const { data } = await axios.post(
-    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
   );
   return data;
 }
@@ -136,42 +128,22 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "COMPLETED",
+      InterviewStatus: 'COMPLETED',
     },
   });
-  
+
   return response.data.data;
 }
 
-
-
-
-
 export async function completeBid(
   interviewId: string,
-  bidId: string = '',
-  comment: string,
-  rating: number
+  bidId: string,
+  feedback: string,
+  rating: number,
 ) {
-  try {
-    const res = await axios.put(
-      `${BASE_URL}/interview/${interviewId}`,
-      {
-        rating: rating,
-        feedback: comment,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return res.data;
-  } catch (error: any) {
-    console.error('Complete bid error:', error);
-    throw new Error(
-      error.response?.data?.message || error.message || "Failed to update bid"
-    );
-  }
+  const { data } = await axios.put(
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
+    { feedback, rating },
+  );
+  return data;
 }

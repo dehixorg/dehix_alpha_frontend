@@ -82,6 +82,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
   const [selectedFreelancer, setSelectedFreelancer] = useState<string | null>(
     null,
   );
+  const [isFreelancerPopoverOpen, setIsFreelancerPopoverOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
@@ -277,7 +278,10 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                 >
                   Freelancer
                 </label>
-                <Popover>
+                <Popover
+                  open={isFreelancerPopoverOpen}
+                  onOpenChange={setIsFreelancerPopoverOpen}
+                >
                   <PopoverTrigger className="overscroll-y-none" asChild>
                     <Button
                       variant="ghost"
@@ -312,6 +316,7 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                                         freelancer.userName,
                                       );
                                       handleFreelancerSelect(freelancer);
+                                      setIsFreelancerPopoverOpen(false); // Close the popover
                                     }}
                                   >
                                     <div className="flex items-center gap-3">

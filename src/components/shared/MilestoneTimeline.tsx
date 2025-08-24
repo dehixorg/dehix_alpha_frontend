@@ -188,9 +188,50 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                         {truncateDescription(milestone.title, 16)}
                       </h3>
                       {milestone.description && (
-                        <p className="text-sm mt-1">
-                          {truncateDescription(milestone.description)}
-                        </p>
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            className="p-0.5 h-auto bg-transparent border-none cursor-pointer hover:bg-gray-100 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const modal = document.createElement('div');
+                              modal.className =
+                                'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                              modal.innerHTML = `
+                                <div class="bg-[#151518] rounded-lg p-6 max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+                                  <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-lg font-semibold text-white">Description</h3>
+                                    <button class="text-red-500 hover:text-red-700 ml-4" onclick="this.closest('.fixed').remove()">
+                                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  <div class="text-sm text-white whitespace-pre-wrap mb-4 text-left">
+                                    ${milestone.description}
+                                  </div>
+                                </div>
+                              `;
+                              document.body.appendChild(modal);
+                              modal.addEventListener('click', (e) => {
+                                if (e.target === modal) modal.remove();
+                              });
+                            }}
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </div>
                     <CarouselPrevious className="absolute top-[117%] left-12 transform -translate-y-1/2">

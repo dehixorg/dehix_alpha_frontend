@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Calendar, Clock, Video, Info } from 'lucide-react';
 
 import { RootState } from '@/lib/store';
-import { fetchScheduledInterviews, fetchBids, completeBid } from '@/lib/api/interviews';
+import { fetchScheduledInterviews } from '@/lib/api/interviews';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -74,7 +74,7 @@ export default function CurrentInterviews() {
 
   useEffect(() => {
     loadScheduledInterviews();
-  }, [user.uid]);
+  });
 
   const fetchInterviewerDetails = async (
     interviewData: ScheduledInterview[],
@@ -129,7 +129,6 @@ export default function CurrentInterviews() {
     return {
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      raw: date,
     };
   };
 
@@ -351,73 +350,24 @@ export default function CurrentInterviews() {
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      {status === 'past' ? (
-                        <Dialog>
-                          <DialogTrigger>
-                            <Button variant="outline" size="sm">
-                              Feedback
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-80 p-4 space-y-4">
-                            <div className="flex flex-col gap-3">
-                              {/* Stars */}
-                              <div className="flex justify-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-6 w-6 cursor-pointer transition ${
-                                      (hover || rating) >= star
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-gray-400'
-                                    }`}
-                                    onClick={() => setRating(star)}
-                                    onMouseEnter={() => setHover(star)}
-                                    onMouseLeave={() => setHover(0)}
-                                  />
-                                ))}
-                              </div>
-
-                              {/* Comment Box */}
-                              <Textarea
-                                placeholder="Write your feedback..."
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                className="resize-none"
-                              />
-
-                              {/* Submit */}
-                              <Button 
-                                onClick={() => handleSubmit(interview)} 
-                                className="w-full"
-                                disabled={submitting}
-                              >
-                                {submitting ? 'Submitting...' : 'Submit'}
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                      <Video className="h-4 w-4 text-purple-500" />
+                      {interview.meetingLink ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(interview.meetingLink, '_blank')
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Join Meeting
+                          </span>
+                        </Button>
                       ) : (
-                        <>
-                          <Video className="h-4 w-4 text-purple-500" />
-                          {interview.meetingLink ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                window.open(interview.meetingLink, '_blank')
-                              }
-                              className="flex items-center gap-2"
-                            >
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Join Meeting
-                              </span>
-                            </Button>
-                          ) : (
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              No Link
-                            </span>
-                          )}
-                        </>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          No Link
+                        </span>
                       )}
                     </div>
                   </TableCell>
