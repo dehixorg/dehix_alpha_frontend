@@ -102,17 +102,6 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
         >
           {type === 'freelancer' ? (
             <>
-              {/* {task?.freelancers[0]?.acceptanceBusiness && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() =>
-                    console.log(`Mark task as completed: ${task._id}`)
-                  }
-                >
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Mark as Completed
-                </DropdownMenuItem>
-              )} */}
               <DropdownMenuItem
                 className="flex items-center gap-2"
                 onClick={handleRequestPermission}
@@ -145,41 +134,6 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                     </span>
                   )}
               </DropdownMenuItem>
-
-              {/* Add Reject Task button for freelancers */}
-              {/* {type === 'freelancer' && 
-                !task?.freelancers[0]?.rejectionFreelancer && 
-                !task?.freelancers[0]?.acceptanceFreelancer && (
-                  <DropdownMenuItem
-                    className="flex whitespace-nowrap text-xs items-center gap-2"
-                    onClick={() =>
-                      handleConfirmPermissionRequest(false, false, true, false)
-                    }
-                  >
-                    <X className="w-4 h-4 text-red-500" />
-                    Reject Task
-                  </DropdownMenuItem>
-                )} */}
-
-              {/* <DropdownMenuItem
-                className="flex items-center gap-2"
-                onClick={() =>
-                  console.log(`View transaction details: ${task._id}`)
-                }
-              >
-                <Eye className="w-4 h-4 text-gray-500" />
-                View Transaction Details
-              </DropdownMenuItem> */}
-              {/* {task?.taskStatus === 'COMPLETED' &&
-                task?.freelancers[0]?.paymentStatus !== 'COMPLETED' && (
-                  <DropdownMenuItem
-                    className="flex items-center gap-2"
-                    onClick={() => console.log(`Request payment: ${task._id}`)}
-                  >
-                    <DollarSign className="w-4 h-4 text-blue-500" />
-                    Request Payment
-                  </DropdownMenuItem>
-                )} */}
             </>
           ) : type === 'business' ? (
             <>

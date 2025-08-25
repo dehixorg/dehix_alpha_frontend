@@ -50,22 +50,6 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     );
   }, [workExperienceData]);
 
-  // useEffect(() => {
-  //   if (workExperienceData.length > 0) {
-  //     const latestJobTitle =
-  //       workExperienceData[workExperienceData.length - 1].jobTitle;
-  //     if (latestJobTitle) {
-  //       generateAISuggestion(latestJobTitle);
-  //     }
-  //   }
-  // }, [workExperienceData]);
-
-  // const generateAISuggestion = (jobTitle: string) => {
-  //   // Call your AI API or function to generate suggestions
-  //   // Example: Fetching data from OpenAI API
-  //   // fetchAIResponse(jobTitle).then(response => console.log(response));
-  // };
-
   const handleAddWorkExperience = () => {
     setWorkExperienceData([
       ...workExperienceData,

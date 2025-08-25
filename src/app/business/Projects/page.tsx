@@ -71,7 +71,7 @@ export default function Dashboard() {
           activeMenu="Projects"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
-            { label: 'Projecs', link: '/dashboard/business' },
+            { label: 'Project', link: '/dashboard/business' },
             { label: project_id, link: '#' }, // Use project_id dynamically
           ]}
         />
