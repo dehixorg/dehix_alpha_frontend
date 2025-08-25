@@ -40,6 +40,7 @@ interface FilterState {
   minRate: string;
   maxRate: string;
   favourites: boolean;
+  consultantProfiles: boolean;
 }
 export interface Project {
   _id: string;
@@ -106,6 +107,7 @@ const Market: React.FC = () => {
     minRate: '',
     maxRate: '',
     favourites: false,
+    consultantProfiles: false
   });
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -178,6 +180,8 @@ const Market: React.FC = () => {
     setFilters((prev) => ({ ...prev, [filterType]: values }));
   };
 
+  
+
   const handleReset = () => {
     setFilters({
       jobType: [],
@@ -189,66 +193,86 @@ const Market: React.FC = () => {
       minRate: '',
       maxRate: '',
       favourites: false,
+      consultantProfiles: false,
     });
   };
   const constructQueryString = (filters: FilterState) => {
-    return Object.entries(filters)
-      .map(([key, value]) => {
-        if (Array.isArray(value)) {
-          return value.length > 0 ? `${key}=${value.join(',')}` : '';
-        }
-        if (typeof value === 'string' && value.trim() !== '') {
-          return `${key}=${encodeURIComponent(value)}`;
-        }
-        if (typeof value === 'boolean' && value === true) {
-          return `${key}=true`;
-        }
-        return '';
-      })
-      .filter(Boolean)
-      .join('&');
-  };
-  const fetchJobs = useCallback(
-    async (appliedFilters: FilterState) => {
-      try {
-        setIsLoading(true);
-        const query = constructQueryString(appliedFilters);
-        const jobsRes = await axiosInstance.get(
-          `/project/freelancer/${user.uid}?${query}`,
-        );
-        const allJobs = jobsRes.data.data || [];
-        // Backend already filters out "not interested" projects
-        let filteredJobs = allJobs;
-        // Filter out completed projects - freelancers shouldn't see completed projects
-        filteredJobs = filteredJobs.filter(
-          (job: Project) => job.status?.toLowerCase() !== 'completed',
-        );
-        // Apply favourites filter if enabled
-        if (appliedFilters.favourites) {
-          filteredJobs = filteredJobs.filter((job: Project) =>
-            draftedProjects.includes(job._id),
-          );
-        }
-        // Sort projects by creation date (newest first)
-        filteredJobs.sort((a: Project, b: Project) => {
-          const dateA = new Date(a.createdAt).getTime();
-          const dateB = new Date(b.createdAt).getTime();
-          return dateB - dateA; // Descending order (newest first)
-        });
-        setJobs(filteredJobs);
-      } catch (err) {
-        console.error('Fetch jobs error:', err);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load job listings.',
-        });
-      } finally {
-        setIsLoading(false);
+  return Object.entries(filters)
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        return value.length > 0 ? `${key}=${value.join(',')}` : '';
       }
-    },
-    [user.uid, draftedProjects],
-  );
+      if (typeof value === 'string' && value.trim() !== '') {
+        return `${key}=${encodeURIComponent(value)}`;
+      }
+      if (typeof value === 'boolean' && value === true) {
+        // Special handling for consultantProfiles filter
+        if (key === 'consultantProfiles') {
+          return 'consultantProfilesOnly=true';
+        }
+        return `${key}=true`;
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .join('&');
+};
+  const fetchJobs = useCallback(
+  async (appliedFilters: FilterState) => {
+    try {
+      setIsLoading(true);
+      const query = constructQueryString(appliedFilters);
+      const jobsRes = await axiosInstance.get(
+        `/project/freelancer/${user.uid}?${query}`,
+      );
+      const allJobs = jobsRes.data.data || [];
+      
+      // Frontend filtering for consultantProfiles (temporary solution)
+      let filteredJobs = allJobs;
+      
+      // Filter out completed projects
+      filteredJobs = filteredJobs.filter(
+        (job: Project) => job.status?.toLowerCase() !== 'completed',
+      );
+      
+      // Apply consultantProfiles filter if enabled
+      if (appliedFilters.consultantProfiles) {
+        filteredJobs = filteredJobs.filter(
+          (job: any) => 
+            job.consultantProfiles && 
+            Array.isArray(job.consultantProfiles) && 
+            job.consultantProfiles.length > 0
+        );
+      }
+      
+      // Apply favourites filter if enabled
+      if (appliedFilters.favourites) {
+        filteredJobs = filteredJobs.filter((job: Project) =>
+          draftedProjects.includes(job._id),
+        );
+      }
+      
+      // Sort projects by creation date (newest first)
+      filteredJobs.sort((a: Project, b: Project) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      });
+      
+      setJobs(filteredJobs);
+    } catch (err) {
+      console.error('Fetch jobs error:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load job listings.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [user.uid, draftedProjects],
+);
   useEffect(() => {
     fetchJobs(filters);
   }, [fetchJobs, filters]);
@@ -370,12 +394,34 @@ const Market: React.FC = () => {
                     htmlFor="favourites"
                     className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
                   >
-                    <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
                     <span>Show Favourites Only</span>
                   </label>
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="w-full">
+  <CardContent className="p-4">
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id="consultantProfiles"
+        checked={filters.consultantProfiles}
+        onCheckedChange={(checked) =>
+          setFilters((prev) => ({
+            ...prev,
+            consultantProfiles: checked as boolean,
+          }))
+        }
+      />
+      <label
+        htmlFor="consultantProfiles"
+        className="text-sm font-medium text-foreground cursor-pointer select-none"
+      >
+        Consultants Only
+      </label>
+    </div>
+  </CardContent>
+</Card>
 
             <div className="mb-4">
               <div className="mb-4">
@@ -543,6 +589,30 @@ const Market: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="border-b border-border py-4">
+  <div className="p-3 border border-border rounded-lg bg-card">
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id="mobile-consultantProfiles"
+        checked={filters.consultantProfiles}
+        onCheckedChange={(checked) =>
+          setFilters((prev) => ({
+            ...prev,
+            consultantProfiles: checked as boolean,
+          }))
+        }
+      />
+      <label
+        htmlFor="mobile-consultantProfiles"
+        className="text-sm font-medium text-foreground cursor-pointer select-none"
+      >
+        Consultants Only
+      </label>
+    </div>
+  </div>
+</div>
+              
               <div className="border-b border-border pb-4">
                 <MobileSkillDom
                   label="Domains"
