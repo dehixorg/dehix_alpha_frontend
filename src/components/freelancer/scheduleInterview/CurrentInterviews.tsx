@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Calendar, Clock, Video, Info } from 'lucide-react';
 
 import { RootState } from '@/lib/store';
-import { fetchScheduledInterviews } from '@/lib/api/interviews';
+import { fetchScheduledInterviews, fetchBids, completeBid } from '@/lib/api/interviews';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -33,7 +33,7 @@ interface ScheduledInterview {
   talentId: string;
   interviewDate: string;
   meetingLink?: string;
-  interviewBids?: any[];
+  interviewBids?: any;
   interviewer?: {
     _id?: string;
     name?: string;
@@ -74,14 +74,18 @@ export default function CurrentInterviews() {
 
   useEffect(() => {
     loadScheduledInterviews();
-  });
+  }, [user.uid]);
 
   const fetchInterviewerDetails = async (
     interviewData: ScheduledInterview[],
   ) => {
-    // Try different possible fields for interviewer ID
     const interviewerIds = interviewData
       .filter((interview) => {
+        const hasInterviewerId = interview.interviewerId;
+        const hasInterviewer = interview.interviewer?._id;
+        const hasCreatorId = (interview as any).creatorId;
+        const hasInterviewerObject = interview.interviewer;
+
         return (
           interview.interviewerId ||
           interview.interviewer?._id ||
@@ -129,16 +133,15 @@ export default function CurrentInterviews() {
     return {
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      raw: date,
     };
   };
 
-  // Helper function for capitalization
   const capitalizeFirstLetter = (str: string): string => {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  // Your updated function
   const getAcceptedInterviewerName = (
     interview: ScheduledInterview,
   ): string => {
@@ -147,7 +150,6 @@ export default function CurrentInterviews() {
       interview.interviewer?._id ||
       (interview as any).creatorId;
 
-    // Check the interview object directly
     if (interview.interviewer?.name) {
       return capitalizeFirstLetter(interview.interviewer.name);
     }
@@ -159,10 +161,8 @@ export default function CurrentInterviews() {
       return capitalizeFirstLetter(emailPrefix);
     }
 
-    // Check the pre-fetched details map
     if (interviewerId && interviewerDetails[interviewerId]) {
       const details = interviewerDetails[interviewerId];
-      // Find the best name from the details
       const name =
         details.name || details.userName || details.email?.split('@')[0];
       if (name) {
@@ -170,7 +170,6 @@ export default function CurrentInterviews() {
       }
     }
 
-    // Fallbacks don't need capitalization as they are already capitalized
     if (interviewerId) return `Interviewer (${interviewerId})`;
 
     return 'Interviewer';
@@ -244,10 +243,10 @@ export default function CurrentInterviews() {
     );
   }
   
-    const handleSubmit = async (interview: ScheduledInterview) => {
+   const handleSubmit = async (interview: ScheduledInterview) => {
     try {
       setSubmitting(true);
-      
+
       if (!rating || rating < 1) {
         toast({
           variant: 'destructive',
@@ -256,10 +255,34 @@ export default function CurrentInterviews() {
         });
         return;
       }
-  
-      // Submit feedback directly using the interview ID
-      await completeBid(interview._id, '', comment, rating);
-  
+
+             let bidId: string | null = null;
+       
+       if (interview.interviewBids) {
+         const bidsArray = Array.isArray(interview.interviewBids)
+           ? interview.interviewBids
+           : Object.values(interview.interviewBids);
+         
+         const acceptedBid = bidsArray.find((bid: any) => 
+           bid.status === 'ACCEPTED'
+         );
+         
+         if (acceptedBid && acceptedBid._id) {
+           bidId = acceptedBid._id;
+         }
+       }
+
+       if (!bidId) {
+         toast({
+           variant: 'destructive',
+           title: 'Error',
+           description: 'Could not find the accepted bid for this interview.',
+         });
+         return;
+       }
+
+       await completeBid(interview._id, bidId, comment, rating);
+
       toast({
         title: 'Feedback submitted',
         description: 'Your rating and feedback have been saved.',
@@ -268,7 +291,7 @@ export default function CurrentInterviews() {
       setComment('');
       setRating(0);
       setHover(0);
-  
+
     } catch (e: any) {
       console.error('Error in handleSubmit:', e);
       toast({
@@ -280,6 +303,7 @@ export default function CurrentInterviews() {
       setSubmitting(false);
     }
   };
+
   
   return (
     <div className="space-y-4">
@@ -299,13 +323,13 @@ export default function CurrentInterviews() {
               <TableHead className="w-[150px] text-center font-medium">
                 Link/Feedback
               </TableHead>
-              <TableHead className="w-[50px] text-center font-medium">
-                {/* Info button column */}
-              </TableHead>
+                             <TableHead className="w-[50px] text-center font-medium">
+               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {displayedInterviews.map((interview, idx) => {
+              
               const { date, time, raw } = formatDateTime(
                 interview.interviewDate,
               );
@@ -350,29 +374,73 @@ export default function CurrentInterviews() {
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <Video className="h-4 w-4 text-purple-500" />
-                      {interview.meetingLink ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            window.open(interview.meetingLink, '_blank')
-                          }
-                          className="flex items-center gap-2"
-                        >
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Join Meeting
-                          </span>
-                        </Button>
+                      {status === 'past' ? (
+                        <Dialog>
+                          <DialogTrigger>
+                            <Button variant="outline" size="sm">
+                              Feedback
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-80 p-4 space-y-4">
+                            <div className="flex flex-col gap-3">
+                              {/* Stars */}
+                              <div className="flex justify-center gap-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`h-6 w-6 cursor-pointer transition ${
+                                      (hover || rating) >= star
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-400'
+                                    }`}
+                                    onClick={() => setRating(star)}
+                                    onMouseEnter={() => setHover(star)}
+                                    onMouseLeave={() => setHover(0)}
+                                  />
+                                ))}
+                              </div>
+
+                              {/* Comment Box */}
+                              <Textarea
+                                placeholder="Write your feedback..."
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                className="resize-none"
+                              />
+
+                              {/* Submit */}
+                              <Button onClick={() => handleSubmit(interview)} className="w-full">
+                                Submit
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ) : (
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          No Link
-                        </span>
+                        <>
+                          <Video className="h-4 w-4 text-purple-500" />
+                          {interview.meetingLink ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                window.open(interview.meetingLink, '_blank')
+                              }
+                              className="flex items-center gap-2"
+                            >
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Join Meeting
+                              </span>
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              No Link
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </TableCell>
-                  {/* Info button cell */}
-                  <TableCell className="py-3 text-center relative">
+                                     <TableCell className="py-3 text-center relative">
                     <button
                       onClick={() =>
                         setOpenDescIdx(openDescIdx === idx ? null : idx)
@@ -396,8 +464,7 @@ export default function CurrentInterviews() {
                             interview.description ||
                             'No description available'}
                         </div>
-                        {/* Arrow pointing to the button */}
-                        <div
+                                                 <div
                           className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
                           style={{
                             top: '50%',
@@ -428,4 +495,3 @@ export default function CurrentInterviews() {
     </div>
   );
 }
-4

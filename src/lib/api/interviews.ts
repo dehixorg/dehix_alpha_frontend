@@ -15,6 +15,7 @@ export interface InterviewBid {
   talentType: string;
   talentId: string;
   fee: number;
+   interviewBids?: InterviewBid[] | { [key: string]: InterviewBid };
   // other props omitted for brevity
 }
 
