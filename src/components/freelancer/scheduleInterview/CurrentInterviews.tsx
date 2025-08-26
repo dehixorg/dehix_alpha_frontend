@@ -2,7 +2,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Calendar, Clock, Video, Info } from 'lucide-react';
+import { Calendar, Clock, Video, Info , Star } from 'lucide-react';
 
 import { RootState } from '@/lib/store';
 import { fetchScheduledInterviews, fetchBids, completeBid } from '@/lib/api/interviews';
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/table';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Textarea } from '@/components/ui/textarea';
-import { Star } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
