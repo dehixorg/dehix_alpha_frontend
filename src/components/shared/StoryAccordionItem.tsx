@@ -62,6 +62,9 @@ interface TaskDetailsDialogProps {
   task: Task | null;
   open: boolean;
   onClose: () => void;
+  isFreelancer: boolean;
+  onApproveUpdatePermission?: (taskId: string) => Promise<boolean>;
+  onRejectUpdatePermission?: (taskId: string) => Promise<boolean>;
 }
 
 interface StoryAccordionItemProps {
@@ -151,13 +154,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         return;
       }
 
-      // Find the task to check current update permission state
-      const taskToReject = story.tasks.find((task: any) => task._id === taskId);
-      const currentUpdatePermissionFreelancer =
-        taskToReject?.freelancers?.[0]?.updatePermissionFreelancer;
-      const currentUpdatePermissionBusiness =
-        taskToReject?.freelancers?.[0]?.updatePermissionBusiness;
-
       await axiosInstance.patch(
         `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
         {
@@ -178,7 +174,9 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     }
   };
 
-  const handleApproveUpdatePermission = async (taskId: string) => {
+  const handleApproveUpdatePermission = async (
+    taskId: string,
+  ): Promise<boolean> => {
     try {
       if (!milestoneId || !story._id) {
         console.warn(
@@ -188,7 +186,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           description: 'Missing milestone or story ID',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
       // Determine the payload based on user type
@@ -217,16 +215,20 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       );
       toast({ description: 'Update permission approved!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
+      return true;
     } catch (error) {
       console.error('Error approving update permission:', error);
       toast({
         description: 'Failed to approve update permission.',
         variant: 'destructive',
       });
+      return false;
     }
   };
 
-  const handleRejectUpdatePermission = async (taskId: string) => {
+  const handleRejectUpdatePermission = async (
+    taskId: string,
+  ): Promise<boolean> => {
     try {
       if (!milestoneId || !story._id) {
         console.warn(
@@ -236,7 +238,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           description: 'Missing milestone or story ID',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
 
       // Determine the payload based on user type
@@ -265,12 +267,14 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       );
       toast({ description: 'Update permission rejected!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
+      return true;
     } catch (error) {
       console.error('Error rejecting update permission:', error);
       toast({
         description: 'Failed to reject update permission.',
         variant: 'destructive',
       });
+      return false;
     }
   };
 
@@ -306,28 +310,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
               className="p-1 h-auto ml-2"
               onClick={(e) => {
                 e.stopPropagation();
-                const modal = document.createElement('div');
-                modal.className =
-                  'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                modal.innerHTML = `
-                  <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                                                <h3 class="text-lg font-semibold text-white">Summary</h3>
-                                                <button class="text-red-500 hover:text-red-700" onclick="this.closest('.fixed').remove()">
-                                                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                  </svg>
-                                                </button>
-                                              </div>
-                    <div class="text-sm text-white whitespace-pre-wrap">
-                      ${story.summary}
-                    </div>
-                  </div>
-                `;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', (e) => {
-                  if (e.target === modal) modal.remove();
-                });
+                setSelectedTask({
+                  _id: 'summary',
+                  title: story.title,
+                  summary: story.summary,
+                  taskStatus: 'SUMMARY',
+                  freelancers: [],
+                } as any);
               }}
             >
               <svg
@@ -536,33 +525,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                         className="p-1 h-auto ml-2"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const modal =
-                                            document.createElement('div');
-                                          modal.className =
-                                            'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                                          modal.innerHTML = `
-                                            <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-                                              <div class="flex justify-between items-center mb-4">
-                                                <h3 class="text-lg font-semibold text-white">Task Summary</h3>
-                                                <button class="text-red-500 hover:text-red-700" onclick="this.closest('.fixed').remove()">
-                                                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                  </svg>
-                                                </button>
-                                              </div>
-                                              <div class="text-sm text-white whitespace-pre-wrap">
-                                                ${task.summary}
-                                              </div>
-                                            </div>
-                                          `;
-                                          document.body.appendChild(modal);
-                                          modal.addEventListener(
-                                            'click',
-                                            (e) => {
-                                              if (e.target === modal)
-                                                modal.remove();
-                                            },
-                                          );
+                                          setSelectedTask(task);
                                         }}
                                       >
                                         <svg
@@ -746,6 +709,13 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+        isFreelancer={isFreelancer}
+        onApproveUpdatePermission={(taskId: string) =>
+          handleApproveUpdatePermission(taskId)
+        }
+        onRejectUpdatePermission={(taskId: string) =>
+          handleRejectUpdatePermission(taskId)
+        }
       />
     </AccordionItem>
   );
@@ -755,77 +725,136 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   task,
   open,
   onClose,
+  isFreelancer,
+  onApproveUpdatePermission,
+  onRejectUpdatePermission,
 }) => {
   if (!task) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg rounded-lg mx-auto w-[90vw] md:w-auto shadow-lg ">
+      <DialogContent className="rounded-lg mx-auto w-[80vw] shadow-lg ">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription className="text-sm mt-4 leading-relaxed">
-          <p className="mt-2 text-sm">
-            Task status:{' '}
-            <span className="font-medium ">{task?.taskStatus}</span>
+        <DialogDescription className="text-sm mt-2 leading-relaxed">
+          {/* Description */}
+          <h4 className="font-semibold mb-1">Description</h4>
+          <p className="mb-3 whitespace-pre-wrap">
+            {task.summary || 'No description provided.'}
           </p>
-          <p className="mt-2 text-sm">
-            Freelancer Name:{' '}
-            <span className="font-medium ">
-              {task?.freelancers[0]?.freelancerName}
-            </span>
-          </p>
-          <p className="mt-2 text-sm">
-            Payment Status:{' '}
-            <span className="font-medium ">
-              {task?.freelancers[0]?.paymentStatus}
-            </span>
-          </p>
-          <Table className="mt-4 border border-gray-300">
-            <TableHeader>
-              <TableRow className="">
-                <TableHead className="font-semibold text-left">User</TableHead>
-                <TableHead className="font-semibold text-left">
-                  Freelancer{' '}
-                </TableHead>
-                <TableHead className="font-semibold text-left">
-                  Business{' '}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {task.freelancers.map((freelancer: any, index: number) => (
-                <TableRow key={index} className="border-b border-gray-200">
-                  <TableCell className="py-2 px-4 font-medium">
-                    Update Permission
-                  </TableCell>
-                  <TableCell className="py-2 px-4 text-center">
-                    <div className="flex justify-center items-center">
-                      {freelancer.updatePermissionFreelancer &&
-                      freelancer.updatePermissionFreelancer &&
-                      freelancer.acceptanceFreelancer ? (
-                        <Check className="text-green-600 w-5 h-5" />
-                      ) : (
-                        <X className="text-red-600 w-5 h-5" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2 px-4 text-center">
-                    <div className="flex justify-center items-center">
-                      {freelancer.updatePermissionBusiness &&
-                      freelancer.updatePermissionFreelancer &&
-                      freelancer.rejectionFreelsncer ? (
-                        <Check className="text-green-600 w-5 h-5" />
-                      ) : (
-                        <X className="text-red-600 w-5 h-5" />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <p className="mt-3">{task.summary}</p>
+
+          {/* Key fields (hidden for story SUMMARY popover) */}
+          {task.taskStatus !== 'SUMMARY' && (
+            <>
+              <p className="mt-2 text-sm">
+                Task status:{' '}
+                <span className="font-medium ">{task?.taskStatus}</span>
+              </p>
+              <p className="mt-2 text-sm">
+                Freelancer Name:{' '}
+                <span className="font-medium ">
+                  {task?.freelancers[0]?.freelancerName || '—'}
+                </span>
+              </p>
+              <p className="mt-2 text-sm">
+                Payment Status:{' '}
+                <span className="font-medium ">
+                  {task?.freelancers[0]?.paymentStatus || '—'}
+                </span>
+              </p>
+            </>
+          )}
+
+          {/* Update task request - only visible to business and not for SUMMARY */}
+          {!isFreelancer && task.taskStatus !== 'SUMMARY' && (
+            <div className="mt-4">
+              <h4 className="font-semibold mb-2">Update Task Request</h4>
+              {task.freelancers.some(
+                (f: any) =>
+                  f.updatePermissionFreelancer && !f.updatePermissionBusiness,
+              ) ? (
+                <Table className="border border-gray-300">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold text-left">
+                        Freelancer
+                      </TableHead>
+                      <TableHead className="font-semibold text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {task.freelancers
+                      .filter(
+                        (f: any) =>
+                          f.updatePermissionFreelancer &&
+                          !f.updatePermissionBusiness,
+                      )
+                      .map((freelancer: any, index: number) => (
+                        <TableRow
+                          key={index}
+                          className="border-b border-gray-200"
+                        >
+                          <TableCell className="py-2 px-4">
+                            {freelancer.freelancerName || 'Freelancer'}
+                          </TableCell>
+                          <TableCell className="py-2 px-4">
+                            <div className="flex items-center justify-center gap-4">
+                              <button
+                                aria-label="Approve update permission"
+                                onClick={async () => {
+                                  if (onApproveUpdatePermission) {
+                                    const ok = await onApproveUpdatePermission(
+                                      task._id,
+                                    );
+                                    if (ok) {
+                                      (task as any).freelancers = (
+                                        task.freelancers || []
+                                      ).filter(
+                                        (f: any) => f._id !== freelancer._id,
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="rounded p-1 hover:bg-emerald-950/40"
+                              >
+                                <Check className="text-green-500 w-5 h-5" />
+                              </button>
+                              <button
+                                aria-label="Reject update permission"
+                                onClick={async () => {
+                                  if (onRejectUpdatePermission) {
+                                    const ok = await onRejectUpdatePermission(
+                                      task._id,
+                                    );
+                                    if (ok) {
+                                      (task as any).freelancers = (
+                                        task.freelancers || []
+                                      ).filter(
+                                        (f: any) => f._id !== freelancer._id,
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="rounded p-1 hover:bg-red-950/40"
+                              >
+                                <X className="text-red-500 w-5 h-5" />
+                              </button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No update permission requests.
+                </p>
+              )}
+            </div>
+          )}
         </DialogDescription>
         <div className="flex justify-end mt-4">
           <DialogClose asChild>

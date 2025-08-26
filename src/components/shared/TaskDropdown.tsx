@@ -100,7 +100,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
           align="end"
           className="w-56 p-2 border rounded-md shadow-md"
         >
-          {type === 'freelancer' ? (
+          {user?.type === 'freelancer' ? (
             <>
               <DropdownMenuItem
                 className="flex items-center gap-2"
@@ -135,7 +135,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
                   )}
               </DropdownMenuItem>
             </>
-          ) : type === 'business' ? (
+          ) : user?.type === 'business' ? (
             <>
               {task.freelancers.length > 0 && (
                 <DropdownMenuItem
@@ -151,7 +151,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
               )}
               <DropdownMenuItem
                 className="flex items-center gap-2"
-                onClick={handleRequestPermission}
+                onClick={() => setShowPermissionDialog(true)}
               >
                 <Edit className="w-4 h-4 text-blue-500" />
                 Update Task Details

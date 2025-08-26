@@ -150,7 +150,7 @@ const Page = () => {
             { label: 'Project', link: '/dashboard/freelancer' },
             {
               label: projectName || project_id,
-              link: `/freelancer/project/${project_id}`,
+              link: `/project/${project_id}`,
             },
             { label: 'Milestone', link: '#' },
           ]}
