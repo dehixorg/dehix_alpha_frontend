@@ -887,11 +887,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         if (response.status === 200) {
           const profileData = response.data.data || response.data;
 
-          console.log('Profile data fetched:', {
-            isFreelancerProfile,
-            profileData,
-          });
-
           // For specific profiles, enrich with freelancer information if we have a freelancer ID
           if (!isFreelancerProfile && freelancerIdOverride) {
             try {
@@ -903,10 +898,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   freelancerResponse.data?.data || freelancerResponse.data;
                 // Merge freelancer data with profile data for better display
                 profileData.freelancerId = freelancerData;
-                console.log(
-                  'Enriched profile data with freelancer info:',
-                  profileData,
-                );
               }
             } catch (enrichError) {
               console.warn(
@@ -1010,7 +1001,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
         // If fetching specific profile failed and we have a freelancer ID, try fetching general freelancer profile
         if (!isFreelancerProfile && freelancerIdOverride) {
-          console.log('Falling back to general freelancer profile...');
           try {
             const fallbackResponse = await axiosInstance.get(
               `/public/freelancer/${freelancerIdOverride}`,
@@ -1018,7 +1008,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             if (fallbackResponse.status === 200) {
               const fallbackData =
                 fallbackResponse.data.data || fallbackResponse.data;
-              console.log('Fallback data fetched:', fallbackData);
               setProfileData(fallbackData);
               return;
             }
