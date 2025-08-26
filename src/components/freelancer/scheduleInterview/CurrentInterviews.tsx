@@ -53,7 +53,8 @@ export default function CurrentInterviews() {
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
     const [rating, setRating] = useState<number>(0)
   const [hover, setHover] = useState<number>(0)
-  const [comment, setComment] = useState<string>("")
+  const [feedback, setfeedback] = useState<string>("")
+  const [interviewStatus,setInterviewStatus] = useState<string>("")
   const [submitting, setSubmitting] = useState<boolean>(false)
 
   const loadScheduledInterviews = async () => {
@@ -62,6 +63,8 @@ export default function CurrentInterviews() {
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
+      console.log(data);
+    //  console.log(data.map((date)=>date.interviewDate > date.now()));
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
@@ -70,8 +73,7 @@ export default function CurrentInterviews() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
+   useEffect(() => {
     loadScheduledInterviews();
   }, [user.uid]);
 
@@ -127,6 +129,119 @@ export default function CurrentInterviews() {
       console.error('Failed to fetch interviewer details:', error);
     }
   };
+ const handleRejected = async (interview: ScheduledInterview) => {
+  try {
+    setSubmitting(true);
+
+    if (!rating || rating < 1) {
+      toast({
+        variant: 'destructive',
+        title: 'Rating required',
+        description: 'Please select a rating before submitting.',
+      });
+      return;
+    }
+
+    let bidId: string | null = null;
+
+    if (interview.interviewBids) {
+      const bidsArray = Array.isArray(interview.interviewBids)
+        ? interview.interviewBids
+        : Object.values(interview.interviewBids);
+
+      if (bidsArray.length > 0 && bidsArray[0]._id) {
+        bidId = bidsArray[0]._id;
+      }
+    }
+
+    if (!bidId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not find any bid for this interview.',
+      });
+      return;
+    }
+
+    await completeBid(interview._id, bidId, feedback, rating, "REJECTED");
+
+    toast({
+      title: 'Rejected submitted',
+      description: 'Your rejection and feedback have been saved.',
+    });
+
+    setfeedback('');
+    setRating(0);
+    setHover(0);
+  } catch (e: any) {
+    console.error('Error in handleRejected:', e);
+    toast({
+      variant: 'destructive',
+      title: 'Failed to submit',
+      description: e?.response?.data?.message || e?.message || 'Something went wrong.',
+    });
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+
+const handleSubmit = async (interview: ScheduledInterview) => {
+  try {
+    setSubmitting(true);
+
+    if (!rating || rating < 1) {
+      toast({
+        variant: 'destructive',
+        title: 'Rating required',
+        description: 'Please select a rating before submitting.',
+      });
+      return;
+    }
+
+    let bidId: string | null = null;
+
+    if (interview.interviewBids) {
+      const bidsArray = Array.isArray(interview.interviewBids)
+        ? interview.interviewBids
+        : Object.values(interview.interviewBids);
+
+      if (bidsArray.length > 0 && bidsArray[0]._id) {
+        bidId = bidsArray[0]._id;
+      }
+    }
+
+    if (!bidId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not find any bid for this interview.',
+      });
+      return;
+    }
+
+    await completeBid(interview._id, bidId, feedback, rating, "COMPLETED");
+
+    toast({
+      title: 'Feedback submitted',
+      description: 'Your rating and feedback have been saved.',
+    });
+
+    setfeedback('');
+    setRating(0);
+    setHover(0);
+  } catch (e: any) {
+    console.error('Error in handleSubmit:', e);
+    toast({
+      variant: 'destructive',
+      title: 'Failed to submit',
+      description: e?.response?.data?.message || e?.message || 'Something went wrong.',
+    });
+  } finally {
+    setSubmitting(false);
+  }
+};
+
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -242,68 +357,6 @@ export default function CurrentInterviews() {
     );
   }
   
-   const handleSubmit = async (interview: ScheduledInterview) => {
-    try {
-      setSubmitting(true);
-
-      if (!rating || rating < 1) {
-        toast({
-          variant: 'destructive',
-          title: 'Rating required',
-          description: 'Please select a rating before submitting.',
-        });
-        return;
-      }
-
-             let bidId: string | null = null;
-       
-       if (interview.interviewBids) {
-         const bidsArray = Array.isArray(interview.interviewBids)
-           ? interview.interviewBids
-           : Object.values(interview.interviewBids);
-         
-         const acceptedBid = bidsArray.find((bid: any) => 
-           bid.status === 'ACCEPTED'
-         );
-         
-         if (acceptedBid && acceptedBid._id) {
-           bidId = acceptedBid._id;
-         }
-       }
-
-       if (!bidId) {
-         toast({
-           variant: 'destructive',
-           title: 'Error',
-           description: 'Could not find the accepted bid for this interview.',
-         });
-         return;
-       }
-
-       await completeBid(interview._id, bidId, comment, rating);
-
-      toast({
-        title: 'Feedback submitted',
-        description: 'Your rating and feedback have been saved.',
-      });
-
-      setComment('');
-      setRating(0);
-      setHover(0);
-
-    } catch (e: any) {
-      console.error('Error in handleSubmit:', e);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to submit',
-        description: e?.response?.data?.message || e?.message || 'Something went wrong.',
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  
   return (
     <div className="space-y-4">
       <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
@@ -402,15 +455,20 @@ export default function CurrentInterviews() {
                               {/* Comment Box */}
                               <Textarea
                                 placeholder="Write your feedback..."
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
+                                value={feedback}
+                                onChange={(e) => setfeedback(e.target.value)}
                                 className="resize-none"
                               />
 
-                              {/* Submit */}
-                              <Button onClick={() => handleSubmit(interview)} className="w-full">
-                                Submit
-                              </Button>
+                              {/* Submit / Submit Rejected */}
+                              <div className="flex gap-2">
+                                <Button onClick={() => handleSubmit(interview)} className="w-full" disabled={submitting}>
+                                  Aditya
+                                </Button>
+                                <Button onClick={() => handleRejected(interview)} className="w-full" disabled={submitting}>
+                                   Rejected
+                                </Button>
+                              </div>
                             </div>
                           </DialogContent>
                         </Dialog>
