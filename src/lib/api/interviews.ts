@@ -141,10 +141,11 @@ export async function completeBid(
   bidId: string,
   feedback: string,
   rating: number,
+  interviewStatus: string
 ) {
   const { data } = await axios.put(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
-    { feedback, rating },
+    { feedback, rating,interviewStatus },
   );
   return data;
 }
