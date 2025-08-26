@@ -285,7 +285,7 @@ export const AddProject: React.FC<AddProjectProps> = ({ onFormSubmit }) => {
       };
 
       // Submit with the skills from our state
-      const response = await axiosInstance.post(`/freelancer/project`, payload);
+      await axiosInstance.post(`/freelancer/project`, payload);
 
       onFormSubmit();
       resetForm(); // Reset form after successful submission
