@@ -869,10 +869,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
                         </div>
                       ) : sharedMedia.length > 0 ? (
-                        <SharedMediaDisplay
-                          mediaItems={sharedMedia}
-                          // onMediaItemClick={(item) => console.log('Media item clicked:', item)} // Optional
-                        />
+                        <SharedMediaDisplay mediaItems={sharedMedia} />
                       ) : (
                         <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
                           <p>No media has been shared yet.</p>
@@ -948,7 +945,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             type="text"
                             placeholder="Search members..."
                             className="w-full p-2 border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--input))] text-sm"
-                            // onChange={(e) => console.log("Search term:", e.target.value)} // Placeholder functionality
                           />
                         </div>
                       )}

@@ -98,8 +98,8 @@ const LiveCaptureField = ({ form }: LiveCaptureFieldProps) => {
                     <Image
                       src={capturedImage || field.value}
                       alt="Live Capture"
-                      width={128}
-                      height={128}
+                      width={250}
+                      height={250}
                       className="rounded-md object-cover"
                     />
                   </div>

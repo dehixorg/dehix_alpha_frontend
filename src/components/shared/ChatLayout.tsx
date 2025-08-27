@@ -24,23 +24,12 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const defaultSidebarSize = 25;
 
-  console.log(
-    '[ChatLayout.tsx] Received isChatAreaExpanded:',
-    isChatAreaExpanded,
-  );
-
   useEffect(() => {
-    console.log(
-      '[ChatLayout.tsx] useEffect triggered. isChatAreaExpanded:',
-      isChatAreaExpanded,
-    );
     const panel = sidebarPanelRef.current;
     if (panel) {
       if (isChatAreaExpanded) {
-        console.log('[ChatLayout.tsx] Calling panel.collapse()');
         panel.collapse();
       } else {
-        console.log('[ChatLayout.tsx] Calling panel.expand()');
         panel.expand();
         // Optional: If expand() doesn't restore to a specific size,
         // and you want it to reset to its default size when re-expanding:

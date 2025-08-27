@@ -35,7 +35,7 @@ export interface PopulatedBid extends InterviewBid {
 
 export async function fetchBids(interviewId: string) {
   const { data } = await axios.get<PopulatedBid[]>(
-    `${BASE_URL}/interview/${interviewId}/interview-bids`
+    `${BASE_URL}/interview/${interviewId}/interview-bids`,
   );
   return data;
 }
@@ -61,20 +61,24 @@ export async function fetchPendingBids(intervieweeId: string) {
       },
     });
 
-    const interviews = Array.isArray(response.data) ? response.data : response.data.data || [];
+    const interviews = Array.isArray(response.data)
+      ? response.data
+      : response.data.data || [];
     const pending: PendingBid[] = [];
 
     for (const interview of interviews) {
       // Only process interviews with BIDDING status
       if (interview.InterviewStatus !== 'BIDDING') continue;
-      
+
       const interviewId = interview._id;
       const bidsData = interview.interviewBids;
-      
+
       if (!bidsData) continue;
 
       // Handle both array and object formats
-      const bidsArray = Array.isArray(bidsData) ? bidsData : Object.values(bidsData);
+      const bidsArray = Array.isArray(bidsData)
+        ? bidsData
+        : Object.values(bidsData);
 
       for (const bid of bidsArray) {
         if (typeof bid === 'object' && bid !== null) {
@@ -89,7 +93,7 @@ export async function fetchPendingBids(intervieweeId: string) {
         }
       }
     }
-    
+
     return pending;
   } catch (error) {
     console.error('Error fetching pending bids:', error);
@@ -97,44 +101,24 @@ export async function fetchPendingBids(intervieweeId: string) {
   }
 }
 
-
 // Fetch scheduled interviews for the given interviewee
 export async function fetchScheduledInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "SCHEDULED",
+      InterviewStatus: 'SCHEDULED',
     },
   });
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
   // FIX: Remove unnecessary Array.isArray check.
-  
-  
-  
-  
-  
-  if (response.data.data && response.data.data.length > 0) {
-    response.data.data.forEach((interview, index) => {
-      console.log(`API Interview ${index + 1}:`, {
-        _id: interview._id,
-        interviewerId: interview.interviewerId,
-        intervieweeId: interview.intervieweeId,
-        creatorId: interview.creatorId,
-        talentId: interview.talentId
-      });
-    });
-  }
-  
+
   return response.data.data;
 }
 
-
-
-
 export async function acceptBid(interviewId: string, bidId: string) {
   const { data } = await axios.post(
-    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
   );
   return data;
 }
@@ -144,32 +128,22 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: "COMPLETED",
+      InterviewStatus: 'COMPLETED',
     },
   });
-  
-  if (response.data.data && response.data.data.length > 0) {
-    response.data.data.forEach((interview, index) => {
-      console.log(`API Interview ${index + 1}:`, {
-        _id: interview._id,
-        interviewerId: interview.interviewerId,
-        intervieweeId: interview.intervieweeId,
-        creatorId: interview.creatorId,
-        talentId: interview.talentId
-      });
-    });
-  }
-  
+
   return response.data.data;
 }
 
-
-
-
-export async function completeBid(interviewId: string, bidId: string, feedback: string, rating: number) {
+export async function completeBid(
+  interviewId: string,
+  bidId: string,
+  feedback: string,
+  rating: number,
+) {
   const { data } = await axios.put(
     `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`,
-    { feedback, rating } 
+    { feedback, rating },
   );
   return data;
 }

@@ -6,6 +6,13 @@ import MilestoneCards from './MilestoneCards';
 import StoriesAccordion from './StoriesAccodian';
 
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -40,6 +47,8 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+  const [isDescOpen, setIsDescOpen] = useState(false);
+  const [descContent, setDescContent] = useState('');
 
   useEffect(() => {
     const div = scrollRef.current;
@@ -188,9 +197,30 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                         {truncateDescription(milestone.title, 16)}
                       </h3>
                       {milestone.description && (
-                        <p className="text-sm mt-1">
-                          {truncateDescription(milestone.description)}
-                        </p>
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            className="p-0.5 h-auto bg-transparent border-none cursor-pointer hover:bg-gray-100 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDescContent(milestone.description || '');
+                              setIsDescOpen(true);
+                            }}
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </div>
                     <CarouselPrevious className="absolute top-[117%] left-12 transform -translate-y-1/2">
@@ -234,6 +264,20 @@ const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
           />
         </div>
       )}
+
+      {/* Shared dialog for mobile milestone description */}
+      <Dialog open={isDescOpen} onOpenChange={setIsDescOpen}>
+        <DialogContent className="max-w-lg w-[90vw] md:w-auto">
+          <DialogHeader>
+            <DialogTitle>Description</DialogTitle>
+            <DialogDescription asChild>
+              <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2">
+                {descContent}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
