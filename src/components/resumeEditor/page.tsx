@@ -1,11 +1,25 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useSelector } from 'react-redux';
 
 import { Button } from '../ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '../ui/dialog';
 import { PersonalInfo } from '../form/resumeform/PersonalInfo';
 import { EducationInfo } from '../form/resumeform/EducationInfo';
 import { SkillInfo } from '../form/resumeform/SkillInfo';
@@ -194,6 +208,8 @@ export default function ResumeEditor({
   const [showAtsScore, setShowAtsScore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
 
@@ -362,6 +378,43 @@ export default function ResumeEditor({
     }
   };
 
+  const handleDeleteResume = async () => {
+    if (!initialResume?._id) {
+      toast({
+        title: 'Error',
+        description: 'No resume to delete',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axiosInstance.delete(`/resume/${initialResume._id}`);
+      toast({
+        title: 'Success',
+        description: 'Resume deleted successfully!',
+      });
+      setShowDeleteDialog(false);
+      // Navigate back to resumes list
+      onCancel();
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete resume',
+        variant: 'destructive',
+      });
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteDialog = () => {
+    setShowDeleteDialog(true);
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
       <SidebarMenu
@@ -440,11 +493,22 @@ export default function ResumeEditor({
 
                 {steps[currentStep]}
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-end gap-3">
+                  {initialResume?._id && (
+                    <Button
+                      onClick={openDeleteDialog}
+                      disabled={isDeleting || isSubmitting}
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Resume
+                    </Button>
+                  )}
                   <Button
                     onClick={handleSubmitResume}
-                    disabled={isSubmitting}
-                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting || isDeleting}
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white"
                   >
                     {isSubmitting ? 'Saving...' : 'Save Resume'}
                   </Button>
@@ -522,6 +586,47 @@ export default function ResumeEditor({
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog - Inline Implementation */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 py-4">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Resume
+            </DialogTitle>
+            <DialogDescription className="text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete the resume for "
+              {personalData[0]?.firstName} {personalData[0]?.lastName}"?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteResume}
+              disabled={isDeleting}
+              className="flex-1 bg-white text-black"
+            >
+              {isDeleting ? (
+                'Deleting...'
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
