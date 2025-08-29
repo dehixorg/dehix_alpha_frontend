@@ -17,8 +17,8 @@ export const AddButton: React.FC<AddButtonProps> = ({
       <Button
         onClick={onClick}
         className={cn(
-          "text-center justify-items-center dark:text-black light:bg-black px-72",
-          className
+          'w-full max-w-full mx-6 text-center justify-center dark:text-black light:bg-black',
+          className,
         )}
         {...props}
       >

@@ -19,32 +19,31 @@ import { Button } from '@/components/ui/button';
 
 export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh] = useState(false);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
   const [resumeData, setResumeData] = useState<any[]>([]);
-  const [, setIsLoading] = useState(false);
+  const [loading, setIsLoading] = useState(false);
   const [selectedResume, setSelectedResume] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchResumeData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
-        setResumeData(res.data.resumes || []);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to fetch resume data. Please try again.',
-        });
-        console.error('API Error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchResumeData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
+      setResumeData(res.data.resumes || []);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch resume data. Please try again.',
+      });
+      console.error('API Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchResumeData();
-  }, [user.uid, refresh]);
+  }, [user.uid]);
 
   const handleNewResume = () => {
     setSelectedResume(null);
@@ -68,7 +67,10 @@ export default function Resume() {
           />
           <ResumeEditor
             initialResume={selectedResume}
-            onCancel={() => setShowResumeEditor(false)}
+            onCancel={() => {
+              setShowResumeEditor(false);
+              fetchResumeData(); // Call fetchResumeData when returning from editor
+            }}
           />
         </div>
       </>
