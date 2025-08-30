@@ -1,12 +1,13 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Calendar, Clock, User, CheckCircle, XCircle } from 'lucide-react';
+/* eslint-disable prettier/prettier */
+"use client";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
 
-import { RootState } from '@/lib/store';
-import { fetchCompletedInterviews } from '@/lib/api/interviews';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { Button } from '@/components/ui/button';
+import { RootState } from "@/lib/store";
+import { fetchCompletedInterviews} from "@/lib/api/interviews";
+import { axiosInstance } from "@/lib/axiosinstance";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,8 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { RatingModal } from '@/components/ui/rating-modal';
-import { FeedbackModal } from '@/components/ui/feedback-modal';
 
 interface CompletedInterview {
   _id: string;
@@ -32,6 +31,10 @@ interface CompletedInterview {
   meetingLink?: string;
   rating?: number;
   feedback?: string;
+  intervieweeFeedback?: string;
+  interviewerFeedback?: string;
+  intervieweeRating?: number;
+  interviewerRating?: number;
   interviewer?: {
     _id?: string;
     name?: string;
@@ -46,61 +49,66 @@ export default function HistoryInterviews() {
   const [interviews, setInterviews] = useState<CompletedInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
-  const [intervieweeDetails, setIntervieweeDetails] = useState<{
-    [key: string]: any;
-  }>({});
-
-  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-  const [selectedInterview, setSelectedInterview] =
-    useState<CompletedInterview | null>(null);
+  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
 
   const loadCompletedInterviews = async () => {
     if (!user?.uid) return;
+    
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
+      console.log(data);
       setInterviews(data);
-      await fetchIntervieweeDetails(data);
+      await fetchInterviewerDetails(data);
+      
     } catch (error) {
       console.error('Failed to load completed interviews:', error);
     } finally {
       setLoading(false);
     }
   };
+  
   useEffect(() => {
     loadCompletedInterviews();
-  }, [user.uid]);
-  const fetchIntervieweeDetails = async (
-    interviewData: CompletedInterview[],
-  ) => {
-    const intervieweeIds = interviewData
-      .filter((interview) => interview.intervieweeId)
-      .map((interview) => interview.intervieweeId);
-    if (intervieweeIds.length === 0) return;
+  }, [user?.uid]);
+  
+  const fetchInterviewerDetails = async (interviewData: CompletedInterview[]) => {
+    
+    const interviewerIds = interviewData
+      .filter(interview => {
+        return interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+      })
+      .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
+    
+    
+    
+    if (interviewerIds.length === 0) return;
+    
     try {
-      const uniqueIds = Array.from(
-        new Set(intervieweeIds.filter((id) => id && id !== undefined)),
-      );
-
-      const detailsMap: { [key: string]: any } = {};
-      for (const intervieweeId of uniqueIds) {
-        if (!intervieweeId) continue;
+      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
+      
+      const detailsMap: {[key: string]: any} = {};
+      
+      for (const interviewerId of uniqueIds) {
+        if (!interviewerId) continue;
         try {
-          const response = await axiosInstance.get(
-            `/freelancer/${intervieweeId}`,
-          );
+          
+          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
+          
           if (response.data?.data) {
-            detailsMap[intervieweeId] = response.data.data;
+            detailsMap[interviewerId] = response.data.data;
           }
         } catch (error) {
-          console.error(`Failed to fetch interviewee ${intervieweeId}:`, error);
+          console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
         }
       }
-
-      setIntervieweeDetails(detailsMap);
+      
+      
+      setInterviewerDetails(detailsMap);
+     // console.log(detailsMap);
     } catch (error) {
-      console.error('Failed to fetch interviewee details:', error);
+      console.error('Failed to fetch interviewer details:', error);
     }
   };
 
@@ -108,7 +116,7 @@ export default function HistoryInterviews() {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
   };
 
@@ -131,174 +139,109 @@ export default function HistoryInterviews() {
   };
 
   const getStatusText = (status: string) => {
-    return status
-      ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
-      : 'Unknown';
+    return status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
   };
 
-  const getAcceptedIntervieweeName = (
-    interview: CompletedInterview,
-  ): string => {
-    const intervieweeId = interview.intervieweeId;
+  const getAcceptedInterviewerName = (interview: CompletedInterview): string => {
+    const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+    
+    // Check the interview object directly
+    if (interview.interviewer?.name) {
+      return capitalizeFirstLetter(interview.interviewer.name);
+    }
+    if (interview.interviewer?.userName) {
+      return capitalizeFirstLetter(interview.interviewer.userName);
+    }
+    if (interview.interviewer?.email) {
+      const emailPrefix = interview.interviewer.email.split('@')[0];
+      return capitalizeFirstLetter(emailPrefix);
+    }
+    
     // Check the pre-fetched details map
-    if (intervieweeId && intervieweeDetails[intervieweeId]) {
-      const details = intervieweeDetails[intervieweeId];
-      const name =
-        details.name || details.userName || details.email?.split('@')[0];
+    if (interviewerId && interviewerDetails[interviewerId]) {
+      const details = interviewerDetails[interviewerId];
+      const name = details.name || details.userName || details.email?.split('@')[0];
       if (name) {
         return capitalizeFirstLetter(name);
       }
     }
-    if (intervieweeId) return `Interviewee (${intervieweeId})`;
-    return 'Interviewee';
+    
+    if (interviewerId) return `Interviewer (${interviewerId})`;
+    return 'Interviewer';
   };
 
   const handleShowMore = () => {
-    setDisplayCount((prev) => prev + 5);
+    setDisplayCount(prev => prev + 5);
   };
-
-  const handleOpenRatingModal = (interview: CompletedInterview) => {
-    setSelectedInterview(interview);
-    setIsRatingModalOpen(true);
-  };
-
-  const handleCloseRatingModal = () => {
-    setIsRatingModalOpen(false);
-    setSelectedInterview(null);
-  };
-
-  const handleSubmitRating = async (rating: number) => {
-    if (!selectedInterview || !user?.uid) return;
-
-    try {
-      await axiosInstance.put(`/interview/${selectedInterview._id}`, {
-        rating,
-      });
-      // Update the local state to reflect the new rating
-      setInterviews((prev) =>
-        prev.map((interview) =>
-          interview._id === selectedInterview._id
-            ? { ...interview, rating }
-            : interview,
-        ),
-      );
-    } catch (error) {
-      console.error('Failed to submit rating:', error);
-      throw error;
-    }
-  };
-
-  const handleOpenFeedbackModal = (interview: CompletedInterview) => {
-    setSelectedInterview(interview);
-    setIsFeedbackModalOpen(true);
-  };
-
-  const handleCloseFeedbackModal = () => {
-    setIsFeedbackModalOpen(false);
-    setSelectedInterview(null);
-  };
-
-  const handleSubmitFeedback = async (feedback: string) => {
-    if (!selectedInterview || !user?.uid) return;
-
-    try {
-      const response = await axiosInstance.put(
-        `/interview/${selectedInterview._id}`,
-        {
-          feedback: feedback,
-        },
-      );
-      // Check if the response indicates success
-      if (response.data && response.data.success !== false) {
-        // Update the local state to reflect the new feedback
-        setInterviews((prev) =>
-          prev.map((interview) =>
-            interview._id === selectedInterview._id
-              ? { ...interview, feedback }
-              : interview,
-          ),
-        );
-
-        // Remove the automatic refresh to prevent feedback from being overwritten
-        // The local state update is sufficient for immediate UI feedback
-        // If needed, we can add a manual refresh button or handle it differently
-      } else {
-        throw new Error(
-          'Failed to save feedback: ' +
-            (response.data?.message || 'Unknown error'),
-        );
-      }
-    } catch (error) {
-      console.error('Failed to submit feedback:', error);
-      throw error;
-    }
-  };
-
+  //console.log(interviews);
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
-          <Table className="bg-white text-black dark:bg-black dark:text-white">
+        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+          <Table>
             <TableHeader>
-              <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
+              <TableRow className="hover:bg-[#09090B]">
                 <TableHead className="w-[200px] text-center font-medium">
-                  Interviewee
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
                 <TableHead className="w-[150px] text-center font-medium">
-                  Date
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
                 <TableHead className="w-[150px] text-center font-medium">
-                  Time
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
                 <TableHead className="w-[150px] text-center font-medium">
-                  Status
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
                 <TableHead className="w-[150px] text-center font-medium">
-                  Rating
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                </TableHead>
+                <TableHead className="w-[300px] text-center font-medium">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
                 <TableHead className="w-[150px] text-center font-medium">
-                  Feedback
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {[...Array(5)].map((_, index) => (
-                <TableRow
-                  key={index}
-                  className="transition bg-white text-black dark:bg-black dark:text-white"
-                >
+                <TableRow key={index} className="transition">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
-                      <div className="h-4 w-20 bg-gray-300 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-300 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
-                      <div className="h-4 w-12 bg-gray-300 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 rounded-full bg-gray-300 animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-300 animate-pulse rounded"></div>
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-8 w-16 bg-gray-300 animate-pulse rounded"></div>
+                    <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-8 w-20 bg-gray-300 animate-pulse rounded"></div>
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -321,12 +264,12 @@ export default function HistoryInterviews() {
 
   return (
     <div className="space-y-4">
-      <div className="w-full bg-white text-black dark:bg-black dark:text-white mx-auto px-4 md:px-10 py-6 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md">
-        <Table className="bg-white text-black dark:bg-black dark:text-white">
+      <div className="w-full bg-card mx-auto px-5 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+        <Table>
           <TableHeader>
-            <TableRow className="hover:bg-gray-100 dark:hover:bg-gray-800">
+            <TableRow className="dark:hover:bg-[#09090B]">
               <TableHead className="w-[200px] text-center font-medium">
-                Interviewee
+                Interviewer
               </TableHead>
               <TableHead className="w-[150px] text-center font-medium">
                 Date
@@ -340,32 +283,30 @@ export default function HistoryInterviews() {
               <TableHead className="w-[150px] text-center font-medium">
                 Rating
               </TableHead>
-              <TableHead className="w-[150px] text-center font-medium">
+              <TableHead className="w-[300px] text-center font-medium">
                 Feedback
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayedInterviews.map((interview) => {
+            {displayedInterviews.map((interview, index) => {
               const { date, time } = formatDateTime(interview.interviewDate);
-              const intervieweeName = getAcceptedIntervieweeName(interview);
+              const interviewerName = getAcceptedInterviewerName(interview);
+              
               return (
-                <TableRow
-                  key={interview._id}
-                  className="transition bg-white text-black dark:bg-transparent dark:text-white"
-                >
+                <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-semibold text-black dark:text-white">
-                        {intervieweeName}
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {interviewerName}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-black dark:text-gray-400">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {date}
                       </span>
                     </div>
@@ -373,7 +314,7 @@ export default function HistoryInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Clock className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-black dark:text-gray-400">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {time}
                       </span>
                     </div>
@@ -381,49 +322,46 @@ export default function HistoryInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {getStatusIcon(interview.InterviewStatus)}
-                      <span className="text-sm text-black dark:text-gray-400">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {getStatusText(interview.InterviewStatus)}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex flex-col gap-2 items-center">
-                      <Button
-                        size="sm"
-                        className="bg-blue-500"
-                        variant="outline"
-                        onClick={() => {
-                          handleOpenRatingModal(interview);
-                        }}
-                        disabled={
-                          typeof interview.rating === 'number' &&
-                          interview.rating > 0
-                        }
-                      >
-                        {interview.rating ? `${interview.rating}/5` : 'Rate'}
-                      </Button>
-                    </div>
+                    {interview.interviewerRating ? (
+                      <div className="flex items-center justify-center">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {interview.interviewerRating}/5
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">
+                        No rating
+                      </span>
+                    )}
                   </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex flex-col gap-2 items-center">
-                      <Button
-                        size="sm"
-                        className="bg-blue-500"
-                        variant="outline"
-                        onClick={() => handleOpenFeedbackModal(interview)}
-                        disabled={
-                          !!(
-                            interview.feedback &&
-                            interview.feedback.trim().length > 0
-                          )
-                        }
+                  <TableCell className="py-3 text-center relative">
+                    <button
+                      onClick={() => setOpenDescIdx(openDescIdx === index ? null : index)}
+                      className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
+                    >
+                      <Info size={16} color="white" />
+                    </button>
+                    {openDescIdx === index && (
+                      <div
+                        className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
+                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
                       >
-                        {interview.feedback &&
-                        interview.feedback.trim().length > 0
-                          ? 'Submitted'
-                          : 'Feedback'}
-                      </Button>
-                    </div>
+                        <div className="text-sm leading-relaxed">
+                          {interview.interviewerFeedback || "No description available"}
+                        </div>
+                        {/* Arrow pointing to the button */}
+                        <div 
+                          className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
+                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                        ></div>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -431,32 +369,17 @@ export default function HistoryInterviews() {
           </TableBody>
         </Table>
       </div>
+      
       {hasMoreInterviews && (
         <div className="flex justify-center">
           <Button
             onClick={handleShowMore}
             variant="outline"
-            className="px-6 py-2 text-black dark:text-white"
+            className="px-6 py-2"
           >
             Show More ({interviews.length - displayCount} remaining)
           </Button>
         </div>
-      )}
-      {selectedInterview && (
-        <>
-          <RatingModal
-            isOpen={isRatingModalOpen}
-            onClose={handleCloseRatingModal}
-            onSubmit={handleSubmitRating}
-            intervieweeName={getAcceptedIntervieweeName(selectedInterview)}
-          />
-          <FeedbackModal
-            isOpen={isFeedbackModalOpen}
-            onClose={handleCloseFeedbackModal}
-            onSubmit={handleSubmitFeedback}
-            intervieweeName={getAcceptedIntervieweeName(selectedInterview)}
-          />
-        </>
       )}
     </div>
   );

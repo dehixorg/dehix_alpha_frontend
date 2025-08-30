@@ -107,7 +107,7 @@ export async function fetchScheduledInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: 'SCHEDULED,CANCELLED',
+      InterviewStatus: ['SCHEDULED', 'CANCELLED'],
     },
   });
 
@@ -129,12 +129,13 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: 'COMPLETED',
+      InterviewStatus: ['COMPLETED', 'CANCELLED','REJECTED'],
     },
   });
-
+  console.log(response.data.data);
   return response.data.data;
 }
+
 
 export async function completeBid(
   interviewId: string,
