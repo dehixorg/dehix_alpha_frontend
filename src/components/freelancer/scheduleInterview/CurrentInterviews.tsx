@@ -13,7 +13,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent,  DialogTrigger } from '@/components/ui/dialog';
 
 // ---------------- Types ----------------
 interface ScheduledInterview {
@@ -48,7 +48,6 @@ export default function CurrentInterviews() {
   // ---------- States ----------
   const [interviews, setInterviews] = useState<ScheduledInterview[]>([]);
   const [interviewerDetails, setInterviewerDetails] = useState<{ [key: string]: any }>({});
-  const [intervieweeDetails, setIntervieweeDetails] = useState<any>(null);
 
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
