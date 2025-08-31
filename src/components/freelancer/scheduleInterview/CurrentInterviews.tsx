@@ -13,7 +13,7 @@ import {
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/components/ui/dialog';
 
 // ---------------- Types ----------------
 interface ScheduledInterview {
@@ -65,6 +65,7 @@ export default function CurrentInterviews() {
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
+      console.log(data);
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
@@ -154,11 +155,11 @@ export default function CurrentInterviews() {
         return;
       }
       const status =
-      interview.interviewerRating && interview.interviewerFeedback
-        ? "COMPLETED"
-        : "SCHEDULED";
+        interview.interviewerRating && interview.interviewerFeedback
+          ? "COMPLETED"
+          : "SCHEDULED";
 
-    await completeBid(interview._id, rating, feedback, status);
+      await completeBid(interview._id, rating, feedback, status);
       setIsDialogOpen(false);
 
       toast({
@@ -319,21 +320,20 @@ export default function CurrentInterviews() {
                       {status === 'past' ? (
                         // Feedback Dialog
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                          <DialogTrigger>
+                          <DialogTrigger asChild>
                             <Button variant="outline" size="sm">Feedback</Button>
                           </DialogTrigger>
-                          <DialogContent className="w-80 p-4 space-y-4">
+                          <DialogContent className="w-80 p-4 space-y-4 bg-transparent border-0 shadow-none">
                             <div className="flex flex-col gap-3">
                               {/* Rating Stars */}
                               <div className="flex justify-center gap-1">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <Star
                                     key={star}
-                                    className={`h-6 w-6 cursor-pointer transition ${
-                                      (hover || rating) >= star
+                                    className={`h-6 w-6 cursor-pointer transition ${(hover || rating) >= star
                                         ? 'fill-yellow-400 text-yellow-400'
                                         : 'text-gray-400'
-                                    }`}
+                                      }`}
                                     onClick={() => setRating(star)}
                                     onMouseEnter={() => setHover(star)}
                                     onMouseLeave={() => setHover(0)}
@@ -351,16 +351,25 @@ export default function CurrentInterviews() {
 
                               {/* Submit / Reject */}
                               <div className="flex gap-2">
-                                <Button onClick={() => handleSubmit(interview)} className="w-full" disabled={submitting}>
+                                <Button
+                                  onClick={() => handleSubmit(interview)}
+                                  className="w-full"
+                                  disabled={submitting}
+                                >
                                   Submit
                                 </Button>
-                                <Button onClick={() => handleRejected(interview)} className="w-full" disabled={submitting}>
+                                <Button
+                                  onClick={() => handleRejected(interview)}
+                                  className="w-full"
+                                  disabled={submitting}
+                                >
                                   Rejected
                                 </Button>
                               </div>
                             </div>
                           </DialogContent>
                         </Dialog>
+
                       ) : (
                         <>
                           <Video className="h-4 w-4 text-purple-500" />
