@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogOverlay, DialogTrigger } from '@/component
 // ---------------- Types ----------------
 interface ScheduledInterview {
   _id: string;
+  
   interviewerId: string;
   intervieweeId: string;
   interviewType: string;
@@ -318,7 +319,9 @@ export default function CurrentInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {status === 'past' ? (
-                        // Feedback Dialog
+                        interview.interviewerFeedback ? (
+                          <Button variant="outline" size="sm">Submitted</Button>
+                        ) : (
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                           <DialogTrigger asChild>
                             <Button variant="outline" size="sm">Feedback</Button>
@@ -369,6 +372,7 @@ export default function CurrentInterviews() {
                             </div>
                           </DialogContent>
                         </Dialog>
+                        )
 
                       ) : (
                         <>

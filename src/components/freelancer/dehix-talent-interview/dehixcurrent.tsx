@@ -157,11 +157,11 @@ export default function CurrentInterviews() {
         return;
       }
       const status =
-      interview.intervieweeRating && interview.intervieweeFeedback
-        ? "COMPLETED"
-        : "SCHEDULED";
+        interview.intervieweeRating && interview.intervieweeFeedback
+          ? "COMPLETED"
+          : "SCHEDULED";
 
-    await completeInterviewerBid(interview._id, rating, feedback, status);
+      await completeInterviewerBid(interview._id, rating, feedback, status);
       setIsDialogOpen(false);
 
       toast({
@@ -320,50 +320,61 @@ export default function CurrentInterviews() {
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {status === 'past' ? (
-                        // Feedback Dialog
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                          <DialogTrigger>
-                            <Button variant="outline" size="sm">Feedback</Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-80 p-4 space-y-4">
-                            <div className="flex flex-col gap-3">
-                              {/* Rating Stars */}
-                              <div className="flex justify-center gap-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-6 w-6 cursor-pointer transition ${
-                                      (hover || rating) >= star
+                        interview.intervieweeFeedback ? (
+                          <Button variant="outline" size="sm">Submitted</Button>
+                        ) : (
+                          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">Feedback</Button>
+                            </DialogTrigger>
+                            <DialogContent className="w-80 p-4 space-y-4 bg-transparent border-0 shadow-none">
+                              <div className="flex flex-col gap-3">
+                                {/* Rating Stars */}
+                                <div className="flex justify-center gap-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`h-6 w-6 cursor-pointer transition ${(hover || rating) >= star
                                         ? 'fill-yellow-400 text-yellow-400'
                                         : 'text-gray-400'
-                                    }`}
-                                    onClick={() => setRating(star)}
-                                    onMouseEnter={() => setHover(star)}
-                                    onMouseLeave={() => setHover(0)}
-                                  />
-                                ))}
-                              </div>
+                                        }`}
+                                      onClick={() => setRating(star)}
+                                      onMouseEnter={() => setHover(star)}
+                                      onMouseLeave={() => setHover(0)}
+                                    />
+                                  ))}
+                                </div>
 
-                              {/* Feedback Text */}
-                              <Textarea
-                                placeholder="Write your feedback..."
-                                value={feedback}
-                                onChange={(e) => setfeedback(e.target.value)}
-                                className="resize-none"
-                              />
+                                {/* Feedback Text */}
+                                <Textarea
+                                  placeholder="Write your feedback..."
+                                  value={feedback}
+                                  onChange={(e) => setfeedback(e.target.value)}
+                                  className="resize-none"
+                                />
 
-                              {/* Submit / Reject */}
-                              <div className="flex gap-2">
-                                <Button onClick={() => handleSubmit(interview)} className="w-full" disabled={submitting}>
-                                  Submit
-                                </Button>
-                                <Button onClick={() => handleRejected(interview)} className="w-full" disabled={submitting}>
-                                  Rejected
-                                </Button>
+                                {/* Submit / Reject */}
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleSubmit(interview)}
+                                    className="w-full"
+                                    disabled={submitting}
+                                  >
+                                    Submit
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleRejected(interview)}
+                                    className="w-full"
+                                    disabled={submitting}
+                                  >
+                                    Rejected
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                        )
+
                       ) : (
                         <>
                           <Video className="h-4 w-4 text-purple-500" />

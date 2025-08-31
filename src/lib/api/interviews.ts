@@ -41,6 +41,15 @@ export async function fetchBids(interviewId: string) {
   return data;
 }
 
+export async function fetchInterviewBids(interviewId: string, bidId: string) {
+  const { data } = await axios.get<PopulatedBid>(
+    `${BASE_URL}/interview/${interviewId}/interview-bids/${bidId}`
+  );
+  return data; // backend already wraps result in { data }
+}
+
+
+
 // Fetch all PENDING interview bids addressed to the given interviewee
 // Fetch all PENDING interview bids addressed to the given interviewee
 export interface PendingBid extends PopulatedBid {
