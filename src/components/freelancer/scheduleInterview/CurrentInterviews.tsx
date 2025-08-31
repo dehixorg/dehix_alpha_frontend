@@ -79,7 +79,7 @@ export default function CurrentInterviews() {
     loadScheduledInterviews();
   }, [user.uid]);
 
-  // ---------- Fetch Interviewer Details ----------
+
   const fetchInterviewerDetails = async (interviewData: ScheduledInterview[]) => {
     const interviewerIds = interviewData
       .map(interview =>

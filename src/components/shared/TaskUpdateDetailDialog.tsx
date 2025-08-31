@@ -42,7 +42,6 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   userType,
   showPermissionDialog,
   setShowPermissionDialog,
-  handleConfirmPermissionRequest,
   fetchMilestones,
 }) => {
   const [taskData, setTaskData] = useState({
@@ -60,20 +59,17 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
 
   const updatePermissionFreelancer =
     task?.freelancers[0]?.updatePermissionFreelancer;
-  const updatePermissionBusiness =
-    task?.freelancers[0]?.updatePermissionBusiness;
 
   const rejectionFreelancer = task?.freelancers[0]?.rejectionFreelancer;
-  const acceptanceFreelancer = task?.freelancers[0]?.acceptanceFreelancer;
 
   const isUpdatePermissionAllowed =
-    userType === 'freelancer'
-      ? updatePermissionFreelancer && !rejectionFreelancer
-      : updatePermissionBusiness && !rejectionFreelancer;
+    userType === 'business'
+      ? !rejectionFreelancer
+      : updatePermissionFreelancer && !rejectionFreelancer;
 
+  // For business, we never show request state; for freelancer show if not yet granted
   const isPermissionSent =
-    (userType === 'freelancer' && !updatePermissionFreelancer) ||
-    (userType === 'business' && !updatePermissionBusiness);
+    userType === 'freelancer' && !updatePermissionFreelancer;
 
   const handleTaskChange = (field: string, value: string) => {
     setTaskData((prevData) => ({
@@ -125,13 +121,8 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
   };
 
   const handleSave = async () => {
-    console.log('User clicked update task details button');
-    console.log('Current task data:', taskData);
-    console.log('Initial task data:', initialTaskData);
-
     // Check if any field has been updated
     if (JSON.stringify(taskData) === JSON.stringify(initialTaskData)) {
-      console.log('No changes detected, skipping update');
       toast({
         description: 'No changes detected. Task update not required.',
         duration: 3000,
@@ -140,16 +131,6 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
     }
 
     const url = `/milestones/update/milestone/${milestoneId}/story/${storyId}/task/${task._id}`;
-    console.log('Update URL:', url);
-    console.log('Update payload:', {
-      milestoneId,
-      storyId,
-      taskId,
-      userType,
-      title: taskData.title,
-      summary: taskData.summary,
-      taskStatus: taskData.taskStatus,
-    });
 
     try {
       await axiosInstance.patch(url, {
@@ -161,8 +142,6 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
         summary: taskData.summary,
         taskStatus: taskData.taskStatus,
       });
-
-      console.log('Task update successful');
       toast({
         description: 'Task updated',
         duration: 3000,
@@ -183,11 +162,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
       <DialogTrigger className="hidden">Trigger</DialogTrigger>
       <DialogContent className=" sm:w-[86vw] md:w-[450px]  p-6 border rounded-md shadow-md">
         <DialogHeader>
-          <DialogTitle>
-            {isUpdatePermissionAllowed
-              ? 'Update Task Details'
-              : 'Request Permission'}
-          </DialogTitle>
+          <DialogTitle>Update Task Details</DialogTitle>
           <DialogDescription>
             {isUpdatePermissionAllowed
               ? 'You have permission to update the task details.'
@@ -197,7 +172,7 @@ const TaskUpdateDetailDialog: React.FC<TaskUpdateDetailDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {!isUpdatePermissionAllowed ? (
+        {!isUpdatePermissionAllowed && userType === 'freelancer' ? (
           <DialogFooter className="flex mt-2 justify-end gap-4">
             <Button
               onClick={handleSendRequest}

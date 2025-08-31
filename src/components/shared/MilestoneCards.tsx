@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface MilestoneProps {
   date: string;
@@ -17,6 +17,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
   isMobile,
   isSelected,
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const truncateDescription = (text: string, maxLength: number = 50) => {
     if (text.length > maxLength) {
       return text.slice(0, maxLength) + '...';
@@ -59,29 +60,7 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
               className="p-0.5 h-auto bg-transparent border-none cursor-pointer hover:bg-gray-100 rounded"
               onClick={(e) => {
                 e.stopPropagation();
-                const modal = document.createElement('div');
-                modal.className =
-                  'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                modal.innerHTML = `
-                  <div class="bg-[#151518] rounded-lg p-6 max-w-md mx-4 max-h-[80vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                      <h3 class="text-lg font-semibold text-white">Description</h3>
-                      <button class="text-red-500 hover:text-red-700" onclick="this.closest('.fixed').remove()">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </div>
-                    <div class="text-sm flex text-white whitespace-pre-wrap">
-                      ${summary}
-                      
-                    </div>
-                  </div>
-                `;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', (e) => {
-                  if (e.target === modal) modal.remove();
-                });
+                setIsOpen(true);
               }}
             >
               <svg
@@ -101,8 +80,54 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
           </div>
         )}
       </div>
+      {/* Dialog for description */}
+      {/* Lazy import to avoid circular deps */}
+      {isOpen && (
+        <DescriptionDialog
+          title="Description"
+          content={summary || ''}
+          open={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      )}
     </div>
   );
 };
 
 export default MilestoneCards;
+
+// Lightweight in-file dialog to avoid many imports in parent
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+function DescriptionDialog({
+  title,
+  content,
+  open,
+  onOpenChange,
+}: {
+  title: string;
+  content: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md w-[90vw] md:w-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription asChild>
+            <div className="text-sm whitespace-pre-wrap leading-relaxed mt-2">
+              {content}
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}

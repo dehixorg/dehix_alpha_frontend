@@ -67,6 +67,7 @@ export default function CurrentInterviews() {
     try {
       setLoading(true);
       const data = await fetchScheduledInterviews(user.uid);
+      console.log('Fetched Scheduled Interviews:', data);
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
