@@ -61,9 +61,7 @@ function ConsultantCard({
               {truncateText(domain, 15)}
             </h2>
           </HoverCardTrigger>
-          <HoverCardContent className="py-2 w-auto">
-            {domain}
-          </HoverCardContent>
+          <HoverCardContent className="py-2 w-auto">{domain}</HoverCardContent>
         </HoverCard>
 
         <Badge className="bg-green-400 capitalize text-black text-xs px-2 py-1 rounded-md">
@@ -74,7 +72,7 @@ function ConsultantCard({
       {/* Content */}
       <div className="flex-grow">
         <Separator />
-        
+
         {/* Consultant Info */}
         <div className="flex items-center mt-4 mb-4">
           <User className="w-4 h-4 mr-2" />
@@ -82,7 +80,7 @@ function ConsultantCard({
             {consultantName || 'Consultant not assigned'}
           </span>
         </div>
-        
+
         <div className="flex mt-6 mb-6 items-center text-sm">
           <DateRange startDate={startDate} endDate={endDate} />
         </div>

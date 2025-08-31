@@ -52,7 +52,7 @@ export default function FreelancerProjectsPage() {
           description: 'Failed to fetch projects. Please try again.',
         });
         console.error('Error fetching projects:', error);
-        
+
         // Fallback to mock data if API fails
         const mockProjects: Project[] = [
           {
@@ -124,7 +124,7 @@ export default function FreelancerProjectsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchProjects();
   }, [user.uid]);
 

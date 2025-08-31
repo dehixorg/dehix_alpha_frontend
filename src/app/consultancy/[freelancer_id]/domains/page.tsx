@@ -107,11 +107,14 @@ export default function ConsultancyDomainPage() {
 
         setAllSkills(skillsResponse.data.data);
         setAllDomains(domainsResponse.data.data);
+        console.log(consultantsResponse);
 
         // Transform the API response
-        const consultantsArray = Array.isArray(consultantsResponse.data)
-          ? consultantsResponse.data
-          : Object.values(consultantsResponse.data);
+        const consultantsArray = Array.isArray(
+          consultantsResponse.data.data.consultant,
+        )
+          ? consultantsResponse.data.data.consultant
+          : Object.values(consultantsResponse.data.data.consultant);
 
         const formattedConsultants = consultantsArray.map(
           (consultant: any) => ({

@@ -74,7 +74,6 @@ interface Project {
   status: string;
 }
 
-
 // Define the schema for the form using Zod
 const consultancyFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -118,44 +117,46 @@ export default function ConsultancyPage() {
   const [searchDomainQuery, setSearchDomainQuery] = useState<string>('');
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
-const [consultantData, setConsultantData] = useState<any>(null);
+  const [consultantData, setConsultantData] = useState<any>(null);
   // const [responseData, setResponseData] = useState<any>([]);
 
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      // Fetch consultant data
-      const consultantResponse = await axiosInstance.get(`/freelancer/consultant`);
-      setConsultantData(consultantResponse.data.data);
-      
-      // Fetch projects for the consultant
-      const projectsResponse = await axiosInstance.get(`/project/consultant`);
-      setProjects(projectsResponse.data.data);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch consultant data
+        const consultantResponse = await axiosInstance.get(
+          `/freelancer/consultant`,
+        );
+        setConsultantData(consultantResponse.data.data);
 
-      const skillsResponse = await axiosInstance.get('/skills');
-      setAllSkills(skillsResponse.data.data);
+        // Fetch projects for the consultant
+        const projectsResponse = await axiosInstance.get(`/project/consultant`);
+        setProjects(projectsResponse.data.data);
 
-      const domainsResponse = await axiosInstance.get('/domain');
-      setAllDomains(domainsResponse.data.data);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-      });
-      console.error('API Error:', error);
-    }
-  };
+        const skillsResponse = await axiosInstance.get('/skills');
+        setAllSkills(skillsResponse.data.data);
 
-  fetchData();
-}, [user.uid]);
+        const domainsResponse = await axiosInstance.get('/domain');
+        setAllDomains(domainsResponse.data.data);
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again.',
+        });
+        console.error('API Error:', error);
+      }
+    };
+
+    fetchData();
+  }, [user.uid]);
 
   const currentProjects = projects.filter(
-  (project) => project.status !== 'COMPLETED',
-);
-const completedProjects = projects.filter(
-  (project) => project.status === 'COMPLETED',
-);
+    (project) => project.status !== 'COMPLETED',
+  );
+  const completedProjects = projects.filter(
+    (project) => project.status === 'COMPLETED',
+  );
 
   const form = useForm<ConsultancyFormValues>({
     resolver: zodResolver(consultancyFormSchema),
@@ -596,100 +597,100 @@ const completedProjects = projects.filter(
                 </DialogContent>
               </Dialog>
             </div>
-              <div className="flex flex-wrap gap-8">
-                {consultants.length == 0 ? (
-                  <div className="flex flex-col items-center justify-center w-full">
-                    <PackageOpen className="text-gray-500" size="100" />
-                    <p className="text-gray-500">No consultancy added</p>
-                  </div>
+            <div className="flex flex-wrap gap-8">
+              {consultants.length == 0 ? (
+                <div className="flex flex-col items-center justify-center w-full">
+                  <PackageOpen className="text-gray-500" size="100" />
+                  <p className="text-gray-500">No consultancy added</p>
+                </div>
+              ) : (
+                <div>
+                  {consultants.map((consultant, index) => (
+                    <ConsultantCard
+                      key={index}
+                      name={consultant.name}
+                      skills={consultant.skills.map((s) => s.name)}
+                      domains={consultant.domains.map((d) => d.name)}
+                      description={consultant.description}
+                      urls={consultant.urls}
+                      perHourRate={consultant.perHourRate}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            <Separator className="my-1" />
+            <div className="grid grid-cols-1 gap-4">
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Current Projects {`(${currentProjects.length})`}
+              </h2>
+              <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+                {currentProjects.length > 0 ? (
+                  currentProjects.map((project, index) => (
+                    <ProjectCard
+                      key={project._id}
+                      _id={project._id}
+                      projectName={project.projectName}
+                      description={project.description}
+                      verified={project.verified}
+                      githubLink={project.githubLink}
+                      liveDemoLink={project.liveDemoLink}
+                      thumbnail={project.thumbnail}
+                      start={project.start}
+                      end={project.end}
+                      refer={project.refer}
+                      techUsed={project.techUsed}
+                      role={project.role}
+                      projectType={project.projectType}
+                      oracleAssigned={project.oracleAssigned}
+                      verificationUpdateTime={project.verificationUpdateTime}
+                      comments={project.comments}
+                    />
+                  ))
                 ) : (
-                  <div>
-                    {consultants.map((consultant, index) => (
-                      <ConsultantCard
-                        key={index}
-                        name={consultant.name}
-                        skills={consultant.skills.map((s) => s.name)}
-                        domains={consultant.domains.map((d) => d.name)}
-                        description={consultant.description}
-                        urls={consultant.urls}
-                        perHourRate={consultant.perHourRate}
-                      />
-                    ))}
+                  <div className="text-center py-10 w-[100%] ">
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
+                    <p className="text-gray-500">No current projects</p>
                   </div>
                 )}
               </div>
-              <Separator className="my-1" />
-              <div className="grid grid-cols-1 gap-4">
-  <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-    Current Projects {`(${currentProjects.length})`}
-  </h2>
-  <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-    {currentProjects.length > 0 ? (
-      currentProjects.map((project, index) => (
-        <ProjectCard
-          key={project._id}
-          _id={project._id}
-          projectName={project.projectName}
-          description={project.description}
-          verified={project.verified}
-          githubLink={project.githubLink}
-          liveDemoLink={project.liveDemoLink}
-          thumbnail={project.thumbnail}
-          start={project.start}
-          end={project.end}
-          refer={project.refer}
-          techUsed={project.techUsed}
-          role={project.role}
-          projectType={project.projectType}
-          oracleAssigned={project.oracleAssigned}
-          verificationUpdateTime={project.verificationUpdateTime}
-          comments={project.comments}
-        />
-      ))
-    ) : (
-      <div className="text-center py-10 w-[100%] ">
-        <PackageOpen className="mx-auto text-gray-500" size="100" />
-        <p className="text-gray-500">No current projects</p>
-      </div>
-    )}
-  </div>
 
-  <Separator className="my-1" />
-  
-  <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-    Completed Projects {`(${completedProjects.length})`}
-  </h2>
-  <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
-    {completedProjects.length > 0 ? (
-      completedProjects.map((project, index) => (
-        <ProjectCard
-          key={project._id}
-          _id={project._id}
-          projectName={project.projectName}
-          description={project.description}
-          verified={project.verified}
-          githubLink={project.githubLink}
-          liveDemoLink={project.liveDemoLink}
-          thumbnail={project.thumbnail}
-          start={project.start}
-          end={project.end}
-          refer={project.refer}
-          techUsed={project.techUsed}
-          role={project.role}
-          projectType={project.projectType}
-          oracleAssigned={project.oracleAssigned}
-          verificationUpdateTime={project.verificationUpdateTime}
-          comments={project.comments}
-        />
-      ))
-    ) : (
-      <div className="text-center py-10 w-[100%] ">
-        <PackageOpen className="mx-auto text-gray-500" size="100" />
-        <p className="text-gray-500">No completed projects</p>
-      </div>
-    )}
-  </div>
-</div>
+              <Separator className="my-1" />
+
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Completed Projects {`(${completedProjects.length})`}
+              </h2>
+              <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8">
+                {completedProjects.length > 0 ? (
+                  completedProjects.map((project, index) => (
+                    <ProjectCard
+                      key={project._id}
+                      _id={project._id}
+                      projectName={project.projectName}
+                      description={project.description}
+                      verified={project.verified}
+                      githubLink={project.githubLink}
+                      liveDemoLink={project.liveDemoLink}
+                      thumbnail={project.thumbnail}
+                      start={project.start}
+                      end={project.end}
+                      refer={project.refer}
+                      techUsed={project.techUsed}
+                      role={project.role}
+                      projectType={project.projectType}
+                      oracleAssigned={project.oracleAssigned}
+                      verificationUpdateTime={project.verificationUpdateTime}
+                      comments={project.comments}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-10 w-[100%] ">
+                    <PackageOpen className="mx-auto text-gray-500" size="100" />
+                    <p className="text-gray-500">No completed projects</p>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="lg:col-span-1 xl:col-span-1 space-y-4">
               <CardTitle className="group flex items-center gap-2 text-2xl">
                 Consultancy Invitations

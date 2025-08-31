@@ -90,7 +90,7 @@ const generateDummyConsultants = (): Consultant[] => {
       email: 'sarah.j@consultant.com',
       startDate: new Date('2023-10-15'),
       endDate: new Date('2024-04-15'),
-      status: 'Active'
+      status: 'Active',
     },
     {
       _id: 'cons2',
@@ -98,7 +98,7 @@ const generateDummyConsultants = (): Consultant[] => {
       domain: 'Frontend Development',
       email: 'michael.chen@techconsult.com',
       startDate: new Date('2023-11-01'),
-      status: 'Active'
+      status: 'Active',
     },
     {
       _id: 'cons3',
@@ -107,7 +107,7 @@ const generateDummyConsultants = (): Consultant[] => {
       email: 'emma.r@cloudsolutions.com',
       startDate: new Date('2023-09-20'),
       endDate: new Date('2024-03-20'),
-      status: 'Completed'
+      status: 'Completed',
     },
     {
       _id: 'cons4',
@@ -115,8 +115,8 @@ const generateDummyConsultants = (): Consultant[] => {
       domain: 'UX/UI Design',
       email: 'james.w@designexperts.com',
       startDate: new Date('2023-12-05'),
-      status: 'Active'
-    }
+      status: 'Active',
+    },
   ];
 };
 
@@ -126,14 +126,14 @@ export default function Dashboard() {
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
   const [consultants, setConsultants] = useState<Consultant[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         // For demo purposes, we'll use dummy data
         // In a real app, you would fetch this from your API
         const dummyConsultants = generateDummyConsultants();
         setConsultants(dummyConsultants);
-        
+
         // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
@@ -162,8 +162,6 @@ export default function Dashboard() {
       });
       return;
     }
-
-    
 
     axiosInstance
       .put(`/project/${project_id}`, { status: StatusEnum.COMPLETED })
@@ -247,7 +245,7 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
-      console.log("hi");
+      console.log('hi');
       console.log(response);
 
       if (projectData) {
@@ -334,6 +332,7 @@ export default function Dashboard() {
                               endDate={project.end}
                               domains={[]}
                               skills={profile.skills}
+                              team={project.team || []}
                             />
                           </CarouselItem>
                         ))}
@@ -362,52 +361,54 @@ export default function Dashboard() {
                       )}
                     </Carousel>
                   </div>
-{/* Consultant Domains Section */}
-<div className="mt-8">
-  <CardHeader className="pl-0">
-    <CardTitle className="pb-4">Consultant Domains</CardTitle>
-  </CardHeader>
-  <Carousel className="w-full relative pt-3">
-    <CarouselContent className="flex mt-3 -ml-2">
-      {consultants.map((consultant, index) => (
-        <CarouselItem
-          key={index}
-          className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2"
-        >
-          <ConsultantCard
-            consultantName={consultant.name}
-            domain={consultant.domain}
-            email={consultant.email}
-            startDate={consultant.startDate}
-            endDate={consultant.endDate}
-            status={consultant.status}
-          />
-        </CarouselItem>
-      ))}
-      {/* Add Consultant card - only show if project is active */}
-      {project?.status === StatusEnum.ACTIVE && (
-        <CarouselItem className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2">
-          <ConsultantCard
-            isLastCard={true}
-            onAddConsultant={() => console.log('Add consultant clicked')}
-          />
-        </CarouselItem>
-      )}
-    </CarouselContent>
-    {consultants.length > 0 && (
-      <>
-        <div className="flex">
-          <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-            Previous
-          </CarouselPrevious>
-          <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
-            Next
-          </CarouselNext>
-        </div>
-      </>
-    )}
-  </Carousel>
-</div>
+                  {/* Consultant Domains Section */}
+                  <div className="mt-8">
+                    <CardHeader className="pl-0">
+                      <CardTitle className="pb-4">Consultant Domains</CardTitle>
+                    </CardHeader>
+                    <Carousel className="w-full relative pt-3">
+                      <CarouselContent className="flex mt-3 -ml-2">
+                        {consultants.map((consultant, index) => (
+                          <CarouselItem
+                            key={index}
+                            className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2"
+                          >
+                            <ConsultantCard
+                              consultantName={consultant.name}
+                              domain={consultant.domain}
+                              email={consultant.email}
+                              startDate={consultant.startDate}
+                              endDate={consultant.endDate}
+                              status={consultant.status}
+                            />
+                          </CarouselItem>
+                        ))}
+                        {/* Add Consultant card - only show if project is active */}
+                        {project?.status === StatusEnum.ACTIVE && (
+                          <CarouselItem className="basis-full md:basis-1/2 lg:basis-1/2 xl:basis-1/3 pl-2">
+                            <ConsultantCard
+                              isLastCard={true}
+                              onAddConsultant={() =>
+                                console.log('Add consultant clicked')
+                              }
+                            />
+                          </CarouselItem>
+                        )}
+                      </CarouselContent>
+                      {consultants.length > 0 && (
+                        <>
+                          <div className="flex">
+                            <CarouselPrevious className="absolute left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                              Previous
+                            </CarouselPrevious>
+                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                              Next
+                            </CarouselNext>
+                          </div>
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="Profiles">
