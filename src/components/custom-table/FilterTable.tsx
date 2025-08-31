@@ -83,7 +83,7 @@ export const FilterTable = ({
     return () => {
       setFilters([]);
     };
-  });
+  }, []); // Empty dependency array to run only on unmount
 
   return (
     <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white text-black dark:bg-black dark:text-white rounded-lg">
