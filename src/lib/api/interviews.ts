@@ -107,13 +107,13 @@ export async function fetchScheduledInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: ['SCHEDULED', 'CANCELLED'],
+      InterviewStatus: "SCHEDULED,CANCELLED",
     },
   });
 
   // The backend returns { data: [...] }, so unwrap once and return the array.
   // FIX: Remove unnecessary Array.isArray check.
-
+  
   return response.data.data;
 }
 
@@ -129,7 +129,7 @@ export async function fetchCompletedInterviews(intervieweeId: string) {
   const response = await axios.get<{ data: any[] }>(`${BASE_URL}/interview`, {
     params: {
       intervieweeId,
-      InterviewStatus: ['COMPLETED', 'CANCELLED','REJECTED'],
+      InterviewStatus: "COMPLETED,CANCELLED,REJECTED",
     },
   });
   console.log(response.data.data);
