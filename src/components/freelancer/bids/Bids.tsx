@@ -48,7 +48,7 @@ type Interview = {
   interviewDate?: string;
   intervieweeName?: string;
   description?: string;
-  interviewBids?: InterviewBid[]; // Array of bids
+  interviewBids?: Record<string, InterviewBid>; // Object of bids
   InterviewStatus?: string;
   skillName?: string;
 };
@@ -72,7 +72,7 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           await Promise.all([
             axiosInstance.get(`/interview?intervieweeId=${userId}`),
             axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
-          ]);
+          ],);
 
         const allInterviews: any[] = Array.isArray(interviewRes)
           ? interviewRes
