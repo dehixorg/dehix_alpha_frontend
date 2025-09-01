@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PackageOpen, Boxes, Home, Plus, X } from 'lucide-react';
+import { PackageOpen, Boxes, Home, Plus, X, Edit, Trash2, LinkIcon } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import { AxiosResponse } from 'axios';
 
-import ConsultantCard from '@/components/cards/ConsultantCard';
 import {
   Dialog,
   DialogTrigger,
@@ -39,6 +38,14 @@ import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/header/header';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -80,7 +87,7 @@ const consultancyFormSchema = z.object({
 
 type ConsultancyFormValues = z.infer<typeof consultancyFormSchema>;
 interface Consultancy extends ConsultancyFormValues {
-  _id?: string; // Make it optional since new entries won't have it initially
+  _id?: string;
 }
 
 export default function ConsultancyDomainPage() {
@@ -107,7 +114,6 @@ export default function ConsultancyDomainPage() {
 
         setAllSkills(skillsResponse.data.data);
         setAllDomains(domainsResponse.data.data);
-        console.log(consultantsResponse);
 
         // Transform the API response
         const consultantsArray = Array.isArray(
@@ -118,7 +124,7 @@ export default function ConsultancyDomainPage() {
 
         const formattedConsultants = consultantsArray.map(
           (consultant: any) => ({
-            _id: consultant._id, // Keep the ID
+            _id: consultant._id,
             name: consultant.name || '',
             skills: consultant.skills?.map((s: string) => ({ name: s })) || [],
             domains: consultant.domain?.map((d: string) => ({ name: d })) || [],
@@ -127,7 +133,6 @@ export default function ConsultancyDomainPage() {
             perHourRate: consultant.price,
           }),
         );
-        console.log(formattedConsultants);
         setConsultancies(formattedConsultants);
       } catch (error) {
         toast({
@@ -208,7 +213,6 @@ export default function ConsultancyDomainPage() {
 
   const startEditing = (index: number) => {
     setEditingIndex(index);
-    // Reset form with the existing consultancy data including _id
     form.reset(consultancies[index]);
     setIsDialogOpen(true);
   };
@@ -255,7 +259,6 @@ export default function ConsultancyDomainPage() {
 
       let response: AxiosResponse<any>;
       if (editingIndex !== null) {
-        // Update existing consultancy - use the _id from the existing item
         const consultantId = consultancies[editingIndex]._id;
         if (!consultantId) throw new Error('Missing consultant ID for update');
 
@@ -264,22 +267,19 @@ export default function ConsultancyDomainPage() {
           apiPayload,
         );
 
-        // Update local state - preserve all existing fields and merge with new data
         setConsultancies((prev) =>
           prev.map((item, index) =>
             index === editingIndex
-              ? { ...item, ...data } // keep existing fields like _id, only update changed ones
+              ? { ...item, ...data }
               : item,
           ),
         );
       } else {
-        // Create new consultancy
         response = await axiosInstance.post(
           '/freelancer/consultant',
           apiPayload,
         );
 
-        // Add new item to state with the _id from response
         setConsultancies((prev) => [
           ...prev,
           {
@@ -378,7 +378,6 @@ export default function ConsultancyDomainPage() {
                       onSubmit={form.handleSubmit(onSubmit)}
                       className="space-y-4"
                     >
-                      {/* Form fields remain the same as before */}
                       <FormField
                         control={form.control}
                         name="name"
@@ -680,49 +679,145 @@ export default function ConsultancyDomainPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="flex flex-wrap gap-6">
-              {consultancies.length > 0 ? (
-                consultancies.map((consultancy, index) => (
-                  <div
-                    key={index}
-                    className="relative group w-[380px] p-4 rounded-xl shadow-md bg-black border border-gray-800"
-                  >
-                    <ConsultantCard
-                      name={consultancy.name}
-                      skills={consultancy.skills.map((s) => s.name)}
-                      domains={consultancy.domains.map((d) => d.name)}
-                      description={consultancy.description}
-                      urls={consultancy.urls?.filter((u) => u.value)}
-                      perHourRate={consultancy.perHourRate}
-                    />
-                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => startEditing(index)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteConsultancy(index)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center mt-[5rem]">
-                  <PackageOpen className="mx-auto text-gray-500" size="100" />
-                  <p className="text-gray-500 mt-4">
-                    No consultancy domains created yet. Click Add Consultancy
-                    Domain to get started.
-                  </p>
+            
+            {/* Table View for Consultancy Domains */}
+            {/* Table View for Consultancy Domains */}
+{consultancies.length > 0 ? (
+  <div className="rounded-lg border bg-card overflow-hidden">
+    <div className="relative w-full overflow-auto">
+      <Table className="w-full caption-bottom text-sm">
+        <TableHeader className="[&_tr]:border-b">
+          <TableRow className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Title
+            </TableHead>
+            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Skills
+            </TableHead>
+            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Domains
+            </TableHead>
+            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Hourly Rate
+            </TableHead>
+            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              Links
+            </TableHead>
+            <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+              Actions
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {consultancies.map((consultancy, index) => (
+            <TableRow 
+              key={index} 
+              className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            >
+              <TableCell className="p-4 align-middle font-medium">
+                {consultancy.name}
+              </TableCell>
+              <TableCell className="p-4 align-middle">
+                <div className="flex flex-wrap gap-1">
+                  {consultancy.skills.slice(0, 3).map((skill, i) => (
+                    <Badge 
+                      key={i} 
+                      variant="secondary" 
+                      className="text-xs"
+                    >
+                      {skill.name}
+                    </Badge>
+                  ))}
+                  {consultancy.skills.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{consultancy.skills.length - 3} more
+                    </Badge>
+                  )}
                 </div>
-              )}
-            </div>
+              </TableCell>
+              <TableCell className="p-4 align-middle">
+                <div className="flex flex-wrap gap-1">
+                  {consultancy.domains.slice(0, 3).map((domain, i) => (
+                    <Badge 
+                      key={i} 
+                      variant="secondary" 
+                      className="text-xs"
+                    >
+                      {domain.name}
+                    </Badge>
+                  ))}
+                  {consultancy.domains.length > 3 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{consultancy.domains.length - 3} more
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="p-4 align-middle">
+                ${consultancy.perHourRate}/hr
+              </TableCell>
+              <TableCell className="p-4 align-middle">
+                <div className="flex flex-col gap-1">
+                  {consultancy.urls?.slice(0, 2).map((url, i) => (
+                    <a 
+                      key={i}
+                      href={url.value} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 max-w-[120px]"
+                      title={url.value}
+                    >
+                      <LinkIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate max-w-[120px]">{url.value}</span>
+                    </a>
+                  ))}
+                  {consultancy.urls && consultancy.urls.length > 2 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{consultancy.urls.length - 2} more
+                    </span>
+                  )}
+                  {(!consultancy.urls || consultancy.urls.length === 0) && (
+                    <span className="text-xs text-muted-foreground">No links</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="p-4 align-middle text-right">
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => startEditing(index)}
+                    className="h-8 px-3"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => deleteConsultancy(index)}
+                    className="h-8 px-3"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+) : (
+  <div className="flex flex-col items-center justify-center mt-[5rem]">
+    <PackageOpen className="mx-auto text-gray-500" size="100" />
+    <p className="text-gray-500 mt-4">
+      No consultancy domains created yet. Click Add Consultancy
+      Domain to get started.
+    </p>
+  </div>
+)}
           </div>
         </main>
       </div>
