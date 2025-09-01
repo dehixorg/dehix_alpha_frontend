@@ -28,6 +28,7 @@ import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
+
 interface ProjectProfile {
   _id?: string;
   selectedFreelancer?: string[];
@@ -44,6 +45,16 @@ interface ProjectProfile {
     freelancerId: string;
     bidId: string;
   };
+}
+
+interface Consultant {
+  _id: string;
+  name: string;
+  domain: string;
+  email: string;
+  startDate?: Date;
+  endDate?: Date;
+  status: string;
 }
 
 interface Project {
@@ -68,19 +79,65 @@ interface Project {
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  consultants?: Consultant[];
 }
+const generateDummyConsultants = (): Consultant[] => {
+  return [
+    {
+      _id: 'cons1',
+      name: 'Sarah Johnson',
+      domain: 'Data Science',
+      email: 'sarah.j@consultant.com',
+      startDate: new Date('2023-10-15'),
+      endDate: new Date('2024-04-15'),
+      status: 'Active',
+    },
+    {
+      _id: 'cons2',
+      name: 'Michael Chen',
+      domain: 'Frontend Development',
+      email: 'michael.chen@techconsult.com',
+      startDate: new Date('2023-11-01'),
+      status: 'Active',
+    },
+    {
+      _id: 'cons3',
+      name: 'Emma Rodriguez',
+      domain: 'Cloud Infrastructure',
+      email: 'emma.r@cloudsolutions.com',
+      startDate: new Date('2023-09-20'),
+      endDate: new Date('2024-03-20'),
+      status: 'Completed',
+    },
+    {
+      _id: 'cons4',
+      name: 'James Wilson',
+      domain: 'UX/UI Design',
+      email: 'james.w@designexperts.com',
+      startDate: new Date('2023-12-05'),
+      status: 'Active',
+    },
+  ];
+};
 
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
+  const [consultants, setConsultants] = useState<Consultant[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // For demo purposes, we'll use dummy data
+        // In a real app, you would fetch this from your API
+        const dummyConsultants = generateDummyConsultants();
+        setConsultants(dummyConsultants);
+
+        // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
-
+        console.log(response);
         if (projectData) {
           setProject(projectData);
         }
@@ -88,8 +145,8 @@ export default function Dashboard() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
       }
     };
@@ -188,6 +245,8 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
+      console.log('hi');
+      console.log(response);
 
       if (projectData) {
         setProject(projectData);
@@ -232,7 +291,7 @@ export default function Dashboard() {
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
             <Tabs defaultValue="Project-Info">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="Project-Info">Project Info</TabsTrigger>
+                <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
                 <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
               </TabsList>
               <TabsContent value="Project-Info">
@@ -273,6 +332,7 @@ export default function Dashboard() {
                               endDate={project.end}
                               domains={[]}
                               skills={profile.skills}
+                              team={project.team || []}
                             />
                           </CarouselItem>
                         ))}
