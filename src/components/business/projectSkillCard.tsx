@@ -1,7 +1,6 @@
 import React from 'react';
-import { Mail, Plus, Calendar, User } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 
-import { Separator } from '../ui/separator';
 import { Card } from '../ui/card';
 import {
   HoverCard,
@@ -10,7 +9,6 @@ import {
 } from '../ui/hover-card';
 
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export interface ProjectSkillCardProps {
   domainName?: string | undefined;
@@ -29,12 +27,9 @@ export interface ProjectSkillCardProps {
 function ProjectSkillCard({
   domainName,
   description,
-  email,
   status,
   startDate,
   endDate,
-  domains = [],
-  skills = [],
   isLastCard,
   onAddProfile,
   team = [],

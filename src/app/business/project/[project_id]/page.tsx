@@ -28,7 +28,6 @@ import { toast } from '@/components/ui/use-toast';
 import Header from '@/components/header/header';
 import AddProfileDialog from '@/components/dialogs/addProfileDialog';
 
-
 interface ProjectProfile {
   _id?: string;
   selectedFreelancer?: string[];
@@ -82,59 +81,15 @@ interface Project {
   updatedAt?: Date;
   consultants?: Consultant[];
 }
-const generateDummyConsultants = (): Consultant[] => {
-  return [
-    {
-      _id: 'cons1',
-      name: 'Sarah Johnson',
-      domain: 'Data Science',
-      email: 'sarah.j@consultant.com',
-      startDate: new Date('2023-10-15'),
-      endDate: new Date('2024-04-15'),
-      status: 'Active',
-    },
-    {
-      _id: 'cons2',
-      name: 'Michael Chen',
-      domain: 'Frontend Development',
-      email: 'michael.chen@techconsult.com',
-      startDate: new Date('2023-11-01'),
-      status: 'Active',
-    },
-    {
-      _id: 'cons3',
-      name: 'Emma Rodriguez',
-      domain: 'Cloud Infrastructure',
-      email: 'emma.r@cloudsolutions.com',
-      startDate: new Date('2023-09-20'),
-      endDate: new Date('2024-03-20'),
-      status: 'Completed',
-    },
-    {
-      _id: 'cons4',
-      name: 'James Wilson',
-      domain: 'UX/UI Design',
-      email: 'james.w@designexperts.com',
-      startDate: new Date('2023-12-05'),
-      status: 'Active',
-    },
-  ];
-};
 
 export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // For demo purposes, we'll use dummy data
-        // In a real app, you would fetch this from your API
-        const dummyConsultants = generateDummyConsultants();
-        setConsultants(dummyConsultants);
-
         // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
