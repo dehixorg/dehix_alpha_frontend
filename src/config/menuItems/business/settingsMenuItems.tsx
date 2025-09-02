@@ -27,6 +27,11 @@ export const menuItemsTop: MenuItem[] = [
     icon: <User className="h-5 w-5" />,
     label: 'Business Info',
   },
+  {
+    href: '/business/settings/kyc',
+    icon: <User className="h-5 w-5" />,
+    label: 'Business Info',
+  },
 ];
 
 export const menuItemsBottom: MenuItem[] = [];
