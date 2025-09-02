@@ -138,7 +138,7 @@ const NoteCard = ({
             onClick={() => onUpdateNoteType(note._id, NoteType.NOTE)}
           />
         )}
-        
+
         <BannerChangerPopover
           handleChangeBanner={(banner) => onChangeBanner(note._id, banner)}
         />

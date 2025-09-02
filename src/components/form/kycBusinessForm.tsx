@@ -5,6 +5,7 @@ import { z } from 'zod';
 import Image from 'next/image';
 
 import LiveCaptureField from './register/livecapture';
+
 import { Card } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -96,9 +97,13 @@ export function KYCForm({ user_id }: { user_id: string }) {
   const uploadImage = async (file: File, fieldName: string) => {
     const formData = new FormData();
     formData.append(fieldName, file);
-    const response = await axiosInstance.post('/register/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post(
+      '/register/upload-image',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
     return response.data.data.Location;
   };
 
@@ -120,15 +125,24 @@ export function KYCForm({ user_id }: { user_id: string }) {
       };
 
       if (data.frontImageUrl instanceof File) {
-        payload.kyc.frontImageUrl = await uploadImage(data.frontImageUrl, 'frontImageUrl');
+        payload.kyc.frontImageUrl = await uploadImage(
+          data.frontImageUrl,
+          'frontImageUrl',
+        );
       }
       if (data.backImageUrl instanceof File) {
-        payload.kyc.backImageUrl = await uploadImage(data.backImageUrl, 'backImageUrl');
+        payload.kyc.backImageUrl = await uploadImage(
+          data.backImageUrl,
+          'backImageUrl',
+        );
       }
       if (data.liveCaptureUrl instanceof File) {
-        payload.kyc.liveCaptureUrl = await uploadImage(data.liveCaptureUrl, 'liveCaptureUrl');
+        payload.kyc.liveCaptureUrl = await uploadImage(
+          data.liveCaptureUrl,
+          'liveCaptureUrl',
+        );
       }
-      console.log(payload)
+      console.log(payload);
       await axiosInstance.put(`/business/kyc`, payload);
       setKycStatus('APPLIED');
 
@@ -168,7 +182,10 @@ export function KYCForm({ user_id }: { user_id: string }) {
               <FormItem>
                 <FormLabel>Business Proof</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your business registration number" {...field} />
+                  <Input
+                    placeholder="Enter your business registration number"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

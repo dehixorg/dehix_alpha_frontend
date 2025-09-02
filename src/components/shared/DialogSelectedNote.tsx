@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -82,7 +81,8 @@ const DialogSelectedNote = ({
 
         <div className="flex justify-between items-center p-2 border-t border-gray-200 dark:border-gray-700 relative z-10">
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {note.createdAt && `Edited ${new Date(note.createdAt).toLocaleString()}`}
+            {note.createdAt &&
+              `Edited ${new Date(note.createdAt).toLocaleString()}`}
           </div>
           <div className="flex gap-2">
             {isEditMode ? (
@@ -90,7 +90,11 @@ const DialogSelectedNote = ({
                 <Button onClick={onClose} variant="ghost" className="text-sm">
                   Cancel
                 </Button>
-                <Button onClick={handleSave} variant="ghost" className="text-sm">
+                <Button
+                  onClick={handleSave}
+                  variant="ghost"
+                  className="text-sm"
+                >
                   Save
                 </Button>
               </>
@@ -99,7 +103,11 @@ const DialogSelectedNote = ({
                 <Button onClick={onClose} variant="ghost" className="text-sm">
                   Close
                 </Button>
-                <Button onClick={() => setIsEditMode(true)} variant="ghost" className="text-sm">
+                <Button
+                  onClick={() => setIsEditMode(true)}
+                  variant="ghost"
+                  className="text-sm"
+                >
                   Edit
                 </Button>
               </>

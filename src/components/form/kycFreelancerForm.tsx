@@ -5,7 +5,9 @@ import { z } from 'zod';
 import Image from 'next/image';
 
 import { Card } from '../ui/card';
+
 import LiveCaptureField from './register/livecapture';
+
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,9 +99,13 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   const uploadImage = async (file: File, fieldName: string) => {
     const formData = new FormData();
     formData.append(fieldName, file);
-    const response = await axiosInstance.post('/register/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post(
+      '/register/upload-image',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
     return response.data.data.Location;
   };
 
@@ -120,13 +126,22 @@ export default function KYCForm({ user_id }: { user_id: string }) {
       };
 
       if (data.frontImageUrl instanceof File) {
-        payload.kyc.frontImageUrl = await uploadImage(data.frontImageUrl, 'frontImageUrl');
+        payload.kyc.frontImageUrl = await uploadImage(
+          data.frontImageUrl,
+          'frontImageUrl',
+        );
       }
       if (data.backImageUrl instanceof File) {
-        payload.kyc.backImageUrl = await uploadImage(data.backImageUrl, 'backImageUrl');
+        payload.kyc.backImageUrl = await uploadImage(
+          data.backImageUrl,
+          'backImageUrl',
+        );
       }
       if (data.liveCaptureUrl instanceof File) {
-        payload.kyc.liveCaptureUrl = await uploadImage(data.liveCaptureUrl, 'liveCaptureUrl');
+        payload.kyc.liveCaptureUrl = await uploadImage(
+          data.liveCaptureUrl,
+          'liveCaptureUrl',
+        );
       }
 
       await axiosInstance.put(`/freelancer/kyc`, payload);
