@@ -185,9 +185,9 @@ function ProjectSkillCard({
       </div>
 
       {/* View Details button */}
-      <div className="pt-2">
-        <button className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 text-sm font-medium">
-          View Details
+      <div className="pt-3">
+        <button className="w-auto bg-blue-600 text-white px-5 py-1 rounded-md hover:bg-blue-700">
+          Mark as completed
         </button>
       </div>
     </div>
