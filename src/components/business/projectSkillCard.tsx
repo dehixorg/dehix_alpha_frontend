@@ -42,7 +42,7 @@ function ProjectSkillCard({
   if (isLastCard) {
     return (
       <Card
-        className="flex w-full items-center justify-center h-[250px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        className="flex w-full items-center justify-center h-[350px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
         onClick={onAddProfile}
       >
         <Plus className="w-12 h-12 text-gray-400" />
@@ -106,7 +106,7 @@ function ProjectSkillCard({
         ];
 
   return (
-    <div className="w-full min-h-[230px] bg-card relative border rounded-lg shadow-sm p-6 flex flex-col h-full">
+    <div className="w-full h-[350px] bg-card relative border rounded-lg shadow-sm p-6 flex flex-col">
       {/* Header with domain name and status */}
       <div className="flex justify-between items-start mb-4">
         <HoverCard>
@@ -125,10 +125,9 @@ function ProjectSkillCard({
         </Badge>
       </div>
 
-      {/* Team members with profile badges, names, and emails */}
-      {/* Team members with profile badges, names, and emails in same row */}
-      <div className="mb-4 space-y-3">
-        {displayTeam.slice(0, 3).map((member, index) => (
+      {/* Team members section with fixed height and scroll if needed */}
+      <div className="mb-4 space-y-3 flex-1 overflow-y-auto">
+        {displayTeam.slice(0, 5).map((member, index) => (
           <div key={index} className="flex items-center">
             <div className="flex-shrink-0 mr-3">
               {member.profilePic ? (
@@ -157,17 +156,15 @@ function ProjectSkillCard({
             </div>
           </div>
         ))}
-        {displayTeam.length > 3 && (
+        {displayTeam.length > 5 && (
           <div className="text-sm text-gray-500 pl-11">
-            +{displayTeam.length - 3} more members
+            +{displayTeam.length - 5} more members
           </div>
         )}
       </div>
 
-      {/* <div className="border-t border-gray-200 my-3"></div> */}
-
       {/* Date range */}
-      <div className="flex items-center text-sm  mb-4">
+      <div className="flex items-center text-sm mb-3">
         <Calendar className="w-4 h-4 mr-2" />
         {startDate ? (
           <>
@@ -180,13 +177,15 @@ function ProjectSkillCard({
         )}
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-100 mb-4 flex-grow">
-        {description || 'No description available.'}
-      </p>
+      {/* Description with fixed height and truncation */}
+      <div className="mb-3 flex-1 overflow-hidden">
+        <p className="text-sm text-gray-100 line-clamp-3">
+          {description || 'No description available.'}
+        </p>
+      </div>
 
       {/* View Details button */}
-      <div className="pt-3 mt-auto">
+      <div className="pt-2">
         <button className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 text-sm font-medium">
           View Details
         </button>

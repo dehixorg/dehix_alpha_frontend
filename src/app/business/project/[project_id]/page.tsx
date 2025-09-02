@@ -45,6 +45,7 @@ interface ProjectProfile {
     freelancerId: string;
     bidId: string;
   };
+  team: string[];
 }
 
 interface Consultant {
@@ -137,7 +138,6 @@ export default function Dashboard() {
         // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
-        console.log(response);
         if (projectData) {
           setProject(projectData);
         }
@@ -332,7 +332,7 @@ export default function Dashboard() {
                               endDate={project.end}
                               domains={[]}
                               skills={profile.skills}
-                              team={project.team || []}
+                              team={profile.team || []}
                             />
                           </CarouselItem>
                         ))}
