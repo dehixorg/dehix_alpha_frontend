@@ -55,6 +55,10 @@ export const CustomTable = ({
 
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const fetchData = async () => {
     try {
       setLoading(true);

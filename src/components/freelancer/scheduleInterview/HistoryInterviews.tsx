@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
 
 import { RootState } from "@/lib/store";
-import { fetchCompletedInterviews } from "@/lib/api/interviews";
+import { fetchCompletedInterviews} from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,10 @@ interface CompletedInterview {
   meetingLink?: string;
   rating?: number;
   feedback?: string;
+  intervieweeFeedback?: string;
+  interviewerFeedback?: string;
+  intervieweeRating?: number;
+  interviewerRating?: number;
   interviewer?: {
     _id?: string;
     name?: string;
@@ -54,6 +58,7 @@ export default function HistoryInterviews() {
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
+      console.log(data);
       setInterviews(data);
       await fetchInterviewerDetails(data);
       
@@ -66,7 +71,7 @@ export default function HistoryInterviews() {
   
   useEffect(() => {
     loadCompletedInterviews();
-  });
+  }, [user?.uid]);
   
   const fetchInterviewerDetails = async (interviewData: CompletedInterview[]) => {
     
@@ -101,6 +106,7 @@ export default function HistoryInterviews() {
       
       
       setInterviewerDetails(detailsMap);
+     // console.log(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
     }
@@ -167,7 +173,7 @@ export default function HistoryInterviews() {
   const handleShowMore = () => {
     setDisplayCount(prev => prev + 5);
   };
-
+  //console.log(interviews);
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
@@ -322,10 +328,10 @@ export default function HistoryInterviews() {
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    {interview.rating ? (
+                    {interview.intervieweeRating ? (
                       <div className="flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {interview.rating}/5
+                          {interview.intervieweeRating}/5
                         </span>
                       </div>
                     ) : (
@@ -347,7 +353,7 @@ export default function HistoryInterviews() {
                         style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
                       >
                         <div className="text-sm leading-relaxed">
-                          {(interview.feedback) || "No feedback available"}
+                          {interview.intervieweeFeedback || "No description available"}
                         </div>
                         {/* Arrow pointing to the button */}
                         <div 
