@@ -40,11 +40,11 @@ interface Freelancer {
 
 interface FreelancerGroup {
   id: string;
-  project_name: string; 
-  participants: string[]; 
+  project_name: string;
+  participants: string[];
   type: 'private' | 'group';
   timestamp: string;
-  project_id?: string; 
+  project_id?: string;
 }
 
 interface FreelancerListProps {
@@ -245,7 +245,7 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
           const transformedGroup = {
             id: conv.id,
             project_name:
-              conv.groupName || conv.project_name || 'Unnamed Group', 
+              conv.groupName || conv.project_name || 'Unnamed Group',
             participants: conv.participants || [],
             type: conv.type,
             timestamp: conv.timestamp || conv.updatedAt || conv.createdAt,
