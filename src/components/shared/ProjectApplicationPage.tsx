@@ -107,7 +107,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   // Selected profile card state
-  const [selectedProfileCardId, setSelectedProfileCardId] = useState<string | null>(null);
+  const [selectedProfileCardId, setSelectedProfileCardId] = useState<
+    string | null
+  >(null);
 
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
@@ -678,8 +680,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                       <Button
                         onClick={handleApplyClick}
                         className={`w-full md:w-auto px-8 ${
-                          selectedProfile 
-                            ? 'bg-blue-600 hover:bg-blue-700' 
+                          selectedProfile
+                            ? 'bg-blue-600 hover:bg-blue-700'
                             : 'bg-gray-400 cursor-not-allowed hover:bg-gray-400'
                         }`}
                         disabled={

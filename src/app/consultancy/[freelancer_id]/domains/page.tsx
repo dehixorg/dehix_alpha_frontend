@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PackageOpen, Boxes, Home, Plus, X, Edit, Trash2, LinkIcon } from 'lucide-react';
+import {
+  PackageOpen,
+  Boxes,
+  Home,
+  Plus,
+  X,
+  Edit,
+  Trash2,
+  LinkIcon,
+} from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -269,9 +278,7 @@ export default function ConsultancyDomainPage() {
 
         setConsultancies((prev) =>
           prev.map((item, index) =>
-            index === editingIndex
-              ? { ...item, ...data }
-              : item,
+            index === editingIndex ? { ...item, ...data } : item,
           ),
         );
       } else {
@@ -679,145 +686,155 @@ export default function ConsultancyDomainPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            
+
             {/* Table View for Consultancy Domains */}
             {/* Table View for Consultancy Domains */}
-{consultancies.length > 0 ? (
-  <div className="rounded-lg border bg-card overflow-hidden">
-    <div className="relative w-full overflow-auto">
-      <Table className="w-full caption-bottom text-sm">
-        <TableHeader className="[&_tr]:border-b">
-          <TableRow className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-              Title
-            </TableHead>
-            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-              Skills
-            </TableHead>
-            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-              Domains
-            </TableHead>
-            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-              Hourly Rate
-            </TableHead>
-            <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-              Links
-            </TableHead>
-            <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-              Actions
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {consultancies.map((consultancy, index) => (
-            <TableRow 
-              key={index} 
-              className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-            >
-              <TableCell className="p-4 align-middle font-medium">
-                {consultancy.name}
-              </TableCell>
-              <TableCell className="p-4 align-middle">
-                <div className="flex flex-wrap gap-1">
-                  {consultancy.skills.slice(0, 3).map((skill, i) => (
-                    <Badge 
-                      key={i} 
-                      variant="secondary" 
-                      className="text-xs"
-                    >
-                      {skill.name}
-                    </Badge>
-                  ))}
-                  {consultancy.skills.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{consultancy.skills.length - 3} more
-                    </Badge>
-                  )}
+            {consultancies.length > 0 ? (
+              <div className="rounded-lg border bg-card overflow-hidden">
+                <div className="relative w-full overflow-auto">
+                  <Table className="w-full caption-bottom text-sm">
+                    <TableHeader className="[&_tr]:border-b">
+                      <TableRow className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Title
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Skills
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Domains
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Hourly Rate
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Links
+                        </TableHead>
+                        <TableHead className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+                          Actions
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {consultancies.map((consultancy, index) => (
+                        <TableRow
+                          key={index}
+                          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                        >
+                          <TableCell className="p-4 align-middle font-medium">
+                            {consultancy.name}
+                          </TableCell>
+                          <TableCell className="p-4 align-middle">
+                            <div className="flex flex-wrap gap-1">
+                              {consultancy.skills
+                                .slice(0, 3)
+                                .map((skill, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {skill.name}
+                                  </Badge>
+                                ))}
+                              {consultancy.skills.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{consultancy.skills.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-4 align-middle">
+                            <div className="flex flex-wrap gap-1">
+                              {consultancy.domains
+                                .slice(0, 3)
+                                .map((domain, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {domain.name}
+                                  </Badge>
+                                ))}
+                              {consultancy.domains.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{consultancy.domains.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-4 align-middle">
+                            ${consultancy.perHourRate}/hr
+                          </TableCell>
+                          <TableCell className="p-4 align-middle">
+                            <div className="flex flex-col gap-1">
+                              {consultancy.urls?.slice(0, 2).map((url, i) => (
+                                <a
+                                  key={i}
+                                  href={url.value}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 max-w-[120px]"
+                                  title={url.value}
+                                >
+                                  <LinkIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                                  <span className="truncate max-w-[120px]">
+                                    {url.value}
+                                  </span>
+                                </a>
+                              ))}
+                              {consultancy.urls &&
+                                consultancy.urls.length > 2 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    +{consultancy.urls.length - 2} more
+                                  </span>
+                                )}
+                              {(!consultancy.urls ||
+                                consultancy.urls.length === 0) && (
+                                <span className="text-xs text-muted-foreground">
+                                  No links
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="p-4 align-middle text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => startEditing(index)}
+                                className="h-8 px-3"
+                              >
+                                <Edit className="h-3.5 w-3.5 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => deleteConsultancy(index)}
+                                className="h-8 px-3"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              </TableCell>
-              <TableCell className="p-4 align-middle">
-                <div className="flex flex-wrap gap-1">
-                  {consultancy.domains.slice(0, 3).map((domain, i) => (
-                    <Badge 
-                      key={i} 
-                      variant="secondary" 
-                      className="text-xs"
-                    >
-                      {domain.name}
-                    </Badge>
-                  ))}
-                  {consultancy.domains.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{consultancy.domains.length - 3} more
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="p-4 align-middle">
-                ${consultancy.perHourRate}/hr
-              </TableCell>
-              <TableCell className="p-4 align-middle">
-                <div className="flex flex-col gap-1">
-                  {consultancy.urls?.slice(0, 2).map((url, i) => (
-                    <a 
-                      key={i}
-                      href={url.value} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 max-w-[120px]"
-                      title={url.value}
-                    >
-                      <LinkIcon className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span className="truncate max-w-[120px]">{url.value}</span>
-                    </a>
-                  ))}
-                  {consultancy.urls && consultancy.urls.length > 2 && (
-                    <span className="text-xs text-muted-foreground">
-                      +{consultancy.urls.length - 2} more
-                    </span>
-                  )}
-                  {(!consultancy.urls || consultancy.urls.length === 0) && (
-                    <span className="text-xs text-muted-foreground">No links</span>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="p-4 align-middle text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => startEditing(index)}
-                    className="h-8 px-3"
-                  >
-                    <Edit className="h-3.5 w-3.5 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteConsultancy(index)}
-                    className="h-8 px-3"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  </div>
-) : (
-  <div className="flex flex-col items-center justify-center mt-[5rem]">
-    <PackageOpen className="mx-auto text-gray-500" size="100" />
-    <p className="text-gray-500 mt-4">
-      No consultancy domains created yet. Click Add Consultancy
-      Domain to get started.
-    </p>
-  </div>
-)}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center mt-[5rem]">
+                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <p className="text-gray-500 mt-4">
+                  No consultancy domains created yet. Click Add Consultancy
+                  Domain to get started.
+                </p>
+              </div>
+            )}
           </div>
         </main>
       </div>
