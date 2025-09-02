@@ -106,6 +106,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   // Profile dropdown state
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
+  // Selected profile card state
+  const [selectedProfileCardId, setSelectedProfileCardId] = useState<string | null>(null);
+
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
@@ -217,13 +220,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       : project?.description.slice(0, maxLength) + '...';
 
   const handleApplyClick = () => {
-    if (project?.profiles && project.profiles.length > 0) {
-      if (project.profiles.length === 1) {
-        setSelectedProfile(project.profiles[0]);
-        setBidAmount(project.profiles[0].minConnect || 0);
-      } else {
-        setSelectedProfile(null);
-      }
+    if (selectedProfile) {
+      setBidAmount(selectedProfile.minConnect || 0);
       setDialogOpen(true);
     }
   };
@@ -328,6 +326,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       setIsBidSubmitted(true); // Mark as applied for this project
       setCoverLetter('');
       setSelectedFreelancerProfile(null); // Reset selected freelancer profile
+      setSelectedProfileCardId(null); // Reset selected profile card
+      setSelectedProfile(null); // Reset selected profile
       toast({
         title: 'Application Submitted',
         description: 'Your application has been successfully submitted.',
@@ -352,6 +352,17 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
     if (value.length <= maxChars) {
       setCoverLetter(value);
+    }
+  };
+
+  const handleProfileCardClick = (profile: Profile) => {
+    // If already selected, deselect it
+    if (selectedProfileCardId === profile._id) {
+      setSelectedProfileCardId(null);
+      setSelectedProfile(null);
+    } else {
+      setSelectedProfileCardId(profile._id);
+      setSelectedProfile(profile);
     }
   };
 
@@ -666,11 +677,16 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                       <Button
                         onClick={handleApplyClick}
-                        className="w-full md:w-auto px-8"
+                        className={`w-full md:w-auto px-8 ${
+                          selectedProfile 
+                            ? 'bg-blue-600 hover:bg-blue-700' 
+                            : 'bg-gray-400 cursor-not-allowed hover:bg-gray-400'
+                        }`}
                         disabled={
                           isLoading ||
                           isBidSubmitted ||
-                          hasAppliedToAnyProfileInProject
+                          hasAppliedToAnyProfileInProject ||
+                          !selectedProfile
                         }
                       >
                         {isLoading
@@ -825,7 +841,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     {project?.profiles?.map((profile: any, index: any) => (
                       <Card
                         key={profile?._id || index}
-                        className="border border-gray-200"
+                        className={`border cursor-pointer transition-all duration-200 ${
+                          selectedProfileCardId === profile._id
+                            ? 'border-blue-500 border-2'
+                            : 'border-gray-200'
+                        }`}
+                        onClick={() => handleProfileCardClick(profile)}
                       >
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center mb-3">
@@ -880,11 +901,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                                 ? 'cursor-not-allowed'
                                 : ''
                             }`}
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click event
                               if (
                                 !appliedProfileIds.includes(profile._id || '')
                               ) {
                                 setSelectedProfile(profile);
+                                setSelectedProfileCardId(profile._id);
                                 setBidAmount(profile.minConnect || 0);
                                 setDialogOpen(true);
                               } else {
