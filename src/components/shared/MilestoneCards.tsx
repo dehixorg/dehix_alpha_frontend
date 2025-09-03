@@ -27,10 +27,10 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
 
   return (
     <div
-      className={`flex flex-col group-hover:bg-[#40b3ff] rounded-md   items-center gap-2 relative ${
+      className={`flex flex-col group-hover:bg-[#40b3ff] rounded-md items-center gap-2 relative ${
         isMobile ? 'w-64' : 'w-48 h-20'
       } ${position === 'top' ? 'mt-[132px]' : position === 'bottom' ? '-mt-[106px]' : ''} 
-          ${isSelected ? 'bg-[#11a0ff]' : 'dynamic-card'}
+          ${isSelected ? 'bg-[#11a0ff] shadow-md' : 'dynamic-card'}
         `}
       style={{
         width: '200px',
@@ -40,9 +40,9 @@ const MilestoneCards: React.FC<MilestoneProps> = ({
     >
       {/* Milestone Content */}
       <div
-        className={`text-center  border-line-bg w-full h-full rounded-md  p-4 ${
+        className={`text-center border-line-bg w-full h-full rounded-md p-4 ${
           isMobile ? 'text-base' : 'text-sm'
-        }  border`}
+        } border ${isSelected ? 'border-blue-500' : ''}`}
       >
         <p className="text-xs">
           {new Date(date).toLocaleDateString('en-US', {

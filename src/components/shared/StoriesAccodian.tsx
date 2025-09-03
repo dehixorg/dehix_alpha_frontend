@@ -18,11 +18,13 @@ const StoriesAccordion = ({
   fetchMilestones,
   handleStorySubmit,
   isFreelancer = false,
+  freelancerId,
 }: {
   milestone: Milestone;
   fetchMilestones: any;
   handleStorySubmit: any;
   isFreelancer: boolean;
+  freelancerId?: string;
 }) => {
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
@@ -135,6 +137,7 @@ const StoriesAccordion = ({
                 <StoryAccordionItem
                   fetchMilestones={fetchMilestones}
                   isFreelancer={isFreelancer}
+                  freelancerId={freelancerId}
                   milestoneId={milestone._id}
                   key={idx}
                   story={story}
