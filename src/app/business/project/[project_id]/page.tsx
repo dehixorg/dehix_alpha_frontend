@@ -44,6 +44,17 @@ interface ProjectProfile {
     freelancerId: string;
     bidId: string;
   };
+  team: string[];
+}
+
+interface Consultant {
+  _id: string;
+  name: string;
+  domain: string;
+  email: string;
+  startDate?: Date;
+  endDate?: Date;
+  status: string;
 }
 
 interface Project {
@@ -68,6 +79,7 @@ interface Project {
   team?: string[];
   createdAt?: Date;
   updatedAt?: Date;
+  consultants?: Consultant[];
 }
 
 export default function Dashboard() {
@@ -78,9 +90,9 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Your existing project data fetching code
         const response = await axiosInstance.get(`/project/${project_id}`);
         const projectData = response?.data?.data?.data || response?.data?.data;
-
         if (projectData) {
           setProject(projectData);
         }
@@ -88,8 +100,8 @@ export default function Dashboard() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
       }
     };
@@ -188,6 +200,8 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
+      console.log('hi');
+      console.log(response);
 
       if (projectData) {
         setProject(projectData);
@@ -232,7 +246,7 @@ export default function Dashboard() {
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
             <Tabs defaultValue="Project-Info">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="Project-Info">Project Info</TabsTrigger>
+                <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
                 <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
               </TabsList>
               <TabsContent value="Project-Info">
@@ -273,6 +287,7 @@ export default function Dashboard() {
                               endDate={project.end}
                               domains={[]}
                               skills={profile.skills}
+                              team={profile.team || []}
                             />
                           </CarouselItem>
                         ))}
