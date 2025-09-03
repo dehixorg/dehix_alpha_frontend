@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
-import ResumeEditor from '@/components/resumeEditor/page';
+import ResumeEditor from '@/components/resumeEditor/editor';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -21,11 +21,9 @@ export default function Resume() {
   const user = useSelector((state: RootState) => state.user);
   const [showResumeEditor, setShowResumeEditor] = useState(false);
   const [resumeData, setResumeData] = useState<any[]>([]);
-  const [loading, setIsLoading] = useState(false);
   const [selectedResume, setSelectedResume] = useState<any>(null);
 
   const fetchResumeData = async () => {
-    setIsLoading(true);
     try {
       const res = await axiosInstance.get(`/resume?userId=${user.uid}`);
       setResumeData(res.data.resumes || []);
@@ -36,8 +34,6 @@ export default function Resume() {
         description: 'Failed to fetch resume data. Please try again.',
       });
       console.error('API Error:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
