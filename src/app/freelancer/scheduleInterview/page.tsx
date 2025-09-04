@@ -7,13 +7,9 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger} from '@/components/ui/accordion';
-  import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from '@/components/ui/tabs';
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
@@ -29,8 +25,10 @@ export default function ScheduleInterviewPage() {
     const tab = searchParams.get('tab');
     return tab || 'upskill';
   });
-  
-  const [activeSection, setActiveSection] = React.useState<'current' | 'bidded' | 'history'>('current');
+
+  const [activeSection, setActiveSection] = React.useState<
+    'current' | 'bidded' | 'history'
+  >('current');
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -68,29 +66,40 @@ export default function ScheduleInterviewPage() {
 
     const renderSectionContent = () => {
       const icon = getTabIcon();
-      const iconClass = activeSection === 'current' 
-        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-        : activeSection === 'bidded'
-          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+      const iconClass =
+        activeSection === 'current'
+          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+          : activeSection === 'bidded'
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
 
-      const sectionTitle = 
-        activeSection === 'current' ? 'Current Interview' :
-        activeSection === 'bidded' ? 'Bidded Interview' : 'History';
+      const sectionTitle =
+        activeSection === 'current'
+          ? 'Current Interview'
+          : activeSection === 'bidded'
+            ? 'Bidded Interview'
+            : 'History';
 
       const sectionContent = () => {
-        if (activeSection === 'current' && activeTab === 'talent') return <CurrentInterviews />;
-        if (activeSection === 'bidded' && activeTab === 'talent') return <BidedInterviews />;
-        if (activeSection === 'history' && activeTab === 'talent') return <HistoryInterviews />;
-        
+        if (activeSection === 'current' && activeTab === 'talent')
+          return <CurrentInterviews />;
+        if (activeSection === 'bidded' && activeTab === 'talent')
+          return <BidedInterviews />;
+        if (activeSection === 'history' && activeTab === 'talent')
+          return <HistoryInterviews />;
+
         // Default content for other tabs
         return (
           <div className="text-center py-8">
             <p className="text-gray-600 dark:text-gray-400">
-              No {activeSection.toLowerCase()} {activeTab.toLowerCase()} interviews {
-                activeSection === 'current' ? 'scheduled' : 
-                activeSection === 'bidded' ? 'found' : 'available'
-              }.
+              No {activeSection.toLowerCase()} {activeTab.toLowerCase()}{' '}
+              interviews{' '}
+              {activeSection === 'current'
+                ? 'scheduled'
+                : activeSection === 'bidded'
+                  ? 'found'
+                  : 'available'}
+              .
             </p>
           </div>
         );
@@ -100,16 +109,16 @@ export default function ScheduleInterviewPage() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 ${iconClass} rounded-full flex items-center justify-center`}>
+              <div
+                className={`w-10 h-10 ${iconClass} rounded-full flex items-center justify-center`}
+              >
                 {React.cloneElement(icon, { className: 'w-5 h-5' })}
               </div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 {sectionTitle}
               </h2>
             </div>
-            <div className="mt-4">
-              {sectionContent()}
-            </div>
+            <div className="mt-4">{sectionContent()}</div>
           </div>
         </div>
       );
@@ -147,12 +156,13 @@ export default function ScheduleInterviewPage() {
         }
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
-        
         <div className="p-6">
           {/* Section Tabs */}
-          <Tabs 
-            value={activeSection} 
-            onValueChange={(value) => setActiveSection(value as 'current' | 'bidded' | 'history')}
+          <Tabs
+            value={activeSection}
+            onValueChange={(value) =>
+              setActiveSection(value as 'current' | 'bidded' | 'history')
+            }
             className="mb-6"
           >
             <TabsList className="grid w-full grid-cols-3">
