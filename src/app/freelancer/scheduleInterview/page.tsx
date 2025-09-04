@@ -7,8 +7,13 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  AccordionTrigger} from '@/components/ui/accordion';
+  import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
@@ -24,6 +29,8 @@ export default function ScheduleInterviewPage() {
     const tab = searchParams.get('tab');
     return tab || 'upskill';
   });
+  
+  const [activeSection, setActiveSection] = React.useState<'current' | 'bidded' | 'history'>('current');
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -44,315 +51,77 @@ export default function ScheduleInterviewPage() {
   }, [searchParams, activeTab]);
 
   const renderContent = () => {
+    // Get the appropriate icon based on active tab
+    const getTabIcon = () => {
+      switch (activeTab) {
+        case 'upskill':
+          return <GraduationCap className="w-5 h-5" />;
+        case 'project':
+          return <Briefcase className="w-5 h-5" />;
+        case 'talent':
+        case 'dehix':
+          return <UserCheck className="w-5 h-5" />;
+        default:
+          return <Users className="w-5 h-5" />;
+      }
+    };
+
+    const renderSectionContent = () => {
+      const icon = getTabIcon();
+      const iconClass = activeSection === 'current' 
+        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+        : activeSection === 'bidded'
+          ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+
+      const sectionTitle = 
+        activeSection === 'current' ? 'Current Interview' :
+        activeSection === 'bidded' ? 'Bidded Interview' : 'History';
+
+      const sectionContent = () => {
+        if (activeSection === 'current' && activeTab === 'talent') return <CurrentInterviews />;
+        if (activeSection === 'bidded' && activeTab === 'talent') return <BidedInterviews />;
+        if (activeSection === 'history' && activeTab === 'talent') return <HistoryInterviews />;
+        
+        // Default content for other tabs
+        return (
+          <div className="text-center py-8">
+            <p className="text-gray-600 dark:text-gray-400">
+              No {activeSection.toLowerCase()} {activeTab.toLowerCase()} interviews {
+                activeSection === 'current' ? 'scheduled' : 
+                activeSection === 'bidded' ? 'found' : 'available'
+              }.
+            </p>
+          </div>
+        );
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-10 h-10 ${iconClass} rounded-full flex items-center justify-center`}>
+                {React.cloneElement(icon, { className: 'w-5 h-5' })}
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {sectionTitle}
+              </h2>
+            </div>
+            <div className="mt-4">
+              {sectionContent()}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Handle different tab content
     switch (activeTab) {
       case 'upskill':
-        return (
-          <div className="space-y-6">
-            {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="current-interviews-upskill">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Current Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No current upskill interviews scheduled.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="bidded-interviews-upskill">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Bidded Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No bidded upskill interviews found.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* History Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="history-upskill">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        History
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No upskill interview history available.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </div>
-        );
-
       case 'project':
-        return (
-          <div className="space-y-6">
-            {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="current-interviews-project">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Current Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No current project interviews scheduled.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="bidded-interviews-project">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Bidded Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No bidded project interviews found.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* History Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="history-project">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        History
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No project interview history available.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </div>
-        );
-
       case 'talent':
-        return (
-          <div className="space-y-6">
-            {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="current-interviews">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Current Interviews
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CurrentInterviews />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="bided-interviews">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Bided Interviews
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <BidedInterviews />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* History Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="history">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        History
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <HistoryInterviews />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </div>
-        );
-
       case 'dehix':
-        return (
-          <div className="space-y-6">
-            {/* Current Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="current-interviews-dehix">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Current Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No current Dehix interviews scheduled.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* Bidded Interview Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="bidded-interviews-dehix">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Bidded Interview
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No bidded Dehix interviews found.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-
-            {/* History Segment */}
-            <div className="bg-white dark:bg-[#151518] rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="history-dehix">
-                  <AccordionTrigger className="text-xl font-semibold hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        History
-                      </h2>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="text-center py-8">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No Dehix interview history available.
-                      </p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
-          </div>
-        );
-
+        return renderSectionContent();
       default:
         return <ScheduleInterviewDialog />;
     }
@@ -378,16 +147,21 @@ export default function ScheduleInterviewPage() {
         }
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
-        <Header
-          menuItemsTop={menuItemsTop}
-          menuItemsBottom={menuItemsBottom}
-          activeMenu="ScheduleInterviews"
-          breadcrumbItems={[
-            { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Schedule Interview', link: '#' },
-          ]}
-        />
+        
         <div className="p-6">
+          {/* Section Tabs */}
+          <Tabs 
+            value={activeSection} 
+            onValueChange={(value) => setActiveSection(value as 'current' | 'bidded' | 'history')}
+            className="mb-6"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="current">Current</TabsTrigger>
+              <TabsTrigger value="bidded">Bidded</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {activeTab === 'upskill' && 'Upskill Interview'}
