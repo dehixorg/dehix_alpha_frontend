@@ -1,4 +1,5 @@
 'use client';
+
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 
@@ -7,6 +8,7 @@ import { RootState } from '@/lib/store';
 
 export default function ProfilePage() {
   const user = useSelector((state: RootState) => state.user);
+
   return (
     <>
       <div className="ml-5 md:ml-10">
@@ -16,6 +18,7 @@ export default function ProfilePage() {
           and provide your experience levels.
         </p>
       </div>
+
       <InterviewProfile freelancerId={user?.uid} />
     </>
   );
