@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Calendar } from 'lucide-react';
+import Image from 'next/image';
 
 import { Card } from '../ui/card';
 import {
@@ -126,7 +127,7 @@ function ProjectSkillCard({
           <div key={index} className="flex items-center">
             <div className="flex-shrink-0 mr-3">
               {member.profilePic ? (
-                <img
+                <Image
                   src={member.profilePic}
                   alt={member.name}
                   className="h-8 w-8 rounded-full object-cover"
