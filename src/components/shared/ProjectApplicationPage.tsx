@@ -46,6 +46,7 @@ interface Profile {
   minConnect: number;
   rate: number;
   description: string;
+  profileType: 'FREELANCER' | 'CONSULTANT';
 }
 
 interface FreelancerProfile {
@@ -832,9 +833,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             <h3 className="font-medium text-xs">
                               {profile?.domain} Developer
                             </h3>
-                            <Badge variant="outline">
-                              {profile?.freelancersRequired} Needed
-                            </Badge>
+                            <div className="flex items-center">
+                              <Badge variant="outline" className="ml-2">
+                                {profile?.profileType}
+                              </Badge>
+                              <Badge variant="outline">
+                                {profile?.freelancersRequired} Needed
+                              </Badge>
+                            </div>
                           </div>
                           <p className="mb-3 text-sm">{profile?.description}</p>
                           <div className="grid grid-cols-2 gap-3 mb-3">
