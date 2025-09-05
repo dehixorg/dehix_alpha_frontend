@@ -40,12 +40,20 @@ const FAQAccordion = () => {
     <Accordion
       type="single"
       collapsible
-      className="w-full md:w-3/4 lg:w-2/3 xl:w-1/2 mx-auto"
+      className="w-full mx-auto max-w-2xl divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-md"
     >
       {questions.map((item, index) => (
-        <AccordionItem key={index} value={`item-${index}`}>
-          <AccordionTrigger>{item.question}</AccordionTrigger>
-          <AccordionContent>{item.answer}</AccordionContent>
+        <AccordionItem
+          key={index}
+          value={`item-${index}`}
+          className="px-4 py-2"
+        >
+          <AccordionTrigger className="text-left font-semibold text-lg hover:text-blue-600 transition-colors duration-200">
+            {item.question}
+          </AccordionTrigger>
+          <AccordionContent className="text-gray-600 leading-relaxed pt-2 pb-4">
+            {item.answer}
+          </AccordionContent>
         </AccordionItem>
       ))}
     </Accordion>

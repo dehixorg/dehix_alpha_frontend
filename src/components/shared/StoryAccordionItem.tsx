@@ -74,6 +74,7 @@ interface StoryAccordionItemProps {
   milestoneStoriesLength: number;
   setIsTaskDialogOpen: (open: boolean) => void;
   isFreelancer: boolean;
+  freelancerId?: string;
   fetchMilestones: () => void;
 }
 
@@ -84,6 +85,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   milestoneStoriesLength,
   setIsTaskDialogOpen,
   isFreelancer = false,
+  freelancerId,
   fetchMilestones,
 }) => {
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
@@ -95,24 +97,60 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [actedUponTasks, setActedUponTasks] = useState<Set<string>>(new Set());
 
-  // Initialize actedUponTasks with tasks that have already been accepted/rejected
   useEffect(() => {
-    const actedTasks = new Set<string>();
+    const newActedUponTasks = new Set<string>();
     story.tasks?.forEach((task: any) => {
+      const freelancerData = task.freelancers?.[0];
+      // Check if this task is assigned to the current freelancer and has been acted upon
       if (
-        task.freelancers?.[0]?.acceptanceFreelancer ||
-        task.freelancers?.[0]?.rejectionFreelancer
+        freelancerData &&
+        freelancerId &&
+        freelancerData.freelancerId === freelancerId &&
+        (freelancerData.acceptanceFreelancer ||
+          freelancerData.rejectionFreelancer)
       ) {
-        actedTasks.add(task._id);
+        newActedUponTasks.add(task._id);
       }
     });
-    setActedUponTasks(actedTasks);
-  }, [story.tasks]);
+    setActedUponTasks(newActedUponTasks);
+  }, [story.tasks, freelancerId]);
+
+  // Helper function to determine if a task should show accept/reject buttons
+  const shouldShowAcceptRejectButtons = (task: any) => {
+    if (actedUponTasks.has(task._id)) {
+      return false;
+    }
+
+    if (!freelancerId) {
+      return false;
+    }
+
+    const freelancerData = task.freelancers?.[0];
+
+    if (!freelancerData) {
+      return false;
+    }
+
+    if (freelancerData.freelancerId !== freelancerId) {
+      return false;
+    }
+
+    if (
+      freelancerData.acceptanceFreelancer ||
+      freelancerData.rejectionFreelancer
+    ) {
+      // Add to actedUponTasks to ensure consistency
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(task._id);
+        return newSet;
+      });
+      return false;
+    }
+    return true;
+  };
 
   const handleAcceptTask = async (taskId: string) => {
-    // Immediately add to acted upon tasks to hide buttons
-    setActedUponTasks((prev) => new Set(prev).add(taskId));
-
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleAcceptTask');
@@ -132,18 +170,29 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           updatePermissionBusiness: false,
         },
       );
+
+      // Add to acted upon tasks to hide buttons immediately
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(taskId);
+        return newSet;
+      });
+
       toast({ description: 'Task accepted!', duration: 3000 });
       fetchMilestones(); // Refresh milestones
     } catch (error) {
       console.error('Error accepting task:', error);
       toast({ description: 'Failed to accept task.', variant: 'destructive' });
+      // Remove from acted upon tasks if the request failed
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
     }
   };
 
   const handleRejectTask = async (taskId: string) => {
-    // Immediately add to acted upon tasks to hide buttons
-    setActedUponTasks((prev) => new Set(prev).add(taskId));
-
     try {
       if (!milestoneId || !story._id) {
         console.warn('Missing milestone or story ID in handleRejectTask');
@@ -159,10 +208,18 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         {
           acceptanceFreelancer: false,
           rejectionFreelancer: true,
-          updatePermissionFreelancer: false, // Clear any update permission requests
-          updatePermissionBusiness: false, // Clear any update permission requests
+          updatePermissionFreelancer: false,
+          updatePermissionBusiness: false,
         },
       );
+
+      // Add to acted upon tasks to hide buttons immediately
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(taskId);
+        return newSet;
+      });
+
       toast({
         description: 'Task rejected and update requests removed!',
         duration: 3000,
@@ -171,6 +228,12 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
     } catch (error) {
       console.error('Error rejecting task:', error);
       toast({ description: 'Failed to reject task.', variant: 'destructive' });
+      // Remove from acted upon tasks if the request failed
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
     }
   };
 
@@ -192,7 +255,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       // Determine the payload based on user type
       let payload;
       if (isFreelancer) {
-        // Freelancer approving business's update request
         payload = {
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
@@ -200,7 +262,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           acceptanceFreelancer: false,
         };
       } else {
-        // Business approving freelancer's update request
         payload = {
           updatePermissionFreelancer: true,
           updatePermissionBusiness: true,
@@ -244,7 +305,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
       // Determine the payload based on user type
       let payload;
       if (isFreelancer) {
-        // Freelancer rejecting business's update request
         payload = {
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
@@ -252,7 +312,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           acceptanceFreelancer: false,
         };
       } else {
-        // Business rejecting freelancer's update request
         payload = {
           updatePermissionFreelancer: false,
           updatePermissionBusiness: false,
@@ -354,9 +413,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                   ?.updatePermissionBusiness &&
                 story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
                   <>
-                    {/* <span className="text-yellow-500 ml-5 hidden md:flex">
-                      Update Req
-                    </span> */}
                     <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
                   </>
                 )}
@@ -395,15 +451,6 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
           className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
           style={{ borderColor: '#09090b' }}
         >
-          {/* <div className="px-6 py-4"> */}
-          {/* <div className="flex items-center justify-between">
-              <h3 className="text-lg md:text-xl font-semibold">
-                {story.title}
-              </h3> 
-              </div>  <Badge className={`${statusBadgeStyle} px-3 py-1 text-sm rounded-full`}>
-                {projectStatus}
-              </Badge>
-            </div> */}
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-1">
               <Badge
@@ -562,32 +609,29 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
                                       className="flex flex-col gap-2 sm:pb-2 mt-2 px-4"
                                       style={{ minHeight: '2.5rem' }}
                                     >
-                                      {!actedUponTasks.has(task._id) &&
-                                        !task.freelancers?.[0]
-                                          ?.acceptanceFreelancer &&
-                                        !task.freelancers?.[0]
-                                          ?.rejectionFreelancer && (
-                                          <div className="flex justify-between items-center">
+                                      {/* Show accept/reject buttons only for tasks that haven't been acted upon */}
+                                      {shouldShowAcceptRejectButtons(task) && (
+                                        <div className="flex justify-between items-center">
+                                          <Button
+                                            onClick={() =>
+                                              handleAcceptTask(task._id)
+                                            }
+                                            className="w-20 md:w-16 h-7"
+                                          >
+                                            Accept
+                                          </Button>
+                                          <div className="flex-1 flex justify-center">
                                             <Button
                                               onClick={() =>
-                                                handleAcceptTask(task._id)
+                                                handleRejectTask(task._id)
                                               }
                                               className="w-20 md:w-16 h-7"
                                             >
-                                              Accept
+                                              Reject
                                             </Button>
-                                            <div className="flex-1 flex justify-center">
-                                              <Button
-                                                onClick={() =>
-                                                  handleRejectTask(task._id)
-                                                }
-                                                className="w-20 md:w-16 h-7"
-                                              >
-                                                Reject
-                                              </Button>
-                                            </div>
                                           </div>
-                                        )}
+                                        </div>
+                                      )}
                                       {/* Approve/Reject Update Permission buttons for freelancers */}
                                       {!task.freelancers?.[0]
                                         ?.updatePermissionFreelancer &&

@@ -1,16 +1,9 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import React, { useState } from 'react';
+
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Note } from '@/utils/types/note';
 
 type DialogSelectedNoteProps = {
@@ -26,13 +19,12 @@ const DialogSelectedNote = ({
 }: DialogSelectedNoteProps) => {
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content || '');
-  const [entityID] = useState(note.entityID || '');
   const [error, setError] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleSave = () => {
-    if (!title.trim() || !content.trim()) {
-      setError('Title and content cannot be empty.');
+    if (!title.trim() && !content.trim()) {
+      setError('Title or content cannot be empty.');
       return;
     }
 
@@ -45,124 +37,83 @@ const DialogSelectedNote = ({
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-[425px] p-6 rounded-lg shadow-lg text-black"
-        style={{ backgroundColor: `${note.bgColor}B3` || '#ffffff' }}
+        className="sm:max-w-[500px] p-0 rounded-lg shadow-xl dark:bg-gray-800 bg-white no-close-button"
+        style={{
+          backgroundColor: note.bgColor || undefined,
+          backgroundImage: note.banner ? `url(${note.banner})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: note.banner ? 'white' : '#000',
+        }}
       >
-        {/* banner as background */}
+        {/* Semi-transparent overlay for better text visibility */}
         {note.banner && (
-          <div className="absolute inset-0 z-0">
-            <Image
-              src={note.banner}
-              alt="Note Banner"
-              layout="fill"
-              objectFit="cover"
-              className="rounded-lg"
-            />
-          </div>
+          <div className="absolute inset-0 bg-black opacity-30 rounded-lg"></div>
         )}
 
-        <DialogHeader className="border-b pb-4 relative z-10">
-          <DialogTitle className="text-2xl font-semibold">
-            {isEditMode ? 'Edit Note' : 'Note Details'}
-          </DialogTitle>
-        </DialogHeader>
+        <div className="p-4 flex flex-col gap-2 relative z-10">
+          {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
 
-        {/* Error Message */}
-        {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-
-        {isEditMode ? (
-          <div className="mt-6 relative z-10">
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-semibold">
-                Title
-              </label>
-              <Input
-                id="title"
+          {isEditMode ? (
+            <div className="w-full">
+              <input // Using native input element
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter note title"
-                className="mt-2 p-2 border bg-opacity-50 bg-white rounded-md w-full text-sm text-opacity-100"
+                placeholder="Title"
+                className="w-full text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="content" className="block text-sm font-semibold">
-                Content
-              </label>
-              <Textarea
-                id="content"
+              <textarea // Using native textarea element
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Enter note content"
-                className="mt-2 p-2 bg-opacity-50 bg-white border  no-scrollbar rounded-md w-full text-sm text-opacity-100  resize-none"
-                rows={5}
+                placeholder="Take a note..."
+                className="w-full min-h-[100px] resize-none bg-transparent border-none focus:outline-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
-
-            <div className="mb-4">
-              <label htmlFor="entityID" className="block text-sm font-semibold">
-                Entity ID
-              </label>
-              <Input
-                id="entityID"
-                type="text"
-                disabled={true}
-                value={entityID}
-                placeholder="Entity ID"
-                className="mt-2 p-2 border bg-opacity-50 bg-white rounded-md w-full text-sm text-opacity-100"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="mt-6 relative z-10 w-full max-w-2xl">
-            <div className="mb-4">
-              <p className="text-sm font-bold">Title:</p>
-              <p className="text-black-300 mt-1">{note.title}</p>
-            </div>
-            <div className="mb-4">
-              <p className="text-sm font-bold">Content:</p>
-              <div
-                className={`text-black-300 mt-1 no-scrollbar p-2 ${
-                  note.content.length > 300 ? 'max-h-52 overflow-y-auto' : ''
-                }`}
-              >
-                {note.content}
-              </div>
-            </div>
-            <div className="mb-4">
-              <p className="text-sm font-bold">Entity ID:</p>
-              <p className="text-black-300 mt-1">{entityID}</p>
-            </div>
-          </div>
-        )}
-
-        <DialogFooter className="mt-6 relative z-10 text-white">
-          {isEditMode ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditMode(false)}
-                className="mr-2"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>Save</Button>
-            </>
           ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="mr-2 text-black dark:text-white"
-              >
-                Close
-              </Button>
-              <Button onClick={() => setIsEditMode(true)}>Edit</Button>
-            </>
+            <div className="w-full">
+              <div className="text-lg font-semibold mb-1">{note.title}</div>
+              <div className="text-sm">{note.content}</div>
+            </div>
           )}
-        </DialogFooter>
+        </div>
+
+        <div className="flex justify-between items-center p-2 border-t border-gray-200 dark:border-gray-700 relative z-10">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {note.createdAt &&
+              `Edited ${new Date(note.createdAt).toLocaleString()}`}
+          </div>
+          <div className="flex gap-2">
+            {isEditMode ? (
+              <>
+                <Button onClick={onClose} variant="ghost" className="text-sm">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  variant="ghost"
+                  className="text-sm"
+                >
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={onClose} variant="ghost" className="text-sm">
+                  Close
+                </Button>
+                <Button
+                  onClick={() => setIsEditMode(true)}
+                  variant="ghost"
+                  className="text-sm"
+                >
+                  Edit
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

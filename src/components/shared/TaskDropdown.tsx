@@ -16,7 +16,9 @@ import TaskUpdateDeatilDialog from './TaskUpdateDetailDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
-  const user = useSelector((state: { user: { type: string } }) => state.user);
+  const user = useSelector(
+    (state: { user: { type: string; uid: string } }) => state.user,
+  );
   const { type } = user;
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
@@ -100,7 +102,8 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
           align="end"
           className="w-56 p-2 border rounded-md shadow-md"
         >
-          {user?.type === 'freelancer' ? (
+          {user?.type === 'freelancer' &&
+          task?.freelancers[0]?.freelancerId === user?.uid ? (
             <>
               <DropdownMenuItem
                 className="flex items-center gap-2"
@@ -159,7 +162,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
             </>
           ) : (
             <DropdownMenuItem disabled className="text-gray-400">
-              No actions available for this user type.
+              This task is not assigned to you.
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

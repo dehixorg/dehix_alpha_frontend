@@ -63,6 +63,7 @@ const profileFormSchema = z.object({
   profiles: z
     .array(
       z.object({
+        profileType: z.enum(['FREELANCER', 'CONSULTANT']),
         domain: z.string().min(1, { message: 'Domain is required.' }),
         description: z.string().optional(),
         freelancersRequired: z
@@ -222,6 +223,7 @@ const defaultValues: Partial<ProfileFormValues> = {
         hourly: { minRate: '', maxRate: '', estimatedHours: '' },
       },
       domain_id: '',
+      profileType: 'FREELANCER',
     },
   ],
 };
@@ -472,8 +474,7 @@ export function CreateProjectBusinessForm() {
         role: '',
         projectType: 'FREELANCE',
         url: data.urls,
-        profiles: data.profiles || [],
-        profilesWithFormattedBudget,
+        profiles: profilesWithFormattedBudget,
       };
       await axiosInstance.post(`/project/business`, payload);
       toast({
@@ -867,6 +868,42 @@ export function CreateProjectBusinessForm() {
 
         return index === activeProfile || mode === 'single' ? (
           <div key={index} className="p-4 mb-4 rounded-md relative">
+            {mode === 'multiple' && (
+              <div className="flex gap-2 mb-4">
+                <Button
+                  type="button"
+                  variant={
+                    form.watch(`profiles.${index}.profileType`) === 'FREELANCER'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  onClick={() => {
+                    form.setValue(
+                      `profiles.${index}.profileType`,
+                      'FREELANCER',
+                    );
+                  }}
+                >
+                  Freelancer
+                </Button>
+                <Button
+                  type="button"
+                  variant={
+                    form.watch(`profiles.${index}.profileType`) === 'CONSULTANT'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  onClick={() => {
+                    form.setValue(
+                      `profiles.${index}.profileType`,
+                      'CONSULTANT',
+                    );
+                  }}
+                >
+                  Consultant
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <FormField
                 control={form.control}
@@ -1061,6 +1098,7 @@ export function CreateProjectBusinessForm() {
                 },
                 description: '',
                 domain_id: '',
+                profileType: 'FREELANCER',
               })
             }
           >

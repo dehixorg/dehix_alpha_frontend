@@ -26,6 +26,7 @@ import { kycBadgeColors } from '@/utils/freelancer/enum';
 
 const profileFormSchema = z.object({
   aadharOrGovtId: z.string().optional(),
+  salaryOrEarning: z.coerce.number().optional(), // New field for salary/earning
   frontImageUrl: z
     .union([
       typeof window !== 'undefined' ? z.instanceof(File) : z.unknown(),
@@ -54,116 +55,97 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 export default function KYCForm({ user_id }: { user_id: string }) {
   const [loading, setLoading] = useState<boolean>(false);
   const [kycStatus, setKycStatus] = useState<string>('PENDING');
-  const [user, setUser] = useState<any>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       aadharOrGovtId: '',
+      salaryOrEarning: 0,
       frontImageUrl: null,
       backImageUrl: null,
       liveCaptureUrl: null,
     },
-    mode: 'all',
+    mode: 'onBlur',
   });
+
+  const { reset } = form;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userResponse = await axiosInstance.get(`/freelancer/${user_id}`);
-        setUser(userResponse.data.data);
-        setKycStatus(userResponse?.data?.data?.kyc?.status);
-
-        form.reset({
-          aadharOrGovtId: userResponse.data.data.kyc?.aadharOrGovtId || '',
-          frontImageUrl: userResponse.data.data.kyc?.frontImageUrl || null,
-          backImageUrl: userResponse.data.data.kyc?.backImageUrl || null,
-          liveCaptureUrl: userResponse.data.data.kyc?.liveCapture || null,
+        const kycData = userResponse.data.data.kyc;
+        setKycStatus(kycData?.status || 'PENDING');
+        reset({
+          aadharOrGovtId: kycData?.aadharOrGovtId || '',
+          salaryOrEarning: kycData?.salaryOrEarning || 0,
+          frontImageUrl: kycData?.frontImageUrl || null,
+          backImageUrl: kycData?.backImageUrl || null,
+          liveCaptureUrl: kycData?.liveCaptureUrl || null,
         });
       } catch (error) {
         console.error('API Error:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
+          description: 'Failed to load KYC data. Please try again.',
         });
       }
     };
 
     fetchData();
-  }, [user_id, form]);
+  }, [user_id, reset]);
 
-  useEffect(() => {
-    form.reset({
-      aadharOrGovtId: user?.kyc?.aadharOrGovtId || '',
-      frontImageUrl: user?.kyc?.frontImageUrl || null,
-      backImageUrl: user?.kyc?.backImageUrl || null,
-      liveCaptureUrl: user?.kyc?.liveCaptureUrl || null,
-    });
-  }, [user, form]);
+  const uploadImage = async (file: File, fieldName: string) => {
+    const formData = new FormData();
+    formData.append(fieldName, file);
+    const response = await axiosInstance.post(
+      '/register/upload-image',
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
+    return response.data.data.Location;
+  };
 
   async function onSubmit(data: ProfileFormValues) {
     setLoading(true);
     try {
-      const uploadedUrls = {
-        frontImageUrl: data.frontImageUrl,
-        backImageUrl: data.backImageUrl,
-        liveCapture: data.liveCaptureUrl,
+      // The API expects userId at the root and KYC details nested under 'kyc'.
+      const payload = {
+        userId: user_id, // Pass the userId here
+        kyc: {
+          aadharOrGovtId: data.aadharOrGovtId,
+          salaryOrEarning: data.salaryOrEarning,
+          frontImageUrl: data.frontImageUrl,
+          backImageUrl: data.backImageUrl,
+          liveCaptureUrl: data.liveCaptureUrl,
+          status: 'PENDING',
+        },
       };
 
       if (data.frontImageUrl instanceof File) {
-        const frontFormData = new FormData();
-        frontFormData.append('frontImageUrl', data.frontImageUrl);
-
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          frontFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
+        payload.kyc.frontImageUrl = await uploadImage(
+          data.frontImageUrl,
+          'frontImageUrl',
         );
-        uploadedUrls.frontImageUrl = response.data.data.Location;
       }
       if (data.backImageUrl instanceof File) {
-        const backFormData = new FormData();
-        backFormData.append('backImageUrl', data.backImageUrl);
-
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          backFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
+        payload.kyc.backImageUrl = await uploadImage(
+          data.backImageUrl,
+          'backImageUrl',
         );
-        uploadedUrls.backImageUrl = response.data.data.Location;
       }
       if (data.liveCaptureUrl instanceof File) {
-        const liveFormData = new FormData();
-        liveFormData.append('liveCaptureUrl', data.liveCaptureUrl);
-        const response = await axiosInstance.post(
-          '/register/upload-image',
-          liveFormData,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
+        payload.kyc.liveCaptureUrl = await uploadImage(
+          data.liveCaptureUrl,
+          'liveCaptureUrl',
         );
-        uploadedUrls.liveCapture = response.data.data.Location;
       }
 
-      const kyc = {
-        aadharOrGovtId: data.aadharOrGovtId,
-        frontImageUrl: uploadedUrls.frontImageUrl,
-        backImageUrl: uploadedUrls.backImageUrl,
-        liveCapture: uploadedUrls.liveCapture,
-        status: 'APPLIED',
-      };
-
-      await axiosInstance.put(`/freelancer/kyc`, kyc);
-
-      setUser({
-        ...user,
-        kyc: {
-          ...user?.kyc,
-          aadharOrGovtId: data.aadharOrGovtId,
-          frontImageUrl: uploadedUrls.frontImageUrl,
-          backImageUrl: uploadedUrls.backImageUrl,
-          liveCaptureUrl: uploadedUrls.liveCapture,
-        },
-      });
+      await axiosInstance.put(`/freelancer/kyc`, payload);
+      setKycStatus('APPLIED');
 
       toast({
         title: 'KYC Updated',
@@ -182,38 +164,45 @@ export default function KYCForm({ user_id }: { user_id: string }) {
   }
 
   return (
-    <Card className="p-10 shadow-lg relative rounded-2xl w-full max-w-7xl min-h-[80vh] mx-auto">
-      <Form {...form}>
-        <div className="flex flex-col mb-4 sm:mb-6 text-center sm:text-left">
-          <div className="text-sm sm:text-base font-medium">
-            KYC Status{' '}
-            <Badge
-              className={`text-xs py-0.5 ${kycBadgeColors[kycStatus] || ''}`}
-            >
-              {kycStatus.toLowerCase()}
-            </Badge>
-          </div>
-        </div>
-
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 md:grid-cols-2"
+    <Card className="p-8 md:p-12 shadow-lg relative rounded-xl w-full max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">KYC Verification</h2>
+        <Badge
+          className={`text-sm px-3 py-1 font-semibold capitalize ${kycBadgeColors[kycStatus] || ''}`}
         >
-          <Separator className="col-span-1 md:col-span-2" />
-
+          {kycStatus.toLowerCase()}
+        </Badge>
+      </div>
+      <Separator className="my-6" />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
             name="aadharOrGovtId"
             render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className="font-semibold text-sm sm:text-base">
-                  Aadhar or Govt Id
-                </FormLabel>
+              <FormItem>
+                <FormLabel>Aadhar or Govt ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your ID number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* New Field for Salary/Earning */}
+          <FormField
+            control={form.control}
+            name="salaryOrEarning"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Salary/Earning</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Enter your Aadhar Id"
+                    placeholder="Enter your annual salary or earning"
+                    type="number"
                     {...field}
-                    className="w-2/3 border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -221,111 +210,117 @@ export default function KYCForm({ user_id }: { user_id: string }) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="frontImageUrl"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className="font-semibold text-sm sm:text-base">
-                  Document Front Img
-                </FormLabel>
-                <FormControl>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
-                    {field.value && typeof field.value === 'string' ? (
-                      <>
-                        <Image
-                          src={field.value}
-                          alt="Front Document"
-                          width={250}
-                          height={250}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.onChange('')}
-                        >
-                          Change Image
-                        </Button>
-                      </>
-                    ) : (
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) field.onChange(file);
-                        }}
-                        onBlur={field.onBlur}
-                        className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FormField
+              control={form.control}
+              name="frontImageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Front Image</FormLabel>
+                  <FormControl>
+                    <div className="flex flex-col items-center gap-4">
+                      {field.value && typeof field.value === 'string' ? (
+                        <>
+                          <Image
+                            src={field.value}
+                            alt="Front Document"
+                            width={200}
+                            height={150}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => field.onChange(null)}
+                            className="w-full"
+                          >
+                            Change Image
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="w-full">
+                          <Input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) field.onChange(file);
+                            }}
+                            onBlur={field.onBlur}
+                            className="cursor-pointer"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            (PNG, JPG, JPEG)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="backImageUrl"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className="font-semibold text-sm sm:text-base">
-                  Document Back Img
-                </FormLabel>
-                <FormControl>
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
-                    {field.value && typeof field.value === 'string' ? (
-                      <>
-                        <Image
-                          src={field.value}
-                          alt="Back Document"
-                          width={250}
-                          height={250}
-                          className="rounded-lg object-contain border shadow-sm"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => field.onChange('')}
-                        >
-                          Change Image
-                        </Button>
-                      </>
-                    ) : (
-                      <Input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) field.onChange(file);
-                        }}
-                        onBlur={field.onBlur}
-                        className="w-full border rounded-md px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormLabel className="font-semibold text-sm sm:text-base">
-            {/* Document Front Img */}
+            <FormField
+              control={form.control}
+              name="backImageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Document Back Image</FormLabel>
+                  <FormControl>
+                    <div className="flex flex-col items-center gap-4">
+                      {field.value && typeof field.value === 'string' ? (
+                        <>
+                          <Image
+                            src={field.value}
+                            alt="Back Document"
+                            width={200}
+                            height={150}
+                            className="rounded-lg object-contain border shadow-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => field.onChange(null)}
+                            className="w-full"
+                          >
+                            Change Image
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="w-full">
+                          <Input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) field.onChange(file);
+                            }}
+                            onBlur={field.onBlur}
+                            className="cursor-pointer"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            (PNG, JPG, JPEG)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <LiveCaptureField form={form} />
-          </FormLabel>
+          </div>
 
-          <Separator className="col-span-1 md:col-span-2" />
-
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2 mt-8">
             <Button
               type="submit"
-              className="w-full rounded-md px-6 py-3 text-sm font-semibold disabled:opacity-50"
+              className="w-full rounded-md px-6 py-3 text-base font-semibold"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Update KYC'}
+              {loading ? 'Submitting...' : 'Update KYC'}
             </Button>
           </div>
         </form>

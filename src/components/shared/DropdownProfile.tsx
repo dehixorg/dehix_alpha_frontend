@@ -1,5 +1,6 @@
+'use client';
 import React, { useEffect, useState } from 'react';
-import { UserIcon, LogOut, Copy, Check, Share2 } from 'lucide-react'; // Import Share2 icon
+import { UserIcon, LogOut, Copy, Check, Share2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
+import FAQAccordion from '@/components/accordian/faqAccordian';
 
 const useShare = () => {
   const share = async (title: string, text: string, url: string) => {
@@ -55,11 +57,12 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const [userType, setUserType] = useState<string | null>(null); // Added userType state
+  const [userType, setUserType] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string>('');
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
+  const [isFaqOpen, setIsFaqOpen] = useState(false); // New state for FAQ dialog
   const share = useShare();
 
   const pathname = usePathname();
@@ -67,23 +70,21 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const reportType = getReportTypeFromPath(pathname);
 
   useEffect(() => {
-    // Check if user type is available in Redux store
     if (user?.type) {
       setUserType(user.type);
     } else {
-      // If not, get it from cookies
       const storedUserType = Cookies.get('userType');
       setUserType(storedUserType || null);
     }
   }, [user]);
 
-  // Fetch referral code from API
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
-        const fetchCode = response.data.data?.referral?.referralCode || '';
+        const fetchCode = response.data?.referral?.referralCode || '';
+        console.log(fetchCode);
         const connects =
           response.data?.data?.connects ?? response.data?.connects ?? 0;
 
@@ -99,7 +100,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           variant: 'destructive',
           title: 'Error',
           description: 'Something went wrong.Please try again.',
-        }); // Error toast
+        });
       } finally {
         setLoading(false);
       }
@@ -124,22 +125,24 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
     setIsReferralOpen(true);
   };
 
+  const handleFaqClick = () => {
+    setIsFaqOpen(true);
+  };
+
   const handleShare = (text: string) => {
     share('Referral Link', 'Check out this referral link!', text);
   };
 
-  // Generate referral link
   const referralLink = referralCode
     ? `${process.env.NEXT_PUBLIC__BASE_URL}auth/sign-up/freelancer?referral=${referralCode}`
     : '';
 
-  // Handle Copy to Clipboard
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).then(
       () => {
         setCopied(text);
         setTimeout(() => {
-          setCopied(null); // Reset after a few seconds
+          setCopied(null);
         }, 2000);
       },
       (err) => {
@@ -184,9 +187,8 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
               <p>Loading...</p>
             )}
           </div>
-          <Link href="/settings/support">
-            <DropdownMenuItem>Support</DropdownMenuItem>
-          </Link>
+          {/* Changed to a DropdownMenuItem with an onClick handler */}
+          <DropdownMenuItem onClick={handleFaqClick}>FAQs</DropdownMenuItem>
           <DropdownMenuItem onClick={handleReferralClick}>
             Referral
           </DropdownMenuItem>
@@ -233,7 +235,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             </p>
           ) : referralCode ? (
             <>
-              {/* Referral Link Section */}
               <div className="mt-4">
                 <p className="text-sm sm:text-base font-medium text-gray-300">
                   Referral Link:
@@ -244,14 +245,14 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 max-w-full break-words sm:truncate"
-                    title={referralLink} // Tooltip for the full link
+                    title={referralLink}
                   >
                     {truncateDescription(referralLink, 60)}
                   </a>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleShare(referralLink)} // Share Button
+                    onClick={() => handleShare(referralLink)}
                     className="ml-2 sm:ml-4"
                   >
                     <Share2 size={16} />
@@ -259,7 +260,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
                 </div>
               </div>
 
-              {/* Referral Code Section */}
               <div className="mt-4">
                 <p className="text-sm sm:text-base font-medium text-gray-300">
                   Referral Code:
@@ -288,6 +288,19 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
               No referral code is available for this user.
             </p>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* FAQ Popup */}
+      <Dialog open={isFaqOpen} onOpenChange={setIsFaqOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Frequently Asked Questions</DialogTitle>
+            <DialogDescription>
+              Find answers to common questions about our services.
+            </DialogDescription>
+          </DialogHeader>
+          <FAQAccordion />
         </DialogContent>
       </Dialog>
     </>

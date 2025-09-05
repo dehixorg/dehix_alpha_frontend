@@ -1,11 +1,25 @@
 'use client';
-import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useSelector } from 'react-redux';
 
 import { Button } from '../ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '../ui/dialog';
 import { PersonalInfo } from '../form/resumeform/PersonalInfo';
 import { EducationInfo } from '../form/resumeform/EducationInfo';
 import { SkillInfo } from '../form/resumeform/SkillInfo';
@@ -194,8 +208,51 @@ export default function ResumeEditor({
   const [showAtsScore, setShowAtsScore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const user = useSelector((state: RootState) => state.user);
   const resumeRef = useRef<HTMLDivElement>(null);
+
+  // Add optimization for PDF content
+  const optimizePdfContent = () => {
+    if (resumeRef.current) {
+      const content = resumeRef.current.querySelector('.resumeContent');
+      if (content) {
+        // Apply print-specific styles
+        content.classList.add('pdf-optimized');
+      }
+    }
+  };
+
+  // Ensure optimizations are applied before PDF generation
+  useEffect(() => {
+    // Add a global print stylesheet for PDF generation
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        .pdf-optimized {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .pdf-optimized * {
+          font-family: 'Arial', sans-serif !important;
+        }
+        .pdf-optimized h1, .pdf-optimized h2 {
+          margin-bottom: 8px !important;
+        }
+        .pdf-optimized p {
+          margin-bottom: 4px !important;
+          line-height: 1.4 !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const steps = [
     <PersonalInfo
@@ -290,6 +347,7 @@ export default function ResumeEditor({
         professionalSummary: summaryData.join(' '),
         selectedTemplate,
         selectedColor,
+        status: 'active',
       };
 
       if (initialResume?._id) {
@@ -321,45 +379,167 @@ export default function ResumeEditor({
     if (!resumeRef.current) return;
     setIsGeneratingPDF(true);
 
+    // Apply optimization before PDF generation
+    optimizePdfContent();
+
     try {
+      // Get the resume content element
       const element = resumeRef.current.querySelector(
         '.resumeContent',
       ) as HTMLElement;
+
+      // Apply better PDF generation settings
       const canvas = await html2canvas(element, {
-        scale: selectedTemplate === 'ResumePreview1' ? 1.5 : 2,
+        scale: 3, // Higher scale for better quality
         backgroundColor: '#FFFFFF',
-        logging: true, // Enable to see console logs for debugging
+        logging: false,
         useCORS: true,
         allowTaint: true,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: document.documentElement.offsetWidth,
+        onclone: (clonedDoc) => {
+          // Ensure styles are properly applied in the cloned document
+          const clonedElement = clonedDoc.querySelector('.resumeContent');
+          if (clonedElement) {
+            // Force all elements to render with correct styles and layout
+            Array.from(clonedElement.querySelectorAll('*')).forEach((el) => {
+              if (el instanceof HTMLElement) {
+                el.style.margin = window.getComputedStyle(el).margin;
+                el.style.padding = window.getComputedStyle(el).padding;
+                el.style.fontSize = window.getComputedStyle(el).fontSize;
+                el.style.fontFamily = window.getComputedStyle(el).fontFamily;
+                el.style.lineHeight = window.getComputedStyle(el).lineHeight;
+                el.style.color = window.getComputedStyle(el).color;
+                el.style.backgroundColor =
+                  window.getComputedStyle(el).backgroundColor;
+                el.style.border = window.getComputedStyle(el).border;
+              }
+            });
+          }
+        },
       });
 
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
+      // Create PDF with better quality settings
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+        precision: 16,
+      });
+
+      const imgData = canvas.toDataURL('image/png', 1.0); // Use maximum quality
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Calculate the aspect ratio to maintain proportions
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
 
-      // Check if content exceeds page height
-      const heightLeft = pdfHeight;
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgPdfWidth = imgWidth * ratio;
+      const imgPdfHeight = imgHeight * ratio;
 
-      if (heightLeft >= pageHeight) {
-        while (position < heightLeft) {
-          position += pageHeight;
+      // Center the image on the page
+      const xOffset = (pdfWidth - imgPdfWidth) / 2;
+      const yOffset = 0;
+
+      // Add image to the PDF with better positioning
+      pdf.addImage(
+        imgData,
+        'PNG',
+        xOffset,
+        yOffset,
+        imgPdfWidth,
+        imgPdfHeight,
+        undefined,
+        'FAST',
+      );
+
+      // Handle multiple pages if content is too long
+      if (imgPdfHeight > pdfHeight) {
+        let heightLeft = imgPdfHeight;
+        let position = -pdfHeight; // Start position for the second page
+
+        while (heightLeft > pdfHeight) {
+          position = position - pdfHeight;
+          heightLeft = heightLeft - pdfHeight;
+
           pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, -position, pdfWidth, pdfHeight);
+          pdf.addImage(
+            imgData,
+            'PNG',
+            xOffset,
+            position,
+            imgPdfWidth,
+            imgPdfHeight,
+            undefined,
+            'FAST',
+          );
         }
       }
 
-      pdf.save(`Resume-${new Date().toISOString().slice(0, 10)}.pdf`);
+      pdf.save(
+        `Resume-${personalData[0]?.firstName || ''}-${personalData[0]?.lastName || ''}-${new Date().toISOString().slice(0, 10)}.pdf`,
+      );
+
+      toast({
+        title: 'Success',
+        description: 'Resume PDF generated successfully!',
+      });
     } catch (error) {
       console.error('Error generating PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate PDF. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsGeneratingPDF(false);
     }
+  };
+
+  const handleDeleteResume = async () => {
+    if (!initialResume?._id) {
+      toast({
+        title: 'Error',
+        description: 'No resume to delete',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Instead of deleting, update the status to 'inactive'
+      await axiosInstance.put(`/resume/${initialResume._id}`, {
+        status: 'inactive',
+      });
+      toast({
+        title: 'Success',
+        description: 'Resume deleted successfully!',
+      });
+      setShowDeleteDialog(false);
+      // Navigate back to resumes list
+      onCancel();
+    } catch (error) {
+      console.error('Error deleting resume:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete resume',
+        variant: 'destructive',
+      });
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteDialog = () => {
+    setShowDeleteDialog(true);
   };
 
   return (
@@ -440,11 +620,22 @@ export default function ResumeEditor({
 
                 {steps[currentStep]}
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-end gap-3">
+                  {initialResume?._id && (
+                    <Button
+                      onClick={openDeleteDialog}
+                      disabled={isDeleting || isSubmitting}
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Resume
+                    </Button>
+                  )}
                   <Button
                     onClick={handleSubmitResume}
-                    disabled={isSubmitting}
-                    className="bg-green-600 hover:bg-green-700"
+                    disabled={isSubmitting || isDeleting}
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white"
                   >
                     {isSubmitting ? 'Saving...' : 'Save Resume'}
                   </Button>
@@ -493,7 +684,17 @@ export default function ResumeEditor({
                 </Button>
               </div>
 
-              <div className="resumeContent pt-4">
+              <div
+                className="resumeContent pt-4"
+                style={{
+                  backgroundColor: 'white',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  overflow: 'hidden',
+                  width: '100%',
+                  maxWidth: '794px', // A4 width in pixels at 96 DPI
+                  margin: '0 auto',
+                }}
+              >
                 {selectedTemplate === 'ResumePreview1' ? (
                   <ResumePreview1
                     personalData={personalData}
@@ -522,6 +723,47 @@ export default function ResumeEditor({
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog - Inline Implementation */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 py-4">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Resume
+            </DialogTitle>
+            <DialogDescription className="text-gray-700 dark:text-gray-300">
+              Are you sure you want to delete the resume for `
+              {personalData[0]?.firstName} {personalData[0]?.lastName}`?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteResume}
+              disabled={isDeleting}
+              className="flex-1 bg-white text-black"
+            >
+              {isDeleting ? (
+                'Deleting...'
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -48,7 +48,7 @@ type Interview = {
   interviewDate?: string;
   intervieweeName?: string;
   description?: string;
-  interviewBids?: InterviewBid[]; // Array of bids
+  interviewBids?: Record<string, InterviewBid>; // Object of bids
   InterviewStatus?: string;
   skillName?: string;
 };
