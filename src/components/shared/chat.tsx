@@ -965,13 +965,13 @@ export function CardsChat({
                       <Flag className="h-4 w-4" />
                       <span className="text-sm font-medium">Report</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
+                    {/* <DropdownMenuItem
                       className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                      onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
+                      onSelect={() => router.push('/report')} // Use onSelect for dropdowns
                     >
                       <HelpCircle className="mr-2 h-4 w-4" />
                       <span>Help</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

@@ -121,7 +121,7 @@ export default function KYCForm({ user_id }: { user_id: string }) {
           frontImageUrl: data.frontImageUrl,
           backImageUrl: data.backImageUrl,
           liveCaptureUrl: data.liveCaptureUrl,
-          status: 'APPLIED',
+          status: 'PENDING',
         },
       };
 

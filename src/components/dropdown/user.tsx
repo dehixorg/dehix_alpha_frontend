@@ -46,7 +46,6 @@ const UserDropdownMenu: React.FC<UserDropdownMenuProps> = ({ email, type }) => {
             Settings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>Logout</DropdownMenuItem>
       </DropdownMenuContent>
