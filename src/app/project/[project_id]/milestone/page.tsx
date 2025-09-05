@@ -180,7 +180,7 @@ const Page = () => {
   }, [fetchMilestones]);
 
   return (
-    <div className="flex h-auto w-full flex-col bg-muted/40 overflow-x-hidden">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -213,44 +213,49 @@ const Page = () => {
               <p>Loading milestones...</p>
             </div>
           ) : milestones.length > 0 ? (
-            <div className="space-y-4">
-              {/* First Row: Timeline - Full Width */}
-              <div className="w-full">
-                <MilestoneTimeline
-                  milestones={milestones}
-                  handleStorySubmit={handleStorySubmit}
-                  fetchMilestones={fetchMilestones}
-                  isFreelancer={true}
-                  selectedIndex={selectedMilestoneIndex}
-                  onMilestoneSelect={(index) =>
-                    setSelectedMilestoneIndex(index)
-                  }
+            <div className="flex flex-col md:flex-row gap-3 w-full max-w-full">
+              {/* Left Part: FreelancerList */}
+              <div className="w-full md:w-[260px] flex-shrink-0 min-w-0 max-w-full">
+                <FreelancerList
+                  projectId={project_id}
+                  onChatClick={handleChatClick}
+                  className="w-full max-w-full"
                 />
               </div>
 
-              {/* Second Row: Two Columns */}
-              {selectedMilestoneIndex !== null && (
-                <div className="flex flex-col xl:flex-row gap-4 min-h-0">
-                  {/* Left Column: Freelancer List */}
-                  <div className="w-full xl:w-80 xl:flex-shrink-0">
-                    <FreelancerList
-                      projectId={project_id}
-                      onChatClick={handleChatClick}
-                      className="sticky top-4 h-[300px] xl:h-[400px] max-w-none xl:max-w-md"
+              {/* Right Part */}
+              <div className="flex-1 flex flex-col gap-3 min-w-0 w-full max-w-full overflow-x-hidden">
+                {/* Top: MilestoneTimeline */}
+                <div className="min-w-0 w-full max-w-full md:h-[280px]">
+                  <div className="w-full max-w-full">
+                    <MilestoneTimeline
+                      fetchMilestones={fetchMilestones}
+                      milestones={milestones}
+                      handleStorySubmit={handleStorySubmit}
+                      selectedIndex={selectedMilestoneIndex}
+                      onMilestoneSelect={(index) =>
+                        setSelectedMilestoneIndex(index)
+                      }
                     />
                   </div>
+                </div>
 
-                  {/* Right Column: Stories */}
-                  <div className="flex-1 min-w-0">
+                {/* Bottom: StoriesSection (milestone cards) */}
+                {selectedMilestoneIndex !== null && (
+                  <div className="min-w-0 w-full max-w-full">
                     <StoriesSection
+                      key={
+                        milestones[selectedMilestoneIndex]?._id ??
+                        selectedMilestoneIndex
+                      }
                       milestone={milestones[selectedMilestoneIndex]}
                       fetchMilestones={fetchMilestones}
                       handleStorySubmit={handleStorySubmit}
                       isFreelancer={true}
                     />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex justify-center items-center h-[40vh] w-full">
