@@ -43,7 +43,11 @@ const FAQAccordion = () => {
       className="w-full mx-auto max-w-2xl divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white shadow-md"
     >
       {questions.map((item, index) => (
-        <AccordionItem key={index} value={`item-${index}`} className="px-4 py-2">
+        <AccordionItem
+          key={index}
+          value={`item-${index}`}
+          className="px-4 py-2"
+        >
           <AccordionTrigger className="text-left font-semibold text-lg hover:text-blue-600 transition-colors duration-200">
             {item.question}
           </AccordionTrigger>

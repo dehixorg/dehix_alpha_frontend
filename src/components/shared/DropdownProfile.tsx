@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/dialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
-import FAQAccordion from '@/components/accordian/faqAccordian'; 
+import FAQAccordion from '@/components/accordian/faqAccordian';
 
 const useShare = () => {
   const share = async (title: string, text: string, url: string) => {
@@ -84,7 +84,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
       try {
         const response = await axiosInstance.get(`/${user.type}/${user?.uid}`);
         const fetchCode = response.data?.referral?.referralCode || '';
-        console.log(fetchCode)
+        console.log(fetchCode);
         const connects =
           response.data?.data?.connects ?? response.data?.connects ?? 0;
 
@@ -134,7 +134,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   };
 
   const referralLink = referralCode
-  
     ? `${process.env.NEXT_PUBLIC__BASE_URL}auth/sign-up/freelancer?referral=${referralCode}`
     : '';
 
@@ -189,9 +188,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             )}
           </div>
           {/* Changed to a DropdownMenuItem with an onClick handler */}
-          <DropdownMenuItem onClick={handleFaqClick}>
-            FAQs
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleFaqClick}>FAQs</DropdownMenuItem>
           <DropdownMenuItem onClick={handleReferralClick}>
             Referral
           </DropdownMenuItem>
@@ -293,7 +290,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
           )}
         </DialogContent>
       </Dialog>
-      
+
       {/* FAQ Popup */}
       <Dialog open={isFaqOpen} onOpenChange={setIsFaqOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

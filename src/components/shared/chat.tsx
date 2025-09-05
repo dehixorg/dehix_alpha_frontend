@@ -16,11 +16,10 @@ import {
   Italic,
   Underline,
   CheckCheck,
-  Flag, // Added
-  HelpCircle,
-  Mic, // Added for voice recording
-  StopCircle, // Added for stopping recording
-  Trash2, // Added for discarding recording
+  Flag,
+  Mic, 
+  StopCircle, 
+  Trash2, 
   X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -147,7 +146,6 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
 }: CardsChatProps) {
-  const router = useRouter();
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',

@@ -71,7 +71,6 @@ type ProjectCardProps = React.ComponentProps<typeof Card> & {
 export function ProjectCard({
   cardClassName,
   project,
-  type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
