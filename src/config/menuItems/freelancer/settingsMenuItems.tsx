@@ -36,6 +36,11 @@ export const menuItemsTop: MenuItem[] = [
     label: 'Personal Info',
   },
   {
+    href: '/freelancer/settings/kyc',
+    icon: <User className="h-5 w-5" />,
+    label: 'KYC',
+  },
+  {
     href: '/freelancer/settings/professional-info',
     icon: <Briefcase className="h-5 w-5" />,
     label: 'Professional Info',

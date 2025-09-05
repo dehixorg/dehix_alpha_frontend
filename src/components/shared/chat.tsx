@@ -16,11 +16,10 @@ import {
   Italic,
   Underline,
   CheckCheck,
-  Flag, // Added
-  HelpCircle,
-  Mic, // Added for voice recording
-  StopCircle, // Added for stopping recording
-  Trash2, // Added for discarding recording
+  Flag,
+  Mic, 
+  StopCircle, 
+  Trash2, 
   X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -147,7 +146,6 @@ export function CardsChat({
   onToggleExpand,
   onOpenProfileSidebar,
 }: CardsChatProps) {
-  const router = useRouter();
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
     email: '',
@@ -965,13 +963,13 @@ export function CardsChat({
                       <Flag className="h-4 w-4" />
                       <span className="text-sm font-medium">Report</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
+                    {/* <DropdownMenuItem
                       className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                      onSelect={() => router.push('/settings/support')} // Use onSelect for dropdowns
+                      onSelect={() => router.push('/report')} // Use onSelect for dropdowns
                     >
                       <HelpCircle className="mr-2 h-4 w-4" />
                       <span>Help</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
