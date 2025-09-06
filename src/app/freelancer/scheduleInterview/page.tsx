@@ -3,17 +3,10 @@ import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { GraduationCap, Briefcase, Users, UserCheck } from 'lucide-react';
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
-import Header from '@/components/header/header';
 import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
 import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
 import HistoryInterviews from '@/components/freelancer/scheduleInterview/HistoryInterviews';

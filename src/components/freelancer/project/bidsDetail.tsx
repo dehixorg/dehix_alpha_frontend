@@ -1408,11 +1408,14 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                               <Skeleton className="h-8 w-48" />
                               <Skeleton className="h-9 w-32" />
                             </div>
-                            
+
                             {/* Table Rows Skeleton */}
                             <div className="space-y-2">
                               {[...Array(5)].map((_, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between p-4 border rounded-lg"
+                                >
                                   <div className="flex items-center space-x-4">
                                     <Skeleton className="h-10 w-10 rounded-full" />
                                     <div className="space-y-2">
@@ -1428,7 +1431,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                 </div>
                               ))}
                             </div>
-                            
+
                             {/* Pagination Skeleton */}
                             <div className="flex justify-between items-center pt-2">
                               <Skeleton className="h-8 w-24" />
