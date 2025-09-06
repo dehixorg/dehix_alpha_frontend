@@ -44,13 +44,37 @@ export default function RejectedProject() {
   const [projectStatus, setProjectStatus] = useState('REJECTED');
   const [projectType, setProjectType] = useState('CONSULTANT');
 
-  const statusOptions: { value: string; label: string; description: string }[] = [
-    { value: 'REJECTED', label: 'Rejected Projects', description: 'Explore and Review projects that were not selected and gain insights for future submissions.' },
-    { value: 'COMPLETED', label: 'Completed Projects', description: 'Explore and manage your successfully completed freelance projects.' },
-    { value: 'ACTIVE', label: 'Active Projects', description: 'Browse and manage your active freelance projects.' },
-    { value: 'PENDING', label: 'Projects Under Verification', description: 'Track the status of your projects currently undergoing verification before final approval.' },
-    { value: 'ALL', label: 'All Projects', description: 'View all projects associated with your profile.' },
-  ];
+  const statusOptions: { value: string; label: string; description: string }[] =
+    [
+      {
+        value: 'REJECTED',
+        label: 'Rejected Projects',
+        description:
+          'Explore and Review projects that were not selected and gain insights for future submissions.',
+      },
+      {
+        value: 'COMPLETED',
+        label: 'Completed Projects',
+        description:
+          'Explore and manage your successfully completed freelance projects.',
+      },
+      {
+        value: 'ACTIVE',
+        label: 'Active Projects',
+        description: 'Browse and manage your active freelance projects.',
+      },
+      {
+        value: 'PENDING',
+        label: 'Projects Under Verification',
+        description:
+          'Track the status of your projects currently undergoing verification before final approval.',
+      },
+      {
+        value: 'ALL',
+        label: 'All Projects',
+        description: 'View all projects associated with your profile.',
+      },
+    ];
 
   const typeOptions: { value: string; label: string }[] = [
     { value: 'CONSULTANT', label: 'Consultant' },
@@ -58,7 +82,9 @@ export default function RejectedProject() {
     { value: 'ALL', label: 'All Types' },
   ];
 
-  const currentStatus = statusOptions.find(option => option.value === projectStatus);
+  const currentStatus = statusOptions.find(
+    (option) => option.value === projectStatus,
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,12 +95,14 @@ export default function RejectedProject() {
         if (projectStatus !== 'ALL') {
           url += `status=${projectStatus}&`;
         }
-        
+
         if (projectType !== 'ALL') {
           url += `project_type=${projectType}`;
         }
 
-        const response = await axiosInstance.get(url.endsWith('&') ? url.slice(0, -1) : url);
+        const response = await axiosInstance.get(
+          url.endsWith('&') ? url.slice(0, -1) : url,
+        );
         setProjects(response.data.data);
       } catch (error) {
         toast({
@@ -101,7 +129,10 @@ export default function RejectedProject() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="project-type" className="text-gray-600 font-medium">
+              <label
+                htmlFor="project-type"
+                className="text-gray-600 font-medium"
+              >
                 Filter by Type:
               </label>
               <select
@@ -118,7 +149,10 @@ export default function RejectedProject() {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor="project-status" className="text-gray-600 font-medium">
+              <label
+                htmlFor="project-status"
+                className="text-gray-600 font-medium"
+              >
                 Filter by Status:
               </label>
               <select
@@ -136,7 +170,7 @@ export default function RejectedProject() {
             </div>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[50vh]">
             <Loader2 size={40} className="animate-spin" />

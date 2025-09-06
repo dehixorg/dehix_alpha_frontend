@@ -43,24 +43,50 @@ export default function CompletedProject() {
   const [isLoading, setIsLoading] = useState(false);
   const [projectStatus, setProjectStatus] = useState('COMPLETED');
 
-  const statusOptions: { value: string; label: string; description: string }[] = [
-    { value: 'COMPLETED', label: 'Completed Projects', description: 'Explore and manage your successfully completed freelance projects.' },
-    { value: 'ACTIVE', label: 'Active Projects', description: 'Browse and manage your active freelance projects.' },
-    { value: 'PENDING', label: 'Projects Under Verification', description: 'Track the status of your projects currently undergoing verification before final approval.' },
-    { value: 'REJECTED', label: 'Rejected Projects', description: 'View the list of projects that have been rejected.' },
-    { value: 'ALL', label: 'All Projects', description: 'View all projects associated with your profile.' },
-  ];
+  const statusOptions: { value: string; label: string; description: string }[] =
+    [
+      {
+        value: 'COMPLETED',
+        label: 'Completed Projects',
+        description:
+          'Explore and manage your successfully completed freelance projects.',
+      },
+      {
+        value: 'ACTIVE',
+        label: 'Active Projects',
+        description: 'Browse and manage your active freelance projects.',
+      },
+      {
+        value: 'PENDING',
+        label: 'Projects Under Verification',
+        description:
+          'Track the status of your projects currently undergoing verification before final approval.',
+      },
+      {
+        value: 'REJECTED',
+        label: 'Rejected Projects',
+        description: 'View the list of projects that have been rejected.',
+      },
+      {
+        value: 'ALL',
+        label: 'All Projects',
+        description: 'View all projects associated with your profile.',
+      },
+    ];
 
-  const currentStatus = statusOptions.find(option => option.value === projectStatus);
+  const currentStatus = statusOptions.find(
+    (option) => option.value === projectStatus,
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const url = projectStatus === 'ALL'
-          ? `/freelancer/project`
-          : `/freelancer/project?status=${projectStatus}`;
-        
+        const url =
+          projectStatus === 'ALL'
+            ? `/freelancer/project`
+            : `/freelancer/project?status=${projectStatus}`;
+
         const response = await axiosInstance.get(url);
         setProjects(response.data.data);
       } catch (error) {
@@ -87,7 +113,10 @@ export default function CompletedProject() {
             <p className="text-gray-400 mt-2">{currentStatus?.description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="project-status" className="text-gray-600 font-medium">
+            <label
+              htmlFor="project-status"
+              className="text-gray-600 font-medium"
+            >
               Filter by Status:
             </label>
             <select
