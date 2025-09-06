@@ -41,13 +41,14 @@ export default function CurrentProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [projectType, setProjectType] = useState('CONSULTANT');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(
-          `/freelancer/project?status=ACTIVE`,
+          `/freelancer/project?status=ACTIVE&project_type=${projectType}`,
         );
 
         setProjects(response.data.data);
@@ -55,8 +56,8 @@ export default function CurrentProject() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Something went wrong.Please try again.',
-        }); // Error toast
+          description: 'Something went wrong. Please try again.',
+        });
         console.error('API Error:', error);
       } finally {
         setIsLoading(false);
@@ -64,17 +65,31 @@ export default function CurrentProject() {
     };
 
     fetchData();
-  }, [user.uid]);
+  }, [user.uid, projectType]);
 
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
-        <div className="mb-8 ml-6">
-          <div className="w-full">
+        <div className="flex justify-between items-center mb-8 ml-6 pr-6">
+          <div>
             <h1 className="text-3xl font-bold">Current Projects</h1>
             <p className="text-gray-400 mt-2">
               Browse and manage your active freelance projects
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="project-type" className="text-gray-600 font-medium">
+              Filter by:
+            </label>
+            <select
+              id="project-type"
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="CONSULTANT">Consultant</option>
+              <option value="FREELANCER">Freelancer</option>
+            </select>
           </div>
         </div>
 
@@ -85,7 +100,7 @@ export default function CurrentProject() {
         ) : (
           <main
             className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+              grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
           >
             {projects?.length === 0 ? (
               <div className="col-span-full text-center mt-20 w-full">
