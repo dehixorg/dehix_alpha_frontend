@@ -16,6 +16,7 @@ export interface ProjectSkillCardProps {
   description?: string | undefined;
   email?: string;
   status?: string | undefined;
+  profileType?: string | undefined;
   startDate?: Date | null | undefined;
   endDate?: Date | null | undefined;
   domains?: string[];
@@ -29,6 +30,7 @@ function ProjectSkillCard({
   domainName,
   description,
   status,
+  profileType,
   startDate,
   endDate,
   isLastCard,
@@ -115,7 +117,9 @@ function ProjectSkillCard({
             {domainName}
           </HoverCardContent>
         </HoverCard>
-
+        <Badge className="bg-blue-100 text-blue-800 capitalize text-xs px-2 py-1 rounded-md">
+          {profileType?.toLocaleLowerCase() || 'Freelancer'}
+        </Badge>
         <Badge className="bg-green-100 text-green-800 capitalize text-xs px-2 py-1 rounded-md">
           {status?.toLocaleLowerCase() || 'Active'}
         </Badge>
