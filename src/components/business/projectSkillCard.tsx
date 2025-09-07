@@ -117,12 +117,14 @@ function ProjectSkillCard({
             {domainName}
           </HoverCardContent>
         </HoverCard>
-        <Badge className="bg-blue-100 text-blue-800 capitalize text-xs px-2 py-1 rounded-md">
-          {profileType?.toLocaleLowerCase() || 'Freelancer'}
-        </Badge>
-        <Badge className="bg-green-100 text-green-800 capitalize text-xs px-2 py-1 rounded-md">
-          {status?.toLocaleLowerCase() || 'Active'}
-        </Badge>
+        <div className="flex gap-2">
+          <Badge className="bg-blue-100 text-blue-800 capitalize text-xs px-2 py-1 rounded-md">
+            {profileType?.toLocaleLowerCase() || 'Freelancer'}
+          </Badge>
+          <Badge className="bg-green-100 text-green-800 capitalize text-xs px-2 py-1 rounded-md">
+            {status?.toLocaleLowerCase() || 'Active'}
+          </Badge>
+        </div>
       </div>
 
       {/* Team members section with fixed height and scroll if needed */}
