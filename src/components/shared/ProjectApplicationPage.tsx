@@ -14,6 +14,7 @@ import {
   Eye,
   UserCircle,
   ChevronDown,
+  X,
 } from 'lucide-react';
 
 import { Textarea } from '../ui/textarea';
@@ -91,7 +92,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [isBidSubmitted, setIsBidSubmitted] = useState(false);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [isBidLoading, setIsBidLoading] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   // State to control ProjectAnalyticsDrawer visibility
   const [showAnalyticsDrawer, setShowAnalyticsDrawer] = useState(false);
@@ -110,6 +110,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
@@ -312,12 +313,15 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         profile_id: selectedProfile._id,
         project_id: project._id,
         biddingValue: bidAmount,
+        profile_type:selectedProfile.profileType
       };
+
 
       // Add freelancer profile ID if selected
       if (selectedFreelancerProfile?._id) {
         bidData.freelancer_profile_id = selectedFreelancerProfile._id;
       }
+      console.log(bidData)
       await axiosInstance.post(`/bid`, bidData);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
@@ -382,6 +386,16 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       </div>
     );
   }
+  const handleProfileSelection = (profile: Profile) => {
+  setSelectedProfile((prevSelected) => {
+    // If the clicked profile is already the selected one, deselect it.
+    if (prevSelected?._id === profile._id) {
+      return null;
+    }
+    // Otherwise, select the new profile.
+    return profile;
+  });
+};
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -534,23 +548,43 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                   <CardTitle className="text-lg font-medium">
                     Your Application
                   </CardTitle>
-                  <div className="relative profile-dropdown-container">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setShowProfileDropdown(!showProfileDropdown)
-                      }
-                      className="flex items-center gap-2"
-                      disabled={hasAppliedToAnyProfileInProject}
-                    >
-                      {selectedFreelancerProfile
-                        ? selectedFreelancerProfile.profileName
-                        : 'Add Profiles'}
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
-                      />
-                    </Button>
+                   <div className="flex items-center gap-2"> 
+      {/* Display selected profiles here */}
+      {selectedProfile && (
+  <div className="flex flex-wrap gap-2">
+    <Badge
+      key={selectedProfile._id}
+      variant="secondary"
+      className="border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 flex items-center gap-1"
+    >
+      {selectedProfile.domain || 'N/A'}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedProfile(null); // Direct deselect on click
+        }}
+        className="ml-1 text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100 focus:outline-none"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </Badge>
+  </div>
+)}
+
+      {/* The existing "Add Profiles" button */}
+      <div className="relative profile-dropdown-container">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+          className="flex items-center gap-2"
+          disabled={hasAppliedToAnyProfileInProject}
+        >
+          {selectedFreelancerProfile ? selectedFreelancerProfile.profileName : 'Add Profiles'}
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
+          />
+        </Button>
 
                     {/* Profile Dropdown */}
                     {showProfileDropdown && (
@@ -613,6 +647,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         )}
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -815,109 +850,83 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
               </CardContent>
             </Card>
             {project?.profiles?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">
-                    Profiles Needed
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
-                    {project?.profiles?.map((profile: any, index: any) => (
-                      <Card
-                        key={profile?._id || index}
-                        className="border border-gray-200"
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium text-xs">
-                              {profile?.domain} Developer
-                            </h3>
-                            <div className="flex items-center">
-                              <Badge variant="outline" className="ml-2">
-                                {profile?.profileType}
-                              </Badge>
-                              <Badge variant="outline">
-                                {profile?.freelancersRequired} Needed
-                              </Badge>
-                            </div>
-                          </div>
-                          <p className="mb-3 text-sm">{profile?.description}</p>
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Experience
-                              </p>
-                              <p className="font-medium">
-                                {profile?.experience}+ years
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Rate</p>
-                              <p className="font-medium">${profile?.rate}/hr</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Minimum Connect
-                              </p>
-                              <p className="font-medium">
-                                {profile?.minConnect}
-                              </p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 mb-2">Skills</p>
-                            <div className="flex flex-wrap gap-2">
-                              {profile?.skills?.map((skill: any, idx: any) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="border border-gray-200"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            className={`w-full mt-4 ${
-                              appliedProfileIds.includes(profile._id || '')
-                                ? 'cursor-not-allowed'
-                                : ''
-                            }`}
-                            onClick={() => {
-                              if (
-                                !appliedProfileIds.includes(profile._id || '')
-                              ) {
-                                setSelectedProfile(profile);
-                                setBidAmount(profile.minConnect || 0);
-                                setDialogOpen(true);
-                              } else {
-                                // If already applied to this specific profile, show analytics drawer
-                                setShowAnalyticsDrawer(true);
-                              }
-                            }}
-                            disabled={
-                              appliedProfileIds.includes(profile._id || '') ||
-                              isBidSubmitted // Disable if any profile for this project is applied
-                            }
-                          >
-                            {appliedProfileIds.includes(profile._id || '') ? (
-                              <span className="flex items-center justify-center">
-                                <Check className="mr-2 h-4 w-4" /> Applied
-                              </span>
-                            ) : (
-                              'Apply for this role'
-                            )}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-lg font-medium">
+        Profiles Needed
+      </CardTitle>
+    </CardHeader>
+     
+    <CardContent className="p-6">
+      <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
+        {project?.profiles?.map((profile: any, index: any) => (
+          <Card
+    key={profile?._id || index}
+    className={`border cursor-pointer ${
+      selectedProfile?._id === profile._id 
+        ? 'border-blue-500 ring-2 ring-blue-500'
+        : 'border-gray-200'
+    }`}
+    onClick={() => handleProfileSelection(profile)}
+  >
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium text-xs">
+                  {profile?.domain} Developer
+                </h3>
+                <div className="flex items-center">
+                  <Badge variant="outline" className="ml-2">
+                    {profile?.profileType}
+                  </Badge>
+                  <Badge variant="outline">
+                    {profile?.freelancersRequired} Needed
+                  </Badge>
+                </div>
+              </div>
+              <p className="mb-3 text-sm">{profile?.description}</p>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Experience
+                  </p>
+                  <p className="font-medium">
+                    {profile?.experience}+ years
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Rate</p>
+                  <p className="font-medium">${profile?.rate}/hr</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Minimum Connect
+                  </p>
+                  <p className="font-medium">
+                    {profile?.minConnect}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Skills</p>
+                <div className="flex flex-wrap gap-2">
+                  {profile?.skills?.map((skill: any, idx: any) => (
+                    <Badge
+                      key={idx}
+                      variant="secondary"
+                      className="border border-gray-200"
+                    >
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+)}
           </div>
         </>
       )}

@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
-import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
