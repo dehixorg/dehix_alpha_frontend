@@ -114,11 +114,38 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
     }
   }, [user?.uid, user.type, setConnects]);
 
-  const handleLogout = () => {
-    dispatch(clearUser());
-    Cookies.remove('userType');
-    Cookies.remove('token');
-    router.replace('/auth/login');
+  const handleLogout = async () => {
+    // Optimize by doing non-blocking operations first
+    const firebaseSignOut = async () => {
+      try {
+        const { auth } = await import('@/config/firebaseConfig');
+        await auth.signOut();
+      } catch (error) {
+        console.error('Error during sign out:', error);
+      }
+    };
+
+    // Clear client-side storage in parallel
+    Promise.all([
+      firebaseSignOut(),
+      // Clear cookies
+      (() => {
+        Cookies.remove('userType');
+        Cookies.remove('token');
+      })(),
+      // Clear localStorage
+      (() => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      })(),
+    ]).then(() => {
+      // Clear Redux store and redirect in the next tick
+      setTimeout(() => {
+        dispatch(clearUser());
+        // Use window.location for immediate redirect without React Router delay
+        window.location.href = '/auth/login';
+      }, 0);
+    });
   };
 
   const handleReferralClick = () => {
