@@ -779,7 +779,29 @@ const TalentCard: React.FC<TalentCardProps> = ({
         next={fetchTalentData}
         threshold={1}
       >
-        {loading && <Loader2 className="my-4 h-8 w-8 animate-spin" />}
+        {loading && (
+          <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
+            {[...Array(3)].map((_, index) => (
+              <div key={`skeleton-${index}`} className="w-full sm:w-[350px] lg:w-[450px]">
+                <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/6"></div>
+                  </div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </InfiniteScroll>
     </div>
   );

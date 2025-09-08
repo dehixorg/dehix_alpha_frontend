@@ -53,6 +53,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skillDomainData, setSkillDomainData] = useState<SkillDomainData[]>([]);
   const [statusVisibility, setStatusVisibility] = useState<boolean[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get the user data from Redux store
   const user = useSelector((state: RootState) => state.user);
@@ -192,7 +193,15 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
 
   // Fetch user data on mount
   useEffect(() => {
-    fetchUserData();
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchUserData();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
   }, [fetchUserData]);
 
   // Handle skill/domain submission
@@ -273,7 +282,28 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {skillDomainData.length > 0 ? (
+                {isLoading ? (
+                  // Skeleton loader
+                  [...Array(5)].map((_, index) => (
+                    <TableRow key={`skeleton-${index}`}>
+                      <TableCell>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-6 w-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : skillDomainData.length > 0 ? (
                   skillDomainData.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>{item.label}</TableCell>

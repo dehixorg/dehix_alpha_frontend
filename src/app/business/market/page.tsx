@@ -199,13 +199,7 @@ const Market: React.FC = () => {
             handleApply={handleApply}
             handleReset={handleReset}
           />
-          {isDataLoading ? (
-            <div className="mt-4 lg:mt-0 lg:ml-10 space-y-4 w-full flex justify-center items-center h-[60vh]">
-              <Loader2 size={40} className=" text-white animate-spin " />
-            </div>
-          ) : (
-            <FreelancerList freelancers={freelancers} />
-          )}
+          <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
         </div>
       </div>
       <MobileFilterModal
