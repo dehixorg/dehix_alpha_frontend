@@ -1,10 +1,10 @@
 'use client';
 
 import { CalendarX2 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Carousel,
@@ -13,7 +13,6 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from '@/components/ui/carousel';
-import { Progress } from '@/components/ui/progress';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -228,7 +227,7 @@ export default function Dashboard() {
             <Skeleton className="h-10 w-24" />
           </div>
         </div>
-        
+
         {/* Main Content Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
@@ -244,7 +243,7 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-            
+
             {/* Profiles Skeleton */}
             <div className="space-y-4">
               <Skeleton className="h-8 w-48" />
@@ -262,7 +261,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           {/* Right Column */}
           <div className="space-y-4">
             <Skeleton className="h-8 w-32" />

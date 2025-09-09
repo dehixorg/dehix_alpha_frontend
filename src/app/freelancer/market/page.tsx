@@ -3,8 +3,8 @@ import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Heart, X } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectTrigger,
