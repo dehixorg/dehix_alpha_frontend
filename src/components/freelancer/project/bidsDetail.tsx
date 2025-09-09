@@ -1386,8 +1386,9 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                         }
                       `}
                       >
-                        {profile.profileType.toLocaleLowerCase() ??
-                          'Freelancer'}
+                        {profile?.profileType
+                          ? profile?.profileType.toLocaleLowerCase()
+                          : 'Freelancer'}
                       </span>
 
                       {/* Rate */}
