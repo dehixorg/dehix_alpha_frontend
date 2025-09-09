@@ -205,7 +205,7 @@ export default function ProjectDrawer({
 
                         <div className="flex items-center gap-1 text-sm">
                           <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                          <span>{profile.totalBid.length} bids received</span>
+                          <span>{profile.totalBid?.length} bids received</span>
                         </div>
                       </div>
                     </CarouselItem>

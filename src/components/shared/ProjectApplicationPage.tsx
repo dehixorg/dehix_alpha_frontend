@@ -219,12 +219,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       : project?.description.slice(0, maxLength) + '...';
 
   const handleApplyClick = () => {
+    console.log(project.profiles)
     if (project?.profiles && project.profiles.length > 0) {
-      if (project.profiles.length === 1) {
-        setSelectedProfile(project.profiles[0]);
+      if (project.profiles.length >= 1) {
         setBidAmount(project.profiles[0].minConnect || 0);
       } else {
         setSelectedProfile(null);
+        console.log("here")
       }
       setDialogOpen(true);
     }
@@ -262,7 +263,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    console.log(selectedProfile)
     if (!selectedProfile || !selectedProfile._id) {
       toast({
         title: 'Error',
@@ -387,14 +388,18 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     );
   }
   const handleProfileSelection = (profile: Profile) => {
-  setSelectedProfile((prevSelected) => {
-    // If the clicked profile is already the selected one, deselect it.
-    if (prevSelected?._id === profile._id) {
-      return null;
+    // If the profile has already been applied for, do not allow deselection.
+    if (appliedProfileIds.includes(profile._id)) {
+      return;
     }
-    // Otherwise, select the new profile.
-    return profile;
-  });
+    setSelectedProfile((prevSelected) => {
+        // If the clicked profile is already the selected one, deselect it.
+        if (prevSelected?._id === profile._id) {
+            return null;
+        }
+        // Otherwise, select the new profile.
+        return profile;
+    });
 };
 
   return (
