@@ -75,6 +75,9 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
   const [skills, setSkills] = useState<any[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
+  const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
+    'Freelancer',
+  );
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -157,36 +160,42 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
   const onSubmit = async (data: ProfileFormValues) => {
     setLoading(true);
     try {
-      // Get the current project data first
       const projectResponse = await axiosInstance.get(`/project/${projectId}`);
       const currentProject =
         projectResponse?.data?.data?.data || projectResponse?.data?.data;
 
-      if (!currentProject) {
-        throw new Error('Project not found');
-      }
+      if (!currentProject) throw new Error('Project not found');
 
-      // Create new profile object with a unique ID
-      const newProfile = {
-        _id: crypto.randomUUID(), // Generate unique ID for the profile
+      const newProfile: any = {
+        _id: crypto.randomUUID(),
         domain: data.domain,
-        freelancersRequired: data.freelancersRequired,
+        domain_id: data.domain_id,
+        description: data.description,
         skills: selectedSkills,
         experience: parseInt(data.experience),
-        minConnect: parseInt(data.minConnect),
-        rate: parseInt(data.rate),
-        description: data.description,
-        domain_id: data.domain_id,
+        profileType: profileType.toUpperCase(),
         selectedFreelancer: [],
         freelancers: [],
         totalBid: [],
       };
 
-      // Add the new profile to the existing profiles array
+      if (profileType === 'Freelancer') {
+        newProfile.freelancersRequired = data.freelancersRequired
+          ? parseInt(data.freelancersRequired)
+          : 0;
+        newProfile.minConnect = data.minConnect ? parseInt(data.minConnect) : 0;
+        newProfile.rate = data.rate ? parseInt(data.rate) : 0;
+      } else {
+        newProfile.consultantRequired = data.freelancersRequired
+          ? parseInt(data.freelancersRequired)
+          : 0;
+        newProfile.rate = data.rate ? parseInt(data.rate) : 0;
+        newProfile.selectedConsultant = [];
+        newProfile.consultants = [];
+      }
       const updatedProfiles = [...(currentProject.profiles || []), newProfile];
 
-      // Use the existing project update endpoint but send only required fields
-      const updatePayload = {
+      const updatePayload: any = {
         projectName: currentProject.projectName,
         description: currentProject.description,
         email: currentProject.email,
@@ -194,34 +203,30 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
         skillsRequired: currentProject.skillsRequired,
         role: currentProject.role || '',
         projectType: currentProject.projectType,
-        // Add profiles to the payload (even though it's not in the schema, MongoDB will accept it)
         profiles: updatedProfiles,
       };
+      if (currentProject.end) updatePayload.end = currentProject.end;
 
       await axiosInstance.put(`/project/${projectId}/update`, updatePayload);
 
       toast({
         title: 'Profile Added',
-        description: 'The profile has been successfully added to the project.',
+        description: 'The profile has been successfully added.',
       });
 
-      // Reset form and close dialog
       form.reset();
       setSelectedSkills([]);
       setSkillInput('');
       setDialogOpen(false);
       onProfileAdded();
     } catch (error: any) {
-      console.error('API Error:', error);
-
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to add profile. Please try again.';
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: errorMessage,
+        description:
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to add profile.',
       });
     } finally {
       setLoading(false);
@@ -232,15 +237,60 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Profile</DialogTitle>
-          <DialogDescription>
-            Add a new profile to this project with specific requirements.
-          </DialogDescription>
+        <DialogHeader className="flex flex-col gap-4">
+          {/* Title and Description (left-aligned) */}
+          <div>
+            <DialogTitle className="text-lg font-semibold">
+              Add New Profile
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              Add a new profile to this project with specific requirements.
+            </DialogDescription>
+          </div>
+
+          {/* Profile Type Toggle (centered with gap from top) */}
+          <div className="flex justify-center items-center gap-3 mt-2">
+            <span
+              className={
+                profileType === 'Freelancer' ? 'font-semibold' : 'text-gray-400'
+              }
+            >
+              Freelancer
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setProfileType((prev) =>
+                  prev === 'Freelancer' ? 'Consultant' : 'Freelancer',
+                )
+              }
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
+                profileType === 'Freelancer' ? 'bg-green-500' : 'bg-blue-500'
+              }`}
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                  profileType === 'Consultant'
+                    ? 'translate-x-7'
+                    : 'translate-x-1'
+                }`}
+              />
+            </button>
+
+            <span
+              className={
+                profileType === 'Consultant' ? 'font-semibold' : 'text-gray-400'
+              }
+            >
+              Consultant
+            </span>
+          </div>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Domain Selection */}
+            {/* Domain */}
             <FormField
               control={form.control}
               name="domain"
@@ -282,7 +332,7 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
               name="freelancersRequired"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Number of Freelancers Required</FormLabel>
+                  <FormLabel>{`Number of ${profileType}s Required`}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
