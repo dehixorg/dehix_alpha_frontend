@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Copy, ChevronsUpDown, Plus, X, Check } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
@@ -34,6 +34,7 @@ import {
 } from '../ui/table';
 
 import TaskDropdown from './TaskDropdown';
+import FreelancerTaskStatus from './FreelancerTaskStatus';
 
 import {
   AccordionItem,
@@ -54,13 +55,16 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Task } from '@/utils/types/Milestone';
+import { axiosInstance } from '@/lib/axiosinstance';
 
 interface TaskDetailsDialogProps {
   task: Task | null;
   open: boolean;
   onClose: () => void;
+  isFreelancer: boolean;
+  onApproveUpdatePermission?: (taskId: string) => Promise<boolean>;
+  onRejectUpdatePermission?: (taskId: string) => Promise<boolean>;
 }
 
 interface StoryAccordionItemProps {
@@ -70,6 +74,7 @@ interface StoryAccordionItemProps {
   milestoneStoriesLength: number;
   setIsTaskDialogOpen: (open: boolean) => void;
   isFreelancer: boolean;
+  freelancerId?: string;
   fetchMilestones: () => void;
 }
 
@@ -80,6 +85,7 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   milestoneStoriesLength,
   setIsTaskDialogOpen,
   isFreelancer = false,
+  freelancerId,
   fetchMilestones,
 }) => {
   const { text: projectStatus, className: statusBadgeStyle } = getStatusBadge(
@@ -89,6 +95,247 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [actedUponTasks, setActedUponTasks] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const newActedUponTasks = new Set<string>();
+    story.tasks?.forEach((task: any) => {
+      const freelancerData = task.freelancers?.[0];
+      // Check if this task is assigned to the current freelancer and has been acted upon
+      if (
+        freelancerData &&
+        freelancerId &&
+        freelancerData.freelancerId === freelancerId &&
+        (freelancerData.acceptanceFreelancer ||
+          freelancerData.rejectionFreelancer)
+      ) {
+        newActedUponTasks.add(task._id);
+      }
+    });
+    setActedUponTasks(newActedUponTasks);
+  }, [story.tasks, freelancerId]);
+
+  // Helper function to determine if a task should show accept/reject buttons
+  const shouldShowAcceptRejectButtons = (task: any) => {
+    if (actedUponTasks.has(task._id)) {
+      return false;
+    }
+
+    if (!freelancerId) {
+      return false;
+    }
+
+    const freelancerData = task.freelancers?.[0];
+
+    if (!freelancerData) {
+      return false;
+    }
+
+    if (freelancerData.freelancerId !== freelancerId) {
+      return false;
+    }
+
+    if (
+      freelancerData.acceptanceFreelancer ||
+      freelancerData.rejectionFreelancer
+    ) {
+      // Add to actedUponTasks to ensure consistency
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(task._id);
+        return newSet;
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleAcceptTask = async (taskId: string) => {
+    try {
+      if (!milestoneId || !story._id) {
+        console.warn('Missing milestone or story ID in handleAcceptTask');
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await axiosInstance.patch(
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        {
+          acceptanceFreelancer: true,
+          rejectionFreelancer: false,
+          updatePermissionFreelancer: false,
+          updatePermissionBusiness: false,
+        },
+      );
+
+      // Add to acted upon tasks to hide buttons immediately
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(taskId);
+        return newSet;
+      });
+
+      toast({ description: 'Task accepted!', duration: 3000 });
+      fetchMilestones(); // Refresh milestones
+    } catch (error) {
+      console.error('Error accepting task:', error);
+      toast({ description: 'Failed to accept task.', variant: 'destructive' });
+      // Remove from acted upon tasks if the request failed
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRejectTask = async (taskId: string) => {
+    try {
+      if (!milestoneId || !story._id) {
+        console.warn('Missing milestone or story ID in handleRejectTask');
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await axiosInstance.patch(
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        {
+          acceptanceFreelancer: false,
+          rejectionFreelancer: true,
+          updatePermissionFreelancer: false,
+          updatePermissionBusiness: false,
+        },
+      );
+
+      // Add to acted upon tasks to hide buttons immediately
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(taskId);
+        return newSet;
+      });
+
+      toast({
+        description: 'Task rejected and update requests removed!',
+        duration: 3000,
+      });
+      fetchMilestones(); // Refresh milestones
+    } catch (error) {
+      console.error('Error rejecting task:', error);
+      toast({ description: 'Failed to reject task.', variant: 'destructive' });
+      // Remove from acted upon tasks if the request failed
+      setActedUponTasks((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleApproveUpdatePermission = async (
+    taskId: string,
+  ): Promise<boolean> => {
+    try {
+      if (!milestoneId || !story._id) {
+        console.warn(
+          'Missing milestone or story ID in handleApproveUpdatePermission',
+        );
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Determine the payload based on user type
+      let payload;
+      if (isFreelancer) {
+        payload = {
+          updatePermissionFreelancer: true,
+          updatePermissionBusiness: true,
+          rejectionFreelancer: true,
+          acceptanceFreelancer: false,
+        };
+      } else {
+        payload = {
+          updatePermissionFreelancer: true,
+          updatePermissionBusiness: true,
+          rejectionFreelancer: false,
+          acceptanceBusiness: true,
+        };
+      }
+
+      await axiosInstance.patch(
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        payload,
+      );
+      toast({ description: 'Update permission approved!', duration: 3000 });
+      fetchMilestones(); // Refresh milestones
+      return true;
+    } catch (error) {
+      console.error('Error approving update permission:', error);
+      toast({
+        description: 'Failed to approve update permission.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  const handleRejectUpdatePermission = async (
+    taskId: string,
+  ): Promise<boolean> => {
+    try {
+      if (!milestoneId || !story._id) {
+        console.warn(
+          'Missing milestone or story ID in handleRejectUpdatePermission',
+        );
+        toast({
+          description: 'Missing milestone or story ID',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Determine the payload based on user type
+      let payload;
+      if (isFreelancer) {
+        payload = {
+          updatePermissionFreelancer: false,
+          updatePermissionBusiness: false,
+          rejectionFreelancer: true,
+          acceptanceFreelancer: false,
+        };
+      } else {
+        payload = {
+          updatePermissionFreelancer: false,
+          updatePermissionBusiness: false,
+          rejectionFreelancer: false,
+          acceptanceBusiness: false,
+        };
+      }
+
+      await axiosInstance.patch(
+        `/milestones/${milestoneId}/story/${story._id}/task/${taskId}`,
+        payload,
+      );
+      toast({ description: 'Update permission rejected!', duration: 3000 });
+      fetchMilestones(); // Refresh milestones
+      return true;
+    } catch (error) {
+      console.error('Error rejecting update permission:', error);
+      toast({
+        description: 'Failed to reject update permission.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
 
   const handleCopy = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -114,61 +361,84 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         className={`flex hover:no-underline items-center under px-4 w-full `}
       >
         <div className="flex justify-between items-center w-full px-4 py-1 rounded-lg duration-300">
-          <h3 className="text-lg md:text-xl flex items-center font-semibold">
-            {story.title}
-            <span className="text-sm">
-              {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-                ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
-                  story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                  !story?.tasks[0]?.freelancers[0]
-                    ?.updatePermissionFreelancer &&
-                  story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                    <>
-                      <span className="text-yellow-500 ml-5 hidden md:flex">
-                        Update Req
-                      </span>
-                      <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
-                    </>
-                  )
-                : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
-                  story?.tasks?.[0]?.freelancers?.[0]
-                    ?.updatePermissionFreelancer &&
-                  !story?.tasks?.[0]?.freelancers?.[0]
-                    ?.updatePermissionBusiness &&
-                  story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
-                    <>
-                      <span className="text-yellow-500 ml-5 hidden md:flex">
-                        Update Req
-                      </span>
-                      <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
-                    </>
-                  )}
-              {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
-                ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
-                  story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
-                  !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
-                    <>
-                      <span className="text-green-500 ml-5 hidden md:flex">
-                        Req Approve
-                      </span>
-                      <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
-                    </>
-                  )
-                : story?.tasks?.[0]?.freelancers?.[0]
-                    ?.updatePermissionFreelancer &&
-                  story?.tasks?.[0]?.freelancers?.[0]
-                    ?.updatePermissionBusiness &&
-                  !story?.tasks?.[0]?.freelancers?.[0]
-                    ?.acceptanceFreelancer && (
-                    <>
-                      <span className="text-green-500 ml-5 hidden md:flex">
-                        Req Approve
-                      </span>
-                      <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
-                    </>
-                  )}
-            </span>
-          </h3>
+          <div className="flex items-center">
+            <h3 className="text-lg md:text-xl font-semibold">{story.title}</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 h-auto ml-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedTask({
+                  _id: 'summary',
+                  title: story.title,
+                  summary: story.summary,
+                  taskStatus: 'SUMMARY',
+                  freelancers: [],
+                } as any);
+              }}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </Button>
+          </div>
+          <span className="text-sm">
+            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
+              ? !story?.tasks[0]?.freelancers[0]?.acceptanceFreelancer &&
+                story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
+                !story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
+                story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+                  <>
+                    {/* <span className="text-yellow-500 ml-5 hidden md:flex">
+                      Update Req
+                    </span> */}
+                    <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
+                  </>
+                )
+              : !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceBusiness &&
+                story?.tasks?.[0]?.freelancers?.[0]
+                  ?.updatePermissionFreelancer &&
+                !story?.tasks?.[0]?.freelancers?.[0]
+                  ?.updatePermissionBusiness &&
+                story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
+                  <>
+                    <span className="text-yellow-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-yellow-500"></span>
+                  </>
+                )}
+            {story?.tasks?.[0]?.freelancers?.[0] && isFreelancer
+              ? story?.tasks[0]?.freelancers[0]?.updatePermissionBusiness &&
+                story?.tasks[0]?.freelancers[0]?.updatePermissionFreelancer &&
+                !story?.tasks[0]?.freelancers[0]?.acceptanceBusiness && (
+                  <>
+                    <span className="text-green-500 ml-5 hidden md:flex">
+                      Req Approve
+                    </span>
+                    <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
+                  </>
+                )
+              : story?.tasks?.[0]?.freelancers?.[0]
+                  ?.updatePermissionFreelancer &&
+                story?.tasks?.[0]?.freelancers?.[0]?.updatePermissionBusiness &&
+                !story?.tasks?.[0]?.freelancers?.[0]?.acceptanceFreelancer && (
+                  <>
+                    <span className="text-green-500 ml-5 hidden md:flex">
+                      Req Approve
+                    </span>
+                    <span className="text-green-500 ml-5 rounded-full flex md:hidden w-2 h-2 bg-green-500"></span>
+                  </>
+                )}
+          </span>
           <Badge
             className={`${statusBadgeStyle} px-3 py-1 hidden md:flex text-xs md:text-sm rounded-full`}
           >
@@ -177,265 +447,458 @@ const StoryAccordionItem: React.FC<StoryAccordionItemProps> = ({
         </div>
       </AccordionTrigger>
       <AccordionContent className="w-full px-4 py-4 sm:px-6 sm:py-4 md:px-8 md:py-6 lg:px-10 lg:py-8">
-        <div className="space-y-1">
-          <Badge
-            className={`${statusBadgeStyle} px-2 py-1 block md:hidden text-xs md:text-sm rounded-full`}
-            style={{ width: 'fit-content' }}
-          >
-            {projectStatus}
-          </Badge>
-          <p className="leading-relaxed px-2 py-1  text-sm md:text-base">
-            {story.summary}
-          </p>
-          <div className="space-y-4 hidden md:flex justify-start items-center gap-4">
-            <h4 className="text-lg md:text-xl font-semibold mt-2">
-              Important URLs:
-            </h4>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-[300px] justify-between"
-                >
-                  {truncateDescription(value, 23) || 'Select or search URL...'}
-                  <ChevronsUpDown className="opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search URL..." className="h-9" />
-                  <CommandList>
-                    <CommandEmpty>No URL found.</CommandEmpty>
-                    <CommandGroup>
-                      {story.importantUrls.map(
-                        (url: { urlName: string; url: string }) => (
-                          <div key={url.urlName}>
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <CommandItem
-                                  value={url.urlName}
-                                  className="cursor-pointer"
-                                  onSelect={() => {
-                                    setValue(url.urlName);
-                                    setOpen(false);
-                                  }}
-                                >
-                                  {truncateDescription(url.urlName, 20)}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="ml-auto cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCopy(url.url);
-                                    }}
-                                  >
-                                    <Copy className="w-4 h-4" />
-                                  </Button>
-                                </CommandItem>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-auto py-1">
-                                {url.url}
-                              </HoverCardContent>
-                            </HoverCard>
-                          </div>
-                        ),
-                      )}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <Card className="px-2  mt-5 py-3">
-          {story?.tasks?.length > 0 ? (
-            <div className="bg-transparent">
-              <div className="flex justify-between items-center px-3 mt-4">
-                <h4 className="text-lg md:text-xl font-semibold">Tasks:</h4>
-                {!isFreelancer && (
-                  <Button
-                    className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base"
-                    onClick={() => setIsTaskDialogOpen(true)}
-                  >
-                    <Plus size={15} /> Add Task
-                  </Button>
-                )}
-              </div>
-              <Carousel className="w-[85vw] md:w-full relative mt-4">
-                <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
-                  {story.tasks.map((task: any) => {
-                    const { className: taskBadgeStyle } = getStatusBadge(
-                      task.taskStatus,
-                    );
-
-                    return (
-                      <CarouselItem
-                        key={task._id}
-                        className="min-w-0 mt-2 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
-                      >
-                        <div className=" p-0 md:p-2 mt-5">
-                          <Card
-                            className="w-full cursor-pointer  border relative rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                            onClick={() => setSelectedTask(task)}
-                          >
-                            <CardHeader className="p-2 md:p-4 ">
-                              <div className="flex justify-between items-center">
-                                <CardTitle className="text-sm md:text-lg font-medium">
-                                  {truncateDescription(task.title, 20)}
-                                </CardTitle>
-                                <Badge
-                                  className={`${taskBadgeStyle} px-2 py-0.5 text-xs md:text-sm rounded-md`}
-                                >
-                                  {task.taskStatus}
-                                </Badge>
+        <div
+          className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
+          style={{ borderColor: '#09090b' }}
+        >
+          <div className="px-6 py-4 space-y-4">
+            <div className="space-y-1">
+              <Badge
+                className={`${statusBadgeStyle} px-2 py-1 block md:hidden text-xs md:text-sm rounded-full`}
+                style={{ width: 'fit-content' }}
+              >
+                {projectStatus}
+              </Badge>
+              <div className="space-y-4 hidden md:flex justify-start items-center gap-4 ">
+                <h4 className="text-lg md:text-xl font-semibold mt-2">
+                  Important URLs:
+                </h4>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-[300px] justify-between"
+                    >
+                      {truncateDescription(value, 23) ||
+                        'Select or search URL...'}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0">
+                    <Command>
+                      <CommandInput
+                        placeholder="Search URL..."
+                        className="h-9"
+                      />
+                      <CommandList>
+                        <CommandEmpty>No URL found.</CommandEmpty>
+                        <CommandGroup>
+                          {story.importantUrls.map(
+                            (url: { urlName: string; url: string }) => (
+                              <div key={url.urlName}>
+                                <HoverCard>
+                                  <HoverCardTrigger asChild>
+                                    <CommandItem
+                                      value={url.urlName}
+                                      className="cursor-pointer"
+                                      onSelect={() => {
+                                        setValue(url.urlName);
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      {truncateDescription(url.urlName, 20)}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-auto cursor-pointer"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCopy(url.url);
+                                        }}
+                                      >
+                                        <Copy className="w-4 h-4" />
+                                      </Button>
+                                    </CommandItem>
+                                  </HoverCardTrigger>
+                                  <HoverCardContent className="w-auto py-1">
+                                    {url.url}
+                                  </HoverCardContent>
+                                </HoverCard>
                               </div>
-                            </CardHeader>
-                            <CardContent className="p-4">
-                              <p className="text-sm leading-relaxed">
-                                {truncateDescription(task.summary, 30)}
-                              </p>
-                            </CardContent>
-                            <div onClick={(e) => e.stopPropagation()}>
-                              <TaskDropdown
-                                fetchMilestones={fetchMilestones}
-                                milestoneId={milestoneId}
-                                storyId={story._id}
-                                task={task}
-                              />
+                            ),
+                          )}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div
+              className="px-2 mt-5 py-3 bg-card text-card-foreground rounded-lg border"
+              style={{ borderColor: '#09090b' }}
+            >
+              {story?.tasks?.length > 0 ? (
+                <div className="bg-transparent">
+                  <div className="flex justify-between items-center px-3 mt-4">
+                    <h4 className="text-lg md:text-xl font-semibold">Tasks:</h4>
+                    {!isFreelancer && (
+                      <Button
+                        className="md:px-3 px-2 py-0 md:py-1 text-sm sm:text-base"
+                        onClick={() => setIsTaskDialogOpen(true)}
+                      >
+                        <Plus size={15} /> Add Task
+                      </Button>
+                    )}
+                  </div>
+                  <Carousel className="w-[85vw] md:w-full relative mt-4">
+                    <CarouselContent className="flex flex-nowrap gap-2 md:gap-0">
+                      {story.tasks.map((task: any) => {
+                        const { className: taskBadgeStyle } = getStatusBadge(
+                          task.taskStatus,
+                        );
+
+                        return (
+                          <CarouselItem
+                            key={task._id}
+                            className="min-w-0 mt-2 w-full md:basis-1/2 sm:w-full md:w-1/2 lg:w-1/3"
+                          >
+                            <div className=" p-0 md:p-2 mt-5">
+                              <div
+                                className="w-full cursor-pointer border relative rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 bg-card text-card-foreground"
+                                onClick={() => setSelectedTask(task)}
+                              >
+                                <div className="p-2 md:p-4">
+                                  <div className="flex justify-between items-center">
+                                    <div className="flex items-center">
+                                      <h4 className="text-sm md:text-lg font-medium">
+                                        {truncateDescription(task.title, 20)}
+                                      </h4>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="p-1 h-auto ml-2"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedTask(task);
+                                        }}
+                                      >
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                          />
+                                        </svg>
+                                      </Button>
+                                    </div>
+                                    <Badge
+                                      className={`${taskBadgeStyle} px-2 py-0.5 text-xs md:text-sm rounded-md`}
+                                    >
+                                      {task.taskStatus}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <TaskDropdown
+                                    fetchMilestones={fetchMilestones}
+                                    milestoneId={milestoneId}
+                                    storyId={story._id}
+                                    task={task}
+                                  />
+                                  {isFreelancer && (
+                                    <div
+                                      className="flex flex-col gap-2 sm:pb-2 mt-2 px-4"
+                                      style={{ minHeight: '2.5rem' }}
+                                    >
+                                      {/* Show accept/reject buttons only for tasks that haven't been acted upon */}
+                                      {shouldShowAcceptRejectButtons(task) && (
+                                        <div className="flex justify-between items-center">
+                                          <Button
+                                            onClick={() =>
+                                              handleAcceptTask(task._id)
+                                            }
+                                            className="w-20 md:w-16 h-7"
+                                          >
+                                            Accept
+                                          </Button>
+                                          <div className="flex-1 flex justify-center">
+                                            <Button
+                                              onClick={() =>
+                                                handleRejectTask(task._id)
+                                              }
+                                              className="w-20 md:w-16 h-7"
+                                            >
+                                              Reject
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {/* Approve/Reject Update Permission buttons for freelancers */}
+                                      {!task.freelancers?.[0]
+                                        ?.updatePermissionFreelancer &&
+                                        task.freelancers?.[0]
+                                          ?.updatePermissionBusiness &&
+                                        !task.freelancers?.[0]
+                                          ?.acceptanceFreelancer && (
+                                          <div className="flex flex-col gap-2 mt-2">
+                                            <Button
+                                              onClick={() =>
+                                                handleApproveUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-yellow-500 hover:bg-yellow-600 text-white"
+                                            >
+                                              Approve Update Permission
+                                            </Button>
+                                            <Button
+                                              onClick={() =>
+                                                handleRejectUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-red-500 hover:bg-red-600 text-white"
+                                            >
+                                              Reject Update Permission
+                                            </Button>
+                                          </div>
+                                        )}
+                                    </div>
+                                  )}
+                                  {!isFreelancer && task.freelancers?.[0] && (
+                                    <div className="mt-2 mr-7 mb-1">
+                                      <FreelancerTaskStatus task={task} />
+                                      {/* Approve/Reject Update Permission buttons for business */}
+                                      {!task.freelancers?.[0]
+                                        ?.updatePermissionBusiness &&
+                                        task.freelancers?.[0]
+                                          ?.updatePermissionFreelancer &&
+                                        !task.freelancers?.[0]
+                                          ?.acceptanceBusiness && (
+                                          <div className="flex flex-col gap-2 mt-2">
+                                            <Button
+                                              onClick={() =>
+                                                handleApproveUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-gray-500 hover:bg-green-500 text-white"
+                                            >
+                                              Approve Update Permission
+                                            </Button>
+                                            <Button
+                                              onClick={() =>
+                                                handleRejectUpdatePermission(
+                                                  task._id,
+                                                )
+                                              }
+                                              className="w-full h-7 bg-gray-500 hover:bg-red-600 text-white"
+                                            >
+                                              Reject Update Permission
+                                            </Button>
+                                          </div>
+                                        )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </Card>
-                        </div>
-                      </CarouselItem>
-                    );
-                  })}
-                </CarouselContent>
-                <div
-                  className={`${story?.tasks?.length > (window.innerWidth > 768 ? 2 : 1) ? 'block' : 'hidden'}`}
-                >
-                  {story?.tasks?.length >
-                    (window.innerWidth >= 768 ? 2 : 1) && (
-                    <>
-                      <CarouselPrevious className="absolute top-1 md:top-2 left-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                      <CarouselNext className="absolute top-1 md:top-2  right-2 transform -translate-y-1/2 shadow rounded-full p-2" />
-                    </>
+                          </CarouselItem>
+                        );
+                      })}
+                    </CarouselContent>
+                    <div
+                      className={`${story?.tasks?.length > (typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1) ? 'block' : 'hidden'}`}
+                    >
+                      {story?.tasks?.length >
+                        (typeof window !== 'undefined' &&
+                        window.innerWidth >= 768
+                          ? 2
+                          : 1) && (
+                        <>
+                          <CarouselPrevious className="absolute top-1 md:top-2 left-2 transform -translate-y-1/2 shadow rounded-full p-2" />
+                          <CarouselNext className="absolute top-1 md:top-2  right-2 transform -translate-y-1/2 shadow rounded-full p-2" />
+                        </>
+                      )}
+                    </div>
+                  </Carousel>
+                </div>
+              ) : (
+                <div className="text-center mt-12 p-4 rounded-md">
+                  {!isFreelancer ? (
+                    <p>
+                      This {story.title} currently has no tasks. Add tasks to
+                      ensure smooth progress and better tracking.
+                    </p>
+                  ) : (
+                    <p>
+                      This {story.title} currently has no tasks. Wait until the
+                      business assigns you to any task.
+                    </p>
+                  )}
+                  {!isFreelancer && (
+                    <Button
+                      className="mt-2 px-3 py-1 text-sm sm:text-base"
+                      onClick={() => setIsTaskDialogOpen(true)}
+                    >
+                      <Plus size={15} /> Add Task
+                    </Button>
                   )}
                 </div>
-              </Carousel>
-            </div>
-          ) : (
-            <div className="text-center mt-12 p-4 rounded-md">
-              {!isFreelancer ? (
-                <p>
-                  This {story.title} currently has no tasks. Add tasks to ensure
-                  smooth progress and better tracking.
-                </p>
-              ) : (
-                <p>
-                  This {story.title} currently has no tasks. Wait until the
-                  business assigns you to any task.
-                </p>
-              )}
-              {!isFreelancer && (
-                <Button
-                  className="mt-2 px-3 py-1 text-sm sm:text-base"
-                  onClick={() => setIsTaskDialogOpen(true)}
-                >
-                  <Plus size={15} /> Add Task
-                </Button>
               )}
             </div>
-          )}
-        </Card>
+          </div>
+        </div>
       </AccordionContent>
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+        isFreelancer={isFreelancer}
+        onApproveUpdatePermission={(taskId: string) =>
+          handleApproveUpdatePermission(taskId)
+        }
+        onRejectUpdatePermission={(taskId: string) =>
+          handleRejectUpdatePermission(taskId)
+        }
       />
     </AccordionItem>
   );
 };
 
-export default StoryAccordionItem;
-
 const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   task,
   open,
   onClose,
+  isFreelancer,
+  onApproveUpdatePermission,
+  onRejectUpdatePermission,
 }) => {
   if (!task) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg rounded-lg mx-auto w-[90vw] md:w-auto shadow-lg ">
+      <DialogContent className="rounded-lg mx-auto w-[80vw] shadow-lg ">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
         </DialogHeader>
-        <DialogDescription className="text-sm mt-4 leading-relaxed">
-          <p className="mt-2 text-sm">
-            Task status:{' '}
-            <span className="font-medium ">{task?.taskStatus}</span>
+        <DialogDescription className="text-sm mt-2 leading-relaxed">
+          {/* Description */}
+          <h4 className="font-semibold mb-1">Description</h4>
+          <p className="mb-3 whitespace-pre-wrap">
+            {task.summary || 'No description provided.'}
           </p>
-          <p className="mt-2 text-sm">
-            Freelancer Name:{' '}
-            <span className="font-medium ">
-              {task?.freelancers[0]?.freelancerName}
-            </span>
-          </p>
-          <p className="mt-2 text-sm">
-            Payment Status:{' '}
-            <span className="font-medium ">
-              {task?.freelancers[0]?.paymentStatus}
-            </span>
-          </p>
-          <Table className="mt-4 border border-gray-300">
-            <TableHeader>
-              <TableRow className="">
-                <TableHead className="font-semibold text-left">User</TableHead>
-                <TableHead className="font-semibold text-left">
-                  Freelancer{' '}
-                </TableHead>
-                <TableHead className="font-semibold text-left">
-                  Business{' '}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {task.freelancers.map((freelancer: any, index: number) => (
-                <TableRow key={index} className="border-b border-gray-200">
-                  <TableCell className="py-2 px-4 font-medium">
-                    Update Permission
-                  </TableCell>
-                  <TableCell className="py-2 px-4 text-center">
-                    <div className="flex justify-center items-center">
-                      {freelancer.updatePermissionFreelancer &&
-                      freelancer.updatePermissionFreelancer &&
-                      freelancer.acceptanceFreelancer ? (
-                        <Check className="text-green-600 w-5 h-5" />
-                      ) : (
-                        <X className="text-red-600 w-5 h-5" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2 px-4 text-center">
-                    <div className="flex justify-center items-center">
-                      {freelancer.updatePermissionBusiness &&
-                      freelancer.updatePermissionFreelancer &&
-                      freelancer.acceptanceBusiness ? (
-                        <Check className="text-green-600 w-5 h-5" />
-                      ) : (
-                        <X className="text-red-600 w-5 h-5" />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <p className="mt-3">{task.summary}</p>
+
+          {/* Key fields (hidden for story SUMMARY popover) */}
+          {task.taskStatus !== 'SUMMARY' && (
+            <>
+              <p className="mt-2 text-sm">
+                Task status:{' '}
+                <span className="font-medium ">{task?.taskStatus}</span>
+              </p>
+              <p className="mt-2 text-sm">
+                Freelancer Name:{' '}
+                <span className="font-medium ">
+                  {task?.freelancers[0]?.freelancerName || '—'}
+                </span>
+              </p>
+              <p className="mt-2 text-sm">
+                Payment Status:{' '}
+                <span className="font-medium ">
+                  {task?.freelancers[0]?.paymentStatus || '—'}
+                </span>
+              </p>
+            </>
+          )}
+
+          {/* Update task request - only visible to business and not for SUMMARY */}
+          {!isFreelancer && task.taskStatus !== 'SUMMARY' && (
+            <div className="mt-4">
+              <h4 className="font-semibold mb-2">Update Task Request</h4>
+              {task.freelancers.some(
+                (f: any) =>
+                  f.updatePermissionFreelancer && !f.updatePermissionBusiness,
+              ) ? (
+                <Table className="border border-gray-300">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold text-left">
+                        Freelancer
+                      </TableHead>
+                      <TableHead className="font-semibold text-center">
+                        Action
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {task.freelancers
+                      .filter(
+                        (f: any) =>
+                          f.updatePermissionFreelancer &&
+                          !f.updatePermissionBusiness,
+                      )
+                      .map((freelancer: any, index: number) => (
+                        <TableRow
+                          key={index}
+                          className="border-b border-gray-200"
+                        >
+                          <TableCell className="py-2 px-4">
+                            {freelancer.freelancerName || 'Freelancer'}
+                          </TableCell>
+                          <TableCell className="py-2 px-4">
+                            <div className="flex items-center justify-center gap-4">
+                              <button
+                                aria-label="Approve update permission"
+                                onClick={async () => {
+                                  if (onApproveUpdatePermission) {
+                                    const ok = await onApproveUpdatePermission(
+                                      task._id,
+                                    );
+                                    if (ok) {
+                                      (task as any).freelancers = (
+                                        task.freelancers || []
+                                      ).filter(
+                                        (f: any) => f._id !== freelancer._id,
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="rounded p-1 hover:bg-emerald-950/40"
+                              >
+                                <Check className="text-green-500 w-5 h-5" />
+                              </button>
+                              <button
+                                aria-label="Reject update permission"
+                                onClick={async () => {
+                                  if (onRejectUpdatePermission) {
+                                    const ok = await onRejectUpdatePermission(
+                                      task._id,
+                                    );
+                                    if (ok) {
+                                      (task as any).freelancers = (
+                                        task.freelancers || []
+                                      ).filter(
+                                        (f: any) => f._id !== freelancer._id,
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="rounded p-1 hover:bg-red-950/40"
+                              >
+                                <X className="text-red-500 w-5 h-5" />
+                              </button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No update permission requests.
+                </p>
+              )}
+            </div>
+          )}
         </DialogDescription>
         <div className="flex justify-end mt-4">
           <DialogClose asChild>
@@ -446,3 +909,5 @@ const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
     </Dialog>
   );
 };
+
+export default StoryAccordionItem;

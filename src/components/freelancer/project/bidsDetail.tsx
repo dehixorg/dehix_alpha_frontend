@@ -34,6 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CustomTable } from '@/components/custom-table/CustomTable';
 import { FieldType } from '@/components/custom-table/FieldTypes';
 // Constants - Backend expects uppercase values
@@ -887,11 +888,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
         if (response.status === 200) {
           const profileData = response.data.data || response.data;
 
-          console.log('Profile data fetched:', {
-            isFreelancerProfile,
-            profileData,
-          });
-
           // For specific profiles, enrich with freelancer information if we have a freelancer ID
           if (!isFreelancerProfile && freelancerIdOverride) {
             try {
@@ -903,10 +899,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                   freelancerResponse.data?.data || freelancerResponse.data;
                 // Merge freelancer data with profile data for better display
                 profileData.freelancerId = freelancerData;
-                console.log(
-                  'Enriched profile data with freelancer info:',
-                  profileData,
-                );
               }
             } catch (enrichError) {
               console.warn(
@@ -1010,7 +1002,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
 
         // If fetching specific profile failed and we have a freelancer ID, try fetching general freelancer profile
         if (!isFreelancerProfile && freelancerIdOverride) {
-          console.log('Falling back to general freelancer profile...');
           try {
             const fallbackResponse = await axiosInstance.get(
               `/public/freelancer/${freelancerIdOverride}`,
@@ -1018,7 +1009,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
             if (fallbackResponse.status === 200) {
               const fallbackData =
                 fallbackResponse.data.data || fallbackResponse.data;
-              console.log('Fallback data fetched:', fallbackData);
               setProfileData(fallbackData);
               return;
             }
@@ -1412,11 +1402,45 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     {BID_STATUSES.map((status) => (
                       <TabsContent key={status} value={status} className="mt-4">
                         {loadingFreelancerDetails ? (
-                          <div className="flex justify-center items-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <span className="ml-2 text-muted-foreground">
-                              Loading freelancer details...
-                            </span>
+                          <div className="space-y-4 py-4">
+                            {/* Table Header Skeleton */}
+                            <div className="flex justify-between items-center">
+                              <Skeleton className="h-8 w-48" />
+                              <Skeleton className="h-9 w-32" />
+                            </div>
+
+                            {/* Table Rows Skeleton */}
+                            <div className="space-y-2">
+                              {[...Array(5)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between p-4 border rounded-lg"
+                                >
+                                  <div className="flex items-center space-x-4">
+                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                    <div className="space-y-2">
+                                      <Skeleton className="h-4 w-32" />
+                                      <Skeleton className="h-3 w-24" />
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-4">
+                                    <Skeleton className="h-4 w-20" />
+                                    <Skeleton className="h-4 w-16" />
+                                    <Skeleton className="h-9 w-24" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Pagination Skeleton */}
+                            <div className="flex justify-between items-center pt-2">
+                              <Skeleton className="h-8 w-24" />
+                              <div className="flex space-x-2">
+                                <Skeleton className="h-9 w-9 rounded-md" />
+                                <Skeleton className="h-9 w-9 rounded-md" />
+                                <Skeleton className="h-9 w-9 rounded-md" />
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <CustomTable

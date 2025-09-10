@@ -90,7 +90,7 @@ export function subscribeToUserConversations(
   const filteredQuery = query(
     collectionRef,
     where('participants', 'array-contains', userID),
-    orderBy('lastMessage.timestamp', 'desc'), // Sort conversations by the timestamp of the last message (descending)
+    orderBy('timestamp', 'desc'),
   );
 
   // Subscribe to the query with onSnapshot
@@ -99,12 +99,14 @@ export function subscribeToUserConversations(
     async (snapshot: QuerySnapshot<DocumentData>) => {
       const data = await Promise.all(
         snapshot.docs.map(async (doc) => {
+          const docData = doc.data();
+
           const conversation: {
             id: string;
             [key: string]: any;
           } = {
             id: doc.id,
-            ...doc.data(),
+            ...docData,
           };
 
           // Get the last message from the `lastMessage` field, if available
@@ -116,9 +118,53 @@ export function subscribeToUserConversations(
           };
         }),
       );
-
       // Pass the updated data to the callback function
       callback(data);
+    },
+    (error) => {
+      // Fallback query without orderBy if the field doesn't exist
+      if (
+        error.code === 'failed-precondition' ||
+        error.code === 'invalid-argument'
+      ) {
+        const fallbackQuery = query(
+          collectionRef,
+          where('participants', 'array-contains', userID),
+        );
+
+        return onSnapshot(
+          fallbackQuery,
+          async (snapshot: QuerySnapshot<DocumentData>) => {
+            const data = await Promise.all(
+              snapshot.docs.map(async (doc) => {
+                const conversation = {
+                  id: doc.id,
+                  ...doc.data(),
+                  lastMessage: doc.data()?.lastMessage || null,
+                };
+                return conversation;
+              }),
+            );
+
+            // Sort manually in JavaScript if Firestore ordering fails
+            data.sort((a, b) => {
+              const aTime =
+                (a as any).timestamp ||
+                (a as any).updatedAt ||
+                (a as any).createdAt ||
+                '';
+              const bTime =
+                (b as any).timestamp ||
+                (b as any).updatedAt ||
+                (b as any).createdAt ||
+                '';
+              return new Date(bTime).getTime() - new Date(aTime).getTime();
+            });
+
+            callback(data);
+          },
+        );
+      }
     },
   );
 }

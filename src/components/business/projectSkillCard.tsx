@@ -1,8 +1,7 @@
 import React from 'react';
-import { Mail, Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
+import Image from 'next/image';
 
-import { Separator } from '../ui/separator';
-import DateRange from '../cards/dateRange';
 import { Card } from '../ui/card';
 import {
   HoverCard,
@@ -24,23 +23,22 @@ export interface ProjectSkillCardProps {
   imageUrl?: string;
   isLastCard?: boolean;
   onAddProfile?: () => void;
+  team?: any[];
 }
 function ProjectSkillCard({
   domainName,
   description,
-  email,
   status,
   startDate,
   endDate,
-  domains = [],
-  skills = [],
   isLastCard,
   onAddProfile,
+  team = [],
 }: ProjectSkillCardProps) {
   if (isLastCard) {
     return (
       <Card
-        className="flex w-full items-center justify-center h-[430px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
+        className="flex w-full items-center justify-center h-[350px] border border-dashed border-gray-400 rounded-lg cursor-pointer hover:border-gray-300 transition-colors"
         onClick={onAddProfile}
       >
         <Plus className="w-12 h-12 text-gray-400" />
@@ -49,20 +47,67 @@ function ProjectSkillCard({
   }
 
   const truncateFileName = (fileName: string | undefined) => {
-    const maxLength = 10;
+    const maxLength = 18;
     if (fileName && fileName.length > maxLength) {
       return `${fileName.substring(0, maxLength)}...`;
     }
     return fileName;
   };
 
+  const formatDate = (date: Date | null | undefined) => {
+    if (!date) return '';
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(date));
+  };
+
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Generate dummy team data if no team is provided
+  const displayTeam =
+    team.length > 0
+      ? team
+      : [
+          {
+            name: 'Sarah Johnson',
+            email: 'sarah.j@example.com',
+            profilePic: '',
+            color: 'bg-blue-100',
+            textColor: 'text-blue-800',
+          },
+          {
+            name: 'Michael Chen',
+            email: 'michael.c@example.com',
+            profilePic: '',
+            color: 'bg-green-100',
+            textColor: 'text-green-800',
+          },
+          {
+            name: 'Emma Rodriguez',
+            email: 'emma.r@example.com',
+            profilePic: '',
+            color: 'bg-purple-100',
+            textColor: 'text-purple-800',
+          },
+        ];
+
   return (
-    <div className="w-full min-h-[400px] bg-card relative border border-gray-700 rounded-lg shadow-md p-6 flex flex-col h-full">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full h-[350px] bg-card relative border rounded-lg shadow-sm p-6 flex flex-col">
+      {/* Header with domain name and status */}
+      <div className="flex justify-between items-start mb-4">
         <HoverCard>
           <HoverCardTrigger>
-            <h2 className="text-lg cursor-pointer font-semibold">
+            <h2 className="text-lg cursor-pointer font-semibold ">
               {truncateFileName(domainName)}
             </h2>
           </HoverCardTrigger>
@@ -71,65 +116,71 @@ function ProjectSkillCard({
           </HoverCardContent>
         </HoverCard>
 
-        <Badge className="bg-yellow-400 capitalize text-black text-xs px-2 py-1 rounded-md">
-          {status?.toLocaleLowerCase() || 'Pending'}
+        <Badge className="bg-green-100 text-green-800 capitalize text-xs px-2 py-1 rounded-md">
+          {status?.toLocaleLowerCase() || 'Active'}
         </Badge>
       </div>
 
-      {/* Content */}
-      <div className="flex-grow">
-        <Separator />
-        <div className="flex mt-6 mb-6 items-center text-sm">
-          <DateRange startDate={startDate} endDate={endDate} />
-        </div>
-
-        {/* Description */}
-        <p className="text-sm mb-4">
-          {description || 'No description available.'}
-        </p>
-
-        {/* Domains */}
-        {domains.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold mb-2">Project Domain:</h3>
-            <div className="flex flex-wrap gap-2">
-              {domains.map((domain, index) => (
-                <Badge
-                  key={index}
-                  className="px-3 bg-gray-200 text-gray-900 py-1 text-xs rounded-full"
+      {/* Team members section with fixed height and scroll if needed */}
+      <div className="mb-4 space-y-3 flex-1 overflow-y-auto">
+        {displayTeam.slice(0, 5).map((member, index) => (
+          <div key={index} className="flex items-center">
+            <div className="flex-shrink-0 mr-3">
+              {member.profilePic ? (
+                <Image
+                  src={member.profilePic}
+                  alt={member.name}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center ${member.color} ${member.textColor}`}
                 >
-                  {domain}
-                </Badge>
-              ))}
+                  <span className="text-xs font-medium">
+                    {getInitials(member.name)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 flex justify-between items-center min-w-0">
+              <span className="text-sm font-medium truncate mr-2">
+                {member.name}
+              </span>
+              <span className="text-xs text-gray-500 truncate">
+                {member.email}
+              </span>
             </div>
           </div>
-        )}
-
-        {/* Skills */}
-        {skills.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold mb-2">Skills:</h3>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
-                <Badge
-                  key={index}
-                  className="px-3 bg-gray-200 text-gray-900 py-1 text-xs rounded-full"
-                >
-                  {skill}
-                </Badge>
-              ))}
-            </div>
+        ))}
+        {displayTeam.length > 5 && (
+          <div className="text-sm text-gray-500 pl-11">
+            +{displayTeam.length - 5} more members
           </div>
         )}
-
-        {/* Email */}
-        <div className="flex mt-[28px] items-center text-sm">
-          <Mail className="w-4 h-4 mr-2" />
-          <span>{email || 'No email provided.'}</span>
-        </div>
       </div>
 
-      {/* Footer */}
+      {/* Date range */}
+      <div className="flex items-center text-sm mb-3">
+        <Calendar className="w-4 h-4 mr-2" />
+        {startDate ? (
+          <>
+            Start {formatDate(startDate)}
+            {endDate && ` - ${formatDate(endDate)}`}
+            {!endDate && ' - Present'}
+          </>
+        ) : (
+          'No dates specified'
+        )}
+      </div>
+
+      {/* Description with fixed height and truncation */}
+      <div className="mb-3 flex-1 overflow-hidden">
+        <p className="text-sm text-gray-100 line-clamp-3">
+          {description || 'No description available.'}
+        </p>
+      </div>
+
+      {/* View Details button */}
       <div className="pt-3">
         <button className="w-auto bg-blue-600 text-white px-5 py-1 rounded-md hover:bg-blue-700">
           Mark as completed

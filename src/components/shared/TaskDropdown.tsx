@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { MoreVertical, CheckCircle, Edit, UserCheck } from 'lucide-react';
+import { MoreVertical, Edit, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -16,7 +16,9 @@ import TaskUpdateDeatilDialog from './TaskUpdateDetailDialog';
 import { axiosInstance } from '@/lib/axiosinstance';
 
 const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
-  const user = useSelector((state: { user: { type: string } }) => state.user);
+  const user = useSelector(
+    (state: { user: { type: string; uid: string } }) => state.user,
+  );
   const { type } = user;
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
@@ -30,13 +32,13 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
   const handleConfirmPermissionRequest = async (
     updatePermissionBusiness: boolean,
     updatePermissionFreelancer: boolean,
-    acceptanceBusiness: boolean,
+    rejectionFreelancer: boolean,
     acceptanceFreelancer: boolean,
   ) => {
     const payload = {
       updatePermissionBusiness,
       updatePermissionFreelancer,
-      acceptanceBusiness,
+      rejectionFreelancer,
       acceptanceFreelancer,
     };
 
@@ -46,9 +48,18 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
       await axiosInstance.patch(url, payload);
 
       setShowPermissionDialog(false);
+
+      // Provide specific feedback based on the action
+      let successMessage = 'Permissions updated successfully.';
+      if (rejectionFreelancer && !acceptanceFreelancer) {
+        successMessage = 'Task rejected successfully.';
+      } else if (acceptanceFreelancer && !rejectionFreelancer) {
+        successMessage = 'Task accepted successfully.';
+      }
+
       toast({
         title: 'Success',
-        description: 'Permissions updated successfully.',
+        description: successMessage,
         duration: 3000,
       });
       fetchMilestones();
@@ -71,7 +82,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
           {(type == 'freelancer'
             ? task?.freelancers[0]?.updatePermissionBusiness &&
               task?.freelancers[0]?.updatePermissionFreelancer &&
-              !task?.freelancers[0]?.acceptanceBusiness
+              !task?.freelancers[0]?.rejectionFreelancer
             : task?.freelancers[0]?.updatePermissionBusiness &&
               task?.freelancers[0]?.updatePermissionFreelancer &&
               !task.freelancers[0]?.acceptanceFreelancer) && (
@@ -80,7 +91,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
           {(type == 'freelancer'
             ? task?.freelancers[0]?.updatePermissionBusiness &&
               !task?.freelancers[0]?.updatePermissionFreelancer &&
-              task?.freelancers[0]?.acceptanceBusiness
+              task?.freelancers[0]?.rejectionFreelancer
             : !task?.freelancers[0]?.updatePermissionBusiness &&
               task?.freelancers[0]?.updatePermissionFreelancer &&
               task.freelancers[0]?.acceptanceFreelancer) && (
@@ -91,76 +102,44 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
           align="end"
           className="w-56 p-2 border rounded-md shadow-md"
         >
-          {type === 'freelancer' ? (
+          {user?.type === 'freelancer' &&
+          task?.freelancers[0]?.freelancerId === user?.uid ? (
             <>
-              {/* {task?.freelancers[0]?.acceptanceBusiness && (
-                <DropdownMenuItem
-                  className="flex items-center gap-2"
-                  onClick={() =>
-                    console.log(`Mark task as completed: ${task._id}`)
-                  }
-                >
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Mark as Completed
-                </DropdownMenuItem>
-              )} */}
               <DropdownMenuItem
                 className="flex items-center gap-2"
                 onClick={handleRequestPermission}
+                disabled={
+                  task?.freelancers[0]?.rejectionFreelancer ||
+                  !task?.freelancers[0]?.acceptanceFreelancer ||
+                  (task?.freelancers[0]?.updatePermissionFreelancer &&
+                    !task?.freelancers[0]?.updatePermissionBusiness)
+                }
               >
                 <Edit className="w-4 h-4 text-blue-500" />
                 Update Task Details
+                {task?.freelancers[0]?.rejectionFreelancer && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Disabled - Task Rejected)
+                  </span>
+                )}
+                {!task?.freelancers[0]?.acceptanceFreelancer &&
+                  !task?.freelancers[0]?.rejectionFreelancer && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Disabled - Task Not Accepted)
+                    </span>
+                  )}
+                {task?.freelancers[0]?.updatePermissionFreelancer &&
+                  !task?.freelancers[0]?.updatePermissionBusiness &&
+                  task?.freelancers[0]?.acceptanceFreelancer &&
+                  !task?.freelancers[0]?.rejectionFreelancer && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      (Disabled - Waiting for Business Approval)
+                    </span>
+                  )}
               </DropdownMenuItem>
-
-              {!task?.freelancers[0]?.updatePermissionFreelancer &&
-                task?.freelancers[0]?.updatePermissionBusiness &&
-                !task?.freelancers[0]?.acceptanceFreelancer && (
-                  <DropdownMenuItem
-                    className="flex whitespace-nowrap text-xs  items-center gap-2"
-                    onClick={() =>
-                      handleConfirmPermissionRequest(true, true, true, false)
-                    }
-                  >
-                    <CheckCircle className="w-4 h-4 text-yellow-500" />
-                    Approve Updates permission
-                  </DropdownMenuItem>
-                )}
-
-              {/* <DropdownMenuItem
-                className="flex items-center gap-2"
-                onClick={() =>
-                  console.log(`View transaction details: ${task._id}`)
-                }
-              >
-                <Eye className="w-4 h-4 text-gray-500" />
-                View Transaction Details
-              </DropdownMenuItem> */}
-              {/* {task?.taskStatus === 'COMPLETED' &&
-                task?.freelancers[0]?.paymentStatus !== 'COMPLETED' && (
-                  <DropdownMenuItem
-                    className="flex items-center gap-2"
-                    onClick={() => console.log(`Request payment: ${task._id}`)}
-                  >
-                    <DollarSign className="w-4 h-4 text-blue-500" />
-                    Request Payment
-                  </DropdownMenuItem>
-                )} */}
             </>
-          ) : type === 'business' ? (
+          ) : user?.type === 'business' ? (
             <>
-              {!task?.freelancers[0]?.updatePermissionBusiness &&
-                task?.freelancers[0].updatePermissionFreelancer &&
-                !task?.freelancers[0]?.acceptanceBusiness && (
-                  <DropdownMenuItem
-                    className="flex whitespace-nowrap text-xs  items-center gap-2"
-                    onClick={() =>
-                      handleConfirmPermissionRequest(true, true, false, true)
-                    }
-                  >
-                    <CheckCircle className="w-4 h-4 text-yellow-500" />
-                    Approve Updates permission
-                  </DropdownMenuItem>
-                )}
               {task.freelancers.length > 0 && (
                 <DropdownMenuItem
                   className="flex items-center gap-2"
@@ -175,7 +154,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
               )}
               <DropdownMenuItem
                 className="flex items-center gap-2"
-                onClick={handleRequestPermission}
+                onClick={() => setShowPermissionDialog(true)}
               >
                 <Edit className="w-4 h-4 text-blue-500" />
                 Update Task Details
@@ -183,7 +162,7 @@ const TaskDropdown = ({ task, milestoneId, storyId, fetchMilestones }: any) => {
             </>
           ) : (
             <DropdownMenuItem disabled className="text-gray-400">
-              No actions available for this user type.
+              This task is not assigned to you.
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
 
 import { RootState } from "@/lib/store";
-import { fetchCompletedInterviews } from "@/lib/api/interviews";
+import { fetchCompletedInterviews} from "@/lib/api/interviews";
 import { axiosInstance } from "@/lib/axiosinstance";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,10 @@ interface CompletedInterview {
   meetingLink?: string;
   rating?: number;
   feedback?: string;
+  intervieweeFeedback?: string;
+  interviewerFeedback?: string;
+  intervieweeRating?: number;
+  interviewerRating?: number;
   interviewer?: {
     _id?: string;
     name?: string;
@@ -54,6 +58,7 @@ export default function HistoryInterviews() {
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
+      console.log(data);
       setInterviews(data);
       await fetchInterviewerDetails(data);
       
@@ -66,7 +71,7 @@ export default function HistoryInterviews() {
   
   useEffect(() => {
     loadCompletedInterviews();
-  });
+  }, [user?.uid]);
   
   const fetchInterviewerDetails = async (interviewData: CompletedInterview[]) => {
     
@@ -101,6 +106,7 @@ export default function HistoryInterviews() {
       
       
       setInterviewerDetails(detailsMap);
+     // console.log(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
     }
@@ -167,7 +173,7 @@ export default function HistoryInterviews() {
   const handleShowMore = () => {
     setDisplayCount(prev => prev + 5);
   };
-
+  //console.log(interviews);
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
@@ -178,27 +184,11 @@ export default function HistoryInterviews() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-[#09090B]">
-                <TableHead className="w-[200px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[300px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
+                {['Interviewer', 'Type', 'Date', 'Status', 'Rating', 'Feedback', 'Actions'].map((header, i) => (
+                  <TableHead key={i} className="text-center font-medium">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20 mx-auto"></div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -206,36 +196,36 @@ export default function HistoryInterviews() {
                 <TableRow key={index} className="transition">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center">
+                      <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center">
+                      <div className="h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center gap-2">
+                      <div className="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -322,10 +312,10 @@ export default function HistoryInterviews() {
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    {interview.rating ? (
+                    {interview.intervieweeRating ? (
                       <div className="flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {interview.rating}/5
+                          {interview.intervieweeRating}/5
                         </span>
                       </div>
                     ) : (
@@ -347,7 +337,7 @@ export default function HistoryInterviews() {
                         style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
                       >
                         <div className="text-sm leading-relaxed">
-                          {(interview.feedback) || "No feedback available"}
+                          {interview.intervieweeFeedback || "No description available"}
                         </div>
                         {/* Arrow pointing to the button */}
                         <div 

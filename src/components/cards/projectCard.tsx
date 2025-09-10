@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getStatusBadge } from '@/utils/statusBadge';
-import { Type } from '@/utils/enum';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import { RootState } from '@/lib/store';
@@ -71,12 +70,10 @@ type ProjectCardProps = React.ComponentProps<typeof Card> & {
 export function ProjectCard({
   cardClassName,
   project,
-  type = Type.BUSINESS,
   ...props
 }: ProjectCardProps) {
   const { text, className } = getStatusBadge(project.status);
   const [openReport, setOpenReport] = useState(false);
-  console.log('user type:', type);
   const pathname = usePathname();
   const user = useSelector((state: RootState) => state.user);
 
@@ -84,7 +81,7 @@ export function ProjectCard({
   const reportData = {
     subject: '',
     description: '',
-    report_role: user?.type || 'STUDENT',
+    report_role: user?.type || 'FREELANCER',
     report_type: reportType,
     status: 'OPEN',
     reportedbyId: user?.uid || 'user123',
@@ -160,11 +157,14 @@ export function ProjectCard({
       </CardContent>
 
       <CardFooter>
-        <Link href={`/project/${project._id}`} className="w-full">
+        <Link
+          href={`${user?.type === 'business' ? '/business' : ''}/project/${project._id}`}
+          className="w-full"
+        >
           <Button
             className={`w-full ${project.status === StatusEnum.COMPLETED && 'bg-green-900 hover:bg-green-700'}`}
           >
-            View full details
+            View full Details
           </Button>
         </Link>
       </CardFooter>

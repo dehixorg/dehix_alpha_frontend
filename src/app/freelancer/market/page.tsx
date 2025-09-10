@@ -2,8 +2,9 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Heart, Loader2, X } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectTrigger,
@@ -478,8 +479,37 @@ const Market: React.FC = () => {
 
         {/* Right Content - Job Listings */}
         {isLoading ? (
-          <div className="mt-4 lg:mt-0 space-y-4 w-full flex justify-center items-center h-[60vh]">
-            <Loader2 size={40} className="text-primary animate-spin" />
+          <div className="mt-4 lg:mt-0 w-full">
+            <div className="content-scroll-area grid grid-cols-1 gap-6 pb-20 lg:pb-4 max-w-4xl mx-auto">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-6 border rounded-lg bg-card">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                    ))}
+                  </div>
+                  <div className="mt-4 flex justify-between items-center">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-28" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="mt-4 lg:mt-0 w-full">
