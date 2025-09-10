@@ -510,150 +510,152 @@ const Market: React.FC = () => {
 
       {/* Mobile Filters Modal */}
       {isClient && showFilters && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
-          <div className="border border-border rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg  bg-black">
-            <div className="flex justify-between items-center p-4 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground">Filters</h2>
-              <Button variant="ghost" size="sm" onClick={handleModalToggle}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="overflow-y-auto p-4 flex-grow scrollbar-hide">
-              {/* Mobile Favourites Filter */}
-              <div className="border-b border-border py-4">
-                <div className="p-3 border border-border rounded-lg bg-card">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="mobile-favourites"
-                      checked={filters.favourites}
-                      onCheckedChange={(checked) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          favourites: checked as boolean,
-                        }))
-                      }
-                    />
-                    <label
-                      htmlFor="mobile-favourites"
-                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
-                    >
-                      <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                      <span>Show Favourites Only</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="border-b border-border pb-4">
-                <MobileSkillDom
-                  label="Domains"
-                  heading="Filter by Domains"
-                  checkboxLabels={domains}
-                  selectedValues={filters.domain}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('domain', values)
-                  }
-                />
-              </div>
-
-              <div className="border-b border-border py-4">
-                <MobileSkillDom
-                  label="Skills"
-                  heading="Filter by Skills"
-                  checkboxLabels={skills}
-                  selectedValues={filters.skills}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('skills', values)
-                  }
-                />
-              </div>
-
-              <div className="border-b border-border py-4">
-                <MobileSkillDom
-                  label="ProjectDomain"
-                  heading="Filter by Project Domains"
-                  checkboxLabels={projectDomains}
-                  selectedValues={filters.projectDomain}
-                  setSelectedValues={(values) =>
-                    handleFilterChange('projectDomain', values)
-                  }
-                />
-              </div>
-
-              <div className="mb-4 bg-background shadow-sm">
-                <Label className="mb-4 block text-lg font-medium text-foreground">
-                  Filter by Rate
-                </Label>
-                <div className="flex gap-4">
-                  <div className="flex flex-col flex-1">
-                    <Label
-                      htmlFor="minRate"
-                      className="mb-1 text-sm text-muted-foreground"
-                    >
-                      Min Rate
-                    </Label>
-                    <Input
-                      id="minRate"
-                      type="number"
-                      min={0}
-                      max={100000}
-                      aria-label="Minimum Rate"
-                      placeholder="e.g. 10"
-                      value={filters.minRate}
-                      onChange={(e) => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          minRate: e.target.value,
-                        }));
-                      }}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      className="bg-background border-border focus:border-primary"
-                    />
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <Label
-                      htmlFor="maxRate"
-                      className="mb-1 text-sm text-muted-foreground"
-                    >
-                      Max Rate
-                    </Label>
-                    <Input
-                      id="maxRate"
-                      type="number"
-                      min={0}
-                      max={100000}
-                      aria-label="Maximum Rate"
-                      placeholder="e.g. 100"
-                      value={filters.maxRate}
-                      onChange={(e) => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          maxRate: e.target.value,
-                        }));
-                      }}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      className="bg-background border-border focus:border-primary"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-3">
-                <Button onClick={handleApply} className="flex-1">
-                  Apply
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  className="flex-1 bg-background border-border hover:bg-muted"
-                >
-                  Reset
-                </Button>
-              </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
+    <div className="border border-gray-200 dark:border-gray-800 rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
+      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Filters
+        </h2>
+        <Button variant="ghost" size="sm" onClick={handleModalToggle}>
+          <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+        </Button>
+      </div>
+      <div className="overflow-y-auto p-4 flex-grow scrollbar-hide">
+        {/* Mobile Favourites Filter */}
+        <div className="border-b border-gray-200 dark:border-gray-800 py-4">
+          <div className="p-3 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="mobile-favourites"
+                checked={filters.favourites}
+                onCheckedChange={(checked) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    favourites: checked as boolean,
+                  }))
+                }
+              />
+              <label
+                htmlFor="mobile-favourites"
+                className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer select-none flex items-center space-x-2"
+              >
+                <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                <span>Show Favourites Only</span>
+              </label>
             </div>
           </div>
         </div>
-      )}
+        <div className="border-b border-gray-200 dark:border-gray-800 pb-4">
+          <MobileSkillDom
+            label="Domains"
+            heading="Filter by Domains"
+            checkboxLabels={domains}
+            selectedValues={filters.domain}
+            setSelectedValues={(values) =>
+              handleFilterChange('domain', values)
+            }
+          />
+        </div>
+
+        <div className="border-b border-gray-200 dark:border-gray-800 py-4">
+          <MobileSkillDom
+            label="Skills"
+            heading="Filter by Skills"
+            checkboxLabels={skills}
+            selectedValues={filters.skills}
+            setSelectedValues={(values) =>
+              handleFilterChange('skills', values)
+            }
+          />
+        </div>
+
+        <div className="border-b border-gray-200 dark:border-gray-800 py-4">
+          <MobileSkillDom
+            label="ProjectDomain"
+            heading="Filter by Project Domains"
+            checkboxLabels={projectDomains}
+            selectedValues={filters.projectDomain}
+            setSelectedValues={(values) =>
+              handleFilterChange('projectDomain', values)
+            }
+          />
+        </div>
+
+        <div className="py-4">
+          <Label className="mb-4 block text-lg font-medium text-gray-900 dark:text-white">
+            Filter by Rate
+          </Label>
+          <div className="flex gap-4">
+            <div className="flex flex-col flex-1">
+              <Label
+                htmlFor="minRate"
+                className="mb-1 text-sm text-gray-500 dark:text-gray-400"
+              >
+                Min Rate
+              </Label>
+              <Input
+                id="minRate"
+                type="number"
+                min={0}
+                max={100000}
+                aria-label="Minimum Rate"
+                placeholder="e.g. 10"
+                value={filters.minRate}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    minRate: e.target.value,
+                  }));
+                }}
+                onWheel={(e) => e.currentTarget.blur()}
+                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex flex-col flex-1">
+              <Label
+                htmlFor="maxRate"
+                className="mb-1 text-sm text-gray-500 dark:text-gray-400"
+              >
+                Max Rate
+              </Label>
+              <Input
+                id="maxRate"
+                type="number"
+                min={0}
+                max={100000}
+                aria-label="Maximum Rate"
+                placeholder="e.g. 100"
+                value={filters.maxRate}
+                onChange={(e) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    maxRate: e.target.value,
+                  }));
+                }}
+                onWheel={(e) => e.currentTarget.blur()}
+                className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <div className="flex gap-3">
+          <Button onClick={handleApply} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+            Apply
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="flex-1 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            Reset
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       {/* Mobile Filter Toggle Button */}
       {isClient && (
         <div className="fixed bottom-0 left-0 right-0 lg:hidden p-4 flex justify-center z-40">
