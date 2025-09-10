@@ -1,8 +1,9 @@
 'use client';
-import { Loader2, PackageOpen } from 'lucide-react';
+import { PackageOpen } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
@@ -94,8 +95,36 @@ export default function CurrentProject() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center min-h-[50vh]">
-            <Loader2 size={40} className="animate-spin" />
+          <div
+            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+          >
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="border rounded-lg p-6 space-y-4">
+                <div className="flex justify-between items-start">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                  ))}
+                </div>
+                <div className="pt-4 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+                <div className="flex justify-between items-center pt-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-28" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <main

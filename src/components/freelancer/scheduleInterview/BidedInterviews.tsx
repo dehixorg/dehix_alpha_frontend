@@ -169,8 +169,59 @@ export default function BidedInterviews() {
 
   if (loading && bids.length === 0) {
     return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="animate-spin" />
+      <div className="space-y-4">
+        <div className="w-full bg-card mx-auto px-4 md:px-10 py-6 border border-gray-200 rounded-xl shadow-md">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-[#09090B]">
+                {['Talent', 'Type', 'Date', 'Time', 'Bid', 'Actions'].map((header, i) => (
+                  <TableHead key={i} className="text-center font-medium">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 mx-auto"></div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, index) => (
+                <TableRow key={index} className="transition">
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="flex justify-center gap-2">
+                      <div className="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }

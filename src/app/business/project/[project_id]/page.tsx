@@ -4,6 +4,7 @@ import { CalendarX2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Carousel,
@@ -12,7 +13,6 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from '@/components/ui/carousel';
-import { Progress } from '@/components/ui/progress';
 import ProjectDetailCard from '@/components/freelancer/project/projectDetailCard';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -218,8 +218,60 @@ export default function Dashboard() {
 
   if (!project) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Progress className="w-1/2" value={50} />
+      <div className="flex min-h-screen w-full flex-col bg-muted/40 p-6 space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex space-x-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Project Info Skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <div className="flex flex-wrap gap-2 pt-2">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-6 w-20 rounded-full" />
+                ))}
+              </div>
+            </div>
+
+            {/* Profiles Skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="border rounded-lg p-4 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex flex-wrap gap-1 pt-2">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-32" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

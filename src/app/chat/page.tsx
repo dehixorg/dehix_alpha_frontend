@@ -4,7 +4,8 @@
 
 import { useEffect, useState } from 'react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { LoaderCircle, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { db } from '@/config/firebaseConfig';
@@ -260,14 +261,22 @@ const HomePage = () => {
     if (!loading && conversations.length > 0 && !activeConversation) {
       setActiveConversation(conversations[0]);
     }
-  }, [conversations, loading, activeConversation]);
+  }, [loading, conversations, activeConversation]);
 
   // --- JSX Rendering Logic ---
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
-      <div className="flex justify-center items-center h-full">
-        <LoaderCircle className="h-6 w-6 text-[hsl(var(--primary))] animate-spin" />
+      <div className="space-y-4 p-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-3 p-2 rounded-lg">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   } else if (conversations.length > 0) {
@@ -294,8 +303,35 @@ const HomePage = () => {
   let chatWindowComponentContent;
   if (loading && !activeConversation) {
     chatWindowComponentContent = (
-      <div className="flex flex-col h-full items-center justify-center bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none">
-        <LoaderCircle className="h-8 w-8 text-[hsl(var(--primary))] animate-spin" />
+      <div className="h-full bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
+        {/* Chat header skeleton */}
+        <div className="flex items-center space-x-3 pb-4 border-b">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+        
+        {/* Chat messages skeleton */}
+        <div className="space-y-4 py-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs ${i % 2 === 0 ? 'bg-primary/10' : 'bg-muted'} rounded-lg p-3`}>
+                <Skeleton className="h-4 w-48 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Message input skeleton */}
+        <div className="border-t pt-4 mt-auto">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 flex-1 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </div>
       </div>
     );
   } else if (activeConversation) {
@@ -371,6 +407,6 @@ const HomePage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default HomePage;

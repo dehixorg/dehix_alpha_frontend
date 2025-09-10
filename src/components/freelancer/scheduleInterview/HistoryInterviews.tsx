@@ -184,27 +184,11 @@ export default function HistoryInterviews() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-[#09090B]">
-                <TableHead className="w-[200px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[300px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
-                <TableHead className="w-[150px] text-center font-medium">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </TableHead>
+                {['Interviewer', 'Type', 'Date', 'Status', 'Rating', 'Feedback', 'Actions'].map((header, i) => (
+                  <TableHead key={i} className="text-center font-medium">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20 mx-auto"></div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -212,36 +196,36 @@ export default function HistoryInterviews() {
                 <TableRow key={index} className="transition">
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                      <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
+                  </TableCell>
+                  <TableCell className="py-3 text-center">
+                    <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center">
+                      <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                      <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center">
+                      <div className="h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
                     </div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="flex justify-center gap-2">
+                      <div className="h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
