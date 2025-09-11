@@ -67,7 +67,7 @@ const NoteCard = ({
               backgroundPosition: 'center',
               opacity: 0.9,
             }
-          : { backgroundColor: note.bgColor || '#ffffff' }
+          : { backgroundColor: note.bgColor || '#ffffff', opacity: 0.8 }
       }
       onClick={() => onEditNote(note)}
     >

@@ -1,15 +1,9 @@
 'use client';
-import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
+import { CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -20,13 +14,13 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
+import MeetingDialog from '@/components/ui/meetingDialog';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { toast } from '@/components/ui/use-toast';
+import EarningCard from '@/components/shared/earningCard';
 
 interface Project {
   _id: string;
@@ -39,8 +33,14 @@ interface Project {
   verified?: any;
   isVerified?: string;
   companyName: string;
-  start?: Date;
-  end?: Date | null;
+  start: {
+    expected: Date;
+    actual?: Date;
+  };
+  end: {
+    expected: Date;
+    actual?: Date;
+  };
   skillsRequired: string[];
   experience?: string;
   role?: string;
@@ -174,29 +174,26 @@ export default function Dashboard() {
             <ProfileCompletion userId={user.uid} />
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card className="sm:col-span-2 flex flex-col h-full">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">
-                    {loading ? <Skeleton className="h-10 w-20" /> : '0'}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className="grid gap-4 grid-cols-4">
-                  <div className="col-span-3">
-                    <CardTitle>Total Earnings</CardTitle>
-                    <CardDescription className="max-w-lg text-balance leading-relaxed">
-                      {loading ? (
-                        <Skeleton className="h-5 w-40" />
-                      ) : (
-                        'Your total earnings from projects.'
-                      )}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                </CardFooter>
-              </Card>
-
+              <EarningCard
+                className="sm:col-span-2 flex flex-col h-full"
+                title="Total Revenue"
+                value="$45,231.89"
+                description="+20.1% from last month"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    className="h-4 w-4 text-muted-foreground"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                }
+              />
               <StatCard
                 title="Active Projects"
                 value={loadingStats ? '...' : activeProjects.length}
