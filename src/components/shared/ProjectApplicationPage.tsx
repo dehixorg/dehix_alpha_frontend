@@ -497,8 +497,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     <p>{project?.status}</p>
                   </div>
                   <div>
-                    <h3 className="font-medium">Budget Type</h3>
-                    <p>{project?.budget?.type}</p>
+                    <h3 className="font-medium">Project Type</h3>
+                    <p>{project?.projectType}</p>
                   </div>
                   {project?.budget?.type.toUpperCase() === 'HOURLY' ? (
                     <>
@@ -772,10 +772,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                           <form onSubmit={handleBidSubmit}>
                             <div className="grid gap-4 py-4">
                               <div className="grid grid-cols-4 items-center gap-4">
-                                <Label
-                                  htmlFor="bidAmount"
-                                  className="text-center"
-                                >
+                                <Label htmlFor="bidAmount" className="text-center">
                                   Connects
                                 </Label>
                                 <div className="col-span-3 relative">
@@ -800,11 +797,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             <div className="flex justify-end">
                               <Button
                                 type="submit"
-                                disabled={isBidSubmitted || isBidLoading}
+                                disabled={isBidLoading || hasAppliedToSelectedProfile}
                               >
                                 {isBidLoading ? (
                                   <Loader2 className="animate-spin w-6 h-6" />
-                                ) : isBidSubmitted ? (
+                                ) : hasAppliedToSelectedProfile ? (
                                   'Applied'
                                 ) : (
                                   'Submit Bid'
