@@ -4,6 +4,7 @@ import { CheckCircle, Clock, PackageOpen, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { Button } from '@/components/ui/button';
@@ -94,13 +95,6 @@ export default function Dashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  {/* Wrap the Button with the Link component to make it clickable */}
-                  {/* <Link href="/business/add-project" passHref>
-                    <Button className="w-full"> */}{' '}
-                  {/* Ensure the Button takes up full width */}
-                  {/* Create New Project
-                    </Button>
-                  </Link> */}
                   <Dialog
                     open={modalOpen}
                     onOpenChange={(isOpen) => {
@@ -143,9 +137,14 @@ export default function Dashboard() {
               />
             </div>
             <Separator className="my-1" />
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Current Projects {`(${pendingProjects.length})`}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Current Projects
+              </h2>
+              <Badge variant="secondary" className="text-sm h-6 px-2 mb-auto">
+                {pendingProjects.length}
+              </Badge>
+            </div>
             <div className="flex gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
               <Carousel className="w-full relative">
                 <CarouselContent className="flex mt-3 gap-4">
@@ -189,9 +188,17 @@ export default function Dashboard() {
 
             <Separator className="my-1" />
 
-            <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Completed Projects {`(${completedProjects.length})`}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                Completed Projects
+              </h2>
+              <Badge
+                variant="secondary"
+                className="text-sm h-6 px-2 mb-auto bg-green-700"
+              >
+                {completedProjects.length}
+              </Badge>
+            </div>
             <div className="flex relative gap-4 overflow-x-scroll no-scrollbar pb-8 pt-5">
               <Carousel className="w-full relative pt-9">
                 <CarouselContent className="flex gap-4">
