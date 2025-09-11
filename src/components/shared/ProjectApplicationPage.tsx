@@ -155,22 +155,16 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       }
 
       const response = await axiosInstance.get(apiEndpoint);
-      console.log(response);
-
       let profilesData = response.data.data;
-      console.log(profilesData);
 
-      // Check if the data is a nested object and extract the array
+      // FIX: Correctly extract the array from the nested API response object
       if (profilesData && profilesData.consultant) {
         const consultantData = profilesData.consultant;
-        // Use Object.values to convert the object of profiles into an array
         profilesData = Object.values(consultantData);
       }
 
-      // Double-check if the extracted data is an array before setting the state.
-      // This is the key line to ensure the state is always an array.
+      // FIX: Ensure profilesData is always an array before setting the state to prevent map errors
       const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
-
       setFreelancerProfiles(finalProfiles);
 
     } catch (error) {
@@ -219,8 +213,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
   useEffect(() => {
     fetchAppliedData();
-    // This effect now fetches profiles dynamically based on `selectedProfile`.
-    // It will trigger whenever `selectedProfile` changes.
     if (selectedProfile) {
       fetchFreelancerProfiles();
     }
@@ -238,12 +230,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
   const handleApplyClick = () => {
     if (!selectedProfile) {
-        toast({
-            title: 'Action Required',
-            description: 'Please select a profile to apply with before proceeding.',
-            variant: 'destructive'
-        });
-        return;
+      toast({
+        title: 'Action Required',
+        description: 'Please select a profile to apply with before proceeding.',
+        variant: 'destructive',
+      });
+      return;
     }
     setDialogOpen(true);
   };
@@ -329,13 +321,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         profile_id: selectedProfile._id,
         project_id: project._id,
         biddingValue: bidAmount,
-        profile_type: selectedProfile.profileType || "FREELANCER",
+        profile_type: selectedProfile.profileType || 'FREELANCER',
       };
 
       if (selectedFreelancerProfile?._id) {
         bidData.freelancer_profile_id = selectedFreelancerProfile._id;
       }
-      console.log(bidData)
+      console.log(bidData);
       await axiosInstance.post(`/bid`, bidData);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
@@ -405,7 +397,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     );
   }
   const handleProfileSelection = (profile: Profile) => {
+    // FIX: Allow selection of an applied profile to view proposal, but prevent deselecting it
     if (appliedProfileIds.includes(profile._id)) {
+      setSelectedProfile(profile);
       return;
     }
     setSelectedProfile((prevSelected) => {
@@ -567,7 +561,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     Your Application
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    {/* Display selected profiles here */}
                     {selectedProfile && (
                       <div className="flex flex-wrap gap-2">
                         <Badge
@@ -885,9 +878,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                       <Card
                         key={profile?._id || index}
                         className={`border cursor-pointer ${
+                          // FIX: Conditional styling for selected vs applied profiles
                           selectedProfile?._id === profile._id
-                            ? 'border-blue-500 ring-2 ring-blue-500'
-                            : 'border-gray-200'
+                            ? appliedProfileIds.includes(profile._id)
+                              ? 'border-red-500 ring-2 ring-red-500' // Applied and selected
+                              : 'border-blue-500 ring-2 ring-blue-500' // Not applied but selected
+                            : appliedProfileIds.includes(profile._id)
+                              ? 'border-red-500' // Applied but not selected
+                              : 'border-gray-200' // Default state
                         }`}
                         onClick={() => handleProfileSelection(profile)}
                       >
