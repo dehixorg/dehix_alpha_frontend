@@ -33,6 +33,7 @@ interface ProjectProfile {
   selectedFreelancer?: string[];
   totalBid?: number[];
   domain?: string;
+  profileType?: string;
   freelancersRequired?: string;
   skills?: string[];
   experience?: number;
@@ -86,7 +87,6 @@ export default function Dashboard() {
   const { project_id } = useParams<{ project_id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [isAddProfileDialogOpen, setIsAddProfileDialogOpen] = useState(false);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -335,6 +335,7 @@ export default function Dashboard() {
                               description={profile.description}
                               email={project.email}
                               status={project.status}
+                              profileType={profile.profileType}
                               startDate={project.createdAt}
                               endDate={project.end}
                               domains={[]}

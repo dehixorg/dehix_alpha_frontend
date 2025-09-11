@@ -41,6 +41,7 @@ interface FilterState {
   minRate: string;
   maxRate: string;
   favourites: boolean;
+  consultant: boolean;
 }
 export interface Project {
   _id: string;
@@ -74,6 +75,7 @@ export interface Project {
   profiles?: {
     _id?: string;
     domain?: string;
+    profileType?: string;
     freelancersRequired?: string;
     skills?: string[];
     experience?: number;
@@ -107,6 +109,7 @@ const Market: React.FC = () => {
     minRate: '',
     maxRate: '',
     favourites: false,
+    consultant: false,
   });
   const [jobs, setJobs] = useState<Project[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -190,6 +193,7 @@ const Market: React.FC = () => {
       minRate: '',
       maxRate: '',
       favourites: false,
+      consultant: false,
     });
   };
   const constructQueryString = (filters: FilterState) => {
@@ -230,6 +234,18 @@ const Market: React.FC = () => {
             draftedProjects.includes(job._id),
           );
         }
+        /* apply consultant profile filter if enabled */
+        if (appliedFilters.consultant) {
+          filteredJobs = filteredJobs.filter(
+            (project: Project) =>
+              Array.isArray(project.profiles) &&
+              project.profiles.some(
+                (profile) =>
+                  profile.profileType?.toUpperCase() === 'CONSULTANT',
+              ),
+          );
+        }
+
         // Sort projects by creation date (newest first)
         filteredJobs.sort((a: Project, b: Project) => {
           const dateA = new Date(a.createdAt).getTime();
@@ -372,7 +388,30 @@ const Market: React.FC = () => {
                     className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
                   >
                     <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                    <span>Show Favourites Only</span>
+                    <span>Show Favourites</span>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="w-full">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="consultant"
+                    checked={filters.consultant}
+                    onCheckedChange={(checked) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        consultant: checked as boolean,
+                      }))
+                    }
+                  />
+                  <label
+                    htmlFor="consultant"
+                    className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                  >
+                    <span>Show Consultant</span>
                   </label>
                 </div>
               </CardContent>
