@@ -24,11 +24,8 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-<<<<<<< HEAD
-import {  usePathname } from 'next/navigation';
-=======
+
 import { usePathname } from 'next/navigation';
->>>>>>> 5413466ebe32d5fdffdf88f5eadd47c03914b39d
 import {
   formatDistanceToNow,
   format,
