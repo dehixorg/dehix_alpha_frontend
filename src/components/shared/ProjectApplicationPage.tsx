@@ -166,7 +166,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       // FIX: Ensure profilesData is always an array before setting the state to prevent map errors
       const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
       setFreelancerProfiles(finalProfiles);
-
     } catch (error) {
       console.error('Error fetching freelancer profiles:', error);
       toast({
@@ -380,14 +379,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     project?.createdAt || Date.now(),
   ).toLocaleDateString();
 
-  const hasAppliedToAnyProfileInProject = appliedProfileIds.some((appliedId) =>
-    project.profiles.some((p: any) => p._id === appliedId),
-  );
   
+
   const hasAppliedToSelectedProfile = selectedProfile
     ? appliedProfileIds.includes(selectedProfile._id)
     : false;
-
 
   if (isLoading) {
     return (
@@ -585,11 +581,15 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                        onClick={() =>
+                          setShowProfileDropdown(!showProfileDropdown)
+                        }
                         className="flex items-center gap-2"
                         disabled={hasAppliedToSelectedProfile}
                       >
-                        {selectedFreelancerProfile ? selectedFreelancerProfile.profileName : 'Add Profiles'}
+                        {selectedFreelancerProfile
+                          ? selectedFreelancerProfile.profileName
+                          : 'Add Profiles'}
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
                         />
@@ -616,19 +616,22 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             </div>
                           ) : (
                             <div className="p-2">
-                              {Array.isArray(freelancerProfiles) && freelancerProfiles.length > 0 ? (
+                              {Array.isArray(freelancerProfiles) &&
+                              freelancerProfiles.length > 0 ? (
                                 freelancerProfiles.map((profile) => (
                                   <div
                                     key={profile._id}
                                     className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
-                                      selectedFreelancerProfile?._id === profile._id
+                                      selectedFreelancerProfile?._id ===
+                                      profile._id
                                         ? 'border-green-500 bg-green-50 dark:bg-green-950'
                                         : 'border-transparent hover:border-muted-foreground hover:bg-muted'
                                     }`}
                                     onClick={() => {
                                       if (!hasAppliedToSelectedProfile) {
                                         setSelectedFreelancerProfile(
-                                          selectedFreelancerProfile?._id === profile._id
+                                          selectedFreelancerProfile?._id ===
+                                            profile._id
                                             ? null
                                             : profile,
                                         );
@@ -642,7 +645,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                                           {profile.profileName}
                                         </h4>
                                       </div>
-                                      {selectedFreelancerProfile?._id === profile._id && (
+                                      {selectedFreelancerProfile?._id ===
+                                        profile._id && (
                                         <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
                                           <Check className="w-3 h-3 text-white" />
                                         </div>
@@ -722,7 +726,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         onClick={handleApplyClick}
                         className="w-full md:w-auto px-8"
                         disabled={
-                          isLoading || hasAppliedToSelectedProfile || !selectedProfile
+                          isLoading ||
+                          hasAppliedToSelectedProfile ||
+                          !selectedProfile
                         }
                       >
                         {isLoading
@@ -772,7 +778,10 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                           <form onSubmit={handleBidSubmit}>
                             <div className="grid gap-4 py-4">
                               <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="bidAmount" className="text-center">
+                                <Label
+                                  htmlFor="bidAmount"
+                                  className="text-center"
+                                >
                                   Connects
                                 </Label>
                                 <div className="col-span-3 relative">
@@ -797,7 +806,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             <div className="flex justify-end">
                               <Button
                                 type="submit"
-                                disabled={isBidLoading || hasAppliedToSelectedProfile}
+                                disabled={
+                                  isBidLoading || hasAppliedToSelectedProfile
+                                }
                               >
                                 {isBidLoading ? (
                                   <Loader2 className="animate-spin w-6 h-6" />

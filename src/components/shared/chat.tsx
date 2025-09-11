@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-
 import { usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,

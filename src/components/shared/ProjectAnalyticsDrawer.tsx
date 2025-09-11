@@ -332,19 +332,33 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{analyticsData.jobDuration}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Duration
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.jobDuration}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Start date</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{analyticsData.startDate}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Start date
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.startDate}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Deadline</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{analyticsData.endDate}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Deadline
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.endDate}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Status
+                      </p>
                       <Badge
                         className={`${
                           project.status === 'COMPLETED'
@@ -361,7 +375,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
 
                   {project.budget && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Budget</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Budget
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {project.budget.type === 'hourly' &&
                         project.budget.hourly ? (
@@ -385,7 +401,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   )}
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Required Skills</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Required Skills
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {project.skillsRequired &&
                       project.skillsRequired.length > 0 ? (
@@ -406,7 +424,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Project Profiles</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Project Profiles
+                    </p>
                     {project.profiles && project.profiles.length > 0 ? (
                       project.profiles.map((profile) => (
                         <div
@@ -414,7 +434,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                           className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900 dark:text-white">{profile.domain}</h4>
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {profile.domain}
+                            </h4>
                             <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-600/20 dark:text-blue-500">
                               ${profile.rate}/hr
                             </Badge>
@@ -424,17 +446,23 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                           </p>
                           <div className="grid grid-cols-3 gap-2 text-xs text-gray-900 dark:text-white">
                             <div>
-                              <span className="text-gray-500 dark:text-gray-500">Required: </span>
+                              <span className="text-gray-500 dark:text-gray-500">
+                                Required:{' '}
+                              </span>
                               <span>
                                 {profile.freelancersRequired || 'N/A'}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-500 dark:text-gray-500">Experience: </span>
+                              <span className="text-gray-500 dark:text-gray-500">
+                                Experience:{' '}
+                              </span>
                               <span>{profile.experience || 'N/A'} years</span>
                             </div>
                             <div>
-                              <span className="text-gray-500 dark:text-gray-500">Bids: </span>
+                              <span className="text-gray-500 dark:text-gray-500">
+                                Bids:{' '}
+                              </span>
                               <span>{profile.totalBid?.length || 0}</span>
                             </div>
                           </div>
@@ -467,7 +495,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-3 text-gray-900 dark:text-white">
                   <div>
-                    <p className="font-medium">{project.companyName || 'N/A'}</p>
+                    <p className="font-medium">
+                      {project.companyName || 'N/A'}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {project.email || 'N/A'}
                     </p>
@@ -524,24 +554,32 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 <CardContent className="space-y-4 text-gray-900 dark:text-white">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Avg bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Avg bid
+                      </p>
                       <p className="font-medium text-green-500">
                         {analyticsData.avgBid}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Top bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Top bid
+                      </p>
                       <p className="font-medium">{analyticsData.topBid}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Low bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Low bid
+                      </p>
                       <p className="font-medium">{analyticsData.lowBid}</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Relevance</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Relevance
+                      </p>
                       <p className="text-xs font-medium">
                         {analyticsData.relevance}%
                       </p>
@@ -585,8 +623,12 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900 dark:text-white">{event.event}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{event.date}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {event.event}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {event.date}
+                          </p>
                         </div>
                       </div>
                     ))
@@ -608,7 +650,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className='text-gray-900 dark:text-white'>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">
                       Average Experience
                     </h3>
@@ -616,13 +658,13 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                       {analyticsData.competitorInsights.avgExperience}
                     </p>
                   </div>
-                  <div className='text-gray-900 dark:text-white'>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">Bid Range</h3>
                     <p className="text-2xl font-bold">
                       {analyticsData.competitorInsights.bidRange}
                     </p>
                   </div>
-                  <div className='text-gray-900 dark:text-white'>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">
                       Total Competitors
                     </h3>
@@ -658,7 +700,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">Bid Distribution</h3>
+                  <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                    Bid Distribution
+                  </h3>
                   {project.profiles && project.profiles.length > 0 ? (
                     <div className="space-y-2">
                       {project.profiles.map((profile) => (
@@ -666,7 +710,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                           key={profile._id}
                           className="flex justify-between items-center"
                         >
-                          <span className="text-sm text-gray-900 dark:text-white">{profile.domain}</span>
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            {profile.domain}
+                          </span>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               {profile.totalBid?.length || 0} bids
