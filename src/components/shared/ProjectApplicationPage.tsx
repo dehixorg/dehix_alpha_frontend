@@ -149,31 +149,31 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
     setIsLoadingProfiles(true);
     try {
-  let apiEndpoint = '/freelancer/profiles';
-  if (selectedProfile?.profileType === 'CONSULTANT') {
-    apiEndpoint = '/freelancer/consultant';
-  }
+      let apiEndpoint = '/freelancer/profiles';
+      if (selectedProfile?.profileType === 'CONSULTANT') {
+        apiEndpoint = '/freelancer/consultant';
+      }
 
-  const response = await axiosInstance.get(apiEndpoint);
-  console.log(response);
+      const response = await axiosInstance.get(apiEndpoint);
+      console.log(response);
 
-  let profilesData = response.data.data;
-  console.log(profilesData);
+      let profilesData = response.data.data;
+      console.log(profilesData);
 
-  // Check if the data is a nested object and extract the array
-  if (profilesData && profilesData.consultant) {
-    const consultantData = profilesData.consultant;
-    // Use Object.values to convert the object of profiles into an array
-    profilesData = Object.values(consultantData);
-  }
+      // Check if the data is a nested object and extract the array
+      if (profilesData && profilesData.consultant) {
+        const consultantData = profilesData.consultant;
+        // Use Object.values to convert the object of profiles into an array
+        profilesData = Object.values(consultantData);
+      }
 
-  // Double-check if the extracted data is an array before setting the state.
-  // This is the key line to ensure the state is always an array.
-  const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
+      // Double-check if the extracted data is an array before setting the state.
+      // This is the key line to ensure the state is always an array.
+      const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
 
-  setFreelancerProfiles(finalProfiles);
+      setFreelancerProfiles(finalProfiles);
 
-} catch (error) {
+    } catch (error) {
       console.error('Error fetching freelancer profiles:', error);
       toast({
         variant: 'destructive',
@@ -243,7 +243,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             description: 'Please select a profile to apply with before proceeding.',
             variant: 'destructive'
         });
-        return; 
+        return;
     }
     setDialogOpen(true);
   };
@@ -294,7 +294,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     );
 
     if (
-      
       isNaN(bidAmount) ||
       isNaN(currentConnects) ||
       bidAmount > currentConnects
@@ -392,6 +391,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const hasAppliedToAnyProfileInProject = appliedProfileIds.some((appliedId) =>
     project.profiles.some((p: any) => p._id === appliedId),
   );
+  
+  const hasAppliedToSelectedProfile = selectedProfile
+    ? appliedProfileIds.includes(selectedProfile._id)
+    : false;
+
 
   if (isLoading) {
     return (
@@ -590,7 +594,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         size="sm"
                         onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                         className="flex items-center gap-2"
-                        disabled={hasAppliedToAnyProfileInProject}
+                        disabled={hasAppliedToSelectedProfile}
                       >
                         {selectedFreelancerProfile ? selectedFreelancerProfile.profileName : 'Add Profiles'}
                         <ChevronDown
@@ -618,54 +622,54 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                               </p>
                             </div>
                           ) : (
-  <div className="p-2">
-    {Array.isArray(freelancerProfiles) && freelancerProfiles.length > 0 ? (
-      freelancerProfiles.map((profile) => (
-        <div
-          key={profile._id}
-          className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
-            selectedFreelancerProfile?._id === profile._id
-              ? 'border-green-500 bg-green-50 dark:bg-green-950'
-              : 'border-transparent hover:border-muted-foreground hover:bg-muted'
-          }`}
-          onClick={() => {
-            if (!hasAppliedToAnyProfileInProject) {
-              setSelectedFreelancerProfile(
-                selectedFreelancerProfile?._id === profile._id
-                  ? null
-                  : profile,
-              );
-              setShowProfileDropdown(false);
-            }
-          }}
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h4 className="font-medium text-sm text-foreground">
-                {profile.profileName}
-              </h4>
-            </div>
-            {selectedFreelancerProfile?._id === profile._id && (
-              <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-            )}
-          </div>
-        </div>
-      ))
-    ) : (
-      <div className="p-4 text-center">
-        <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          No profiles created yet
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Create profiles in your settings
-        </p>
-      </div>
-    )}
-  </div>
-)}
+                            <div className="p-2">
+                              {Array.isArray(freelancerProfiles) && freelancerProfiles.length > 0 ? (
+                                freelancerProfiles.map((profile) => (
+                                  <div
+                                    key={profile._id}
+                                    className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
+                                      selectedFreelancerProfile?._id === profile._id
+                                        ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                        : 'border-transparent hover:border-muted-foreground hover:bg-muted'
+                                    }`}
+                                    onClick={() => {
+                                      if (!hasAppliedToSelectedProfile) {
+                                        setSelectedFreelancerProfile(
+                                          selectedFreelancerProfile?._id === profile._id
+                                            ? null
+                                            : profile,
+                                        );
+                                        setShowProfileDropdown(false);
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <h4 className="font-medium text-sm text-foreground">
+                                          {profile.profileName}
+                                        </h4>
+                                      </div>
+                                      {selectedFreelancerProfile?._id === profile._id && (
+                                        <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
+                                          <Check className="w-3 h-3 text-white" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-4 text-center">
+                                  <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                  <p className="text-sm text-muted-foreground">
+                                    No profiles created yet
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Create profiles in your settings
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -686,7 +690,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     placeholder="Write your cover letter..."
                     rows={8}
                     className="w-full p-3 border rounded-md resize-none"
-                    disabled={hasAppliedToAnyProfileInProject}
+                    disabled={hasAppliedToSelectedProfile}
                   />
                   <div className="text-sm mt-1 text-right">
                     <span
@@ -712,7 +716,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                 </div>
 
                 <div className="flex gap-4 mt-4">
-                  {hasAppliedToAnyProfileInProject ? (
+                  {hasAppliedToSelectedProfile ? (
                     <Button
                       onClick={handleViewApplicationClick}
                       className="w-full md:w-auto px-8"
@@ -725,14 +729,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         onClick={handleApplyClick}
                         className="w-full md:w-auto px-8"
                         disabled={
-                          isLoading ||
-                          isBidSubmitted ||
-                          hasAppliedToAnyProfileInProject
+                          isLoading || hasAppliedToSelectedProfile || !selectedProfile
                         }
                       >
                         {isLoading
                           ? 'Submitting...'
-                          : hasAppliedToAnyProfileInProject
+                          : hasAppliedToSelectedProfile
                             ? 'Applied'
                             : 'Apply Now'}
                       </Button>
