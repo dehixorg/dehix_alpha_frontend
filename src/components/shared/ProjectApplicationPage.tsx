@@ -379,8 +379,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     project?.createdAt || Date.now(),
   ).toLocaleDateString();
 
-  
-
   const hasAppliedToSelectedProfile = selectedProfile
     ? appliedProfileIds.includes(selectedProfile._id)
     : false;
