@@ -2,6 +2,7 @@
 import { FileCheck, Pointer, FolderDot, CircleX } from 'lucide-react';
 import React, { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link'; // Import the Link component
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -58,40 +59,40 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children }) => {
                   className="flex items-center gap-2"
                   asChild
                 >
-                  <a href="/freelancer/project/current">
+                  <Link href="/freelancer/project/current">
                     <FolderDot className="h-4 w-4" />
                     <span>Current</span>
-                  </a>
+                  </Link>
                 </TabsTrigger>
                 <TabsTrigger
                   value="Applied"
                   className="flex items-center gap-2"
                   asChild
                 >
-                  <a href="/freelancer/project/applied">
+                  <Link href="/freelancer/project/applied">
                     <Pointer className="h-4 w-4" />
                     <span>Applied</span>
-                  </a>
+                  </Link>
                 </TabsTrigger>
                 <TabsTrigger
                   value="Completed"
                   className="flex items-center gap-2"
                   asChild
                 >
-                  <a href="/freelancer/project/completed">
+                  <Link href="/freelancer/project/completed">
                     <FileCheck className="h-4 w-4" />
                     <span>Completed</span>
-                  </a>
+                  </Link>
                 </TabsTrigger>
                 <TabsTrigger
                   value="Rejected"
                   className="flex items-center gap-2"
                   asChild
                 >
-                  <a href="/freelancer/project/rejected">
+                  <Link href="/freelancer/project/rejected">
                     <CircleX className="h-4 w-4" />
                     <span>Rejected</span>
-                  </a>
+                  </Link>
                 </TabsTrigger>
               </TabsList>
             </Tabs>

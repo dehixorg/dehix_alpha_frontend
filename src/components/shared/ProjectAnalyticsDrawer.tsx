@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import {
   User,
@@ -70,7 +71,7 @@ interface ProjectData {
     bidder_id: string;
     current_price: number;
     project_id: string;
-    bid_status?: string; // Optional as it's not present in all bid examples
+    bid_status?: string;
     createdAt: string;
     updatedAt: string;
     description: string;
@@ -89,19 +90,16 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
   setShowAnalyticsDrawer,
 }) => {
   const [, setActiveTab] = useState<string>('insights');
-  // If projectData is not provided, render a loading state or a message
   if (!projectData) {
     return (
-      <Card className="flex flex-col h-full w-full overflow-auto text-white items-center justify-center">
+      <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white items-center justify-center">
         <p>Loading project data...</p>
       </Card>
     );
   }
 
-  // Use the passed projectData directly
   const project = projectData;
 
-  // Calculate analytics based on actual project data
   const calculateAnalytics = () => {
     const totalBids =
       project.profiles?.reduce(
@@ -239,44 +237,22 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
     },
   ];
 
-  //   setExporting(true);
-  //   setExportError(null);
-  //   try {
-  //     const dataStr = JSON.stringify(project, null, 2); // Converts project object to a JSON string
-  //     const dataUri =
-  //       'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr); // Sets the MIME type to JSON
-  //     const exportFileDefaultName = `${project.projectName}_analytics.json`; // Sets the file extension to .json
-
-  //     const linkElement = document.createElement('a');
-  //     linkElement.setAttribute('href', dataUri);
-  //     linkElement.setAttribute('download', exportFileDefaultName);
-  //     document.body.appendChild(linkElement);
-  //     linkElement.click();
-  //     document.body.removeChild(linkElement);
-  //   } catch (error) {
-  //     console.error('Failed to export project data:', error);
-  //     setExportError('Failed to export data. Please try again.');
-  //   } finally {
-  //     setExporting(false);
-  //   }
-  // };
-
   return (
-    <Card className="flex flex-col h-full w-full overflow-auto text-white  ">
-      <div className="p-4 border-b ">
+    <Card className="flex flex-col h-full w-full overflow-auto bg-white dark:bg-black text-black dark:text-white">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {project.projectName} - Proposal Details
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {project.projectDomain?.join(', ') || 'N/A'}
             </p>
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="text-gray-400 border-gray-700"
+            className="text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={() => setShowAnalyticsDrawer(false)}
           >
             Close
@@ -285,38 +261,36 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
       </div>
 
       <Tabs defaultValue="insights" className="w-full flex flex-col flex-grow">
-        <TabsList className="w-full bg-[#09090B] gap-6 rounded-none">
+        <TabsList className="w-full bg-gray-50 dark:bg-gray-900 gap-6 rounded-none border-b border-gray-200 dark:border-gray-800">
           <TabsTrigger
             value="insights"
-            className="data-[state=active]:bg-gray-800 data-[state=active]:text-white hover:bg-gray-700"
+            className="data-[state=active]:bg-gray-200 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-400"
             onClick={() => setActiveTab('insights')}
           >
             Insights
           </TabsTrigger>
           <TabsTrigger
             value="timeline"
-            className="data-[state=active]:bg-gray-800 data-[state=active]:text-white hover:bg-gray-700"
+            className="data-[state=active]:bg-gray-200 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-400"
             onClick={() => setActiveTab('timeline')}
           >
             Timeline
           </TabsTrigger>
           <TabsTrigger
             value="competition"
-            className="data-[state=active]:bg-gray-800 data-[state=active]:text-white hover:bg-gray-700"
+            className="data-[state=active]:bg-gray-200 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-400"
             onClick={() => setActiveTab('competition')}
           >
             Competition
           </TabsTrigger>
         </TabsList>
 
-        <div className="flex-grow overflow-y-auto p-4">
-          {' '}
-          {/* Scrollable content area */}
+        <div className="flex-grow overflow-y-auto p-4 bg-gray-50 dark:bg-gray-950">
           <TabsContent value="insights" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="  col-span-1 bg-gray-850">
+              <Card className="col-span-1 bg-gray-100 dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-400">
+                  <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Bid score
                   </CardTitle>
                 </CardHeader>
@@ -329,9 +303,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </CardContent>
               </Card>
 
-              <Card className="  md:col-span-2 bg-gray-850">
+              <Card className="md:col-span-2  dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-400">
+                  <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Metrics
                   </CardTitle>
                 </CardHeader>
@@ -349,35 +323,49 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4">
-              <Card className="  bg-gray-850">
+              <Card className="bg-gray-100 dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-400">
+                  <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Project Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">Duration</p>
-                      <p className="font-medium">{analyticsData.jobDuration}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Duration
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.jobDuration}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Start date</p>
-                      <p className="font-medium">{analyticsData.startDate}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Start date
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.startDate}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Deadline</p>
-                      <p className="font-medium">{analyticsData.endDate}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Deadline
+                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {analyticsData.endDate}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Status</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Status
+                      </p>
                       <Badge
                         className={`${
                           project.status === 'COMPLETED'
-                            ? 'bg-green-600/20 text-green-500 hover:bg-green-600/30'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-600/20 dark:text-green-500'
                             : project.status === 'ACTIVE'
-                              ? 'bg-blue-600/20 text-blue-500 hover:bg-blue-600/30'
-                              : 'bg-yellow-600/20 text-yellow-500 hover:bg-yellow-600/30'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-600/20 dark:text-blue-500'
+                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-600/20 dark:text-yellow-500'
                         }`}
                       >
                         {project.status}
@@ -385,24 +373,26 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                     </div>
                   </div>
 
-                  {project.budget && ( // Display budget if available
+                  {project.budget && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Budget</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        Budget
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {project.budget.type === 'hourly' &&
                         project.budget.hourly ? (
-                          <Badge className="bg-purple-600/20 text-purple-400">
+                          <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-600/20 dark:text-purple-400">
                             Hourly: ${project.budget.hourly.minRate}-$
                             {project.budget.hourly.maxRate}/hr (Est.{' '}
                             {project.budget.hourly.estimatedHours} hrs)
                           </Badge>
                         ) : project.budget.type === 'fixed' &&
                           project.budget.fixedAmount ? (
-                          <Badge className="bg-purple-600/20 text-purple-400">
+                          <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-600/20 dark:text-purple-400">
                             Fixed: ${project.budget.fixedAmount}
                           </Badge>
                         ) : (
-                          <Badge className="bg-gray-600/20 text-gray-400">
+                          <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-600/20 dark:text-gray-400">
                             Budget not specified
                           </Badge>
                         )}
@@ -411,20 +401,22 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   )}
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Required Skills</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Required Skills
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {project.skillsRequired &&
                       project.skillsRequired.length > 0 ? (
                         project.skillsRequired.map((skill, index) => (
                           <Badge
                             key={index}
-                            className="bg-gray-800 text-gray-300"
+                            className="bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
                           >
                             {skill}
                           </Badge>
                         ))
                       ) : (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-500">
                           No specific skills listed.
                         </p>
                       )}
@@ -432,60 +424,60 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Project Profiles</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Project Profiles
+                    </p>
                     {project.profiles && project.profiles.length > 0 ? (
                       project.profiles.map((profile) => (
                         <div
                           key={profile._id}
-                          className="border border-gray-700 rounded-lg p-3"
+                          className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium">{profile.domain}</h4>
-                            <Badge className="bg-blue-600/20 text-blue-500">
+                            <h4 className="font-medium text-gray-900 dark:text-white">
+                              {profile.domain}
+                            </h4>
+                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-600/20 dark:text-blue-500">
                               ${profile.rate}/hr
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-400 mb-2">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                             {profile.description || 'No description provided.'}
                           </p>
-                          <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="grid grid-cols-3 gap-2 text-xs text-gray-900 dark:text-white">
                             <div>
-                              <span className="text-gray-500">Required: </span>
+                              <span className="text-gray-500 dark:text-gray-500">
+                                Required:{' '}
+                              </span>
                               <span>
                                 {profile.freelancersRequired || 'N/A'}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-gray-500 dark:text-gray-500">
                                 Experience:{' '}
                               </span>
                               <span>{profile.experience || 'N/A'} years</span>
                             </div>
                             <div>
-                              <span className="text-gray-500">Bids: </span>
+                              <span className="text-gray-500 dark:text-gray-500">
+                                Bids:{' '}
+                              </span>
                               <span>{profile.totalBid?.length || 0}</span>
                             </div>
                           </div>
-                          <div className="mt-2 text-xs">
-                            <span className="text-gray-500">
+                          <div className="mt-2 text-xs text-gray-900 dark:text-white">
+                            <span className="text-gray-500 dark:text-gray-500">
                               Selected Freelancers:{' '}
                             </span>
                             <span>
                               {profile.selectedFreelancer?.length || 0}
                             </span>
                           </div>
-                          {/* {profile.freelancers && profile.freelancers.length > 0 && (
-                            <div className="mt-2 text-xs">
-                              <span className="text-gray-500">Associated Freelancers: </span>
-                              {profile.freelancers.map((f, idx) => (
-                                <span key={idx} className="ml-1">{f.freelancerId}{idx < profile.freelancers.length - 1 ? ',' : ''}</span>
-                              ))}
-                            </div>
-                          )} */}
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-500">
                         No project profiles defined.
                       </p>
                     )}
@@ -495,23 +487,23 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </div>
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="  bg-gray-850">
+              <Card className="bg-gray-100 dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-400">
+                  <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     About the Client
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 text-gray-900 dark:text-white">
                   <div>
                     <p className="font-medium">
                       {project.companyName || 'N/A'}
                     </p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {project.email || 'N/A'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Briefcase className="text-gray-500 h-4 w-4" />
+                    <Briefcase className="text-gray-500 dark:text-gray-500 h-4 w-4" />
                     <div>
                       <p className="text-sm">
                         {analyticsData.clientHistory.totalProjects} projects
@@ -520,7 +512,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="text-gray-500 h-4 w-4" />
+                    <CheckCircle className="text-gray-500 dark:text-gray-500 h-4 w-4" />
                     <div>
                       <p className="text-sm">
                         {analyticsData.clientHistory.completionRate}% completion
@@ -544,7 +536,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                               i <
                               Math.floor(analyticsData.clientHistory.avgRating)
                                 ? 'text-yellow-500 fill-yellow-500'
-                                : 'text-gray-500'
+                                : 'text-gray-400 dark:text-gray-500'
                             }
                           />
                         ))}
@@ -553,46 +545,54 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </CardContent>
               </Card>
 
-              <Card className="  md:col-span-2 bg-gray-850">
+              <Card className="md:col-span-2 bg-gray-100 dark:bg-black border-gray-200 dark:border-gray-800">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-400">
+                  <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Bid Competitiveness
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-gray-900 dark:text-white">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-gray-500">Avg bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Avg bid
+                      </p>
                       <p className="font-medium text-green-500">
                         {analyticsData.avgBid}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Top bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Top bid
+                      </p>
                       <p className="font-medium">{analyticsData.topBid}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Low bid</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Low bid
+                      </p>
                       <p className="font-medium">{analyticsData.lowBid}</p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">Relevance</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Relevance
+                      </p>
                       <p className="text-xs font-medium">
                         {analyticsData.relevance}%
                       </p>
                     </div>
                     <Progress
                       value={analyticsData.relevance}
-                      className="h-2 bg-gray-800"
+                      className="h-2 bg-gray-200 dark:bg-gray-800"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Rate competitiveness
                       </p>
                       <p className="text-xs font-medium">
@@ -601,7 +601,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                     </div>
                     <Progress
                       value={analyticsData.rateCompetitiveness}
-                      className="h-2 bg-gray-800"
+                      className="h-2 bg-gray-200 dark:bg-gray-800"
                     />
                   </div>
                 </CardContent>
@@ -609,9 +609,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </div>
           </TabsContent>
           <TabsContent value="timeline" className="mt-0">
-            <Card className="  bg-gray-850">
+            <Card className=" dark:bg-black bg-gray-100 border-gray-200 dark:border-gray-800">
               <CardHeader>
-                <CardTitle className="text-md font-medium">
+                <CardTitle className="text-md font-medium text-gray-900 dark:text-white">
                   Project Timeline
                 </CardTitle>
               </CardHeader>
@@ -623,13 +623,17 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
                         <div className="flex-1">
-                          <p className="font-medium">{event.event}</p>
-                          <p className="text-sm text-gray-400">{event.date}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {event.event}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {event.date}
+                          </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
                       No timeline data available.
                     </p>
                   )}
@@ -638,15 +642,15 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </Card>
           </TabsContent>
           <TabsContent value="competition" className="mt-0">
-            <Card className="  bg-gray-850">
+            <Card className=" dark:bg-black bg-gray-100 border-gray-200 dark:border-gray-800">
               <CardHeader>
-                <CardTitle className="text-md font-medium">
+                <CardTitle className="text-md font-medium text-gray-900 dark:text-white">
                   Competitor Analysis
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">
                       Average Experience
                     </h3>
@@ -654,13 +658,13 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                       {analyticsData.competitorInsights.avgExperience}
                     </p>
                   </div>
-                  <div>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">Bid Range</h3>
                     <p className="text-2xl font-bold">
                       {analyticsData.competitorInsights.bidRange}
                     </p>
                   </div>
-                  <div>
+                  <div className="text-gray-900 dark:text-white">
                     <h3 className="text-sm font-medium mb-2">
                       Total Competitors
                     </h3>
@@ -671,7 +675,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">
+                  <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">
                     Top Skills Among Competitors
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -681,14 +685,14 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                         (skill, index) => (
                           <Badge
                             key={index}
-                            className="bg-gray-800 text-gray-300"
+                            className="bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
                           >
                             {skill}
                           </Badge>
                         ),
                       )
                     ) : (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-500">
                         No top skills identified among competitors.
                       </p>
                     )}
@@ -696,7 +700,9 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Bid Distribution</h3>
+                  <h3 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                    Bid Distribution
+                  </h3>
                   {project.profiles && project.profiles.length > 0 ? (
                     <div className="space-y-2">
                       {project.profiles.map((profile) => (
@@ -704,12 +710,14 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                           key={profile._id}
                           className="flex justify-between items-center"
                         >
-                          <span className="text-sm">{profile.domain}</span>
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            {profile.domain}
+                          </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
                               {profile.totalBid?.length || 0} bids
                             </span>
-                            <Badge className="bg-blue-600/20 text-blue-500">
+                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-600/20 dark:text-blue-500">
                               ${profile.rate || 'N/A'}/hr
                             </Badge>
                           </div>
@@ -717,7 +725,7 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
                       No bid distribution data available.
                     </p>
                   )}
@@ -725,21 +733,21 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
               </CardContent>
             </Card>
 
-            <Card className="  mt-4 bg-gray-850">
+            <Card className="mt-4  dark:bg-black bg-gray-100 border-gray-200 dark:border-gray-800">
               <CardHeader>
-                <CardTitle className="text-md font-medium">
+                <CardTitle className="text-md font-medium text-gray-900 dark:text-white">
                   Competitive Edge
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 text-gray-900 dark:text-white">
                   <div className="flex items-start gap-4">
-                    <div className="bg-green-500/20 rounded-full p-2">
-                      <Award className="h-5 w-5 text-green-500" />
+                    <div className="bg-green-100 dark:bg-green-500/20 rounded-full p-2">
+                      <Award className="h-5 w-5 text-green-700 dark:text-green-500" />
                     </div>
                     <div>
                       <h3 className="font-medium">Strong skill match</h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Your skills match {analyticsData.relevance}% of the
                         project requirements.
                       </p>
@@ -747,12 +755,12 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="bg-yellow-500/20 rounded-full p-2">
-                      <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    <div className="bg-yellow-100 dark:bg-yellow-500/20 rounded-full p-2">
+                      <AlertCircle className="h-5 w-5 text-yellow-700 dark:text-yellow-500" />
                     </div>
                     <div>
                       <h3 className="font-medium">Rate consideration</h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Your rate competitiveness is{' '}
                         {analyticsData.rateCompetitiveness}%. Consider
                         highlighting your unique value proposition.
@@ -761,12 +769,12 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="bg-blue-500/20 rounded-full p-2">
-                      <BarChart3 className="h-5 w-5 text-blue-500" />
+                    <div className="bg-blue-100 dark:bg-blue-500/20 rounded-full p-2">
+                      <BarChart3 className="h-5 w-5 text-blue-700 dark:text-blue-500" />
                     </div>
                     <div>
                       <h3 className="font-medium">Project complexity</h3>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         This project has a complexity score of{' '}
                         {analyticsData.projectComplexity}% based on required
                         skills.
@@ -778,20 +786,19 @@ const ProjectAnalyticsDrawer: React.FC<ProjectAnalyticsDrawerProps> = ({
             </Card>
           </TabsContent>
         </div>
-      </Tabs>
-
-      <div className="mt-auto p-4 border-t  ">
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-400 border-gray-700"
-            onClick={() => setShowAnalyticsDrawer(false)}
-          >
-            Back to projects
-          </Button>
+        <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={() => setShowAnalyticsDrawer(false)}
+            >
+              Back to projects
+            </Button>
+          </div>
         </div>
-      </div>
+      </Tabs>
     </Card>
   );
 };

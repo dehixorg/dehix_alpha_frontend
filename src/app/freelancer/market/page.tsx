@@ -541,17 +541,19 @@ const Market: React.FC = () => {
       {/* Mobile Filters Modal */}
       {isClient && showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-hidden">
-          <div className="border border-border rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg  bg-black">
-            <div className="flex justify-between items-center p-4 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground">Filters</h2>
+          <div className="border border-gray-200 dark:border-gray-800 rounded-lg w-full max-w-screen-lg mx-auto h-[80vh] max-h-full flex flex-col shadow-lg bg-white dark:bg-gray-950 text-gray-900 dark:text-white">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Filters
+              </h2>
               <Button variant="ghost" size="sm" onClick={handleModalToggle}>
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               </Button>
             </div>
             <div className="overflow-y-auto p-4 flex-grow scrollbar-hide">
               {/* Mobile Favourites Filter */}
-              <div className="border-b border-border py-4">
-                <div className="p-3 border border-border rounded-lg bg-card">
+              <div className="border-b border-gray-200 dark:border-gray-800 py-4">
+                <div className="p-3 border border-gray-200 dark:border-gray-800 rounded-lg bg-gray-50 dark:bg-gray-900">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="mobile-favourites"
@@ -565,7 +567,7 @@ const Market: React.FC = () => {
                     />
                     <label
                       htmlFor="mobile-favourites"
-                      className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
+                      className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer select-none flex items-center space-x-2"
                     >
                       <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
                       <span>Show Favourites Only</span>
@@ -573,7 +575,7 @@ const Market: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="border-b border-border pb-4">
+              <div className="border-b border-gray-200 dark:border-gray-800 pb-4">
                 <MobileSkillDom
                   label="Domains"
                   heading="Filter by Domains"
@@ -585,7 +587,7 @@ const Market: React.FC = () => {
                 />
               </div>
 
-              <div className="border-b border-border py-4">
+              <div className="border-b border-gray-200 dark:border-gray-800 py-4">
                 <MobileSkillDom
                   label="Skills"
                   heading="Filter by Skills"
@@ -597,7 +599,7 @@ const Market: React.FC = () => {
                 />
               </div>
 
-              <div className="border-b border-border py-4">
+              <div className="border-b border-gray-200 dark:border-gray-800 py-4">
                 <MobileSkillDom
                   label="ProjectDomain"
                   heading="Filter by Project Domains"
@@ -609,15 +611,15 @@ const Market: React.FC = () => {
                 />
               </div>
 
-              <div className="mb-4 bg-background shadow-sm">
-                <Label className="mb-4 block text-lg font-medium text-foreground">
+              <div className="py-4">
+                <Label className="mb-4 block text-lg font-medium text-gray-900 dark:text-white">
                   Filter by Rate
                 </Label>
                 <div className="flex gap-4">
                   <div className="flex flex-col flex-1">
                     <Label
                       htmlFor="minRate"
-                      className="mb-1 text-sm text-muted-foreground"
+                      className="mb-1 text-sm text-gray-500 dark:text-gray-400"
                     >
                       Min Rate
                     </Label>
@@ -636,13 +638,13 @@ const Market: React.FC = () => {
                         }));
                       }}
                       onWheel={(e) => e.currentTarget.blur()}
-                      className="bg-background border-border focus:border-primary"
+                      className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-blue-500"
                     />
                   </div>
                   <div className="flex flex-col flex-1">
                     <Label
                       htmlFor="maxRate"
-                      className="mb-1 text-sm text-muted-foreground"
+                      className="mb-1 text-sm text-gray-500 dark:text-gray-400"
                     >
                       Max Rate
                     </Label>
@@ -661,21 +663,24 @@ const Market: React.FC = () => {
                         }));
                       }}
                       onWheel={(e) => e.currentTarget.blur()}
-                      className="bg-background border-border focus:border-primary"
+                      className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-blue-500"
                     />
                   </div>
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-border bg-card">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex gap-3">
-                <Button onClick={handleApply} className="flex-1">
+                <Button
+                  onClick={handleApply}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
                   Apply
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleReset}
-                  className="flex-1 bg-background border-border hover:bg-muted"
+                  className="flex-1 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
                 >
                   Reset
                 </Button>
