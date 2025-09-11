@@ -167,7 +167,6 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
       if (!currentProject) throw new Error('Project not found');
 
       const newProfile: any = {
-        _id: crypto.randomUUID(),
         domain: data.domain,
         domain_id: data.domain_id,
         description: data.description,
