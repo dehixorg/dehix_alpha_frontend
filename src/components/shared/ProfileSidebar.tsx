@@ -755,9 +755,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
         aria-labelledby="profile-sidebar-title"
         aria-describedby="profile-sidebar-description"
+        side="right"
       >
         <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center">
             <SheetTitle
               id="profile-sidebar-title"
               className="text-[hsl(var(--card-foreground))]"
@@ -767,15 +768,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             <p id="profile-sidebar-description" className="sr-only">
               Displays details and actions for the selected user or group.
             </p>
-            <SheetClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </SheetClose>
           </div>
         </SheetHeader>
         <ScrollArea className="flex-1">

@@ -1,5 +1,4 @@
-/* eslint-disable import/order */
-/* eslint-disable prettier/prettier */
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -263,20 +262,30 @@ const HomePage = () => {
     }
   }, [loading, conversations, activeConversation]);
 
-  // --- JSX Rendering Logic ---
   let chatListComponentContent;
   if (loading) {
     chatListComponentContent = (
-      <div className="space-y-4 p-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center space-x-3 p-2 rounded-lg">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
+      <div className="space-y-3 p-3">
+        <Skeleton className="h-12 w-full rounded-full" />
+
+        
+        <Skeleton className="h-10 w-full rounded-full" />
+
+        
+        <div className="mt-4 space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center space-x-3 p-3 rounded-lg bg-[hsl(var(--card))]"
+            >
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   } else if (conversations.length > 0) {
@@ -303,32 +312,46 @@ const HomePage = () => {
   let chatWindowComponentContent;
   if (loading && !activeConversation) {
     chatWindowComponentContent = (
-      <div className="h-full bg-[hsl(var(--card))] rounded-lg shadow-sm dark:shadow-none p-4">
-        {/* Chat header skeleton */}
-        <div className="flex items-center space-x-3 pb-4 border-b">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
+      <div className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
+          <div className="flex items-center space-x-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
         </div>
         
-        {/* Chat messages skeleton */}
-        <div className="space-y-4 py-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs ${i % 2 === 0 ? 'bg-primary/10' : 'bg-muted'} rounded-lg p-3`}>
-                <Skeleton className="h-4 w-48 mb-1" />
-                <Skeleton className="h-3 w-32" />
-              </div>
+        {/* Messages Skeleton */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-6">
+          {/* Incoming message skeleton */}
+          <div className="flex items-start space-x-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
             </div>
-          ))}
+          </div>
+          
+          {/* Outgoing message skeleton */}
+          <div className="flex justify-end">
+            <div className="space-y-2 max-w-[80%]">
+              <Skeleton className="h-4 w-16 ml-auto" />
+              <Skeleton className="h-20 w-72 rounded-lg bg-primary/20" />
+            </div>
+          </div>
         </div>
         
-        {/* Message input skeleton */}
-        <div className="border-t pt-4 mt-auto">
+        {/* Input area skeleton */}
+        <div className="p-3 border-t border-[hsl(var(--border))]">
           <div className="flex items-center space-x-2">
-            <Skeleton className="h-10 flex-1 rounded-full" />
+            <Skeleton className="flex-1 h-10 rounded-full" />
             <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </div>
