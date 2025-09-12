@@ -88,7 +88,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const maxLength = 100;
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isBidSubmitted, setIsBidSubmitted] = useState(false);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [isBidLoading, setIsBidLoading] = useState(false);
 
@@ -190,16 +189,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         )
         .map((bid: any) => bid.profile_id);
       setAppliedProfileIds(profilesUserAppliedFor);
-
-      const appliedProfiles = project.profiles.filter((profile: any) =>
-        profilesUserAppliedFor.includes(profile._id || ''),
-      );
-
-      if (appliedProfiles.length > 0) {
-        setIsBidSubmitted(true);
-      } else {
-        setIsBidSubmitted(false);
-      }
     } catch (error) {
       console.error('API Error fetching applied data:', error);
       toast({
@@ -335,7 +324,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
       setBidAmount(0);
       setDialogOpen(false);
-      setIsBidSubmitted(true);
       setCoverLetter('');
       setSelectedFreelancerProfile(null);
       toast({
