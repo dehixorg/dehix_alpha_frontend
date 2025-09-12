@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import HistoryInterviews from '@/components/freelancer/HistoryProject/HistoryInterviews';
 
-export default function HistoryPage() {
+export default function HistoryTab() {
   const [filter, setFilter] = useState('All');
   return (
     <>

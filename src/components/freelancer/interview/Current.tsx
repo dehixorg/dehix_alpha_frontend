@@ -25,32 +25,7 @@ import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
 
-export default function CurrentPage() {
-  // const [sampleInterviews, setSampleInterviews] = React.useState<Interview[]>([
-  //   {
-  //     reference: 'Jane Smith',
-  //     skill: 'HTML/CSS',
-  //     interviewDate: '2023-11-23T10:30:00Z',
-  //     rating: 9,
-  //     comments: '',
-  //     status: 'Pending',
-  //     description:
-  //       'This interview focused on assessing proficiency in HTML/CSS and evaluating communication skills.',
-  //     contact: 'jane.smith@example.com',
-  //   },
-  //   {
-  //     reference: 'Chirag Vaviya',
-  //     domain: 'DevOps',
-  //     interviewDate: '2023-11-23T10:30:00Z',
-  //     rating: 9,
-  //     comments: '',
-  //     status: 'Pending',
-  //     description:
-  //       "This interview was scheduled to discuss the candidate's experience and skills in DevOps.",
-  //     contact: 'jane.smith@example.com',
-  //   },
-  // ]);
-
+export default function CurrentTab() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
@@ -88,7 +63,6 @@ export default function CurrentPage() {
         const interviewData = response.data?.data.dehixTalent ?? [];
         const projectData = response.data?.data.projects ?? [];
 
-        // Normalize both interviewData and projectData into arrays if not already
         const normalizedInterviewData = Array.isArray(interviewData)
           ? interviewData
           : [interviewData];
@@ -97,7 +71,6 @@ export default function CurrentPage() {
           ? projectData
           : [projectData];
 
-        // Split interviewData into SKILL and DOMAIN
         const skillArray = normalizedInterviewData.filter(
           (item: any) => item?.talentType === 'SKILL',
         );
@@ -105,7 +78,6 @@ export default function CurrentPage() {
           (item: any) => item?.talentType === 'DOMAIN',
         );
 
-        // Split projectData into SKILL and DOMAIN
         const projectSkillArray = normalizedProjectData.filter(
           (item: any) => item?.talentType === 'SKILL',
         );
@@ -113,25 +85,21 @@ export default function CurrentPage() {
           (item: any) => item?.talentType === 'DOMAIN',
         );
 
-        // Set state
         setSkillData(skillArray ?? []);
         setDomainData(domainArray ?? []);
         setProjectSkill(projectSkillArray ?? []);
         setProjectDomain(projectDomainArray ?? []);
       } catch (err: any) {
-        // Check if this is the specific "no current interviews" case
         if (
           err.response?.status === 404 &&
           (err.response?.data?.message === 'Current Interview not found' ||
             err.response?.data?.code === 'NOT_FOUND')
         ) {
-          // This is not an error - just no current interviews scheduled
           setSkillData([]);
           setDomainData([]);
           setProjectSkill([]);
           setProjectDomain([]);
         } else {
-          // This is a real error - show error toast
           toast({
             variant: 'destructive',
             title: 'Error',
@@ -150,30 +118,6 @@ export default function CurrentPage() {
 
     fetchInterviews();
   }, [user?.uid]);
-
-  // const handleCommentSubmit = (index: number, comment: string) => {
-  //   const updatedInterviews = [...sampleInterviews];
-
-  //
-
-  //   updatedInterviews[index] = {
-  //     ...updatedInterviews[index],
-  //     comments: comment,
-  //     status: 'Complete',
-  //   };
-
-  //
-
-  //   setSampleInterviews(updatedInterviews);
-  // };
-
-  // const filteredInterviews = sampleInterviews.filter((interview) => {
-  //   if (interview.status === 'Complete') return false;
-  //   if (filter === 'All') return true;
-  //   if (filter === 'Skills' && interview.skill) return true;
-  //   if (filter === 'Domain' && interview.domain) return true;
-  //   return false;
-  // });
 
   return (
     <>
@@ -277,7 +221,6 @@ export default function CurrentPage() {
               </div>
             )}
 
-            {/* Always visible in md+ */}
             <div className="gap-2 md:flex hidden">
               <Button
                 onClick={() => setIsTableView(true)}
@@ -298,22 +241,11 @@ export default function CurrentPage() {
             </div>
           </div>
         </div>
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredInterviews.map((interview, index) => (
-              <InterviewCard
-                key={index}
-                index={index}
-                interview={interview}
-                handleCommentSubmit={handleCommentSubmit}
-              />
-            ))}
-          </div>  */}
         <div className="w-full flex justify-center items-center flex-col">
           {isLoading ? (
             <SkeletonLoader isTableView={isTableView} />
           ) : (
             <div className="w-full space-y-8">
-              {/* Dehix Talent Interviews Section */}
               <div className="w-full">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold ">
@@ -322,33 +254,8 @@ export default function CurrentPage() {
                 </div>
                 <DehixInterviews />
 
-                {/* {skillData.length === 0 && domainData.length === 0 ? (
-                  {/* {skillData.length === 0 && domainData.length === 0 ? (
-                    <div className="text-center py-8 w-full ">
-                      <PackageOpen
-                        className="mx-auto text-gray-400"
-                        size="60"
-                      />
-                      <p className="text-gray-500 text-base font-medium mt-3">
-                        No Dehix talent interviews scheduled.
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Browse available talent opportunities to schedule new
-                        interviews.
-                      </p>
-                    </div>
-                  ) : (
-                    <DehixInterviews
-                      skillData={skillData}
-                      domainData={domainData}
-                      searchQuery={searchQuery}
-                      isTableView={isTableView}
-                      filter={filter}
-                    />
-                  )} */}
               </div>
 
-              {/* Project Interviews Section */}
               <div className="w-full">
                 <div className="mb-4">
                   <h2 className="text-2xl font-semibold ">
@@ -356,29 +263,6 @@ export default function CurrentPage() {
                   </h2>
                 </div>
                 <Projects />
-                {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
-                    <div className="text-center py-8 w-full">
-                      <PackageOpen
-                        className="mx-auto text-gray-400"
-                        size="60"
-                      />
-                      <p className="text-gray-500 text-base font-medium mt-3">
-                        No project interviews scheduled.
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Check your project applications for upcoming interview
-                        opportunities.
-                      </p>
-                    </div>
-                  ) : (
-                    <Projects
-                      searchQuery={searchQuery}
-                      isTableView={isTableView}
-                      skillData={projectSkill}
-                      domainData={projectDomain}
-                      filter={filter}
-                    />
-                  )} */}
               </div>
             </div>
           )}
