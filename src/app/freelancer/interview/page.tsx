@@ -7,6 +7,7 @@ import CurrentTab from '@/components/freelancer/interview/Current';
 import BidsTab from '@/components/freelancer/interview/BidsTab';
 import HistoryTab from '@/components/freelancer/interview/History';
 import SidebarMenu from '@/components/menu/sidebarMenu';
+import Header from '@/components/header/header';
 import {
   menuItemsBottom as freelancerMenuItemsBottom,
   menuItemsTop as freelancerMenuItemsTop,
@@ -24,6 +25,15 @@ export default function InterviewPage() {
         />
       </div>
       <div className="flex flex-col w-full sm:ml-14">
+        <Header
+          menuItemsTop={freelancerMenuItemsTop}
+          menuItemsBottom={freelancerMenuItemsBottom}
+          activeMenu="Dashboard"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            { label: 'Interview', link: '/freelancer/interview' },
+          ]}
+        />
         {/* Main Content */}
         <div className="flex-1 p-4 sm:p-6 md:p-8">
           <Tabs defaultValue="profile" className="mt-5">
