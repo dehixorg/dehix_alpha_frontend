@@ -42,7 +42,7 @@ export default function RejectedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [projectStatus, setProjectStatus] = useState('REJECTED');
+  const projectStatus = 'REJECTED';
   const [projectType, setProjectType] = useState('CONSULTANT');
 
   const statusOptions: { value: string; label: string; description: string }[] =
@@ -93,9 +93,7 @@ export default function RejectedProject() {
         setIsLoading(true);
         let url = `/freelancer/project?`;
 
-        if (projectStatus !== 'ALL') {
-          url += `status=${projectStatus}&`;
-        }
+        url += `status=${projectStatus}&`;
 
         if (projectType !== 'ALL') {
           url += `project_type=${projectType}`;
@@ -143,26 +141,6 @@ export default function RejectedProject() {
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {typeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="project-status"
-                className="text-gray-600 font-medium"
-              >
-                Filter by Status:
-              </label>
-              <select
-                id="project-status"
-                value={projectStatus}
-                onChange={(e) => setProjectStatus(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>

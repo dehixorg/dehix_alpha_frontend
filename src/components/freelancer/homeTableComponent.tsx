@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -41,8 +41,14 @@ interface Project {
   verified?: any;
   isVerified?: string;
   companyName: string;
-  start?: Date;
-  end?: Date | null;
+  start: {
+    expected: Date;
+    actual?: Date;
+  };
+  end: {
+    expected: Date;
+    actual?: Date;
+  };
   skillsRequired: string[];
   experience?: string;
   role?: string;
@@ -101,6 +107,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     setIsDialogOpen(true); // Open the dialog with the selected project
   };
 
+  console.log(projects);
   return (
     <Card>
       <CardHeader className="px-7">
@@ -112,7 +119,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead className="text-start">Project Name</TableHead>
-              <TableHead className="text-center">Verification</TableHead>
               <TableHead className="text-center">Start Date</TableHead>
               <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Actions</TableHead>
@@ -143,20 +149,19 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
               projects.map((project) => (
                 <TableRow key={project._id}>
                   <TableCell>
-                    <div className="font-medium">{project.projectName}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{project.projectName}</span>
+                      {project.verified && (
+                        <ShieldCheck className="h-4 w-4 text-green-500" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge
-                      className="text-xs"
-                      variant={project.verified ? 'secondary' : 'outline'}
-                    >
-                      {project.verified ? 'Verified' : 'Not Verified'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {project.start
-                      ? new Date(project.start).toLocaleDateString()
-                      : 'N/A'}
+                    {project.start?.actual
+                      ? new Date(project.start.actual).toLocaleDateString()
+                      : project.start?.expected
+                        ? new Date(project.start.expected).toLocaleDateString()
+                        : 'N/A'}
                   </TableCell>
                   <TableCell className="text-center">
                     {project.status ? (
