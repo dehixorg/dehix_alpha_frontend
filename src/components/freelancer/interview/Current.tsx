@@ -1,12 +1,8 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-// import { z } from 'zod';
-// import { useForm } from 'react-hook-form';
 import { ListFilter, Search, Table } from 'lucide-react';
-// import { zodResolver } from '@hookform/resolvers/zod';
 import { BoxModelIcon } from '@radix-ui/react-icons';
 import { useSelector } from 'react-redux';
-// import CurrentInterviews from "@/components/freelancer/scheduleInterview/CurrentInterviews";
 
 import {
   DropdownMenu,
