@@ -42,50 +42,13 @@ export default function AppliedProject() {
   const user = useSelector((state: RootState) => state.user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [projectStatus, setProjectStatus] = useState('PENDING');
-
-  const statusOptions: { value: string; label: string; description: string }[] =
-    [
-      {
-        value: 'PENDING',
-        label: 'Projects Under Verification',
-        description:
-          'Track the status of your projects currently undergoing verification before final approval.',
-      },
-      {
-        value: 'ACTIVE',
-        label: 'Active Projects',
-        description: 'Browse and manage your active freelance projects.',
-      },
-      {
-        value: 'REJECTED',
-        label: 'Rejected Projects',
-        description: 'View the list of projects that have been rejected.',
-      },
-      {
-        value: 'COMPLETED',
-        label: 'Completed Projects',
-        description: 'Review your successfully completed projects.',
-      },
-      {
-        value: 'ALL',
-        label: 'All Projects',
-        description: 'View all projects associated with your profile.',
-      },
-    ];
-
-  const currentStatus = statusOptions.find(
-    (option) => option.value === projectStatus,
-  );
+  const projectStatus = 'PENDING';
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const url =
-          projectStatus === 'ALL'
-            ? `/freelancer/project`
-            : `/freelancer/project?status=${projectStatus}`;
+        const url = `/freelancer/project?status=${projectStatus}`;
 
         const response = await axiosInstance.get(url);
         setProjects(response.data.data);
@@ -107,32 +70,6 @@ export default function AppliedProject() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
-        <div className="flex justify-between items-center mb-8 ml-6 pr-6">
-          <div>
-            <h1 className="text-3xl font-bold">{currentStatus?.label}</h1>
-            <p className="text-gray-400 mt-2">{currentStatus?.description}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="project-status"
-              className="text-gray-600 font-medium"
-            >
-              Filter by Status:
-            </label>
-            <select
-              id="project-status"
-              value={projectStatus}
-              onChange={(e) => setProjectStatus(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
         {isLoading ? (
           <div
             className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
