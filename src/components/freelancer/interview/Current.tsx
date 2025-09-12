@@ -253,7 +253,6 @@ export default function CurrentTab() {
                   </h2>
                 </div>
                 <DehixInterviews />
-
               </div>
 
               <div className="w-full">
