@@ -189,10 +189,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         )
         .map((bid: any) => bid.profile_id);
       setAppliedProfileIds(profilesUserAppliedFor);
-
-      const appliedProfiles = project.profiles.filter((profile: any) =>
-        profilesUserAppliedFor.includes(profile._id || ''),
-      );
     } catch (error) {
       console.error('API Error fetching applied data:', error);
       toast({
