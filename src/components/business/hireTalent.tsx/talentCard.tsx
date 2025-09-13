@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Loader2, SendIcon, Expand, Github, Linkedin } from 'lucide-react';
+import { SendIcon, Expand, Github, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 
@@ -782,7 +782,10 @@ const TalentCard: React.FC<TalentCardProps> = ({
         {loading && (
           <div className="flex flex-wrap justify-center gap-4 w-full mt-4">
             {[...Array(3)].map((_, index) => (
-              <div key={`skeleton-${index}`} className="w-full sm:w-[350px] lg:w-[450px]">
+              <div
+                key={`skeleton-${index}`}
+                className="w-full sm:w-[350px] lg:w-[450px]"
+              >
                 <div className="animate-pulse space-y-4 p-6 border rounded-lg shadow">
                   <div className="flex items-center space-x-4">
                     <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>

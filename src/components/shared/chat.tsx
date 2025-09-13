@@ -19,12 +19,12 @@ import {
   Flag,
   Mic, 
   StopCircle, 
-  Trash2, 
-  X,
+  Trash2,
+  X, 
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
-import { useRouter, usePathname } from 'next/navigation';
+import {usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,

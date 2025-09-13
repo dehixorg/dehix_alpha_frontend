@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X,
   VolumeX,
   ShieldX,
   Trash2,
@@ -47,7 +46,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -755,7 +753,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
         aria-labelledby="profile-sidebar-title"
         aria-describedby="profile-sidebar-description"
-        side="right"
       >
         <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
           <div className="flex items-center">

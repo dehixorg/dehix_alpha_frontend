@@ -1,9 +1,9 @@
 'use client';
 import { PackageOpen } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';
@@ -75,8 +75,10 @@ export default function CompletedProject() {
           </p>
         </div>
         {isLoading ? (
-          <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+          <div
+            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+          >
             {[...Array(6)].map((_, i) => (
               <div key={i} className="border rounded-lg p-6 space-y-4">
                 <div className="flex justify-between items-start">

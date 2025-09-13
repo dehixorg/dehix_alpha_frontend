@@ -1,26 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
-import { MessageSquare, Search, SquarePen, LoaderCircle } from 'lucide-react';
+import { MessageSquare, Search, SquarePen } from 'lucide-react';
 import { useSelector } from 'react-redux';
+
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { RootState } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 import type { CombinedUser } from '@/hooks/useAllUsers';
 import { useAllUsers } from '@/hooks/useAllUsers';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -67,7 +58,9 @@ export function ChatList({
   onOpenProfileSidebar,
   onOpenNewChatDialog,
 }: ChatListProps) {
-  const [lastUpdatedTimes, setLastUpdatedTimes] = useState<Record<string, string>>({});
+  const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
+    Record<string, string>
+  >({});
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -79,8 +72,11 @@ export function ChatList({
   const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const stripHtml = (html: string) =>
-    html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  const stripHtml = (html: string): string =>
+    html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
 
   const handleProfileIconClick = (e: React.MouseEvent, conv: Conversation) => {
     e.stopPropagation();
@@ -88,8 +84,11 @@ export function ChatList({
     if (conv.type === 'group') {
       onOpenProfileSidebar(conv.id, 'group');
     } else {
-      const otherParticipantUid = conv.participants.find(p => p !== currentUser.uid);
-      if (otherParticipantUid) onOpenProfileSidebar(otherParticipantUid, 'user');
+      const otherParticipantUid = conv.participants.find(
+        (p) => p !== currentUser.uid,
+      );
+      if (otherParticipantUid)
+        onOpenProfileSidebar(otherParticipantUid, 'user');
     }
   };
 
@@ -102,36 +101,48 @@ export function ChatList({
     setIsSearching(true);
     try {
       const filtered = allFetchedUsers.filter(
-        user =>
+        (user) =>
           user.id !== currentUser.uid &&
-          !selectedUsers.find(selected => selected.id === user.id) &&
+          !selectedUsers.find((selected) => selected.id === user.id) &&
           (user.displayName.toLowerCase().includes(term) ||
             user.email.toLowerCase().includes(term) ||
             user.rawUserName?.toLowerCase().includes(term) ||
-            user.rawName?.toLowerCase().includes(term))
+            user.rawName?.toLowerCase().includes(term)),
       );
       setSearchResults(filtered);
     } catch (error) {
       console.error('Error filtering users:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to search users. Please try again.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to search users. Please try again.',
+      });
     } finally {
       setIsSearching(false);
     }
   }, [userSearchTerm, allFetchedUsers, selectedUsers, currentUser.uid]);
 
-  const handleUserSearch = (term: string) => setUserSearchTerm(term);
-  const handleSelectUser = (user: CombinedUser) => {
-    if (!selectedUsers.find(selected => selected.id === user.id)) {
-      setSelectedUsers([...selectedUsers, user]);
-    }
+  const handleUserSearch = (term: string): void => {
+    setUserSearchTerm(term);
+  };
+  const handleSelectUser = (user: CombinedUser): void => {
+    setSelectedUsers((prevSelectedUsers) => {
+      if (!prevSelectedUsers.some((selected) => selected.id === user.id)) {
+        return [...prevSelectedUsers, user];
+      }
+      return prevSelectedUsers;
+    });
     setUserSearchTerm('');
   };
-  const handleRemoveUser = (userId: string) =>
-    setSelectedUsers(selectedUsers.filter(user => user.id !== userId));
+  const handleRemoveUser = (userId: string): void => {
+    setSelectedUsers((prevSelectedUsers) =>
+      prevSelectedUsers.filter((user) => user.id !== userId),
+    );
+  };
 
   const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
-    conversations.forEach(conversation => {
+    conversations.forEach((conversation) => {
       if (conversation.timestamp) {
         try {
           updatedTimes[conversation.id] =
@@ -150,31 +161,47 @@ export function ChatList({
     return () => clearInterval(intervalId);
   }, [updateLastUpdated]);
 
-  const filteredConversations = conversations.filter(conversation => {
-    const name = conversation.project_name || 'Unnamed Project';
-    const lastMessageContent = conversation.lastMessage?.content || '';
-    return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  const filteredConversations = conversations.filter(
+    (conversation: Conversation) => {
+      const name = conversation.project_name || 'Unnamed Project';
+      const lastMessageContent = conversation.lastMessage?.content || '';
+      return (
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    },
+  );
 
-  const handleCreateGroup = async () => {
+  const handleCreateGroup = async (): Promise<void> => {
     if (!currentUser?.uid) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to create a group.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to create a group.',
+      });
       return;
     }
     if (selectedUsers.length === 0) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please select at least one user to create a group.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please select at least one user to create a group.',
+      });
       return;
     }
     if (!groupName.trim()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please enter a group name.' });
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter a group name.',
+      });
       return;
     }
 
     const currentUserUID = currentUser.uid;
-    const participantUIDs = Array.from(new Set([currentUserUID, ...selectedUsers.map(su => su.id)]));
+    const participantUIDs = Array.from(
+      new Set([currentUserUID, ...selectedUsers.map((su) => su.id)]),
+    );
     const now = new Date().toISOString();
 
     const newGroup: Conversation = {
@@ -193,16 +220,22 @@ export function ChatList({
       },
       participantDetails: {
         [currentUserUID]: {
-          userName: currentUser.displayName || currentUser.email || 'Current User',
+          userName:
+            currentUser.displayName || currentUser.email || 'Current User',
           profilePic: currentUser.photoURL || undefined,
           email: currentUser.email || undefined,
           userType: currentUser.type,
         },
         ...Object.fromEntries(
-          selectedUsers.map(user => [
+          selectedUsers.map((user) => [
             user.id,
-            { userName: user.displayName, profilePic: user.profilePic, email: user.email, userType: user.userType },
-          ])
+            {
+              userName: user.displayName,
+              profilePic: user.profilePic,
+              email: user.email,
+              userType: user.userType,
+            },
+          ]),
         ),
       },
     };
@@ -218,12 +251,19 @@ export function ChatList({
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
       <div className="p-3 border-b border-[hsl(var(--border))]">
         <div className="flex space-x-2 mb-3">
-          <Button variant="default" className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg" onClick={onOpenNewChatDialog}>
+          <Button
+            variant="default"
+            className="flex-1 flex items-center justify-center text-sm px-4 py-2 rounded-full shadow-lg"
+            onClick={onOpenNewChatDialog}
+          >
             <SquarePen className="h-4 w-4 mr-2" /> New Chat
           </Button>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" aria-hidden="true" />
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]"
+            aria-hidden="true"
+          />
           <Input
             placeholder="Search or start new chat"
             aria-label="Search conversations"
@@ -240,34 +280,55 @@ export function ChatList({
             filteredConversations.map((conversation) => {
               const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
               const isActive = active?.id === conversation.id;
-              const lastMessageText = stripHtml(conversation.lastMessage?.content || '');
+              const lastMessageText = stripHtml(
+                conversation.lastMessage?.content || '',
+              );
               const displayText = lastMessageText || 'No messages yet';
 
               return (
                 <div
                   key={conversation.id}
-                  className={cn('flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
-                    isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]')}
+                  className={cn(
+                    'flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
+                    isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]',
+                  )}
                   onClick={() => setConversation(conversation)}
                 >
-                  <div className="flex items-center space-x-3 flex-shrink-0" onClick={(e) => handleProfileIconClick(e, conversation)}>
+                  <div
+                    className="flex items-center space-x-3 flex-shrink-0"
+                    onClick={(e) => handleProfileIconClick(e, conversation)}
+                  >
                     <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
                       <AvatarImage
                         src={
                           conversation.type === 'group'
-                            ? conversation.participantDetails?.[conversation.id]?.profilePic
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.profilePic
+                            ? conversation.participantDetails?.[conversation.id]
+                                ?.profilePic
+                            : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.profilePic
                         }
                         alt={
                           conversation.type === 'group'
                             ? conversation.groupName
-                            : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName
+                            : conversation.participantDetails?.[
+                                conversation.participants.find(
+                                  (p) => p !== currentUser.uid,
+                                ) || ''
+                              ]?.userName
                         }
                       />
                       <AvatarFallback>
                         {(conversation.type === 'group'
                           ? conversation.groupName?.charAt(0)
-                          : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName?.charAt(0))?.toUpperCase() || 'P'}
+                          : conversation.participantDetails?.[
+                              conversation.participants.find(
+                                (p) => p !== currentUser.uid,
+                              ) || ''
+                            ]?.userName?.charAt(0)
+                        )?.toUpperCase() || 'P'}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -276,11 +337,21 @@ export function ChatList({
                       <p className="text-sm font-medium truncate">
                         {conversation.type === 'group'
                           ? conversation.groupName
-                          : conversation.participantDetails?.[conversation.participants.find(p => p !== currentUser.uid) || '']?.userName || 'Chat User'}
+                          : conversation.participantDetails?.[
+                              conversation.participants.find(
+                                (p) => p !== currentUser.uid,
+                              ) || ''
+                            ]?.userName || 'Chat User'}
                       </p>
-                      <p className="text-xs flex-shrink-0 ml-2">{lastUpdated}</p>
+                      <p className="text-xs flex-shrink-0 ml-2">
+                        {lastUpdated}
+                      </p>
                     </div>
-                    <p className="text-xs truncate">{displayText.length > 40 ? displayText.substring(0, 40) + '...' : displayText}</p>
+                    <p className="text-xs truncate">
+                      {displayText.length > 40
+                        ? displayText.substring(0, 40) + '...'
+                        : displayText}
+                    </p>
                   </div>
                 </div>
               );
@@ -289,9 +360,15 @@ export function ChatList({
             <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
               <MessageSquare className="w-10 h-10 mb-2" />
               <p className="text-lg font-medium">
-                {searchTerm ? 'No matching conversations' : 'No conversations found'}
+                {searchTerm
+                  ? 'No matching conversations'
+                  : 'No conversations found'}
               </p>
-              {!searchTerm && <p className="text-sm">Start a new chat or wait for others to connect!</p>}
+              {!searchTerm && (
+                <p className="text-sm">
+                  Start a new chat or wait for others to connect!
+                </p>
+              )}
             </div>
           )}
         </div>
