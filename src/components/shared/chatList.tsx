@@ -62,15 +62,15 @@ export function ChatList({
     Record<string, string>
   >({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const [, setShowCreateGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const { users: allFetchedUsers } = useAllUsers();
   const currentUser = useSelector((state: RootState) => state.user);
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
+  const [, setSearchResults] = useState<CombinedUser[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [, setIsSearching] = useState(false);
 
   const stripHtml = (html: string): string =>
     html
