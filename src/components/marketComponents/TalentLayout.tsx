@@ -28,6 +28,8 @@ interface TalentLayoutProps {
   activeTab: string;
 }
 
+
+
 const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
   const [activePage, setActivePage] = useState('Talent');
 
@@ -127,9 +129,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ children, activeTab }) => {
                       />
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="space-y-2">
                     <Label>Skills</Label>
                     <div className="space-y-1">

@@ -66,6 +66,7 @@ const SkillDomainForm: React.FC<SkillDomainFormProps> = ({
           axiosInstance.get('/skills'),
           axiosInstance.get('/domain'),
         ]);
+       
 
         setSkills(skillsResponse.data?.data || []);
         setDomains(domainsResponse.data?.data || []);
