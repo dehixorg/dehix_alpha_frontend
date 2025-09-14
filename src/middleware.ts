@@ -1,50 +1,68 @@
-import { NextRequest, NextResponse } from 'next/server';
-import cookie from 'cookie';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// Cache for user type to reduce cookie parsing
+const userTypeCache = new Map<string, string>();
 
 export async function middleware(request: NextRequest) {
-  const cookiesHeader = request.headers.get('cookie');
-  const cookies = cookie.parse(cookiesHeader || '');
-  const userType = cookies.userType;
-  const token = cookies.token;
-
   const { pathname } = request.nextUrl;
+  const url = request.nextUrl.clone();
 
-  // Handle explicit logout logic
-  if (pathname === '/auth/login') {
-    if (token && userType) {
-      const redirectPath =
-        userType === 'freelancer'
-          ? '/dashboard/freelancer'
-          : '/dashboard/business';
-      return NextResponse.redirect(new URL(redirectPath, request.url));
-    }
-
-    // Allow access to the login page if no session exists
+  // Skip middleware for static files, API routes, and auth pages
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/static/') ||
+    pathname.startsWith('/auth/sign-up')
+  ) {
     return NextResponse.next();
   }
 
-  // Redirect to login page if no token exists
-  if (!token) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+  // Get cookies more efficiently
+  const token = request.cookies.get('token')?.value;
+  let userType = userTypeCache.get(request.cookies.toString());
+
+  if (!userType) {
+    userType = request.cookies.get('userType')?.value || '';
+    if (userType) {
+      userTypeCache.set(request.cookies.toString(), userType);
+    }
   }
 
-  if (token && userType) {
+  // Handle login page
+  if (pathname === '/auth/login') {
+    if (token && userType) {
+      url.pathname = `/dashboard/${userType}`;
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
+  // Handle unauthenticated access
+  if (!token) {
+    url.pathname = '/auth/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Handle role-based redirects
+  if (userType) {
+    const isFreelancer = userType === 'freelancer';
+    const isBusiness = userType === 'business';
+    const isFreelancerPath =
+      pathname.startsWith('/freelancer') ||
+      pathname.startsWith('/dashboard/freelancer');
+    const isBusinessPath =
+      pathname.startsWith('/business') ||
+      pathname.startsWith('/dashboard/business');
+
     if (
-      userType === 'freelancer' &&
-      (pathname.startsWith('/dashboard/business') ||
-        pathname.startsWith('/business') ||
-        pathname === '/')
+      (isFreelancer && isBusinessPath) ||
+      (isBusiness && isFreelancerPath) ||
+      pathname === '/'
     ) {
-      return NextResponse.redirect(
-        new URL('/dashboard/freelancer', request.url),
-      );
-    } else if (
-      userType === 'business' &&
-      (pathname.startsWith('/dashboard/freelancer') ||
-        pathname.startsWith('/freelancer') ||
-        pathname === '/')
-    ) {
-      return NextResponse.redirect(new URL('/dashboard/business', request.url));
+      url.pathname = `/dashboard/${userType}`;
+      return NextResponse.redirect(url);
     }
   }
 
@@ -60,18 +78,32 @@ export async function middleware(request: NextRequest) {
     !userType &&
     protectedRoutes.some((route) => pathname.startsWith(route))
   ) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const response = NextResponse.redirect(new URL('/', request.url));
+    return addCacheHeaders(response);
   }
-  return NextResponse.next();
+
+  const response = NextResponse.next();
+  return addCacheHeaders(response);
 }
 
+// Match all request paths except for the ones starting with:
+// - _next/static (static files)
+// - _next/image (image optimization files)
+// - favicon.ico (favicon file)
+// - public folder
+// - api folder
 export const config = {
-  matcher: [
-    '/',
-    '/dashboard/:path*',
-    '/protected/:path*',
-    '/business/:path*',
-    '/freelancer/:path*',
-    '/auth/login',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|static/).*)'],
+};
+
+// Add cache control headers to responses
+const addCacheHeaders = (response: NextResponse) => {
+  // Cache for 5 minutes on CDN and browser
+  response.headers.set(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=60',
+  );
+  // Prevent middleware caching
+  response.headers.set('x-middleware-cache', 'no-cache');
+  return response;
 };

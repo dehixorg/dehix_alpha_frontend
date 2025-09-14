@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
+import Cookies from 'js-cookie';
 import { UserCredential } from 'firebase/auth';
 import { LoaderCircle, Chrome, Key, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -60,6 +61,12 @@ export default function Login() {
     e.preventDefault();
     setIsEmailLoginLoading(true);
 
+    // Clear any existing auth state before login
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    Cookies.remove('userType');
+    Cookies.remove('token');
+
     try {
       const response = await axiosInstance.get(
         `/public/user_email?user=${email}`,
@@ -85,12 +92,15 @@ export default function Login() {
           } else {
             dispatch(setUser({ ...user, type: claims.type }));
           }
-          router.replace(`/dashboard/${claims.type}`);
-
-          toast({
-            title: 'Login Successful',
-            description: 'You have successfully logged in.',
-          });
+          // Use window.location for faster client-side redirect
+          window.location.href = `/dashboard/${claims.type}`;
+          // Show toast on the next tick to ensure redirect happens
+          setTimeout(() => {
+            toast({
+              title: 'Login Successful',
+              description: 'You have successfully logged in.',
+            });
+          }, 0);
         } catch (error: any) {
           toast({
             variant: 'destructive',
@@ -232,7 +242,7 @@ export default function Login() {
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
             <Button variant="outline" size="sm" className="ml-2" asChild>
-              <Link href="/auth/sign-up/freelancer">Sign up</Link>
+              <Link href="/auth/sign-up/freelancer">Sign Up</Link>
             </Button>
           </div>
         </div>

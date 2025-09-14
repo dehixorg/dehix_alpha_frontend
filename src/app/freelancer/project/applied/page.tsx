@@ -1,9 +1,9 @@
 'use client';
 import { PackageOpen } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { ProjectCard } from '@/components/cards/projectCard';

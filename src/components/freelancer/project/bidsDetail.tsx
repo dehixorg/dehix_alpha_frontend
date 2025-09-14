@@ -1374,9 +1374,28 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                     <h3 className="text-lg font-semibold">
                       {profile.domain ?? 'N/A'}
                     </h3>
-                    <span className="text-muted-foreground">
-                      Rate: {profile.rate ?? 'N/A'}
-                    </span>
+                    <div className="flex items-center gap-5">
+                      {/* Profile Type as badge */}
+                      <span
+                        className={`
+                        text-xs px-2 py-1 rounded-full font-medium capitalize
+                        ${
+                          profile.profileType?.toLowerCase() === 'freelancer'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }
+                      `}
+                      >
+                        {profile?.profileType
+                          ? profile?.profileType.toLocaleLowerCase()
+                          : 'Freelancer'}
+                      </span>
+
+                      {/* Rate */}
+                      <span className="text-sm text-muted-foreground">
+                        Rate: {profile.rate ?? 'N/A'}
+                      </span>
+                    </div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-0">
