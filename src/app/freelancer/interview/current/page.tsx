@@ -309,18 +309,17 @@ export default function CurrentPage() {
             ))}
           </div>  */}
         <div className="w-full flex justify-center items-center flex-col">
-           
-            <div className="w-full space-y-8">
-              {/* Dehix Talent Interviews Section */}
-              <div className="w-full">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold ">
-                    Dehix Talent Interviews
-                  </h2>
-                </div>
-                <DehixInterviews />
+          <div className="w-full space-y-8">
+            {/* Dehix Talent Interviews Section */}
+            <div className="w-full">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold ">
+                  Dehix Talent Interviews
+                </h2>
+              </div>
+              <DehixInterviews />
 
-                {/* {skillData.length === 0 && domainData.length === 0 ? (
+              {/* {skillData.length === 0 && domainData.length === 0 ? (
                   {/* {skillData.length === 0 && domainData.length === 0 ? (
                     <div className="text-center py-8 w-full ">
                       <PackageOpen
@@ -344,17 +343,15 @@ export default function CurrentPage() {
                       filter={filter}
                     />
                   )} */}
-              </div>
+            </div>
 
-              {/* Project Interviews Section */}
-              <div className="w-full">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold ">
-                    Project Interviews
-                  </h2>
-                </div>
-                <Projects />
-                {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
+            {/* Project Interviews Section */}
+            <div className="w-full">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold ">Project Interviews</h2>
+              </div>
+              <Projects />
+              {/* {projectSkill.length === 0 && projectDomain.length === 0 ? (
                     <div className="text-center py-8 w-full">
                       <PackageOpen
                         className="mx-auto text-gray-400"
@@ -377,9 +374,8 @@ export default function CurrentPage() {
                       filter={filter}
                     />
                   )} */}
-              </div>
             </div>
-          
+          </div>
         </div>
       </div>
     </>
