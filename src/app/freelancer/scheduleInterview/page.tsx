@@ -6,10 +6,7 @@ import { GraduationCap, Briefcase, Users, UserCheck } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
-<<<<<<< HEAD
-=======
 import Header from '@/components/header/header';
->>>>>>> 0e041a2602ad60f5bd98484505029d96d55b448b
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
 import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
 import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';

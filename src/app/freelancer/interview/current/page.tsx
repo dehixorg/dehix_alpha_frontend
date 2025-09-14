@@ -309,9 +309,7 @@ export default function CurrentPage() {
             ))}
           </div>  */}
         <div className="w-full flex justify-center items-center flex-col">
-          {isLoading ? (
-            <SkeletonLoader isTableView={isTableView} />
-          ) : (
+           
             <div className="w-full space-y-8">
               {/* Dehix Talent Interviews Section */}
               <div className="w-full">
@@ -381,7 +379,7 @@ export default function CurrentPage() {
                   )} */}
               </div>
             </div>
-          )}
+          
         </div>
       </div>
     </>
