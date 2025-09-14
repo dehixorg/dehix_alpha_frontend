@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { MapPinned } from 'lucide-react';
+
 import { Separator } from '@/components/ui/separator';
 
 interface ProjectProps {
