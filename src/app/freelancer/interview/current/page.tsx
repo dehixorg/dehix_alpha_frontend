@@ -53,7 +53,7 @@ export default function CurrentPage() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
-  const [isTableView, setIsTableView] = useState(true);
+  const [, setIsTableView] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -63,7 +63,7 @@ export default function CurrentPage() {
   const [, setProjectSkill] = useState<any>([]);
   const [, setProjectDomain] = useState<any>([]);
 
-  const [isLoading, setIsloading] = useState(false);
+  const [, setIsloading] = useState(false);
 
   useEffect(() => {
     if (isFocused && inputRef.current) {
