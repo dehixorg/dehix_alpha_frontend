@@ -21,7 +21,6 @@ import DehixInterviews from '@/components/freelancer/dehix-talent-interview/Dehi
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
 
