@@ -1,46 +1,36 @@
-// src/components/marketComponents/profileCards/invitedProfileCards.tsx
+// src/components/marketComponents/profileCards/acceptedProfileCards.tsx
 'use client';
 import React from 'react';
-import { Mail, Clock, User, ExternalLink } from 'lucide-react';
+import {
+  User,
+  MapPin,
+  Phone,
+  ExternalLink,
+  CheckCircle,
+  Mail,
+  Github,
+} from 'lucide-react';
 
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Skill {
-  _id: string;
-  name: string;
-}
-interface ProfessionalExperience {
-  workFrom: string;
-  workTo: string;
-}
-interface Talent {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  profilePic: string;
-  domainName: string;
-  professionalInfo: ProfessionalExperience[];
-  skills: Skill[];
-}
-
-interface ProfileCardsProps {
-  talents: Talent[];
+interface AcceptedProfileCardsProps {
+  talents: any[];
   loading: boolean;
-  calculateExperience: (professionalInfo: ProfessionalExperience[]) => string;
+  calculateExperience: (professionalInfo: any[]) => string;
 }
 
-const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
+const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
   talents,
   loading,
   calculateExperience,
@@ -88,7 +78,7 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                   <Avatar className="h-12 w-12">
                     <AvatarImage
                       src={talent.profilePic}
-                      alt={`${talent.firstName} ${talent.lastName}`}
+                      alt={talent.firstName}
                     />
                     <AvatarFallback>
                       {talent.firstName?.slice(0, 1).toUpperCase() || ''}
@@ -99,12 +89,12 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     <CardTitle>
                       {talent.firstName} {talent.lastName}
                     </CardTitle>
-                    <CardDescription>{talent.domainName}</CardDescription>
+                    <CardDescription>{talent.role}</CardDescription>
                   </div>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Invited
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  Accepted
                 </Badge>
               </div>
             </CardHeader>
@@ -116,43 +106,70 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     {calculateExperience(talent.professionalInfo)} of experience
                   </span>
                 </div>
+                {talent.location && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{talent.location}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span>{talent.email}</span>
                 </div>
+                {talent.phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{talent.phone}</span>
+                  </div>
+                )}
+                {talent.githubLink && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Github className="h-4 w-4 text-muted-foreground" />
+                    <a
+                      href={talent.githubLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      GitHub Profile
+                    </a>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {talent.skills.map((skill: Skill) => (
-                    <Badge key={skill._id} variant="secondary">
+                  {talent.skills?.map((skill, index) => (
+                    <Badge key={index} variant="secondary">
                       {skill.name}
                     </Badge>
                   ))}
                 </div>
               </div>
             </CardContent>
-            <div className="flex justify-between p-6 pt-2">
+            <CardFooter className="flex justify-between pt-2">
+              <div className="text-sm text-muted-foreground">
+                Accepted on{' '}
+                {talent.kyc?.createdAt
+                  ? new Date(talent.kyc.createdAt).toLocaleDateString()
+                  : 'N/A'}
+              </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost">
-                  Cancel
+                <Button size="sm" variant="outline">
+                  Send Message
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1"
-                >
+                <Button size="sm" className="flex items-center gap-1">
                   <ExternalLink className="h-3 w-3" />
-                  View Profile
+                  Contact
                 </Button>
               </div>
-            </div>
+            </CardFooter>
           </Card>
         ))
       ) : (
         <p className="col-span-full text-center text-muted-foreground">
-          No invited talents found.
+          No accepted talents found.
         </p>
       )}
     </div>
   );
 };
 
-export default React.memo(InvitedProfileCards);
+export default React.memo(AcceptedProfileCards);

@@ -1,46 +1,27 @@
-// src/components/marketComponents/profileCards/invitedProfileCards.tsx
+// src/components/marketComponents/profileCards/rejectedProfileCards.tsx
 'use client';
 import React from 'react';
-import { Mail, Clock, User, ExternalLink } from 'lucide-react';
-
+import { User, MapPin, ExternalLink, XCircle, RefreshCw } from 'lucide-react';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Skill {
-  _id: string;
-  name: string;
-}
-interface ProfessionalExperience {
-  workFrom: string;
-  workTo: string;
-}
-interface Talent {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  profilePic: string;
-  domainName: string;
-  professionalInfo: ProfessionalExperience[];
-  skills: Skill[];
-}
-
-interface ProfileCardsProps {
-  talents: Talent[];
+interface RejectedProfileCardsProps {
+  talents: any[];
   loading: boolean;
-  calculateExperience: (professionalInfo: ProfessionalExperience[]) => string;
+  calculateExperience: (professionalInfo: any[]) => string;
 }
 
-const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
+const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
   talents,
   loading,
   calculateExperience,
@@ -86,10 +67,6 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage
-                      src={talent.profilePic}
-                      alt={`${talent.firstName} ${talent.lastName}`}
-                    />
                     <AvatarFallback>
                       {talent.firstName?.slice(0, 1).toUpperCase() || ''}
                       {talent.lastName?.slice(0, 1).toUpperCase() || ''}
@@ -99,12 +76,15 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     <CardTitle>
                       {talent.firstName} {talent.lastName}
                     </CardTitle>
-                    <CardDescription>{talent.domainName}</CardDescription>
+                    <CardDescription>{talent.role || 'N/A'}</CardDescription>
                   </div>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Invited
+                <Badge
+                  variant="destructive"
+                  className="flex items-center gap-1"
+                >
+                  <XCircle className="h-3 w-3" />
+                  Rejected
                 </Badge>
               </div>
             </CardHeader>
@@ -116,12 +96,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                     {calculateExperience(talent.professionalInfo)} of experience
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{talent.email}</span>
-                </div>
+                {/* Location and reason for rejection are commented out as per the original code */}
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {talent.skills.map((skill: Skill) => (
+                  {talent.skills?.map((skill, index) => (
                     <Badge key={skill._id} variant="secondary">
                       {skill.name}
                     </Badge>
@@ -129,30 +106,34 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                 </div>
               </div>
             </CardContent>
-            <div className="flex justify-between p-6 pt-2">
+            <CardFooter className="flex justify-between pt-2">
+              {/* Rejected date is not available in the provided data */}
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost">
-                  Cancel
-                </Button>
                 <Button
                   size="sm"
                   variant="outline"
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Reconsider
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   className="flex items-center gap-1"
                 >
                   <ExternalLink className="h-3 w-3" />
                   View Profile
                 </Button>
               </div>
-            </div>
+            </CardFooter>
           </Card>
         ))
       ) : (
-        <p className="col-span-full text-center text-muted-foreground">
-          No invited talents found.
-        </p>
+        <div>No rejected talents found.</div>
       )}
     </div>
   );
 };
 
-export default React.memo(InvitedProfileCards);
+export default React.memo(RejectedProfileCards);

@@ -1,6 +1,7 @@
+// src/components/marketComponents/TalentLayout.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   BookMarked,
   CheckCircle2,
@@ -10,76 +11,125 @@ import {
   Users2,
   XCircle,
 } from 'lucide-react';
-
-import { Button } from '../ui/button';
-import { Switch } from '../ui/switch';
-
-import SidebarMenu from '@/components/menu/sidebarMenu';
-import { axiosInstance } from '@/lib/axiosinstance';
-import { RootState } from '@/lib/store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import InvitedProfileCards from '@/components/marketComponents/sidebar-projectComponents/profileCards.tsx/invitedProfileCards';
+import { Switch } from '@/components/ui/switch';
 
-// ------------------- Experience Helper -------------------
-interface ProfessionalExperience {
-  workFrom: string;
-  workTo: string;
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import TalentContent from './TalentContent';
+
+interface TalentLayoutProps {
+  activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
 }
-export const calculateExperience = (
-  professionalInfo: ProfessionalExperience[],
-): string => {
-  if (!professionalInfo || professionalInfo.length === 0)
+interface ProfessionalExperience {
+  workFrom?: string;
+  workTo?: string;
+  jobTitle?: string;
+}
+interface TalentData {
+  invited: any[];
+  accepted: any[];
+  rejected: any[];
+}
+export const calculateExperience = (professionalInfo: ProfessionalExperience[]): string => {
+  if (!professionalInfo || professionalInfo.length === 0) {
     return 'Not specified';
-  let longestExperienceInMonths: number = 0;
+  }
+  let totalExperienceInMonths = 0;
   professionalInfo.forEach((job) => {
     if (job.workFrom && job.workTo) {
       const start = new Date(job.workFrom);
       const end = new Date(job.workTo);
-      const diff =
-        (end.getFullYear() - start.getFullYear()) * 12 +
-        (end.getMonth() - start.getMonth());
-      if (diff > longestExperienceInMonths) longestExperienceInMonths = diff;
+      if (start < end) {
+        const diffInMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        if (diffInMonths > 0) {
+          totalExperienceInMonths += diffInMonths;
+        }
+      }
     }
   });
-  const years = Math.floor(longestExperienceInMonths / 12);
-  const months = longestExperienceInMonths % 12;
+
+  const years = Math.floor(totalExperienceInMonths / 12);
+  const months = totalExperienceInMonths % 12;
+
   if (years === 0 && months === 0) return 'Less than a month';
-  if (years === 0) return `${months} month${months > 1 ? 's' : ''}`;
-  if (months === 0) return `${years} year${years > 1 ? 's' : ''}`;
-  return `${years} year${years > 1 ? 's' : ''} and ${months} month${months > 1 ? 's' : ''}`;
+  const yearString = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
+  const monthString = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+
+  if (yearString && monthString) return `${yearString} and ${monthString}`;
+  return yearString || monthString;
 };
 
-interface TalentLayoutProps {
-  activeTab: string;
-}
 
 const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
+  const router = useRouter();
   const [activePage, setActivePage] = useState('Talent');
-  const [invitedTalents, setInvitedTalents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const user = useSelector((state: RootState) => state.user);
   const businessId = user?.uid;
 
+  const [talentData, setTalentData] = useState<TalentData>({
+    invited: [],
+    accepted: [],
+    rejected: [],
+  });
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    async function fetchInvitedTalents() {
+    async function fetchData() {
+      if (!businessId || activeTab === 'overview') {
+        return;
+      }
+
+      // Check if data is already cached
+      if (talentData[activeTab]?.length > 0) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
-        setLoading(true);
-        const res = await axiosInstance.get(
-          `business/hire-dehixtalent/free/${businessId}/invited`,
-        );
-        setInvitedTalents(res.data.data);
+        let endpoint = '';
+        if (activeTab === 'invited') {
+          endpoint = `/business/hire-dehixtalent/free/${businessId}/invited`;
+        } else if (activeTab === 'accepted') {
+          endpoint = `/business/hire-dehixtalent/free/${businessId}/selected`;
+        } else if (activeTab === 'rejected') {
+          endpoint = `/business/hire-dehixtalent/free/${businessId}/rejected`;
+        }
+
+        const response = await axiosInstance.get(endpoint);
+        setTalentData(prevData => ({
+          ...prevData,
+          [activeTab]: response.data.data,
+        }));
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching talents:', err);
       } finally {
         setLoading(false);
       }
     }
-    if (businessId) fetchInvitedTalents();
+    fetchData();
   }, [businessId]);
+
+  const handleTabChange = (value: string) => {
+    router.push(`/business/market/${value}`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -89,18 +139,14 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
         active={activePage}
         setActive={setActivePage}
       />
-
       <div className="ml-14 flex flex-col min-h-screen">
-        {/* Header */}
         <header className="border-b">
           <div className="container flex h-16 items-center justify-between px-4">
             <h1 className="text-xl font-bold">Talent Management</h1>
           </div>
         </header>
-
-        {/* Tabs */}
         <div className="container px-4 py-4">
-          <Tabs defaultValue={activeTab} className="w-full">
+          <Tabs value={activeTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" asChild>
                 <a href="/business/talent">
@@ -108,33 +154,34 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                   Overview
                 </a>
               </TabsTrigger>
-              <TabsTrigger value="invited" asChild>
-                <a href="/business/market/invited">
-                  <BookMarked className="h-4 w-4" />
-                  Invites
-                </a>
+              <TabsTrigger
+                value="invited"
+                onClick={() => handleTabChange('invited')}
+              >
+                <BookMarked className="h-4 w-4" />
+                Invites
               </TabsTrigger>
-              <TabsTrigger value="accepted" asChild>
-                <a href="/business/market/accepted">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Accepted
-                </a>
+              <TabsTrigger
+                value="accepted"
+                onClick={() => handleTabChange('accepted')}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Accepted
               </TabsTrigger>
-              <TabsTrigger value="rejected" asChild>
-                <a href="/business/market/rejected">
-                  <XCircle className="h-4 w-4" />
-                  Rejected
-                </a>
+              <TabsTrigger
+                value="rejected"
+                onClick={() => handleTabChange('rejected')}
+              >
+                <XCircle className="h-4 w-4" />
+                Rejected
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
-
-        {/* Main */}
         <div className="container flex-1 items-start px-4 py-6">
           <div className="grid grid-cols-12 gap-6">
-            {/* Filters Sidebar */}
             <aside className="col-span-3">
+              {/* Your filter sidebar component here */}
               <Card className="sticky top-20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -176,9 +223,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       )}
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="space-y-2">
                     <Label>Experience</Label>
                     <div className="space-y-1">
@@ -192,9 +237,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       ))}
                     </div>
                   </div>
-
                   <Separator />
-
                   <div className="space-y-2">
                     <Label>Location</Label>
                     <div className="relative">
@@ -202,7 +245,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                       <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
-
                   <div className="flex justify-between pt-4">
                     <Button variant="outline">Reset</Button>
                     <Button>Apply Filters</Button>
@@ -210,26 +252,11 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                 </CardContent>
               </Card>
             </aside>
-
-            {/* Profile Cards */}
             <div className="col-span-9">
-              {/* Header */}
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight">
-                  Invited Talents
-                </h2>
-                <span className="text-muted-foreground">
-                  {loading
-                    ? 'Loading...'
-                    : `Showing ${invitedTalents.length} results`}
-                </span>
-              </div>
-
-              {/* Cards */}
-              <InvitedProfileCards
-                talents={invitedTalents}
+              <TalentContent
+                activeTab={activeTab}
+                talents={talentData[activeTab]}
                 loading={loading}
-                calculateExperience={calculateExperience}
               />
             </div>
           </div>
