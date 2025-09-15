@@ -190,7 +190,6 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
              bg-white
              border border-white/50
              ring-4 ring-white/70
-             shadow-[0_0_50px_rgba(255,255,255,0.8),0_0_80px_rgba(255,255,255,0.5)]
              hover:scale-105 transition-transform duration-300
              overflow-hidden"
                           >
