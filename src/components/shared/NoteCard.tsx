@@ -55,10 +55,10 @@ const NoteCard = ({
     onDragStart={onDragStart}
     onDragOver={onDragOver}
     onDrop={onDrop}
-    className="relative group"
+    className="relative group w-full h-full"
   >
     <Card
-      className="font-sans border-none break-inside-avoid cursor-pointer bg-white/90 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 group w-[80vw] mb-3 md:w-[300px] min-h-[250px] relative"
+      className="font-sans border-none cursor-pointer bg-white/90 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
       style={
         note.banner
           ? {
