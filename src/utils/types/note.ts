@@ -37,6 +37,7 @@ export type Note = {
   type?: LabelType; // Label or type of the note
   noteType: NoteType;
   createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export const badgeColors: { [key: string]: string } = {

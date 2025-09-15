@@ -7,13 +7,7 @@ import { Badge } from '../ui/badge';
 import BannerChangerPopover from './BannerChangerPopUp';
 import DropdownNavNotes from './DropdownNavNotes';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { badgeColors, Note, NoteType } from '@/utils/types/note';
 import { truncateHTMLContent, truncateText } from '@/utils/notes/notesHelpers';
 
@@ -61,54 +55,54 @@ const NoteCard = ({
     onDragStart={onDragStart}
     onDragOver={onDragOver}
     onDrop={onDrop}
-    className="relative group"
+    className="relative group w-full h-full"
   >
     <Card
-      className="break-inside-avoid cursor-pointer bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 group w-[80vw] mb-3 md:w-[300px] min-h-[250px] relative"
+      className="font-sans border-none cursor-pointer bg-white/90 hover:bg-white/80 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 w-full h-full min-h-[250px] relative"
       style={
         note.banner
           ? {
               backgroundImage: `url(${note.banner})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              opacity: 0.9,
             }
-          : { backgroundColor: note.bgColor || '#ffffff' }
+          : { backgroundColor: note.bgColor || '#ffffff', opacity: 0.8 }
       }
+      onClick={() => onEditNote(note)}
     >
-      <div onClick={() => onEditNote(note)}>
-        <CardHeader>
-          {note.type && (
-            <div className="absolute top-1 left-1">
-              <Badge
-                className={`text-xs py-0.5 ${badgeColors[note.type] || ' '}`}
-              >
-                {note.type.toLowerCase()}
-              </Badge>
+      <CardHeader>
+        {note.type && (
+          <div className="absolute top-1 left-1">
+            <Badge
+              className={`text-xs py-0.5 ${badgeColors[note.type] || ' '}`}
+            >
+              {note.type.toUpperCase()}
+            </Badge>
+          </div>
+        )}
+        {note.title && (
+          <CardTitle className="font-semibold text-lg text-gray-900 mt-6 leading-tight">
+            {note.title}
+          </CardTitle>
+        )}
+      </CardHeader>
+      <CardContent className="max-h-[320px] overflow-hidden">
+        <div className="text-sm text-gray-600 whitespace-pre-wrap break-words font-normal leading-relaxed">
+          {note.isHTML ? (
+            <div
+              className="whitespace-pre-wrap break-words"
+              dangerouslySetInnerHTML={{
+                __html: truncateHTMLContent(note.content, 30),
+              }}
+            />
+          ) : (
+            <div className="text-gray-800">
+              {truncateText(note.content, 30)}
             </div>
           )}
-          {note.title && (
-            <CardTitle className="font-semibold text-lg text-black mt-6">
-              {note.title}
-            </CardTitle>
-          )}
-        </CardHeader>
-        <CardContent className="max-h-[320px] overflow-hidden">
-          <CardDescription className="text-sm whitespace-pre-wrap truncate break-words">
-            {note.isHTML ? (
-              <div
-                className="text-sm whitespace-pre-wrap break-words"
-                dangerouslySetInnerHTML={{
-                  __html: truncateHTMLContent(note.content, 30),
-                }}
-              />
-            ) : (
-              <CardDescription className="text-sm font-bold truncate bg-opacity-100 whitespace-pre-wrap break-words text-black">
-                {truncateText(note.content, 30)}
-              </CardDescription>
-            )}
-          </CardDescription>
-        </CardContent>
-      </div>
+        </div>
+      </CardContent>
 
       {/* This is the new, corrected button menu section */}
       <div className="absolute bottom-2 right-2 hidden group-hover:flex items-center gap-2 p-2 rounded-lg bg-white/50 backdrop-blur-sm shadow-md">

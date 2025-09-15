@@ -6,10 +6,15 @@ import { GraduationCap, Briefcase, Users, UserCheck } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import ScheduleInterviewDialog from '@/components/freelancer/scheduleInterview/scheduleInterviewDialog';
+import Header from '@/components/header/header';
 import { createScheduleInterviewMenuItems } from '@/config/menuItems/freelancer/scheduleInterviewMenuItems';
 import CurrentInterviews from '@/components/freelancer/scheduleInterview/CurrentInterviews';
 import BidedInterviews from '@/components/freelancer/scheduleInterview/BidedInterviews';
 import HistoryInterviews from '@/components/freelancer/scheduleInterview/HistoryInterviews';
+import {
+  menuItemsBottom as freelancerMenuItemsBottom,
+  menuItemsTop as freelancerMenuItemsTop,
+} from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 export default function ScheduleInterviewPage() {
   const searchParams = useSearchParams();
@@ -149,6 +154,18 @@ export default function ScheduleInterviewPage() {
         }
       />
       <div className="flex flex-col sm:py-2 sm:pl-14 mb-8 w-full">
+        <Header
+          menuItemsTop={freelancerMenuItemsTop}
+          menuItemsBottom={freelancerMenuItemsBottom}
+          activeMenu="Schedule Interview"
+          breadcrumbItems={[
+            { label: 'Freelancer', link: '/dashboard/freelancer' },
+            {
+              label: 'Schedule Interview',
+              link: '/freelancer/scheduleInterview',
+            },
+          ]}
+        />
         <div className="p-6">
           {/* Section Tabs */}
           <Tabs

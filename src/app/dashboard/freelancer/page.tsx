@@ -1,15 +1,9 @@
 'use client';
-import { CheckCircle, ChevronRight, Clock, CalendarX2 } from 'lucide-react';
+import { CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -20,77 +14,54 @@ import {
   menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import ProjectTableCard from '@/components/freelancer/homeTableComponent';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import MeetingDialog from '@/components/ui/meetingDialog'; // Import MeetingDialog
+import MeetingDialog from '@/components/ui/meetingDialog';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { toast } from '@/components/ui/use-toast';
-
-interface Project {
-  _id: string;
-  projectName: string;
-  projectDomain: string[];
-  description: string;
-  companyId: string;
-  email: string;
-  url?: { value: string }[];
-  verified?: any;
-  isVerified?: string;
-  companyName: string;
-  start?: Date;
-  end?: Date | null;
-  skillsRequired: string[];
-  experience?: string;
-  role?: string;
-  projectType?: string;
-  profiles?: {
-    _id?: string;
-    domain?: string;
-    freelancersRequired?: string;
-    skills?: string[];
-    experience?: number;
-    minConnect?: number;
-    rate?: number;
-    description?: string;
-    domain_id: string;
-    selectedFreelancer?: string[];
-    freelancers?: {
-      freelancerId: string;
-      bidId: string;
-    };
-    totalBid?: string[];
-  }[];
-  status?: StatusEnum;
-  team?: string[];
-}
+import EarningCard from '@/components/shared/earningCard';
+import { Project } from '@/types/project';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjects, setActiveProjects] = useState<Project[]>([]);
   const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false); // State for showing dialog
-  const [currentTab, setCurrentTab] = useState('ACTIVE');
-  const [loading, setLoading] = useState(true);
+  const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
+  const [rejectedProjects, setRejectedProjects] = useState<Project[]>([]);
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
+  const [currentTab, setCurrentTab] = useState(StatusEnum.ACTIVE);
+  const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const fetchProjectData = async (status: string) => {
+  const fetchProjectData = async (status: StatusEnum) => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(
         `/freelancer/project?status=${status}`,
       );
-      if (response.status == 200 && response?.data?.data) {
-        setProjects(response.data.data);
+      if (response.status === 200 && response?.data?.data) {
+        switch (status) {
+          case StatusEnum.ACTIVE:
+            setActiveProjects(response.data.data);
+            break;
+          case StatusEnum.PENDING:
+            setPendingProjects(response.data.data);
+            break;
+          case StatusEnum.COMPLETED:
+            setCompletedProjects(response.data.data);
+            break;
+          case StatusEnum.REJECTED:
+            setRejectedProjects(response.data.data);
+            break;
+        }
       }
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+        description: 'Something went wrong. Please try again.',
+      });
       console.error('API Error:', error);
     } finally {
       setLoading(false);
@@ -98,58 +69,18 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchProjectData(currentTab);
-  }, [user.uid, currentTab]);
-
-  const fetchProjectStats = async () => {
-    setLoadingStats(true);
-    try {
-      const activeCountResponse = await axiosInstance.get(
-        `/freelancer/project?status=ACTIVE`,
-      );
-      const pendingCountResponse = await axiosInstance.get(
-        `/freelancer/project?status=PENDING`,
-      );
-
-      if (
-        activeCountResponse.status == 200 &&
-        activeCountResponse?.data?.data
-      ) {
-        setActiveProjects(activeCountResponse.data.data);
-      }
-      if (
-        pendingCountResponse.status == 200 &&
-        pendingCountResponse?.data?.data
-      ) {
-        setPendingProjects(pendingCountResponse.data.data);
-      }
-    } catch (error) {
-      console.error('API Error for project stats:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProjectData(currentTab);
-  }, [user.uid, currentTab]);
-
-  useEffect(() => {
-    fetchProjectStats();
+    fetchProjectData(StatusEnum.ACTIVE);
+    fetchProjectData(StatusEnum.PENDING);
+    fetchProjectData(StatusEnum.COMPLETED);
+    fetchProjectData(StatusEnum.REJECTED);
   }, [user.uid]);
 
-  const handleTabChange = (status: string) => {
+  const handleTabChange = (status: StatusEnum) => {
     setCurrentTab(status);
-    fetchProjectData(status);
   };
 
   const handleCreateMeetClick = () => {
-    setShowMeetingDialog(true); // Open meeting dialog
+    setShowMeetingDialog(true);
   };
 
   return (
@@ -170,33 +101,30 @@ export default function Dashboard() {
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            {/* Profile Completion component */}
             <ProfileCompletion userId={user.uid} />
+
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <Card className="sm:col-span-2 flex flex-col h-full">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-4xl mb-3">
-                    {loading ? <Skeleton className="h-10 w-20" /> : '0'}
-                  </CardTitle>
-                </CardHeader>
-                <CardFooter className="grid gap-4 grid-cols-4">
-                  <div className="col-span-3">
-                    <CardTitle>Total Earnings</CardTitle>
-                    <CardDescription className="max-w-lg text-balance leading-relaxed">
-                      {loading ? (
-                        <Skeleton className="h-5 w-40" />
-                      ) : (
-                        'Your total earnings from projects.'
-                      )}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-end justify-end">
-                    <ChevronRight className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                </CardFooter>
-              </Card>
-
+              <EarningCard
+                className="sm:col-span-2 flex flex-col h-full"
+                title="Total Revenue"
+                value="$45,231.89"
+                description="+20.1% from last month"
+                icon={
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    className="h-4 w-4 text-muted-foreground"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                }
+              />
               <StatCard
                 title="Active Projects"
                 value={loadingStats ? '...' : activeProjects.length}
@@ -217,7 +145,9 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <Tabs
                 value={currentTab}
-                onValueChange={(status) => handleTabChange(status)}
+                onValueChange={(status) =>
+                  handleTabChange(status as StatusEnum)
+                }
               >
                 <div className="flex items-center">
                   <TabsList>
@@ -233,31 +163,32 @@ export default function Dashboard() {
                     </TabsTrigger>
                   </TabsList>
                 </div>
+
                 <TabsContent value={StatusEnum.ACTIVE}>
                   <ProjectTableCard
                     type="active"
-                    projects={projects}
+                    projects={activeProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
                   <ProjectTableCard
                     type="pending"
-                    projects={projects}
+                    projects={pendingProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
                   <ProjectTableCard
                     type="completed"
-                    projects={projects}
+                    projects={completedProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
                   <ProjectTableCard
                     type="rejected"
-                    projects={projects}
+                    projects={rejectedProjects}
                     loading={loading}
                   />
                 </TabsContent>
@@ -281,7 +212,6 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* MeetingDialog Modal */}
       <MeetingDialog
         isOpen={showMeetingDialog}
         onClose={() => setShowMeetingDialog(false)}

@@ -14,6 +14,7 @@ import {
   Eye,
   UserCircle,
   ChevronDown,
+  X,
 } from 'lucide-react';
 
 import { Textarea } from '../ui/textarea';
@@ -72,7 +73,7 @@ interface ProjectApplicationFormProps {
   project: any;
   isLoading: boolean;
   onCancel: () => void;
-  bidExist?: boolean; // This prop is now less critical as we derive applied status internally
+  bidExist?: boolean;
 }
 
 const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
@@ -84,19 +85,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const minChars = 500;
   const maxChars = 2000;
   const [showFullText, setShowFullText] = useState<boolean>(false);
-  const maxLength = 100; // Number of characters to show when collapsed
+  const maxLength = 100;
 
-  // Bid dialog and state
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isBidSubmitted, setIsBidSubmitted] = useState(false);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [isBidLoading, setIsBidLoading] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
-  // State to control ProjectAnalyticsDrawer visibility
   const [showAnalyticsDrawer, setShowAnalyticsDrawer] = useState(false);
 
-  // Freelancer profiles state
   const [freelancerProfiles, setFreelancerProfiles] = useState<
     FreelancerProfile[]
   >([]);
@@ -104,12 +100,15 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     useState<FreelancerProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
 
-  // Profile dropdown state
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   const user = useSelector((state: RootState) => state.user);
   const [userConnects, setUserConnects] = useState<number>(0);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  useEffect(() => {
+    console.log('Project data from backend:', project);
+  }, [project]);
 
   useEffect(() => {
     const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
@@ -130,7 +129,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     };
   }, [user.uid]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -153,9 +151,23 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
     setIsLoadingProfiles(true);
     try {
-      const response = await axiosInstance.get('/freelancer/profiles');
-      const profilesData = response.data.data || [];
-      setFreelancerProfiles(profilesData);
+      let apiEndpoint = '/freelancer/profiles';
+      if (selectedProfile?.profileType === 'CONSULTANT') {
+        apiEndpoint = '/freelancer/consultant';
+      }
+
+      const response = await axiosInstance.get(apiEndpoint);
+      let profilesData = response.data.data;
+
+      // FIX: Correctly extract the array from the nested API response object
+      if (profilesData && profilesData.consultant) {
+        const consultantData = profilesData.consultant;
+        profilesData = Object.values(consultantData);
+      }
+
+      // FIX: Ensure profilesData is always an array before setting the state to prevent map errors
+      const finalProfiles = Array.isArray(profilesData) ? profilesData : [];
+      setFreelancerProfiles(finalProfiles);
     } catch (error) {
       console.error('Error fetching freelancer profiles:', error);
       toast({
@@ -167,13 +179,12 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     } finally {
       setIsLoadingProfiles(false);
     }
-  }, [user.uid]);
+  }, [user.uid, selectedProfile]);
 
   const fetchAppliedData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
 
-      // Filter bids for the current project and extract profile IDs
       const profilesUserAppliedFor = response.data.data
         .filter(
           (bid: any) =>
@@ -181,16 +192,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         )
         .map((bid: any) => bid.profile_id);
       setAppliedProfileIds(profilesUserAppliedFor);
-
-      const appliedProfiles = project.profiles.filter((profile: any) =>
-        profilesUserAppliedFor.includes(profile._id || ''),
-      );
-
-      if (appliedProfiles.length > 0) {
-        setIsBidSubmitted(true);
-      } else {
-        setIsBidSubmitted(false);
-      }
     } catch (error) {
       console.error('API Error fetching applied data:', error);
       toast({
@@ -199,13 +200,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         description: 'Failed to retrieve application status. Please try again.',
       });
     }
-  }, [user.uid, project._id, project.profiles]); // Added project dependencies
+  }, [user.uid, project._id, project.profiles]);
 
-  // Effect to fetch data when component mounts
   useEffect(() => {
-    fetchAppliedData(); // Fetch applied bids on component mount
-    fetchFreelancerProfiles(); // Fetch freelancer profiles
-  }, [fetchAppliedData, fetchFreelancerProfiles]);
+    fetchAppliedData();
+    if (selectedProfile) {
+      fetchFreelancerProfiles();
+    }
+  }, [fetchAppliedData, fetchFreelancerProfiles, selectedProfile]);
 
   const toggleText = () => {
     setShowFullText(!showFullText);
@@ -218,15 +220,15 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       : project?.description.slice(0, maxLength) + '...';
 
   const handleApplyClick = () => {
-    if (project?.profiles && project.profiles.length > 0) {
-      if (project.profiles.length === 1) {
-        setSelectedProfile(project.profiles[0]);
-        setBidAmount(project.profiles[0].minConnect || 0);
-      } else {
-        setSelectedProfile(null);
-      }
-      setDialogOpen(true);
+    if (!selectedProfile) {
+      toast({
+        title: 'Action Required',
+        description: 'Please select a profile to apply with before proceeding.',
+        variant: 'destructive',
+      });
+      return;
     }
+    setDialogOpen(true);
   };
 
   const handleViewApplicationClick = () => {
@@ -261,7 +263,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!selectedProfile || !selectedProfile._id) {
       toast({
         title: 'Error',
@@ -276,7 +277,6 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
     );
 
     if (
-      typeof selectedProfile.minConnect !== 'number' ||
       isNaN(bidAmount) ||
       isNaN(currentConnects) ||
       bidAmount > currentConnects
@@ -312,12 +312,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
         profile_id: selectedProfile._id,
         project_id: project._id,
         biddingValue: bidAmount,
+        profile_type: selectedProfile.profileType || 'FREELANCER',
       };
 
-      // Add freelancer profile ID if selected
       if (selectedFreelancerProfile?._id) {
         bidData.freelancer_profile_id = selectedFreelancerProfile._id;
       }
+      console.log(bidData);
       await axiosInstance.post(`/bid`, bidData);
 
       const updatedConnects = (currentConnects - bidAmount).toString();
@@ -326,15 +327,14 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
 
       setBidAmount(0);
       setDialogOpen(false);
-      setIsBidSubmitted(true); // Mark as applied for this project
       setCoverLetter('');
-      setSelectedFreelancerProfile(null); // Reset selected freelancer profile
+      setSelectedFreelancerProfile(null);
       toast({
         title: 'Application Submitted',
         description: 'Your application has been successfully submitted.',
       });
-      fetchAppliedData(); // Re-fetch to update applied profiles
-      setShowAnalyticsDrawer(true); // Show analytics drawer on successful bid
+      fetchAppliedData();
+      setShowAnalyticsDrawer(true);
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast({
@@ -355,25 +355,24 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       setCoverLetter(value);
     }
   };
-
   const totalBids = project?.bids?.length || 0;
   const avgBid =
     totalBids > 0
       ? (
-          project?.bids?.reduce(
-            (sum: any, bid: any) => sum + (bid?.current_price || 0),
+          project.bids.reduce(
+            (sum: number, bid: any) => sum + (bid.current_price || 0),
             0,
           ) / totalBids
         ).toFixed(2)
       : 'N/A';
+
   const postedDate = new Date(
     project?.createdAt || Date.now(),
   ).toLocaleDateString();
 
-  // Determine if the main "Apply Now" button should be disabled or changed to "View Application"
-  const hasAppliedToAnyProfileInProject = appliedProfileIds.some((appliedId) =>
-    project.profiles.some((p: any) => p._id === appliedId),
-  );
+  const hasAppliedToSelectedProfile = selectedProfile
+    ? appliedProfileIds.includes(selectedProfile._id)
+    : false;
 
   if (isLoading) {
     return (
@@ -382,12 +381,24 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       </div>
     );
   }
+  const handleProfileSelection = (profile: Profile) => {
+    // FIX: Allow selection of an applied profile to view proposal, but prevent deselecting it
+    if (appliedProfileIds.includes(profile._id)) {
+      setSelectedProfile(profile);
+      return;
+    }
+    setSelectedProfile((prevSelected) => {
+      if (prevSelected?._id === profile._id) {
+        return null;
+      }
+      return profile;
+    });
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {!showAnalyticsDrawer && (
         <>
-          {' '}
           <div className="md:col-span-2 space-y-6">
             <Card>
               <CardContent className="p-6">
@@ -430,34 +441,34 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Client Information</h2>
-                <div className="flex items-start gap-4">
-                  <div className="bg-red-500 rounded-full w-8 h-8 flex items-center justify-center text-white">
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <p className="font-medium">{project?.companyName}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
-                      <Briefcase size={14} />
-                      <span>12 projects posted</span>
-                      <span className="mx-1">|</span>
-                      <DollarSign size={14} />
-                      <span>$3.5k spent</span>
-                    </div>
-                    <div className="flex items-center mt-2">
-                      <Star className="text-yellow-400" size={16} />
-                      <span className="ml-1">4.5</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm">
-                  {project?.companyName} is a leading technology company focused
-                  on innovative AI solutions. They have a history of successful
-                  project completions with freelancers on our platform.
-                </p>
+              <CardHeader>
+                <CardTitle>Client Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <strong>Company:</strong>{' '}
+                    {project?.companyName || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Email:</strong> {project?.email || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Status:</strong>{' '}
+                    {project?.status || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Project Type:</strong>{' '}
+                    {project?.projectType || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Domains:</strong>{' '}
+                    {project?.projectDomain?.join(', ') || 'Not specified'}
+                  </li>
+                </ul>
               </CardContent>
             </Card>
+
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-lg font-medium mb-4">Project Details</h2>
@@ -471,8 +482,8 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     <p>{project?.status}</p>
                   </div>
                   <div>
-                    <h3 className="font-medium">Budget Type</h3>
-                    <p>{project?.budget?.type}</p>
+                    <h3 className="font-medium">Project Type</h3>
+                    <p>{project?.projectType}</p>
                   </div>
                   {project?.budget?.type.toUpperCase() === 'HOURLY' ? (
                     <>
@@ -514,9 +525,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Bid Summary</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardHeader>
+                <CardTitle>Bid Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-medium">Total Bids</h3>
                     <p>{totalBids}</p>
@@ -534,85 +547,120 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                   <CardTitle className="text-lg font-medium">
                     Your Application
                   </CardTitle>
-                  <div className="relative profile-dropdown-container">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setShowProfileDropdown(!showProfileDropdown)
-                      }
-                      className="flex items-center gap-2"
-                      disabled={hasAppliedToAnyProfileInProject}
-                    >
-                      {selectedFreelancerProfile
-                        ? selectedFreelancerProfile.profileName
-                        : 'Add Profiles'}
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
-                      />
-                    </Button>
-
-                    {/* Profile Dropdown */}
-                    {showProfileDropdown && (
-                      <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                        {isLoadingProfiles ? (
-                          <div className="flex items-center justify-center p-4">
-                            <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                            <span className="text-sm text-muted-foreground">
-                              Loading profiles...
-                            </span>
-                          </div>
-                        ) : freelancerProfiles.length === 0 ? (
-                          <div className="p-4 text-center">
-                            <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                              No profiles created yet
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Create profiles in your settings
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="p-2">
-                            {freelancerProfiles.map((profile) => (
-                              <div
-                                key={profile._id}
-                                className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
-                                  selectedFreelancerProfile?._id === profile._id
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                    : 'border-transparent hover:border-muted-foreground hover:bg-muted'
-                                }`}
-                                onClick={() => {
-                                  if (!hasAppliedToAnyProfileInProject) {
-                                    setSelectedFreelancerProfile(
-                                      selectedFreelancerProfile?._id ===
-                                        profile._id
-                                        ? null
-                                        : profile,
-                                    );
-                                    setShowProfileDropdown(false);
-                                  }
-                                }}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <h4 className="font-medium text-sm text-foreground">
-                                      {profile.profileName}
-                                    </h4>
-                                  </div>
-                                  {selectedFreelancerProfile?._id ===
-                                    profile._id && (
-                                    <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
-                                      <Check className="w-3 h-3 text-white" />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                  <div className="flex items-center gap-2">
+                    {selectedProfile && (
+                      <div className="flex flex-wrap gap-2">
+                        <Badge
+                          key={selectedProfile._id}
+                          variant="secondary"
+                          className="border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 flex items-center gap-1"
+                        >
+                          {selectedProfile.domain || 'N/A'}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProfile(null);
+                            }}
+                            className="ml-1 text-green-700 hover:text-green-900 dark:text-green-300 dark:hover:text-green-100 focus:outline-none"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
                       </div>
                     )}
+                    <div className="relative profile-dropdown-container">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setShowProfileDropdown(!showProfileDropdown)
+                        }
+                        className="flex items-center gap-2"
+                        disabled={hasAppliedToSelectedProfile}
+                      >
+                        {selectedFreelancerProfile
+                          ? selectedFreelancerProfile.profileName
+                          : 'Add Profiles'}
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${showProfileDropdown ? 'rotate-180' : ''}`}
+                        />
+                      </Button>
+
+                      {showProfileDropdown && (
+                        <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                          {isLoadingProfiles ? (
+                            <div className="flex items-center justify-center p-4">
+                              <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                              <span className="text-sm text-muted-foreground">
+                                Loading profiles...
+                              </span>
+                            </div>
+                          ) : freelancerProfiles.length === 0 ? (
+                            <div className="p-4 text-center">
+                              <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                No profiles created yet
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Create profiles in your settings
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="p-2">
+                              {Array.isArray(freelancerProfiles) &&
+                              freelancerProfiles.length > 0 ? (
+                                freelancerProfiles.map((profile) => (
+                                  <div
+                                    key={profile._id}
+                                    className={`p-3 rounded-md cursor-pointer transition-all duration-200 border-2 mb-2 ${
+                                      selectedFreelancerProfile?._id ===
+                                      profile._id
+                                        ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                        : 'border-transparent hover:border-muted-foreground hover:bg-muted'
+                                    }`}
+                                    onClick={() => {
+                                      if (!hasAppliedToSelectedProfile) {
+                                        setSelectedFreelancerProfile(
+                                          selectedFreelancerProfile?._id ===
+                                            profile._id
+                                            ? null
+                                            : profile,
+                                        );
+                                        setShowProfileDropdown(false);
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <h4 className="font-medium text-sm text-foreground">
+                                          {profile.profileName}
+                                        </h4>
+                                      </div>
+                                      {selectedFreelancerProfile?._id ===
+                                        profile._id && (
+                                        <div className="flex items-center justify-center w-5 h-5 bg-green-500 rounded-full ml-2">
+                                          <Check className="w-3 h-3 text-white" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-4 text-center">
+                                  <UserCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                                  <p className="text-sm text-muted-foreground">
+                                    No profiles created yet
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Create profiles in your settings
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -630,7 +678,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                     placeholder="Write your cover letter..."
                     rows={8}
                     className="w-full p-3 border rounded-md resize-none"
-                    disabled={hasAppliedToAnyProfileInProject} // Disable textarea if already applied
+                    disabled={hasAppliedToSelectedProfile}
                   />
                   <div className="text-sm mt-1 text-right">
                     <span
@@ -656,7 +704,7 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                 </div>
 
                 <div className="flex gap-4 mt-4">
-                  {hasAppliedToAnyProfileInProject ? (
+                  {hasAppliedToSelectedProfile ? (
                     <Button
                       onClick={handleViewApplicationClick}
                       className="w-full md:w-auto px-8"
@@ -670,13 +718,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                         className="w-full md:w-auto px-8"
                         disabled={
                           isLoading ||
-                          isBidSubmitted ||
-                          hasAppliedToAnyProfileInProject
+                          hasAppliedToSelectedProfile ||
+                          !selectedProfile
                         }
                       >
                         {isLoading
                           ? 'Submitting...'
-                          : hasAppliedToAnyProfileInProject
+                          : hasAppliedToSelectedProfile
                             ? 'Applied'
                             : 'Apply Now'}
                       </Button>
@@ -749,11 +797,13 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
                             <div className="flex justify-end">
                               <Button
                                 type="submit"
-                                disabled={isBidSubmitted || isBidLoading}
+                                disabled={
+                                  isBidLoading || hasAppliedToSelectedProfile
+                                }
                               >
                                 {isBidLoading ? (
                                   <Loader2 className="animate-spin w-6 h-6" />
-                                ) : isBidSubmitted ? (
+                                ) : hasAppliedToSelectedProfile ? (
                                   'Applied'
                                 ) : (
                                   'Submit Bid'
@@ -777,154 +827,197 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </Card>
           </div>
           <div className="space-y-6">
+            {/* Experience */}
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Experience</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">3+ yrs</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Hourly rate</p>
-                      <p>
-                        ${project?.budget?.hourly?.minRate || 0} - $
-                        {project?.budget?.hourly?.maxRate || 0}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Time per week</p>
-                      <p>40 hours</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Project length</p>
-                      <p>3 to 5 months</p>
-                    </div>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Experience</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <strong>Experience:</strong>{' '}
+                    {project?.requirements?.experience
+                      ? `${project.requirements.experience} yrs`
+                      : project?.profiles?.[0]?.experience
+                        ? `${project.profiles[0].experience} yrs`
+                        : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Hourly rate:</strong>{' '}
+                    {project?.budget?.type?.toUpperCase() === 'HOURLY'
+                      ? `$${project?.budget?.hourly?.minRate || 0} - $${project?.budget?.hourly?.maxRate || 0}`
+                      : project?.budget?.type?.toUpperCase() === 'FIXED'
+                        ? `$${project?.budget?.fixedAmount || 0}`
+                        : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Time per week:</strong>{' '}
+                    {project?.hoursPerWeek
+                      ? `${project.hoursPerWeek} hours`
+                      : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Project length:</strong>{' '}
+                    {project?.start && project?.end
+                      ? `${Math.ceil(
+                          (new Date(project.end).getTime() -
+                            new Date(project.start).getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        )} days`
+                      : 'Not specified'}
+                  </li>
+                </ul>
               </CardContent>
-            </Card>
-            {project?.profiles?.length > 0 && (
+
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg font-medium">
-                    Profiles Needed
-                  </CardTitle>
+                  <CardTitle>Experience</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
-                    {project?.profiles?.map((profile: any, index: any) => (
-                      <Card
-                        key={profile?._id || index}
-                        className="border border-gray-200"
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium text-xs">
-                              {profile?.domain} Developer
-                            </h3>
-                            <div className="flex items-center">
-                              <Badge variant="outline" className="ml-2">
-                                {profile?.profileType}
-                              </Badge>
-                              <Badge variant="outline">
-                                {profile?.freelancersRequired} Needed
-                              </Badge>
-                            </div>
-                          </div>
-                          <p className="mb-3 text-sm">{profile?.description}</p>
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Experience
-                              </p>
-                              <p className="font-medium">
-                                {profile?.experience}+ years
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Rate</p>
-                              <p className="font-medium">${profile?.rate}/hr</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Minimum Connect
-                              </p>
-                              <p className="font-medium">
-                                {profile?.minConnect}
-                              </p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 mb-2">Skills</p>
-                            <div className="flex flex-wrap gap-2">
-                              {profile?.skills?.map((skill: any, idx: any) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="border border-gray-200"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            className={`w-full mt-4 ${
-                              appliedProfileIds.includes(profile._id || '')
-                                ? 'cursor-not-allowed'
-                                : ''
-                            }`}
-                            onClick={() => {
-                              if (
-                                !appliedProfileIds.includes(profile._id || '')
-                              ) {
-                                setSelectedProfile(profile);
-                                setBidAmount(profile.minConnect || 0);
-                                setDialogOpen(true);
-                              } else {
-                                // If already applied to this specific profile, show analytics drawer
-                                setShowAnalyticsDrawer(true);
-                              }
-                            }}
-                            disabled={
-                              appliedProfileIds.includes(profile._id || '') ||
-                              isBidSubmitted // Disable if any profile for this project is applied
-                            }
-                          >
-                            {appliedProfileIds.includes(profile._id || '') ? (
-                              <span className="flex items-center justify-center">
-                                <Check className="mr-2 h-4 w-4" /> Applied
-                              </span>
-                            ) : (
-                              'Apply for this role'
-                            )}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <h2 className="text-lg font-medium mb-4">Experience</h2>
+                  <div className="space-y-4">
+                    {/* Experience */}
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">
+                          {project?.requirements?.experience
+                            ? `${project.requirements.experience}+ yrs`
+                            : project?.profiles?.[0]?.experience
+                              ? `${project.profiles[0].experience}+ yrs`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Hourly Rate */}
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Hourly rate</p>
+                        <p>
+                          {project?.budget?.type?.toUpperCase() === 'HOURLY'
+                            ? `$${project?.budget?.hourly?.minRate || 0} - $${project?.budget?.hourly?.maxRate || 0}`
+                            : project?.budget?.type?.toUpperCase() === 'FIXED'
+                              ? `$${project?.budget?.fixedAmount || 0}`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Time per week */}
+                    <div className="flex items-center gap-2">
+                      <Clock className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Time per week</p>
+                        <p>
+                          {project?.requirements?.hoursPerWeek
+                            ? `${project.requirements.hoursPerWeek} hours`
+                            : project?.profiles?.[0]?.hoursPerWeek
+                              ? `${project.profiles[0].hoursPerWeek} hours`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Project length */}
+                    <div className="flex items-center gap-2">
+                      <Calendar className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Project length</p>
+                        <p>
+                          {project?.start && project?.end
+                            ? `${Math.ceil(
+                                (new Date(project.end).getTime() -
+                                  new Date(project.start).getTime()) /
+                                  (1000 * 60 * 60 * 24),
+                              )} days`
+                            : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
+
+              <CardHeader>
+                <CardTitle className="text-lg font-medium">
+                  Profiles Needed
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
+                  {project?.profiles?.map((profile: any, index: any) => (
+                    <Card
+                      key={profile?._id || index}
+                      className={`border cursor-pointer ${
+                        selectedProfile?._id === profile._id
+                          ? appliedProfileIds.includes(profile._id)
+                            ? 'border-red-500 ring-2 ring-red-500' // Applied and selected
+                            : 'border-blue-500 ring-2 ring-blue-500' // Not applied but selected
+                          : appliedProfileIds.includes(profile._id)
+                            ? 'border-red-500' // Applied but not selected
+                            : 'border-gray-200' // Default state
+                      }`}
+                      onClick={() => handleProfileSelection(profile)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="font-medium text-xs">
+                            {profile?.domain} Developer
+                          </h3>
+                          <div className="flex items-center">
+                            <Badge variant="outline" className="ml-2">
+                              {profile?.profileType}
+                            </Badge>
+                            <Badge variant="outline">
+                              {profile?.freelancersRequired} Needed
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="mb-3 text-sm">{profile?.description}</p>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <p className="text-xs text-gray-500">Experience</p>
+                            <p className="font-medium">
+                              {profile?.experience}+ years
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Rate</p>
+                            <p className="font-medium">${profile?.rate}/hr</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              Minimum Connect
+                            </p>
+                            <p className="font-medium">{profile?.minConnect}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {profile?.skills?.map((skill: any, idx: any) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="border border-gray-200"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </>
       )}
       {showAnalyticsDrawer && (
         <div className="col-span-1 md:col-span-3">
-          {' '}
-          {/* Changed from grid-cols-1 to md:col-span-3 */}
           <ProjectAnalyticsDrawer
             projectData={project}
             setShowAnalyticsDrawer={setShowAnalyticsDrawer}

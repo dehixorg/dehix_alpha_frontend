@@ -8,12 +8,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const url = request.nextUrl.clone();
 
-  // Skip middleware for static files and API routes
+  // Skip middleware for static files, API routes, and auth pages
   if (
     pathname.startsWith('/_next') ||
     pathname.includes('.') ||
     pathname.startsWith('/api/') ||
-    pathname.startsWith('/static/')
+    pathname.startsWith('/static/') ||
+    pathname.startsWith('/auth/sign-up')
   ) {
     return NextResponse.next();
   }

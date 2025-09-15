@@ -245,6 +245,9 @@ export function CreateProjectBusinessForm() {
   const [currProjectDomains, setCurrProjectDomains] = useState<any[]>([]);
   const [tmpProjectDomains, setTmpProjectDomains] = useState('');
   const [loading, setLoading] = useState(false);
+  const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
+    'Freelancer',
+  );
   const [showLoadDraftDialog, setShowLoadDraftDialog] = useState(false);
   const [currentStep, setCurrentStep] = useState<FormSteps>(
     FormSteps.ProjectInfo,
@@ -878,6 +881,7 @@ export function CreateProjectBusinessForm() {
                       : 'outline'
                   }
                   onClick={() => {
+                    setProfileType('Freelancer');
                     form.setValue(
                       `profiles.${index}.profileType`,
                       'FREELANCER',
@@ -894,6 +898,7 @@ export function CreateProjectBusinessForm() {
                       : 'outline'
                   }
                   onClick={() => {
+                    setProfileType('Consultant');
                     form.setValue(
                       `profiles.${index}.profileType`,
                       'CONSULTANT',
@@ -949,7 +954,7 @@ export function CreateProjectBusinessForm() {
                 name={`profiles.${index}.freelancersRequired`}
                 render={({ field }) => (
                   <FormItem className="mb-4">
-                    <FormLabel>Number of Freelancers Required</FormLabel>
+                    <FormLabel>{`Number of ${profileType} Required`}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
