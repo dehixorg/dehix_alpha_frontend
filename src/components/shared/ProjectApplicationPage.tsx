@@ -106,6 +106,9 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
   const [userConnects, setUserConnects] = useState<number>(0);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  useEffect(() => {
+    console.log('Project data from backend:', project);
+  }, [project]);
 
   useEffect(() => {
     const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
@@ -352,17 +355,17 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
       setCoverLetter(value);
     }
   };
-
   const totalBids = project?.bids?.length || 0;
   const avgBid =
     totalBids > 0
       ? (
-          project?.bids?.reduce(
-            (sum: any, bid: any) => sum + (bid?.current_price || 0),
+          project.bids.reduce(
+            (sum: number, bid: any) => sum + (bid.current_price || 0),
             0,
           ) / totalBids
         ).toFixed(2)
       : 'N/A';
+
   const postedDate = new Date(
     project?.createdAt || Date.now(),
   ).toLocaleDateString();
@@ -438,34 +441,34 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Client Information</h2>
-                <div className="flex items-start gap-4">
-                  <div className="bg-red-500 rounded-full w-8 h-8 flex items-center justify-center text-white">
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <p className="font-medium">{project?.companyName}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
-                      <Briefcase size={14} />
-                      <span>12 projects posted</span>
-                      <span className="mx-1">|</span>
-                      <DollarSign size={14} />
-                      <span>$3.5k spent</span>
-                    </div>
-                    <div className="flex items-center mt-2">
-                      <Star className="text-yellow-400" size={16} />
-                      <span className="ml-1">4.5</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm">
-                  {project?.companyName} is a leading technology company focused
-                  on innovative AI solutions. They have a history of successful
-                  project completions with freelancers on our platform.
-                </p>
+              <CardHeader>
+                <CardTitle>Client Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <strong>Company:</strong>{' '}
+                    {project?.companyName || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Email:</strong> {project?.email || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Status:</strong>{' '}
+                    {project?.status || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Project Type:</strong>{' '}
+                    {project?.projectType || 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Domains:</strong>{' '}
+                    {project?.projectDomain?.join(', ') || 'Not specified'}
+                  </li>
+                </ul>
               </CardContent>
             </Card>
+
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-lg font-medium mb-4">Project Details</h2>
@@ -522,9 +525,11 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Bid Summary</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardHeader>
+                <CardTitle>Bid Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-medium">Total Bids</h3>
                     <p>{totalBids}</p>
@@ -822,125 +827,192 @@ const ProjectApplicationForm: React.FC<ProjectApplicationFormProps> = ({
             </Card>
           </div>
           <div className="space-y-6">
+            {/* Experience */}
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-medium mb-4">Experience</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">3+ yrs</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Hourly rate</p>
-                      <p>
-                        ${project?.budget?.hourly?.minRate || 0} - $
-                        {project?.budget?.hourly?.maxRate || 0}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Time per week</p>
-                      <p>40 hours</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="text-gray-500" size={18} />
-                    <div>
-                      <p className="font-medium">Project length</p>
-                      <p>3 to 5 months</p>
-                    </div>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Experience</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <strong>Experience:</strong>{' '}
+                    {project?.requirements?.experience
+                      ? `${project.requirements.experience} yrs`
+                      : project?.profiles?.[0]?.experience
+                        ? `${project.profiles[0].experience} yrs`
+                        : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Hourly rate:</strong>{' '}
+                    {project?.budget?.type?.toUpperCase() === 'HOURLY'
+                      ? `$${project?.budget?.hourly?.minRate || 0} - $${project?.budget?.hourly?.maxRate || 0}`
+                      : project?.budget?.type?.toUpperCase() === 'FIXED'
+                        ? `$${project?.budget?.fixedAmount || 0}`
+                        : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Time per week:</strong>{' '}
+                    {project?.hoursPerWeek
+                      ? `${project.hoursPerWeek} hours`
+                      : 'Not specified'}
+                  </li>
+                  <li>
+                    <strong>Project length:</strong>{' '}
+                    {project?.start && project?.end
+                      ? `${Math.ceil(
+                          (new Date(project.end).getTime() -
+                            new Date(project.start).getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        )} days`
+                      : 'Not specified'}
+                  </li>
+                </ul>
               </CardContent>
-            </Card>
-            {project?.profiles?.length > 0 && (
+
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg font-medium">
-                    Profiles Needed
-                  </CardTitle>
+                  <CardTitle>Experience</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
-                    {project?.profiles?.map((profile: any, index: any) => (
-                      <Card
-                        key={profile?._id || index}
-                        className={`border cursor-pointer ${
-                          // FIX: Conditional styling for selected vs applied profiles
-                          selectedProfile?._id === profile._id
-                            ? appliedProfileIds.includes(profile._id)
-                              ? 'border-red-500 ring-2 ring-red-500' // Applied and selected
-                              : 'border-blue-500 ring-2 ring-blue-500' // Not applied but selected
-                            : appliedProfileIds.includes(profile._id)
-                              ? 'border-red-500' // Applied but not selected
-                              : 'border-gray-200' // Default state
-                        }`}
-                        onClick={() => handleProfileSelection(profile)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium text-xs">
-                              {profile?.domain} Developer
-                            </h3>
-                            <div className="flex items-center">
-                              <Badge variant="outline" className="ml-2">
-                                {profile?.profileType}
-                              </Badge>
-                              <Badge variant="outline">
-                                {profile?.freelancersRequired} Needed
-                              </Badge>
-                            </div>
-                          </div>
-                          <p className="mb-3 text-sm">{profile?.description}</p>
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Experience
-                              </p>
-                              <p className="font-medium">
-                                {profile?.experience}+ years
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">Rate</p>
-                              <p className="font-medium">${profile?.rate}/hr</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500">
-                                Minimum Connect
-                              </p>
-                              <p className="font-medium">
-                                {profile?.minConnect}
-                              </p>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 mb-2">Skills</p>
-                            <div className="flex flex-wrap gap-2">
-                              {profile?.skills?.map((skill: any, idx: any) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="border border-gray-200"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <h2 className="text-lg font-medium mb-4">Experience</h2>
+                  <div className="space-y-4">
+                    {/* Experience */}
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">
+                          {project?.requirements?.experience
+                            ? `${project.requirements.experience}+ yrs`
+                            : project?.profiles?.[0]?.experience
+                              ? `${project.profiles[0].experience}+ yrs`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Hourly Rate */}
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Hourly rate</p>
+                        <p>
+                          {project?.budget?.type?.toUpperCase() === 'HOURLY'
+                            ? `$${project?.budget?.hourly?.minRate || 0} - $${project?.budget?.hourly?.maxRate || 0}`
+                            : project?.budget?.type?.toUpperCase() === 'FIXED'
+                              ? `$${project?.budget?.fixedAmount || 0}`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Time per week */}
+                    <div className="flex items-center gap-2">
+                      <Clock className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Time per week</p>
+                        <p>
+                          {project?.requirements?.hoursPerWeek
+                            ? `${project.requirements.hoursPerWeek} hours`
+                            : project?.profiles?.[0]?.hoursPerWeek
+                              ? `${project.profiles[0].hoursPerWeek} hours`
+                              : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Project length */}
+                    <div className="flex items-center gap-2">
+                      <Calendar className="text-gray-500" size={18} />
+                      <div>
+                        <p className="font-medium">Project length</p>
+                        <p>
+                          {project?.start && project?.end
+                            ? `${Math.ceil(
+                                (new Date(project.end).getTime() -
+                                  new Date(project.start).getTime()) /
+                                  (1000 * 60 * 60 * 24),
+                              )} days`
+                            : 'Not specified'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
+
+              <CardHeader>
+                <CardTitle className="text-lg font-medium">
+                  Profiles Needed
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4 h-[70vh] overflow-y-scroll no-scrollbar">
+                  {project?.profiles?.map((profile: any, index: any) => (
+                    <Card
+                      key={profile?._id || index}
+                      className={`border cursor-pointer ${
+                        selectedProfile?._id === profile._id
+                          ? appliedProfileIds.includes(profile._id)
+                            ? 'border-red-500 ring-2 ring-red-500' // Applied and selected
+                            : 'border-blue-500 ring-2 ring-blue-500' // Not applied but selected
+                          : appliedProfileIds.includes(profile._id)
+                            ? 'border-red-500' // Applied but not selected
+                            : 'border-gray-200' // Default state
+                      }`}
+                      onClick={() => handleProfileSelection(profile)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="font-medium text-xs">
+                            {profile?.domain} Developer
+                          </h3>
+                          <div className="flex items-center">
+                            <Badge variant="outline" className="ml-2">
+                              {profile?.profileType}
+                            </Badge>
+                            <Badge variant="outline">
+                              {profile?.freelancersRequired} Needed
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="mb-3 text-sm">{profile?.description}</p>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <p className="text-xs text-gray-500">Experience</p>
+                            <p className="font-medium">
+                              {profile?.experience}+ years
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Rate</p>
+                            <p className="font-medium">${profile?.rate}/hr</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              Minimum Connect
+                            </p>
+                            <p className="font-medium">{profile?.minConnect}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {profile?.skills?.map((skill: any, idx: any) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="border border-gray-200"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </>
       )}
