@@ -98,12 +98,9 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     setSelectedProject(project);
     setIsDialogOpen(true);
   };
-  // Count dynamically from props
-  const activeCount = projects.filter((p) => p.status === 'active').length;
-  const pendingCount = projects.filter((p) => p.status === 'pending').length;
 
   return (
-    <div className="bg-gray-50 dark:bg-black min-h-screen">
+    <div className="min-h-screen">
       <Card>
         <CardHeader className="px-7">
           <CardTitle>Projects</CardTitle>
