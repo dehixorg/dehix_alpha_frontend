@@ -100,7 +100,7 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <Card>
         <CardHeader className="px-7">
           <CardTitle>Projects</CardTitle>
