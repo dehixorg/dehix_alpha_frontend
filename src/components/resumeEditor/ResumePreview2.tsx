@@ -112,21 +112,26 @@ export const ResumePreview2: React.FC<ResumePreviewProps> = ({
                 >
                   {`${person.firstName} ${person.lastName}`}
                 </h1>
-
                 <div className="mt-4">
                   <h2
-                    className="text-lg font-semibold text-gray-900 mb-4"
+                    className="text-lg font-semibold text-gray-900 mb-2"
                     style={{ color: headingColor }}
                   >
                     Contact Details
                   </h2>
                   <Separator className="my-2" />
-                  <p className="text-sm text-gray-800">{person.email}</p>
-                  <p className="text-sm text-gray-800">{person.phoneNumber}</p>
-                  <p className="text-sm text-gray-800 mt-2">
+                  <p className="text-sm text-gray-800 break-words truncate">
+                    {person.email}
+                  </p>
+                  <p className="text-sm text-gray-800 break-words truncate">
+                    {person.phoneNumber}
+                  </p>
+                  <p className="text-sm text-gray-800 mt-1 break-words truncate">
                     {person.linkedin}
                   </p>
-                  <p className="text-sm text-gray-800">{person.github}</p>
+                  <p className="text-sm text-gray-800 break-words truncate">
+                    {person.github}
+                  </p>
                 </div>
               </div>
             ))}

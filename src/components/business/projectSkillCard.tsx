@@ -136,6 +136,8 @@ function ProjectSkillCard({
                 <Image
                   src={member.profilePic}
                   alt={member.name}
+                  width={32}
+                  height={32}
                   className="h-8 w-8 rounded-full object-cover"
                 />
               ) : (

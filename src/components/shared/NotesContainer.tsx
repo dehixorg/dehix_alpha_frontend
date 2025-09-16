@@ -83,8 +83,8 @@ const NotesContainer = ({
   ];
 
   return (
-    <div className="flex justify-center items-center p-4">
-      <div className="w-full columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-4">
+    <div className="w-full p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {notes.map((note, index) => (
           <NoteCard
             key={note._id}
