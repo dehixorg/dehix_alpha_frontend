@@ -98,9 +98,12 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     setSelectedProject(project);
     setIsDialogOpen(true);
   };
+  // Count dynamically from props
+  const activeCount = projects.filter((p) => p.status === 'active').length;
+  const pendingCount = projects.filter((p) => p.status === 'pending').length;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 dark:bg-black min-h-screen">
       <Card>
         <CardHeader className="px-7">
           <CardTitle>Projects</CardTitle>
@@ -186,12 +189,12 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                           </DialogTrigger>
                           <DialogContent
                             className="rounded-2xl 
-             p-6 w-96 max-w-[90vw] mx-auto
-             bg-white
-             border border-white/50
-             ring-4 ring-white/70
-             hover:scale-105 transition-transform duration-300
-             overflow-hidden"
+    p-6 w-96 max-w-[90vw] mx-auto
+    bg-white dark:bg-gray-900
+    border border-gray-200 dark:border-gray-700
+    ring-4 ring-gray-100 dark:ring-gray-800
+    hover:scale-105 transition-transform duration-300
+    overflow-hidden text-gray-900 dark:text-gray-100"
                           >
                             <DialogHeader className="mb-4 text-center">
                               <DialogTitle className="text-lg font-semibold leading-tight flex items-center gap-2 justify-center">

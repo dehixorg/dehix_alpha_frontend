@@ -17,9 +17,9 @@ import {
   Underline,
   CheckCheck,
   Flag,
-  Mic, 
-  StopCircle, 
-  Trash2, 
+  Mic,
+  StopCircle,
+  Trash2,
   X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';

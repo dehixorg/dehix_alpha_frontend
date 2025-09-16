@@ -13,7 +13,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/webp',
 ];
-const maxImageSize = 2 * 1024 * 1024; // 2MB
+const maxImageSize = 5 * 1024 * 1024; // 5MB
 
 interface ThumbnailUploadProps {
   onThumbnailUpdate?: (thumbnailUrl: string) => void;
@@ -55,7 +55,7 @@ const ThumbnailUpload: React.FC<ThumbnailUploadProps> = ({
       toast({
         variant: 'destructive',
         title: 'File too large',
-        description: 'Please select an image smaller than 2MB.',
+        description: 'Please select an image smaller than 5MB.',
       });
       return;
     }

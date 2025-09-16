@@ -69,10 +69,20 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchProjectData(StatusEnum.ACTIVE);
-    fetchProjectData(StatusEnum.PENDING);
-    fetchProjectData(StatusEnum.COMPLETED);
-    fetchProjectData(StatusEnum.REJECTED);
+    const fetchAllProjects = async () => {
+      setLoadingStats(true); // start loading stats
+      await Promise.all([
+        fetchProjectData(StatusEnum.ACTIVE),
+        fetchProjectData(StatusEnum.PENDING),
+        fetchProjectData(StatusEnum.COMPLETED),
+        fetchProjectData(StatusEnum.REJECTED),
+      ]);
+      setLoadingStats(false); // stop loading after all are fetched
+    };
+
+    if (user?.uid) {
+      fetchAllProjects();
+    }
   }, [user.uid]);
 
   const handleTabChange = (status: StatusEnum) => {
