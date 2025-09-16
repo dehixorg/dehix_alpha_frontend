@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { LoaderCircle } from 'lucide-react';
 
 interface ConfirmActionDialogProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface ConfirmActionDialogProps {
     | 'link'
     | null
     | undefined; // Optional: Default to "destructive"
+    isLoading?: boolean;
 }
 
 export function ConfirmActionDialog({
@@ -38,6 +40,7 @@ export function ConfirmActionDialog({
   description,
   confirmButtonText = 'Confirm',
   confirmButtonVariant = 'destructive',
+  isLoading = false,
 }: ConfirmActionDialogProps) {
   if (!isOpen) {
     return null;
@@ -94,7 +97,12 @@ export function ConfirmActionDialog({
                 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-hover))]',
             )}
           >
-            {confirmButtonText}
+             {isLoading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              confirmButtonText
+            )}
+            {/* {confirmButtonText} */}
           </Button>
         </DialogFooter>
       </DialogContent>

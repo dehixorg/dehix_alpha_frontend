@@ -49,7 +49,7 @@ const HomePage = () => {
   const [profileSidebarId, setProfileSidebarId] = useState<string | null>(null);
   const [profileSidebarType, setProfileSidebarType] = useState<'user' | 'group' | null>(null);
   const [profileSidebarInitialData, setProfileSidebarInitialData] = useState<object | undefined>(undefined);
-
+  
   // State for NewChatDialog
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
@@ -104,12 +104,14 @@ const HomePage = () => {
           profilePic: user.photoURL || null,
           email: user.email || null,
           userType: user.type,
+          viewState : 'inbox',
         },
         [selectedUser.id]: {
           userName: selectedUser.displayName,
           profilePic: selectedUser.profilePic || null,
           email: selectedUser.email || null,
           userType: selectedUser.userType,
+          viewState : 'inbox',
         },
       },
     };
@@ -130,12 +132,14 @@ const HomePage = () => {
             profilePic: user.photoURL || undefined,
             email: user.email || undefined,
             userType: user.type,
+            viewState: 'inbox',
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
             profilePic: selectedUser.profilePic || undefined,
             email: selectedUser.email || undefined,
             userType: selectedUser.userType,
+            viewState: 'inbox',
           },
         },
         createdAt: new Date().toISOString(),
@@ -176,6 +180,7 @@ const HomePage = () => {
         profilePic: user.photoURL || null,
         email: user.email || null,
         userType: user.type,
+        viewState: 'inbox', 
       },
     };
     selectedUsers.forEach((selected: any) => {
@@ -184,6 +189,7 @@ const HomePage = () => {
         profilePic: selected.profilePic || null,
         email: selected.email || null,
         userType: selected.userType,
+        viewState: 'inbox', 
       };
     });
 
@@ -212,6 +218,7 @@ const HomePage = () => {
             profilePic: v.profilePic || undefined,
             email: v.email || undefined,
             userType: v.userType,
+            viewState: v.viewState,
           },
         ]),
       );
@@ -342,6 +349,8 @@ const HomePage = () => {
         isChatExpanded={isChatExpanded}
         onToggleExpand={toggleChatExpanded}
         onOpenProfileSidebar={handleOpenProfileSidebar}
+        onConversationUpdate={setActiveConversation}
+
       />
     );
   } else if (!loading && conversations.length > 0) {
@@ -394,6 +403,8 @@ const HomePage = () => {
           profileId={profileSidebarId}
           profileType={profileSidebarType}
           initialData={profileSidebarInitialData}
+          onConversationUpdate={setActiveConversation}
+
         />
         {user && (
           <NewChatDialog

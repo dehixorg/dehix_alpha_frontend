@@ -9,6 +9,7 @@ import {
   SquarePen,
   X as LucideX,
   LoaderCircle,
+  Archive,
 } from 'lucide-react';
 import { useSelector } from 'react-redux'; // Added
 
@@ -46,12 +47,17 @@ export interface Conversation extends DocumentData {
     senderId?: string;
     timestamp?: string;
   } | null; // Allow null
+  blocked?: {
+    status: boolean; // Will be true when blocked
+    by: string;     // The UID of the user who initiated the block
+  } | null;
   participantDetails?: {
     [uid: string]: {
       userName: string;
       profilePic?: string;
       email?: string;
       userType?: 'freelancer' | 'business';
+      viewState: 'archieved' | 'inbox',
     };
   };
   // Group specific fields
@@ -92,6 +98,9 @@ export function ChatList({
   const [searchResults, setSearchResults] = useState<CombinedUser[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  // --- HIGHLIGHT: ADD THIS STATE AND HANDLERS ---
+  const [activeView, setActiveView] = useState<'inbox' | 'archived'>('inbox');
+
 
   const stripHtml = (html: string) =>
     html
@@ -169,6 +178,14 @@ export function ChatList({
     setSelectedUsers(selectedUsers.filter((user) => user.id !== userId));
   };
 
+  const handleOpenArchivedChats = () => {
+    setActiveView('archived');
+  };
+
+  const handleOpenInbox = () => {
+    setActiveView('inbox');
+  };
+  
   // Function to update the last updated time for each conversation
   const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
@@ -198,6 +215,33 @@ export function ChatList({
     return (
       name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lastMessageContent.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const displayedConversations = conversations
+  .filter((conversation) => {
+    // --- HIGHLIGHT: FIRST, FILTER BY VIEW (INBOX/ARCHIVED) ---
+    const userDetails = conversation.participantDetails?.[currentUser.uid];
+    if (activeView === 'archived') {
+      // Corrected typo 'archieved' to 'archived' for the check
+      return userDetails?.viewState === 'archieved'; 
+    } else {
+      // In inbox view, show chats that are not archived
+      return userDetails?.viewState !== 'archieved';
+    }
+  })
+  .filter((conversation) => {
+    // --- HIGHLIGHT: THEN, FILTER BY THE EXISTING SEARCH TERM ---
+    const name =
+      conversation.groupName ||
+      conversation.participantDetails?.[
+        conversation.participants.find((p) => p !== currentUser.uid) || ''
+      ]?.userName ||
+      '';
+    const lastMessageContent = conversation.lastMessage?.content || '';
+    return (
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      stripHtml(lastMessageContent).toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -292,6 +336,15 @@ export function ChatList({
             <SquarePen className="h-4 w-4 mr-2" />
             New Chat
           </Button>
+          {/* --- HIGHLIGHT: NEW ARCHIVED CHAT BUTTON --- */}
+        <Button
+          variant="outline" // Using "outline" to make it look secondary
+          className="flex items-center justify-center text-sm px-3 py-2 rounded-full shadow-lg"
+          onClick={handleOpenArchivedChats} // You will need to create this function
+          aria-label="View archived chats"
+        >
+          <Archive className="h-4 w-4" />
+        </Button>
         </div>
 
         {/* Existing Search Bar Div */}
@@ -308,6 +361,23 @@ export function ChatList({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
+
+          {/* --- HIGHLIGHT: ADD THIS ENTIRE BLOCK --- */}
+          {activeView === 'archived' && (
+            <div className="p-3 text-center border-b border-[hsl(var(--border))]">
+              <div className="flex items-center justify-between">
+                <Button variant="link" onClick={handleOpenInbox}>
+                  &larr; Back to Inbox
+                </Button>
+                <h3 className="font-semibold text-lg">Archived Chats</h3>
+                <div style={{ width: '95px' }}></div> {/* Spacer to keep title centered */}
+              </div>
+            </div>
+          )}
+          {/* --- END HIGHLIGHT --- */}
+        
+        
       </div>
 
       <ScrollArea hideScrollbar>
@@ -320,8 +390,8 @@ export function ChatList({
         >
           {' '}
           {/* Container for conversation items */}
-          {filteredConversations.length > 0 ? (
-            filteredConversations.map((conversation) => {
+          {displayedConversations.length > 0 ? (
+            displayedConversations.map((conversation) => {
               const lastUpdated = lastUpdatedTimes[conversation.id] || 'N/A';
               const isActive = active?.id === conversation.id;
               const lastMessageText = stripHtml(

@@ -21,9 +21,11 @@ import {
   StopCircle, 
   Trash2, 
   X,
+  ArchiveRestore,
+  Archive,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { DocumentData } from 'firebase/firestore';
+import { doc, DocumentData, updateDoc } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
@@ -82,6 +84,7 @@ import {
   DialogOverlay,
 } from '@/components/ui/dialog';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
+import { db } from '@/config/firebaseConfig';
 
 // Format only the time (e.g., 10:30 AM) for in-bubble timestamps
 function formatChatTimestamp(timestamp: string) {
@@ -138,6 +141,8 @@ interface CardsChatProps {
     type: 'user' | 'group',
     initialDetails?: { userName?: string; email?: string; profilePic?: string },
   ) => void;
+  // --- HIGHLIGHT: ADD THIS LINE ---
+  onConversationUpdate: (updatedConversation: Conversation) => void;
 }
 
 export function CardsChat({
@@ -145,6 +150,7 @@ export function CardsChat({
   isChatExpanded,
   onToggleExpand,
   onOpenProfileSidebar,
+  onConversationUpdate,
 }: CardsChatProps) {
   const [primaryUser, setPrimaryUser] = useState<User>({
     userName: '',
@@ -339,6 +345,17 @@ export function CardsChat({
     message: Partial<Message>,
     setInput: React.Dispatch<React.SetStateAction<string>>,
   ) {
+
+    // --- ADD THIS CHECK ---
+    if (conversation.blocked?.status === true) {
+      toast({
+        variant: 'destructive',
+        title: 'Action Denied',
+        description: 'You cannot send messages to a blocked conversation.',
+      });
+      return; // Stop the function
+    }
+    // --- END OF CHECK ---
     try {
       setIsSending(true);
       const datentime = new Date().toISOString();
@@ -819,6 +836,68 @@ export function CardsChat({
     );
   }
 
+
+  // --- ADD THIS LOGIC ---
+  // 1. Determine if the current conversation is blocked
+  const isBlocked = conversation?.blocked?.status === true;
+  const isArchived = conversation?.participantDetails?.[user.uid]?.viewState === 'archieved';
+  // 2. Create a dynamic message to show the user
+  let blockMessage = '';
+  if (isBlocked) {
+    if (conversation.blocked?.by === user.uid) {
+      blockMessage = "You have blocked this conversation. Unblock them to send a message.";
+    } else {
+      blockMessage = "This conversation is blocked. You cannot send a message.";
+    }
+  }
+
+  // Inside your CardsChat component in chat.tsx
+
+// --- HIGHLIGHT: ADD THIS ENTIRE FUNCTION ---
+async function handleToggleArchive() {
+  console.log('toggled');
+  if (!user?.uid || !conversation?.id) return;
+  
+  console.log(isArchived);
+  // 1. Determine the current and new state
+  const currentState = conversation.participantDetails?.[user.uid]?.viewState;
+  console.log(currentState);
+
+  const newState = currentState === 'archieved' ? 'inbox' : 'archieved';
+
+  // 2. Prepare the update for Firestore
+  const conversationDocRef = doc(db, 'conversations', conversation.id);
+  const fieldToUpdate = `participantDetails.${user.uid}.viewState`;
+  
+  try {
+    // 3. Update the document in Firestore
+    await updateDoc(conversationDocRef, { [fieldToUpdate]: newState });
+    
+    // 4. Create the updated conversation object for the local state
+    const updatedConversation = {
+      ...conversation,
+      participantDetails: {
+        ...conversation.participantDetails,
+        [user.uid]: {
+          ...conversation.participantDetails?.[user.uid],
+          viewState: newState,
+        },
+      },
+    };
+
+    // 5. Call the prop to update the parent's state instantly
+    onConversationUpdate(updatedConversation as Conversation);
+
+    toast({
+      title: `Conversation ${newState === 'archieved' ? 'Archived' : 'Unarchived'}`,
+    });
+  } catch (error) {
+    console.error("Error toggling archive state:", error);
+    toast({ variant: 'destructive', title: 'Error', description: 'Could not update archive status.' });
+  }
+}
+// --- END HIGHLIGHT ---
+
   return (
     <>
       {/* Image Modal */}
@@ -910,6 +989,21 @@ export function CardsChat({
                 >
                   <Search className="h-5 w-5" />
                 </Button>
+                {/* --- HIGHLIGHT: ADD THIS BUTTON --- */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={isArchived ? 'Unarchive chat' : 'Archive chat'}
+                  onClick={handleToggleArchive}
+                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                >
+                  {isArchived ? (
+                    <ArchiveRestore className="h-5 w-5" /> // Icon for unarchiving
+                  ) : (
+                    <Archive className="h-5 w-5" /> // Icon for archiving
+                  )}
+                </Button>
+                {/* --- END HIGHLIGHT --- */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1337,215 +1431,161 @@ export function CardsChat({
               </div>
             </CardContent>
             <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (input.trim().length === 0) return;
-                  const newMessage = {
-                    senderId: user.uid,
-                    content: input,
-                    timestamp: new Date().toISOString(),
-                    replyTo: replyToMessageId || null,
-                  };
-                  sendMessage(conversation, newMessage, setInput);
-                  setReplyToMessageId('');
-                }}
-                className="flex flex-col w-full space-y-2"
-                aria-label="Message input form"
-              >
-                {replyToMessageId && (
-                  <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
-                    <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
-                      Replying to:{' '}
-                      <span className="font-semibold">
-                        {messages
-                          .find((msg) => msg.id === replyToMessageId)
-                          ?.content.replace(/\*|__/g, '')
-                          .substring(0, 50) || 'Message'}
-                        ...
-                      </span>
-                    </div>
-                    <Button
-                      onClick={() => setReplyToMessageId('')}
-                      variant="ghost"
-                      size="icon"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
-                      aria-label="Cancel reply"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+              {isBlocked ? (
+                  // If blocked, show this message
+                  <div className="flex h-full w-full items-center justify-center rounded-lg border bg-gray-100 p-4 text-center text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <p>{blockMessage}</p>
                   </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <div
-                      className="absolute inset-y-0 flex items-center justify-center 
-                    pl-0.1 z-10"
-                    >
-                      <EmojiPicker
-                        aria-label="Insert emoji"
-                        onSelect={handleInsertEmoji}
-                      />
-                    </div>
-                    <div
-                      ref={composerRef}
-                      contentEditable
-                      aria-label="Type a message"
-                      aria-placeholder="Type a message..."
-                      data-placeholder="Type a message..."
-                      className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
-                      onInput={(e) => {
-                        const html = (e.currentTarget as HTMLElement).innerHTML;
-                        setInput(html);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && !isSending) {
-                          e.preventDefault();
-                          const html = composerRef.current?.innerHTML || '';
-                          const textContent =
-                            composerRef.current?.innerText || '';
-                          if (textContent.trim().length > 0) {
-                            const sanitized = DOMPurify.sanitize(html, {
-                              ALLOWED_TAGS: [
-                                'b',
-                                'strong',
-                                'i',
-                                'em',
-                                'u',
-                                'br',
-                                'div',
-                                'span',
-                                'a',
-                              ],
-                              ALLOWED_ATTR: [
-                                'href',
-                                'target',
-                                'rel',
-                                'style',
-                                'class',
-                              ],
-                            });
-                            const newMessage = {
-                              senderId: user.uid,
-                              content: sanitized,
-                              timestamp: new Date().toISOString(),
-                              replyTo: replyToMessageId || null,
-                            };
-                            sendMessage(conversation, newMessage, setInput);
-                            setReplyToMessageId('');
-                            composerRef.current!.innerHTML = '';
-                            setInput('');
-                          }
-                        }
-                      }}
-                      suppressContentEditableWarning
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
-                    disabled={!input.trim().length || isSending}
-                    aria-label="Send message"
-                    onClick={() => {
-                      const html = composerRef.current?.innerHTML || '';
-                      const textContent = composerRef.current?.innerText || '';
-                      if (textContent.trim().length === 0) return;
-                      const sanitized = DOMPurify.sanitize(html, {
-                        ALLOWED_TAGS: [
-                          'b',
-                          'strong',
-                          'i',
-                          'em',
-                          'u',
-                          'br',
-                          'div',
-                          'span',
-                          'a',
-                        ],
-                      });
+                ) : (
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      if (input.trim().length === 0) return;
                       const newMessage = {
                         senderId: user.uid,
-                        content: sanitized,
+                        content: input,
                         timestamp: new Date().toISOString(),
                         replyTo: replyToMessageId || null,
                       };
                       sendMessage(conversation, newMessage, setInput);
                       setReplyToMessageId('');
-                      composerRef.current!.innerHTML = '';
-                      setInput('');
                     }}
+                    className="flex flex-col w-full space-y-2"
+                    aria-label="Message input form"
                   >
-                    {isSending ? (
-                      <LoaderCircle className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </Button>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleBold}
-                    title="Bold"
-                    aria-label="Bold"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
-                  >
-                    {' '}
-                    <Bold className="h-4 w-4" />{' '}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleitalics}
-                    title="Italic"
-                    aria-label="Italic"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
-                  >
-                    {' '}
-                    <Italic className="h-4 w-4" />{' '}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleUnderline}
-                    title="Underline"
-                    aria-label="Underline"
-                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
-                  >
-                    {' '}
-                    <Underline className="h-4 w-4" />{' '}
-                  </Button>
-
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                    
+                    {replyToMessageId && (
+                      <div className="flex items-center justify-between p-2 rounded-md bg-[hsl(var(--accent))] border-l-2 border-[hsl(var(--primary))_/_0.7]">
+                        <div className="text-xs italic text-[hsl(var(--muted-foreground))] overflow-hidden whitespace-nowrap text-ellipsis max-w-full">
+                          Replying to:{' '}
+                          <span className="font-semibold">
+                            {messages
+                              .find((msg) => msg.id === replyToMessageId)
+                              ?.content.replace(/\*|__/g, '')
+                              .substring(0, 50) || 'Message'}
+                            ...
+                          </span>
+                        </div>
                         <Button
-                          type="button"
+                          onClick={() => setReplyToMessageId('')}
                           variant="ghost"
                           size="icon"
-                          onClick={toggleFormattingOptions}
-                          title="Formatting options"
-                          aria-label="Formatting options"
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
+                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
+                          aria-label="Cancel reply"
                         >
-                          {' '}
-                          <Text className="h-4 w-4" />{' '}
+                          <X className="h-4 w-4" />
                         </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>Formatting</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <div
+                          className="absolute inset-y-0 flex items-center justify-center 
+                        pl-0.1 z-10"
+                        >
+                          <EmojiPicker
+                            aria-label="Insert emoji"
+                            onSelect={handleInsertEmoji}
+                          />
+                        </div>
+                        <div
+                          ref={composerRef}
+                          contentEditable
+                          aria-label="Type a message"
+                          aria-placeholder="Type a message..."
+                          data-placeholder="Type a message..."
+                          className="pl-12 min-h-[36px] max-h-60 overflow-y-auto border border-[hsl(var(--input))] rounded-lg p-2.5 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(var(--muted-foreground))]"
+                          onInput={(e) => {
+                            const html = (e.currentTarget as HTMLElement).innerHTML;
+                            setInput(html);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                              e.preventDefault();
+                              const html = composerRef.current?.innerHTML || '';
+                              const textContent =
+                                composerRef.current?.innerText || '';
+                              if (textContent.trim().length > 0) {
+                                const sanitized = DOMPurify.sanitize(html, {
+                                  ALLOWED_TAGS: [
+                                    'b',
+                                    'strong',
+                                    'i',
+                                    'em',
+                                    'u',
+                                    'br',
+                                    'div',
+                                    'span',
+                                    'a',
+                                  ],
+                                  ALLOWED_ATTR: [
+                                    'href',
+                                    'target',
+                                    'rel',
+                                    'style',
+                                    'class',
+                                  ],
+                                });
+                                const newMessage = {
+                                  senderId: user.uid,
+                                  content: sanitized,
+                                  timestamp: new Date().toISOString(),
+                                  replyTo: replyToMessageId || null,
+                                };
+                                sendMessage(conversation, newMessage, setInput);
+                                setReplyToMessageId('');
+                                composerRef.current!.innerHTML = '';
+                                setInput('');
+                              }
+                            }
+                          }}
+                          suppressContentEditableWarning
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-full bg-[#96c] hover:bg-[#96c]/90 text-white disabled:bg-[#96c]/50"
+                        disabled={!input.trim().length || isSending}
+                        aria-label="Send message"
+                        onClick={() => {
+                          const html = composerRef.current?.innerHTML || '';
+                          const textContent = composerRef.current?.innerText || '';
+                          if (textContent.trim().length === 0) return;
+                          const sanitized = DOMPurify.sanitize(html, {
+                            ALLOWED_TAGS: [
+                              'b',
+                              'strong',
+                              'i',
+                              'em',
+                              'u',
+                              'br',
+                              'div',
+                              'span',
+                              'a',
+                            ],
+                          });
+                          const newMessage = {
+                            senderId: user.uid,
+                            content: sanitized,
+                            timestamp: new Date().toISOString(),
+                            replyTo: replyToMessageId || null,
+                          };
+                          sendMessage(conversation, newMessage, setInput);
+                          setReplyToMessageId('');
+                          composerRef.current!.innerHTML = '';
+                          setInput('');
+                        }}
+                      >
+                        {isSending ? (
+                          <LoaderCircle className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <Send className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </div>
+                    <div className="flex items-center space-x-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -1553,7 +1593,7 @@ export function CardsChat({
                         onClick={handleBold}
                         title="Bold"
                         aria-label="Bold"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                       >
                         {' '}
                         <Bold className="h-4 w-4" />{' '}
@@ -1565,7 +1605,7 @@ export function CardsChat({
                         onClick={handleitalics}
                         title="Italic"
                         aria-label="Italic"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                       >
                         {' '}
                         <Italic className="h-4 w-4" />{' '}
@@ -1577,142 +1617,204 @@ export function CardsChat({
                         onClick={handleUnderline}
                         title="Underline"
                         aria-label="Underline"
-                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                        className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] md:hidden"
                       >
                         {' '}
                         <Underline className="h-4 w-4" />{' '}
                       </Button>
-                    </div>
-                  )}
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={handleFileUpload}
-                          title="Upload file"
-                          aria-label="Upload file"
-                          className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                        >
-                          {' '}
-                          <Upload className="h-4 w-4" />{' '}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>Upload file</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      {/* <TooltipTrigger asChild>
-                             <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
-                        </TooltipTrigger> */}
-                      <TooltipContent side="top">
-                        <p>Create Google Meet</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {recordingStatus === 'idle' && (
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={toggleFormattingOptions}
+                              title="Formatting options"
+                              aria-label="Formatting options"
+                              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hidden md:inline-flex"
+                            >
+                              {' '}
+                              <Text className="h-4 w-4" />{' '}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Formatting</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      {showFormattingOptions && (
+                        <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={startRecording}
-                            title="Record voice message"
-                            aria-label="Record voice message"
+                            onClick={handleBold}
+                            title="Bold"
+                            aria-label="Bold"
                             className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                           >
-                            <Mic className="h-4 w-4" />
+                            {' '}
+                            <Bold className="h-4 w-4" />{' '}
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p>Record voice</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                  <div className="ml-auto md:hidden"></div>
-                </div>
-
-                {/* Voice Recording UI */}
-                {recordingStatus !== 'idle' &&
-                  recordingStatus !== 'uploading' && ( // Hide this part during uploading too
-                    <div className="p-2 border-t border-[hsl(var(--border))]">
-                      {recordingStatus === 'permission_pending' && (
-                        <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
-                          <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                          Requesting microphone permission...
-                        </div>
-                      )}
-                      {recordingStatus === 'recording' && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm text-red-500">
-                            <Mic className="w-4 h-4 mr-2 animate-pulse" />
-                            Recording... {formatDuration(recordingDuration)}
-                          </div>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={stopRecording}
-                            title="Stop recording"
-                            className="text-red-500 hover:text-red-700"
+                            onClick={handleitalics}
+                            title="Italic"
+                            aria-label="Italic"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                           >
-                            <StopCircle className="h-6 w-6" />
+                            {' '}
+                            <Italic className="h-4 w-4" />{' '}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleUnderline}
+                            title="Underline"
+                            aria-label="Underline"
+                            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                          >
+                            {' '}
+                            <Underline className="h-4 w-4" />{' '}
                           </Button>
                         </div>
                       )}
-                      {recordingStatus === 'recorded' && audioUrl && (
-                        <div className="flex flex-col space-y-2">
-                          <div className="text-sm font-medium">
-                            Recording complete (
-                            {formatDuration(recordingDuration)})
-                          </div>
-                          <audio
-                            ref={audioPreviewRef}
-                            src={audioUrl}
-                            controls
-                            className="w-full h-10"
-                          />
-                          <div className="flex items-center justify-end space-x-2">
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <Button
                               type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={discardRecording}
-                              title="Discard recording"
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleFileUpload}
+                              title="Upload file"
+                              aria-label="Upload file"
+                              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                             >
-                              <Trash2 className="h-4 w-4 mr-1" /> Discard
+                              {' '}
+                              <Upload className="h-4 w-4" />{' '}
                             </Button>
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              onClick={handleSendVoiceMessage}
-                              title="Send voice message"
-                            >
-                              <Send className="h-4 w-4 mr-1" /> Send
-                            </Button>
-                          </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Upload file</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          {/* <TooltipTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon" onClick={handleCreateMeet} title="Create Google Meet" aria-label="Create Google Meet" className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"> <Video className="h-4 w-4" /> </Button>
+                            </TooltipTrigger> */}
+                          <TooltipContent side="top">
+                            <p>Create Google Meet</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {recordingStatus === 'idle' && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={startRecording}
+                                title="Record voice message"
+                                aria-label="Record voice message"
+                                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                              >
+                                <Mic className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Record voice</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <div className="ml-auto md:hidden"></div>
+                    </div>
+
+                    {/* Voice Recording UI */}
+                    {recordingStatus !== 'idle' &&
+                      recordingStatus !== 'uploading' && ( // Hide this part during uploading too
+                        <div className="p-2 border-t border-[hsl(var(--border))]">
+                          {recordingStatus === 'permission_pending' && (
+                            <div className="flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))]">
+                              <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                              Requesting microphone permission...
+                            </div>
+                          )}
+                          {recordingStatus === 'recording' && (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-sm text-red-500">
+                                <Mic className="w-4 h-4 mr-2 animate-pulse" />
+                                Recording... {formatDuration(recordingDuration)}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={stopRecording}
+                                title="Stop recording"
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <StopCircle className="h-6 w-6" />
+                              </Button>
+                            </div>
+                          )}
+                          {recordingStatus === 'recorded' && audioUrl && (
+                            <div className="flex flex-col space-y-2">
+                              <div className="text-sm font-medium">
+                                Recording complete (
+                                {formatDuration(recordingDuration)})
+                              </div>
+                              <audio
+                                ref={audioPreviewRef}
+                                src={audioUrl}
+                                controls
+                                className="w-full h-10"
+                              />
+                              <div className="flex items-center justify-end space-x-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={discardRecording}
+                                  title="Discard recording"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" /> Discard
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSendVoiceMessage}
+                                  title="Send voice message"
+                                >
+                                  <Send className="h-4 w-4 mr-1" /> Send
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {/* Uploading indicator was here, moved below */}
                         </div>
                       )}
-                      {/* Uploading indicator was here, moved below */}
-                    </div>
-                  )}
-                {/* Separate block for uploading indicator to ensure it's visible */}
-                {recordingStatus === 'uploading' && (
-                  <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
-                    <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading voice message...
-                  </div>
+                    {/* Separate block for uploading indicator to ensure it's visible */}
+                    {recordingStatus === 'uploading' && (
+                      <div className="p-2 flex items-center justify-center text-sm text-[hsl(var(--muted-foreground))] border-t border-[hsl(var(--border))]">
+                        <LoaderCircle className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading voice message...
+                      </div>
+                    )}
+                  </form>
                 )}
-              </form>
             </CardFooter>
           </Card>
           <Dialog open={openReport} onOpenChange={setOpenReport}>

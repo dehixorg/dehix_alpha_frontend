@@ -24,6 +24,7 @@ import {
   query,
   orderBy,
   getDocs,
+  where,
 } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 
@@ -57,6 +58,7 @@ import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
+import { Conversation } from './chatList';
 
 export type ProfileUser = {
   _id: string;
@@ -108,6 +110,7 @@ interface ProfileSidebarProps {
   // but including it in props if direct passing is ever preferred.
   currentUser?: CombinedUser | null;
   initialData?: { userName?: string; email?: string; profilePic?: string };
+  onConversationUpdate: (updatedConversation: Conversation) => void;
 }
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
@@ -117,6 +120,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   profileType,
   // currentUser prop is available via Redux store
   initialData,
+  onConversationUpdate, // Assuming you add this to ProfileSidebarProps
 }) => {
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
@@ -150,6 +154,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       | null
       | undefined,
   });
+  // Inside your ProfileSidebar component, near your other useState hooks
+const [blockStatus, setBlockStatus] = useState<{
+  isBlocked: boolean;
+  blockedBy: string | null;
+}>({ isBlocked: false, blockedBy: null });
+
 
   const [refreshDataKey, setRefreshDataKey] = useState(0);
 
@@ -340,6 +350,32 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     }
   };
 
+  // New function to find the 1-on-1 chat and check its block status
+const fetchBlockStatus = async (targetUserId: string) => {
+  if (!user?.uid) return;
+
+  setBlockStatus({ isBlocked: false, blockedBy: null }); // Reset on each fetch
+  const conversationsRef = collection(db, 'conversations');
+  const q = query(
+    conversationsRef,
+    where('type', '==', 'individual'),
+    where('participants', 'array-contains', user.uid)
+  );
+
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach(doc => {
+    if (doc.data().participants.includes(targetUserId)) {
+      const conversationData = doc.data();
+      if (conversationData.blocked?.status === true) {
+        setBlockStatus({
+          isBlocked: true,
+          blockedBy: conversationData.blocked.by,
+        });
+      }
+    }
+  });
+};
+
   useEffect(() => {
     const executeFetches = async () => {
       if (isOpen && profileId && profileType) {
@@ -354,6 +390,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
           internalFetchProfileData(), // This function will set its own setLoading(false)
           fetchSharedMedia(profileId), // This function will set its own setLoadingMedia(false)
           fetchSharedFiles(profileId), // This function will set its own setLoadingFiles(false)
+          fetchBlockStatus(profileId), // <-- Add this call
         ]);
 
         // If one of the above functions didn't manage its loading state properly in case of an early return
@@ -381,6 +418,13 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     executeFetches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, profileId, profileType, refreshDataKey, initialData]); // Added initialData to dependency array
+
+//   useEffect(() => {
+//   // This is a "cleanup" effect. Whenever the profile you are looking at
+//   // changes, it automatically resets the dialog state to ensure it's closed.
+//   setIsConfirmDialogOpen(false);
+// }, [profileId]); // This is the key: The effect runs whenever profileId changes
+
 
   const handleAddMembersToGroup = async (
     selectedUsers: CombinedUser[],
@@ -685,6 +729,77 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     }
   };
 
+  const handleToggleBlockChat = async (targetUserId: string, block: boolean,onConversationUpdate: (updatedConv: Conversation) => void, ) => {
+  if (!user?.uid || !targetUserId) {
+    console.log("hello");
+    toast({ variant: 'destructive', title: 'Error', description: 'User information is missing.' });
+    return;
+  }
+
+  
+  // 1. Find the 1-on-1 conversation between the current user and the target user
+  const conversationsRef = collection(db, 'conversations');
+  const q = query(
+    conversationsRef,
+    where('type', '==', 'individual'),
+    where('participants', 'array-contains', user.uid)
+  );
+
+  let conversationDocToUpdate:any;
+  try {
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach(doc => {
+      // Find the specific conversation that also includes the target user
+      if (doc.data().participants.includes(targetUserId)) {
+        conversationDocToUpdate = doc;
+      }
+    });
+    console.log("inside block function",targetUserId);
+    console.log(conversationDocToUpdate);
+
+    if (!conversationDocToUpdate) {
+      toast({
+        variant: 'destructive',
+        title: 'Cannot Block',
+        description: 'A direct 1-on-1 chat must exist to block this user.',
+      });
+      return;
+    }
+
+    const conversationDocRef = doc(db, 'conversations', conversationDocToUpdate.id);
+
+    // 2. Update the document with the block status
+    if (block) {
+      await updateDoc(conversationDocRef, {
+        blocked: { status: true, by: user.uid }
+      });
+      console.log("blocked");
+      // --- HIGHLIGHT: ADD THIS BLOCK ---
+      // Refresh the local state instantly
+      setBlockStatus({ isBlocked: true, blockedBy: user.uid });
+      toast({ title: 'Chat Blocked', description: 'You will no longer receive messages in this chat.' });
+    } else {
+      // To unblock, we remove the entire 'blocked' field
+      await updateDoc(conversationDocRef, {
+        blocked: deleteField()
+      });
+       // Refresh the local state instantly
+      setBlockStatus({ isBlocked: false, blockedBy: null });
+      toast({ title: 'Chat Unblocked', description: 'You can now message in this chat.' });
+    }
+    // After successfully updating Firestore, update the parent component's state
+    const currentConvData = (await getDoc(conversationDocRef)).data() as Conversation;
+    onConversationUpdate({ ...currentConvData, id: conversationDocRef.id });
+    
+  } catch (error) {
+    console.error("Error updating block status:", error);
+    toast({ variant: 'destructive', title: 'Error', description: 'Failed to update block status.' });
+  } finally {
+    setIsConfirmDialogOpen(false);
+    
+  }
+};
+
   const handleDeleteGroup = async (groupId: string) => {
     // ... (existing implementation)
     if (!groupId) {
@@ -890,9 +1005,41 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                       <Button
                         variant="outline"
                         className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50"
-                        disabled
+                        // disabled
+                        disabled={blockStatus.isBlocked && blockStatus.blockedBy !== user?.uid}
+                        onClick={() => {
+                          if (profileId) {//qc
+                            // First, determine if the chat is currently blocked BY YOU
+                            const isCurrentlyBlocked = blockStatus.isBlocked && blockStatus.blockedBy === user?.uid;
+                            
+                            setConfirmDialogProps({
+                              // The title is now dynamic
+                              title: isCurrentlyBlocked ? 'Unblock this Chat?' : 'Block this Chat?',
+                              // The description is now dynamic
+                              description: isCurrentlyBlocked
+                                ? 'Unblocking will allow both of you to send messages in this chat again. Are you sure?'
+                                : 'Blocking will prevent both of you from sending messages in this 1-on-1 chat. Do you want to block it?',
+                              
+                              // --- THIS IS THE KEY ---
+                              // It calls the function with the opposite of the current block state.
+                              // If blocked (true), it calls with false (to unblock).
+                              // If not blocked (false), it calls with true (to block).
+                              onConfirm: () => handleToggleBlockChat(profileId, !isCurrentlyBlocked,onConversationUpdate),
+                              
+                              // The button text inside the dialog is now dynamic
+                              confirmButtonText: isCurrentlyBlocked ? 'Unblock Chat' : 'Block Chat',
+                              confirmButtonVariant: 'destructive',
+                            });
+                            setIsConfirmDialogOpen(true);
+                          }
+                        }}
                       >
-                        <ShieldX className="h-4 w-4 mr-2" /> Block User
+                        <ShieldX className="h-4 w-4 mr-2" /> 
+                        {blockStatus.isBlocked && blockStatus.blockedBy === user?.uid
+                          ? 'Unblock User'
+                          : blockStatus.isBlocked // Blocked by the other user
+                          ? 'Blocked by User'
+                          : 'Block User'}
                       </Button>
                       <Button
                         variant="outline"
@@ -1214,13 +1361,15 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             currentInviteLink={(profileData as ProfileGroup).inviteLink}
             groupName={(profileData as ProfileGroup).displayName || 'the group'}
           />
-          <ConfirmActionDialog
+          
+        </>
+        
+      )}
+      <ConfirmActionDialog
             isOpen={isConfirmDialogOpen}
             onClose={() => setIsConfirmDialogOpen(false)}
             {...confirmDialogProps}
-          />
-        </>
-      )}
+      />
     </Sheet>
   );
 };
