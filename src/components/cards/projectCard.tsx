@@ -118,11 +118,11 @@ export function ProjectCard({
           {project.verified && <ShieldCheck className="text-success" />}
         </CardTitle>
         <CardDescription className="text-gray-600">
-          <p className="my-auto">
+          <div className="my-auto">
             {project.createdAt
               ? new Date(project.createdAt).toLocaleDateString()
               : 'N/A'}
-          </p>
+          </div>
           <br />
           <Badge className={className}>{text}</Badge>
         </CardDescription>

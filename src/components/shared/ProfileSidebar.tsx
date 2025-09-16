@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X,
   VolumeX,
   ShieldX,
   Trash2,
@@ -47,7 +46,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -757,7 +755,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         aria-describedby="profile-sidebar-description"
       >
         <SheetHeader className="p-4 border-b border-[hsl(var(--border))]">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center">
             <SheetTitle
               id="profile-sidebar-title"
               className="text-[hsl(var(--card-foreground))]"
@@ -767,15 +765,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             <p id="profile-sidebar-description" className="sr-only">
               Displays details and actions for the selected user or group.
             </p>
-            <SheetClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </SheetClose>
           </div>
         </SheetHeader>
         <ScrollArea className="flex-1">
