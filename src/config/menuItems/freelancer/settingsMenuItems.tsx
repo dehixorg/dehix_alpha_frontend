@@ -5,7 +5,6 @@ import {
   HomeIcon,
   ImagePlus,
   Package,
-  Shield,
   ShieldCheck,
   User,
   UserCheck,
