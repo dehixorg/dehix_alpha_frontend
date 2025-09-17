@@ -1,14 +1,6 @@
 'use client';
 import React from 'react';
-import {
-  ListVideo,
-  Users2,
-  History,
-  Briefcase,
-  Home,
-  Settings,
-  Package,
-} from 'lucide-react';
+import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileComponent from '@/components/freelancer/interview/Profile';

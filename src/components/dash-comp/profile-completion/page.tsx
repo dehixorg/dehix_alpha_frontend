@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRightCircle, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 import {
   Card,
