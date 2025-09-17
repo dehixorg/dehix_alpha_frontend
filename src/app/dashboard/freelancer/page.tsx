@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [currentTab, setCurrentTab] = useState(StatusEnum.ACTIVE);
   const [loading, setLoading] = useState(false);
-  const [loadingStats, setLoadingStats] = useState(true);
+  const loadingStats = true;
 
   const fetchProjectData = async (status: StatusEnum) => {
     setLoading(true);

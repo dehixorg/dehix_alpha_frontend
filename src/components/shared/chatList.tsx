@@ -62,14 +62,17 @@ export function ChatList({
     Record<string, string>
   >({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [, setShowCreateGroupDialog] = useState(false);
-  const [groupName, setGroupName] = useState('');
-  const [groupDescription, setGroupDescription] = useState('');
   const { users: allFetchedUsers } = useAllUsers();
   const currentUser = useSelector((state: RootState) => state.user);
-  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const userSearchTerm = '';
   const [, setSearchResults] = useState<CombinedUser[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<CombinedUser[]>([]);
+  interface SelectedUser {
+    id: string;
+    displayName?: string;
+    email?: string;
+  }
+
+  const selectedUsers: SelectedUser[] = [];
   const [, setIsSearching] = useState(false);
 
   const stripHtml = (html: string): string =>
@@ -120,25 +123,7 @@ export function ChatList({
     } finally {
       setIsSearching(false);
     }
-  }, [userSearchTerm, allFetchedUsers, selectedUsers, currentUser.uid]);
-
-  const handleUserSearch = (term: string): void => {
-    setUserSearchTerm(term);
-  };
-  const handleSelectUser = (user: CombinedUser): void => {
-    setSelectedUsers((prevSelectedUsers) => {
-      if (!prevSelectedUsers.some((selected) => selected.id === user.id)) {
-        return [...prevSelectedUsers, user];
-      }
-      return prevSelectedUsers;
-    });
-    setUserSearchTerm('');
-  };
-  const handleRemoveUser = (userId: string): void => {
-    setSelectedUsers((prevSelectedUsers) =>
-      prevSelectedUsers.filter((user) => user.id !== userId),
-    );
-  };
+  }, [userSearchTerm, allFetchedUsers, currentUser.uid]);
 
   const updateLastUpdated = useCallback(() => {
     const updatedTimes: Record<string, string> = {};
@@ -171,81 +156,6 @@ export function ChatList({
       );
     },
   );
-
-  const handleCreateGroup = async (): Promise<void> => {
-    if (!currentUser?.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in to create a group.',
-      });
-      return;
-    }
-    if (selectedUsers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please select at least one user to create a group.',
-      });
-      return;
-    }
-    if (!groupName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Please enter a group name.',
-      });
-      return;
-    }
-
-    const currentUserUID = currentUser.uid;
-    const participantUIDs = Array.from(
-      new Set([currentUserUID, ...selectedUsers.map((su) => su.id)]),
-    );
-    const now = new Date().toISOString();
-
-    const newGroup: Conversation = {
-      id: `group_${Date.now()}`,
-      type: 'group',
-      groupName: groupName.trim(),
-      description: groupDescription.trim(),
-      participants: participantUIDs,
-      createdAt: now,
-      updatedAt: now,
-      admins: [currentUserUID],
-      lastMessage: {
-        content: `${currentUser.displayName || currentUser.email || currentUserUID} created the group "${groupName.trim()}"`,
-        senderId: 'system',
-        timestamp: now,
-      },
-      participantDetails: {
-        [currentUserUID]: {
-          userName:
-            currentUser.displayName || currentUser.email || 'Current User',
-          profilePic: currentUser.photoURL || undefined,
-          email: currentUser.email || undefined,
-          userType: currentUser.type,
-        },
-        ...Object.fromEntries(
-          selectedUsers.map((user) => [
-            user.id,
-            {
-              userName: user.displayName,
-              profilePic: user.profilePic,
-              email: user.email,
-              userType: user.userType,
-            },
-          ]),
-        ),
-      },
-    };
-
-    setConversation(newGroup);
-    setSelectedUsers([]);
-    setGroupName('');
-    setGroupDescription('');
-    setShowCreateGroupDialog(false);
-  };
 
   return (
     <div className="flex flex-col h-full bg-[hsl(var(--card))]">
