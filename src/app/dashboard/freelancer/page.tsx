@@ -1,7 +1,7 @@
 'use client';
 import { CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,34 +25,19 @@ import { Project } from '@/types/project';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
-  const [activeProjects, setActiveProjects] = useState<Project[]>([]);
-  const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
-  const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
-  const [rejectedProjects, setRejectedProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [currentTab, setCurrentTab] = useState(StatusEnum.ACTIVE);
   const [loading, setLoading] = useState(false);
-  const loadingStats = true;
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const fetchProjectData = async (status: StatusEnum) => {
+  const fetchProjectData = async () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/freelancer/project`);
       if (response.status === 200 && response?.data?.data) {
-        switch (status) {
-          case StatusEnum.ACTIVE:
-            setActiveProjects(response.data.data);
-            break;
-          case StatusEnum.PENDING:
-            setPendingProjects(response.data.data);
-            break;
-          case StatusEnum.COMPLETED:
-            setCompletedProjects(response.data.data);
-            break;
-          case StatusEnum.REJECTED:
-            setRejectedProjects(response.data.data);
-            break;
-        }
+        setProjects(response.data.data);
+        setLoadingStats(false);
       }
     } catch (error) {
       toast({
@@ -66,11 +51,24 @@ export default function Dashboard() {
     }
   };
 
+  // Memoized counts of projects by status for efficient rendering of stats
+  const statusCounts = useMemo(() => {
+    const counts: Record<StatusEnum, number> = {
+      [StatusEnum.ACTIVE]: 0,
+      [StatusEnum.PENDING]: 0,
+      [StatusEnum.COMPLETED]: 0,
+      [StatusEnum.REJECTED]: 0,
+    };
+    for (const p of projects) {
+      if (p.status && counts[p.status as StatusEnum] !== undefined) {
+        counts[p.status as StatusEnum] += 1;
+      }
+    }
+    return counts;
+  }, [projects]);
+
   useEffect(() => {
-    fetchProjectData(StatusEnum.ACTIVE);
-    fetchProjectData(StatusEnum.PENDING);
-    fetchProjectData(StatusEnum.COMPLETED);
-    fetchProjectData(StatusEnum.REJECTED);
+    fetchProjectData();
   }, [user.uid]);
 
   const handleTabChange = (status: StatusEnum) => {
@@ -125,13 +123,13 @@ export default function Dashboard() {
               />
               <StatCard
                 title="Active Projects"
-                value={loadingStats ? '...' : activeProjects.length}
+                value={loadingStats ? '...' : statusCounts[StatusEnum.ACTIVE]}
                 icon={<CheckCircle className="h-6 w-6 text-success" />}
                 additionalInfo={'Earning stats will be here'}
               />
               <StatCard
                 title="Pending Projects"
-                value={loadingStats ? '...' : pendingProjects.length}
+                value={loadingStats ? '...' : statusCounts[StatusEnum.PENDING]}
                 icon={<Clock className="h-6 w-6 text-warning" />}
                 additionalInfo={
                   loadingStats ? 'Loading...' : 'Project stats will be here'
@@ -165,28 +163,28 @@ export default function Dashboard() {
                 <TabsContent value={StatusEnum.ACTIVE}>
                   <ProjectTableCard
                     type={StatusEnum.ACTIVE}
-                    projects={activeProjects}
+                    projects={projects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
                   <ProjectTableCard
                     type={StatusEnum.PENDING}
-                    projects={pendingProjects}
+                    projects={projects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
                   <ProjectTableCard
                     type={StatusEnum.COMPLETED}
-                    projects={completedProjects}
+                    projects={projects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
                   <ProjectTableCard
                     type={StatusEnum.REJECTED}
-                    projects={rejectedProjects}
+                    projects={projects}
                     loading={loading}
                   />
                 </TabsContent>
