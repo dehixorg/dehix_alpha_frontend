@@ -37,9 +37,7 @@ export default function Dashboard() {
   const fetchProjectData = async (status: StatusEnum) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(
-        `/freelancer/project?status=${status}`,
-      );
+      const response = await axiosInstance.get(`/freelancer/project`);
       if (response.status === 200 && response?.data?.data) {
         switch (status) {
           case StatusEnum.ACTIVE:
@@ -166,28 +164,28 @@ export default function Dashboard() {
 
                 <TabsContent value={StatusEnum.ACTIVE}>
                   <ProjectTableCard
-                    type="active"
+                    type={StatusEnum.ACTIVE}
                     projects={activeProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.PENDING}>
                   <ProjectTableCard
-                    type="pending"
+                    type={StatusEnum.PENDING}
                     projects={pendingProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.COMPLETED}>
                   <ProjectTableCard
-                    type="completed"
+                    type={StatusEnum.COMPLETED}
                     projects={completedProjects}
                     loading={loading}
                   />
                 </TabsContent>
                 <TabsContent value={StatusEnum.REJECTED}>
                   <ProjectTableCard
-                    type="rejected"
+                    type={StatusEnum.REJECTED}
                     projects={rejectedProjects}
                     loading={loading}
                   />
