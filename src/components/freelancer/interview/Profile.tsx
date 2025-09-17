@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import InterviewProfile from '@/components/freelancer/interviewProfile/interviewProfile';
 import { RootState } from '@/lib/store';
 
-export default function ProfileTab() {
+export default function ProfileComponent() {
   const user = useSelector((state: RootState) => state.user);
   return (
     <>
