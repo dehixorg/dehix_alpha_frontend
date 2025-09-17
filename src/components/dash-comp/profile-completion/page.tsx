@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowRightCircle, ChevronRight } from 'lucide-react';
 
 import {
   Card,
@@ -13,7 +14,6 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { Progress } from '@/components/ui/progress';
-import { ArrowRightCircle, ChevronRight } from 'lucide-react';
 
 export interface UserProfile {
   _id: string;

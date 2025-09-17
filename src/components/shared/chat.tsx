@@ -829,7 +829,6 @@ export function CardsChat({
       },
     );
   }
-  console.log('this is messages', messages);
 
   return (
     <>
