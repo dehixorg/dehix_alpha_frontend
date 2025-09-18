@@ -17,8 +17,8 @@ import {
   Underline,
   CheckCheck,
   Flag,
-  Mic, 
-  StopCircle, 
+  Mic,
+  StopCircle,
   Trash2,
   X,
 } from 'lucide-react';
@@ -28,9 +28,6 @@ import { usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,
-  isToday,
-  isYesterday,
-  isThisYear,
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -90,13 +87,23 @@ function formatChatTimestamp(timestamp: string) {
 }
 
 // Helper for date header (Today, Yesterday, Oct 12 2023 …)
-function formatDateHeader(timestamp: string) {
-  const date = new Date(timestamp);
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
-  return isThisYear(date)
-    ? format(date, 'MMM dd')
-    : format(date, 'yyyy MMM dd');
+function formatDateHeader(timestamp: string | number) {
+  const msgDate = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const msgDay = msgDate.toDateString(); // gives date as string value
+
+  if (msgDay === today.toDateString()) return 'Today';
+  if (msgDay === yesterday.toDateString()) return 'Yesterday';
+
+  return msgDate.toLocaleDateString(undefined, {
+    weekday: 'long', // “Sunday”
+    month: 'short', // “Sep”
+    day: 'numeric', // 14
+    year: 'numeric', // 2025
+  });
 }
 
 function isSameDay(d1: Date, d2: Date) {
@@ -864,7 +871,7 @@ export function CardsChat({
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>
           </div>
-          
+
           {/* Messages Skeleton */}
           <div className="flex-1 p-4 overflow-y-auto space-y-6">
             {/* Incoming message skeleton */}
@@ -875,7 +882,7 @@ export function CardsChat({
                 <Skeleton className="h-16 w-64 rounded-lg" />
               </div>
             </div>
-            
+
             {/* Outgoing message skeleton */}
             <div className="flex justify-end">
               <div className="space-y-2 max-w-[80%]">
@@ -884,7 +891,7 @@ export function CardsChat({
               </div>
             </div>
           </div>
-          
+
           {/* Input area skeleton */}
           <div className="p-3 border-t border-[hsl(var(--border))]">
             <div className="flex items-center space-x-2">
@@ -900,7 +907,7 @@ export function CardsChat({
             <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
               <button
                 onClick={handleHeaderClick}
-                className="flex items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
+                className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
                 aria-label="View profile information"
               >
                 <Avatar className="w-10 h-10">
@@ -932,7 +939,7 @@ export function CardsChat({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
@@ -1018,12 +1025,19 @@ export function CardsChat({
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
-              <div className="flex flex-col-reverse space-y-3 space-y-reverse">
-                <div ref={messagesEndRef} />
+              <div className="flex flex-col space-y-3 ">
+                <div  />
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
                   );
+                  const prev = messages[index - 1];
+                  const isNewDay =
+                    !prev ||
+                    !isSameDay(
+                      new Date(prev.timestamp),
+                      new Date(message.timestamp),
+                    );
 
                   // Helper: detect if the content contains ONLY emojis that were inserted via <span class="chat-emoji">…</span>
                   const { isEmojiOnly, isSingleEmoji } = (() => {
@@ -1055,20 +1069,19 @@ export function CardsChat({
                       isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
                     };
                   })();
-                  // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
-                  const nextMsg = messages[index + 1];
-                  const showDateHeader =
-                    !nextMsg ||
-                    !isSameDay(
-                      new Date(message.timestamp),
-                      new Date(nextMsg.timestamp),
-                    );
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
 
                   return (
-                    <>
+                    <React.Fragment key={message.id}>
+                      {isNewDay && (
+                        <div className="w-full flex justify-center my-2 ">
+                          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
+                            {formatDateHeader(message.timestamp)}
+                          </span>
+                        </div>
+                      )}
                       <div
                         id={message.id}
                         key={index}
@@ -1365,16 +1378,10 @@ export function CardsChat({
                             <Reply className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
+                      </div >
+                      <div ref={messagesEndRef} />
                       {/* Date header (appears below current bubble due to flex-col-reverse order) */}
-                      {showDateHeader && (
-                        <div className="w-full flex justify-center my-2 sticky bottom-2 z-10">
-                          <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
-                            {formatDateHeader(message.timestamp)}
-                          </span>
-                        </div>
-                      )}
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </div>
