@@ -1,9 +1,34 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import {
+  Building2,
+  FileText,
+  Lightbulb,
+  Target,
+  Bookmark,
+  DollarSign,
+  Users,
+  ShieldCheck,
+  CheckCircle2,
+  ClipboardList,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ProfileRequirements } from '@/components/shared/ProfileRequirements';
+import { Skeleton } from '@/components/ui/skeleton';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -24,20 +49,21 @@ interface Bid {
 interface Profile {
   _id: string;
   domain: string;
-  freelancersRequired: string;
+  freelancersRequired: number;
   skills: string[];
   experience: number;
-  minConnect: number;
-  rate: number;
-  description: string;
+  minConnect?: number;
+  rate?: number;
+  description?: string;
+  profileType: 'FREELANCER' | 'CONSULTANT';
 }
 
 interface Budget {
-  type: string;
+  type: 'fixed' | 'hourly';
   hourly?: {
     minRate: number;
     maxRate: number;
-    estimatedHours: number;
+    estimatedHours?: number;
   };
   fixedAmount?: number;
 }
@@ -48,48 +74,49 @@ interface ProjectData {
   projectDomain: string[];
   description: string;
   companyName: string;
-  skillsRequired: string[];
+  skillsRequired?: string[];
   status: string;
   projectType: string;
-  profiles: Profile[];
-  bids: Bid[];
+  profiles?: Profile[];
+  bids?: Bid[];
   budget: Budget;
   createdAt: string;
+  updatedAt?: string;
 }
+
+// ProjectType has been consolidated into ProjectData
+
 const Page = () => {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
 
-  // Get project ID from URL (format: /freelancer/market/post/123/apply)
-  const projectId: string = (params?.project_id as string) || '123';
-
   useEffect(() => {
-    const fetchProjectDetails = async (): Promise<void> => {
+    const fetchProject = async () => {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get(
-          `/project/project/${projectId}`,
+          `/project/${params.project_id}`,
         );
-
-        setProject(response.data.data[0]);
+        setProject(response.data.data);
       } catch (error) {
-        console.error('Error fetching project details:', error);
+        console.error('Error fetching project:', error);
         toast({
-          title: 'Error',
-          description: 'Failed to load project details',
           variant: 'destructive',
+          title: 'Error',
+          description:
+            'Failed to load project details. Please try again later.',
         });
+        router.push('/freelancer/market');
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Fetch project data
-    fetchProjectDetails();
-  }, [projectId, toast]);
+    fetchProject();
+  }, [params.project_id, router]);
 
   const handleCancel = (): void => {
     router.back();
@@ -97,40 +124,378 @@ const Page = () => {
 
   if (isLoading && !project) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">
-          <Loader2 className="animate-spin w-5 h-5" />
+      <div className="flex min-h-screen w-full bg-background">
+        <SidebarMenu
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          active="Market"
+        />
+        <div className="flex-1">
+          <Header
+            menuItemsTop={menuItemsTop}
+            menuItemsBottom={menuItemsBottom}
+            activeMenu="Market"
+            breadcrumbItems={[
+              { label: 'Freelancer', link: '/dashboard/freelancer' },
+              { label: 'Marketplace', link: '/freelancer/market' },
+              { label: 'Loading...', link: '#' },
+            ]}
+          />
+          <main className="p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            {/* Header Skeleton */}
+            <div className="space-y-8">
+              <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-64" />
+                        <Skeleton className="h-6 w-16" />
+                      </div>
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-9 w-32" />
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Left Column Skeleton */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Project Overview Skeleton */}
+                  <Card>
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-40" />
+                      </div>
+                      <Skeleton className="h-4 w-64 mt-2" />
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <Skeleton className="h-5 w-32 mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <Skeleton className="h-4 w-4/5" />
+                    </CardContent>
+                  </Card>
+
+                  {/* Requirements & Skills Skeleton */}
+                  <Card>
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-48" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-6">
+                      <div>
+                        <Skeleton className="h-5 w-32 mb-3" />
+                        <div className="flex flex-wrap gap-2">
+                          {[...Array(4)].map((_, i) => (
+                            <Skeleton key={i} className="h-6 w-20" />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Skeleton className="h-5 w-32 mb-3" />
+                        <div className="flex items-center gap-2">
+                          <div className="w-full max-w-[200px]">
+                            <Skeleton className="h-2 w-full" />
+                          </div>
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Right Column Skeleton */}
+                <div className="space-y-6">
+                  {/* Project Summary Skeleton */}
+                  <Card className="sticky top-6">
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-36" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                          <Skeleton className="h-10 w-10 rounded-lg" />
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-5 w-32" />
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Application Form Skeleton */}
+                  <Card>
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-5 rounded-full" />
+                        <Skeleton className="h-6 w-40" />
+                      </div>
+                      <Skeleton className="h-4 w-56 mt-1" />
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-10 w-full" />
+                        </div>
+                      ))}
+                      <Skeleton className="h-10 w-full mt-4" />
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-muted flex-col">
+    <div className="flex min-h-screen w-full bg-background">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col flex-1">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Market"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Marketplace', link: '#' },
+            { label: 'Marketplace', link: '/freelancer/market' },
+            { label: project?.projectName || 'Project', link: '#' },
           ]}
         />
-        <main className="w-[85vw] mx-auto text-foreground">
-          {/* <ProjectAnalyticsDrawer /> */}
-          {project && (
-            <ProjectApplicationForm
-              project={project}
-              isLoading={isLoading}
-              onCancel={handleCancel}
-            />
-          )}
+
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8 md:pl-12 xl:pl-0"
+            >
+              {/* Header Section */}
+              <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                          {project?.projectName || 'Project Details'}
+                        </h1>
+                        {project?.status && (
+                          <Badge
+                            variant={
+                              project.status === 'open'
+                                ? 'default'
+                                : 'destructive'
+                            }
+                            className="px-3 py-1 text-xs"
+                          >
+                            {project.status.toUpperCase()}
+                          </Badge>
+                        )}
+                      </div>
+                      {project && (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-4 w-4 mr-1" />
+                            {project.companyName}
+                          </span>
+                          <span className="mx-2">•</span>
+                          <span className="flex items-center gap-1">
+                            Posted{' '}
+                            {format(new Date(project.createdAt), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCancel}>
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Save for Later
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Left Column - Project Details */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Project Overview Card */}
+                  <Card>
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">
+                          Project Overview
+                        </CardTitle>
+                      </div>
+                      <CardDescription>
+                        {project?.projectType} •{' '}
+                        {project?.projectDomain.join(' • ')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-8">
+                      <div>
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-foreground">
+                          <Lightbulb className="h-5 w-5 text-amber-500" />
+                          Project Description
+                        </h4>
+                        <p className="text-muted-foreground leading-relaxed">
+                          {project?.description || 'No description provided.'}
+                        </p>
+                      </div>
+
+                      {/* Requirements & Skills Section */}
+                      <div className="border-t pt-6">
+                        <h4 className="font-medium mb-4 flex items-center gap-2 text-foreground">
+                          <Target className="h-5 w-5 text-emerald-500" />
+                          Requirements & Skills
+                        </h4>
+                        <div className="space-y-6">
+                          {project?.profiles && project.profiles.length > 0 ? (
+                            project.profiles.map((profile, index) => (
+                              <ProfileRequirements
+                                key={index}
+                                profile={profile}
+                              />
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-muted-foreground">
+                              No specific requirements provided.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Application Form */}
+                  {project && (
+                    <ProjectApplicationForm
+                      project={project}
+                      isLoading={isLoading}
+                      onCancel={handleCancel}
+                    />
+                  )}
+                </div>
+
+                {/* Right Column - Application & Details */}
+                <div className="space-y-6">
+                  {/* Project Summary Card */}
+                  <Card className="sticky top-6">
+                    <CardHeader className="border-b">
+                      <div className="flex items-center gap-2">
+                        <ClipboardList className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-lg">
+                          Project Summary
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="grid gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              Budget
+                            </p>
+                            <p className="font-medium">
+                              {project?.budget?.type === 'hourly'
+                                ? `$${project.budget.hourly?.minRate || '0'} - $${project.budget.hourly?.maxRate || '0'}/hr`
+                                : `$${project?.budget?.fixedAmount?.toLocaleString() || '0'} (Fixed)`}
+                            </p>
+                            {project?.budget?.type === 'hourly' &&
+                              project.budget.hourly?.estimatedHours && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  ~{project.budget.hourly.estimatedHours} hours
+                                  estimated
+                                </p>
+                              )}
+                          </div>
+                        </div>
+
+                        {project?.createdAt && (
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <div className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-muted-foreground">
+                                Posted
+                              </p>
+                              <p className="font-medium">
+                                {format(
+                                  new Date(project.createdAt),
+                                  'MMM d, yyyy',
+                                )}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {Math.ceil(
+                                  (new Date().getTime() -
+                                    new Date(project.createdAt).getTime()) /
+                                    (1000 * 60 * 60 * 24),
+                                )}{' '}
+                                days ago
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Users className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">
+                              Proposals
+                            </p>
+                            <p className="font-medium">
+                              {project?.bids?.length || 0}{' '}
+                              {project?.bids?.length === 1
+                                ? 'proposal'
+                                : 'proposals'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="border-t pt-6">
+                      <div className="w-full space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <ShieldCheck className="h-4 w-4 text-green-500" />
+                          <span>Secure payment protection</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <span>No upfront costs</span>
+                        </div>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
