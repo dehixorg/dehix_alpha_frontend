@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronRight } from 'lucide-react';
 
 import {
   Card,
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 export interface UserProfile {
   _id: string;
@@ -152,34 +154,30 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
     <Card className="w-full border-2">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-2xl">Profile Completion</CardTitle>
-            <CardDescription>
-              Complete your profile to increase visibility
-            </CardDescription>
-          </div>
+          <CardTitle className="text-2xl">Profile Completion</CardTitle>
+
           <Button
-            className="w-32"
             onClick={() => router.push('/freelancer/settings/personal-info')}
-            variant="default"
+            variant="ghost"
+            size="icon"
           >
-            Complete Profile
+            <ChevronRight />
           </Button>
         </div>
+        <CardDescription>
+          Complete your profile to increase visibility
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="w-full mr-3">
-                <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 ease-in-out"
-                    style={{ width: `${completionPercentage}%` }}
-                  />
+                <div className="h-3 w-full overflow-hidden">
+                  <Progress value={completionPercentage} className="h-1 mt-1" />
                 </div>
               </div>
-              <span className="text-xl font-bold whitespace-nowrap">
+              <span className="text-sm font-bold whitespace-nowrap">
                 {completionPercentage.toFixed(0)}%
               </span>
             </div>

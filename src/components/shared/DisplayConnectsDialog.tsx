@@ -96,26 +96,29 @@ const DisplayConnectsDialog = ({ connects, userId }: any) => {
 
   const filterOptions = [
     { key: 'ALL', label: 'All' },
+    { key: 'APPROVED', label: 'Approved' },
     { key: 'PENDING', label: 'Pending' },
     { key: 'REJECTED', label: 'Rejected' },
-    { key: 'ACCEPTED', label: 'Accepted' },
   ];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <div className="relative flex items-center justify-end md:justify-center cursor-pointer hover:scale-105 transition-transform">
-          <Wallet />
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative rounded-full hover:scale-105 transition-transform"
+        >
+          <Wallet strokeWidth={1.1} className="w-5 h-5" />
           {connects >= 0 && (
             <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
               {connects}
             </span>
           )}
-        </div>
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-        <h2 className="text-xl font-semibold mb-4">Connects Request</h2>
-
+        <h2 className="text-xl font-semibold mb-4">Connects Request History</h2>
         <div className="flex items-center gap-4 mb-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

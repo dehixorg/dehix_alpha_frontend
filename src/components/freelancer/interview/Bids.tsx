@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/store';
 import Bids from '@/components/freelancer/bids/Bids';
 
-export default function BidsTab() {
+export default function BidsComponent() {
   const user = useSelector((state: RootState) => state.user);
   return (
     <>

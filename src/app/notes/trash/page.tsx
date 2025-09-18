@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 
 import NotesRender from '@/components/shared/NotesRender';
 import NotesHeader from '@/components/business/market/NotesHeader';
@@ -28,7 +28,7 @@ const TrashPage = () => {
         menuItemsBottom={menuItemsBottom}
         active="Trash"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:py-0 sm:pl-14 mb-8">
         <div>
           <Header
             menuItemsTop={notesMenu}
@@ -61,8 +61,11 @@ const TrashPage = () => {
                       isArchive={true}
                     />
                   ) : (
-                    <div className="flex justify-center items-center h-[40vh] w-full">
-                      <p>No trash here! Add some to get started!</p>
+                    <div className="text-center py-10 w-[100%] ">
+                      <Trash2 className="mx-auto text-gray-500" size={100} />
+                      <p className="text-gray-500">
+                        No trash here! Add some to get started!
+                      </p>
                     </div>
                   )}
                 </div>

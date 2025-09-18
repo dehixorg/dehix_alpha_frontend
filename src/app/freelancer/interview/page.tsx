@@ -1,62 +1,82 @@
 'use client';
-import * as React from 'react';
+import React from 'react';
+import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ProfileTab from '@/components/freelancer/interview/Profile';
-import CurrentTab from '@/components/freelancer/interview/Current';
-import BidsTab from '@/components/freelancer/interview/BidsTab';
-import HistoryTab from '@/components/freelancer/interview/History';
-import SidebarMenu from '@/components/menu/sidebarMenu';
+import ProfileComponent from '@/components/freelancer/interview/Profile';
+import BidsComponent from '@/components/freelancer/interview/Bids';
+import CurrentComponent from '@/components/freelancer/interview/Current';
+import HistoryComponent from '@/components/freelancer/interview/History';
 import Header from '@/components/header/header';
+import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
-  menuItemsBottom as freelancerMenuItemsBottom,
-  menuItemsTop as freelancerMenuItemsTop,
+  menuItemsBottom,
+  menuItemsTop,
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 export default function InterviewPage() {
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <div className="bg-background border-r">
-        <SidebarMenu
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          active="Interviews"
-        />
-      </div>
-      <div className="flex flex-col w-full sm:ml-14">
+    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Interviews"
+      />
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          activeMenu="Dashboard"
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Interviews"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Interview', link: '/freelancer/interview' },
           ]}
         />
-        {/* Main Content */}
-        <div className="flex-1 p-4 sm:p-6 md:p-8">
-          <Tabs defaultValue="profile" className="mt-5">
-            <TabsList>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="current">Current</TabsTrigger>
-              <TabsTrigger value="bids">Bids</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-            <TabsContent value="profile">
-              <ProfileTab />
-            </TabsContent>
-            <TabsContent value="current">
-              <CurrentTab />
-            </TabsContent>
-            <TabsContent value="bids">
-              <BidsTab />
-            </TabsContent>
-            <TabsContent value="history">
-              <HistoryTab />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <main className="flex-1 px-4 md:px-6">
+          <div className="w-full px-4">
+            <Tabs defaultValue="profile" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-5">
+                <TabsTrigger
+                  value="profile"
+                  className="flex items-center gap-2"
+                >
+                  <Users2 className="h-4 w-4" />
+                  <span>Profile</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="current"
+                  className="flex items-center gap-2"
+                >
+                  <ListVideo className="h-4 w-4" />
+                  <span>Current</span>
+                </TabsTrigger>
+                <TabsTrigger value="bids" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  <span>Bids</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  className="flex items-center gap-2"
+                >
+                  <History className="h-4 w-4" />
+                  <span>History</span>
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="profile">
+                <ProfileComponent />
+              </TabsContent>
+              <TabsContent value="current">
+                <CurrentComponent />
+              </TabsContent>
+              <TabsContent value="bids">
+                <BidsComponent />
+              </TabsContent>
+              <TabsContent value="history">
+                <HistoryComponent />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
     </div>
   );
