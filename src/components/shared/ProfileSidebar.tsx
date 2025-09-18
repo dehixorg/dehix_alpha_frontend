@@ -50,7 +50,13 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -802,15 +808,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                 <Card>
                   <CardHeader className="items-center text-center">
                     <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
-                      <AvatarImage src={avatarSrc} alt={profileData.displayName} />
+                      <AvatarImage
+                        src={avatarSrc}
+                        alt={profileData.displayName}
+                      />
                       <AvatarFallback className="text-3xl">
                         {getFallbackName(profileData)}
                       </AvatarFallback>
                     </Avatar>
-                    <CardTitle className="text-xl mt-2">{profileData.displayName}</CardTitle>
-                    {profileType === 'user' && (profileData as ProfileUser).email && (
-                      <CardDescription>{(profileData as ProfileUser).email}</CardDescription>
-                    )}
+                    <CardTitle className="text-xl mt-2">
+                      {profileData.displayName}
+                    </CardTitle>
+                    {profileType === 'user' &&
+                      (profileData as ProfileUser).email && (
+                        <CardDescription>
+                          {(profileData as ProfileUser).email}
+                        </CardDescription>
+                      )}
                     {profileType === 'group' && (
                       <CardDescription>
                         {(profileData as ProfileGroup).description || (
@@ -825,32 +839,49 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                   <>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">User Details</CardTitle>
-                        <CardDescription>Presence and profile info</CardDescription>
+                        <CardTitle className="text-base">
+                          User Details
+                        </CardTitle>
+                        <CardDescription>
+                          Presence and profile info
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">Status</span>
+                          <span className="text-xs text-muted-foreground">
+                            Status
+                          </span>
                           <Badge variant="secondary" className="text-xs">
                             {(profileData as ProfileUser).status || 'Unknown'}
                           </Badge>
                         </div>
                         <Separator />
                         <div>
-                          <span className="text-xs text-muted-foreground">Last Seen</span>
-                          <p className="text-sm">{(profileData as ProfileUser).lastSeen || 'Unknown'}</p>
+                          <span className="text-xs text-muted-foreground">
+                            Last Seen
+                          </span>
+                          <p className="text-sm">
+                            {(profileData as ProfileUser).lastSeen || 'Unknown'}
+                          </p>
                         </div>
                         <Separator />
                         <div>
-                          <span className="text-xs text-muted-foreground">Bio</span>
-                          <p className="text-sm whitespace-pre-wrap">{(profileData as ProfileUser).bio || 'No bio available.'}</p>
+                          <span className="text-xs text-muted-foreground">
+                            Bio
+                          </span>
+                          <p className="text-sm whitespace-pre-wrap">
+                            {(profileData as ProfileUser).bio ||
+                              'No bio available.'}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
 
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Shared Media</CardTitle>
+                        <CardTitle className="text-base">
+                          Shared Media
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -872,16 +903,32 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        <Button variant="outline" className="w-full justify-start" disabled>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
                           <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
                         </Button>
-                        <Button variant="outline" className="w-full justify-start" disabled>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
                           <ShieldX className="h-4 w-4 mr-2" /> Block User
                         </Button>
-                        <Button variant="outline" className="w-full justify-start" disabled>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          disabled
+                        >
                           <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
                         </Button>
-                        <Button variant="destructive" className="w-full justify-start" disabled>
+                        <Button
+                          variant="destructive"
+                          className="w-full justify-start"
+                          disabled
+                        >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
                         </Button>
                       </CardContent>
@@ -896,14 +943,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                         <CardTitle className="text-base">Group Info</CardTitle>
                         {(profileData as ProfileGroup).createdAtFormatted && (
                           <CardDescription>
-                            Created: {(profileData as ProfileGroup).createdAtFormatted}
+                            Created:{' '}
+                            {(profileData as ProfileGroup).createdAtFormatted}
                           </CardDescription>
                         )}
                       </CardHeader>
                       <CardContent>
                         {(profileData as ProfileGroup).admins && (
                           <div className="text-xs text-muted-foreground">
-                            Admins: {(profileData as ProfileGroup).admins.length}
+                            Admins:{' '}
+                            {(profileData as ProfileGroup).admins.length}
                           </div>
                         )}
                       </CardContent>
@@ -911,51 +960,83 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Members ({(profileData as ProfileGroup).members.length})</CardTitle>
+                        <CardTitle className="text-base">
+                          Members (
+                          {(profileData as ProfileGroup).members.length})
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-60 px-4">
                           <ul className="space-y-1 py-2">
-                            {(profileData as ProfileGroup).members.map((member) => (
-                              <li key={member.id} className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage src={member.profilePic} alt={member.userName} />
-                                  <AvatarFallback>{member.userName?.charAt(0).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                  <span className="text-sm font-medium truncate">
-                                    {member.userName}
+                            {(profileData as ProfileGroup).members.map(
+                              (member) => (
+                                <li
+                                  key={member.id}
+                                  className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
+                                >
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarImage
+                                      src={member.profilePic}
+                                      alt={member.userName}
+                                    />
+                                    <AvatarFallback>
+                                      {member.userName?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm font-medium truncate">
+                                      {member.userName}
+                                    </span>
+                                    {(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-2 text-[10px]"
+                                      >
+                                        Admin
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                    {member.status === 'online'
+                                      ? 'Online'
+                                      : 'Offline'}
                                   </span>
-                                  {(profileData as ProfileGroup).admins?.includes(member.id) && (
-                                    <Badge variant="outline" className="ml-2 text-[10px]">Admin</Badge>
-                                  )}
-                                </div>
-                                <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                  {member.status === 'online' ? 'Online' : 'Offline'}
-                                </span>
-                                {user && (profileData as ProfileGroup).admins?.includes(user.uid) && member.id !== user.uid && !(profileData as ProfileGroup).admins?.includes(member.id) && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setConfirmDialogProps({
-                                        title: 'Confirm Removal',
-                                        description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                        onConfirm: () => handleConfirmRemoveMember(member.id),
-                                        confirmButtonText: 'Remove Member',
-                                        confirmButtonVariant: 'destructive',
-                                      });
-                                      setIsConfirmDialogOpen(true);
-                                    }}
-                                    aria-label={`Remove ${member.userName} from group`}
-                                  >
-                                    <MinusCircle className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </li>
-                            ))}
+                                  {user &&
+                                    (
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(user.uid) &&
+                                    member.id !== user.uid &&
+                                    !(
+                                      profileData as ProfileGroup
+                                    ).admins?.includes(member.id) && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmDialogProps({
+                                            title: 'Confirm Removal',
+                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                            onConfirm: () =>
+                                              handleConfirmRemoveMember(
+                                                member.id,
+                                              ),
+                                            confirmButtonText: 'Remove Member',
+                                            confirmButtonVariant: 'destructive',
+                                          });
+                                          setIsConfirmDialogOpen(true);
+                                        }}
+                                        aria-label={`Remove ${member.userName} from group`}
+                                      >
+                                        <MinusCircle className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                </li>
+                              ),
+                            )}
                           </ul>
                         </ScrollArea>
                       </CardContent>
@@ -963,7 +1044,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Shared Media</CardTitle>
+                        <CardTitle className="text-base">
+                          Shared Media
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -985,27 +1068,56 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
-                          <>
-                            <Button variant="outline" className="w-full justify-start" onClick={() => setIsAddMembersDialogOpen(true)}>
-                              <UserPlus className="h-4 w-4 mr-2" /> Add/Remove Members
-                            </Button>
-                            <Button variant="outline" className="w-full justify-start" onClick={() => setIsChangeGroupInfoDialogOpen(true)}>
-                              <Edit3 className="h-4 w-4 mr-2" /> Change Group Name or Avatar
-                            </Button>
-                            {(profileData as ProfileGroup).inviteLink !== undefined && (
-                              <Button variant="outline" className="w-full justify-start" onClick={() => setIsInviteLinkDialogOpen(true)}>
-                                <Link2 className="h-4 w-4 mr-2" /> Invite Link
+                        {user &&
+                          (profileData as ProfileGroup).admins?.includes(
+                            user.uid,
+                          ) && (
+                            <>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start"
+                                onClick={() => setIsAddMembersDialogOpen(true)}
+                              >
+                                <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
+                                Members
                               </Button>
-                            )}
-                          </>
-                        )}
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start"
+                                onClick={() =>
+                                  setIsChangeGroupInfoDialogOpen(true)
+                                }
+                              >
+                                <Edit3 className="h-4 w-4 mr-2" /> Change Group
+                                Name or Avatar
+                              </Button>
+                              {(profileData as ProfileGroup).inviteLink !==
+                                undefined && (
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-start"
+                                  onClick={() =>
+                                    setIsInviteLinkDialogOpen(true)
+                                  }
+                                >
+                                  <Link2 className="h-4 w-4 mr-2" /> Invite Link
+                                </Button>
+                              )}
+                            </>
+                          )}
                         <Button
                           variant="outline"
                           className="w-full justify-start"
                           onClick={() => {
-                            if (profileData && profileType === 'group' && user?.uid) {
-                              handleToggleMuteGroup((profileData as ProfileGroup).id, !!isCurrentlyMuted);
+                            if (
+                              profileData &&
+                              profileType === 'group' &&
+                              user?.uid
+                            ) {
+                              handleToggleMuteGroup(
+                                (profileData as ProfileGroup).id,
+                                !!isCurrentlyMuted,
+                              );
                             }
                           }}
                         >
@@ -1014,18 +1126,28 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                           ) : (
                             <VolumeX className="h-4 w-4 mr-2" />
                           )}
-                          {isCurrentlyMuted ? 'Unmute Notifications' : 'Mute Notifications'}
+                          {isCurrentlyMuted
+                            ? 'Unmute Notifications'
+                            : 'Mute Notifications'}
                         </Button>
                         <Button
                           variant="destructive"
                           className="w-full justify-start"
                           onClick={() => {
-                            if (profileData && profileType === 'group' && user?.uid) {
+                            if (
+                              profileData &&
+                              profileType === 'group' &&
+                              user?.uid
+                            ) {
                               setConfirmDialogProps({
                                 title: 'Leave Group?',
                                 description:
                                   'Are you sure you want to leave this group? You will need to be re-invited to join again.',
-                                onConfirm: () => handleLeaveGroup((profileData as ProfileGroup).id, user.uid),
+                                onConfirm: () =>
+                                  handleLeaveGroup(
+                                    (profileData as ProfileGroup).id,
+                                    user.uid,
+                                  ),
                                 confirmButtonText: 'Leave Group',
                                 confirmButtonVariant: 'destructive',
                               });
@@ -1035,27 +1157,33 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                         >
                           <LogOut className="h-4 w-4 mr-2" /> Leave Group
                         </Button>
-                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
-                          <Button
-                            variant="destructive"
-                            className="w-full justify-start"
-                            onClick={() => {
-                              if (profileData && profileType === 'group') {
-                                setConfirmDialogProps({
-                                  title: 'Delete Group Permanently?',
-                                  description:
-                                    'This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?',
-                                  onConfirm: () => handleDeleteGroup((profileData as ProfileGroup).id),
-                                  confirmButtonText: 'Yes, Delete This Group',
-                                  confirmButtonVariant: 'destructive',
-                                });
-                                setIsConfirmDialogOpen(true);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete Group
-                          </Button>
-                        )}
+                        {user &&
+                          (profileData as ProfileGroup).admins?.includes(
+                            user.uid,
+                          ) && (
+                            <Button
+                              variant="destructive"
+                              className="w-full justify-start"
+                              onClick={() => {
+                                if (profileData && profileType === 'group') {
+                                  setConfirmDialogProps({
+                                    title: 'Delete Group Permanently?',
+                                    description:
+                                      'This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?',
+                                    onConfirm: () =>
+                                      handleDeleteGroup(
+                                        (profileData as ProfileGroup).id,
+                                      ),
+                                    confirmButtonText: 'Yes, Delete This Group',
+                                    confirmButtonVariant: 'destructive',
+                                  });
+                                  setIsConfirmDialogOpen(true);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete Group
+                            </Button>
+                          )}
                       </CardContent>
                     </Card>
                   </div>
