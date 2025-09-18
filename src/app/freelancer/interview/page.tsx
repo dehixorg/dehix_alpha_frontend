@@ -32,10 +32,10 @@ export default function InterviewPage() {
             { label: 'Interview', link: '/freelancer/interview' },
           ]}
         />
-        <main className="flex-1 p-4 md:p-6">
-          <div className="w-full p-4">
+        <main className="flex-1 px-4 md:px-6">
+          <div className="w-full px-4">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-4 mb-5">
                 <TabsTrigger
                   value="profile"
                   className="flex items-center gap-2"

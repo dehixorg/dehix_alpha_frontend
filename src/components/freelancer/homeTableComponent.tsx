@@ -99,6 +99,12 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
     setIsDialogOpen(true);
   };
 
+  const visibleProjects = type
+    ? projects.filter(
+        (p) => String(p.status ?? '').toUpperCase() === type.toUpperCase(),
+      )
+    : projects;
+
   return (
     <div className="min-h-screen">
       <Card>
@@ -134,8 +140,8 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                     </TableCell>
                   </TableRow>
                 ))
-              ) : projects.length > 0 ? (
-                projects.map((project) => (
+              ) : visibleProjects.length > 0 ? (
+                visibleProjects.map((project) => (
                   <TableRow key={project._id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -166,7 +172,8 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {type === 'rejected' || type === 'pending' ? (
+                      {type === StatusEnum.REJECTED ||
+                      type === StatusEnum.PENDING ? (
                         <Dialog
                           open={isDialogOpen}
                           onOpenChange={(open) => setIsDialogOpen(open)}
@@ -174,25 +181,13 @@ const ProjectTableCard: React.FC<ProjectCardProps> = ({
                           <DialogTrigger asChild>
                             <Button
                               size="sm"
-                              variant="outline"
                               onClick={() => handleDialogOpen(project)}
-                              className="border border-gray-300 rounded-lg px-4 py-2 transition-all duration-300 shadow-sm hover:shadow-md"
+                              variant="outline"
                             >
-                              <span className="flex items-center gap-2">
-                                <i className="fas fa-info-circle"></i>
-                                <span>View Status</span>
-                              </span>
+                              View Details
                             </Button>
                           </DialogTrigger>
-                          <DialogContent
-                            className="rounded-2xl 
-             p-6 w-96 max-w-[90vw] mx-auto
-             bg-white
-             border border-white/50
-             ring-4 ring-white/70
-             hover:scale-105 transition-transform duration-300
-             overflow-hidden"
-                          >
+                          <DialogContent>
                             <DialogHeader className="mb-4 text-center">
                               <DialogTitle className="text-lg font-semibold leading-tight flex items-center gap-2 justify-center">
                                 <i className="fas fa-project-diagram"></i>

@@ -20,7 +20,7 @@ import {
   Mic, 
   StopCircle, 
   Trash2,
-  X, 
+  X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';

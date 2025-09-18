@@ -109,14 +109,54 @@ export default function ResumeEditor({
     fetchResume();
   }, [user.uid]);
 
-  // Initialize all states empty
-  const [personalData, setPersonalData] = useState<any[]>([]);
-  const [workExperienceData, setWorkExperienceData] = useState<any[]>([]);
-  const [educationData, setEducationData] = useState<any[]>([]);
-  const [skillData, setSkillData] = useState<any[]>([]);
-  const [achievementData, setAchievementData] = useState<any[]>([]);
-  const [projectData, setProjectData] = useState<any[]>([]);
-  const [summaryData, setSummaryData] = useState<string[]>([]);
+  // Initialize all states with default values for a new resume
+  const [personalData, setPersonalData] = useState<any[]>([
+    {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      phoneNumber: '123-456-7890',
+      city: 'New York',
+      country: 'USA',
+      github: 'github.com/john',
+      linkedin: 'linkedin.com/in/john',
+    },
+  ]);
+
+  const [workExperienceData, setWorkExperienceData] = useState<any[]>([
+    {
+      jobTitle: 'Software Engineer',
+      company: 'ABC Corp',
+      startDate: '2020-01-01',
+      endDate: '2023-01-01',
+      description: 'Worked on web applications.',
+    },
+  ]);
+
+  const [educationData, setEducationData] = useState<any[]>([
+    {
+      degree: 'B.Sc. Computer Science',
+      school: 'XYZ University',
+      startDate: '2016-01-01',
+      endDate: '2020-01-01',
+    },
+  ]);
+
+  const [skillData, setSkillData] = useState<any[]>([
+    { skillName: 'JavaScript' },
+  ]);
+  const [achievementData, setAchievementData] = useState<any[]>([
+    { achievementName: 'Won Hackathon 2022' },
+  ]);
+  const [projectData, setProjectData] = useState<any[]>([
+    {
+      title: 'Portfolio Website',
+      description: 'Built a personal portfolio website.',
+    },
+  ]);
+  const [summaryData, setSummaryData] = useState<string[]>([
+    'Motivated software engineer with experience in web development.',
+  ]);
   const [selectedTemplate, setSelectedTemplate] = useState('ResumePreview2');
   const [selectedColor] = useState('#000000');
 
