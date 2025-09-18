@@ -37,6 +37,8 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomTable } from '@/components/custom-table/CustomTable';
 import { FieldType } from '@/components/custom-table/FieldTypes';
+import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
+import StatItem from '@/components/shared/StatItem';
 // Constants - Backend expects uppercase values
 const BID_STATUSES = [
   'PENDING',
@@ -1327,6 +1329,21 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     ],
   );
 
+  // Format rate nicely in USD
+  const formatUSD = (value?: number | string | null) => {
+    if (value === null || value === undefined || isNaN(Number(value)))
+      return 'N/A';
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      }).format(Number(value));
+    } catch {
+      return `$${value}`;
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-4">
@@ -1347,71 +1364,65 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
     );
   }
 
-  if (!userData?.data?.profiles?.length) {
-    return (
-      <div className="max-w-5xl mx-auto p-4">
-        <div className="text-center py-10 w-full mt-10">
-          <PackageOpen className="mx-auto text-muted-foreground" size="100" />
-          <p className="text-muted-foreground text-lg">No bid profiles found</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="max-w-5xl mx-auto p-4">
-        <div className="mb-8 mt-4">
-          <Accordion type="single" collapsible>
-            {userData.data.profiles.map((profile: any) => (
-              <AccordionItem
-                key={profile._id}
-                value={profile._id || ''}
-                onClick={() => setProfileId(profile._id)}
-              >
-                <AccordionTrigger>
-                  <div className="flex justify-between items-center w-full">
-                    <h3 className="text-lg font-semibold">
-                      {profile.domain ?? 'N/A'}
-                    </h3>
-                    <div className="flex items-center gap-5">
-                      {/* Profile Type as badge */}
-                      <span
-                        className={`
-                        text-xs px-2 py-1 rounded-full font-medium capitalize
-                        ${
-                          profile.profileType?.toLowerCase() === 'freelancer'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }
-                      `}
-                      >
-                        {profile?.profileType
-                          ? profile?.profileType.toLocaleLowerCase()
-                          : 'Freelancer'}
-                      </span>
+        <Accordion type="single" collapsible>
+          {userData!.data.profiles.map((profile: any) => (
+            <AccordionItem
+              key={profile._id}
+              value={profile._id || ''}
+              onClick={() => setProfileId(profile._id)}
+              className="border rounded-lg mb-2"
+            >
+              <AccordionTrigger className="px-4 hover:no-underline">
+                <div className="flex justify-between items-center w-full">
+                  <h4 className="text-lg font-semibold tracking-tight">
+                    {profile.domain ?? 'N/A'}
+                  </h4>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs px-2 py-0.5 rounded ${profileTypeOutlineClasses(profile.profileType)}`}
+                    >
+                      {profile?.profileType || 'FREELANCER'}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-2 mr-2 py-0.5 rounded-md"
+                    >
+                      {formatUSD(profile.rate)}
+                      {formatUSD(profile.rate) !== 'N/A' ? '/hr' : ''}
+                    </Badge>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-0">
+                <div className="px-6 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
+                    <StatItem
+                      icon={
+                        <Briefcase className="w-4 h-4 text-foreground/70" />
+                      }
+                      label="Experience"
+                      value={profile.experience ?? 'N/A'}
+                    />
+                    <StatItem
+                      icon={<Users className="w-4 h-4 text-foreground/70" />}
+                      label="Min Connect"
+                      value={profile.minConnect ?? 'N/A'}
+                    />
+                    <StatItem
+                      icon={
+                        <PackageOpen className="w-4 h-4 text-foreground/70" />
+                      }
+                      label="Total Bids"
+                      value={profile.totalBid?.length || 0}
+                    />
+                  </div>
 
-                      {/* Rate */}
-                      <span className="text-sm text-muted-foreground">
-                        Rate: {profile.rate ?? 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-0">
-                  <div className="px-6 py-4 flex flex-col gap-2">
-                    <div className="flex gap-2 items-center">
-                      <p>Experience: {profile.experience ?? 'N/A'}</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <p>Min Connect: {profile.minConnect ?? 'N/A'}</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                      <p>Total Bids: {profile.totalBid?.length || 0}</p>
-                    </div>
-                  </div>
                   <Tabs defaultValue="PENDING" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-4">
+                    <TabsList className="grid w-full grid-cols-5 mb-4 sticky top-0 z-10">
                       {BID_STATUSES.map((status) => (
                         <TabsTrigger key={status} value={status}>
                           {`${status.charAt(0) + status.slice(1).toLowerCase()} (${bidCounts[status] || 0})`}
@@ -1422,13 +1433,10 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       <TabsContent key={status} value={status} className="mt-4">
                         {loadingFreelancerDetails ? (
                           <div className="space-y-4 py-4">
-                            {/* Table Header Skeleton */}
                             <div className="flex justify-between items-center">
                               <Skeleton className="h-8 w-48" />
                               <Skeleton className="h-9 w-32" />
                             </div>
-
-                            {/* Table Rows Skeleton */}
                             <div className="space-y-2">
                               {[...Array(5)].map((_, i) => (
                                 <div
@@ -1450,8 +1458,6 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                                 </div>
                               ))}
                             </div>
-
-                            {/* Pagination Skeleton */}
                             <div className="flex justify-between items-center pt-2">
                               <Skeleton className="h-8 w-24" />
                               <div className="flex space-x-2">
@@ -1469,24 +1475,22 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                       </TabsContent>
                     ))}
                   </Tabs>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
 
-      {/* Profile Dialog */}
       <ProfileDialog
         isOpen={isProfileDialogOpen}
         onClose={handleCloseProfileDialog}
         profileData={profileData}
         loading={loadingProfile}
-        isFreelancerProfile={!selectedProfileId} // true if no profile selected, false if specific profile
+        isFreelancerProfile={!selectedProfileId}
         bidData={selectedBidData}
       />
 
-      {/* Interview Dialog */}
       <Dialog
         open={isInterviewDialogOpen}
         onOpenChange={setIsInterviewDialogOpen}

@@ -17,15 +17,14 @@ import DehixInterviews from '@/components/freelancer/dehix-talent-interview/Dehi
 import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axiosinstance';
 import type { RootState } from '@/lib/store';
-import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import Projects from '@/components/freelancer/projectInterview/ProjectInterviews';
 import { toast } from '@/components/ui/use-toast';
 
-export default function CurrentTab() {
+export default function CurrentComponent() {
   const [filter, setFilter] = React.useState<'All' | 'Skills' | 'Domain'>(
     'All',
   );
-  const [isTableView, setIsTableView] = useState(true);
+  const [, setIsTableView] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -35,7 +34,7 @@ export default function CurrentTab() {
   const [, setProjectSkill] = useState<any>([]);
   const [, setProjectDomain] = useState<any>([]);
 
-  const [isLoading, setIsloading] = useState(false);
+  const [, setIsloading] = useState(false);
 
   useEffect(() => {
     if (isFocused && inputRef.current) {
@@ -238,29 +237,23 @@ export default function CurrentTab() {
           </div>
         </div>
         <div className="w-full flex justify-center items-center flex-col">
-          {isLoading ? (
-            <SkeletonLoader isTableView={isTableView} />
-          ) : (
-            <div className="w-full space-y-8">
-              <div className="w-full">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold ">
-                    Dehix Talent Interviews
-                  </h2>
-                </div>
-                <DehixInterviews />
+          <div className="w-full space-y-8">
+            <div className="w-full">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold ">
+                  Dehix Talent Interviews
+                </h2>
               </div>
-
-              <div className="w-full">
-                <div className="mb-4">
-                  <h2 className="text-2xl font-semibold ">
-                    Project Interviews
-                  </h2>
-                </div>
-                <Projects />
-              </div>
+              <DehixInterviews />
             </div>
-          )}
+
+            <div className="w-full">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold ">Project Interviews</h2>
+              </div>
+              <Projects />
+            </div>
+          </div>
         </div>
       </div>
     </>

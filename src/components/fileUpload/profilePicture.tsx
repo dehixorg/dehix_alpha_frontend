@@ -17,7 +17,7 @@ const allowedImageFormats = [
   'image/gif',
   'image/svg+xml',
 ];
-const maxImageSize = 1 * 1024 * 1024; // 1MB
+const maxImageSize = 5 * 1024 * 1024; // 5MB
 
 const ProfilePictureUpload = ({
   profile,
@@ -44,7 +44,7 @@ const ProfilePictureUpload = ({
         toast({
           variant: 'destructive',
           title: 'File too large',
-          description: 'Image size should not exceed 1MB.',
+          description: 'Image size should not exceed 5MB.',
         });
       }
     } else {
