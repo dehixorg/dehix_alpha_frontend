@@ -7,7 +7,6 @@ import {
   UserCircle,
   ChevronDown,
   X,
-  FileText,
   Award,
   CheckCircle2,
   AlertCircle,
@@ -381,11 +380,10 @@ const ProjectApplicationForm = ({
 
   return (
     <Card className="overflow-hidden shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/20 dark:to-primary/5">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
               Your Application
             </CardTitle>
             <CardDescription className="mt-1">

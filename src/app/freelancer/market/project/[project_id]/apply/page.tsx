@@ -3,15 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Building2,
-  FileText,
-  Lightbulb,
   Target,
   Bookmark,
   DollarSign,
   Users,
-  ShieldCheck,
-  CheckCircle2,
-  ClipboardList,
+  Clock,
+  Calendar,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ProfileRequirements } from '@/components/shared/ProfileRequirements';
@@ -37,6 +33,7 @@ import {
 import ProjectApplicationForm from '@/components/shared/ProjectApplicationPage';
 import { axiosInstance } from '@/lib/axiosinstance';
 import Header from '@/components/header/header';
+import { profileTypeOutlineClasses } from '@/utils/common/getBadgeStatus';
 
 interface Bid {
   _id: string;
@@ -335,54 +332,123 @@ const Page = () => {
               </div>
 
               {/* Main Content */}
-              <div className="grid gap-6 lg:grid-cols-3">
+              <div className="grid gap-6 lg:grid-cols-10">
                 {/* Left Column - Project Details */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-6 space-y-6">
                   {/* Project Overview Card */}
                   <Card>
-                    <CardHeader className="border-b">
+                    <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
                         <CardTitle className="text-lg">
                           Project Overview
                         </CardTitle>
                       </div>
-                      <CardDescription>
-                        {project?.projectType} •{' '}
-                        {project?.projectDomain.join(' • ')}
+                      <CardDescription className="flex items-center gap-2">
+                        <Badge
+                          className={profileTypeOutlineClasses(
+                            project?.projectType || '',
+                          )}
+                          variant="outline"
+                        >
+                          {project?.projectType}
+                        </Badge>{' '}
+                        • {project?.projectDomain.join(' • ')}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-8">
+                    <CardContent className="pt-6 space-y-6">
+                      {/* Project Summary Section */}
                       <div>
-                        <h4 className="font-medium mb-3 flex items-center gap-2 text-foreground">
-                          <Lightbulb className="h-5 w-5 text-amber-500" />
-                          Project Description
-                        </h4>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <DollarSign className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  Budget
+                                </p>
+                                <p className="font-medium">
+                                  {project?.budget?.type === 'hourly'
+                                    ? `$${project.budget.hourly?.minRate || '0'} - $${project.budget.hourly?.maxRate || '0'}/hr`
+                                    : `$${project?.budget?.fixedAmount?.toLocaleString() || '0'} (Fixed)`}
+                                </p>
+                                {project?.budget?.type === 'hourly' &&
+                                  project.budget.hourly?.estimatedHours && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      ~{project.budget.hourly.estimatedHours}{' '}
+                                      hours estimated
+                                    </p>
+                                  )}
+                              </div>
+                            </div>
+
+                            {project?.createdAt && (
+                              <div className="flex items-center gap-4">
+                                <div className="p-2 rounded-lg bg-primary/10">
+                                  <Calendar className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Posted
+                                  </p>
+                                  <p className="font-medium">
+                                    {format(
+                                      new Date(project.createdAt),
+                                      'MMM d, yyyy',
+                                    )}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {Math.ceil(
+                                      (new Date().getTime() -
+                                        new Date(project.createdAt).getTime()) /
+                                        (1000 * 60 * 60 * 24),
+                                    )}{' '}
+                                    days ago
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <Users className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  Proposals
+                                </p>
+                                <p className="font-medium">
+                                  {project?.bids?.length || 0}{' '}
+                                  {project?.bids?.length === 1
+                                    ? 'proposal'
+                                    : 'proposals'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <Clock className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">
+                                  Project Type
+                                </p>
+                                <p className="font-medium">
+                                  {project?.projectType || 'Not specified'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border-t pt-6">
                         <p className="text-muted-foreground leading-relaxed">
                           {project?.description || 'No description provided.'}
                         </p>
-                      </div>
-
-                      {/* Requirements & Skills Section */}
-                      <div className="border-t pt-6">
-                        <h4 className="font-medium mb-4 flex items-center gap-2 text-foreground">
-                          <Target className="h-5 w-5 text-emerald-500" />
-                          Requirements & Skills
-                        </h4>
-                        <div className="space-y-6">
-                          {project?.profiles && project.profiles.length > 0 ? (
-                            project.profiles.map((profile, index) => (
-                              <ProfileRequirements
-                                key={index}
-                                profile={profile}
-                              />
-                            ))
-                          ) : (
-                            <div className="text-center py-4 text-muted-foreground">
-                              No specific requirements provided.
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -398,100 +464,26 @@ const Page = () => {
                 </div>
 
                 {/* Right Column - Application & Details */}
-                <div className="space-y-6">
-                  {/* Project Summary Card */}
-                  <Card className="sticky top-6">
-                    <CardHeader className="border-b">
-                      <div className="flex items-center gap-2">
-                        <ClipboardList className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">
-                          Project Summary
-                        </CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="grid gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <DollarSign className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Budget
-                            </p>
-                            <p className="font-medium">
-                              {project?.budget?.type === 'hourly'
-                                ? `$${project.budget.hourly?.minRate || '0'} - $${project.budget.hourly?.maxRate || '0'}/hr`
-                                : `$${project?.budget?.fixedAmount?.toLocaleString() || '0'} (Fixed)`}
-                            </p>
-                            {project?.budget?.type === 'hourly' &&
-                              project.budget.hourly?.estimatedHours && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  ~{project.budget.hourly.estimatedHours} hours
-                                  estimated
-                                </p>
-                              )}
-                          </div>
-                        </div>
+                <div className="lg:col-span-4 space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-emerald-500" />
+                    <CardTitle className="text-lg">
+                      Requirements & Skills
+                    </CardTitle>
+                  </div>
+                  {/* Requirements & Skills Card */}
 
-                        {project?.createdAt && (
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 rounded-lg bg-primary/10">
-                              <div className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <p className="text-sm text-muted-foreground">
-                                Posted
-                              </p>
-                              <p className="font-medium">
-                                {format(
-                                  new Date(project.createdAt),
-                                  'MMM d, yyyy',
-                                )}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {Math.ceil(
-                                  (new Date().getTime() -
-                                    new Date(project.createdAt).getTime()) /
-                                    (1000 * 60 * 60 * 24),
-                                )}{' '}
-                                days ago
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <Users className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">
-                              Proposals
-                            </p>
-                            <p className="font-medium">
-                              {project?.bids?.length || 0}{' '}
-                              {project?.bids?.length === 1
-                                ? 'proposal'
-                                : 'proposals'}
-                            </p>
-                          </div>
-                        </div>
+                  <div className="space-y-4">
+                    {project?.profiles && project.profiles.length > 0 ? (
+                      project.profiles.map((profile, index) => (
+                        <ProfileRequirements key={index} profile={profile} />
+                      ))
+                    ) : (
+                      <div className="text-center py-2 text-muted-foreground text-sm">
+                        No specific requirements provided.
                       </div>
-                    </CardContent>
-                    <CardFooter className="border-t pt-6">
-                      <div className="w-full space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <ShieldCheck className="h-4 w-4 text-green-500" />
-                          <span>Secure payment protection</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          <span>No upfront costs</span>
-                        </div>
-                      </div>
-                    </CardFooter>
-                  </Card>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

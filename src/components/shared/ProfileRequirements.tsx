@@ -114,7 +114,7 @@ export function ProfileRequirements({
         className,
       )}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-t-lg border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
@@ -176,7 +176,6 @@ export function ProfileRequirements({
                   >
                     {skill}
                   </Badge>
-                  <div className="absolute inset-0 rounded-md bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity -z-10 scale-95 group-hover:scale-100 duration-200" />
                 </div>
               ))}
             </div>
