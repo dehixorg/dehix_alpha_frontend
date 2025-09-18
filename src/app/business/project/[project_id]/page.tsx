@@ -289,7 +289,6 @@ export default function Dashboard() {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
             { label: project.projectName, link: '#' },
           ]}
