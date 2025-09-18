@@ -50,6 +50,10 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
@@ -770,11 +774,20 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-6">
             {loading && (
-              <div className="flex justify-center items-center h-32">
-                <p className="text-[hsl(var(--muted-foreground))]">
-                  Loading profile...
-                </p>
-              </div>
+              <Card>
+                <CardHeader className="items-center gap-2">
+                  <Skeleton className="h-24 w-24 rounded-full" />
+                  <Skeleton className="h-5 w-40 mt-2" />
+                  <Skeleton className="h-4 w-56 mt-1" />
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
             )}
             {!loading && !profileData && (
               <div className="flex justify-center items-center h-32">
@@ -786,343 +799,243 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
 
             {!loading && profileData && (
               <>
-                <div className="flex flex-col items-center space-y-2 pt-4">
-                  <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
-                    <AvatarImage
-                      src={avatarSrc}
-                      alt={profileData.displayName}
-                    />
-                    <AvatarFallback className="text-3xl">
-                      {getFallbackName(profileData)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h2 className="text-xl font-semibold text-[hsl(var(--foreground))] pt-2">
-                    {profileData.displayName}
-                  </h2>
-
-                  {profileType === 'user' &&
-                    (profileData as ProfileUser).email && (
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                        {(profileData as ProfileUser).email}
-                      </p>
+                <Card>
+                  <CardHeader className="items-center text-center">
+                    <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
+                      <AvatarImage src={avatarSrc} alt={profileData.displayName} />
+                      <AvatarFallback className="text-3xl">
+                        {getFallbackName(profileData)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <CardTitle className="text-xl mt-2">{profileData.displayName}</CardTitle>
+                    {profileType === 'user' && (profileData as ProfileUser).email && (
+                      <CardDescription>{(profileData as ProfileUser).email}</CardDescription>
                     )}
-
-                  {profileType === 'group' && (
-                    <>
-                      {(profileData as ProfileGroup).description ? (
-                        <p className="text-sm text-center text-[hsl(var(--muted-foreground))] whitespace-pre-wrap px-2">
-                          {(profileData as ProfileGroup).description}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-center italic text-[hsl(var(--muted-foreground))]">
-                          No group description.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
+                    {profileType === 'group' && (
+                      <CardDescription>
+                        {(profileData as ProfileGroup).description || (
+                          <span className="italic">No group description.</span>
+                        )}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                </Card>
 
                 {profileType === 'user' && (profileData as ProfileUser) && (
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                        Status
-                      </h3>
-                      <p className="text-sm text-[hsl(var(--foreground))]">
-                        {(profileData as ProfileUser).status || 'Unknown'}
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                        Last Seen
-                      </h3>
-                      <p className="text-sm text-[hsl(var(--foreground))]">
-                        {(profileData as ProfileUser).lastSeen || 'Unknown'}
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                        Bio
-                      </h3>
-                      <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">
-                        {(profileData as ProfileUser).bio ||
-                          'No bio available.'}
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">
-                        Shared Media
-                      </h3>
-                      {isLoadingMedia ? (
-                        <div className="flex justify-center items-center h-20">
-                          <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">User Details</CardTitle>
+                        <CardDescription>Presence and profile info</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Status</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {(profileData as ProfileUser).status || 'Unknown'}
+                          </Badge>
                         </div>
-                      ) : sharedMedia.length > 0 ? (
-                        <SharedMediaDisplay mediaItems={sharedMedia} />
-                      ) : (
-                        <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                          <p>No media has been shared yet.</p>
+                        <Separator />
+                        <div>
+                          <span className="text-xs text-muted-foreground">Last Seen</span>
+                          <p className="text-sm">{(profileData as ProfileUser).lastSeen || 'Unknown'}</p>
                         </div>
-                      )}
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
-                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
-                        Actions
-                      </h3>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50"
-                        disabled
-                      >
-                        <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50"
-                        disabled
-                      >
-                        <ShieldX className="h-4 w-4 mr-2" /> Block User
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))] hover:border-[hsl(var(--destructive))] disabled:opacity-50"
-                        disabled
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="w-full justify-start disabled:opacity-50"
-                        disabled
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
-                      </Button>
-                    </div>
-                  </div>
+                        <Separator />
+                        <div>
+                          <span className="text-xs text-muted-foreground">Bio</span>
+                          <p className="text-sm whitespace-pre-wrap">{(profileData as ProfileUser).bio || 'No bio available.'}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Shared Media</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingMedia ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedMedia.length > 0 ? (
+                          <SharedMediaDisplay mediaItems={sharedMedia} />
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No media has been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <Button variant="outline" className="w-full justify-start" disabled>
+                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                        </Button>
+                        <Button variant="outline" className="w-full justify-start" disabled>
+                          <ShieldX className="h-4 w-4 mr-2" /> Block User
+                        </Button>
+                        <Button variant="outline" className="w-full justify-start" disabled>
+                          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                        </Button>
+                        <Button variant="destructive" className="w-full justify-start" disabled>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </>
                 )}
 
                 {profileType === 'group' && (profileData as ProfileGroup) && (
                   <div className="space-y-4">
-                    <div className="space-y-1 text-xs text-center text-[hsl(var(--muted-foreground))]">
-                      {(profileData as ProfileGroup).createdAtFormatted && (
-                        <p>
-                          Created:{' '}
-                          {(profileData as ProfileGroup).createdAtFormatted}
-                        </p>
-                      )}
-                      {/* Placeholder for Admin Info - this could be a list of admin names */}
-                      {/* For now, we just show number of admins, actual names would require fetching user details for each admin ID */}
-                      {(profileData as ProfileGroup).admins &&
-                        (profileData as ProfileGroup).admins.length > 0 && (
-                          <p>
-                            Admin
-                            {((profileData as ProfileGroup).admins.length ||
-                              0) > 1
-                              ? 's'
-                              : ''}
-                            : {(profileData as ProfileGroup).admins.length}
-                            {/* Example: (profileData as ProfileGroup).admins.map(adminId => adminId.slice(0,5)).join(', ') */}
-                          </p>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Group Info</CardTitle>
+                        {(profileData as ProfileGroup).createdAtFormatted && (
+                          <CardDescription>
+                            Created: {(profileData as ProfileGroup).createdAtFormatted}
+                          </CardDescription>
                         )}
-                    </div>
+                      </CardHeader>
+                      <CardContent>
+                        {(profileData as ProfileGroup).admins && (
+                          <div className="text-xs text-muted-foreground">
+                            Admins: {(profileData as ProfileGroup).admins.length}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                    {/* Search Members Placeholder */}
-                    {(profileData as ProfileGroup).members &&
-                      (profileData as ProfileGroup).members.length > 10 && ( // Example: Show search if more than 10 members
-                        <div className="my-3">
-                          <input
-                            type="text"
-                            placeholder="Search members..."
-                            className="w-full p-2 border border-[hsl(var(--border))] rounded-md bg-[hsl(var(--input))] text-sm"
-                          />
-                        </div>
-                      )}
-
-                    <div>
-                      <h3 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-2">
-                        Members ({(profileData as ProfileGroup).members.length})
-                      </h3>
-                      <ul className="space-y-2 max-h-60">
-                        {(profileData as ProfileGroup).members.map((member) => (
-                          <li
-                            key={member.id}
-                            className="flex items-center space-x-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
-                          >
-                            <Avatar className="w-9 h-9">
-                              <AvatarImage
-                                src={member.profilePic}
-                                alt={member.userName}
-                              />
-                              <AvatarFallback>
-                                {member.userName?.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-grow">
-                              <span className="text-sm font-medium text-[hsl(var(--foreground))]">
-                                {member.userName}
-                              </span>
-                              {(profileData as ProfileGroup).admins?.includes(
-                                member.id,
-                              ) && (
-                                <span className="ml-1.5 text-xs text-[hsl(var(--primary))] bg-[hsl(var(--primary)_/_0.1)] px-1.5 py-0.5 rounded-full">
-                                  Admin
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Members ({(profileData as ProfileGroup).members.length})</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <ScrollArea className="max-h-60 px-4">
+                          <ul className="space-y-1 py-2">
+                            {(profileData as ProfileGroup).members.map((member) => (
+                              <li key={member.id} className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarImage src={member.profilePic} alt={member.userName} />
+                                  <AvatarFallback>{member.userName?.charAt(0).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-sm font-medium truncate">
+                                    {member.userName}
+                                  </span>
+                                  {(profileData as ProfileGroup).admins?.includes(member.id) && (
+                                    <Badge variant="outline" className="ml-2 text-[10px]">Admin</Badge>
+                                  )}
+                                </div>
+                                <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
+                                  {member.status === 'online' ? 'Online' : 'Offline'}
                                 </span>
-                              )}
-                            </div>
-                            {user &&
-                              (profileData as ProfileGroup).admins?.includes(
-                                user.uid,
-                              ) &&
-                              member.id !== user.uid &&
-                              !(profileData as ProfileGroup).admins?.includes(
-                                member.id,
-                              ) && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setConfirmDialogProps({
-                                      title: 'Confirm Removal',
-                                      description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                      onConfirm: () =>
-                                        handleConfirmRemoveMember(member.id),
-                                      confirmButtonText: 'Remove Member',
-                                      confirmButtonVariant: 'destructive',
-                                    });
-                                    setIsConfirmDialogOpen(true);
-                                  }}
-                                  aria-label={`Remove ${member.userName} from group`}
-                                >
-                                  <MinusCircle className="h-4 w-4" />
-                                </Button>
-                              )}
-                            <span className="text-xs text-gray-400 ml-1 mr-1 group-hover:text-[hsl(var(--foreground))]">
-                              {member.status === 'online'
-                                ? 'Online'
-                                : 'Offline'}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                                {user && (profileData as ProfileGroup).admins?.includes(user.uid) && member.id !== user.uid && !(profileData as ProfileGroup).admins?.includes(member.id) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setConfirmDialogProps({
+                                        title: 'Confirm Removal',
+                                        description: `Are you sure you want to remove ${member.userName} from the group?`,
+                                        onConfirm: () => handleConfirmRemoveMember(member.id),
+                                        confirmButtonText: 'Remove Member',
+                                        confirmButtonVariant: 'destructive',
+                                      });
+                                      setIsConfirmDialogOpen(true);
+                                    }}
+                                    aria-label={`Remove ${member.userName} from group`}
+                                  >
+                                    <MinusCircle className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
 
-                    {/* Shared Media and Files Placeholder/Existing Implementation */}
-                    <div>
-                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">
-                        Shared Media
-                      </h3>
-                      {isLoadingMedia ? (
-                        <div className="flex justify-center items-center h-20">
-                          <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
-                        </div>
-                      ) : sharedMedia.length > 0 ? (
-                        <SharedMediaDisplay mediaItems={sharedMedia} />
-                      ) : (
-                        <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                          <p>No media or files have been shared yet.</p>
-                          {/* Placeholder for future file upload/browsing */}
-                          {/* <Button variant="link" size="sm" className="mt-1">Browse Files</Button> */}
-                        </div>
-                      )}
-                    </div>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Shared Media</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoadingMedia ? (
+                          <div className="flex justify-center items-center h-20">
+                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                          </div>
+                        ) : sharedMedia.length > 0 ? (
+                          <SharedMediaDisplay mediaItems={sharedMedia} />
+                        ) : (
+                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                            <p>No media or files have been shared yet.</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                    <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
-                      <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
-                        Actions
-                      </h3>
-                      {user &&
-                        (profileData as ProfileGroup).admins?.includes(
-                          user.uid,
-                        ) && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Actions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
                           <>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-[hsl(var(--muted-foreground))]"
-                              onClick={() => setIsAddMembersDialogOpen(true)}
-                            >
-                              <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
-                              Members
+                            <Button variant="outline" className="w-full justify-start" onClick={() => setIsAddMembersDialogOpen(true)}>
+                              <UserPlus className="h-4 w-4 mr-2" /> Add/Remove Members
                             </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start text-[hsl(var(--muted-foreground))]"
-                              onClick={() =>
-                                setIsChangeGroupInfoDialogOpen(true)
-                              }
-                            >
-                              <Edit3 className="h-4 w-4 mr-2" /> Change Group
-                              Name or Avatar
+                            <Button variant="outline" className="w-full justify-start" onClick={() => setIsChangeGroupInfoDialogOpen(true)}>
+                              <Edit3 className="h-4 w-4 mr-2" /> Change Group Name or Avatar
                             </Button>
-                            {(profileData as ProfileGroup).inviteLink !==
-                              undefined && ( // Show only if inviteLink field exists
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start text-[hsl(var(--muted-foreground))]"
-                                onClick={() => setIsInviteLinkDialogOpen(true)}
-                              >
+                            {(profileData as ProfileGroup).inviteLink !== undefined && (
+                              <Button variant="outline" className="w-full justify-start" onClick={() => setIsInviteLinkDialogOpen(true)}>
                                 <Link2 className="h-4 w-4 mr-2" /> Invite Link
                               </Button>
                             )}
                           </>
                         )}
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-[hsl(var(--muted-foreground))]"
-                        onClick={() => {
-                          if (
-                            profileData &&
-                            profileType === 'group' &&
-                            user?.uid // Use Redux user instead of currentUser prop
-                          ) {
-                            handleToggleMuteGroup(
-                              (profileData as ProfileGroup).id,
-                              !!isCurrentlyMuted,
-                            );
-                          }
-                        }}
-                      >
-                        {isCurrentlyMuted ? (
-                          <Volume2 className="h-4 w-4 mr-2" />
-                        ) : (
-                          <VolumeX className="h-4 w-4 mr-2" />
-                        )}
-                        {isCurrentlyMuted
-                          ? 'Unmute Notifications'
-                          : 'Mute Notifications'}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          if (
-                            profileData &&
-                            profileType === 'group' &&
-                            user?.uid
-                          ) {
-                            setConfirmDialogProps({
-                              title: 'Leave Group?',
-                              description:
-                                'Are you sure you want to leave this group? You will need to be re-invited to join again.',
-                              onConfirm: () =>
-                                handleLeaveGroup(
-                                  (profileData as ProfileGroup).id,
-                                  user.uid,
-                                ),
-                              confirmButtonText: 'Leave Group',
-                              confirmButtonVariant: 'destructive',
-                            });
-                            setIsConfirmDialogOpen(true);
-                          }
-                        }}
-                      >
-                        <LogOut className="h-4 w-4 mr-2" /> Leave Group
-                      </Button>
-                      {user &&
-                        (profileData as ProfileGroup).admins?.includes(
-                          user.uid,
-                        ) && (
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            if (profileData && profileType === 'group' && user?.uid) {
+                              handleToggleMuteGroup((profileData as ProfileGroup).id, !!isCurrentlyMuted);
+                            }
+                          }}
+                        >
+                          {isCurrentlyMuted ? (
+                            <Volume2 className="h-4 w-4 mr-2" />
+                          ) : (
+                            <VolumeX className="h-4 w-4 mr-2" />
+                          )}
+                          {isCurrentlyMuted ? 'Unmute Notifications' : 'Mute Notifications'}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            if (profileData && profileType === 'group' && user?.uid) {
+                              setConfirmDialogProps({
+                                title: 'Leave Group?',
+                                description:
+                                  'Are you sure you want to leave this group? You will need to be re-invited to join again.',
+                                onConfirm: () => handleLeaveGroup((profileData as ProfileGroup).id, user.uid),
+                                confirmButtonText: 'Leave Group',
+                                confirmButtonVariant: 'destructive',
+                              });
+                              setIsConfirmDialogOpen(true);
+                            }
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" /> Leave Group
+                        </Button>
+                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
                           <Button
                             variant="destructive"
                             className="w-full justify-start"
@@ -1132,10 +1045,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                                   title: 'Delete Group Permanently?',
                                   description:
                                     'This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?',
-                                  onConfirm: () =>
-                                    handleDeleteGroup(
-                                      (profileData as ProfileGroup).id,
-                                    ),
+                                  onConfirm: () => handleDeleteGroup((profileData as ProfileGroup).id),
                                   confirmButtonText: 'Yes, Delete This Group',
                                   confirmButtonVariant: 'destructive',
                                 });
@@ -1146,7 +1056,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                             <Trash2 className="h-4 w-4 mr-2" /> Delete Group
                           </Button>
                         )}
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
               </>

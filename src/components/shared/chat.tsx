@@ -28,9 +28,6 @@ import { usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,
-  isToday,
-  isYesterday,
-  isThisYear,
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -910,7 +907,7 @@ export function CardsChat({
             <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
               <button
                 onClick={handleHeaderClick}
-                className="flex items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
+                className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
                 aria-label="View profile information"
               >
                 <Avatar className="w-10 h-10">
@@ -942,7 +939,7 @@ export function CardsChat({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
@@ -1072,14 +1069,6 @@ export function CardsChat({
                       isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
                     };
                   })();
-                  // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
-                  const nextMsg = messages[index + 1];
-                  const showDateHeader =
-                    !nextMsg ||
-                    !isSameDay(
-                      new Date(message.timestamp),
-                      new Date(nextMsg.timestamp),
-                    );
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
