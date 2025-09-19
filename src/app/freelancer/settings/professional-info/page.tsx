@@ -20,6 +20,7 @@ export default function ProfessionalInfo() {
   const user = useSelector((state: RootState) => state.user);
   const [refresh, setRefresh] = useState(false);
   const [experiences, setExperiences] = useState<any>([]);
+  console.log(experiences, 'experiences');
   const [isLoading, setIsLoading] = useState(false);
   const handleFormSubmit = () => {
     setRefresh((prev) => !prev);
