@@ -4,10 +4,7 @@ import {
   MessageSquare,
   ExternalLink,
   User,
-  Clock,
   AlertCircle,
-  CheckCircle2,
-  XCircle,
   Building2,
   ArrowUpRight,
 } from 'lucide-react';
@@ -28,6 +25,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { DateHistory } from '@/components/shared/DateHistory';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import { cn } from '@/lib/utils';
 
 export interface ExperienceCardProps {
@@ -66,37 +64,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
   employmentType,
   skills = [],
 }) => {
-  const statusVariants = {
-    verified: {
-      text: 'Verified',
-      icon: CheckCircle2,
-      className:
-        'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20',
-      iconClass: 'text-green-500',
-    },
-    pending: {
-      text: 'Pending',
-      icon: Clock,
-      className:
-        'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20',
-      iconClass: 'text-yellow-500',
-    },
-    rejected: {
-      text: 'Rejected',
-      icon: XCircle,
-      className:
-        'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20',
-      iconClass: 'text-red-500',
-    },
-  } as const;
-
-  const status =
-    statusVariants[
-      verificationStatus.toLowerCase() as keyof typeof statusVariants
-    ] || statusVariants.pending;
-
-  const StatusIcon = status.icon;
-
   const employmentTypeLabels = {
     'full-time': 'Full-time',
     'part-time': 'Part-time',
@@ -137,17 +104,10 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
             {workFrom && <DateHistory startDate={workFrom} endDate={workTo} />}
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              'px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5',
-              status.className,
-              'group-hover:shadow-sm',
-            )}
-          >
-            <StatusIcon className={cn('h-3.5 w-3.5', status.iconClass)} />
-            {status.text}
-          </Badge>
+          <StatusBadge
+            status={verificationStatus}
+            className="group-hover:shadow-sm transition-shadow"
+          />
         </div>
       </CardHeader>
 
