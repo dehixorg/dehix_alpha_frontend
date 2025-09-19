@@ -40,12 +40,8 @@ export const useAllUsers = () => {
 
     try {
       // Add pagination parameters to get all users
-      const response = await axiosInstance.get('/freelancer', {
-        params: {
-          limit: 100, // Set a high limit to get all users
-          page: 1,
-        },
-      });
+      const response = await axiosInstance.get('/freelancer');
+      console.log('API response for freelancers:', response.data);
 
       // The API returns the array inside a `data` property. Check for its existence.
       if (response.data && Array.isArray(response.data.data)) {
