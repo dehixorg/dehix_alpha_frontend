@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { CheckCircle, Circle, AlertCircle, ArrowUpRight } from 'lucide-react';
 
+import { cn } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 export interface UserProfile {
   _id: string;
@@ -131,18 +133,25 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
   if (!userProfile) {
     return (
       <Card className="w-full">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-2xl">Profile Completion</CardTitle>
-              <CardDescription>
-                Complete your profile to increase visibility
-              </CardDescription>
-            </div>
+        <CardHeader className="pb-4">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-64" />
           </div>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="w-[100px] h-[20px] rounded-full" />
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-2 w-full" />
+          </div>
+          <div className="space-y-2 pt-2">
+            <Skeleton className="h-4 w-32" />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-4 w-48" />
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -150,50 +159,97 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
   const incompleteFields = getIncompleteFields();
 
-  return (
-    <Card className="w-full border-2">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl">Profile Completion</CardTitle>
+  const completionColor =
+    completionPercentage < 30
+      ? 'bg-red-500'
+      : completionPercentage < 70
+        ? 'bg-yellow-500'
+        : 'bg-green-500';
 
+  return (
+    <Card className="w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              Profile Strength
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {completionPercentage === 100
+                ? 'Your profile is complete! 🎉'
+                : 'Complete your profile to increase your visibility and get more opportunities.'}
+            </CardDescription>
+          </div>
           <Button
             onClick={() => router.push('/freelancer/settings/personal-info')}
             variant="ghost"
             size="icon"
+            className="text-muted-foreground hover:text-foreground"
           >
-            <ChevronRight />
+            <ArrowUpRight />
           </Button>
         </div>
-        <CardDescription>
-          Complete your profile to increase visibility
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="space-y-2">
+      <CardContent className="pb-4">
+        <div className="space-y-6">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="w-full mr-3">
-                <div className="h-3 w-full overflow-hidden">
-                  <Progress value={completionPercentage} className="h-1 mt-1" />
-                </div>
-              </div>
-              <span className="text-sm font-bold whitespace-nowrap">
+              <span className="text-sm font-medium mt-2">
                 {completionPercentage.toFixed(0)}%
               </span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-xs font-medium border-0',
+                  completionPercentage < 30
+                    ? 'bg-red-500/10 text-red-600'
+                    : completionPercentage < 70
+                      ? 'bg-yellow-500/10 text-yellow-600'
+                      : 'bg-green-500/10 text-green-600',
+                )}
+              >
+                {completionPercentage < 30
+                  ? 'Beginner'
+                  : completionPercentage < 70
+                    ? 'Intermediate'
+                    : 'Expert'}
+              </Badge>
             </div>
+            <Progress
+              value={completionPercentage}
+              className={cn('h-1', `[&>*]:${completionColor}`)}
+            />
           </div>
 
           {incompleteFields.length > 0 && completionPercentage < 100 && (
-            <div className="mt-2 text-sm text-muted-foreground">
-              <p>Missing information:</p>
-              <ul className="list-disc pl-5 mt-1">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-sm font-medium">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <span>Complete these to improve your profile:</span>
+              </div>
+              <ul className="space-y-2">
                 {incompleteFields.slice(0, 3).map((field, index) => (
-                  <li key={index}>{field}</li>
+                  <li
+                    key={index}
+                    className="flex items-center space-x-2 text-sm"
+                  >
+                    <Circle className="h-3 w-3 text-muted-foreground/50" />
+                    <span>{field}</span>
+                  </li>
                 ))}
                 {incompleteFields.length > 3 && (
-                  <li>And {incompleteFields.length - 3} more...</li>
+                  <li className="text-xs text-muted-foreground pl-5">
+                    +{incompleteFields.length - 3} more items to complete
+                  </li>
                 )}
               </ul>
+            </div>
+          )}
+
+          {completionPercentage === 100 && (
+            <div className="flex items-center space-x-2 rounded-md bg-green-50 p-3 text-sm text-green-700">
+              <CheckCircle className="h-4 w-4 flex-shrink-0" />
+              <p>Your profile is 100% complete! Great job! 🎉</p>
             </div>
           )}
         </div>
