@@ -411,6 +411,9 @@ const FreelancerProfile = () => {
                           key={project._id}
                           _id={project._id}
                           projectName={project.projectName}
+                          verificationStatus={
+                            project.verified ? 'verified' : 'pending'
+                          }
                           githubLink={project.githubLink || ''}
                           liveDemoLink={project.liveDemoLink || ''}
                           thumbnail={project.thumbnail || ''}
