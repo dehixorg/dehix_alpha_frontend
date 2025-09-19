@@ -269,9 +269,6 @@ const Market: React.FC = () => {
   useEffect(() => {
     fetchJobs(filters);
   }, [fetchJobs, filters]);
-  const handleApply = () => {
-    fetchJobs(filters);
-  };
   const handleResize = () => {
     if (window.innerWidth >= 1024) setShowFilters(false);
   };
@@ -344,10 +341,6 @@ const Market: React.FC = () => {
         {/* Left Sidebar Filters */}
         <div className="hidden mb-10 lg:block lg:sticky lg:top-16 lg:w-[400px] lg:self-start lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:transition-all lg:duration-300 lg:scrollbar  no-scrollbar lg:scrollbar-thumb-gray-500 lg:scrollbar-track-gray-200 hover:lg:overflow-y-auto">
           <div className="h-full px-4 flex flex-col space-y-4">
-            <Button onClick={handleApply} className="w-full">
-              Apply
-            </Button>
-
             <Button
               variant="outline"
               onClick={handleReset}
@@ -710,12 +703,6 @@ const Market: React.FC = () => {
             </div>
             <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex gap-3">
-                <Button
-                  onClick={handleApply}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Apply
-                </Button>
                 <Button
                   variant="outline"
                   onClick={handleReset}
