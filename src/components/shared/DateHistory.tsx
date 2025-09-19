@@ -45,13 +45,7 @@ export const DateHistory: React.FC<DateHistoryProps> = ({
                   variant="secondary"
                   className="text-xs px-2 py-0.5 rounded"
                 >
-                  End: {formatDate(endDate)}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={`text-xs px-2 py-0.5 rounded ${statusOutlineClasses('COMPLETED')}`}
-                >
-                  Completed
+                  {formatDate(endDate)}
                 </Badge>
               </>
             ) : (
