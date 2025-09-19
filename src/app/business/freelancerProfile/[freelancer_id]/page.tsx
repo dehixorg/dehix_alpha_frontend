@@ -411,8 +411,9 @@ const FreelancerProfile = () => {
                           key={project._id}
                           _id={project._id}
                           projectName={project.projectName}
-                          description={project.description || ''}
-                          verified={project.verified || false}
+                          verificationStatus={
+                            project.verified ? 'verified' : 'pending'
+                          }
                           githubLink={project.githubLink || ''}
                           liveDemoLink={project.liveDemoLink || ''}
                           thumbnail={project.thumbnail || ''}
@@ -426,7 +427,6 @@ const FreelancerProfile = () => {
                           verificationUpdateTime={
                             project.verificationUpdateTime || ''
                           }
-                          comments={project.comments || ''}
                           isViewOnly={true}
                           onClick={() => setSelectedProject(project)}
                         />
