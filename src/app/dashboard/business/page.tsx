@@ -160,7 +160,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardFooter className="flex flex-col gap-2">
-                <div className="flex items-center justify-between w-full text-xs">
+                <div className="flex items-center justify-between w-full text-xs uppercase">
                   <span>Project Completion</span>
                   <span className="font-medium">
                     {responseData.length > 0

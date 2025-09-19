@@ -17,6 +17,8 @@ interface BaseStatItemProps {
   color?: ColorVariant;
   /** Optional icon component */
   icon?: React.ReactNode;
+  /** Optional text class */
+  text_class?: string;
 }
 
 interface DefaultVariantProps extends BaseStatItemProps {
@@ -63,6 +65,7 @@ const StatItem: React.FC<StatItemProps> = ({
   className = '',
   variant = 'default',
   color = 'default',
+  text_class = 'text-2xl',
 }) => {
   const colors = colorMap[color] || colorMap.default;
 
@@ -90,7 +93,7 @@ const StatItem: React.FC<StatItemProps> = ({
             )}
             <div>
               <p className="text-sm text-muted-foreground">{label}</p>
-              <p className="text-2xl">{value}</p>
+              <p className={text_class}>{value}</p>
             </div>
           </div>
         </div>
