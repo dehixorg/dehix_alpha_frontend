@@ -1,6 +1,6 @@
 'use client';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Filter, PackageOpen } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,30 +11,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import WorkExpVerificationCard from '@/components/cards/oracleDashboard/workExpVerificationCard';
-import { axiosInstance } from '@/lib/axiosinstance';
 import { StatusEnum } from '@/utils/freelancer/enum';
+import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
-// Define a union type for the filter options
-type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
-interface JobData {
-  _id: string;
-  jobTitle: string;
-  workDescription: string;
-  company: string;
-  workFrom: string;
-  workTo: string;
-  referencePersonName: string;
-  referencePersonContact: string;
-  githubRepoLink: string;
-  comments: string;
-  verificationStatus: string;
-  onStatusUpdate: (newStatus: string) => void;
-  onCommentUpdate: (newComment: string) => void;
-}
+import BusinessVerificationCard from '@/components/cards/oracleDashboard/businessVerificationCard';
 
-export default function ProfessionalInfo() {
-  const [JobData, setJobData] = useState<JobData[]>([]);
+type FilterOption = 'all' | 'current' | 'verified' | 'rejected';
+
+const BusinessVerification = () => {
+  const [businessdata, setBusinessData] = useState<any[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -43,20 +28,17 @@ export default function ProfessionalInfo() {
     setIsDialogOpen(false);
   };
 
-  const filteredData = JobData.filter((data) => {
-    if (filter === 'all') {
-      return true;
-    }
-    return (
-      data.verificationStatus === filter ||
-      (filter === 'current' && data.verificationStatus === StatusEnum.PENDING)
-    );
+  const filteredData = businessdata.filter((data) => {
+    if (filter === 'all') return true;
+    if (filter === 'current')
+      return data.verificationStatus === StatusEnum.PENDING;
+    return data.verificationStatus === filter;
   });
 
   const fetchData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
-        `/verification/oracle?doc_type=experience`,
+        `/verification/oracle?doc_type=business`,
       );
       const result = response.data.data;
 
@@ -69,13 +51,15 @@ export default function ProfessionalInfo() {
             }))
           : [],
       );
-      setJobData(flattenedData);
+
+      setBusinessData(flattenedData);
     } catch (error) {
+      console.error('Error in getting verification data:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong.Please try again.',
-      }); // Error toast
+        description: 'Something went wrong. Please try again.',
+      });
     }
   }, []);
 
@@ -83,26 +67,25 @@ export default function ProfessionalInfo() {
     fetchData();
   }, [fetchData]);
 
-  const updateJobStatus = (index: number, newStatus: string) => {
-    const updatedData = [...JobData];
-    updatedData[index].verificationStatus = newStatus;
-    setJobData(updatedData); // Assuming you set this in state
+  const updateBusinessStatus = (index: number, newStatus: string) => {
+    const updatedData = [...businessdata];
+    updatedData[index].status = newStatus;
+    setBusinessData(updatedData);
   };
 
   const updateCommentStatus = (index: number, newComment: string) => {
-    const updatedData = [...JobData];
+    const updatedData = [...businessdata];
     updatedData[index].comments = newComment;
-    setJobData(updatedData);
+    setBusinessData(updatedData);
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="mb-8 ml-4 flex justify-between mt-8 md:mt-4 items-center">
-        <div className="mb-8 ">
-          <h1 className="text-3xl font-bold">Experience Verification</h1>
+      <div className="mb-8 ml-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Business Verification</h1>
           <p className="text-gray-400 mt-2">
-            Stay updated on your work experience verification status. Check back
-            regularly for any new updates or requirements.
+            Monitor the status of your Business verifications.
           </p>
         </div>
         <Button
@@ -118,10 +101,9 @@ export default function ProfessionalInfo() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Filter Experience Status</DialogTitle>
+            <DialogTitle>Filter Business Verification</DialogTitle>
           </DialogHeader>
           <RadioGroup
-            defaultValue="all"
             value={filter}
             onValueChange={(value: FilterOption) => handleFilterChange(value)}
             className="space-y-2"
@@ -153,37 +135,44 @@ export default function ProfessionalInfo() {
 
       <main
         className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+          grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
       >
-        {filteredData.map((data, index) => (
-          <WorkExpVerificationCard
-            key={index}
-            _id={data._id}
-            jobTitle={data.jobTitle}
-            workDescription={data.workDescription}
-            company={data.company}
-            startFrom={data.workFrom}
-            endTo={data.workTo}
-            referencePersonName={data.referencePersonName}
-            referencePersonContact={data.referencePersonContact}
-            githubRepoLink={data.githubRepoLink}
-            comments={data.comments}
-            status={data.verificationStatus} // Pass the status to the card component
-            onStatusUpdate={(newStatus) => updateJobStatus(index, newStatus)}
-            onCommentUpdate={(newComment) =>
-              updateCommentStatus(index, newComment)
-            }
-          />
-        ))}
-        {JobData.length == 0 ? (
-          <div className="text-center w-[90vw] px-auto mt-20 py-10">
+        {filteredData.length > 0 ? (
+          filteredData.map((data, index) => (
+            <BusinessVerificationCard
+              key={index}
+              _id={data._id}
+              firstName={data.firstName}
+              lastName={data.lastName}
+              email={data.email}
+              phone={data.phone}
+              companyName={data.companyName}
+              companySize={data.companySize}
+              referenceEmail={data.referenceEmail}
+              websiteLink={data.websiteLink}
+              linkedInLink={data.linkedInLink}
+              githubLink={data.githubLink}
+              comments={data.comments}
+              status={data.status}
+              onStatusUpdate={(newStatus) =>
+                updateBusinessStatus(index, newStatus)
+              }
+              onCommentUpdate={(newComment) =>
+                updateCommentStatus(index, newComment)
+              }
+            />
+          ))
+        ) : (
+          <div className="text-center w-full col-span-full mt-20 py-10">
             <PackageOpen className="mx-auto text-gray-500" size="100" />
             <p className="text-gray-500">
-              No Work Experience verification for you now.
+              No Business verification records found.
             </p>
           </div>
-        ) : null}
+        )}
       </main>
     </div>
   );
-}
+};
+
+export default BusinessVerification;

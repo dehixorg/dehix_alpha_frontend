@@ -28,7 +28,7 @@ interface EducationData {
   verificationStatus: string;
 }
 
-export default function ProfessionalInfo() {
+const EducationVerification = () => {
   // Initialize state with education data from dummydata.json
   const [educationdata, setEducationData] = useState<EducationData[]>([]);
 
@@ -193,4 +193,6 @@ export default function ProfessionalInfo() {
       </main>
     </div>
   );
-}
+};
+
+export default EducationVerification;
