@@ -76,7 +76,7 @@ const DisplayConnectsDialog = ({ connects, userId }: any) => {
   useEffect(() => {
     setFilteredData(() =>
       filter === 'ALL'
-        ? (data ?? [])
+        ? data ?? []
         : (data ?? []).filter((item: any) => item.status === filter),
     );
   }, [data, filter]);
