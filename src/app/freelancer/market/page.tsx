@@ -30,7 +30,7 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
-import { DraftSheet } from '@/components/shared/DraftSheet';
+
 interface FilterState {
   projects: string[];
   jobType: string[];
@@ -98,7 +98,6 @@ const Market: React.FC = () => {
   const [openItem, setOpenItem] = useState<string | null>(
     'Filter by Project Domains',
   );
-  const [openSheet, setOpenSheet] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     jobType: [],
     domain: [],
@@ -330,9 +329,6 @@ const Market: React.FC = () => {
               potential projects, and filter by skills, domains and project
               domains to enhance your portfolio.
             </p>
-          </div>
-          <div className="w-full sm:w-[30%] flex justify-end pr-4 sm:pr-8">
-            <DraftSheet open={openSheet} setOpen={setOpenSheet} />
           </div>
         </div>
       </div>
