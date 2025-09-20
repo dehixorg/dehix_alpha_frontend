@@ -48,12 +48,22 @@ interface SkillDialogProps {
 }
 
 const skillSchema = z.object({
-  label: z.string().nonempty('Please select a domain'),
-  skillId: z.string().nonempty('Domain ID is required'), // Validation for skillId
-  experience: z
-    .string()
-    .nonempty('Please enter your experience')
-    .regex(/^\d+$/, 'Experience must be a number'),
+  label: z.string().nonempty("Please select a domain"),
+  skillId: z.string().nonempty("Domain ID is required"),
+  experience: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const trimmed = val.trim();
+        return trimmed === "" ? NaN : Number(trimmed);
+      }
+      return val;
+    },
+    z
+      .number({ invalid_type_error: "Experience must be a number" })
+      .int("Experience must be an integer")
+      .min(0, "Experience cannot be negative")
+      .max(50, "Experience cannot exceed 50 years")
+  ),
   description: z.string().nonempty('Please enter description'),
   visible: z.boolean(),
   status: z.string(),
@@ -68,7 +78,7 @@ const SkillDialog: React.FC<SkillDialogProps> = ({ skills, onSubmitSkill }) => {
     defaultValues: {
       skillId: '',
       label: '',
-      experience: '',
+      experience: ' ',
       description: '',
       visible: false,
       status: 'ADDED',
