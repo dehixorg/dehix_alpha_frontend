@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Heart, X } from 'lucide-react';
+import { Bookmark, X } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -376,8 +376,8 @@ const Market: React.FC = () => {
                     htmlFor="favourites"
                     className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
                   >
-                    <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                    <span>Show Favourites</span>
+                    <Bookmark className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                    <span>Drafts</span>
                   </label>
                 </div>
               </CardContent>
@@ -597,8 +597,8 @@ const Market: React.FC = () => {
                       htmlFor="mobile-favourites"
                       className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer select-none flex items-center space-x-2"
                     >
-                      <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                      <span>Show Favourites Only</span>
+                      <Bookmark className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                      <span>Drafts</span>
                     </label>
                   </div>
                 </div>
