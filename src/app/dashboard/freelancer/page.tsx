@@ -1,11 +1,11 @@
 'use client';
-import { CheckCircle, Clock, CalendarX2 } from 'lucide-react';
+import { Activity, CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
 
+import StatItem from '@/components/shared/StatItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
-import StatCard from '@/components/shared/statCard';
 import { axiosInstance } from '@/lib/axiosinstance';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -19,7 +19,6 @@ import { StatusEnum } from '@/utils/freelancer/enum';
 import Header from '@/components/header/header';
 import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { toast } from '@/components/ui/use-toast';
-import EarningCard from '@/components/shared/earningCard';
 import { Project } from '@/types/project';
 import {
   Card,
@@ -126,12 +125,11 @@ export default function Dashboard() {
               <ProfileCompletion userId={user.uid} />
             </Card>
             {/* Project Status Cards */}
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-              <EarningCard
-                className="sm:col-span-2 flex flex-col h-full"
-                title="Total Revenue"
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <StatItem
+                variant="card"
+                label="Total Revenue"
                 value="$45,231.89"
-                description="+20.1% from last month"
                 icon={
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -141,25 +139,46 @@ export default function Dashboard() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
+                    className="h-5 w-5"
                   >
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                   </svg>
                 }
+                className="h-full"
+                color="green"
+                text_class="text-2xl"
               />
-              <StatCard
-                title="Active Projects"
+
+              <StatItem
+                variant="card"
+                label="Active Projects"
                 value={loadingStats ? '...' : statusCounts[StatusEnum.ACTIVE]}
-                icon={<CheckCircle className="h-6 w-6 text-success" />}
-                additionalInfo={'Earning stats will be here'}
+                icon={<Activity className="h-5 w-5" />}
+                className="h-full"
+                color="green"
+                text_class="text-2xl"
               />
-              <StatCard
-                title="Pending Projects"
+
+              <StatItem
+                variant="card"
+                label="Pending Projects"
                 value={loadingStats ? '...' : statusCounts[StatusEnum.PENDING]}
-                icon={<Clock className="h-6 w-6 text-warning" />}
-                additionalInfo={
-                  loadingStats ? 'Loading...' : 'Project stats will be here'
+                icon={<Clock className="h-5 w-5" />}
+                className="h-full"
+                color="amber"
+                text_class="text-2xl"
+              />
+
+              <StatItem
+                variant="card"
+                label="Completed"
+                value={
+                  loadingStats ? '...' : statusCounts[StatusEnum.COMPLETED] || 0
                 }
+                icon={<CheckCircle className="h-5 w-5" />}
+                className="h-full"
+                color="blue"
+                text_class="text-2xl"
               />
             </div>
 
