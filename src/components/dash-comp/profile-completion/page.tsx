@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Circle, AlertCircle, ArrowUpRight } from 'lucide-react';
+import {
+  CheckCircle,
+  Circle,
+  AlertCircle,
+  ArrowUpRight,
+  User,
+  Briefcase,
+  Mail,
+  Phone,
+  FileText,
+  Award,
+  ShieldCheck,
+  Layers,
+} from 'lucide-react';
+
+import StatItem from '../../shared/StatItem';
 
 import { cn } from '@/lib/utils';
 import {
@@ -16,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface UserProfile {
   _id: string;
@@ -46,6 +62,39 @@ interface ProfileCompletionProps {
 interface CompletionFields {
   [key: string]: boolean;
 }
+// Map field types to their corresponding icons
+const fieldIcons: Record<string, React.ReactNode> = {
+  // Personal Information
+  firstname: <User className="h-3 w-3" />,
+  lastname: <User className="h-3 w-3" />,
+  username: <User className="h-3 w-3" />,
+  email: <Mail className="h-3 w-3" />,
+  phone: <Phone className="h-3 w-3" />,
+  profilepic: <User className="h-3 w-3" />,
+  description: <FileText className="h-3 w-3" />,
+
+  // Professional Information
+  skills: <Award className="h-3 w-3" />,
+  domain: <Briefcase className="h-3 w-3" />,
+  projectdomain: <Layers className="h-3 w-3" />,
+
+  // Verification
+  kyc: <ShieldCheck className="h-3 w-3" />,
+
+  // Fallback
+  default: <Circle className="h-3 w-3 text-muted-foreground/50" />,
+};
+
+// Helper function to get the appropriate icon for a field
+const getFieldIcon = (field: string) => {
+  const lowerField = field.toLowerCase();
+  for (const [key, icon] of Object.entries(fieldIcons)) {
+    if (lowerField.includes(key)) {
+      return icon;
+    }
+  }
+  return fieldIcons.default;
+};
 
 const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -126,7 +175,6 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
 
         return readableField;
       });
-
     return incomplete;
   };
 
@@ -227,22 +275,19 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 <span>Complete these to improve your profile:</span>
               </div>
-              <ul className="space-y-2">
-                {incompleteFields.slice(0, 3).map((field, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center space-x-2 text-sm"
-                  >
-                    <Circle className="h-3 w-3 text-muted-foreground/50" />
-                    <span>{field}</span>
-                  </li>
-                ))}
-                {incompleteFields.length > 3 && (
-                  <li className="text-xs text-muted-foreground pl-5">
-                    +{incompleteFields.length - 3} more items to complete
-                  </li>
-                )}
-              </ul>
+              <ScrollArea className="h-[100px] pr-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {incompleteFields.map((field, index) => (
+                    <StatItem
+                      key={index}
+                      icon={getFieldIcon(field)}
+                      value={field}
+                      label=""
+                      className="h-full"
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           )}
 
