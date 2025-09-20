@@ -4,6 +4,7 @@ import CompanyCard from '@/components/opportunities/company-size/company';
 import SkillDom from '@/components/opportunities/skills-domain/skilldom';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface FilterState {
   location: string[];
@@ -23,7 +24,6 @@ interface FilterSidebarProps {
     filterType: string,
     selectedValues: string | string[],
   ) => void;
-  handleApply: () => void;
   handleReset: () => void;
 }
 
@@ -32,7 +32,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   domains,
   skills,
   handleFilterChange,
-  handleApply,
   handleReset,
 }) => {
   return (
@@ -40,7 +39,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       <div className="h-full px-4 flex flex-col space-y-4">
         {/* Correctly wire the Apply button */}
         <Button
-          onClick={handleApply}
+          
           className="w-full"
         >
           Apply Filters
@@ -77,59 +76,61 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           />
         </div>
 
-        <div className="mb-4">
-          <Label className="mb-2 block text-sm font-medium">
-            Filter by Rate
-          </Label>
-          <div className="flex gap-4">
-            <div className="flex flex-col flex-1">
-              <Label
-                htmlFor="minRate"
-                className="mb-1 text-sm text-muted-foreground"
-              >
-                Min Rate
-              </Label>
-              <Input
-                id="minRate"
-                type="number"
-                min={0}
-                max={100000}
-                aria-label="Minimum Rate"
-                placeholder="e.g. 10"
-                value={filters.minRate}
-                onChange={(e) => {
-                  const rawValue = Number(e.target.value);
-                  const safeValue = Math.min(Math.max(rawValue, 0), 100000);
-                  handleFilterChange('minRate', [safeValue.toString()]);
-                }}
-                onWheel={(e) => e.currentTarget.blur()}
-              />
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-lg">Filter by Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <div className="flex flex-col flex-1">
+                <Label
+                  htmlFor="minRate"
+                  className="mb-1 text-sm text-muted-foreground"
+                >
+                  Min Rate
+                </Label>
+                <Input
+                  id="minRate"
+                  type="number"
+                  min={0}
+                  max={100000}
+                  aria-label="Minimum Rate"
+                  placeholder="e.g. 10"
+                  value={filters.minRate}
+                  onChange={(e) => {
+                    const rawValue = Number(e.target.value);
+                    const safeValue = Math.min(Math.max(rawValue, 0), 100000);
+                    handleFilterChange('minRate', [safeValue.toString()]);
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <Label
+                  htmlFor="maxRate"
+                  className="mb-1 text-sm text-muted-foreground"
+                >
+                  Max Rate
+                </Label>
+                <Input
+                  id="maxRate"
+                  type="number"
+                  min={0}
+                  max={100000}
+                  aria-label="Maximum Rate"
+                  placeholder="e.g. 100"
+                  value={filters.maxRate}
+                  onChange={(e) => {
+                    const rawValue = Number(e.target.value);
+                    const safeValue = Math.min(Math.max(rawValue, 0), 100000);
+                    handleFilterChange('maxRate', [safeValue.toString()]);
+                  }}
+                  onWheel={(e) => e.currentTarget.blur()}
+                />
+              </div>
             </div>
-            <div className="flex flex-col flex-1">
-              <Label
-                htmlFor="maxRate"
-                className="mb-1 text-sm text-muted-foreground"
-              >
-                Max Rate
-              </Label>
-              <Input
-                id="maxRate"
-                type="number"
-                min={0}
-                max={100000}
-                aria-label="Maximum Rate"
-                placeholder="e.g. 100"
-                value={filters.maxRate}
-                onChange={(e) => {
-                  const rawValue = Number(e.target.value);
-                  const safeValue = Math.min(Math.max(rawValue, 0), 100000);
-                  handleFilterChange('maxRate', [safeValue.toString()]);
-                }}
-                onWheel={(e) => e.currentTarget.blur()}
-              />
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

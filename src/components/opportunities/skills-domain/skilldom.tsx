@@ -102,7 +102,7 @@ const SkillDom: React.FC<SkillDomProps> = ({
           }
         >
           <AccordionItem value={heading}>
-            <AccordionTrigger className="text-base px-4 py-2 hover:no-underline">
+            <AccordionTrigger className="text-left px-4 py-2 hover:no-underline">
               {heading}
             </AccordionTrigger>
             <AccordionContent>

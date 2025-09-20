@@ -35,7 +35,7 @@ interface ProjectData {
   onCommentUpdate: (newComment: string) => void;
 }
 
-export default function ProfessionalInfo() {
+const ProjectVerification = () => {
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -188,4 +188,6 @@ export default function ProfessionalInfo() {
       </main>
     </div>
   );
-}
+};
+
+export default ProjectVerification;

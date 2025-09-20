@@ -18,7 +18,7 @@ export default function PersonalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="kyc"
+        active="KYC"
         isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">

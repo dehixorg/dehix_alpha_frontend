@@ -196,7 +196,6 @@ const Market: React.FC = () => {
             domains={domains}
             skills={skills}
             handleFilterChange={handleFilterChange}
-            handleApply={handleApply}
             handleReset={handleReset}
           />
           <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
@@ -208,7 +207,6 @@ const Market: React.FC = () => {
         domains={domains}
         skills={skills}
         handleFilterChange={handleFilterChange}
-        handleApply={handleApply}
         handleModalToggle={handleModalToggle}
       />
     </section>
