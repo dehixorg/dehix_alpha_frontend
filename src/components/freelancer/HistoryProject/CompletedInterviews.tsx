@@ -1,13 +1,20 @@
 /* eslint-disable prettier/prettier */
-"use client";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Calendar, Clock, User, CheckCircle, XCircle, Info } from "lucide-react";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import {
+  Calendar,
+  Clock,
+  User,
+  CheckCircle,
+  XCircle,
+  Info,
+} from 'lucide-react';
 
-import { RootState } from "@/lib/store";
-import { fetchCompletedInterviews} from "@/lib/api/interviews";
-import { axiosInstance } from "@/lib/axiosinstance";
-import { Button } from "@/components/ui/button";
+import { RootState } from '@/lib/store';
+import { fetchCompletedInterviews } from '@/lib/api/interviews';
+import { axiosInstance } from '@/lib/axiosinstance';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -49,53 +56,65 @@ export default function HistoryInterviews() {
   const [interviews, setInterviews] = useState<CompletedInterview[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
-  const [interviewerDetails, setInterviewerDetails] = useState<{[key: string]: any}>({});
+  const [interviewerDetails, setInterviewerDetails] = useState<{
+    [key: string]: any;
+  }>({});
   const [openDescIdx, setOpenDescIdx] = useState<number | null>(null);
 
   const loadCompletedInterviews = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
       console.log(data);
       setInterviews(data);
       await fetchInterviewerDetails(data);
-      
     } catch (error) {
       console.error('Failed to load completed interviews:', error);
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     loadCompletedInterviews();
   }, [user?.uid]);
-  
-  const fetchInterviewerDetails = async (interviewData: CompletedInterview[]) => {
-    
+
+  const fetchInterviewerDetails = async (
+    interviewData: CompletedInterview[],
+  ) => {
     const interviewerIds = interviewData
-      .filter(interview => {
-        return interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
+      .filter((interview) => {
+        return (
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId
+        );
       })
-      .map(interview => interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId);
-    
-    
-    
+      .map(
+        (interview) =>
+          interview.interviewerId ||
+          interview.interviewer?._id ||
+          (interview as any).creatorId,
+      );
+
     if (interviewerIds.length === 0) return;
-    
+
     try {
-      const uniqueIds = Array.from(new Set(interviewerIds.filter(id => id && id !== undefined)));
-      
-      const detailsMap: {[key: string]: any} = {};
-      
+      const uniqueIds = Array.from(
+        new Set(interviewerIds.filter((id) => id && id !== undefined)),
+      );
+
+      const detailsMap: { [key: string]: any } = {};
+
       for (const interviewerId of uniqueIds) {
         if (!interviewerId) continue;
         try {
-          
-          const response = await axiosInstance.get(`/freelancer/${interviewerId}`);
-          
+          const response = await axiosInstance.get(
+            `/freelancer/${interviewerId}`,
+          );
+
           if (response.data?.data) {
             detailsMap[interviewerId] = response.data.data;
           }
@@ -103,10 +122,9 @@ export default function HistoryInterviews() {
           console.error(`Failed to fetch interviewer ${interviewerId}:`, error);
         }
       }
-      
-      
+
       setInterviewerDetails(detailsMap);
-     // console.log(detailsMap);
+      // console.log(detailsMap);
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
     }
@@ -116,7 +134,7 @@ export default function HistoryInterviews() {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   };
 
@@ -139,12 +157,19 @@ export default function HistoryInterviews() {
   };
 
   const getStatusText = (status: string) => {
-    return status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
+    return status
+      ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+      : 'Unknown';
   };
 
-  const getAcceptedInterviewerName = (interview: CompletedInterview): string => {
-    const interviewerId = interview.interviewerId || interview.interviewer?._id || (interview as any).creatorId;
-    
+  const getAcceptedInterviewerName = (
+    interview: CompletedInterview,
+  ): string => {
+    const interviewerId =
+      interview.interviewerId ||
+      interview.interviewer?._id ||
+      (interview as any).creatorId;
+
     // Check the interview object directly
     if (interview.interviewer?.name) {
       return capitalizeFirstLetter(interview.interviewer.name);
@@ -156,22 +181,23 @@ export default function HistoryInterviews() {
       const emailPrefix = interview.interviewer.email.split('@')[0];
       return capitalizeFirstLetter(emailPrefix);
     }
-    
+
     // Check the pre-fetched details map
     if (interviewerId && interviewerDetails[interviewerId]) {
       const details = interviewerDetails[interviewerId];
-      const name = details.name || details.userName || details.email?.split('@')[0];
+      const name =
+        details.name || details.userName || details.email?.split('@')[0];
       if (name) {
         return capitalizeFirstLetter(name);
       }
     }
-    
+
     if (interviewerId) return `Interviewer (${interviewerId})`;
     return 'Interviewer';
   };
 
   const handleShowMore = () => {
-    setDisplayCount(prev => prev + 5);
+    setDisplayCount((prev) => prev + 5);
   };
   //console.log(interviews);
   const displayedInterviews = interviews.slice(0, displayCount);
@@ -292,7 +318,7 @@ export default function HistoryInterviews() {
             {displayedInterviews.map((interview, index) => {
               const { date, time } = formatDateTime(interview.interviewDate);
               const interviewerName = getAcceptedInterviewerName(interview);
-              
+
               return (
                 <TableRow key={interview._id} className="transition">
                   <TableCell className="py-3 text-center">
@@ -335,14 +361,14 @@ export default function HistoryInterviews() {
                         </span>
                       </div>
                     ) : (
-                      <span className="text-sm text-gray-400">
-                        No rating
-                      </span>
+                      <span className="text-sm text-gray-400">No rating</span>
                     )}
                   </TableCell>
                   <TableCell className="py-3 text-center relative">
                     <button
-                      onClick={() => setOpenDescIdx(openDescIdx === index ? null : index)}
+                      onClick={() =>
+                        setOpenDescIdx(openDescIdx === index ? null : index)
+                      }
                       className="bg-gray-700 rounded-full p-2 hover:bg-gray-600"
                     >
                       <Info size={16} color="white" />
@@ -350,15 +376,25 @@ export default function HistoryInterviews() {
                     {openDescIdx === index && (
                       <div
                         className="p-3 bg-gray-900 border rounded shadow text-left text-white absolute z-10 min-w-[250px] max-w-[350px]"
-                        style={{ top: '50%', right: '50%', transform: 'translateY(-50%)', marginRight: '8px' }}
+                        style={{
+                          top: '50%',
+                          right: '50%',
+                          transform: 'translateY(-50%)',
+                          marginRight: '8px',
+                        }}
                       >
                         <div className="text-sm leading-relaxed">
-                          {interview.interviewerFeedback || "No description available"}
+                          {interview.interviewerFeedback ||
+                            'No description available'}
                         </div>
                         {/* Arrow pointing to the button */}
-                        <div 
+                        <div
                           className="absolute w-0 h-0 border-l-8 border-l-gray-900 border-t-4 border-t-transparent border-b-4 border-b-transparent"
-                          style={{ top: '50%', right: '-8px', transform: 'translateY(-50%)' }}
+                          style={{
+                            top: '50%',
+                            right: '-8px',
+                            transform: 'translateY(-50%)',
+                          }}
                         ></div>
                       </div>
                     )}
@@ -369,7 +405,7 @@ export default function HistoryInterviews() {
           </TableBody>
         </Table>
       </div>
-      
+
       {hasMoreInterviews && (
         <div className="flex justify-center">
           <Button

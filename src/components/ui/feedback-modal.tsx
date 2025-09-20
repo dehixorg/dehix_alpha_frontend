@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -32,8 +32,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
+
     if (words.length <= MAX_WORDS) {
       setFeedback(text);
       setWordCount(words.length);
@@ -42,7 +45,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   const handleSubmit = async () => {
     if (!feedback.trim()) return;
-    
+
     setIsSubmitting(true);
     try {
       await onSubmit(feedback.trim());
@@ -70,7 +73,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p className="text-sm text-gray-600">
-            Please provide your feedback for the interview with <strong>{intervieweeName}</strong>
+            Please provide your feedback for the interview with{' '}
+            <strong>{intervieweeName}</strong>
           </p>
           <div className="space-y-2">
             <Textarea

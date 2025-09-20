@@ -23,7 +23,14 @@ const ScrollArea = React.forwardRef<
     <ScrollAreaPrimitive.Viewport
       data-hide-scrollbar={hideScrollbar ? 'true' : undefined}
       className="h-full w-full rounded-[inherit]"
-      style={hideScrollbar ? ({ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties) : undefined}
+      style={
+        hideScrollbar
+          ? ({
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       {children}
     </ScrollAreaPrimitive.Viewport>
