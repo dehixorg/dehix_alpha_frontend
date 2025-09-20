@@ -1,7 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import MobileSkillDom from '@/components/opportunities/mobile-opport/mob-skills-domain/mob-skilldom';
 import CompanyCard from '@/components/opportunities/mobile-opport/mob-comp/mob-comp';
 
@@ -21,7 +20,6 @@ interface MobileFilterModalProps {
     filterType: string,
     selectedValues: string | string[],
   ) => void;
-  handleApply: () => void;
   handleModalToggle: () => void;
 }
 
@@ -31,7 +29,6 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
   domains,
   skills,
   handleFilterChange,
-  handleApply,
   handleModalToggle,
 }) => {
   return (
@@ -76,11 +73,6 @@ const MobileFilterModal: React.FC<MobileFilterModalProps> = ({
                   }
                 />
               </div>
-            </div>
-            <div className="p-4 border-t border-gray-300">
-              <Button onClick={handleApply} className="w-full">
-                Apply
-              </Button>
             </div>
           </div>
         </div>
