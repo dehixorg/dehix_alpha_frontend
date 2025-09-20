@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Heart, Eye, EyeOff, MoreVertical } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  MoreVertical,
+  Clock,
+  MapPin,
+  DollarSign,
+  Calendar,
+  Briefcase,
+  Bookmark,
+  Share2,
+  X,
+} from 'lucide-react';
+import axios from 'axios';
 import Link from 'next/link';
 import { useSelector, useDispatch } from 'react-redux';
 import { usePathname } from 'next/navigation';
@@ -14,13 +27,32 @@ import {
 } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { NewReportTab } from '../report-tabs/NewReportTabs';
+import { getReportTypeFromPath } from '../../utils/getReporttypeFromPath';
 
-import ProjectDrawer from './ProjectDrawer';
+import StatItem from './StatItem';
 
-import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
-import { getReportTypeFromPath } from '@/utils/getReporttypeFromPath';
-import { Project } from '@/app/freelancer/market/page';
-import { axiosInstance } from '@/lib/axiosinstance';
+interface Project {
+  _id: string;
+  projectName: string;
+  description?: string;
+  status?: string;
+  position?: string;
+  skillsRequired?: string[];
+  profiles?: Array<{
+    positions?: number;
+    years?: number | string;
+    connectsRequired?: number;
+  }>;
+  createdAt?: string | Date;
+  location?: string;
+  budget?: number | string;
+  duration?: string;
+  progress?: number;
+  deadline?: string;
+  proposals?: number;
+}
+
 import { RootState } from '@/lib/store';
 import {
   addDraftedProject,
@@ -33,9 +65,9 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 
-// Simple loader/spinner component (you can replace with your own)
+// Simple loader/spinner component
 const Loader = () => (
-  <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+  <div className="w-5 h-5 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
 );
 
 interface JobCardProps {
@@ -76,9 +108,9 @@ const JobCard: React.FC<JobCardProps> = ({
   };
 
   const handleLike = async () => {
-    setLoading(true); // start loading
+    setLoading(true);
     try {
-      const response = await axiosInstance.put(`/freelancer/draft`, {
+      const response = await axios.put(`/api/freelancer/draft`, {
         project_id: job._id,
       });
 
@@ -88,14 +120,14 @@ const JobCard: React.FC<JobCardProps> = ({
     } catch (error) {
       console.error('Failed to add project to draft:', error);
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false);
     }
   };
 
   const handleUnlike = async () => {
-    setLoading(true); // start loading
+    setLoading(true);
     try {
-      const response = await axiosInstance.delete('/freelancer/draft', {
+      const response = await axios.delete('/api/freelancer/draft', {
         data: { project_id: job._id },
       });
 
@@ -105,101 +137,202 @@ const JobCard: React.FC<JobCardProps> = ({
     } catch (error) {
       console.error('Failed to remove project from draft:', error);
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false);
     }
   };
 
   const profile =
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
 
+  // Format date with type safety
+  const formatDate = (dateString?: string | Date): string => {
+    if (!dateString) return 'N/A';
+    try {
+      const date =
+        dateString instanceof Date ? dateString : new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'N/A';
+    }
+  };
+
   return (
-    <Card className="w-[100%] max-w-3xl lg:max-w-4xl mx-auto shadow-sm hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1 pr-4">
-            <CardTitle className="text-xl lg:text-2xl font-semibold">
-              {job.projectName}{' '}
-            </CardTitle>
-            <CardDescription className="mt-2 text-sm lg:text-base">
-              Position: {job.position || 'Web developer'} · Exp:{' '}
-              {profile?.years || '2'} yrs
-            </CardDescription>
-          </div>
-          <div className="flex justify-between items-center gap-3">
-            {job.status && (
-              <Badge
-                variant="outline"
-                className={
-                  job.status.toLowerCase() === 'pending'
-                    ? 'bg-amber-300/10 text-amber-500 border-amber-500/20'
-                    : 'bg-green-500/10 text-green-500 border-green-500/20'
-                }
-              >
-                {job.status}
-              </Badge>
-            )}
+    <>
+      <div className="w-full max-w-4xl mx-auto">
+        <Card className="shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+          <CardHeader className="pb-3 px-6 pt-6">
+            <div className="flex flex-col space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div className="flex items-start space-x-4">
+                  <div className="bg-primary/10 p-2 rounded-lg">
+                    <div className="bg-primary/10 p-2 rounded-lg w-full h-full flex items-center justify-center">
+                      <Briefcase className="h-8 w-8 text-primary" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                        {job.projectName || 'Untitled Project'}
+                      </CardTitle>
+                      {job.status && (
+                        <Badge
+                          variant="outline"
+                          className={
+                            job.status.toLowerCase() === 'pending'
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                              : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800'
+                          }
+                        >
+                          {job.status}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="font-medium">
+                        {job.position || 'Web Developer'}
+                      </span>{' '}
+                      • {profile?.years || '2'}+ years experience
+                    </CardDescription>
+                  </div>
+                </div>
 
-            {loading ? (
-              <Loader />
-            ) : (
-              <Heart
-                className={`w-5 h-5 cursor-pointer ${isDrafted ? 'fill-red-600 text-red-600' : 'text-gray-400 hover:text-gray-600'}`}
-                onClick={
-                  loading ? undefined : isDrafted ? handleUnlike : handleLike
-                }
-              />
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-500 hover:text-gray-100 p-0 h-6 w-6 focus-visible:ring-0 focus-visible:ring-offset-0"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-32 z-50"
-                sideOffset={4}
-              >
-                <DropdownMenuItem
-                  onClick={() => setOpenReport(true)}
-                  className="text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  Report
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Description Section */}
-          <div className="lg:col-span-3">
-            <p
-              className={`text-sm lg:text-base text-gray-500 leading-relaxed ${!expanded && 'line-clamp-3'}`}
-            >
-              {job.description}
-            </p>
-            {job.description && job.description.length > 150 && (
-              <button
-                onClick={toggleExpand}
-                className="text-primary text-sm mt-2 hover:underline font-medium"
-              >
-                {expanded ? 'Show less' : 'Show more'}
-              </button>
-            )}
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`rounded-full h-9 w-9 ${isDrafted ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    onClick={
+                      loading
+                        ? undefined
+                        : isDrafted
+                          ? handleUnlike
+                          : handleLike
+                    }
+                  >
+                    {loading ? (
+                      <Loader />
+                    ) : (
+                      <Bookmark
+                        className={`h-4 w-4 ${isDrafted ? 'fill-current' : ''}`}
+                      />
+                    )}
+                  </Button>
 
-            <div className="mt-6">
-              <h4 className="text-sm lg:text-base font-semibold mb-3">
-                Skills required
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {job.skillsRequired &&
-                  job.skillsRequired.map((skill, index) => (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="end">
+                      <DropdownMenuItem
+                        onClick={() => setOpenReport(true)}
+                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+                      >
+                        Report Project
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Share2 className="mr-2 h-4 w-4" />
+                        <span>Share</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                <StatItem
+                  icon={<Clock className="h-4 w-4" />}
+                  label="Posted"
+                  value={job.createdAt ? formatDate(job.createdAt) : 'N/A'}
+                  color="blue"
+                  variant="card"
+                  text_class="text-sm"
+                />
+                <StatItem
+                  icon={<MapPin className="h-4 w-4" />}
+                  label="Location"
+                  value={job.location || 'Remote'}
+                  color="green"
+                  variant="card"
+                  text_class="text-sm"
+                />
+                <StatItem
+                  icon={<DollarSign className="h-4 w-4" />}
+                  label="Budget"
+                  value={
+                    job.budget
+                      ? typeof job.budget === 'number'
+                        ? `$${job.budget}`
+                        : job.budget
+                      : 'Negotiable'
+                  }
+                  color="amber"
+                  variant="card"
+                  text_class="text-sm"
+                />
+                <StatItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Duration"
+                  value={job.duration || 'Flexible'}
+                  variant="card"
+                  text_class="text-sm"
+                />
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="px-6 pb-4">
+            <div className="space-y-6">
+              {/* Project Description */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Project Description
+                </h3>
+                <div
+                  className={`prose prose-sm max-w-none text-gray-600 dark:text-gray-300 ${!expanded ? 'line-clamp-3' : ''}`}
+                >
+                  {job.description || 'No description provided.'}
+                </div>
+                {job.description && job.description.length > 150 && (
+                  <button
+                    onClick={toggleExpand}
+                    className="text-primary text-sm font-medium mt-2 hover:underline inline-flex items-center"
+                  >
+                    {expanded ? (
+                      <>
+                        <span>Show less</span>
+                        <EyeOff className="ml-1 h-4 w-4" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Read more</span>
+                        <Eye className="ml-1 h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Skills */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                  Skills Required
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {(job.skillsRequired || []).map((skill, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
@@ -208,90 +341,114 @@ const JobCard: React.FC<JobCardProps> = ({
                       {skill}
                     </Badge>
                   ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Project Details Section */}
-          <div className="lg:col-span-1 flex flex-col justify-between">
-            {profile && (
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {profile.positions && (
-                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
-                      {profile.positions} Positions
-                    </span>
-                  )}
-                  {profile.years && (
-                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
-                      {profile.years} Years
-                    </span>
+            {/* Project Details Section */}
+            <div className="lg:col-span-1 flex flex-col justify-between">
+              {profile && (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {profile.positions && (
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
+                        {profile.positions} Positions
+                      </span>
+                    )}
+                    {profile.years && (
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
+                        {profile.years} Years
+                      </span>
+                    )}
+                  </div>
+                  {profile.connectsRequired && (
+                    <div className="text-sm lg:text-base">
+                      <span className="text-muted-foreground">
+                        Connects required:
+                      </span>{' '}
+                      <span className="font-semibold text-foreground">
+                        {profile.connectsRequired}
+                      </span>
+                    </div>
                   )}
                 </div>
-                {profile.connectsRequired && (
-                  <div className="text-sm lg:text-base">
-                    <span className="text-muted-foreground">
-                      Connects required:
-                    </span>{' '}
-                    <span className="font-semibold text-foreground">
-                      {profile.connectsRequired}
-                    </span>
-                  </div>
+              )}
+            </div>
+          </CardContent>
+
+          <CardFooter className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <Briefcase className="h-4 w-4 flex-shrink-0" />
+                <span>{job.proposals || 0} proposals</span>
+                {job.deadline && (
+                  <span className="hidden sm:inline">
+                    • Apply before {formatDate(job.deadline)}
+                  </span>
                 )}
               </div>
-            )}
+
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Link
+                  href={`/freelancer/market/project/${job._id}/apply`}
+                  passHref
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    disabled={bidExist}
+                  >
+                    {bidExist ? 'Applied' : 'Apply Now'}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardFooter>
+          <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground p-4 bg-gray-50 dark:bg-gray-800/50 border-t">
+            <span>
+              Posted: {job.createdAt ? formatDate(job.createdAt) : 'N/A'}
+            </span>
           </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between items-center pt-6">
-        <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground">
-          <span>Posted: {new Date(job.createdAt).toLocaleDateString()}</span>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onNotInterested}
-            className="text-gray-500"
-          >
-            <EyeOff className="h-4 w-4 mr-1" />
-            Not Interested
-          </Button>
-          <ProjectDrawer
-            icon={<Eye className="h-4 w-4 mr-1" />}
-            project={job}
-            text="View"
-            isSizeSmall={true}
-          />
-          <Link
-            href={`/freelancer/market/project/${job._id}/apply`}
-            className="flex-1 w-flex-none"
-          >
+          <div className="flex gap-2 p-4 bg-gray-50 dark:bg-gray-800/50 border-t">
             <Button
-              type="submit"
-              className="w-full"
+              variant="outline"
               size="sm"
-              disabled={bidExist}
+              onClick={onNotInterested}
+              className="text-gray-500"
             >
-              {bidExist ? 'Applied' : 'Bid'}
+              <EyeOff className="h-4 w-4 mr-1" />
+              Not Interested
             </Button>
-          </Link>
-        </div>
-      </CardFooter>
+          </div>
+        </Card>
+      </div>
       {openReport && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-md w-full max-w-lg relative shadow-lg">
             <button
               onClick={() => setOpenReport(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
-            <NewReportTab reportData={reportData} />
+            <h3 className="text-lg font-medium mb-4">Report Project</h3>
+            <NewReportTab
+              reportData={{
+                ...reportData,
+                report_role: 'freelancer',
+                report_type: 'project',
+                reportedId: job._id,
+              }}
+              onSubmitted={() => {
+                setOpenReport(false);
+                return true;
+              }}
+            />
           </div>
         </div>
       )}
-    </Card>
+    </>
   );
 };
 
