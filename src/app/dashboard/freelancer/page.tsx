@@ -3,7 +3,6 @@ import { CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
 
-import { CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
 import StatCard from '@/components/shared/statCard';
@@ -22,6 +21,13 @@ import ProfileCompletion from '@/components/dash-comp/profile-completion/page';
 import { toast } from '@/components/ui/use-toast';
 import EarningCard from '@/components/shared/earningCard';
 import { Project } from '@/types/project';
+import {
+  Card,
+  CardTitle,
+  CardDescription,
+  CardHeader,
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Dashboard() {
   const user = useSelector((state: RootState) => state.user);
@@ -97,8 +103,28 @@ export default function Dashboard() {
         />
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
           <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-            <ProfileCompletion userId={user.uid} />
-
+            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm overflow-hidden">
+              <CardHeader className="py4">
+                <div className="flex justify-between items-start gap-4">
+                  <div>
+                    <CardTitle className="text-2xl font-bold tracking-tight">
+                      Welcome back, {user?.name || 'User'}!
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      Here&lsquo;s what&lsquo;s happening with your projects
+                      today.
+                    </CardDescription>
+                  </div>
+                  <Avatar className="h-12 w-12 flex-shrink-0">
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.name} />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </CardHeader>
+              <ProfileCompletion userId={user.uid} />
+            </Card>
             {/* Project Status Cards */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
               <EarningCard

@@ -167,7 +167,7 @@ const ProfileCompletion = ({ userId }: ProfileCompletionProps) => {
         : 'bg-green-500';
 
   return (
-    <Card className="w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
+    <Card className="rounded-none rounded-b-lg w-full overflow-hidden border-0 shadow-sm bg-gradient-to-br from-card to-card/70">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
