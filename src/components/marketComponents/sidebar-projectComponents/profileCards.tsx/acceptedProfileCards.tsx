@@ -24,6 +24,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Define the Skill interface as it exists in your project
+interface Skill {
+  _id: string;
+  name: string;
+}
+
 interface AcceptedProfileCardsProps {
   talents: any[];
   loading: boolean;
@@ -70,8 +76,8 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
           <SkeletonCard key={index} />
         ))
       ) : talents.length > 0 ? (
-        talents.map((talent) => (
-          <Card key={talent._id} className="overflow-hidden">
+        talents.map((talent, index) => (
+          <Card key={`${talent._id}-${index}`} className="overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
@@ -136,8 +142,8 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {talent.skills?.map((skill, index) => (
-                    <Badge key={index} variant="secondary">
+                  {talent.skills?.map((skill: Skill, skillIndex: number) => (
+                    <Badge key={`${talent._id}-${skillIndex}`} variant="secondary">
                       {skill.name}
                     </Badge>
                   ))}

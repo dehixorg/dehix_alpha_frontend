@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import { useRouter } from 'next/navigation';
 interface Skill {
   _id: string;
   name: string;
@@ -33,18 +33,24 @@ interface Talent {
   professionalInfo: ProfessionalExperience[];
   skills: Skill[];
 }
-
 interface ProfileCardsProps {
   talents: Talent[];
   loading: boolean;
   calculateExperience: (professionalInfo: ProfessionalExperience[]) => string;
 }
 
+
 const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   talents,
   loading,
   calculateExperience,
 }) => {
+  const router = useRouter();
+
+  const handleViewProfile = (talentId: string) => {
+    router.push(`/profiles?id=${talentId}`);
+  };
+  
   const SkeletonCard = () => (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -80,8 +86,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
           <SkeletonCard key={index} />
         ))
       ) : talents.length > 0 ? (
-        talents.map((talent) => (
-          <Card key={talent._id} className="overflow-hidden">
+        // The CORRECTED map function with a unique key
+        talents.map((talent, index) => (
+          <Card key={`${talent._id}-${index}`} className="overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
@@ -135,13 +142,14 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                   Cancel
                 </Button>
                 <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View Profile
-                </Button>
+      size="sm"
+      variant="outline"
+      className="flex items-center gap-1"
+      onClick={() => handleViewProfile(talent._id)} 
+    >
+      <ExternalLink className="h-3 w-3" />
+      View Profile
+    </Button>
               </div>
             </div>
           </Card>

@@ -15,6 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Define the Skill interface as it exists in your project
+interface Skill {
+  _id: string;
+  name: string;
+}
+
 interface RejectedProfileCardsProps {
   talents: any[];
   loading: boolean;
@@ -61,8 +67,9 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
           <SkeletonCard key={index} />
         ))
       ) : talents.length > 0 ? (
-        talents.map((talent) => (
-          <Card key={talent._id} className="overflow-hidden">
+        talents.map((talent, index) => (
+          // FIX 1: Use a unique key by combining _id with index
+          <Card key={`${talent._id}-${index}`} className="overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
@@ -96,10 +103,10 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
                     {calculateExperience(talent.professionalInfo)} of experience
                   </span>
                 </div>
-                {/* Location and reason for rejection are commented out as per the original code */}
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {talent.skills?.map((skill, index) => (
-                    <Badge key={skill._id} variant="secondary">
+                  {talent.skills?.map((skill: Skill, skillIndex: number) => (
+                    // FIX 2: Use a unique key for skills list
+                    <Badge key={`${talent._id}-${skillIndex}`} variant="secondary">
                       {skill.name}
                     </Badge>
                   ))}
@@ -107,7 +114,6 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
               </div>
             </CardContent>
             <CardFooter className="flex justify-between pt-2">
-              {/* Rejected date is not available in the provided data */}
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -130,7 +136,8 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
           </Card>
         ))
       ) : (
-        <div>No rejected talents found.</div>
+        // FIX 3: Give a key to the empty state element
+        <div key="no-rejected-talents">No rejected talents found.</div>
       )}
     </div>
   );

@@ -173,6 +173,7 @@ const Market: React.FC = () => {
   }, [user.uid, filters, fetchData]);
 
   const handleApply = () => {
+    console.log("selected")
     fetchData(filters);
   };
 
