@@ -49,6 +49,7 @@
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.6",
     "embla-carousel-react": "^8.5.2",
+    "ethers": "^6.15.0",
     "firebase": "^10.11.0",
     "framer-motion": "^12.18.1",
     "html2canvas": "^1.4.1",

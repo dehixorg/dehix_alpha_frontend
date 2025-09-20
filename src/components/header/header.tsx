@@ -6,6 +6,7 @@ import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
+import { WalletConnectButton } from '../walletConnectButton';
 import {
   HoverCard,
   HoverCardContent,
@@ -14,7 +15,7 @@ import {
 import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
-
+ 
 interface HeaderProps {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
@@ -24,6 +25,7 @@ interface HeaderProps {
   setActiveConversation?: any;
   conversations?: any;
   activeConversation?: any;
+  showWalletButton?: boolean; // New prop to control wallet button visibility
 }
 
 interface BreadcrumbMenuItem {
@@ -39,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({
   conversations,
   activeConversation,
   setActiveConversation,
+  showWalletButton = true, // Default to showing the wallet button
 }) => {
   const user = useSelector((state: RootState) => state.user);
   const [connects, setConnects] = useState<number>(0);
@@ -98,24 +101,30 @@ const Header: React.FC<HeaderProps> = ({
         /> */}
       </div>
 
-      <HoverCard>
-        <div className="relative ml-auto flex-1 md:grow-0">
+      {/* Right side actions - using flexbox to organize them */}
+      <div className="flex items-center gap-3">
+        {/* Wallet Connect Button */}
+        {showWalletButton && <WalletConnectButton />}
+
+        {/* Connects/Rewards Display */}
+        <HoverCard>
           <HoverCardTrigger asChild>
             <DisplayConnectsDialog userId={user.uid} connects={connects} />
           </HoverCardTrigger>
+          
           <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
             {connects !== null
               ? `${formatConnects(connects)} rewards Available`
               : 'No rewards yet!'}
           </HoverCardContent>
-        </div>
-      </HoverCard>
+        </HoverCard>
 
-      {/* Notification Button */}
-      <NotificationButton />
+        {/* Notification Button */}
+        <NotificationButton />
 
-      {/* Profile Dropdown */}
-      <DropdownProfile setConnects={setConnects} />
+        {/* Profile Dropdown */}
+        <DropdownProfile setConnects={setConnects} />
+      </div>
     </header>
   );
 };
