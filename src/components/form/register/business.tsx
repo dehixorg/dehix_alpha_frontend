@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ToastAction } from '@radix-ui/react-toast';
+import { useEffect } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -355,6 +356,13 @@ function BusinessRegisterForm({
       setIsLoading(false);
     }
   };
+  useEffect(()=>{
+    const referralCode = searchParams.get('referral')
+    if(referralCode){
+      form.setValue('referralCode', referralCode)
+    }
+  
+  }, [searchParams, form])
 
   return (
     <Form {...form}>

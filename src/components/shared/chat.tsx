@@ -28,9 +28,7 @@ import { usePathname } from 'next/navigation';
 import {
   formatDistanceToNow,
   format,
-  isToday,
-  isYesterday,
-  isThisYear,
+ 
 } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -44,7 +42,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu,
+  DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -1074,12 +1072,7 @@ export function CardsChat({
                   })();
                   // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
                   const nextMsg = messages[index + 1];
-                  const showDateHeader =
-                    !nextMsg ||
-                    !isSameDay(
-                      new Date(message.timestamp),
-                      new Date(nextMsg.timestamp),
-                    );
+                
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
