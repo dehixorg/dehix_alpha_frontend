@@ -25,10 +25,7 @@ import {
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import {
-  formatDistanceToNow,
-  format,
-} from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify'; // <-- add import later
@@ -1026,7 +1023,7 @@ export function CardsChat({
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <div className="flex flex-col space-y-3 ">
-                <div  />
+                <div />
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1378,7 +1375,7 @@ export function CardsChat({
                             <Reply className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div >
+                      </div>
                       <div ref={messagesEndRef} />
                       {/* Date header (appears below current bubble due to flex-col-reverse order) */}
                     </React.Fragment>

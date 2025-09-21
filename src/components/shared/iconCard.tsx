@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
 import { ChevronRight } from 'lucide-react';
 
 import { Button, ButtonProps } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface IconCardProps {
   title: string;
   icon: ReactNode;
   description: string;
-  buttonProps?: ButtonProps; // Optional button props
+  buttonProps?: ButtonProps;
 }
 
 export const IconCard: React.FC<IconCardProps> = ({
@@ -50,13 +49,6 @@ export const IconCard: React.FC<IconCardProps> = ({
       </Tooltip>
     </div>
   );
-};
-
-// Define propTypes for IconCard
-IconCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  icon: PropTypes.node.isRequired, // Allow any type of node for the icon
-  description: PropTypes.string.isRequired,
 };
 
 export default IconCard;

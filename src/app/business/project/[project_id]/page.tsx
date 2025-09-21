@@ -200,8 +200,6 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
-      console.log('hi');
-      console.log(response);
 
       if (projectData) {
         setProject(projectData);

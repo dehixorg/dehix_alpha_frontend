@@ -1,9 +1,9 @@
-import { ChevronRight } from "lucide-react";
-import { Button, ButtonProps } from "@/components/ui/button";
+import { ChevronRight } from 'lucide-react';
+import { Button, ButtonProps } from '@/components/ui/button';
 
 export function ButtonIcon({
   onClick,
-  variant = "ghost",
+  variant = 'ghost',
   ...props
 }: ButtonProps) {
   return (
