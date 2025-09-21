@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet } from 'lucide-react';
 
+import { contractFunctions } from '@/lib/smartContract';
+import { useToast } from '@/hooks/use-toast';
+
 // Extend the Window interface to include ethereum
 declare global {
   interface Window {
@@ -29,6 +32,9 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showRewardPopup, setShowRewardPopup] = useState<boolean>(false);
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
+  const [tokenBalance, setTokenBalance] = useState<string>('0');
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+  const { toast } = useToast();
 
   // Check if wallet is already connected on mount
   useEffect(() => {
@@ -51,9 +57,33 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
     }
   };
 
+  const loadUserData = async (address: string) => {
+    try {
+      // Check if user is registered
+      const registered = await contractFunctions.isAddressRegistered(address);
+      setIsRegistered(registered);
+
+      // Get token balance
+      const balance = await contractFunctions.getBalance(address);
+      setTokenBalance(balance);
+
+      // Show reward popup only if not registered
+      if (!registered) {
+        setShowRewardPopup(true);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
   const connectWallet = async (): Promise<void> => {
     if (typeof window === 'undefined' || !window.ethereum) {
-      alert('Please install MetaMask or another Web3 wallet to connect.');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          'Please install MetaMask or another Web3 wallet to connect.',
+      });
       return;
     }
 
@@ -65,14 +95,22 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
       if (accounts.length > 0) {
         setWalletAddress(accounts[0]);
         setIsConnected(true);
-        setShowRewardPopup(true);
+        await loadUserData(accounts[0]);
       }
     } catch (error: any) {
       console.error('Error connecting wallet:', error);
       if (error.code === 4001) {
-        alert('Please connect your wallet to continue.');
+        toast({
+          variant: 'destructive',
+          title: 'Connection Cancelled',
+          description: 'Please connect your wallet to continue.',
+        });
       } else {
-        alert('Failed to connect wallet. Please try again.');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to connect wallet. Please try again.',
+        });
       }
     } finally {
       setIsConnecting(false);
@@ -86,13 +124,44 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
   };
 
   const handleClaimTokens = async (): Promise<void> => {
+    if (!walletAddress) return;
+
     setIsClaiming(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // simulate delay
-      console.log('Tokens claimed successfully!');
+      // Check if user is already registered
+      const registered =
+        await contractFunctions.isAddressRegistered(walletAddress);
+
+      if (registered) {
+        toast({
+          title: 'Already Registered',
+          description: 'You have already claimed your welcome reward.',
+        });
+        setShowRewardPopup(false);
+        return;
+      }
+
+      // Give reward tokens to the user
+      const tx = await contractFunctions.reward(walletAddress);
+
+      toast({
+        title: 'Success!',
+        description: '50 DXUT tokens have been claimed successfully!',
+      });
+
+      // Refresh balance
+      const balance = await contractFunctions.getBalance(walletAddress);
+      setTokenBalance(balance);
+      setIsRegistered(true);
       setShowRewardPopup(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error claiming tokens:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          error.message || 'Failed to claim tokens. Please try again.',
+      });
     } finally {
       setIsClaiming(false);
     }
@@ -134,6 +203,11 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             <span className="text-sm font-medium">
               {truncateAddress(walletAddress)}
+            </span>
+          </div>
+          <div className="flex items-center bg-blue-100 text-blue-800 px-3 py-2 rounded-lg border border-blue-200">
+            <span className="text-sm font-medium">
+              {parseFloat(tokenBalance).toFixed(2)} DXUT
             </span>
           </div>
           <button
