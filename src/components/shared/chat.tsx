@@ -194,7 +194,6 @@ export function CardsChat({
 
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
-  const[replyInput,setReplyInput] = useState("")
 
   // Reporting modal state & helpers
   const [openReport, setOpenReport] = useState(false);
