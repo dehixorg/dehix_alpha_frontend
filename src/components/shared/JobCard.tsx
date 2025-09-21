@@ -229,7 +229,6 @@ const JobCard: React.FC<JobCardProps> = ({
         day: 'numeric',
       });
     } catch (error) {
-      console.log('Bid count:', bidCount);
       console.error('Error formatting date:', error);
       return 'N/A';
     }

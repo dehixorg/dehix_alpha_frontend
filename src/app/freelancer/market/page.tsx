@@ -185,16 +185,13 @@ const Market: React.FC = () => {
       try {
         setIsLoading(true);
         const query = constructQueryString(appliedFilters);
-        console.log('Fetching jobs with query:', query);
 
         const jobsRes = await axiosInstance.get(
           `/project/freelancer/${user.uid}${query ? `?${query}` : ''}`,
           { signal },
         );
 
-        console.log('Jobs API response:', jobsRes.data);
         const allJobs = jobsRes.data?.data || [];
-        console.log('Parsed jobs:', allJobs);
 
         // Apply client-side filtering
         const filteredJobs = allJobs.filter((job: Project) => {
@@ -257,7 +254,6 @@ const Market: React.FC = () => {
           return dateB - dateA;
         });
 
-        console.log('Filtered jobs:', filteredJobs);
         setJobs(filteredJobs);
       } catch (err) {
         // Type guard to check if it's an Error object
@@ -288,10 +284,7 @@ const Market: React.FC = () => {
   );
   // Effect to fetch jobs when filters change or component mounts
   useEffect(() => {
-    console.log('Filters or user changed - current filters:', filters);
-
     if (!user?.uid) {
-      console.log('User not authenticated, skipping job fetch');
       return;
     }
 
@@ -303,7 +296,6 @@ const Market: React.FC = () => {
       if (!isMounted) return;
 
       try {
-        console.log('Initiating job fetch with filters:', filters);
         setIsLoading(true);
 
         // Create a clean filters object with all filter properties
@@ -321,7 +313,6 @@ const Market: React.FC = () => {
           signal,
         };
 
-        console.log('Sending filters to API:', fetchOptions);
         await fetchJobs(fetchOptions);
       } catch (error) {
         if (!signal.aborted && isMounted) {
@@ -385,7 +376,7 @@ const Market: React.FC = () => {
     });
 
     const queryString = params.toString();
-    console.log('Constructed query string:', queryString);
+
     return queryString;
   };
   const handleResize = () => {

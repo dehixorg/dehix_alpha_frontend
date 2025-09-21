@@ -48,8 +48,7 @@ const BidList = ({
           setHasBidAlready(true);
 
           // fetch from backend using interviewId + bidId
-          const data = await fetchInterviewBids(interview._id, myBid._id);
-          console.log('Fetched Bid Data:', data);
+          await fetchInterviewBids(interview._id, myBid._id);
         }
       } catch (error) {
         console.error(error);
