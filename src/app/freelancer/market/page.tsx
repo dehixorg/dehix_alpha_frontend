@@ -456,7 +456,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:pb-4 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -466,7 +466,7 @@ const Market: React.FC = () => {
             { label: 'Market', link: '#' },
           ]}
         />
-        <div className="px-4 sm:px-8 pt-2 pb-4">
+        <div className="px-4 sm:px-8 pb-4">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
