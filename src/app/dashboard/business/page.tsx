@@ -121,7 +121,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -144,7 +144,18 @@ export default function Dashboard() {
                 <div className="flex justify-between items-center">
                   <div>
                     <CardTitle className="text-2xl font-bold tracking-tight">
-                      Welcome back, {user?.name || 'User'}!
+                      Welcome Back,{' '}
+                      {user?.displayName
+                        ? user.displayName
+                            .split(' ')
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase(),
+                            )
+                            .join(' ')
+                        : 'User'}
+                      !
                     </CardTitle>
                     <CardDescription>
                       Here&lsquo;s what&lsquo;s happening with your projects
@@ -325,7 +336,7 @@ export default function Dashboard() {
           {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <Card>
+            <Card className="bg-muted/20">
               <CardHeader>
                 <CardTitle className="text-lg">Quick Actions</CardTitle>
               </CardHeader>
