@@ -6,7 +6,7 @@ import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
-import { WalletConnectButton } from '../walletConnectButton';
+import WalletConnectButton from '../walletConnectButton';
 import {
   HoverCard,
   HoverCardContent,
