@@ -5,7 +5,7 @@ export const DXUT_NFT_ADDRESS: string = '0x...'; // Replace with actual DXUT NFT
 
 // ABI for DXUTPlatform contract
 export const CONTRACT_ABI: any[] = [
-	{
+  {
     inputs: [
       {
         internalType: 'address',
@@ -966,9 +966,9 @@ export const CONTRACT_ABI: any[] = [
 // Contract interaction functions
 export const getContract = async () => {
   if (typeof window === 'undefined') return null;
-  
+
   const { ethers } = await import('ethers');
-  
+
   // Check if MetaMask is installed
   if (!window.ethereum) {
     throw new Error('MetaMask is not installed');
@@ -976,7 +976,7 @@ export const getContract = async () => {
 
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
-  
+
   return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 };
 
@@ -986,10 +986,10 @@ export const contractFunctions = {
   createEscrow: async (freelancerAddress: string, amount: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const { ethers } = await import('ethers');
     const tx = await contract.createEscrow(freelancerAddress, {
-      value: ethers.parseEther(amount)
+      value: ethers.parseEther(amount),
     });
     return await tx.wait();
   },
@@ -998,7 +998,7 @@ export const contractFunctions = {
   releaseEscrow: async (escrowId: number) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const tx = await contract.releaseEscrow(escrowId);
     return await tx.wait();
   },
@@ -1007,7 +1007,7 @@ export const contractFunctions = {
   refundClient: async (escrowId: number) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const tx = await contract.refundClient(escrowId);
     return await tx.wait();
   },
@@ -1016,7 +1016,7 @@ export const contractFunctions = {
   mintInterviewNFT: async (freelancerAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const tx = await contract.mintInterviewNFT(freelancerAddress);
     return await tx.wait();
   },
@@ -1025,7 +1025,7 @@ export const contractFunctions = {
   reward: async (toAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const tx = await contract.reward(toAddress);
     return await tx.wait();
   },
@@ -1034,7 +1034,7 @@ export const contractFunctions = {
   isAddressRegistered: async (userAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     return await contract.isAddressRegistered(userAddress);
   },
 
@@ -1042,7 +1042,7 @@ export const contractFunctions = {
   getBalance: async (userAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     const { ethers } = await import('ethers');
     const balance = await contract.balanceOf(userAddress);
     return ethers.formatEther(balance);
@@ -1052,7 +1052,7 @@ export const contractFunctions = {
   getEscrow: async (escrowId: number) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     return await contract.escrows(escrowId);
   },
 
@@ -1060,7 +1060,7 @@ export const contractFunctions = {
   getEscrowCounter: async () => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
-    
+
     return await contract.escrowCounter();
-  }
+  },
 };
