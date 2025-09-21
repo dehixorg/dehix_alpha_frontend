@@ -10,7 +10,9 @@ interface Transaction {
   hash?: string;
 }
 
-interface PlaceholderTransactionsProps {
+interface DisplayConnectsDialogProps {
+  userId: string;
+  connects: number;
   className?: string;
 }
 
@@ -66,7 +68,7 @@ const mockTransactions: Transaction[] = [
   }
 ];
 
-const PlaceholderTransactions: React.FC<PlaceholderTransactionsProps> = ({ className = '' }) => {
+const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, connects, className = '' }) => {
   const [filter, setFilter] = useState('ALL');
   const [filteredData, setFilteredData] = useState<Transaction[]>(mockTransactions);
   const [isOpen, setIsOpen] = useState(false);
@@ -138,7 +140,7 @@ const PlaceholderTransactions: React.FC<PlaceholderTransactionsProps> = ({ class
       >
         <Activity size={20} className="text-gray-300" />
         <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-          {mockTransactions.length}
+          {connects}
         </span>
       </button>
     );
@@ -231,4 +233,4 @@ const PlaceholderTransactions: React.FC<PlaceholderTransactionsProps> = ({ class
   );
 };
 
-export default PlaceholderTransactions;
+export default DisplayConnectsDialog;
