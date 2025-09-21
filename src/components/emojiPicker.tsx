@@ -9,11 +9,17 @@ import {
   PopoverContent,
 } from '@/components/ui/popover'; // Import Popover components
 
+interface EmojiPickerProps {
+  onSelect: (emoji: string) => void;
+  'aria-label'?: string;
+  className?: string;
+}
+
 export const EmojiPicker = ({
   onSelect,
-}: {
-  onSelect: (emoji: string) => void;
-}) => {
+  'aria-label': ariaLabel = 'Select emoji',
+  className = '',
+}: EmojiPickerProps) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   // Handle closing the Popover when an emoji is selected
@@ -25,7 +31,12 @@ export const EmojiPicker = ({
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
-        <Button className="my-auto " variant="link" size="sm">
+        <Button 
+          className={`my-auto ${className}`} 
+          variant="link" 
+          size="sm"
+          aria-label={ariaLabel}
+        >
           <Smile className="h-4 w-4 " />
         </Button>
       </PopoverTrigger>
