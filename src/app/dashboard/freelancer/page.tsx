@@ -3,6 +3,7 @@ import { Activity, CheckCircle, Clock, CalendarX2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState } from 'react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import StatItem from '@/components/shared/StatItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RootState } from '@/lib/store';
@@ -85,7 +86,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen  w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen  w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -107,7 +108,18 @@ export default function Dashboard() {
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <CardTitle className="text-2xl font-bold tracking-tight">
-                      Welcome back, {user?.name || 'User'}!
+                      Welcome Back,{' '}
+                      {user?.displayName
+                        ? user.displayName
+                            .split(' ')
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase(),
+                            )
+                            .join(' ')
+                        : 'User'}
+                      !
                     </CardTitle>
                     <CardDescription className="mt-2">
                       Here&lsquo;s what&lsquo;s happening with your projects
@@ -122,7 +134,14 @@ export default function Dashboard() {
                   </Avatar>
                 </div>
               </CardHeader>
-              <ProfileCompletion userId={user.uid} />
+              {user?.uid ? (
+                <ProfileCompletion userId={user.uid} />
+              ) : (
+                <div className="p-4">
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              )}
             </Card>
             {/* Project Status Cards */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 
 import { AddButton } from '@/components/ui/AddButton';
@@ -42,13 +42,6 @@ export const WorkExperienceInfo: React.FC<WorkExperienceInfoProps> = ({
     };
     setWorkExperienceData(updatedWorkExperience);
   };
-  //
-  useEffect(() => {
-    console.log(
-      'Updated Work Experience Data in SummaryInfo:',
-      workExperienceData,
-    );
-  }, [workExperienceData]);
 
   const handleAddWorkExperience = () => {
     setWorkExperienceData([

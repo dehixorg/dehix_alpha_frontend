@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface ProjectDraftState {
+export interface ProjectDraftState {
   draftedProjects: string[];
 }
 

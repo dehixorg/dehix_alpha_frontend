@@ -142,7 +142,7 @@ export function KYCForm({ user_id }: { user_id: string }) {
           'liveCaptureUrl',
         );
       }
-      console.log(payload);
+
       await axiosInstance.put(`/business/kyc`, payload);
       setKycStatus('APPLIED');
 

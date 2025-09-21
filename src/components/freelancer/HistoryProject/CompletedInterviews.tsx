@@ -67,7 +67,7 @@ export default function HistoryInterviews() {
     try {
       setLoading(true);
       const data = await fetchCompletedInterviews(user.uid);
-      console.log(data);
+      
       setInterviews(data);
       await fetchInterviewerDetails(data);
     } catch (error) {
@@ -124,7 +124,7 @@ export default function HistoryInterviews() {
       }
 
       setInterviewerDetails(detailsMap);
-      // console.log(detailsMap);
+
     } catch (error) {
       console.error('Failed to fetch interviewer details:', error);
     }
@@ -199,7 +199,7 @@ export default function HistoryInterviews() {
   const handleShowMore = () => {
     setDisplayCount((prev) => prev + 5);
   };
-  //console.log(interviews);
+
   const displayedInterviews = interviews.slice(0, displayCount);
   const hasMoreInterviews = displayCount < interviews.length;
 
