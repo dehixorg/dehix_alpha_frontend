@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Eye,
   EyeOff,
   MoreVertical,
   Clock,
@@ -11,12 +10,14 @@ import {
   Bookmark,
   Share2,
   X,
+  CircleAlert,
+  FileText,
 } from 'lucide-react';
-import axios from 'axios';
 import Link from 'next/link';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { usePathname } from 'next/navigation';
 
+import { toast } from '../ui/use-toast';
 import {
   Card,
   CardContent,
@@ -31,6 +32,19 @@ import { NewReportTab } from '../report-tabs/NewReportTabs';
 import { getReportTypeFromPath } from '../../utils/getReporttypeFromPath';
 
 import StatItem from './StatItem';
+
+import { AppDispatch, RootState } from '@/lib/store';
+import { axiosInstance } from '@/lib/axiosinstance';
+import {
+  addDraftedProject,
+  removeDraftedProject,
+} from '@/lib/projectDraftSlice';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 interface Project {
   _id: string;
@@ -53,18 +67,6 @@ interface Project {
   proposals?: number;
 }
 
-import { RootState } from '@/lib/store';
-import {
-  addDraftedProject,
-  removeDraftedProject,
-} from '@/lib/projectDraftSlice';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-
 // Simple loader/spinner component
 const Loader = () => (
   <div className="w-5 h-5 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
@@ -81,19 +83,17 @@ const JobCard: React.FC<JobCardProps> = ({
   onNotInterested,
   bidExist,
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const draftedProjects = useSelector(
-    (state: RootState) => state.projectDraft.draftedProjects,
+  const { draftedProjects } = useSelector(
+    (state: RootState) => state.projectDraft,
   );
 
   const isDrafted = draftedProjects?.includes(job._id);
   const user = useSelector((state: RootState) => state.user);
 
-  const toggleExpand = () => setExpanded(!expanded);
   const [openReport, setOpenReport] = useState(false);
   const pathname = usePathname();
   const reportType = getReportTypeFromPath(pathname);
@@ -108,34 +108,59 @@ const JobCard: React.FC<JobCardProps> = ({
   };
 
   const handleLike = async () => {
+    if (loading) return;
+
     setLoading(true);
     try {
-      const response = await axios.put(`/api/freelancer/draft`, {
+      const response = await axiosInstance.put(`/freelancer/draft`, {
         project_id: job._id,
       });
 
       if (response.status === 200) {
         dispatch(addDraftedProject(job._id));
+        toast({
+          title: 'Added to saved projects',
+          description: 'You can find this project in your saved items.',
+          variant: 'default',
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add project to draft:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to save project',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleUnlike = async () => {
+    if (loading) return;
+
     setLoading(true);
     try {
-      const response = await axios.delete('/api/freelancer/draft', {
+      const response = await axiosInstance.delete('/freelancer/draft', {
         data: { project_id: job._id },
       });
 
       if (response.status === 200) {
         dispatch(removeDraftedProject(job._id));
+        toast({
+          title: 'Removed from saved projects',
+          description: 'This project has been removed from your saved items.',
+          variant: 'default',
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to remove project from draft:', error);
+      toast({
+        title: 'Error',
+        description:
+          error.response?.data?.message || 'Failed to remove project',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -207,7 +232,7 @@ const JobCard: React.FC<JobCardProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`rounded-full h-9 w-9 ${isDrafted ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    className={`h-9 w-9 ${isDrafted ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                     onClick={
                       loading
                         ? undefined
@@ -230,7 +255,7 @@ const JobCard: React.FC<JobCardProps> = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="h-9 w-9 text-gray-500"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
@@ -240,11 +265,19 @@ const JobCard: React.FC<JobCardProps> = ({
                         onClick={() => setOpenReport(true)}
                         className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
                       >
-                        Report Project
+                        <CircleAlert className="mr-2 h-4 w-4" />
+                        <span>Report</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="cursor-pointer">
                         <Share2 className="mr-2 h-4 w-4" />
                         <span>Share</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={onNotInterested}
+                        className="text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer"
+                      >
+                        <EyeOff className="mr-2 h-4 w-4" />
+                        <span>Not Interested</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -296,36 +329,6 @@ const JobCard: React.FC<JobCardProps> = ({
 
           <CardContent className="px-6 pb-4">
             <div className="space-y-6">
-              {/* Project Description */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Project Description
-                </h3>
-                <div
-                  className={`prose prose-sm max-w-none text-gray-600 dark:text-gray-300 ${!expanded ? 'line-clamp-3' : ''}`}
-                >
-                  {job.description || 'No description provided.'}
-                </div>
-                {job.description && job.description.length > 150 && (
-                  <button
-                    onClick={toggleExpand}
-                    className="text-primary text-sm font-medium mt-2 hover:underline inline-flex items-center"
-                  >
-                    {expanded ? (
-                      <>
-                        <span>Show less</span>
-                        <EyeOff className="ml-1 h-4 w-4" />
-                      </>
-                    ) : (
-                      <>
-                        <span>Read more</span>
-                        <Eye className="ml-1 h-4 w-4" />
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
               {/* Skills */}
               <div>
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
@@ -379,7 +382,7 @@ const JobCard: React.FC<JobCardProps> = ({
           <CardFooter className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <Briefcase className="h-4 w-4 flex-shrink-0" />
+                <FileText className="h-4 w-4 flex-shrink-0" />
                 <span>{job.proposals || 0} proposals</span>
                 {job.deadline && (
                   <span className="hidden sm:inline">
@@ -405,22 +408,6 @@ const JobCard: React.FC<JobCardProps> = ({
               </div>
             </div>
           </CardFooter>
-          <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground p-4 bg-gray-50 dark:bg-gray-800/50 border-t">
-            <span>
-              Posted: {job.createdAt ? formatDate(job.createdAt) : 'N/A'}
-            </span>
-          </div>
-          <div className="flex gap-2 p-4 bg-gray-50 dark:bg-gray-800/50 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onNotInterested}
-              className="text-gray-500"
-            >
-              <EyeOff className="h-4 w-4 mr-1" />
-              Not Interested
-            </Button>
-          </div>
         </Card>
       </div>
       {openReport && (

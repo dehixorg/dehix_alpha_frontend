@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Heart, X } from 'lucide-react';
+import { Bookmark, X } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -30,7 +30,7 @@ import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
-import { DraftSheet } from '@/components/shared/DraftSheet';
+
 interface FilterState {
   projects: string[];
   jobType: string[];
@@ -98,7 +98,6 @@ const Market: React.FC = () => {
   const [openItem, setOpenItem] = useState<string | null>(
     'Filter by Project Domains',
   );
-  const [openSheet, setOpenSheet] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     jobType: [],
     domain: [],
@@ -331,9 +330,6 @@ const Market: React.FC = () => {
               domains to enhance your portfolio.
             </p>
           </div>
-          <div className="w-full sm:w-[30%] flex justify-end pr-4 sm:pr-8">
-            <DraftSheet open={openSheet} setOpen={setOpenSheet} />
-          </div>
         </div>
       </div>
 
@@ -380,8 +376,8 @@ const Market: React.FC = () => {
                     htmlFor="favourites"
                     className="text-sm font-medium text-foreground cursor-pointer select-none flex items-center space-x-2"
                   >
-                    <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                    <span>Show Favourites</span>
+                    <Bookmark className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                    <span>Drafts</span>
                   </label>
                 </div>
               </CardContent>
@@ -601,8 +597,8 @@ const Market: React.FC = () => {
                       htmlFor="mobile-favourites"
                       className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer select-none flex items-center space-x-2"
                     >
-                      <Heart className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
-                      <span>Show Favourites Only</span>
+                      <Bookmark className="w-4 h-4 cursor-pointer fill-red-600 text-red-600" />
+                      <span>Drafts</span>
                     </label>
                   </div>
                 </div>
