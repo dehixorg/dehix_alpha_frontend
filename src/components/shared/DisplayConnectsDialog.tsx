@@ -85,7 +85,7 @@ const DisplayConnectsDialog = React.forwardRef<
   useEffect(() => {
     setFilteredData(() =>
       filter === 'ALL'
-        ? (data ?? [])
+        ? data ?? []
         : (data ?? []).filter((item: any) => item.status === filter),
     );
   }, [data, filter]);
