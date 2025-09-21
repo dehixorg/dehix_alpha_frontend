@@ -1104,11 +1104,17 @@ export function CardsChat({
                                 src={primaryUser.profilePic}
                                 alt={message.senderId}
                               />
-                              <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                                {primaryUser.userName
-                                  ? primaryUser.userName.charAt(0).toUpperCase()
-                                  : 'U'}
-                              </AvatarFallback>
+                             
+
+                <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                    {(conversation.type === 'group'
+                        ? conversation.groupName?.charAt(0)
+                        : conversation.participantDetails?.[
+                            conversation.participants.find((p) => p !== user.uid) || ''
+                        ]?.userName?.charAt(0) || 'U'
+                    )?.toUpperCase()}
+                </AvatarFallback>
+
                             </Avatar>
                           </div>
                         )}
@@ -1396,8 +1402,7 @@ export function CardsChat({
                           </Button>
                         </div>
                       </div>
-                      
-                      {/* End of message container */}
+
                       <div ref={messagesEndRef} />
                     </div>
                   );
