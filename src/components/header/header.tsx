@@ -15,7 +15,7 @@ import {
 import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
- 
+
 interface HeaderProps {
   menuItemsTop: MenuItem[];
   menuItemsBottom: MenuItem[];
@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
           <HoverCardTrigger asChild>
             <DisplayConnectsDialog userId={user.uid} connects={connects} />
           </HoverCardTrigger>
-          
+
           <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
             {connects !== null
               ? `${formatConnects(connects)} rewards Available`

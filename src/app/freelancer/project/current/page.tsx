@@ -1,14 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Users, MapPin, CheckCircle, Clock, Building2 } from 'lucide-react';
+import {
+  Calendar,
+  Users,
+  MapPin,
+  CheckCircle,
+  Clock,
+  Building2,
+} from 'lucide-react';
 
 // Enums
 enum StatusEnum {
   ACTIVE = 'ACTIVE',
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 // Interfaces
@@ -48,7 +55,11 @@ interface ProjectCardProps {
   onCompleteProject: (projectId: string) => Promise<void>;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProject }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  project,
+  type,
+  onCompleteProject,
+}) => {
   const [isCompleting, setIsCompleting] = useState<boolean>(false);
 
   const handleCompleteProject = async (): Promise<void> => {
@@ -67,7 +78,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProj
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -97,7 +108,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProj
         <h3 className="text-xl font-semibold text-white line-clamp-2">
           {project.projectName}
         </h3>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.status)}`}>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.status)}`}
+        >
           {project.status || 'Active'}
         </span>
       </div>
@@ -117,14 +130,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProj
       {/* Skills Required */}
       <div className="mb-4">
         <div className="flex flex-wrap gap-2">
-          {project.skillsRequired?.slice(0, 4).map((skill: string, index: number) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-blue-900/30 text-blue-300 border border-blue-800/30 rounded-full text-xs font-medium"
-            >
-              {skill}
-            </span>
-          ))}
+          {project.skillsRequired
+            ?.slice(0, 4)
+            .map((skill: string, index: number) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-blue-900/30 text-blue-300 border border-blue-800/30 rounded-full text-xs font-medium"
+              >
+                {skill}
+              </span>
+            ))}
           {project.skillsRequired?.length > 4 && (
             <span className="px-2 py-1 bg-gray-800 text-gray-400 border border-gray-700 rounded-full text-xs">
               +{project.skillsRequired.length - 4} more
@@ -169,7 +184,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProj
         <div className="mb-4">
           <div className="flex items-center text-sm text-gray-400">
             <Users className="w-4 h-4 mr-2 text-gray-500" />
-            <span>Team: {project.team.length} member{project.team.length !== 1 ? 's' : ''}</span>
+            <span>
+              Team: {project.team.length} member
+              {project.team.length !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
       )}
@@ -179,28 +197,28 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, type, onCompleteProj
         <div className="text-xs text-gray-500">
           Created: {formatDate(project.createdAt)}
         </div>
-        
+
         {/* Complete Project Button */}
         <button
           onClick={handleCompleteProject}
           disabled={isCompleting || isProjectCompleted()}
           className={`
             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-            ${isProjectCompleted()
-              ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-              : isCompleting
-                ? 'bg-green-900/30 text-green-400 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-500 active:bg-green-700'
+            ${
+              isProjectCompleted()
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : isCompleting
+                  ? 'bg-green-900/30 text-green-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-500 active:bg-green-700'
             }
           `}
         >
           <CheckCircle className="w-4 h-4" />
-          {isCompleting 
-            ? 'Completing...' 
+          {isCompleting
+            ? 'Completing...'
             : isProjectCompleted()
-              ? 'Completed' 
-              : 'Complete Project'
-          }
+              ? 'Completed'
+              : 'Complete Project'}
         </button>
       </div>
     </div>
@@ -217,24 +235,32 @@ const ProjectCardDemo: React.FC = () => {
     {
       _id: '1',
       projectName: 'E-commerce Website Development',
-      description: 'Build a modern, responsive e-commerce website with payment integration, user authentication, and admin dashboard. The project requires expertise in React, Node.js, and MongoDB.',
+      description:
+        'Build a modern, responsive e-commerce website with payment integration, user authentication, and admin dashboard. The project requires expertise in React, Node.js, and MongoDB.',
       email: 'client@example.com',
       companyName: 'TechStart Inc.',
       start: new Date('2024-01-15'),
       end: new Date('2024-04-15'),
-      skillsRequired: ['React', 'Node.js', 'MongoDB', 'Payment Gateway', 'REST API'],
+      skillsRequired: [
+        'React',
+        'Node.js',
+        'MongoDB',
+        'Payment Gateway',
+        'REST API',
+      ],
       experience: 'Mid-level',
       role: 'Full Stack Developer',
       projectType: 'Web Development',
       status: StatusEnum.ACTIVE,
       team: ['dev1', 'dev2'],
       createdAt: new Date('2024-01-10'),
-      updatedAt: new Date('2024-01-10')
+      updatedAt: new Date('2024-01-10'),
     },
     {
       _id: '2',
       projectName: 'Mobile App UI/UX Design',
-      description: 'Design a modern and intuitive mobile application interface for a fitness tracking app. Includes wireframes, prototypes, and final designs.',
+      description:
+        'Design a modern and intuitive mobile application interface for a fitness tracking app. Includes wireframes, prototypes, and final designs.',
       email: 'design@example.com',
       companyName: 'FitLife Studios',
       start: new Date('2024-02-01'),
@@ -246,12 +272,13 @@ const ProjectCardDemo: React.FC = () => {
       status: StatusEnum.ACTIVE,
       team: ['designer1'],
       createdAt: new Date('2024-01-25'),
-      updatedAt: new Date('2024-01-25')
+      updatedAt: new Date('2024-01-25'),
     },
     {
       _id: '3',
       projectName: 'Data Analysis Dashboard',
-      description: 'Create an analytics dashboard for business intelligence. Already completed and delivered to client.',
+      description:
+        'Create an analytics dashboard for business intelligence. Already completed and delivered to client.',
       email: 'analytics@example.com',
       companyName: 'DataViz Corp',
       start: new Date('2023-12-01'),
@@ -263,23 +290,23 @@ const ProjectCardDemo: React.FC = () => {
       status: StatusEnum.COMPLETED,
       team: ['analyst1'],
       createdAt: new Date('2023-11-25'),
-      updatedAt: new Date('2024-01-30')
-    }
+      updatedAt: new Date('2024-01-30'),
+    },
   ]);
 
   const handleCompleteProject = async (projectId: string): Promise<void> => {
     // Simulate API call
-    await new Promise<void>(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise<void>((resolve) => setTimeout(resolve, 1500));
+
     // Update project status
-    setProjects((prevProjects: Project[]) => 
-      prevProjects.map((project: Project) => 
-        project._id === projectId 
+    setProjects((prevProjects: Project[]) =>
+      prevProjects.map((project: Project) =>
+        project._id === projectId
           ? { ...project, status: StatusEnum.COMPLETED, updatedAt: new Date() }
-          : project
-      )
+          : project,
+      ),
     );
-    
+
     console.log(`Project ${projectId} completed successfully!`);
   };
 
@@ -287,9 +314,11 @@ const ProjectCardDemo: React.FC = () => {
     <div className="p-8 bg-gray-950 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Current Projects</h1>
-        <p className="text-gray-400">Browse and manage your active freelance projects</p>
+        <p className="text-gray-400">
+          Browse and manage your active freelance projects
+        </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project: Project) => (
           <ProjectCard

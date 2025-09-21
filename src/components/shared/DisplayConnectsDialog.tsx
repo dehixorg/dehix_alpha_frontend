@@ -20,19 +20,19 @@ interface DisplayConnectsDialogProps {
 const mockTransactions: Transaction[] = [
   {
     id: '1',
-    amount: 50.50,
+    amount: 50.5,
     status: 'COMPLETED',
     dateTime: '2024-03-15T10:30:00Z',
     type: 'RECEIVE',
-    hash: '0x1234...abcd'
+    hash: '0x1234...abcd',
   },
   {
     id: '2',
-    amount: 10.00,
+    amount: 10.0,
     status: 'PENDING',
     dateTime: '2024-03-14T14:20:00Z',
     type: 'SEND',
-    hash: '0x5678...efgh'
+    hash: '0x5678...efgh',
   },
   {
     id: '3',
@@ -40,15 +40,15 @@ const mockTransactions: Transaction[] = [
     status: 'COMPLETED',
     dateTime: '2024-03-13T09:15:00Z',
     type: 'SWAP',
-    hash: '0x9abc...ijkl'
+    hash: '0x9abc...ijkl',
   },
   {
     id: '4',
-    amount: 20.00,
+    amount: 20.0,
     status: 'ACCEPTED',
     dateTime: '2024-03-12T16:45:00Z',
     type: 'STAKE',
-    hash: '0xdef0...mnop'
+    hash: '0xdef0...mnop',
   },
   {
     id: '5',
@@ -56,28 +56,33 @@ const mockTransactions: Transaction[] = [
     status: 'REJECTED',
     dateTime: '2024-03-11T11:30:00Z',
     type: 'SEND',
-    hash: '0x1357...qrst'
+    hash: '0x1357...qrst',
   },
   {
     id: '6',
-    amount: 15.00,
+    amount: 15.0,
     status: 'COMPLETED',
     dateTime: '2024-03-10T13:20:00Z',
     type: 'RECEIVE',
-    hash: '0x2468...uvwx'
-  }
+    hash: '0x2468...uvwx',
+  },
 ];
 
-const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, connects, className = '' }) => {
+const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({
+  userId,
+  connects,
+  className = '',
+}) => {
   const [filter, setFilter] = useState('ALL');
-  const [filteredData, setFilteredData] = useState<Transaction[]>(mockTransactions);
+  const [filteredData, setFilteredData] =
+    useState<Transaction[]>(mockTransactions);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setFilteredData(() =>
       filter === 'ALL'
         ? mockTransactions
-        : mockTransactions.filter((item) => item.status === filter)
+        : mockTransactions.filter((item) => item.status === filter),
     );
   }, [filter]);
 
@@ -151,7 +156,9 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
       <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-4xl max-h-[80vh] w-full mx-4 flex flex-col">
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">Transaction History</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Transaction History
+            </h2>
             <button
               onClick={() => setIsOpen(false)}
               className="text-gray-400 hover:text-white text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-800"
@@ -159,7 +166,7 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
               ×
             </button>
           </div>
-          
+
           <div className="flex items-center gap-4 mt-4">
             <div className="relative">
               <select
@@ -183,11 +190,21 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
             <table className="min-w-full">
               <thead className="sticky top-0 bg-gray-800 border-b border-gray-700">
                 <tr>
-                  <th className="text-left py-3 px-6 font-medium text-gray-300">Type</th>
-                  <th className="text-center py-3 px-6 font-medium text-gray-300">Amount</th>
-                  <th className="text-center py-3 px-6 font-medium text-gray-300">Status</th>
-                  <th className="text-center py-3 px-6 font-medium text-gray-300">Date</th>
-                  <th className="text-center py-3 px-6 font-medium text-gray-300">Hash</th>
+                  <th className="text-left py-3 px-6 font-medium text-gray-300">
+                    Type
+                  </th>
+                  <th className="text-center py-3 px-6 font-medium text-gray-300">
+                    Amount
+                  </th>
+                  <th className="text-center py-3 px-6 font-medium text-gray-300">
+                    Status
+                  </th>
+                  <th className="text-center py-3 px-6 font-medium text-gray-300">
+                    Date
+                  </th>
+                  <th className="text-center py-3 px-6 font-medium text-gray-300">
+                    Hash
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
@@ -195,7 +212,9 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
                   filteredData.map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-gray-800">
                       <td className="py-4 px-6">
-                        <span className={`font-medium ${getTypeColor(transaction.type)}`}>
+                        <span
+                          className={`font-medium ${getTypeColor(transaction.type)}`}
+                        >
                           {transaction.type}
                         </span>
                       </td>
@@ -203,7 +222,9 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
                         {transaction.amount.toFixed(2)} DXUT
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getBadgeColor(transaction.status)}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getBadgeColor(transaction.status)}`}
+                        >
                           {transaction.status}
                         </span>
                       </td>
@@ -219,7 +240,10 @@ const DisplayConnectsDialog: React.FC<DisplayConnectsDialogProps> = ({ userId, c
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center font-semibold text-gray-400">
+                    <td
+                      colSpan={5}
+                      className="py-8 text-center font-semibold text-gray-400"
+                    >
                       No Transactions Found
                     </td>
                   </tr>

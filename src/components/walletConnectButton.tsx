@@ -9,7 +9,10 @@ declare global {
     ethereum?: {
       request: (args: { method: string }) => Promise<any>;
       on: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener: (event: string, callback: (...args: any[]) => void) => void;
+      removeListener: (
+        event: string,
+        callback: (...args: any[]) => void,
+      ) => void;
     };
   }
 }
@@ -18,7 +21,9 @@ interface WalletConnectButtonProps {
   className?: string;
 }
 
-const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '' }) => {
+const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
+  className = '',
+}) => {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -33,7 +38,9 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '
   const checkWalletConnection = async (): Promise<void> => {
     if (typeof window !== 'undefined' && window.ethereum) {
       try {
-        const accounts: string[] = await window.ethereum.request({ method: 'eth_accounts' });
+        const accounts: string[] = await window.ethereum.request({
+          method: 'eth_accounts',
+        });
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
           setIsConnected(true);
@@ -52,7 +59,9 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '
 
     setIsConnecting(true);
     try {
-      const accounts: string[] = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts: string[] = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
       if (accounts.length > 0) {
         setWalletAddress(accounts[0]);
         setIsConnected(true);
@@ -79,7 +88,7 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '
   const handleClaimTokens = async (): Promise<void> => {
     setIsClaiming(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // simulate delay
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // simulate delay
       console.log('Tokens claimed successfully!');
       setShowRewardPopup(false);
     } catch (error) {
@@ -109,7 +118,10 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '
       window.ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum?.removeListener(
+          'accountsChanged',
+          handleAccountsChanged,
+        );
       };
     }
   }, []);
@@ -145,7 +157,8 @@ const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ className = '
                 </h3>
                 <p className="text-gray-600 mb-6">
                   As a new user you are rewarded{' '}
-                  <span className="font-bold text-blue-600">50 DXUT</span> tokens
+                  <span className="font-bold text-blue-600">50 DXUT</span>{' '}
+                  tokens
                 </p>
                 <div className="space-y-3">
                   <button
