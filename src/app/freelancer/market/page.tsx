@@ -420,7 +420,7 @@ const Market: React.FC = () => {
   const activeFilterCount = getActiveFilterCount(filters);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -703,9 +703,12 @@ const Market: React.FC = () => {
                     key={job._id}
                     job={job}
                     onNotInterested={() => handleRemoveJob(job._id)}
-                    bidExist={
-                      Array.isArray(job.profiles) &&
-                      job.profiles.some((p: any) => bidProfiles.includes(p._id))
+                    bidCount={
+                      Array.isArray(job.profiles)
+                        ? job.profiles.filter((p: any) =>
+                            bidProfiles.includes(p._id),
+                          ).length
+                        : 0
                     }
                   />
                 ))}
