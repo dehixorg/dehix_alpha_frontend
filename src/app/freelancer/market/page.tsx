@@ -2,15 +2,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Bookmark,
-  Sliders,
-  Search,
-  Briefcase,
-  Tag,
-  DollarSign,
-  Layers,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
@@ -101,8 +93,6 @@ const Market: React.FC = () => {
   );
   const dispatch = useDispatch();
   const [, setShowFilters] = useState(true);
-
-  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     jobType: [],
     domain: [],
