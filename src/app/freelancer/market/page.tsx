@@ -21,17 +21,12 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 import { Button } from '@/components/ui/button';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { RootState } from '@/lib/store';
 import Header from '@/components/header/header';
 import JobCard from '@/components/shared/JobCard';
 import { setDraftedProjects } from '@/lib/projectDraftSlice';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { FilterSheet } from '@/components/market/FilterSheet';
 
 interface FilterState {
   projects: string[];
@@ -90,24 +85,15 @@ export interface Project {
   }[];
 }
 
-// Filter section component
-const FilterSection = ({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: any;
-  children: React.ReactNode;
-}) => (
-  <div className="space-y-4 mb-6">
-    <div className="flex items-center space-x-2 text-sm font-medium text-muted-foreground">
-      <Icon className="h-4 w-4" />
-      <span>{title}</span>
-    </div>
-    <div className="pl-6">{children}</div>
-  </div>
-);
+// Active filters count for badge
+const getActiveFilterCount = (filters: FilterState) => {
+  return Object.values(filters).reduce((count, value) => {
+    if (Array.isArray(value)) return count + (value?.length || 0);
+    if (typeof value === 'string' && value) return count + 1;
+    if (typeof value === 'boolean' && value) return count + 1;
+    return count;
+  }, 0);
+};
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
   const draftedProjects = useSelector(
@@ -441,16 +427,10 @@ const Market: React.FC = () => {
       });
     }
   };
-  // Active filters count for badge
-  const activeFilterCount = Object.values(filters).reduce((count, value) => {
-    if (Array.isArray(value)) return count + (value?.length || 0);
-    if (typeof value === 'string' && value) return count + 1;
-    if (typeof value === 'boolean' && value) return count + 1;
-    return count;
-  }, 0);
+  const activeFilterCount = getActiveFilterCount(filters);
 
   return (
-    <div className="flex min-h-screen bg-background w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -477,320 +457,29 @@ const Market: React.FC = () => {
                   Browse through available projects and find your next gig
                 </p>
               </div>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 self-start"
-                  >
-                    <Sliders className="h-4 w-4" />
-                    <span>Filters</span>
-                    {activeFilterCount > 0 && (
-                      <Badge variant="secondary" className="px-1.5 py-0.5">
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent
-                  side="right"
-                  className="w-[350px] sm:w-[400px] p-0 overflow-y-auto"
-                >
-                  <div className="h-full flex flex-col">
-                    <div className="sticky top-0 z-10 bg-background border-b p-4">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Filters</h2>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setFilters({
-                              jobType: [],
-                              domain: [],
-                              skills: [],
-                              projects: [],
-                              projectDomain: [],
-                              sorting: [],
-                              minRate: '',
-                              maxRate: '',
-                              favourites: false,
-                              consultant: false,
-                            });
-                          }}
-                        >
-                          Reset all
-                        </Button>
-                      </div>
-                    </div>
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-6">
-                        <FilterSection title="Project Type" icon={Layers}>
-                          <div className="space-y-2">
-                            {['Fixed Price', 'Hourly', 'Milestone'].map(
-                              (type) => (
-                                <div
-                                  key={type}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <Checkbox
-                                    id={`desktop-type-${type}`}
-                                    checked={filters.jobType.includes(type)}
-                                    onCheckedChange={(checked) => {
-                                      setFilters((prev) => ({
-                                        ...prev,
-                                        jobType: checked
-                                          ? [...prev.jobType, type]
-                                          : prev.jobType.filter(
-                                              (t) => t !== type,
-                                            ),
-                                      }));
-                                    }}
-                                  />
-                                  <label
-                                    htmlFor={`desktop-type-${type}`}
-                                    className="text-sm font-medium leading-none cursor-pointer"
-                                  >
-                                    {type}
-                                  </label>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        </FilterSection>
-
-                        {/* Domains Filter */}
-                        <FilterSection title="Domains" icon={Layers}>
-                          <div className="space-y-2 max-h-60 overflow-y-auto py-1 -mx-1 px-1">
-                            {domains.map((domain) => (
-                              <div
-                                key={domain}
-                                className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
-                              >
-                                <Checkbox
-                                  id={`desktop-domain-${domain}`}
-                                  checked={filters.domain.includes(domain)}
-                                  onCheckedChange={(checked) => {
-                                    setFilters((prev) => ({
-                                      ...prev,
-                                      domain: checked
-                                        ? [...prev.domain, domain]
-                                        : prev.domain.filter(
-                                            (d) => d !== domain,
-                                          ),
-                                    }));
-                                  }}
-                                />
-                                <label
-                                  htmlFor={`desktop-domain-${domain}`}
-                                  className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                >
-                                  {domain}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </FilterSection>
-
-                        {/* Project Domains Filter */}
-                        <FilterSection title="Project Domains" icon={Layers}>
-                          <div className="space-y-2 max-h-60 overflow-y-auto py-1 -mx-1 px-1">
-                            {projectDomains.map((domain) => (
-                              <div
-                                key={domain}
-                                className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
-                              >
-                                <Checkbox
-                                  id={`desktop-project-domain-${domain}`}
-                                  checked={filters.projectDomain.includes(
-                                    domain,
-                                  )}
-                                  onCheckedChange={(checked) => {
-                                    setFilters((prev) => ({
-                                      ...prev,
-                                      projectDomain: checked
-                                        ? [...prev.projectDomain, domain]
-                                        : prev.projectDomain.filter(
-                                            (d) => d !== domain,
-                                          ),
-                                    }));
-                                  }}
-                                />
-                                <label
-                                  htmlFor={`desktop-project-domain-${domain}`}
-                                  className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                >
-                                  {domain}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        </FilterSection>
-
-                        <FilterSection title="Skills" icon={Tag}>
-                          <div className="space-y-2">
-                            <div className="relative">
-                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                placeholder="Search skills..."
-                                className="pl-8 h-9 text-sm"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                              />
-                            </div>
-                            <div className="space-y-2 max-h-60 overflow-y-auto py-1 -mx-1 px-1">
-                              {skills
-                                .filter((skill) =>
-                                  skill
-                                    .toLowerCase()
-                                    .includes(searchQuery.toLowerCase()),
-                                )
-                                .slice(0, 10)
-                                .map((skill) => (
-                                  <div
-                                    key={skill}
-                                    className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
-                                  >
-                                    <Checkbox
-                                      id={`desktop-skill-${skill}`}
-                                      checked={filters.skills.includes(skill)}
-                                      onCheckedChange={(checked) => {
-                                        setFilters((prev) => ({
-                                          ...prev,
-                                          skills: checked
-                                            ? [...prev.skills, skill]
-                                            : prev.skills.filter(
-                                                (s) => s !== skill,
-                                              ),
-                                        }));
-                                      }}
-                                    />
-                                    <label
-                                      htmlFor={`desktop-skill-${skill}`}
-                                      className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                    >
-                                      {skill}
-                                    </label>
-                                    <Badge
-                                      variant="outline"
-                                      className="h-5 text-xs"
-                                    >
-                                      {Math.floor(Math.random() * 100) + 1}
-                                    </Badge>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        </FilterSection>
-
-                        <FilterSection title="Budget Range" icon={DollarSign}>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="desktop-min-rate"
-                                  className="text-xs text-muted-foreground"
-                                >
-                                  Min ($)
-                                </Label>
-                                <Input
-                                  id="desktop-min-rate"
-                                  placeholder="Min"
-                                  type="number"
-                                  value={filters.minRate}
-                                  onChange={(e) =>
-                                    setFilters((prev) => ({
-                                      ...prev,
-                                      minRate: e.target.value,
-                                    }))
-                                  }
-                                  className="h-9"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label
-                                  htmlFor="desktop-max-rate"
-                                  className="text-xs text-muted-foreground"
-                                >
-                                  Max ($)
-                                </Label>
-                                <Input
-                                  id="desktop-max-rate"
-                                  placeholder="Max"
-                                  type="number"
-                                  value={filters.maxRate}
-                                  onChange={(e) =>
-                                    setFilters((prev) => ({
-                                      ...prev,
-                                      maxRate: e.target.value,
-                                    }))
-                                  }
-                                  className="h-9"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </FilterSection>
-
-                        <FilterSection title="Other Options" icon={Sliders}>
-                          <div className="space-y-3">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="desktop-favourites"
-                                checked={filters.favourites}
-                                onCheckedChange={(checked) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    favourites: !!checked,
-                                  }))
-                                }
-                              />
-                              <label
-                                htmlFor="desktop-favourites"
-                                className="text-sm font-medium leading-none cursor-pointer flex items-center"
-                              >
-                                <Bookmark className="h-4 w-4 mr-2 text-red-500 fill-red-500/20" />
-                                Saved Projects
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox
-                                id="desktop-consultant"
-                                checked={filters.consultant}
-                                onCheckedChange={(checked) =>
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    consultant: !!checked,
-                                  }))
-                                }
-                              />
-                              <label
-                                htmlFor="desktop-consultant"
-                                className="text-sm font-medium leading-none cursor-pointer flex items-center"
-                              >
-                                <Briefcase className="h-4 w-4 mr-2 text-blue-500" />
-                                Consultant Roles
-                              </label>
-                            </div>
-                          </div>
-                        </FilterSection>
-                      </div>
-                    </ScrollArea>
-                    <div className="sticky bottom-0 bg-background border-t p-4">
-                      <Button
-                        className="w-full"
-                        onClick={() => {
-                          document.dispatchEvent(
-                            new KeyboardEvent('keydown', { key: 'Escape' }),
-                          );
-                        }}
-                      >
-                        Apply Filters
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+              <FilterSheet
+                filters={{
+                  jobType: filters.jobType,
+                  domain: filters.domain,
+                  skills: filters.skills,
+                  projectDomain: filters.projectDomain,
+                  minRate: filters.minRate,
+                  maxRate: filters.maxRate,
+                  favourites: filters.favourites,
+                  consultant: filters.consultant,
+                }}
+                onFilterChange={(updatedFilters) => {
+                  setFilters(prev => ({
+                    ...prev,
+                    ...updatedFilters
+                  }));
+                }}
+                activeFilterCount={activeFilterCount}
+                skills={skills}
+                domains={domains}
+                projectDomains={projectDomains}
+                onReset={handleReset}
+              />
             </div>
           </div>
         </div>
