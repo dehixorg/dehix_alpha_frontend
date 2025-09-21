@@ -144,12 +144,11 @@ const ProjectApplicationForm = ({
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   const user = useSelector((state: RootState) => state.user);
-  const [userConnects, setUserConnects] = useState<number>(0);
+  const [, setUserConnects] = useState<number>(0);
 
   useEffect(() => {
     const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
     setUserConnects(connects);
-    console.log(userConnects);
 
     const handleConnectsUpdated = () => {
       const updatedConnects = parseInt(

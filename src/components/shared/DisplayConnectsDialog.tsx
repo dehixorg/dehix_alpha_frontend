@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import * as React from 'react';
 import { Wallet, ListFilter } from 'lucide-react';
 
 import { Badge } from '../ui/badge';
@@ -27,7 +28,15 @@ import {
 } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
-const DisplayConnectsDialog = ({ connects, userId }: any) => {
+interface DisplayConnectsDialogProps {
+  connects: number;
+  userId: string;
+}
+
+const DisplayConnectsDialog = React.forwardRef<
+  HTMLButtonElement,
+  DisplayConnectsDialogProps
+>(({ connects, userId }, ref) => {
   const [filter, setFilter] = useState('ALL');
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -105,12 +114,13 @@ const DisplayConnectsDialog = ({ connects, userId }: any) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
+          ref={ref}
           variant="outline"
           size="icon"
-          className="relative rounded-full hover:scale-105 transition-transform"
+          className="relative rounded-full hover:scale-105 transition-transform ml-auto"
         >
           <Wallet strokeWidth={1.1} className="w-5 h-5" />
-          {connects >= 0 && (
+          {connects > 0 && (
             <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
               {connects}
             </span>
@@ -193,6 +203,8 @@ const DisplayConnectsDialog = ({ connects, userId }: any) => {
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+DisplayConnectsDialog.displayName = 'DisplayConnectsDialog';
 
 export default DisplayConnectsDialog;

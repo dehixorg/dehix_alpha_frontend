@@ -183,7 +183,9 @@ export function SkillDomainMeetingDialog({
             </Label>
             <Select
               onValueChange={(value) => {
-                const updatedAttendees = [user.email, value];
+                const updatedAttendees = [user.email, value].filter(
+                  Boolean,
+                ) as string[];
                 setAttendees(updatedAttendees);
               }}
               value={attendees[0] || ''}
