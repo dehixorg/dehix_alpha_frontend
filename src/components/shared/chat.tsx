@@ -1080,6 +1080,7 @@ export function CardsChat({
                     ? conversation.participantDetails?.[message.senderId]?.userName 
                       || 'Unknown User' 
                     : '';
+                    
 
                   return (
                     <div key={message.id} className="w-full">
@@ -1108,9 +1109,7 @@ export function CardsChat({
                                 alt={message.senderId}
                               />
                               <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                                {primaryUser.userName
-                                  ? primaryUser.userName.charAt(0).toUpperCase()
-                                  : 'U'}
+                                {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
                               </AvatarFallback>
                             </Avatar>
                           </div>

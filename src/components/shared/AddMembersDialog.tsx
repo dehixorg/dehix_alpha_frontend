@@ -45,7 +45,6 @@ export function AddMembersDialog({
   const [selectedUsersState, setSelectedUsersState] = useState<CombinedUser[]>(
     [],
   ); // Changed state name and type
-
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -55,7 +54,7 @@ export function AddMembersDialog({
       // refetchUsers();
     }
   }, [isOpen]);
-
+  // console.log(selectedUsersState, "selectedUsersState")
   // Perform search based on allFetchedUsers, userSearchTerm, and currentMemberIds
   useEffect(() => {
     if (!isOpen || isLoadingUsers || !allFetchedUsers) {
@@ -111,7 +110,6 @@ export function AddMembersDialog({
     onAddMembers(selectedUsersState); // Pass array of CombinedUser objects
     onClose(); // Close the dialog after adding
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
