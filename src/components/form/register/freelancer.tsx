@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {  useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 import { ToastAction } from '@radix-ui/react-toast';
 import { Controller, useForm } from 'react-hook-form';
@@ -466,14 +466,12 @@ function FreelancerRegisterForm({
       setTimeout(() => setIsLoading(false), 100);
     }
   };
-useEffect(()=>{
-  const referralCode = searchParams.get('referral')
-  if(referralCode){
-    form.setValue('referralCode', referralCode)
-  }
-
-}, [searchParams, form])
-  
+  useEffect(() => {
+    const referralCode = searchParams.get('referral');
+    if (referralCode) {
+      form.setValue('referralCode', referralCode);
+    }
+  }, [searchParams, form]);
 
   return (
     <Form {...form}>

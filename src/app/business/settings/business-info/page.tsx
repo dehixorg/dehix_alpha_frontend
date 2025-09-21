@@ -1,7 +1,8 @@
 'use client';
-import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { RootState } from '@/lib/store';
+import { useAppSelector } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
   menuItemsBottom,
@@ -10,8 +11,17 @@ import {
 import { BusinessForm } from '@/components/form/businessForm';
 import Header from '@/components/header/header';
 
-export default function PersonalInfo() {
-  const user = useSelector((state: RootState) => state.user);
+export default function BusinessInfoPage() {
+  const router = useRouter();
+  const user = useAppSelector((state) => state.user);
+
+  // Optional: Redirect if user is not authenticated
+  useEffect(() => {
+    if (!user.uid) {
+      // uid will be empty string if not authenticated
+      router.push('/auth/login');
+    }
+  }, [user.uid, router]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -25,7 +35,7 @@ export default function PersonalInfo() {
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Personal Info"
+          activeMenu="Business Info"
           breadcrumbItems={[
             { label: 'Business', link: '/dashboard/business' },
             { label: 'Settings', link: '#' },

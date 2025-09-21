@@ -49,7 +49,7 @@ First, run the development server:
 
 ### ✅ Setup Husky (optional for Git hooks)
 
-```bash
+````bash
 npm install --save-dev husky
 # OR
 yarn add --dev husky
@@ -66,7 +66,7 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
+````
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

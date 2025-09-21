@@ -16,6 +16,7 @@ import { ProjectCard } from '@/components/cards/projectCard';
 import { StatusEnum } from '@/utils/freelancer/enum';
 import { toast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import Header from '@/components/header/header';
 import {
@@ -26,6 +27,53 @@ import {
   menuItemsBottom,
   menuItemsTop,
 } from '@/config/menuItems/business/dashboardMenuItems';
+import { Badge } from '@/components/ui/badge';
+
+// Reusable header component for tab sections
+function SectionHeader({
+  title,
+  subtitle,
+  right,
+}: {
+  title: string;
+  subtitle: string;
+  right?: React.ReactNode;
+}) {
+  return (
+    <div className="flex justify-between items-center mb-8 ml-6 pr-6">
+      <div>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        <p className="text-gray-400 mt-2">{subtitle}</p>
+      </div>
+      {right}
+    </div>
+  );
+}
+
+// Reusable project type toggle (Consultant <-> Freelancer)
+function FilterToggle({
+  projectType,
+  onChange,
+  id,
+}: {
+  projectType: string;
+  onChange: (value: string) => void;
+  id?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <Badge className="font-medium">FREELANCER</Badge>
+      <Switch
+        id={id}
+        checked={projectType === 'FREELANCER'}
+        onCheckedChange={(checked) =>
+          onChange(checked ? 'FREELANCER' : 'CONSULTANT')
+        }
+      />
+      <Badge className="font-medium">CONSULTANT</Badge>
+    </div>
+  );
+}
 
 interface Project {
   _id: string;
@@ -152,15 +200,13 @@ export default function ProjectPage() {
   const [projectType, setProjectType] = useState('CONSULTANT');
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="bg-background border-r">
-        <SidebarMenu
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          active="Projects"
-        />
-      </div>
-      <div className="flex mb-8 flex-col sm:pl-14 w-full">
+    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+      <SidebarMenu
+        menuItemsTop={freelancerMenuItemsTop}
+        menuItemsBottom={freelancerMenuItemsBottom}
+        active="Projects"
+      />
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -205,87 +251,48 @@ export default function ProjectPage() {
               </TabsList>
 
               <TabsContent value="current">
-                <div className="flex justify-between items-center mb-8 ml-6 pr-6">
-                  <div>
-                    <h1 className="text-3xl font-bold">Current Projects</h1>
-                    <p className="text-gray-400 mt-2">
-                      Browse and manage your active freelance projects
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="project-type"
-                      className="text-gray-600 font-medium"
-                    >
-                      Filter by:
-                    </label>
-                    <select
+                <SectionHeader
+                  title="Current Projects"
+                  subtitle="Browse and manage your active freelance projects"
+                  right={
+                    <FilterToggle
                       id="project-type"
-                      value={projectType}
-                      onChange={(e) => setProjectType(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="CONSULTANT">Consultant</option>
-                      <option value="FREELANCER">Freelancer</option>
-                    </select>
-                  </div>
-                </div>
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
+                />
                 <ProjectList status="ACTIVE" projectType={projectType} />
               </TabsContent>
 
               <TabsContent value="applied">
-                <div className="flex justify-between items-center mb-8 ml-6 pr-6">
-                  <div>
-                    <h1 className="text-3xl font-bold">Applied Projects</h1>
-                    <p className="text-gray-400 mt-2">
-                      Track the status of your projects currently undergoing
-                      verification before final approval.
-                    </p>
-                  </div>
-                </div>
+                <SectionHeader
+                  title="Applied Projects"
+                  subtitle="Track the status of your projects currently undergoing verification before final approval."
+                />
                 <ProjectList status="PENDING" />
               </TabsContent>
 
               <TabsContent value="completed">
-                <div className="flex justify-between items-center mb-8 ml-6 pr-6">
-                  <div>
-                    <h1 className="text-3xl font-bold">Completed Projects</h1>
-                    <p className="text-gray-400 mt-2">
-                      Explore and manage your successfully completed freelance
-                      projects.
-                    </p>
-                  </div>
-                </div>
+                <SectionHeader
+                  title="Completed Projects"
+                  subtitle="Explore and manage your successfully completed freelance projects."
+                />
                 <ProjectList status="COMPLETED" />
               </TabsContent>
 
               <TabsContent value="rejected">
-                <div className="flex justify-between items-center mb-8 ml-6 pr-6">
-                  <div>
-                    <h1 className="text-3xl font-bold">Rejected Projects</h1>
-                    <p className="text-gray-400 mt-2">
-                      Explore and Review projects that were not selected and
-                      gain insights for future submissions.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="project-type"
-                      className="text-gray-600 font-medium"
-                    >
-                      Filter by:
-                    </label>
-                    <select
-                      id="project-type"
-                      value={projectType}
-                      onChange={(e) => setProjectType(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="CONSULTANT">Consultant</option>
-                      <option value="FREELANCER">Freelancer</option>
-                    </select>
-                  </div>
-                </div>
+                <SectionHeader
+                  title="Rejected Projects"
+                  subtitle="Explore and Review projects that were not selected and gain insights for future submissions."
+                  right={
+                    <FilterToggle
+                      id="project-type-rejected"
+                      projectType={projectType}
+                      onChange={setProjectType}
+                    />
+                  }
+                />
                 <ProjectList status="REJECTED" projectType={projectType} />
               </TabsContent>
             </Tabs>

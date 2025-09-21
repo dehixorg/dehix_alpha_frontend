@@ -32,6 +32,7 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { toast } from '../ui/use-toast';
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 
 import { axiosInstance } from '@/lib/axiosinstance';
 
@@ -247,44 +248,19 @@ export const AddProfileDialog: React.FC<AddProfileDialogProps> = ({
             </DialogDescription>
           </div>
 
-          {/* Profile Type Toggle (centered with gap from top) */}
-          <div className="flex justify-center items-center gap-3 mt-2">
-            <span
-              className={
-                profileType === 'Freelancer' ? 'font-semibold' : 'text-gray-400'
-              }
-            >
-              Freelancer
-            </span>
-
-            <button
-              type="button"
-              onClick={() =>
-                setProfileType((prev) =>
-                  prev === 'Freelancer' ? 'Consultant' : 'Freelancer',
-                )
-              }
-              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
-                profileType === 'Freelancer' ? 'bg-green-500' : 'bg-blue-500'
-              }`}
-            >
-              <span
-                className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
-                  profileType === 'Consultant'
-                    ? 'translate-x-7'
-                    : 'translate-x-1'
-                }`}
-              />
-            </button>
-
-            <span
-              className={
-                profileType === 'Consultant' ? 'font-semibold' : 'text-gray-400'
-              }
-            >
-              Consultant
-            </span>
-          </div>
+          {/* Profile Type Tabs */}
+          <Tabs
+            value={profileType}
+            onValueChange={(val) =>
+              setProfileType(val as 'Freelancer' | 'Consultant')
+            }
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="Freelancer">Freelancer</TabsTrigger>
+              <TabsTrigger value="Consultant">Consultant</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </DialogHeader>
 
         <Form {...form}>

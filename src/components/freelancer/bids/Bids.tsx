@@ -1,17 +1,19 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useState } from 'react';
 
-import SkeletonLoader from './SkeletonLoader';
-import BidList from './BidList';
-
 import { axiosInstance } from '@/lib/axiosinstance';
 import { Button } from '@/components/ui/button';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+// No dropdown menu needed since we only keep a single action
+// Removed accordion usage as we now use a table layout
 import {
   Dialog,
   DialogContent,
@@ -72,11 +74,11 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           await Promise.all([
             axiosInstance.get(`/interview?intervieweeId=${userId}`),
             axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
-          ],);
+          ]);
 
         const allInterviews: any[] = Array.isArray(interviewRes)
           ? interviewRes
-          : interviewRes?.data ?? [];
+          : (interviewRes?.data ?? []);
 
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
 
@@ -345,42 +347,85 @@ const BidsPage = ({ userId }: { userId?: string }) => {
   return (
     <div className="w-[84vw] mx-auto ">
       {loading ? (
-        <SkeletonLoader />
+        // Table skeleton
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Skill</TableHead>
+              <TableHead>Interviewee</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(4)].map((_, idx) => (
+              <TableRow key={idx}>
+                <TableCell>
+                  <div className="h-4 w-28 bg-muted rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-40 bg-muted rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 w-24 bg-muted rounded" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-6 w-24 bg-muted rounded-full" />
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="h-8 w-8 bg-muted rounded-md inline-block" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       ) : bidsData?.length > 0 ? (
-        <Accordion type="single" collapsible defaultValue={bidsData?.[0]?._id}>
-          {bidsData.map((interview) => (
-            <AccordionItem key={interview?._id} value={interview?._id || ''}>
-              <AccordionTrigger className="text-xl w-full font-semibold hover:no-underline">
-                <div className="flex justify-between items-center w-full mx-3">
-                  <div className="flex flex-col text-left">
-                    <span className="font-medium">
-                      {interview?.skillName || 'Unknown Skill'}
-                    </span>
-                    {interview?.intervieweeName && (
-                      <span className="text-sm text-muted-foreground">
-                        {interview.intervieweeName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end text-right">
-                    {interview?.interviewDate && (
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(interview.interviewDate).toLocaleDateString()}
-                      </span>
-                    )}
-                    <span className="text-blue-600">Verify request</span>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <BidList
-                  interview={interview}
-                  setConfirmAction={setConfirmAction}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Skill</TableHead>
+              <TableHead>Interviewee</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bidsData.map((interview) => (
+              <TableRow key={interview?._id}>
+                <TableCell className="font-medium">
+                  {interview?.skillName || 'Unknown Skill'}
+                </TableCell>
+                <TableCell>{interview?.intervieweeName || '-'}</TableCell>
+                <TableCell>
+                  {interview?.interviewDate
+                    ? new Date(interview.interviewDate).toLocaleDateString()
+                    : '-'}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {interview?.InterviewStatus || 'BIDDING'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setConfirmAction({
+                        interviewId: interview._id,
+                        action: 'PLACE_BID',
+                      })
+                    }
+                  >
+                    Place Bid
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       ) : (
         <div className="text-center text-lg font-semibold mt-4">
           No bids available
@@ -426,6 +471,8 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Removed View Bids dialog to keep only single action */}
     </div>
   );
 };

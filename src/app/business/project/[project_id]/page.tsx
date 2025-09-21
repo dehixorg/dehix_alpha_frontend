@@ -200,8 +200,6 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
-      console.log('hi');
-      console.log(response);
 
       if (projectData) {
         setProject(projectData);
@@ -289,7 +287,6 @@ export default function Dashboard() {
           menuItemsBottom={menuItemsBottom}
           activeMenu=""
           breadcrumbItems={[
-            { label: 'Dashboard', link: '/dashboard/business' },
             { label: 'Project', link: '/dashboard/business' },
             { label: project.projectName, link: '#' },
           ]}
@@ -298,7 +295,7 @@ export default function Dashboard() {
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
             <Tabs defaultValue="Project-Info">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="Project-Info">Project-Info</TabsTrigger>
+                <TabsTrigger value="Project-Info">Project Info</TabsTrigger>
                 <TabsTrigger value="Profiles">Profile Bids</TabsTrigger>
               </TabsList>
               <TabsContent value="Project-Info">

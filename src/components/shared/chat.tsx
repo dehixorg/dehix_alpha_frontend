@@ -25,11 +25,7 @@ import {
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import {
-  formatDistanceToNow,
-  format,
- 
-} from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify'; // <-- add import later
@@ -908,7 +904,7 @@ export function CardsChat({
             <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
               <button
                 onClick={handleHeaderClick}
-                className="flex items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
+                className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
                 aria-label="View profile information"
               >
                 <Avatar className="w-10 h-10">
@@ -940,7 +936,7 @@ export function CardsChat({
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-base font-semibold leading-none text-[hsl(var(--card-foreground))]">
+                  <p className="text-base pb-1 font-semibold leading-none text-[hsl(var(--card-foreground))]">
                     {conversation.type === 'group'
                       ? conversation.groupName
                       : primaryUser.userName || 'Chat'}
@@ -1027,7 +1023,7 @@ export function CardsChat({
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <div className="flex flex-col space-y-3 ">
-                <div  />
+                <div />
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1070,9 +1066,6 @@ export function CardsChat({
                       isSingleEmoji: onlyEmojis && emojiMatches.length === 1,
                     };
                   })();
-                  // Determine if we need to show date header (because array is reverse-ordered, compare with next element)
-                  const nextMsg = messages[index + 1];
-                
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
@@ -1382,7 +1375,7 @@ export function CardsChat({
                             <Reply className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div >
+                      </div>
                       <div ref={messagesEndRef} />
                       {/* Date header (appears below current bubble due to flex-col-reverse order) */}
                     </React.Fragment>
