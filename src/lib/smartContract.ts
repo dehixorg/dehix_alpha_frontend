@@ -14,7 +14,9 @@ export const CONTRACT_ABI: any[] = DXUT_PLATFORM_ABI;
 export const getContract = async () => {
   if (typeof window === 'undefined') return null;
 
+
   const { ethers } = await import('ethers');
+
 
   // Check if MetaMask is installed
   if (!window.ethereum) {
@@ -23,6 +25,7 @@ export const getContract = async () => {
 
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
+
 
   return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 };
@@ -33,6 +36,7 @@ export const contractFunctions = {
   createEscrow: async (freelancerAddress: string, amount: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
+
 
     const { ethers } = await import('ethers');
     const tx = await contract.createEscrow(freelancerAddress, {
@@ -46,6 +50,7 @@ export const contractFunctions = {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
 
+
     const tx = await contract.releaseEscrow(escrowId);
     return await tx.wait();
   },
@@ -54,6 +59,7 @@ export const contractFunctions = {
   refundClient: async (escrowId: number) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
+
 
     const tx = await contract.refundClient(escrowId);
     return await tx.wait();
@@ -64,6 +70,7 @@ export const contractFunctions = {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
 
+
     const tx = await contract.mintInterviewNFT(freelancerAddress);
     return await tx.wait();
   },
@@ -72,6 +79,7 @@ export const contractFunctions = {
   reward: async (toAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
+
 
     const tx = await contract.reward(toAddress);
     return await tx.wait();
@@ -82,6 +90,7 @@ export const contractFunctions = {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
 
+
     return await contract.isAddressRegistered(userAddress);
   },
 
@@ -89,6 +98,7 @@ export const contractFunctions = {
   getBalance: async (userAddress: string) => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
+
 
     const { ethers } = await import('ethers');
     const balance = await contract.balanceOf(userAddress);
@@ -100,6 +110,7 @@ export const contractFunctions = {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
 
+
     return await contract.escrows(escrowId);
   },
 
@@ -107,6 +118,7 @@ export const contractFunctions = {
   getEscrowCounter: async () => {
     const contract = await getContract();
     if (!contract) throw new Error('Contract not available');
+
 
     return await contract.escrowCounter();
   },
