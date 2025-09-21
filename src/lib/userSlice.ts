@@ -1,31 +1,38 @@
 // lib/userSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export type UserType = 'freelancer' | 'business';
+
 export interface UserState {
-  uid?: string;
+  uid: string; // uid is now required and will never be null/undefined
   email?: string | null;
   displayName?: string | null;
   photoURL?: string | null;
   phoneNumber?: string | null;
   emailVerified?: boolean;
-  type?: string;
+  type?: UserType;
   // Add other user properties as needed
   [key: string]: any; // For backward compatibility
 }
 
-const initialState: UserState = {};
+const initialState: UserState = {
+  uid: '', // Default to empty string instead of undefined
+};
 
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<UserState | null>) => {
+    setUser: (state, action: PayloadAction<Partial<UserState> | null>) => {
       if (!action.payload) {
-        return {};
+        return { uid: '' }; // Return default state with empty uid
       }
+
+      // Ensure uid is always a string, defaulting to empty string
+      const uid = action.payload.uid || '';
+
       // Only include serializable properties
       const {
-        uid,
         email,
         displayName,
         photoURL,
@@ -36,18 +43,20 @@ const userSlice = createSlice({
       } = action.payload;
 
       return {
-        uid,
-        email,
-        displayName,
-        photoURL,
-        phoneNumber,
-        emailVerified,
-        type,
-        ...(type === 'freelancer' ? { connects: rest.connects } : {}),
+        uid, // This will always be a string, at least empty string
+        ...(email !== undefined && { email }),
+        ...(displayName !== undefined && { displayName }),
+        ...(photoURL !== undefined && { photoURL }),
+        ...(phoneNumber !== undefined && { phoneNumber }),
+        ...(emailVerified !== undefined && { emailVerified }),
+        ...(type !== undefined && { type }),
+        ...(type === 'freelancer' && rest.connects !== undefined
+          ? { connects: rest.connects }
+          : {}),
       };
     },
     clearUser: () => {
-      return {};
+      return { uid: '' }; // Return default state with empty uid
     },
   },
 });

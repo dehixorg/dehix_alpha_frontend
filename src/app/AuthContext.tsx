@@ -4,7 +4,7 @@ import { User } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
-import { setUser, clearUser } from '@/lib/userSlice';
+import { UserType, setUser, clearUser } from '@/lib/userSlice';
 import { initializeAxiosWithToken } from '@/lib/axiosinstance';
 import { auth } from '@/config/firebaseConfig';
 
@@ -54,8 +54,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const claims = await firebaseUser.getIdTokenResult();
             // Ensure type safety for the claims
             const userType =
-              typeof claims.claims.type === 'string'
-                ? claims.claims.type
+              typeof claims.claims.type === 'string' &&
+              (claims.claims.type === 'freelancer' ||
+                claims.claims.type === 'business')
+                ? (claims.claims.type as UserType)
                 : undefined;
 
             const userData = {
@@ -65,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               photoURL: firebaseUser.photoURL,
               phoneNumber: firebaseUser.phoneNumber,
               emailVerified: firebaseUser.emailVerified,
-              type: userType,
+              type: userType, // This is now properly typed as UserType | undefined
               // Add any other serializable properties you need
             };
 

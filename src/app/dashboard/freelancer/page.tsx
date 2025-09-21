@@ -108,7 +108,18 @@ export default function Dashboard() {
                 <div className="flex justify-between items-start gap-4">
                   <div>
                     <CardTitle className="text-2xl font-bold tracking-tight">
-                      Welcome back, {user?.name || 'User'}!
+                      Welcome Back,{' '}
+                      {user?.displayName
+                        ? user.displayName
+                            .split(' ')
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase(),
+                            )
+                            .join(' ')
+                        : 'User'}
+                      !
                     </CardTitle>
                     <CardDescription className="mt-2">
                       Here&lsquo;s what&lsquo;s happening with your projects

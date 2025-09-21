@@ -71,6 +71,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   useEffect(() => {
     if (user?.type) {
+      console.log(user);
       setUserType(user.type);
     } else {
       const storedUserType = Cookies.get('userType');
@@ -188,7 +189,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
             className="overflow-hidden rounded-full hover:scale-105 transition-transform"
           >
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.photoURL} alt="@shadcn" />
+              <AvatarImage src={user.photoURL || ''} alt="User" />
               <AvatarFallback>
                 <UserIcon className="w-5 h-5 hover:scale-105 transition-transform" />
               </AvatarFallback>
