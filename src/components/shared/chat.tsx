@@ -197,6 +197,7 @@ export function CardsChat({
 
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
+  const[replyInput,setReplyInput] = useState("")
 
   // Reporting modal state & helpers
   const [openReport, setOpenReport] = useState(false);
@@ -1072,11 +1073,18 @@ export function CardsChat({
                   const readableTimestamp =
                     formatDistanceToNow(new Date(message.timestamp)) + ' ago';
                   const isSender = message.senderId === user.uid;
+                  const isGroupChat = conversation.type === 'group';
+                  const showSenderName = isGroupChat && 
+                    (index === 0 || messages[index - 1]?.senderId !== message.senderId);
+                  const senderName = isGroupChat && !isSender 
+                    ? conversation.participantDetails?.[message.senderId]?.userName 
+                      || 'Unknown User' 
+                    : '';
 
                   return (
-                    <React.Fragment key={message.id}>
+                    <div key={message.id} className="w-full">
                       {isNewDay && (
-                        <div className="w-full flex justify-center my-2 ">
+                        <div className="w-full flex justify-center my-2">
                           <span className="text-xs bg-[hsl(var(--muted))] dark:bg-[hsl(var(--secondary))] px-3 py-0.5 rounded-full text-[hsl(var(--muted-foreground))]">
                             {formatDateHeader(message.timestamp)}
                           </span>
@@ -1084,45 +1092,55 @@ export function CardsChat({
                       )}
                       <div
                         id={message.id}
-                        key={index}
                         className={cn(
-                          'flex flex-row items-start relative group',
+                          'flex items-start group w-full mb-2',
                           isSender ? 'justify-end' : 'justify-start',
                         )}
                         onMouseEnter={() => setHoveredMessageId(message.id)}
                         onMouseLeave={() => setHoveredMessageId(null)}
                       >
+                        {/* Avatar for received messages */}
                         {!isSender && (
-                          <Avatar
-                            key={index}
-                            className="w-8 h-8 mr-2 mt-0.5 flex-shrink-0"
-                          >
-                            <AvatarImage
-                              src={primaryUser.profilePic}
-                              alt={message.senderId}
-                            />
-                            <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
-                              {primaryUser.userName
-                                ? primaryUser.userName.charAt(0).toUpperCase()
-                                : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="flex-shrink-0 mr-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage
+                                src={primaryUser.profilePic}
+                                alt={message.senderId}
+                              />
+                              <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
+                                {primaryUser.userName
+                                  ? primaryUser.userName.charAt(0).toUpperCase()
+                                  : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
                         )}
-                        <div
-                          className={cn(
-                            'flex w-max max-w-[98%] md:max-w-[90%] flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
-                            message.content.match(
-                              /\.(jpeg|jpg|gif|png)(\?|$)/i,
-                            ) ||
+
+                        {/* Message content container */}
+                        <div className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+                          {/* Sender name in group chats */}
+                          {isGroupChat && showSenderName && !isSender && (
+                            <div className="mb-0.5">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {senderName}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={cn(
+                              'flex w-max max-w-full flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
+                              message.content.match(
+                                /\.(jpeg|jpg|gif|png)(\?|$)/i,
+                              ) ||
                               isEmojiOnly ||
                               (message.voiceMessage &&
                                 message.voiceMessage.type === 'voice')
-                              ? isSender
-                                ? 'ml-auto bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
-                                : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
-                              : isSender
-                                ? 'ml-auto bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
-                                : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
+                                ? isSender
+                                  ? 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-gray-50 rounded-br-none'
+                                  : 'bg-transparent text-[hsl(var(--foreground))] dark:bg-transparent dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none'
+                                : isSender
+                                  ? 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-gray-50 rounded-br-none relative flex justify-center items-center pr-20 min-w-[180px]'
+                                  : 'bg-[#c8a3ed] text-[hsl(var(--foreground))] dark:bg-[#9966ccba] dark:text-[hsl(var(--secondary-foreground))] rounded-bl-none relative flex justify-center items-center pr-20 min-w-[180px]',
                           )}
                           onClick={() => {
                             if (message.replyTo) {
@@ -1349,18 +1367,20 @@ export function CardsChat({
                               ))}
                           </div>
                         </div>
+                        </div>
+                        
+                        {/* Message actions (emoji + reply) */}
                         <div
                           className={cn(
-                            'relative opacity-0 group-hover:opacity-100 transition-opacity',
-                            isSender ? 'mr-1' : 'ml-1',
+                            'flex items-start pt-2 opacity-0 group-hover:opacity-100 transition-opacity',
+                            isSender ? 'ml-2' : 'mr-2'
                           )}
                         >
                           {!isSender && (
                             <EmojiPicker
                               aria-label="Add reaction"
-                              onSelect={(emoji: string) =>
-                                toggleReaction(message.id, emoji)
-                              }
+                              onSelect={(emoji: string) => toggleReaction(message.id, emoji)}
+                              className="mr-1"
                             />
                           )}
                           <Button
@@ -1378,10 +1398,11 @@ export function CardsChat({
                             <Reply className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div >
+                      </div>
+                      
+                      {/* End of message container */}
                       <div ref={messagesEndRef} />
-                      {/* Date header (appears below current bubble due to flex-col-reverse order) */}
-                    </React.Fragment>
+                    </div>
                   );
                 })}
               </div>
@@ -1416,7 +1437,8 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={() => setReplyToMessageId('')}
+                      onClick={(e) => setReplyToMessageId('')
+                      }
                       variant="ghost"
                       size="icon"
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
