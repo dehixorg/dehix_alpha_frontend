@@ -1,7 +1,8 @@
 // src/components/marketComponents/profileCards/rejectedProfileCards.tsx
 'use client';
 import React from 'react';
-import { User, MapPin, ExternalLink, XCircle, RefreshCw } from 'lucide-react';
+import { User, ExternalLink, XCircle, RefreshCw } from 'lucide-react';
+
 import {
   Card,
   CardContent,
@@ -11,7 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -106,7 +107,10 @@ const RejectedProfileCards: React.FC<RejectedProfileCardsProps> = ({
                 <div className="flex flex-wrap gap-2 pt-2">
                   {talent.skills?.map((skill: Skill, skillIndex: number) => (
                     // FIX 2: Use a unique key for skills list
-                    <Badge key={`${talent._id}-${skillIndex}`} variant="secondary">
+                    <Badge
+                      key={`${talent._id}-${skillIndex}`}
+                      variant="secondary"
+                    >
                       {skill.name}
                     </Badge>
                   ))}

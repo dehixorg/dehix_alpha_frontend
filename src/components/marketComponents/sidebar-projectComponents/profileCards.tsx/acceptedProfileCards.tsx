@@ -143,7 +143,10 @@ const AcceptedProfileCards: React.FC<AcceptedProfileCardsProps> = ({
                 )}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {talent.skills?.map((skill: Skill, skillIndex: number) => (
-                    <Badge key={`${talent._id}-${skillIndex}`} variant="secondary">
+                    <Badge
+                      key={`${talent._id}-${skillIndex}`}
+                      variant="secondary"
+                    >
                       {skill.name}
                     </Badge>
                   ))}

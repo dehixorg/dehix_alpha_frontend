@@ -172,11 +172,6 @@ const Market: React.FC = () => {
     fetchData(filters); // Fetch all data initially
   }, [user.uid, filters, fetchData]);
 
-  const handleApply = () => {
-    console.log("selected")
-    fetchData(filters);
-  };
-
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
   };

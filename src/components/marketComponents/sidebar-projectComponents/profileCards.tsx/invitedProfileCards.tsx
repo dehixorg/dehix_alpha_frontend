@@ -2,6 +2,7 @@
 'use client';
 import React from 'react';
 import { Mail, Clock, User, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import {
   Card,
@@ -14,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useRouter } from 'next/navigation';
 interface Skill {
   _id: string;
   name: string;
@@ -39,7 +39,6 @@ interface ProfileCardsProps {
   calculateExperience: (professionalInfo: ProfessionalExperience[]) => string;
 }
 
-
 const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   talents,
   loading,
@@ -48,9 +47,9 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
   const router = useRouter();
 
   const handleViewProfile = (talentId: string) => {
-    router.push(`/profiles?id=${talentId}`);
-  };
-  
+    router.push(`/profiles?id=${talentId}`);
+  };
+
   const SkeletonCard = () => (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
@@ -142,14 +141,14 @@ const InvitedProfileCards: React.FC<ProfileCardsProps> = ({
                   Cancel
                 </Button>
                 <Button
-      size="sm"
-      variant="outline"
-      className="flex items-center gap-1"
-      onClick={() => handleViewProfile(talent._id)} 
-    >
-      <ExternalLink className="h-3 w-3" />
-      View Profile
-    </Button>
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center gap-1"
+                  onClick={() => handleViewProfile(talent._id)}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View Profile
+                </Button>
               </div>
             </div>
           </Card>

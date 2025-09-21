@@ -413,7 +413,6 @@ function FreelancerRegisterForm({
     const referralCodeFromForm = data.referralCode;
 
     const referralCode = referralCodeFromQuery || referralCodeFromForm || null;
-
     setPhone(
       `${countries.find((c) => c.code === code)?.dialCode}${data.phone}`,
     );
@@ -445,6 +444,7 @@ function FreelancerRegisterForm({
       ? `/register/freelancer?referralCode=${referralCode}`
       : '/register/freelancer';
 
+    console.log(url);
     try {
       await axiosInstance.post(url, formData);
       toast({

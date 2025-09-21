@@ -1,6 +1,7 @@
 // src/components/marketComponents/TalentContent.tsx
 'use client';
 import React from 'react';
+
 import InvitedProfileCards from './sidebar-projectComponents/profileCards.tsx/invitedProfileCards';
 import AcceptedProfileCards from './sidebar-projectComponents/profileCards.tsx/acceptedProfileCards';
 import RejectedProfileCards from './sidebar-projectComponents/profileCards.tsx/rejectedProfileCards';
@@ -13,7 +14,11 @@ interface TalentContentProps {
   loading: boolean;
 }
 
-const TalentContent: React.FC<TalentContentProps> = ({ activeTab, talents, loading }) => {
+const TalentContent: React.FC<TalentContentProps> = ({
+  activeTab,
+  talents,
+  loading,
+}) => {
   const renderCards = () => {
     if (activeTab === 'invited') {
       return (

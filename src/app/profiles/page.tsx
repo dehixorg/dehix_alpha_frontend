@@ -1,13 +1,10 @@
 'use client';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
 import { RootState } from '@/lib/store';
 import SidebarMenu from '@/components/menu/sidebarMenu';
-import ExperienceCard from '@/components/cards/experienceCard';
 import { axiosInstance } from '@/lib/axiosinstance';
-import { AddExperience } from '@/components/dialogs/addExperiences';
 import {
   menuItemsBottom,
   menuItemsTop,
@@ -17,38 +14,37 @@ import { toast } from '@/components/ui/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function ProfilesInfo() {
-  const searchParams = useSearchParams();
-  const id = searchParams.get('id'); // Get the 'id' from the URL query parameters
+export default function FreelancerBids() {
   const user = useSelector((state: RootState) => state.user);
-  const [refresh, setRefresh] = useState(false);
-  const [experiences, setExperiences] = useState<any>([]);
+  const [bids, setBids] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFormSubmit = () => {
-    setRefresh((prev) => !prev);
-  };
-
   useEffect(() => {
-    if (!id) return; // Exit if id is not available yet
+    // Check if the user is a freelancer and has a valid ID
+    if (
+      !user.isLoggedIn ||
+      user.userType !== 'freelancer' ||
+      !user.freelancerId
+    ) {
+      return;
+    }
 
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        console.log(id)
-        const response = await axiosInstance.get(`/freelancer/${id}`); // Use the 'id' from the URL
-        console.log(response)
-        const professionalInfo = response.data?.data?.professionalInfo;
+        // Assuming your GET /bid endpoint is secure and filters by the authenticated user's ID
+        const response = await axiosInstance.get(`/bid`);
 
-        if (!professionalInfo || typeof professionalInfo !== 'object') {
-          console.warn(
-            'No professional experience data found, setting empty array.',
-          );
-          setExperiences([]);
+        const bidData = response.data?.data;
+
+        if (!bidData || !Array.isArray(bidData)) {
+          console.warn('No bid data found, setting empty array.');
+          setBids([]);
           return;
         }
 
-        setExperiences(Object.values(professionalInfo));
+        setBids(bidData);
+        console.log('Fetched Bids:', bidData); // Log the fetched data here
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -56,47 +52,42 @@ export default function ProfilesInfo() {
           description: 'Something went wrong. Please try again.',
         });
         console.error('API Error:', error);
-        setExperiences([]);
+        setBids([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [id, refresh]); // Add 'id' to the dependency array
+  }, [user.isLoggedIn, user.userType, user.freelancerId]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="Professional Info"
+        active="My Bids"
         isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Professional Info"
+          activeMenu="My Bids"
           breadcrumbItems={[
-            { label: 'Business', link: '/dashboard/business' },
-            
-            { label: 'Freelancer Profiles', link: '#' },
+            { label: 'Dashboard', link: '/dashboard/freelancer' },
+            { label: 'My Bids', link: '#' },
           ]}
         />
         <main
           className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+             grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
+          {/* This section is now purely for a loading state and a message, no bids are rendered */}
           {isLoading ? (
             <CardSkeleton />
           ) : (
-            <>
-              {experiences.map((exp: any, index: number) => (
-                <ExperienceCard key={index} {...exp} />
-              ))}
-              <AddExperience onFormSubmit={handleFormSubmit} />
-            </>
+            <p>Bids have been fetched. Check the console for the data.</p>
           )}
         </main>
       </div>
@@ -123,7 +114,6 @@ const CardSkeleton = () => {
           </CardContent>
         </Card>
       ))}
-      <Skeleton className="h-10 w-10 rounded-md" />
     </>
   );
 };

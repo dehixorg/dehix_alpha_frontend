@@ -9,27 +9,23 @@ import {
   Search,
   Users2,
   XCircle,
-  ChevronDown
+  ChevronDown,
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+
+import TalentContent from './TalentContent';
+
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/components/ui/use-toast';
-import { useSelector } from 'react-redux';
-
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance';
-import TalentContent from './TalentContent';
 
 interface ProfessionalExperience {
   workFrom?: string;
@@ -54,7 +50,9 @@ interface TalentLayoutProps {
   activeTab: 'invited' | 'accepted' | 'rejected' | 'overview';
 }
 
-export const calculateExperience = (professionalInfo: ProfessionalExperience[]): string => {
+export const calculateExperience = (
+  professionalInfo: ProfessionalExperience[],
+): string => {
   if (!professionalInfo || professionalInfo.length === 0) {
     return 'Not specified';
   }
@@ -64,7 +62,9 @@ export const calculateExperience = (professionalInfo: ProfessionalExperience[]):
       const start = new Date(job.workFrom);
       const end = new Date(job.workTo);
       if (start < end) {
-        const diffInMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        const diffInMonths =
+          (end.getFullYear() - start.getFullYear()) * 12 +
+          (end.getMonth() - start.getMonth());
         if (diffInMonths > 0) {
           totalExperienceInMonths += diffInMonths;
         }
@@ -77,7 +77,8 @@ export const calculateExperience = (professionalInfo: ProfessionalExperience[]):
 
   if (years === 0 && months === 0) return 'Less than a month';
   const yearString = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
-  const monthString = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+  const monthString =
+    months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
 
   if (yearString && monthString) return `${yearString} and ${monthString}`;
   return yearString || monthString;
@@ -106,7 +107,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     skills: [],
     experience: [],
   });
-  
+
   const experienceMapping = {
     Junior: '1',
     'Mid-level': '2',
@@ -115,22 +116,25 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
   };
 
   // REMOVED 'location' from the filterType parameter
-  const handleToggleFilter = useCallback((
-    filterType: 'skills' | 'experience',
-    value: string,
-    isChecked: boolean,
-  ) => {
-    setFilters((prevFilters) => {
-      const currentValues = prevFilters[filterType] as string[];
-      const updatedValues = isChecked
-        ? [...currentValues, value]
-        : currentValues.filter((item) => item !== value);
-      return {
-        ...prevFilters,
-        [filterType]: updatedValues,
-      };
-    });
-  }, []);
+  const handleToggleFilter = useCallback(
+    (
+      filterType: 'skills' | 'experience',
+      value: string,
+      isChecked: boolean,
+    ) => {
+      setFilters((prevFilters) => {
+        const currentValues = prevFilters[filterType] as string[];
+        const updatedValues = isChecked
+          ? [...currentValues, value]
+          : currentValues.filter((item) => item !== value);
+        return {
+          ...prevFilters,
+          [filterType]: updatedValues,
+        };
+      });
+    },
+    [],
+  );
 
   const handleSearchChange = useCallback((value: string) => {
     setFilters((prevFilters) => ({
@@ -146,12 +150,16 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
       queryParts.push(`search=${encodeURIComponent(currentFilters.search)}`);
     }
     if (currentFilters.skills.length > 0) {
-      queryParts.push(`skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`);
+      queryParts.push(
+        `skillName=${currentFilters.skills.map(encodeURIComponent).join(',')}`,
+      );
     }
     if (currentFilters.experience.length > 0) {
-      queryParts.push(`experience=${currentFilters.experience.map(encodeURIComponent).join(',')}`);
+      queryParts.push(
+        `experience=${currentFilters.experience.map(encodeURIComponent).join(',')}`,
+      );
     }
-    
+
     return queryParts.join('&');
   }, []);
 
@@ -171,10 +179,10 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
         } else if (activeTab === 'rejected') {
           endpoint = `/business/hire-dehixtalent/free/rejected`;
         }
-        
+
         const queryString = constructQueryString(currentFilters);
         const response = await axiosInstance.get(`${endpoint}?${queryString}`);
-        
+
         setTalentData((prevData) => {
           const newState = {
             ...prevData,
@@ -182,7 +190,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           };
           return newState;
         });
-
       } catch (err) {
         console.error('Error fetching talents:', err);
         toast({
@@ -196,7 +203,7 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
     },
     [businessId, activeTab, constructQueryString],
   );
-  
+
   // MERGE SKILLS AND DOMAINS FETCHING INTO A SINGLE EFFECT
   useEffect(() => {
     const fetchFilterData = async () => {
@@ -206,8 +213,12 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
           axiosInstance.get('/domain'),
         ]);
 
-        const skillLabels = skillsResponse.data.data.map((skill: any) => skill.label);
-        const domainLabels = domainsResponse.data.data.map((domain: any) => domain.label);
+        const skillLabels = skillsResponse.data.data.map(
+          (skill: any) => skill.label,
+        );
+        const domainLabels = domainsResponse.data.data.map(
+          (domain: any) => domain.label,
+        );
 
         const combinedLabels = [...skillLabels, ...domainLabels];
         setAllSkillsAndDomains(combinedLabels);
@@ -238,7 +249,6 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
       search: '',
       skills: [],
       experience: [],
-    
     };
     setFilters(emptyFilters);
   };
@@ -331,9 +341,14 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                     <div className="space-y-1">
                       {allSkillsAndDomains
                         .filter((skill) =>
-                          skill.toLowerCase().includes(searchQuery.toLowerCase()),
+                          skill
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()),
                         )
-                        .slice(0, showAllSkills ? allSkillsAndDomains.length : 10)
+                        .slice(
+                          0,
+                          showAllSkills ? allSkillsAndDomains.length : 10,
+                        )
                         .map((skill) => (
                           <div
                             key={skill}
@@ -363,8 +378,9 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                         className="p-0 text-sm font-normal"
                       >
                         <ChevronDown
-                          className={`h-4 w-4 mr-2 transition-transform ${showAllSkills ? 'rotate-180' : ''
-                            }`}
+                          className={`h-4 w-4 mr-2 transition-transform ${
+                            showAllSkills ? 'rotate-180' : ''
+                          }`}
                         />
                         {showAllSkills ? 'Less' : 'More'}
                       </Button>
@@ -374,20 +390,32 @@ const TalentLayout: React.FC<TalentLayoutProps> = ({ activeTab }) => {
                   <div className="space-y-2">
                     <Label>Experience</Label>
                     <div className="space-y-1">
-                      {Object.entries(experienceMapping).map(([label, value]) => (
-                        <div key={label} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`exp-${label}`}
-                            checked={filters.experience.includes(value)}
-                            onCheckedChange={(isChecked: boolean) =>
-                              handleToggleFilter('experience', value, isChecked)
-                            }
-                          />
-                          <Label htmlFor={`exp-${label}`} className="font-normal">
-                            {label}
-                          </Label>
-                        </div>
-                      ))}
+                      {Object.entries(experienceMapping).map(
+                        ([label, value]) => (
+                          <div
+                            key={label}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`exp-${label}`}
+                              checked={filters.experience.includes(value)}
+                              onCheckedChange={(isChecked: boolean) =>
+                                handleToggleFilter(
+                                  'experience',
+                                  value,
+                                  isChecked,
+                                )
+                              }
+                            />
+                            <Label
+                              htmlFor={`exp-${label}`}
+                              className="font-normal"
+                            >
+                              {label}
+                            </Label>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                   <div className="flex justify-between pt-4">
