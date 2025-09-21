@@ -9,7 +9,6 @@ import {
   Bookmark,
   Share2,
   CircleAlert,
-  FileText,
   Users,
   Zap,
   X,
@@ -245,7 +244,7 @@ const JobCard: React.FC<JobCardProps> = ({
         transition={{ duration: 0.3 }}
       >
         <Card
-          className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 dark:bg-muted/20 cursor-pointer"
+          className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20 cursor-pointer"
           onClick={handleCardClick}
         >
           <CardHeader className="pb-2 px-6 pt-6">
@@ -264,7 +263,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <CardTitle className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                      <CardTitle className="text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">
                         {job.projectName || 'Untitled Project'}
                       </CardTitle>
 
@@ -377,7 +376,7 @@ const JobCard: React.FC<JobCardProps> = ({
               </div>
 
               {/* Project Description */}
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-2">
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mt-2">
                 {job.description || 'No description provided for this project.'}
               </p>
             </div>
@@ -390,12 +389,12 @@ const JobCard: React.FC<JobCardProps> = ({
                 <Zap className="h-4 w-4 mr-2 text-amber-500" />
                 Skills Required
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {(job.skillsRequired || []).map((skill, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="rounded-full text-xs font-medium px-3 py-1 bg-primary/5 hover:bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 border border-primary/10 dark:border-primary/30 transition-colors"
+                    className="rounded-full text-xs font-medium px-3 py-1 bg-primary/5 hover:bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300 border border-primary/10 dark:border-primary/30 transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
                   >
                     {skill}
                   </Badge>
@@ -405,7 +404,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
             {/* Project Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center space-x-2">
                   <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30">
                     <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -427,7 +426,7 @@ const JobCard: React.FC<JobCardProps> = ({
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center space-x-2">
                   <div className="p-1.5 rounded-lg bg-green-50 dark:bg-green-900/30">
                     <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -446,7 +445,7 @@ const JobCard: React.FC<JobCardProps> = ({
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center space-x-2">
                   <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30">
                     <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -466,7 +465,7 @@ const JobCard: React.FC<JobCardProps> = ({
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+              <div className="bg-gray-50/80 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
                 <div className="flex items-center space-x-2">
                   <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/30">
                     <Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -501,11 +500,10 @@ const JobCard: React.FC<JobCardProps> = ({
             )}
           </CardContent>
 
-          <CardFooter className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
+          <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
               <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center">
-                  <FileText className="h-4 w-4 mr-1.5" />
                   <span>
                     {bidCount > 0
                       ? `${bidCount} ${bidCount === 1 ? 'proposal' : 'proposals'}`
