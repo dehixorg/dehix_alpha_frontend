@@ -17,7 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -93,7 +100,12 @@ export function FilterSheet({
   const [searchQuery, setSearchQuery] = useState('');
   const [domainSearchQuery, setDomainSearchQuery] = useState('');
   const [projectDomainSearchQuery, setProjectDomainSearchQuery] = useState('');
-  const [, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleReset = () => {
+    onReset();
+    setIsOpen(false);
+  };
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     onFilterChange(updates);
@@ -114,7 +126,7 @@ export function FilterSheet({
   };
 
   return (
-    <Sheet onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center gap-2">
           <Sliders className="h-4 w-4" />
@@ -132,11 +144,16 @@ export function FilterSheet({
       >
         <div className="sticky top-0 z-10 bg-background border-b p-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">Filters</h2>
+            <SheetHeader className="text-left">
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription className="sr-only">
+                Filter and sort projects by various criteria
+              </SheetDescription>
+            </SheetHeader>
             <Button
               variant="ghost"
               size="sm"
-              onClick={onReset}
+              onClick={handleReset}
               className="flex items-center gap-1 text-red-500 hover:text-red-500/80 transition-colors bg-red-500/10 hover:bg-red-500/20"
             >
               Clear all
@@ -158,7 +175,7 @@ export function FilterSheet({
               'budget',
               'other',
             ]}
-            className="space-y-4"
+            className="space-y-4 pb-2"
           >
             <AccordionItem
               value="domains"
