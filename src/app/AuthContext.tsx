@@ -52,12 +52,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const accessToken = await firebaseUser.getIdToken();
           if (accessToken) {
             const claims = await firebaseUser.getIdTokenResult();
-            const userData = { ...firebaseUser, type: claims.claims.type };
+            // Ensure type safety for the claims
+            const userType =
+              typeof claims.claims.type === 'string'
+                ? claims.claims.type
+                : undefined;
+
+            const userData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              phoneNumber: firebaseUser.phoneNumber,
+              emailVerified: firebaseUser.emailVerified,
+              type: userType,
+              // Add any other serializable properties you need
+            };
+
             setLocalStorageItem('user', JSON.stringify(userData));
             setLocalStorageItem('token', accessToken);
-            setUserState(userData);
+            setUserState(firebaseUser); // Keep the full user object in local state
             initializeAxiosWithToken(accessToken);
-            dispatch(setUser(userData));
+            dispatch(setUser(userData)); // Only pass serializable data to Redux
           }
         } catch (error) {
           console.error('Token Refresh Error:', error);
