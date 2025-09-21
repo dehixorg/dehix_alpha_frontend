@@ -32,6 +32,25 @@ import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/hooks/use-toast';
 import FAQAccordion from '@/components/accordian/faqAccordian';
 
+// Logging out overlay component with enhanced UI/UX
+const LoggingOutOverlay = () => (
+  <div className="fixed inset-0 bg-background/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div className="bg-card p-8 rounded-xl shadow-2xl max-w-md w-full mx-4 flex flex-col items-center space-y-6 border border-border/50">
+      <div className="relative">
+        <div className="h-16 w-16 rounded-full flex items-center justify-center">
+          <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        </div>
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-xl font-semibold text-foreground">Signing Out</h3>
+        <p className="text-muted-foreground text-sm">
+          Securing your account...
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 const useShare = () => {
   const share = async (title: string, text: string, url: string) => {
     if (navigator.share) {
@@ -63,6 +82,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [isFaqOpen, setIsFaqOpen] = useState(false); // New state for FAQ dialog
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const share = useShare();
 
   const pathname = usePathname();
@@ -71,7 +91,6 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   useEffect(() => {
     if (user?.type) {
-      console.log(user);
       setUserType(user.type);
     } else {
       const storedUserType = Cookies.get('userType');
@@ -116,37 +135,32 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
   }, [user?.uid, user.type, setConnects]);
 
   const handleLogout = async () => {
-    // Optimize by doing non-blocking operations first
-    const firebaseSignOut = async () => {
-      try {
-        const { auth } = await import('@/config/firebaseConfig');
-        await auth.signOut();
-      } catch (error) {
-        console.error('Error during sign out:', error);
-      }
-    };
+    // Show logging out overlay and prevent interaction
+    setIsLoggingOut(true);
+    document.body.style.pointerEvents = 'none';
+    document.body.style.overflow = 'hidden';
 
-    // Clear client-side storage in parallel
-    Promise.all([
-      firebaseSignOut(),
-      // Clear cookies
-      (() => {
-        Cookies.remove('userType');
-        Cookies.remove('token');
-      })(),
-      // Clear localStorage
-      (() => {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      })(),
-    ]).then(() => {
-      // Clear Redux store and redirect in the next tick
-      setTimeout(() => {
-        dispatch(clearUser());
-        // Use window.location for immediate redirect without React Router delay
-        window.location.href = '/auth/login';
-      }, 0);
-    });
+    try {
+      // Clear sensitive data first
+      Cookies.remove('userType');
+      Cookies.remove('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+
+      // Clear Redux store
+      dispatch(clearUser());
+
+      // Firebase sign out (fire and forget)
+      const { auth } = await import('@/config/firebaseConfig');
+      auth.signOut().catch(console.error);
+
+      // Force a hard redirect to prevent any state-related issues
+      window.location.href = '/auth/login';
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Even if there's an error, still redirect to login
+      window.location.href = '/auth/login';
+    }
   };
 
   const handleReferralClick = () => {
@@ -181,6 +195,7 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   return (
     <>
+      {isLoggingOut && <LoggingOutOverlay />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
