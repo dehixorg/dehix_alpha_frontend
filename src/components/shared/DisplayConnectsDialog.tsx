@@ -117,10 +117,10 @@ const DisplayConnectsDialog = React.forwardRef<
           ref={ref}
           variant="outline"
           size="icon"
-          className="relative rounded-full hover:scale-105 transition-transform"
+          className="relative rounded-full hover:scale-105 transition-transform ml-auto"
         >
           <Wallet strokeWidth={1.1} className="w-5 h-5" />
-          {connects >= 0 && (
+          {connects > 0 && (
             <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full px-2 shadow-md">
               {connects}
             </span>

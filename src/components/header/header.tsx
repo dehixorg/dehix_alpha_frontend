@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Wallet } from 'lucide-react';
 
 import CollapsibleSidebarMenu from '../menu/collapsibleSidebarMenu';
 import { MenuItem } from '../menu/sidebarMenu';
 import DropdownProfile from '../shared/DropdownProfile';
 import { NotificationButton } from '../shared/notification';
 import Breadcrumb from '../shared/breadcrumbList';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '../ui/hover-card';
+import { Button } from '../ui/button';
 import DisplayConnectsDialog from '../shared/DisplayConnectsDialog';
 
 import { RootState } from '@/lib/store';
@@ -67,14 +64,6 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, [user?.uid]);
 
-  const formatConnects = (num: number) => {
-    if (!num) return '0';
-    if (num >= 1_000_000)
-      return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
-    return num.toString();
-  };
-
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center py-6 gap-4 border-b bg-muted/40 px-4 sm:px-6 border-b">
       {/* Sidebar Menu */}
@@ -91,26 +80,20 @@ const Header: React.FC<HeaderProps> = ({
       <Breadcrumb items={breadcrumbItems || []} />
 
       {/* Search Bar */}
-      <div className="relative ml-auto flex-1 md:grow-0">
-        {/* <Search
+      {/* <div className="relative ml-auto flex-1 md:grow-0">
+        <Search
           className="w-full md:w-[200px] lg:w-[336px]"
           placeholder={searchPlaceholder}
-        /> */}
-      </div>
+        />
+      </div> */}
 
-      <HoverCard>
-        <div className="relative ml-auto flex-1 md:grow-0">
-          <HoverCardTrigger asChild>
-            <DisplayConnectsDialog userId={user.uid} connects={connects} />
-          </HoverCardTrigger>
-          <HoverCardContent className="w-auto px-4 py-2 text-center font-bold shadow-xl rounded-lg">
-            {connects !== null
-              ? `${formatConnects(connects)} rewards Available`
-              : 'No rewards yet!'}
-          </HoverCardContent>
-        </div>
-      </HoverCard>
-
+      {user?.uid ? (
+        <DisplayConnectsDialog userId={user.uid} connects={connects} />
+      ) : (
+        <Button variant="ghost" size="sm">
+          <Wallet className="h-4 w-4" />
+        </Button>
+      )}
       {/* Notification Button */}
       <NotificationButton />
 

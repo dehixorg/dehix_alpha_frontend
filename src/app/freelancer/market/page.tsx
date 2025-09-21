@@ -436,14 +436,17 @@ const Market: React.FC = () => {
             { label: 'Market', link: '#' },
           ]}
         />
-        <div className="px-4 sm:px-8 pb-4">
+        <div className="p-4 sm:px-8">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
                   Find Your Next Opportunity
                 </h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
+                  Marketplace
+                </h1>
+                <p className="hidden md:block text-muted-foreground">
                   Browse through available projects and find your next gig
                 </p>
               </div>

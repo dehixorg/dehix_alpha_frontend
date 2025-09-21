@@ -262,12 +262,11 @@ const JobCard: React.FC<JobCardProps> = ({
                   </Avatar>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <CardTitle className="text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">
+                    <div className="flex justify-between items-start w-full gap-2">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors max-w-[calc(100%-80px)]">
                         {job.projectName || 'Untitled Project'}
                       </CardTitle>
-
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -502,7 +501,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
           <CardFooter className="px-6 py-4 bg-gray-50/80 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
-              <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center">
                   <span>
                     {bidCount > 0
@@ -512,7 +511,7 @@ const JobCard: React.FC<JobCardProps> = ({
                 </div>
                 {job.updatedAt && (
                   <div className="hidden sm:flex items-center">
-                    <span className="mx-2">•</span>
+                    <Dot />
                     <span>
                       Updated{' '}
                       {formatDistanceToNow(new Date(job.updatedAt), {
