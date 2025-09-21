@@ -469,9 +469,9 @@ const Market: React.FC = () => {
                   consultant: filters.consultant,
                 }}
                 onFilterChange={(updatedFilters) => {
-                  setFilters(prev => ({
+                  setFilters((prev) => ({
                     ...prev,
-                    ...updatedFilters
+                    ...updatedFilters,
                   }));
                 }}
                 activeFilterCount={activeFilterCount}

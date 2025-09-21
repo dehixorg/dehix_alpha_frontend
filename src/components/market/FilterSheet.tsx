@@ -1,13 +1,22 @@
 'use client';
 
+import {
+  Layers,
+  Search,
+  Sliders,
+  Tag,
+  DollarSign,
+  Bookmark,
+  Briefcase,
+} from 'lucide-react';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Layers, Search, Sliders, Tag, DollarSign, Bookmark, Briefcase } from 'lucide-react';
-import { useState } from 'react';
 
 export interface FilterState {
   jobType: string[];
@@ -76,12 +85,15 @@ export function FilterSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[350px] sm:w-[400px] p-0 overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="w-[350px] sm:w-[400px] p-0 overflow-y-auto"
+      >
         <div className="h-full flex flex-col">
           <div className="sticky top-0 z-10 bg-background border-b p-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Filters</h2>
-              <Button variant="ghost" size="sm" onClick={onReset}>
+              <Button variant="outline" size="sm" onClick={onReset}>
                 Reset all
               </Button>
             </div>
@@ -103,7 +115,10 @@ export function FilterSheet({
                           });
                         }}
                       />
-                      <label htmlFor={`type-${type}`} className="text-sm font-medium leading-none cursor-pointer">
+                      <label
+                        htmlFor={`type-${type}`}
+                        className="text-sm font-medium leading-none cursor-pointer"
+                      >
                         {type}
                       </label>
                     </div>
@@ -115,7 +130,10 @@ export function FilterSheet({
                 <ScrollArea className="h-60 py-1 -mx-1">
                   <div className="space-y-2 pr-2">
                     {domains.map((domain) => (
-                      <div key={domain} className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1">
+                      <div
+                        key={domain}
+                        className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
+                      >
                         <Checkbox
                           id={`domain-${domain}`}
                           checked={filters.domain.includes(domain)}
@@ -127,7 +145,10 @@ export function FilterSheet({
                             });
                           }}
                         />
-                        <label htmlFor={`domain-${domain}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
+                        <label
+                          htmlFor={`domain-${domain}`}
+                          className="text-sm font-medium leading-none cursor-pointer flex-1"
+                        >
                           {domain}
                         </label>
                       </div>
@@ -140,7 +161,10 @@ export function FilterSheet({
                 <ScrollArea className="h-60 py-1 -mx-1">
                   <div className="space-y-2 pr-2">
                     {projectDomains.map((domain) => (
-                      <div key={domain} className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1">
+                      <div
+                        key={domain}
+                        className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
+                      >
                         <Checkbox
                           id={`project-domain-${domain}`}
                           checked={filters.projectDomain.includes(domain)}
@@ -148,11 +172,16 @@ export function FilterSheet({
                             handleFilterChange({
                               projectDomain: checked
                                 ? [...filters.projectDomain, domain]
-                                : filters.projectDomain.filter((d) => d !== domain),
+                                : filters.projectDomain.filter(
+                                    (d) => d !== domain,
+                                  ),
                             });
                           }}
                         />
-                        <label htmlFor={`project-domain-${domain}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
+                        <label
+                          htmlFor={`project-domain-${domain}`}
+                          className="text-sm font-medium leading-none cursor-pointer flex-1"
+                        >
                           {domain}
                         </label>
                       </div>
@@ -176,11 +205,16 @@ export function FilterSheet({
                     <div className="space-y-2 pr-2">
                       {skills
                         .filter((skill) =>
-                          skill.toLowerCase().includes(searchQuery.toLowerCase())
+                          skill
+                            .toLowerCase()
+                            .includes(searchQuery.toLowerCase()),
                         )
                         .slice(0, 10)
                         .map((skill) => (
-                          <div key={skill} className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1">
+                          <div
+                            key={skill}
+                            className="flex items-center space-x-2 hover:bg-muted/50 rounded p-1"
+                          >
                             <Checkbox
                               id={`skill-${skill}`}
                               checked={filters.skills.includes(skill)}
@@ -192,7 +226,10 @@ export function FilterSheet({
                                 });
                               }}
                             />
-                            <label htmlFor={`skill-${skill}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
+                            <label
+                              htmlFor={`skill-${skill}`}
+                              className="text-sm font-medium leading-none cursor-pointer flex-1"
+                            >
                               {skill}
                             </label>
                           </div>
@@ -206,7 +243,10 @@ export function FilterSheet({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label htmlFor="min-rate" className="text-xs text-muted-foreground">
+                      <label
+                        htmlFor="min-rate"
+                        className="text-xs text-muted-foreground"
+                      >
                         Min ($)
                       </label>
                       <Input
@@ -221,7 +261,10 @@ export function FilterSheet({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label htmlFor="max-rate" className="text-xs text-muted-foreground">
+                      <label
+                        htmlFor="max-rate"
+                        className="text-xs text-muted-foreground"
+                      >
                         Max ($)
                       </label>
                       <Input
