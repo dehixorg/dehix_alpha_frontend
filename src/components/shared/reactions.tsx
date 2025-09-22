@@ -39,7 +39,12 @@ const Reactions: React.FC<ReactionProps> = ({
         >
           <span
             className="inline-flex items-center justify-center rounded-full bg-transparent"
-            style={{ width: '1.2em', height: '1.2em', fontSize: '1em', lineHeight: 1 }}
+            style={{
+              width: '1.2em',
+              height: '1.2em',
+              fontSize: '1em',
+              lineHeight: 1,
+            }}
           >
             {emoji}
           </span>
