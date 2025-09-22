@@ -1336,11 +1336,14 @@ export function CardsChat({
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions || {}}
-                            toggleReaction={toggleReaction}
-                          />
+                          {/* Reactions moved to bottom-left of message bubble */}
+                          <div className="absolute -bottom-3 left-2 z-10">
+                            <Reactions
+                              messageId={message.id}
+                              reactions={message.reactions || {}}
+                              toggleReaction={toggleReaction}
+                            />
+                          </div>
                           <div
                             className={cn(
                               'flex items-center text-xs mt-1',
