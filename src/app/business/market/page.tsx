@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
+import Header from '@/components/header/header';
 
 export interface FilterState {
   location: string[];
@@ -94,7 +95,11 @@ const Market: React.FC = () => {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
+      // Skip experience as it's already handled above
       if (key === 'experience') return;
+      
+      // Skip minRate and maxRate if they are empty strings
+      if ((key === 'minRate' || key === 'maxRate') && value === '') return;
 
       if (Array.isArray(value) && value.length > 0) {
         const cleanedValues = value.filter(
@@ -103,12 +108,13 @@ const Market: React.FC = () => {
         if (cleanedValues.length > 0) {
           queryParts.push(`${key}=${cleanedValues.join(',')}`);
         }
-      } else if (typeof value === 'string') {
+      } else if (typeof value === 'string' && value !== '') {
         queryParts.push(
           `${key}=${value
             .split(',')
             .map((v) => v.trim())
-            .join(',')}`,
+            .filter(v => v !== '')
+            .join(',')}`
         );
       }
     });
@@ -172,7 +178,17 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-4 sm:pl-14">
+      <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">
+        <Header
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        activeMenu="Market"
+        breadcrumbItems={[
+          { label: 'Dashboard', link: '/business/dashboard' },
+          { label: 'Market', link: '/business/market' },
+        ]}
+      />
+      <div className="flex flex-col sm:gap-4">
         <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
           <div className="relative flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -215,6 +231,7 @@ const Market: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

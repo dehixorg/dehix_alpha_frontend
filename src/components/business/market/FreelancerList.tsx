@@ -57,8 +57,8 @@ const FreelancerList: React.FC<FreelancerListProps> = ({
             profile={freelancer.profilePic}
             userName={freelancer.userName}
             monthlyPay={freelancer.monthlyPay}
-            Github={freelancer.github}
-            LinkedIn={freelancer.linkedin}
+            githubUrl={freelancer.github}
+            linkedInUrl={freelancer.linkedin}
           />
         ))
       )}
