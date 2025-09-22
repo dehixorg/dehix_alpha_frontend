@@ -10,7 +10,7 @@ export const NewReportTab = ({
   onSubmitted,
 }: NewReportTabProps) => {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden  rounded-md p-2">
+    <div className="flex-1 flex flex-col overflow-hidden rounded-md">
       <div className="flex-1 overflow-y-auto">
         <ReportForm initialData={reportData} onSubmitted={onSubmitted} />
       </div>

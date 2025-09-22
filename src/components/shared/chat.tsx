@@ -1434,8 +1434,7 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={() => setReplyToMessageId('')
-                      }
+                      onClick={() => setReplyToMessageId('')}
                       variant="ghost"
                       size="icon"
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
