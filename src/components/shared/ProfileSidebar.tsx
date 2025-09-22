@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import {
   VolumeX,
   ShieldX,
@@ -10,7 +11,7 @@ import {
   MinusCircle,
   Volume2,
   LoaderCircle,
-} from 'lucide-react'; // Added LoaderCircle
+} from 'lucide-react';
 import {
   doc,
   getDoc,
@@ -23,16 +24,17 @@ import {
   query,
   orderBy,
   getDocs,
+  writeBatch,
 } from 'firebase/firestore';
-import { useSelector } from 'react-redux';
+
+import { useToast } from '../ui/use-toast';
 
 import { AddMembersDialog } from './AddMembersDialog';
-import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
+import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
-// Simple file item type for shared files list
 export type FileItem = {
   id: string;
   name: string;
@@ -62,7 +64,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
-import { useToast } from '@/hooks/use-toast';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
 
@@ -118,14 +119,15 @@ interface ProfileSidebarProps {
   initialData?: { userName?: string; email?: string; profilePic?: string };
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
+export function ProfileSidebar({
   isOpen,
   onClose,
   profileId,
   profileType,
   // currentUser prop is available via Redux store
   initialData,
-}) => {
+}: ProfileSidebarProps) {
+  // State management
   const [profileData, setProfileData] = useState<
     ProfileUser | ProfileGroup | null
   >(null);
@@ -135,14 +137,18 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
-
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [refreshDataKey, setRefreshDataKey] = useState(0);
+
+  // Hooks
+  const user = useSelector((state: RootState) => state.user);
+  const { toast } = useToast();
+
+  // Dialog state
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
@@ -158,8 +164,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       | null
       | undefined,
   });
-
-  const [refreshDataKey, setRefreshDataKey] = useState(0);
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -402,6 +406,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       });
       return;
     }
+
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -410,33 +415,52 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       });
       return;
     }
+
     const groupDocRef = doc(db, 'conversations', groupId);
+
     try {
-      // No need to fetch groupSnap if we are just updating, unless we need to validate something from it first.
-      // For now, assuming direct update is fine.
+      const batch = writeBatch(db);
+      const updates: any = {};
+      const memberUpdates: string[] = [];
 
-      const newParticipantDetailsUpdates: { [key: string]: any } = {};
-      const selectedUserIds = selectedUsers.map((user) => user.id);
+      // Prepare participant details updates
+      selectedUsers.forEach((user) => {
+        if (!user.id) return; // Skip if no user ID
 
-      for (const user of selectedUsers) {
-        newParticipantDetailsUpdates[`participantDetails.${user.id}`] = {
-          email: user.email,
-          userName: user.displayName, // Using displayName from CombinedUser
-          profilePic: user.profilePic,
-          userType: user.userType, // Storing userType
+        updates[`participantDetails.${user.id}`] = {
+          userName: user.displayName || 'User',
+          email: user.email || '',
+          profilePic: user.profilePic || null, // Ensure profilePic is never undefined
+          userType: user.userType || 'user', // Default to 'user' if not specified
         };
+
+        memberUpdates.push(user.id);
+      });
+
+      if (Object.keys(updates).length === 0) {
+        throw new Error('No valid users to add');
       }
 
-      await updateDoc(groupDocRef, {
-        participants: arrayUnion(...selectedUserIds),
-        ...newParticipantDetailsUpdates,
-        updatedAt: new Date().toISOString(),
-      });
+      // Add members to the group
+      updates.members = arrayUnion(...memberUpdates);
+      updates.updatedAt = new Date().toISOString();
+
+      // Update the document with all changes
+      batch.update(groupDocRef, updates);
+      await batch.commit();
+
+      // Refresh the profile data to show the new members
+      if (profileData && 'refreshData' in profileData) {
+        await (profileData as any).refreshData();
+      }
+
+      // Update local state to reflect the changes
+      setRefreshDataKey((prev) => prev + 1);
+
       toast({
         title: 'Success',
         description: `${selectedUsers.length} member(s) added successfully.`,
       });
-      setRefreshDataKey((prev) => prev + 1); // Trigger data refresh for the sidebar
     } catch (error) {
       console.error('Error adding members:', error);
       toast({
@@ -444,6 +468,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         title: 'Error',
         description: 'Failed to add members. Please try again.',
       });
+      throw error; // Re-throw to allow caller to handle if needed
     }
   };
 
@@ -1251,6 +1276,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       )}
     </Sheet>
   );
-};
+}
 
 export default ProfileSidebar;
