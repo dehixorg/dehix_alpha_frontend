@@ -205,13 +205,6 @@ const JobCard: React.FC<JobCardProps> = ({
 
   const router = useRouter();
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Only navigate if the click was directly on the card, not on interactive elements
-    if (!(e.target as HTMLElement).closest('button, a, [role="button"]')) {
-      router.push(`/project/${job._id}`);
-    }
-  };
-
   const profile =
     job.profiles && job.profiles.length > 0 ? job.profiles[0] : null;
 
@@ -242,10 +235,7 @@ const JobCard: React.FC<JobCardProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card
-          className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20 cursor-pointer"
-          onClick={handleCardClick}
-        >
+        <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-muted/20 cursor-pointer">
           <CardHeader className="pb-2 px-6 pt-6">
             <div className="flex flex-col space-y-3">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
