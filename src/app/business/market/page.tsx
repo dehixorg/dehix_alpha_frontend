@@ -119,6 +119,11 @@ const Market: React.FC = () => {
       }
     });
 
+    // Include search term if present
+    if (searchQuery && searchQuery.trim() !== '') {
+      queryParts.push(`search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+
     return queryParts.join('&');
   };
 
@@ -139,7 +144,7 @@ const Market: React.FC = () => {
     } finally {
       setIsDataLoading(false);
     }
-  }, []);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -189,6 +194,20 @@ const Market: React.FC = () => {
           ]}
         />
         <div className="flex flex-col sm:gap-4">
+          {/* Page Hero */}
+          <div className="px-4 sm:px-6">
+            <div className="flex flex-col space-y-2">
+              <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                Business Marketplace
+              </h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
+                Business Marketplace
+              </h1>
+              <p className="hidden md:block text-muted-foreground">
+                Discover and hire vetted freelancers for your projects.
+              </p>
+            </div>
+          </div>
           <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <div className="relative flex-1 md:grow-0">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -216,14 +235,11 @@ const Market: React.FC = () => {
           </div>
           <div className="mx-auto w-full p-4 md:p-6">
             <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">
-                  Available Freelancers
-                </h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex items-center justify-between px-1">
+                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
                   {freelancers.length}{' '}
                   {freelancers.length === 1 ? 'result' : 'results'}
-                </p>
+                </span>
               </div>
               <div className="space-y-4">
                 <FreelancerList

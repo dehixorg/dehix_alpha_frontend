@@ -161,7 +161,7 @@ export function BusinessFilterSheet({
               onChange={onSearchChange}
               onClear={onClear}
             />
-            <div className="h-60 overflow-hidden">
+            <div className="max-h-60 overflow-hidden">
               <ScrollArea className="h-full w-full pr-2">
                 <div className="space-y-1 py-1">
                   {items
