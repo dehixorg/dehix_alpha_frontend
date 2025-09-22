@@ -97,7 +97,7 @@ const Market: React.FC = () => {
     Object.entries(filters).forEach(([key, value]) => {
       // Skip experience as it's already handled above
       if (key === 'experience') return;
-      
+
       // Skip minRate and maxRate if they are empty strings
       if ((key === 'minRate' || key === 'maxRate') && value === '') return;
 
@@ -113,8 +113,8 @@ const Market: React.FC = () => {
           `${key}=${value
             .split(',')
             .map((v) => v.trim())
-            .filter(v => v !== '')
-            .join(',')}`
+            .filter((v) => v !== '')
+            .join(',')}`,
         );
       }
     });
@@ -172,7 +172,7 @@ const Market: React.FC = () => {
   }, [user.uid, filters, fetchData]);
 
   return (
-    <section className="flex min-h-screen w-full flex-col bg-muted/40">
+    <section className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -180,58 +180,60 @@ const Market: React.FC = () => {
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">
         <Header
-        menuItemsTop={menuItemsTop}
-        menuItemsBottom={menuItemsBottom}
-        activeMenu="Market"
-        breadcrumbItems={[
-          { label: 'Dashboard', link: '/business/dashboard' },
-          { label: 'Market', link: '/business/market' },
-        ]}
-      />
-      <div className="flex flex-col sm:gap-4">
-        <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-          <div className="relative flex-1 md:grow-0">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search freelancers..."
-              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <BusinessFilterSheet
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              activeFilterCount={activeFilterCount}
-              skills={skills}
-              domains={domains}
-              experiences={experiences}
-              jobTypes={jobTypes}
-              locations={locations}
-              onReset={handleReset}
-            />
-          </div>
-        </div>
-        <div className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-6">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold">Available Freelancers</h1>
-              <p className="text-sm text-muted-foreground">
-                {freelancers.length}{' '}
-                {freelancers.length === 1 ? 'result' : 'results'}
-              </p>
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Market"
+          breadcrumbItems={[
+            { label: 'Dashboard', link: '/business/dashboard' },
+            { label: 'Market', link: '/business/market' },
+          ]}
+        />
+        <div className="flex flex-col sm:gap-4">
+          <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+            <div className="relative flex-1 md:grow-0">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search freelancers..."
+                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <div className="space-y-4">
-              <FreelancerList
-                freelancers={freelancers}
-                isLoading={isDataLoading}
+            <div className="ml-auto flex items-center gap-2">
+              <BusinessFilterSheet
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                activeFilterCount={activeFilterCount}
+                skills={skills}
+                domains={domains}
+                experiences={experiences}
+                jobTypes={jobTypes}
+                locations={locations}
+                onReset={handleReset}
               />
             </div>
           </div>
+          <div className="mx-auto w-full p-4 md:p-6">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-semibold">
+                  Available Freelancers
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {freelancers.length}{' '}
+                  {freelancers.length === 1 ? 'result' : 'results'}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <FreelancerList
+                  freelancers={freelancers}
+                  isLoading={isDataLoading}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
       </div>
     </section>
   );
