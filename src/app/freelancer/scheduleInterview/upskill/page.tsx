@@ -1,9 +1,16 @@
 'use client';
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 import ScheduleInterviewNavbar from '@/components/freelancer/scheduleInterview/ScheduleInterviewNavbar';
 
 export default function UpskillInterviewPage() {
+  const router = useRouter();
+
+  React.useEffect(() => {
+    router.replace('/freelancer/scheduleInterview/upskill?tab=upskill/current');
+  }, [router]);
+
   return (
     <div className="flex min-h-screen w-full">
       <ScheduleInterviewNavbar />
@@ -39,9 +46,7 @@ export default function UpskillInterviewPage() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
               This feature will help you enhance your skills through specialized
-              interviews with industry experts. This feature will help you
-              enhance your skills through specialized interviews with industry
-              experts.
+              interviews with industry experts.
             </p>
           </div>
         </div>
