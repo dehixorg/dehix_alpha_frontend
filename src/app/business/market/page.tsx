@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Search } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -11,7 +10,6 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import FreelancerList from '@/components/business/market/FreelancerList';
 import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
@@ -29,7 +27,6 @@ export interface FilterState {
 
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
-  const [searchQuery, setSearchQuery] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
   const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
@@ -119,11 +116,6 @@ const Market: React.FC = () => {
       }
     });
 
-    // Include search term if present
-    if (searchQuery && searchQuery.trim() !== '') {
-      queryParts.push(`search=${encodeURIComponent(searchQuery.trim())}`);
-    }
-
     return queryParts.join('&');
   };
 
@@ -144,7 +136,7 @@ const Market: React.FC = () => {
     } finally {
       setIsDataLoading(false);
     }
-  }, [searchQuery]);
+  }, []);
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -196,41 +188,31 @@ const Market: React.FC = () => {
         <div className="flex flex-col sm:gap-4">
           {/* Page Hero */}
           <div className="px-4 sm:px-6">
-            <div className="flex flex-col space-y-2">
-              <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
-                Business Marketplace
-              </h1>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
-                Business Marketplace
-              </h1>
-              <p className="hidden md:block text-muted-foreground">
-                Discover and hire vetted freelancers for your projects.
-              </p>
-            </div>
-          </div>
-          <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-            <div className="relative flex-1 md:grow-0">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search freelancers..."
-                className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="ml-auto flex items-center gap-2">
-              <BusinessFilterSheet
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                activeFilterCount={activeFilterCount}
-                skills={skills}
-                domains={domains}
-                experiences={experiences}
-                jobTypes={jobTypes}
-                locations={locations}
-                onReset={handleReset}
-              />
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col space-y-2">
+                <h1 className="hidden md:block text-2xl sm:text-3xl font-bold tracking-tight">
+                  Business Marketplace
+                </h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block md:hidden">
+                  Business Marketplace
+                </h1>
+                <p className="hidden md:block text-muted-foreground">
+                  Discover and hire vetted freelancers for your projects.
+                </p>
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <BusinessFilterSheet
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  activeFilterCount={activeFilterCount}
+                  skills={skills}
+                  domains={domains}
+                  experiences={experiences}
+                  jobTypes={jobTypes}
+                  locations={locations}
+                  onReset={handleReset}
+                />
+              </div>
             </div>
           </div>
           <div className="mx-auto w-full p-4 md:p-6">

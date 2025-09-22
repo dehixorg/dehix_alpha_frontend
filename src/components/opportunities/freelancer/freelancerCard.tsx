@@ -23,8 +23,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 import {
   Tooltip,
   TooltipContent,
@@ -43,38 +44,6 @@ interface FreelancerCardProps {
   linkedInUrl?: string;
   websiteUrl?: string;
 }
-
-// Social link component
-const SocialLink = ({
-  href,
-  children,
-  icon: Icon,
-}: {
-  href: string;
-  children: React.ReactNode;
-  icon: React.ElementType;
-}) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-  >
-    <Icon className="h-4 w-4" />
-    <span className="truncate">{children}</span>
-  </a>
-);
-
-// Skill progress component
-const SkillProgress = ({ name, level }: { name: string; level: number }) => (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between">
-      <span className="text-sm font-medium">{name}</span>
-      <span className="text-xs text-muted-foreground">{level}%</span>
-    </div>
-    <Progress value={level} className="h-2" />
-  </div>
-);
 
 const FreelancerCard: React.FC<FreelancerCardProps> = ({
   name,
@@ -297,108 +266,148 @@ const FreelancerCard: React.FC<FreelancerCardProps> = ({
                   <DialogTitle className="text-2xl tracking-tight">
                     Freelancer Profile
                   </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    Overview of this freelancer&lsquo;s experience, skills, and
+                    domains.
+                  </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6 py-4">
-                  <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-                    <div className="text-center md:text-left">
-                      <Avatar className="h-24 w-24 border-4 border-primary/10 mx-auto md:mx-0">
+                <div className="space-y-6 py-2">
+                  {/* Top profile summary */}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16 border-4 border-primary/10">
                         <AvatarImage
                           src={profile}
                           alt={name}
                           className="object-cover"
                         />
-                        <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                        <AvatarFallback className="bg-primary/10 text-primary text-lg font-semibold">
                           {getInitials(name)}
                         </AvatarFallback>
                       </Avatar>
-                      <h2 className="text-xl font-bold mt-4">{name}</h2>
-                      <p className="text-muted-foreground">
-                        @{userName || 'username'}
-                      </p>
-
-                      <div className="mt-4 space-y-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">
-                            Experience:
-                          </span>
-                          <span className="font-medium">
-                            {experience} years
-                          </span>
-                        </div>
-                        {monthlyPay && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Rate:</span>
-                            <span className="font-medium">
-                              ${monthlyPay}/hr
-                            </span>
-                          </div>
-                        )}
+                      <div>
+                        <h2 className="text-xl font-semibold leading-tight">
+                          {name}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                          @{userName || 'username'}
+                        </p>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground bg-muted/40">
+                        <Briefcase className="h-3.5 w-3.5" />{' '}
+                        {Number(experience) || 0} yrs
+                      </span>
+                      {Number(monthlyPay) > 0 && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground bg-muted/40">
+                          <DollarSign className="h-3.5 w-3.5" />{' '}
+                          {Number(monthlyPay)}/hr
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                      <div className="mt-4 flex justify-center md:justify-start gap-4">
-                        {githubUrl && (
-                          <SocialLink href={githubUrl} icon={Github}>
-                            GitHub
-                          </SocialLink>
-                        )}
-                        {linkedInUrl && (
-                          <SocialLink href={linkedInUrl} icon={Linkedin}>
-                            LinkedIn
-                          </SocialLink>
+                  <Separator />
+
+                  {/* Detail sections */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-medium mb-2 flex items-center gap-2">
+                        <Award className="h-4 w-4" /> Skills
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {!skills || skills.length === 0 ? (
+                          <div className="text-sm text-muted-foreground inline-flex items-center gap-2 px-3 py-1 rounded-md border bg-muted/30">
+                            No skills provided
+                          </div>
+                        ) : (
+                          skills
+                            .slice(0, 10)
+                            .map((skill: any, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="secondary"
+                                className="font-normal px-3 py-1 rounded-md"
+                              >
+                                {skill.name}
+                              </Badge>
+                            ))
                         )}
                       </div>
                     </div>
 
-                    <Separator className="my-4 md:hidden" />
-
-                    <div className="flex-1 space-y-6">
-                      <div>
-                        <h3 className="font-medium mb-2 flex items-center gap-2">
-                          <Award className="h-4 w-4" /> Skills
-                        </h3>
-                        <div className="space-y-4">
-                          {!skills || skills.length === 0 ? (
-                            <div className="text-sm text-muted-foreground inline-flex items-center gap-2 px-3 py-1 rounded-md border bg-muted/30">
-                              No skills provided
-                            </div>
-                          ) : (
-                            skills
-                              .slice(0, 5)
-                              .map((skill: any, index: number) => (
-                                <SkillProgress
-                                  key={index}
-                                  name={skill.name}
-                                  level={Math.min(
-                                    100,
-                                    70 + Math.floor(Math.random() * 30),
-                                  )}
-                                />
-                              ))
-                          )}
+                    <div>
+                      <h3 className="font-medium mb-2 flex items-center gap-2">
+                        <Layers className="h-4 w-4" /> Domains
+                      </h3>
+                      {domains && domains.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {domains.map((domain: any, index: number) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="font-normal px-3 py-1 rounded-full"
+                            >
+                              {domain.name}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-
-                      {domains && domains.length > 0 && (
-                        <div>
-                          <h3 className="font-medium mb-2 flex items-center gap-2">
-                            <Layers className="h-4 w-4" /> Domains
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {domains.map((domain: any, index: number) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="font-normal px-3 py-1 rounded-full"
-                              >
-                                {domain.name}
-                              </Badge>
-                            ))}
-                          </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground inline-flex items-center gap-2 px-3 py-1 rounded-md border bg-muted/30">
+                          No domains listed
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* Footer actions inside content for mobile stacking */}
+                  <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-3 pt-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {websiteUrl && (
+                        <a
+                          href={websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Globe className="h-4 w-4" /> Website
+                          </Button>
+                        </a>
+                      )}
+                      {githubUrl && (
+                        <a
+                          href={githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Github className="h-4 w-4" /> GitHub
+                          </Button>
+                        </a>
+                      )}
+                      {linkedInUrl && (
+                        <a
+                          href={linkedInUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Linkedin className="h-4 w-4" /> LinkedIn
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                        aria-label="Hire freelancer"
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" /> Hire Now
+                      </Button>
+                    </div>
+                  </DialogFooter>
                 </div>
               </DialogContent>
             </Dialog>
