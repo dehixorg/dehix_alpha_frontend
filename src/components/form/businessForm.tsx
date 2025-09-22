@@ -133,8 +133,9 @@ export function BusinessForm({ user_id }: { user_id: string }) {
       if (res.status === 200) {
         const updatedUser = {
           ...userInfo,
-          ...data,
         };
+
+        updatedUser.uid = userInfo._id;
 
         dispatch(setUser(updatedUser));
         setUserInfo(updatedUser);
