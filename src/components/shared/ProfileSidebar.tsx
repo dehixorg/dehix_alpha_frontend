@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useToast } from '@/components/ui/use-toast';
 import {
   VolumeX,
   ShieldX,
@@ -28,13 +27,14 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
+import { useToast } from '../ui/use-toast';
+
 import { AddMembersDialog } from './AddMembersDialog';
-import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
+import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
-// Simple file item type for shared files list
 export type FileItem = {
   id: string;
   name: string;
@@ -128,19 +128,22 @@ export function ProfileSidebar({
   initialData,
 }: ProfileSidebarProps) {
   // State management
-  const [profileData, setProfileData] = useState<ProfileUser | ProfileGroup | null>(null);
+  const [profileData, setProfileData] = useState<
+    ProfileUser | ProfileGroup | null
+  >(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [sharedFiles, setSharedFiles] = useState<FileItem[]>([]);
+  const [, setSharedFiles] = useState<FileItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
-  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] = useState(false);
+  const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
+    useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
-  
+
   // Hooks
   const user = useSelector((state: RootState) => state.user);
   const { toast } = useToast();
@@ -414,7 +417,7 @@ export function ProfileSidebar({
     }
 
     const groupDocRef = doc(db, 'conversations', groupId);
-    
+
     try {
       const batch = writeBatch(db);
       const updates: any = {};
@@ -423,14 +426,14 @@ export function ProfileSidebar({
       // Prepare participant details updates
       selectedUsers.forEach((user) => {
         if (!user.id) return; // Skip if no user ID
-        
+
         updates[`participantDetails.${user.id}`] = {
           userName: user.displayName || 'User',
           email: user.email || '',
           profilePic: user.profilePic || null, // Ensure profilePic is never undefined
           userType: user.userType || 'user', // Default to 'user' if not specified
         };
-        
+
         memberUpdates.push(user.id);
       });
 
@@ -452,7 +455,7 @@ export function ProfileSidebar({
       }
 
       // Update local state to reflect the changes
-      setRefreshDataKey(prev => prev + 1);
+      setRefreshDataKey((prev) => prev + 1);
 
       toast({
         title: 'Success',
@@ -1273,6 +1276,6 @@ export function ProfileSidebar({
       )}
     </Sheet>
   );
-};
+}
 
 export default ProfileSidebar;
