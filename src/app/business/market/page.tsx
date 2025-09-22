@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { Search } from 'lucide-react';
 
 import SidebarMenu from '@/components/menu/sidebarMenu';
 import {
@@ -10,13 +11,12 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { RootState } from '@/lib/store';
-import MarketHeader from '@/components/business/market/MarketHeader';
-import FilterSidebar from '@/components/business/market/FilterSideBar';
-import FreelancerList from '@/components/business/market/FreelancerList';
-import MobileFilterModal from '@/components/business/market/MobileFilterModal';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import FreelancerList from '@/components/business/market/FreelancerList';
+import { BusinessFilterSheet } from '@/components/business/market/BusinessFilterSheet';
 
-interface FilterState {
+export interface FilterState {
   location: string[];
   jobType: string[];
   domain: string[];
@@ -28,12 +28,14 @@ interface FilterState {
 
 const Market: React.FC = () => {
   const user = useSelector((state: RootState) => state.user);
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [domains, setDomains] = useState<string[]>([]);
+  const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance'];
+  const locations = ['Remote', 'On-site', 'Hybrid'];
+  const experiences = ['Entry', 'Intermediate', 'Senior', 'Lead'];
   const [freelancers, setFreelancers] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
-
   const [filters, setFilters] = useState<FilterState>({
     location: [],
     jobType: [],
@@ -44,33 +46,10 @@ const Market: React.FC = () => {
     maxRate: '',
   });
 
-  const handleFilterChange = (
-    filterType: string,
-    selectedValues: string | string[],
-  ) => {
-    let transformedValues: string | string[] = selectedValues;
-
-    const values = Array.isArray(selectedValues)
-      ? selectedValues
-      : [selectedValues];
-
-    transformedValues = values.flatMap((value) => {
-      // Check for experience ranges like "0-2", "3-6", "7+" and split them
-      if (value.includes('-')) {
-        const [start, end] = value.split('-').map(Number);
-        return Array.from({ length: end - start + 1 }, (_, i) =>
-          (start + i).toString(),
-        );
-      }
-      if (value === '7+') {
-        return ['7', '8', '9', '10']; // Return as strings
-      }
-      return [value];
-    });
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [filterType]: transformedValues,
+  const handleFilterChange = (updates: Partial<FilterState>) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...updates,
     }));
   };
 
@@ -78,13 +57,27 @@ const Market: React.FC = () => {
     setFilters({
       location: [],
       jobType: [],
+      experience: [],
       domain: [],
       skills: [],
-      experience: [],
       minRate: '',
       maxRate: '',
     });
   };
+
+  const getActiveFilterCount = (filters: FilterState) => {
+    return (
+      filters.skills.length +
+      filters.domain.length +
+      filters.experience.length +
+      filters.jobType.length +
+      filters.location.length +
+      (filters.minRate ? 1 : 0) +
+      (filters.maxRate ? 1 : 0)
+    );
+  };
+
+  const activeFilterCount = getActiveFilterCount(filters);
 
   const constructQueryString = (filters: FilterState) => {
     const queryParts: string[] = [];
@@ -172,10 +165,6 @@ const Market: React.FC = () => {
     fetchData(filters); // Fetch all data initially
   }, [user.uid, filters, fetchData]);
 
-  const handleModalToggle = () => {
-    setShowFilters(!showFilters);
-  };
-
   return (
     <section className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -183,27 +172,50 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-4  sm:pl-14 mb-8">
-        <MarketHeader />
-        <div className="flex flex-col lg:flex-row lg:space-x-5 md:-space-x-3 ml:20 sm:-space-x-4 md:ml-6 lg:ml-6">
-          <FilterSidebar
-            filters={filters}
-            domains={domains}
-            skills={skills}
-            handleFilterChange={handleFilterChange}
-            handleReset={handleReset}
-          />
-          <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
+      <div className="flex flex-col sm:gap-4 sm:pl-14">
+        <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+          <div className="relative flex-1 md:grow-0">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search freelancers..."
+              className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <BusinessFilterSheet
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              activeFilterCount={activeFilterCount}
+              skills={skills}
+              domains={domains}
+              experiences={experiences}
+              jobTypes={jobTypes}
+              locations={locations}
+              onReset={handleReset}
+            />
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-6">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold">Available Freelancers</h1>
+              <p className="text-sm text-muted-foreground">
+                {freelancers.length}{' '}
+                {freelancers.length === 1 ? 'result' : 'results'}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <FreelancerList
+                freelancers={freelancers}
+                isLoading={isDataLoading}
+              />
+            </div>
+          </div>
         </div>
       </div>
-      <MobileFilterModal
-        showFilters={showFilters}
-        filters={filters}
-        domains={domains}
-        skills={skills}
-        handleFilterChange={handleFilterChange}
-        handleModalToggle={handleModalToggle}
-      />
     </section>
   );
 };
