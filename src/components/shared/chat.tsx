@@ -1434,7 +1434,7 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={(e) => setReplyToMessageId('')
+                      onClick={() => setReplyToMessageId('')
                       }
                       variant="ghost"
                       size="icon"
