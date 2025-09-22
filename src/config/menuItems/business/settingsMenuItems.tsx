@@ -1,4 +1,4 @@
-import { FileText, HomeIcon, ShieldCheck, User } from 'lucide-react';
+import { Files, HomeIcon, ShieldCheck, User } from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -33,8 +33,8 @@ export const menuItemsTop: MenuItem[] = [
     label: 'KYC',
   },
   {
-    href: '/business/reports',
-    icon: <FileText className="h-5 w-5" />,
+    href: '/reports', // Link to your new Reports page
+    icon: <Files className="h-5 w-5" />, // You can change icon
     label: 'Reports',
   },
 ];
