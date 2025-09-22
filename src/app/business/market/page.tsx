@@ -172,10 +172,6 @@ const Market: React.FC = () => {
     fetchData(filters); // Fetch all data initially
   }, [user.uid, filters, fetchData]);
 
-  const handleApply = () => {
-    fetchData(filters);
-  };
-
   const handleModalToggle = () => {
     setShowFilters(!showFilters);
   };
@@ -195,7 +191,6 @@ const Market: React.FC = () => {
             domains={domains}
             skills={skills}
             handleFilterChange={handleFilterChange}
-            handleApply={handleApply}
             handleReset={handleReset}
           />
           <FreelancerList freelancers={freelancers} isLoading={isDataLoading} />
@@ -207,7 +202,6 @@ const Market: React.FC = () => {
         domains={domains}
         skills={skills}
         handleFilterChange={handleFilterChange}
-        handleApply={handleApply}
         handleModalToggle={handleModalToggle}
       />
     </section>

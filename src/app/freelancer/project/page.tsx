@@ -200,15 +200,13 @@ export default function ProjectPage() {
   const [projectType, setProjectType] = useState('CONSULTANT');
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="bg-background border-r">
-        <SidebarMenu
-          menuItemsTop={freelancerMenuItemsTop}
-          menuItemsBottom={freelancerMenuItemsBottom}
-          active="Projects"
-        />
-      </div>
-      <div className="flex mb-8 flex-col sm:pl-14 w-full">
+    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+      <SidebarMenu
+        menuItemsTop={freelancerMenuItemsTop}
+        menuItemsBottom={freelancerMenuItemsBottom}
+        active="Projects"
+      />
+      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

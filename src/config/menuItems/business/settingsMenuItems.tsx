@@ -1,4 +1,4 @@
-import { HomeIcon, User } from 'lucide-react';
+import { HomeIcon, ShieldCheck, User } from 'lucide-react';
 import Image from 'next/image';
 
 import { MenuItem } from '@/components/menu/sidebarMenu';
@@ -29,8 +29,8 @@ export const menuItemsTop: MenuItem[] = [
   },
   {
     href: '/business/settings/kyc',
-    icon: <User className="h-5 w-5" />,
-    label: 'Business Info',
+    icon: <ShieldCheck className="h-5 w-5" />,
+    label: 'KYC',
   },
 ];
 

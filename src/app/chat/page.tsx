@@ -28,6 +28,13 @@ import {
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 
+type UserType = 'freelancer' | 'business' | undefined;
+
+// Helper function to safely get user type
+const getUserType = (type: string | undefined): UserType => {
+  return type === 'freelancer' || type === 'business' ? type : undefined;
+};
+
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
   if (arr1.length !== arr2.length) return false;
@@ -147,15 +154,15 @@ const HomePage = () => {
             userName: user.displayName || user.email || 'Current User',
             profilePic: user.photoURL || undefined,
             email: user.email || undefined,
-            userType: user.type,
+            userType: getUserType(user.type),
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
             profilePic: selectedUser.profilePic || undefined,
             email: selectedUser.email || undefined,
-            userType: selectedUser.userType,
+            userType: getUserType(selectedUser.userType),
           },
-        },
+        } as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

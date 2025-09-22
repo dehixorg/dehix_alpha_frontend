@@ -74,11 +74,11 @@ const BidsPage = ({ userId }: { userId?: string }) => {
           await Promise.all([
             axiosInstance.get(`/interview?intervieweeId=${userId}`),
             axiosInstance.get(`/freelancer/${userId}`), // assumes this endpoint returns freelancer doc
-          ],);
+          ]);
 
         const allInterviews: any[] = Array.isArray(interviewRes)
           ? interviewRes
-          : interviewRes?.data ?? [];
+          : (interviewRes?.data ?? []);
 
         const dehixTalentObj = freelancerRes?.data?.dehixTalent ?? {};
 
