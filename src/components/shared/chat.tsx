@@ -38,7 +38,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu,
+  DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -1329,11 +1329,14 @@ export function CardsChat({
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions || {}}
-                            toggleReaction={toggleReaction}
-                          />
+                          {/* Reactions moved to bottom-left of message bubble */}
+                          <div className="absolute -bottom-3 left-2 z-10">
+                            <Reactions
+                              messageId={message.id}
+                              reactions={message.reactions || {}}
+                              toggleReaction={toggleReaction}
+                            />
+                          </div>
                           <div
                             className={cn(
                               'flex items-center text-xs mt-1',
@@ -1431,8 +1434,7 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={(e) => setReplyToMessageId('')
-                      }
+                      onClick={() => setReplyToMessageId('')}
                       variant="ghost"
                       size="icon"
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
