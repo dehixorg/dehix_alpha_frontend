@@ -66,6 +66,7 @@ import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
+import { constrainedMemory } from 'process';
 
 export type ProfileUser = {
   _id: string;
@@ -145,7 +146,6 @@ export function ProfileSidebar({
   const user = useSelector((state: RootState) => state.user);
   const { toast } = useToast();
 
-  // Dialog state
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
@@ -233,16 +233,20 @@ export function ProfileSidebar({
               | 'offline', // Type assertion to fix the error
           }));
 
+          // Use the avatar from initialData if available, otherwise fall back to groupData.avatar
+          const avatarUrl = initialData?.profilePic || groupData.avatar;
+          
           setProfileData({
-            _id: conversationDoc.id, // Add the missing _id field
+            _id: conversationDoc.id,
             id: conversationDoc.id,
-            groupName: groupData.groupName || 'Unnamed Group', // Add the missing groupName field
-            displayName: groupData.groupName || 'Unnamed Group', // Add the missing displayName field
+            groupName: groupData.groupName || 'Unnamed Group',
+            displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
+            avatar: avatarUrl, // Set the avatar URL here
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
-            participantDetails: groupData.participantDetails, // Add the missing participantDetails field
+            participantDetails: groupData.participantDetails,
           });
         } else {
           throw new Error('Group not found');
@@ -761,7 +765,7 @@ export function ProfileSidebar({
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
-
+ 
   const isCurrentlyMuted =
     profileType === 'group' &&
     profileData &&
@@ -830,10 +834,25 @@ export function ProfileSidebar({
                 <Card>
                   <CardHeader className="items-center text-center">
                     <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
-                      <AvatarImage
-                        src={avatarSrc}
-                        alt={profileData.displayName}
-                      />
+                      {profileType === 'group' ? (
+                        <AvatarImage
+                          src={(profileData as ProfileGroup).avatar || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading group avatar:', e);
+                            console.log('Failed to load group avatar with src:', e.currentTarget.src);
+                          }}
+                        />
+                      ) : (
+                        <AvatarImage
+                          src={(profileData as ProfileUser).profilePic || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading user avatar:', e);
+                            console.log('Failed to load user avatar with src:', e.currentTarget.src);
+                          }}
+                        />
+                      )}
                       <AvatarFallback className="text-3xl">
                         {getFallbackName(profileData)}
                       </AvatarFallback>
@@ -1090,122 +1109,100 @@ export function ProfileSidebar({
                         <CardTitle className="text-base">Actions</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        {user &&
-                          (profileData as ProfileGroup).admins?.includes(
-                            user.uid,
-                          ) && (
-                            <>
+                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start"
+                              onClick={() => setIsAddMembersDialogOpen(true)}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" /> Add/Remove Members
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start"
+                              onClick={() => setIsChangeGroupInfoDialogOpen(true)}
+                            >
+                              <Edit3 className="h-4 w-4 mr-2" /> Change Group Name or Avatar
+                            </Button>
+                            {(profileData as ProfileGroup).inviteLink !== undefined && (
                               <Button
                                 variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => setIsAddMembersDialogOpen(true)}
+                                onClick={() => setIsInviteLinkDialogOpen(true)}
                               >
-                                <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
-                                Members
+                                <Link2 className="h-4 w-4 mr-2" /> Invite Link
                               </Button>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start"
-                                onClick={() =>
-                                  setIsChangeGroupInfoDialogOpen(true)
-                                }
-                              >
-                                <Edit3 className="h-4 w-4 mr-2" /> Change Group
-                                Name or Avatar
-                              </Button>
-                              {(profileData as ProfileGroup).inviteLink !==
-                                undefined && (
-                                <Button
-                                  variant="outline"
-                                  className="w-full justify-start"
-                                  onClick={() =>
-                                    setIsInviteLinkDialogOpen(true)
-                                  }
-                                >
-                                  <Link2 className="h-4 w-4 mr-2" /> Invite Link
-                                </Button>
-                              )}
-                            </>
-                          )}
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              handleToggleMuteGroup(
-                                (profileData as ProfileGroup).id,
-                                !!isCurrentlyMuted,
-                              );
-                            }
-                          }}
-                        >
-                          {isCurrentlyMuted ? (
-                            <Volume2 className="h-4 w-4 mr-2" />
-                          ) : (
-                            <VolumeX className="h-4 w-4 mr-2" />
-                          )}
-                          {isCurrentlyMuted
-                            ? 'Unmute Notifications'
-                            : 'Mute Notifications'}
-                        </Button>
+                            )}
+                          </>
+                        )}
                         <Button
                           variant="destructive"
                           className="w-full justify-start"
                           onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              setConfirmDialogProps({
-                                title: 'Leave Group?',
-                                description:
-                                  'Are you sure you want to leave this group? You will need to be re-invited to join again.',
-                                onConfirm: () =>
-                                  handleLeaveGroup(
-                                    (profileData as ProfileGroup).id,
-                                    user.uid,
-                                  ),
-                                confirmButtonText: 'Leave Group',
-                                confirmButtonVariant: 'destructive',
-                              });
-                              setIsConfirmDialogOpen(true);
-                            }
+                            setConfirmDialogProps({
+                              title: 'Leave Group',
+                              description: 'Are you sure you want to leave this group?',
+                              onConfirm: async () => {
+                                try {
+                                  if (profileType === 'group' && profileId && user?.uid) {
+                                    // Remove user from the group
+                                    const groupRef = doc(db, 'conversations', profileId);
+                                    await updateDoc(groupRef, {
+                                      [`participantDetails.${user.uid}`]: deleteField(),
+                                      members: arrayRemove(user.uid),
+                                      admins: arrayRemove(user.uid)
+                                    });
+                                    
+                                    // Close the profile sidebar
+                                    onClose();
+                                    
+                                    toast({
+                                      title: 'Left group',
+                                      description: 'You have left the group successfully.'
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('Error leaving group:', error);
+                                  toast({
+                                    title: 'Error',
+                                    description: 'Failed to leave the group. Please try again.',
+                                    variant: 'destructive'
+                                  });
+                                }
+                              },
+                              confirmButtonText: 'Leave',
+                              confirmButtonVariant: 'destructive',
+                            });
+                            setIsConfirmDialogOpen(true);
                           }}
                         >
                           <LogOut className="h-4 w-4 mr-2" /> Leave Group
                         </Button>
-                        {user &&
-                          (profileData as ProfileGroup).admins?.includes(
-                            user.uid,
-                          ) && (
-                            <Button
-                              variant="destructive"
-                              className="w-full justify-start"
-                              onClick={() => {
-                                if (profileData && profileType === 'group') {
-                                  setConfirmDialogProps({
-                                    title: 'Delete Group Permanently?',
-                                    description:
-                                      'This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?',
-                                    onConfirm: () =>
-                                      handleDeleteGroup(
-                                        (profileData as ProfileGroup).id,
-                                      ),
-                                    confirmButtonText: 'Yes, Delete This Group',
-                                    confirmButtonVariant: 'destructive',
-                                  });
-                                  setIsConfirmDialogOpen(true);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" /> Delete Group
-                            </Button>
-                          )}
+                        {user && (profileData as ProfileGroup).admins?.includes(user.uid) && (
+                          <Button
+                            variant="destructive"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              if (profileData && profileType === 'group') {
+                                setConfirmDialogProps({
+                                  title: 'Delete Group Permanently?',
+                                  description:
+                                    'This action cannot be undone. All messages, members, and group information will be permanently lost. Are you absolutely sure you want to delete this group?',
+                                  onConfirm: () =>
+                                    handleDeleteGroup(
+                                      (profileData as ProfileGroup).id,
+                                    ),
+                                  confirmButtonText: 'Yes, Delete This Group',
+                                  confirmButtonVariant: 'destructive',
+                                });
+                                setIsConfirmDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete Group
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
