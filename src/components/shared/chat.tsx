@@ -911,10 +911,7 @@ export function CardsChat({
                   <AvatarImage
                     src={
                       conversation.type === 'group'
-                        ? conversation.avatar || // First try the group avatar
-                          (conversation.participantDetails &&
-                            conversation.participantDetails[conversation.id]?.profilePic) ||
-                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        ? conversation.avatar || ''
                         : primaryUser.profilePic
                     }
                     alt={
