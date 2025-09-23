@@ -48,13 +48,13 @@ interface ChatListProps {
   active: Conversation | null;
   setConversation: (activeConversation: Conversation) => void;
   onOpenProfileSidebar?: (
-    id: string, 
+    id: string,
     type: 'user' | 'group',
-    initialDetails?: { 
-      userName?: string; 
+    initialDetails?: {
+      userName?: string;
       email?: string;
-      profilePic?: string; 
-    }
+      profilePic?: string;
+    },
   ) => void;
   onOpenNewChatDialog: () => void;
 }
@@ -95,18 +95,19 @@ export function ChatList({
     if (conv.type === 'group') {
       onOpenProfileSidebar(conv.id, 'group', {
         userName: conv.groupName || 'Group',
-        profilePic: conv.avatar
+        profilePic: conv.avatar,
       });
     } else {
       const otherParticipantUid = conv.participants.find(
         (p) => p !== currentUser.uid,
       );
       if (otherParticipantUid) {
-        const participantDetails = conv.participantDetails?.[otherParticipantUid];
+        const participantDetails =
+          conv.participantDetails?.[otherParticipantUid];
         onOpenProfileSidebar(otherParticipantUid, 'user', {
           userName: participantDetails?.userName,
           email: participantDetails?.email,
-          profilePic: participantDetails?.profilePic
+          profilePic: participantDetails?.profilePic,
         });
       }
     }
