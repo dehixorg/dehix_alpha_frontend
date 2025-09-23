@@ -143,6 +143,7 @@ export function ProfileSidebar({
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
+  const [showAllMembers, setShowAllMembers] = useState(false);
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
@@ -579,6 +580,74 @@ export function ProfileSidebar({
     }
   };
 
+  const handleRemoveAdmin = async (groupId: string, memberId: string) => {
+    if (!groupId || !memberId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Group or Member ID is missing.',
+      });
+      return;
+    }
+
+    const groupDocRef = doc(db, 'conversations', groupId);
+
+    try {
+      await updateDoc(groupDocRef, {
+        admins: arrayRemove(memberId),
+        updatedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Admin privileges have been revoked.',
+      });
+
+      setRefreshDataKey((prev) => prev + 1);
+    } catch (error) {
+      console.error('Error removing admin:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to remove admin privileges.',
+      });
+    }
+  };
+
+  const handleMakeAdmin = async (groupId: string, memberId: string) => {
+    if (!groupId || !memberId) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Group or Member ID is missing.',
+      });
+      return;
+    }
+
+    const groupDocRef = doc(db, 'conversations', groupId);
+
+    try {
+      await updateDoc(groupDocRef, {
+        admins: arrayUnion(memberId),
+        updatedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Member has been promoted to admin.',
+      });
+
+      setRefreshDataKey((prev) => prev + 1); // Refresh data to show updated admin status
+    } catch (error) {
+      console.error('Error making member admin:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to promote member to admin.',
+      });
+    }
+  };
+
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
     // ... (existing implementation)
     if (!profileId) {
@@ -993,77 +1062,120 @@ export function ProfileSidebar({
                       <CardContent className="p-0">
                         <ScrollArea className="max-h-60 px-4">
                           <ul className="space-y-1 py-2">
-                            {(profileData as ProfileGroup).members.map(
-                              (member) => (
-                                <li
-                                  key={member.id}
-                                  className="flex items-center gap-3 p-1 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)] group"
-                                >
-                                  <Avatar className="w-8 h-8">
-                                    <AvatarImage
-                                      src={member.profilePic}
-                                      alt={member.userName}
-                                    />
-                                    <AvatarFallback>
-                                      {member.userName?.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-medium truncate">
-                                      {member.userName}
-                                    </span>
-                                    {(
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(member.id) && (
-                                      <Badge
-                                        variant="outline"
-                                        className="ml-2 text-[10px]"
-                                      >
-                                        Admin
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <span className="text-xs text-gray-400 ml-1 mr-2 group-hover:text-[hsl(var(--foreground))]">
-                                    {member.status === 'online'
-                                      ? 'Online'
-                                      : 'Offline'}
-                                  </span>
-                                  {user &&
-                                    (
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(user.uid) &&
-                                    member.id !== user.uid &&
-                                    !(
-                                      profileData as ProfileGroup
-                                    ).admins?.includes(member.id) && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="ml-auto h-7 w-7 text-gray-400 hover:text-red-600"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setConfirmDialogProps({
-                                            title: 'Confirm Removal',
-                                            description: `Are you sure you want to remove ${member.userName} from the group?`,
-                                            onConfirm: () =>
-                                              handleConfirmRemoveMember(
+                            {(profileData as ProfileGroup).members
+                              .slice(0, showAllMembers ? undefined : 7)
+                              .map((member) => {
+                                const group = profileData as ProfileGroup;
+                                const isCurrentUserAdmin =
+                                  user && group.admins?.includes(user.uid);
+                                const isMemberAdmin = group.admins?.includes(
+                                  member.id,
+                                );
+                                const canPerformAction =
+                                  isCurrentUserAdmin && user.uid !== member.id;
+
+                                return (
+                                  <li
+                                    key={member.id}
+                                    className="flex items-center justify-between p-2 rounded-md hover:bg-[hsl(var(--accent)_/_0.5)]"
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <Avatar className="w-9 h-9">
+                                        <AvatarImage
+                                          src={member.profilePic}
+                                          alt={member.userName}
+                                        />
+                                        <AvatarFallback>
+                                          {member.userName
+                                            ?.charAt(0)
+                                            .toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <p className="text-sm font-medium leading-none">
+                                          {member.userName}
+                                        </p>
+                                        {isMemberAdmin && (
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-xs mt-1"
+                                          >
+                                            Admin
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {canPerformAction && (
+                                      <div className="flex items-center space-x-2">
+                                        {!isMemberAdmin ? (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleMakeAdmin(
+                                                group.id,
                                                 member.id,
-                                              ),
-                                            confirmButtonText: 'Remove Member',
-                                            confirmButtonVariant: 'destructive',
-                                          });
-                                          setIsConfirmDialogOpen(true);
-                                        }}
-                                        aria-label={`Remove ${member.userName} from group`}
-                                      >
-                                        <MinusCircle className="h-4 w-4" />
-                                      </Button>
+                                              )
+                                            }
+                                          >
+                                            Make Admin
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() =>
+                                              handleRemoveAdmin(
+                                                group.id,
+                                                member.id,
+                                              )
+                                            }
+                                          >
+                                            Remove Admin
+                                          </Button>
+                                        )}
+                                        <Button
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => {
+                                            setIsConfirmDialogOpen(true);
+                                            setConfirmDialogProps({
+                                              title: 'Remove Member',
+                                              description:
+                                                'Are you sure you want to remove this member from the group?',
+                                              onConfirm: () =>
+                                                handleConfirmRemoveMember(
+                                                  member.id,
+                                                ),
+                                              confirmButtonText: 'Remove',
+                                              confirmButtonVariant:
+                                                'destructive',
+                                            });
+                                          }}
+                                        >
+                                          <MinusCircle className="h-4 w-4" />
+                                        </Button>
+                                      </div>
                                     )}
-                                </li>
-                              ),
-                            )}
+                                  </li>
+                                );
+                              })}
                           </ul>
                         </ScrollArea>
+                        {(profileData as ProfileGroup).members.length > 7 &&
+                          !showAllMembers && (
+                            <div className="p-4 pt-0">
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setShowAllMembers(true)}
+                              >
+                                View All Members
+                              </Button>
+                            </div>
+                          )}
                       </CardContent>
                     </Card>
 
