@@ -1243,31 +1243,6 @@ export function ProfileSidebar({
                             </>
                           )}
                         <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              handleToggleMuteGroup(
-                                (profileData as ProfileGroup).id,
-                                !!isCurrentlyMuted,
-                              );
-                            }
-                          }}
-                        >
-                          {isCurrentlyMuted ? (
-                            <Volume2 className="h-4 w-4 mr-2" />
-                          ) : (
-                            <VolumeX className="h-4 w-4 mr-2" />
-                          )}
-                          {isCurrentlyMuted
-                            ? 'Unmute Notifications'
-                            : 'Mute Notifications'}
-                        </Button>
-                        <Button
                           variant="destructive"
                           className="w-full justify-start"
                           onClick={() => {
