@@ -117,7 +117,7 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
 
   return (
     <TooltipProvider>
-      <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-black/20 flex flex-col h-full">
+      <Card className="group relative overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 bg-muted-foreground/20 dark:bg-black/20 flex flex-col h-full">
         <CardHeader className="pb-2 px-6 pt-6">
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12 rounded-xl border border-gray-200 dark:border-gray-700">

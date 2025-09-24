@@ -441,7 +441,7 @@ export default function ProfilesPage() {
                             profile={profile}
                             onView={() =>
                               router.push(
-                                `/freelancer/settings/profiles/view/${profile._id!}`,
+                                `/freelancer/settings/profiles/${profile._id!}`,
                               )
                             }
                             onEdit={() => handleViewProfile(profile._id!)}
@@ -454,7 +454,7 @@ export default function ProfilesPage() {
                             setNewProfileType('Freelancer');
                             setIsCreateDialogOpen(true);
                           }}
-                          className="flex items-center justify-center h-full min-h-[200px]"
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
                         >
                           <Plus className="h-6 w-6" />
                         </Button>
@@ -491,7 +491,7 @@ export default function ProfilesPage() {
                             profile={profile}
                             onView={() =>
                               router.push(
-                                `/freelancer/settings/profiles/view/${profile._id!}`,
+                                `/freelancer/settings/profiles/${profile._id!}`,
                               )
                             }
                             onEdit={() => handleViewProfile(profile._id!)}
@@ -504,7 +504,7 @@ export default function ProfilesPage() {
                             setNewProfileType('Consultant');
                             setIsCreateDialogOpen(true);
                           }}
-                          className="flex items-center justify-center h-full min-h-[200px]"
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
                         >
                           <Plus className="h-6 w-6" />
                         </Button>

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 
 import {
@@ -61,7 +62,7 @@ export default function ProjectSelectionDialog({
       fetchProjects();
       fetchCurrentProfileProjects();
     }
-  });
+  }, [freelancerId, currentProfileId]);
 
   const fetchProjects = async () => {
     setIsLoading(true);
@@ -69,8 +70,10 @@ export default function ProjectSelectionDialog({
       const response = await axiosInstance.get(`/freelancer/${freelancerId}`);
       const projectsData = response.data?.data?.projects;
 
-      if (projectsData && typeof projectsData === 'object') {
-        // Convert projects object to array
+      if (Array.isArray(projectsData)) {
+        setProjects(projectsData as Project[]);
+      } else if (projectsData && typeof projectsData === 'object') {
+        // Convert projects object (id -> project) to array
         const projectsArray = Object.values(projectsData) as Project[];
         setProjects(projectsArray);
       } else {
@@ -174,15 +177,15 @@ export default function ProjectSelectionDialog({
             </div>
           ) : projects.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No projects found.</p>
-              <p className="text-sm text-muted-foreground">
-                Add projects from the Projects page first to select them for
-                your profile.
+              <p className="text-muted-foreground mb-2">No projects found.</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create projects from your Projects page to add them to this profile.
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Debug: Freelancer ID: {freelancerId}, Profile ID:{' '}
-                {currentProfileId}
-              </p>
+              <Button asChild>
+                <Link href="/freelancer/settings/projects" target="_blank" rel="noopener noreferrer">
+                  Go to Projects
+                </Link>
+              </Button>
             </div>
           ) : (
             <>
