@@ -25,10 +25,7 @@ import {
 import { useSelector } from 'react-redux';
 import { DocumentData } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
-import {
-  formatDistanceToNow,
-  format,
-} from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify'; // <-- add import later
@@ -41,7 +38,7 @@ import {
   TooltipTrigger,
 } from '../ui/tooltip';
 import {
-  DropdownMenu,
+  DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -197,7 +194,6 @@ export function CardsChat({
 
   // State for image modal
   const [modalImage, setModalImage] = useState<string | null>(null);
-  const[replyInput,setReplyInput] = useState("")
 
   // Reporting modal state & helpers
   const [openReport, setOpenReport] = useState(false);
@@ -915,10 +911,7 @@ export function CardsChat({
                   <AvatarImage
                     src={
                       conversation.type === 'group'
-                        ? conversation.avatar || // First try the group avatar
-                          (conversation.participantDetails &&
-                            conversation.participantDetails[conversation.id]?.profilePic) ||
-                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        ? conversation.avatar || ''
                         : primaryUser.profilePic
                     }
                     alt={
@@ -1027,7 +1020,7 @@ export function CardsChat({
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <div className="flex flex-col space-y-3 ">
-                <div  />
+                <div />
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1333,11 +1326,14 @@ export function CardsChat({
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
-                          <Reactions
-                            messageId={message.id}
-                            reactions={message.reactions || {}}
-                            toggleReaction={toggleReaction}
-                          />
+                          {/* Reactions moved to bottom-left of message bubble */}
+                          <div className="absolute -bottom-3 left-2 z-10">
+                            <Reactions
+                              messageId={message.id}
+                              reactions={message.reactions || {}}
+                              toggleReaction={toggleReaction}
+                            />
+                          </div>
                           <div
                             className={cn(
                               'flex items-center text-xs mt-1',
@@ -1398,8 +1394,7 @@ export function CardsChat({
                           </Button>
                         </div>
                       </div>
-                      
-                      {/* End of message container */}
+
                       <div ref={messagesEndRef} />
                     </div>
                   );
@@ -1436,8 +1431,7 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={(e) => setReplyToMessageId('')
-                      }
+                      onClick={() => setReplyToMessageId('')}
                       variant="ghost"
                       size="icon"
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"

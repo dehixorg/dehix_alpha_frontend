@@ -18,10 +18,10 @@ export default function PersonalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="kyc"
+        active="KYC"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -32,7 +32,7 @@ export default function PersonalInfo() {
             { label: 'kyc', link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
           <KYCForm user_id={user.uid} />
         </main>
       </div>

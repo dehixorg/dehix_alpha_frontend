@@ -98,7 +98,7 @@ export function ReportForm({
   };
 
   return (
-    <Card className="p-6 rounded-lg border-none shadow-none">
+    <Card className="rounded-lg border-none shadow-none bg-transparent p-1">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* 🧾 Subject, Report Type & Role in One Row */}
@@ -295,7 +295,7 @@ export function ReportForm({
           </FormItem>
 
           {/* 🚀 Submit Button */}
-          <Button type="submit" className="h-9 px-4" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </Button>
         </form>

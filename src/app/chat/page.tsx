@@ -28,6 +28,13 @@ import {
 import { subscribeToUserConversations } from '@/utils/common/firestoreUtils';
 import { RootState } from '@/lib/store';
 
+type UserType = 'freelancer' | 'business' | undefined;
+
+// Helper function to safely get user type
+const getUserType = (type: string | undefined): UserType => {
+  return type === 'freelancer' || type === 'business' ? type : undefined;
+};
+
 // Helper function to check if two arrays contain the same elements, regardless of order
 const arraysHaveSameElements = (arr1: string[], arr2: string[]) => {
   if (arr1.length !== arr2.length) return false;
@@ -147,15 +154,15 @@ const HomePage = () => {
             userName: user.displayName || user.email || 'Current User',
             profilePic: user.photoURL || undefined,
             email: user.email || undefined,
-            userType: user.type,
+            userType: getUserType(user.type),
           },
           [selectedUser.id]: {
             userName: selectedUser.displayName,
             profilePic: selectedUser.profilePic || undefined,
             email: selectedUser.email || undefined,
-            userType: selectedUser.userType,
+            userType: getUserType(selectedUser.userType),
           },
-        },
+        } as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -445,7 +452,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:gap-4 sm:py-0 sm:pl-14 overflow-hidden">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -467,7 +474,7 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[93vh] p-1 sm:p-2 md:p-0">
+        <main className="h-[93vh] p-4 sm:px-6 sm:py-4">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}

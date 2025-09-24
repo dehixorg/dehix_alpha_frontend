@@ -31,9 +31,9 @@ export const EmojiPicker = ({
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          className={`my-auto ${className}`} 
-          variant="link" 
+        <Button
+          className={`my-auto ${className}`}
+          variant="link"
           size="sm"
           aria-label={ariaLabel}
         >

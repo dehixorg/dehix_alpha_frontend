@@ -200,8 +200,6 @@ export default function Dashboard() {
     try {
       const response = await axiosInstance.get(`/project/${project_id}`);
       const projectData = response?.data?.data?.data || response?.data?.data;
-      console.log('hi');
-      console.log(response);
 
       if (projectData) {
         setProject(projectData);
@@ -293,7 +291,7 @@ export default function Dashboard() {
             { label: project.projectName, link: '#' },
           ]}
         />
-        <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex flex-col lg:grid lg:grid-cols-4 xl:grid-cols-4 flex-1 items-start gap-4 p-4 sm:px-6 sm:py-3 md:gap-8">
           <div className="w-full lg:col-span-3 space-y-4 md:space-y-8">
             <Tabs defaultValue="Project-Info">
               <TabsList className="grid w-full grid-cols-2">

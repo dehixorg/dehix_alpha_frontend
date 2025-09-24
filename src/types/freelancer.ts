@@ -56,6 +56,7 @@ export interface FreelancerProfile {
   description?: string;
   skills?: Skill[];
   domains?: Domain[];
+  profileType: 'Freelancer' | 'Consultant';
   projects?: {
     _id: string;
     projectName: string;

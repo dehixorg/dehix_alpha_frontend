@@ -1,5 +1,6 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { ListVideo, Users2, History, Briefcase } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,26 +16,46 @@ import {
 } from '@/config/menuItems/freelancer/dashboardMenuItems';
 
 export default function InterviewPage() {
+  const params = useParams();
+  const router = useRouter();
+
+  // slug will be [] or ["profile"], ["current"], ["bids"], ["history"]
+  const slug = Array.isArray(params?.slug) ? params.slug : [];
+  const activeTab = slug[0] || 'profile';
+
+  // Redirect plain /interview → /interview/profile
+  useEffect(() => {
+    if (slug.length === 0) {
+      router.replace('/freelancer/interview/profile');
+    }
+  }, [slug, router]);
+
   return (
-    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Interviews"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Interviews"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
-            { label: 'Interview', link: '/freelancer/interview' },
+            { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
-        <main className="flex-1 px-4 md:px-6">
-          <div className="w-full px-4">
-            <Tabs defaultValue="profile" className="w-full">
+        <main className="flex-1 px-4 md:px-6 py-0 md:py-2">
+          <div className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={(val) =>
+                router.push(`/freelancer/interview/${val}`)
+              }
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-4 mb-5">
                 <TabsTrigger
                   value="profile"
@@ -62,6 +83,7 @@ export default function InterviewPage() {
                   <span>History</span>
                 </TabsTrigger>
               </TabsList>
+
               <TabsContent value="profile">
                 <ProfileComponent />
               </TabsContent>
