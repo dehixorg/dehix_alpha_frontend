@@ -231,13 +231,13 @@ const Page = () => {
   }, [milestones]);
 
   return (
-    <div className="flex h-auto w-full flex-col bg-muted/40 overflow-x-hidden">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-2 sm:py-0 sm:pl-14 min-w-0 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}

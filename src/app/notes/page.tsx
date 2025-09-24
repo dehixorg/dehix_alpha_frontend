@@ -82,7 +82,7 @@ const Notes = () => {
         active="Notes"
       />
 
-      <div className="flex flex-col sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <div>
           <Header
             menuItemsTop={notesMenu}

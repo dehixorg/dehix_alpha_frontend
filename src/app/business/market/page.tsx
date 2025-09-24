@@ -175,7 +175,7 @@ const Market: React.FC = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 mb-8 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-0 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
