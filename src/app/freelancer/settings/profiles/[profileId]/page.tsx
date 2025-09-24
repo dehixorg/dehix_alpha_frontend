@@ -62,7 +62,6 @@ export default function ProfileDetailPage() {
   const [isProjectDetailsOpen, setIsProjectDetailsOpen] = useState(false);
   const [tmpSkill, setTmpSkill] = useState<string>('');
   const [tmpDomain, setTmpDomain] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     if (profileId) {
@@ -83,69 +82,29 @@ export default function ProfileDetailPage() {
     }
   }, [profileId]);
 
-  // Helper function to get skill name from ID
   const getSkillNameById = (skillId: string) => {
     if (!skillId || !skillsOptions || skillsOptions.length === 0) {
       return skillId || '';
     }
-
-    // Try multiple matching strategies
-    let skill = skillsOptions.find((s: any) => s.skillId === skillId);
-    if (!skill) skill = skillsOptions.find((s: any) => s._id === skillId);
-    if (!skill) skill = skillsOptions.find((s: any) => s.id === skillId);
-    if (!skill) skill = skillsOptions.find((s: any) => s.name === skillId);
-
-    // If still not found, try case-insensitive name matching
-    if (!skill) {
-      skill = skillsOptions.find(
-        (s: any) =>
-          (s.name || s.label || s.skillName)?.toLowerCase() ===
-          skillId.toLowerCase(),
-      );
-    }
-
-    return skill
-      ? skill.name || skill.label || skill.skillName || skillId
-      : skillId;
+    const skill = skillsOptions.find((s: any) => s._id === skillId);
+    return skill ? skill.label || skill.name : skillId;
   };
 
-  // Helper function to get domain name from ID
   const getDomainNameById = (domainId: string) => {
     if (!domainId || !domainsOptions || domainsOptions.length === 0) {
       return domainId || '';
     }
-
-    // Try multiple matching strategies
-    let domain = domainsOptions.find((d: any) => d.domainId === domainId);
-    if (!domain) domain = domainsOptions.find((d: any) => d._id === domainId);
-    if (!domain) domain = domainsOptions.find((d: any) => d.id === domainId);
-    if (!domain) domain = domainsOptions.find((d: any) => d.name === domainId);
-
-    // If still not found, try case-insensitive name matching
-    if (!domain) {
-      domain = domainsOptions.find(
-        (d: any) =>
-          (d.name || d.label || d.domainName)?.toLowerCase() ===
-          domainId.toLowerCase(),
-      );
-    }
-
-    return domain
-      ? domain.name || domain.label || domain.domainName || domainId
-      : domainId;
+    const domain = domainsOptions.find((d: any) => d._id === domainId);
+    return domain ? domain.label || domain.name : domainId;
   };
 
-  // Helper function to transform profile data for backend API
   const transformProfileForAPI = (profileData: any) => {
     const transformedSkills =
       profileData.skills?.map((skill: any) => {
         if (typeof skill === 'string') {
           return skill;
         }
-        // Prioritize skillId field, then fallback to other ID fields
-        const skillId =
-          skill.skillId || skill._id || skill.id || skill.value || skill.name;
-        return skillId;
+        return skill._id;
       }) || [];
 
     const transformedDomains =
@@ -153,14 +112,7 @@ export default function ProfileDetailPage() {
         if (typeof domain === 'string') {
           return domain;
         }
-        // Prioritize domainId field, then fallback to other ID fields
-        const domainId =
-          domain.domainId ||
-          domain._id ||
-          domain.id ||
-          domain.value ||
-          domain.name;
-        return domainId;
+        return domain._id;
       }) || [];
 
     return {
@@ -179,7 +131,6 @@ export default function ProfileDetailPage() {
       );
       const profileData = response.data.data;
 
-      // If profile has projects, fetch complete project data to ensure we have thumbnails
       if (profileData.projects && profileData.projects.length > 0) {
         try {
           const freelancerResponse = await axiosInstance.get(
@@ -188,19 +139,15 @@ export default function ProfileDetailPage() {
           const freelancerData = freelancerResponse.data.data || {};
           const freelancerProjects = freelancerData.projects || {};
 
-          // Convert projects object to array if it's an object
           const allFreelancerProjects = Array.isArray(freelancerProjects)
             ? freelancerProjects
             : Object.values(freelancerProjects);
 
-          // Merge profile projects with complete freelancer project data
           const enrichedProjects = profileData.projects.map(
             (profileProject: any) => {
               const fullProject = allFreelancerProjects.find(
                 (fp: any) => fp._id === profileProject._id,
               );
-
-              // Use full project data if available, otherwise use profile project data
               return fullProject || profileProject;
             },
           );
@@ -208,15 +155,17 @@ export default function ProfileDetailPage() {
           profileData.projects = enrichedProjects;
         } catch (projectError) {
           console.warn('Could not fetch complete project data:', projectError);
-          // Continue with existing profile data if project fetch fails
         }
       }
 
-      // Ensure skills and domains are properly formatted as arrays of strings
       const processedProfileData = {
         ...profileData,
-        skills: Array.isArray(profileData.skills) ? profileData.skills : [],
-        domains: Array.isArray(profileData.domains) ? profileData.domains : [],
+        skills: (profileData.skills || []).map((s: any) =>
+          typeof s === 'string' ? s : s._id,
+        ),
+        domains: (profileData.domains || []).map((d: any) =>
+          typeof d === 'string' ? d : d._id,
+        ),
       };
 
       setProfile(processedProfileData);
@@ -234,22 +183,44 @@ export default function ProfileDetailPage() {
 
   const fetchSkillsAndDomains = async () => {
     try {
-      const freelancerResponse = await axiosInstance.get(
-        `/freelancer/${user.uid}`,
-      );
+      const [skillsResponse, domainsResponse, freelancerResponse] =
+        await Promise.all([
+          axiosInstance.get('/skills'),
+          axiosInstance.get('/domain'), // Corrected endpoint
+          axiosInstance.get(`/freelancer/${user.uid}`),
+        ]);
+
+      const allSkills = skillsResponse.data.data || [];
+      const allDomains = domainsResponse.data.data || [];
       const freelancerData = freelancerResponse.data.data || {};
 
-      const skillsData = freelancerData.skills || [];
-      const skillsArray = Array.isArray(skillsData) ? skillsData : [];
-      setSkillsOptions(skillsArray);
+      const freelancerSkillNames = (freelancerData.skills || [])
+        .map((s: any) => s.name || s.label)
+        .filter(Boolean);
 
-      const domainsData = freelancerData.domain || [];
-      const domainsArray = Array.isArray(domainsData) ? domainsData : [];
-      setDomainsOptions(domainsArray);
+      const freelancerDomainNames = (freelancerData.domain || [])
+        .map((d: any) => d.name || d.label)
+        .filter(Boolean);
+
+      const skillsForOptions = allSkills.filter((s: any) =>
+        freelancerSkillNames.includes(s.label || s.name),
+      );
+      const domainsForOptions = allDomains.filter((d: any) =>
+        freelancerDomainNames.includes(d.label || d.name),
+      );
+
+      setSkillsOptions(skillsForOptions);
+      setDomainsOptions(domainsForOptions);
 
       setSkillsAndDomainsLoaded(true);
     } catch (error) {
       console.error('Error fetching skills and domains:', error);
+      toast({
+        title: 'Error',
+        description:
+          'Could not load skills and domains. Please ensure you have added skills to your main profile.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -269,7 +240,6 @@ export default function ProfileDetailPage() {
   const handleUpdateProfile = async () => {
     if (!profile?._id) return;
 
-    // Client-side validation
     if (
       !editingProfileData.profileName ||
       editingProfileData.profileName.trim().length === 0
@@ -294,38 +264,20 @@ export default function ProfileDetailPage() {
       return;
     }
 
-    if (editingProfileData.profileName.length > 100) {
-      toast({
-        title: 'Validation Error',
-        description: 'Profile name must be less than 100 characters',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (editingProfileData.description.length > 500) {
-      toast({
-        title: 'Validation Error',
-        description: 'Description must be less than 500 characters',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setIsUpdating(true);
     try {
-      // Transform the data to match backend schema
       const updatePayload = transformProfileForAPI(editingProfileData);
 
       await axiosInstance.put(
         `/freelancer/profile/${profile._id}`,
         updatePayload,
       );
+
       toast({
         title: 'Success',
         description: 'Profile updated successfully',
       });
-      fetchProfile();
+      await fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -346,127 +298,97 @@ export default function ProfileDetailPage() {
   };
 
   const handleAddSkill = () => {
-    if (!tmpSkill || !profile || !skillsOptions || skillsOptions.length === 0)
-      return;
+    if (!tmpSkill || !editingProfileData) return;
 
     const selectedSkill = skillsOptions.find(
-      (skill: any) =>
-        (skill.name || skill.label || skill.skillName) === tmpSkill,
+      (skill: any) => (skill.label || skill.name) === tmpSkill,
     );
 
     if (selectedSkill) {
-      // Add the skillId (string) to the profile, not the entire object
-      const skillIdToAdd =
-        selectedSkill.skillId ||
-        selectedSkill._id ||
-        selectedSkill.id ||
-        selectedSkill.name;
+      const skillIdToAdd = selectedSkill._id;
 
-      // Check if skill is already added by comparing IDs
-      const isAlreadyAdded = profile.skills?.some((skill: any) => {
-        const existingSkillId =
-          typeof skill === 'string'
-            ? skill
-            : skill.skillId || skill._id || skill.id || skill.name;
-        return existingSkillId === skillIdToAdd;
-      });
+      const isAlreadyAdded = (editingProfileData.skills || []).includes(
+        skillIdToAdd,
+      );
 
       if (!isAlreadyAdded) {
-        const updatedSkills = [...(profile.skills || []), skillIdToAdd];
-        setProfile({ ...profile, skills: updatedSkills });
-        setEditingProfileData({
-          ...editingProfileData,
+        const updatedSkills = [
+          ...(editingProfileData.skills || []),
+          skillIdToAdd,
+        ];
+        setEditingProfileData((prev: any) => ({
+          ...prev,
           skills: updatedSkills,
-        });
+        }));
       }
       setTmpSkill('');
-      setSearchQuery('');
     }
   };
 
   const handleAddDomain = () => {
-    if (
-      !tmpDomain ||
-      !profile ||
-      !domainsOptions ||
-      domainsOptions.length === 0
-    )
-      return;
+    if (!tmpDomain || !editingProfileData) return;
 
     const selectedDomain = domainsOptions.find(
-      (domain: any) =>
-        (domain.name || domain.label || domain.domainName) === tmpDomain,
+      (domain: any) => (domain.label || domain.name) === tmpDomain,
     );
 
     if (selectedDomain) {
-      // Add the domainId (string) to the profile, not the entire object
-      const domainIdToAdd =
-        selectedDomain.domainId ||
-        selectedDomain._id ||
-        selectedDomain.id ||
-        selectedDomain.name;
+      const domainIdToAdd = selectedDomain._id;
 
-      // Check if domain is already added by comparing IDs
-      const isAlreadyAdded = profile.domains?.some((domain: any) => {
-        const existingDomainId =
-          typeof domain === 'string'
-            ? domain
-            : domain.domainId || domain._id || domain.id || domain.name;
-        return existingDomainId === domainIdToAdd;
-      });
+      const isAlreadyAdded = (editingProfileData.domains || []).includes(
+        domainIdToAdd,
+      );
 
       if (!isAlreadyAdded) {
-        const updatedDomains = [...(profile.domains || []), domainIdToAdd];
-        setProfile({ ...profile, domains: updatedDomains });
-        setEditingProfileData({
-          ...editingProfileData,
+        const updatedDomains = [
+          ...(editingProfileData.domains || []),
+          domainIdToAdd,
+        ];
+        setEditingProfileData((prev: any) => ({
+          ...prev,
           domains: updatedDomains,
-        });
+        }));
       }
       setTmpDomain('');
-      setSearchQuery('');
     }
   };
 
   const handleDeleteSkill = (skillIdToDelete: string) => {
-    if (!profile || !profile.skills) return;
+    if (!editingProfileData || !editingProfileData.skills) return;
 
-    const updatedSkills = profile.skills.filter((skill: any) => {
-      const skillId =
-        typeof skill === 'string'
-          ? skill
-          : skill.skillId || skill._id || skill.id || skill.name;
-      return skillId !== skillIdToDelete;
-    });
-    setProfile({ ...profile, skills: updatedSkills });
-    setEditingProfileData({ ...editingProfileData, skills: updatedSkills });
+    const updatedSkills = editingProfileData.skills.filter(
+      (id: string) => id !== skillIdToDelete,
+    );
+    setEditingProfileData((prev: any) => ({ ...prev, skills: updatedSkills }));
   };
 
   const handleDeleteDomain = (domainIdToDelete: string) => {
-    if (!profile || !profile.domains) return;
+    if (!editingProfileData || !editingProfileData.domains) return;
 
-    const updatedDomains = profile.domains.filter((domain: any) => {
-      const domainId =
-        typeof domain === 'string'
-          ? domain
-          : domain.domainId || domain._id || domain.id || domain.name;
-      return domainId !== domainIdToDelete;
-    });
-    setProfile({ ...profile, domains: updatedDomains });
-    setEditingProfileData({ ...editingProfileData, domains: updatedDomains });
+    const updatedDomains = editingProfileData.domains.filter(
+      (id: string) => id !== domainIdToDelete,
+    );
+    setEditingProfileData((prev: any) => ({
+      ...prev,
+      domains: updatedDomains,
+    }));
   };
 
   const handleRemoveProject = async (projectId: string) => {
     if (!profile?._id) return;
 
     try {
-      const updatedProjects = (profile.projects || []).filter(
+      const updatedProjects = (editingProfileData.projects || []).filter(
         (project: any) => project._id !== projectId,
       );
 
-      // Transform the data to match backend schema
+      setEditingProfileData((prev: any) => ({
+        ...prev,
+        projects: updatedProjects,
+      }));
+
       const updatePayload = transformProfileForAPI({
-        ...profile,
+        ...editingProfileData,
         projects: updatedProjects,
       });
 
@@ -479,7 +401,7 @@ export default function ProfileDetailPage() {
         title: 'Success',
         description: 'Project removed from profile successfully',
       });
-      fetchProfile();
+      await fetchProfile();
     } catch (error: any) {
       console.error('Error removing project:', error);
       toast({
@@ -494,13 +416,17 @@ export default function ProfileDetailPage() {
     if (!profile?._id) return;
 
     try {
-      const updatedExperiences = (profile.experiences || []).filter(
+      const updatedExperiences = (editingProfileData.experiences || []).filter(
         (experience: any) => experience._id !== experienceId,
       );
 
-      // Transform the data to match backend schema
+      setEditingProfileData((prev: any) => ({
+        ...prev,
+        experiences: updatedExperiences,
+      }));
+
       const updatePayload = transformProfileForAPI({
-        ...profile,
+        ...editingProfileData,
         experiences: updatedExperiences,
       });
 
@@ -513,7 +439,7 @@ export default function ProfileDetailPage() {
         title: 'Success',
         description: 'Experience removed from profile successfully',
       });
-      fetchProfile();
+      await fetchProfile();
     } catch (error: any) {
       console.error('Error removing experience:', error);
       toast({
@@ -641,12 +567,11 @@ export default function ProfileDetailPage() {
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
             { label: 'Profiles', link: '/freelancer/settings/profiles' },
-            { label: profile.profileName, link: '#' },
+            { label: editingProfileData.profileName, link: '#' },
           ]}
         />
         <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
           <div className="space-y-6">
-            {/* Back to Profiles Button */}
             <div>
               <Button
                 variant="outline"
@@ -658,10 +583,11 @@ export default function ProfileDetailPage() {
               </Button>
             </div>
 
-            {/* Profile Header with Actions */}
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold">{profile.profileName}</h1>
+                <h1 className="text-2xl font-bold">
+                  {editingProfileData.profileName}
+                </h1>
                 <p className="text-muted-foreground">
                   Edit your professional profile
                 </p>
@@ -693,19 +619,15 @@ export default function ProfileDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Profile Name and Hourly Rate */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Label htmlFor="profileName">Profile Name</Label>
                       <span
                         className={`text-sm ${
-                          (editingProfileData.profileName || '').length === 0
+                          (editingProfileData.profileName || '').length > 100
                             ? 'text-red-500'
-                            : (editingProfileData.profileName || '').length >
-                                100
-                              ? 'text-red-500'
-                              : 'text-muted-foreground'
+                            : 'text-muted-foreground'
                         }`}
                       >
                         {(editingProfileData.profileName || '').length}/100
@@ -719,7 +641,6 @@ export default function ProfileDetailPage() {
                       }
                       placeholder="e.g., Frontend Developer"
                       className={
-                        (editingProfileData.profileName || '').length === 0 ||
                         (editingProfileData.profileName || '').length > 100
                           ? 'border-red-500'
                           : ''
@@ -743,21 +664,17 @@ export default function ProfileDetailPage() {
                   </div>
                 </div>
 
-                {/* Description */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="description">Description</Label>
                     <span
                       className={`text-sm ${
-                        (editingProfileData.description || '').length < 10
+                        (editingProfileData.description || '').length > 500
                           ? 'text-red-500'
-                          : (editingProfileData.description || '').length > 500
-                            ? 'text-red-500'
-                            : 'text-muted-foreground'
+                          : 'text-muted-foreground'
                       }`}
                     >
-                      {(editingProfileData.description || '').length}/500 (min:
-                      10)
+                      {(editingProfileData.description || '').length}/500
                     </span>
                   </div>
                   <Textarea
@@ -766,10 +683,9 @@ export default function ProfileDetailPage() {
                     onChange={(e) =>
                       handleInputChange('description', e.target.value)
                     }
-                    placeholder="Describe your expertise and experience... (minimum 10 characters)"
+                    placeholder="Describe your expertise and experience..."
                     rows={4}
                     className={
-                      (editingProfileData.description || '').length < 10 ||
                       (editingProfileData.description || '').length > 500
                         ? 'border-red-500'
                         : ''
@@ -779,123 +695,31 @@ export default function ProfileDetailPage() {
 
                 <Separator />
 
-                {/* Skills and Domains */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Skills</Label>
                     <div className="flex items-center mt-2">
                       <Select
-                        onValueChange={(value) => {
-                          setTmpSkill(value);
-                          setSearchQuery('');
-                        }}
+                        onValueChange={(value) => setTmpSkill(value)}
                         value={tmpSkill || ''}
-                        onOpenChange={(open) => {
-                          if (!open) setSearchQuery('');
-                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={tmpSkill ? tmpSkill : 'Select skill'}
-                          />
+                          <SelectValue placeholder="Select skill" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Add search input */}
-                          <div className="p-2 relative">
-                            <input
-                              type="text"
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                              placeholder="Search skills"
-                            />
-                            {searchQuery && (
-                              <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                          {skillsOptions
+                            .filter(
+                              (skill: any) =>
+                                !editingProfileData.skills?.includes(skill._id),
+                            )
+                            .map((skill: any) => (
+                              <SelectItem
+                                key={skill._id}
+                                value={skill.label || skill.name}
                               >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                          {/* Filtered skill list */}
-                          {skillsOptions &&
-                            skillsOptions.length > 0 &&
-                            skillsOptions
-                              .filter((skill: any) => {
-                                const skillName =
-                                  skill.name || skill.label || skill.skillName;
-                                if (!skillName) return false;
-
-                                const matchesSearch = skillName
-                                  .toLowerCase()
-                                  .includes(searchQuery.toLowerCase());
-
-                                const isAlreadySelected = profile?.skills?.some(
-                                  (s: any) => {
-                                    const existingSkillId =
-                                      typeof s === 'string'
-                                        ? s
-                                        : s.skillId || s._id || s.id || s.name;
-                                    const currentSkillId =
-                                      skill.skillId ||
-                                      skill._id ||
-                                      skill.id ||
-                                      skill.name;
-                                    return existingSkillId === currentSkillId;
-                                  },
-                                );
-
-                                return matchesSearch && !isAlreadySelected;
-                              })
-                              .map((skill: any, index: number) => (
-                                <SelectItem
-                                  key={
-                                    skill.skillId ||
-                                    skill._id ||
-                                    skill.id ||
-                                    index
-                                  }
-                                  value={
-                                    skill.name || skill.label || skill.skillName
-                                  }
-                                >
-                                  {skill.name || skill.label || skill.skillName}
-                                </SelectItem>
-                              ))}
-                          {/* No matching skills */}
-                          {skillsOptions &&
-                            skillsOptions.length > 0 &&
-                            skillsOptions.filter((skill: any) => {
-                              const skillName =
-                                skill.name || skill.label || skill.skillName;
-                              if (!skillName) return false;
-
-                              const matchesSearch = skillName
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase());
-
-                              const isAlreadySelected = profile?.skills?.some(
-                                (s: any) => {
-                                  const existingSkillId =
-                                    typeof s === 'string'
-                                      ? s
-                                      : s.skillId || s._id || s.id || s.name;
-                                  const currentSkillId =
-                                    skill.skillId ||
-                                    skill._id ||
-                                    skill.id ||
-                                    skill.name;
-                                  return existingSkillId === currentSkillId;
-                                },
-                              );
-
-                              return matchesSearch && !isAlreadySelected;
-                            }).length === 0 && (
-                              <div className="p-2 text-gray-500 italic text-center">
-                                No matching skills
-                              </div>
-                            )}
+                                {skill.label || skill.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <Button
@@ -904,40 +728,27 @@ export default function ProfileDetailPage() {
                         size="icon"
                         className="ml-2"
                         disabled={!tmpSkill}
-                        onClick={() => {
-                          handleAddSkill();
-                          setTmpSkill('');
-                          setSearchQuery('');
-                        }}
+                        onClick={handleAddSkill}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-5">
-                      {profile.skills && profile.skills.length > 0 ? (
-                        profile.skills.map((skill: any, index: number) => {
-                          const skillId =
-                            typeof skill === 'string'
-                              ? skill
-                              : skill.skillId ||
-                                skill._id ||
-                                skill.id ||
-                                skill.name;
-                          const skillName = getSkillNameById(skillId);
-
-                          return (
+                      {editingProfileData.skills?.length > 0 ? (
+                        editingProfileData.skills.map(
+                          (skillId: string, index: number) => (
                             <Badge
                               key={index}
                               className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                             >
-                              {skillName}
+                              {getSkillNameById(skillId)}
                               <X
                                 className="ml-2 h-3 w-3 cursor-pointer"
                                 onClick={() => handleDeleteSkill(skillId)}
                               />
                             </Badge>
-                          );
-                        })
+                          ),
+                        )
                       ) : (
                         <p className="text-muted-foreground text-sm">
                           No skills selected
@@ -949,126 +760,28 @@ export default function ProfileDetailPage() {
                     <Label>Domains</Label>
                     <div className="flex items-center mt-2">
                       <Select
-                        onValueChange={(value) => {
-                          setTmpDomain(value);
-                          setSearchQuery('');
-                        }}
+                        onValueChange={(value) => setTmpDomain(value)}
                         value={tmpDomain || ''}
-                        onOpenChange={(open) => {
-                          if (!open) setSearchQuery('');
-                        }}
                       >
                         <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              tmpDomain ? tmpDomain : 'Select domain'
-                            }
-                          />
+                          <SelectValue placeholder="Select domain" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Add search input */}
-                          <div className="p-2 relative">
-                            <input
-                              type="text"
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded-lg text-sm"
-                              placeholder="Search domains"
-                            />
-                            {searchQuery && (
-                              <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white text-xl transition-colors mr-2"
+                          {domainsOptions
+                            .filter(
+                              (domain: any) =>
+                                !editingProfileData.domains?.includes(
+                                  domain._id,
+                                ),
+                            )
+                            .map((domain: any) => (
+                              <SelectItem
+                                key={domain._id}
+                                value={domain.label || domain.name}
                               >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                          {/* Filtered domain list */}
-                          {domainsOptions &&
-                            domainsOptions.length > 0 &&
-                            domainsOptions
-                              .filter((domain: any) => {
-                                const domainName =
-                                  domain.name ||
-                                  domain.label ||
-                                  domain.domainName;
-                                if (!domainName) return false;
-
-                                const matchesSearch = domainName
-                                  .toLowerCase()
-                                  .includes(searchQuery.toLowerCase());
-
-                                const isAlreadySelected =
-                                  profile?.domains?.some((d: any) => {
-                                    const existingDomainId =
-                                      typeof d === 'string'
-                                        ? d
-                                        : d.domainId || d._id || d.id || d.name;
-                                    const currentDomainId =
-                                      domain.domainId ||
-                                      domain._id ||
-                                      domain.id ||
-                                      domain.name;
-                                    return existingDomainId === currentDomainId;
-                                  });
-
-                                return matchesSearch && !isAlreadySelected;
-                              })
-                              .map((domain: any, index: number) => (
-                                <SelectItem
-                                  key={
-                                    domain.domainId ||
-                                    domain._id ||
-                                    domain.id ||
-                                    index
-                                  }
-                                  value={
-                                    domain.name ||
-                                    domain.label ||
-                                    domain.domainName
-                                  }
-                                >
-                                  {domain.name ||
-                                    domain.label ||
-                                    domain.domainName}
-                                </SelectItem>
-                              ))}
-                          {/* No matching domains */}
-                          {domainsOptions &&
-                            domainsOptions.length > 0 &&
-                            domainsOptions.filter((domain: any) => {
-                              const domainName =
-                                domain.name ||
-                                domain.label ||
-                                domain.domainName;
-                              if (!domainName) return false;
-
-                              const matchesSearch = domainName
-                                .toLowerCase()
-                                .includes(searchQuery.toLowerCase());
-
-                              const isAlreadySelected = profile?.domains?.some(
-                                (d: any) => {
-                                  const existingDomainId =
-                                    typeof d === 'string'
-                                      ? d
-                                      : d.domainId || d._id || d.id || d.name;
-                                  const currentDomainId =
-                                    domain.domainId ||
-                                    domain._id ||
-                                    domain.id ||
-                                    domain.name;
-                                  return existingDomainId === currentDomainId;
-                                },
-                              );
-
-                              return matchesSearch && !isAlreadySelected;
-                            }).length === 0 && (
-                              <div className="p-2 text-gray-500 italic text-center">
-                                No matching domains
-                              </div>
-                            )}
+                                {domain.label || domain.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <Button
@@ -1077,40 +790,27 @@ export default function ProfileDetailPage() {
                         size="icon"
                         className="ml-2"
                         disabled={!tmpDomain}
-                        onClick={() => {
-                          handleAddDomain();
-                          setTmpDomain('');
-                          setSearchQuery('');
-                        }}
+                        onClick={handleAddDomain}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-5">
-                      {profile.domains && profile.domains.length > 0 ? (
-                        profile.domains.map((domain: any, index: number) => {
-                          const domainId =
-                            typeof domain === 'string'
-                              ? domain
-                              : domain.domainId ||
-                                domain._id ||
-                                domain.id ||
-                                domain.name;
-                          const domainName = getDomainNameById(domainId);
-
-                          return (
+                      {editingProfileData.domains?.length > 0 ? (
+                        editingProfileData.domains.map(
+                          (domainId: string, index: number) => (
                             <Badge
                               key={index}
                               className="uppercase text-xs font-normal bg-gray-300 flex items-center px-2 py-1"
                             >
-                              {domainName}
+                              {getDomainNameById(domainId)}
                               <X
                                 className="ml-2 h-3 w-3 cursor-pointer"
                                 onClick={() => handleDeleteDomain(domainId)}
                               />
                             </Badge>
-                          );
-                        })
+                          ),
+                        )
                       ) : (
                         <p className="text-muted-foreground text-sm">
                           No domains selected
@@ -1122,7 +822,6 @@ export default function ProfileDetailPage() {
 
                 <Separator />
 
-                {/* Links */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="githubLink">GitHub Link</Label>
@@ -1183,7 +882,6 @@ export default function ProfileDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Projects Section */}
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -1201,28 +899,30 @@ export default function ProfileDetailPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {profile.projects && profile.projects.length > 0 ? (
+                {editingProfileData.projects &&
+                editingProfileData.projects.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {profile.projects.map((project: any, index: number) => (
-                      <div key={project._id || index} className="relative">
-                        <ProjectCard
-                          {...project}
-                          onClick={() => handleProjectClick(project)}
-                        />
-                        {/* Remove button overlay */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveProject(project._id);
-                          }}
-                          className="absolute top-2 right-2 z-10 h-8 w-8 p-0 bg-red-500/80 hover:bg-red-600/90 text-white rounded-full"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                    {editingProfileData.projects.map(
+                      (project: any, index: number) => (
+                        <div key={project._id || index} className="relative">
+                          <ProjectCard
+                            {...project}
+                            onClick={() => handleProjectClick(project)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveProject(project._id);
+                            }}
+                            className="absolute top-2 right-2 z-10 h-8 w-8 p-0 bg-red-500/80 hover:bg-red-600/90 text-white rounded-full"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <Card className="flex flex-col items-center justify-center py-12">
@@ -1242,7 +942,6 @@ export default function ProfileDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Experience Section */}
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
@@ -1260,9 +959,10 @@ export default function ProfileDetailPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {profile.experiences && profile.experiences.length > 0 ? (
+                {editingProfileData.experiences &&
+                editingProfileData.experiences.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {profile.experiences.map(
+                    {editingProfileData.experiences.map(
                       (experience: any, index: number) => (
                         <Card
                           key={experience._id || index}
@@ -1334,7 +1034,6 @@ export default function ProfileDetailPage() {
         </main>
       </div>
 
-      {/* Project and Experience Dialogs */}
       <ProjectSelectionDialog
         open={showProjectDialog}
         onOpenChange={setShowProjectDialog}
@@ -1355,7 +1054,6 @@ export default function ProfileDetailPage() {
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1379,7 +1077,6 @@ export default function ProfileDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* View-Only Project Details Dialog */}
       {selectedProject && (
         <Dialog
           open={isProjectDetailsOpen}
@@ -1393,7 +1090,6 @@ export default function ProfileDetailPage() {
             </DialogHeader>
 
             <div className="space-y-6">
-              {/* Project Image */}
               {selectedProject.thumbnail && (
                 <div className="w-full">
                   <Image
@@ -1404,7 +1100,6 @@ export default function ProfileDetailPage() {
                 </div>
               )}
 
-              {/* Project Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>

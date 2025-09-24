@@ -40,8 +40,6 @@ export const useAllUsers = () => {
 
     try {
       // Add pagination parameters to get all users
-
-      /* [TODO] -> use debouncing method for efficient serching feature */
       const response = await axiosInstance.get('/freelancer');
 
       // The API returns the array inside a `data` property. Check for its existence.

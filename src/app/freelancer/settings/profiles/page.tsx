@@ -51,9 +51,6 @@ export default function ProfilesPage() {
   const [newProfileDescription, setNewProfileDescription] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
-  const [profileTypeToDelete, setProfileTypeToDelete] = useState<
-    'Freelancer' | 'Consultant' | null
-  >(null);
 
   /** Fetch Freelancer Profiles */
   const fetchFreelancerProfiles = useCallback(async () => {
@@ -138,41 +135,25 @@ export default function ProfilesPage() {
         );
       }
 
-      let apiUrl = '';
-      let profilePayload: any = {};
+      const profilePayload = {
+        profileName: newProfileName.trim(),
+        description: description,
+        skills: [],
+        domains: [],
+        projects: [],
+        experiences: [],
+        portfolioLinks: [],
+        // Auto-populate personal links from freelancer data
+        githubLink: (freelancerData as any).githubLink || '',
+        linkedinLink: (freelancerData as any).linkedin || '',
+        personalWebsite: (freelancerData as any).personalWebsite || '',
+      };
 
-      if (profileType === 'Freelancer') {
-        apiUrl = '/freelancer/profile';
-        profilePayload = {
-          profileName: newProfileName.trim(),
-          description,
-          skills: [],
-          domains: [],
-          projects: [],
-          experiences: [],
-          portfolioLinks: [],
-          githubLink: freelancerData.githubLink || '',
-          linkedinLink: freelancerData.linkedin || '',
-          personalWebsite: freelancerData.personalWebsite || '',
-        };
-      } else {
-        apiUrl = '/freelancer/consultant';
-        profilePayload = {
-          status: 'NOT_APPLIED',
-          description,
-          price: 0,
-          domain: [],
-          skills: [],
-          experience: '',
-          links: [
-            freelancerData.githubLink || '',
-            freelancerData.linkedin || '',
-            freelancerData.personalWebsite || '',
-          ].filter(Boolean),
-        };
-      }
+      const response = await axiosInstance.post(
+        `/freelancer/profile`,
+        profilePayload,
+      );
 
-      const response = await axiosInstance.post(apiUrl, profilePayload);
       const newProfile = response.data.data;
 
       if (profileType === 'Freelancer') {
@@ -241,7 +222,12 @@ export default function ProfilesPage() {
       setProfileTypeToDelete(null);
     }
   };
-
+  const freelancerProfiles = profiles.filter(
+    (p) => p.profileType === 'Freelancer' || !p.profileType, // Handles old profiles
+  );
+  const consultantProfiles = profiles.filter(
+    (p) => p.profileType === 'Consultant',
+  );
   const handleViewProfile = (profileId: string) => {
     router.push(`/freelancer/settings/profiles/${profileId}`);
   };
@@ -266,327 +252,214 @@ export default function ProfilesPage() {
           ]}
         />
         <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="space-y-10">
-            {/* Freelancer Profiles */}
-            <section>
-              <h2 className="text-xl font-bold mb-4">Freelancer Profiles</h2>
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <p>Loading profiles...</p>
-                </div>
-              ) : freelancerProfiles.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center py-12">
-                  <p className="text-gray-500 mb-4">No profiles found</p>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setProfileType('Freelancer');
-                      setIsCreateDialogOpen(true);
-                    }}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold">Professional Profiles</h1>
+                <p className="text-muted-foreground">
+                  Create and manage multiple professional profiles to showcase
+                  different aspects of your expertise.
+                </p>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p>Loading profiles...</p>
+              </div>
+            ) : profiles.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-12">
+                <p className="text-gray-500 mb-4">No profiles found</p>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profiles.map((profile) => (
+                  <Card
+                    key={profile._id}
+                    className="hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {freelancerProfiles.map((profile) => (
-                    <Card
-                      key={profile._id}
-                      className="hover:shadow-lg transition-shadow flex flex-col h-full"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                              <User className="h-5 w-5" />
-                              {profile.profileName}
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {profile.description &&
-                              profile.description.length > 100
-                                ? `${profile.description.substring(0, 100)}...`
-                                : profile.description ||
-                                  'No description available'}
-                            </p>
-                          </div>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                            <User className="h-5 w-5" />
+                            {profile.profileName}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {profile.description &&
+                            profile.description.length > 100
+                              ? `${profile.description.substring(0, 100)}...`
+                              : profile.description ||
+                                'No description available'}
+                          </p>
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4 flex-1 flex flex-col">
-                        <div className="flex-1 space-y-4">
-                          {/* Skills */}
-                          <div className="min-h-[60px]">
-                            {profile.skills && profile.skills.length > 0 ? (
-                              <div>
-                                <p className="text-sm font-medium mb-2">
-                                  Skills:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                  {profile.skills
-                                    .slice(0, 3)
-                                    .map((skill: any, i) => (
-                                      <Badge
-                                        key={i}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        {typeof skill === 'string'
-                                          ? skill
-                                          : skill.name || skill.skillName}
-                                      </Badge>
-                                    ))}
-                                  {profile.skills.length > 3 && (
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4 flex-1 flex flex-col">
+                      <div className="flex-1 space-y-4">
+                        {/* Skills */}
+                        <div className="min-h-[60px]">
+                          {profile.skills && profile.skills.length > 0 ? (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Skills:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {profile.skills
+                                  .slice(0, 3)
+                                  .map((skill: any, index: number) => (
                                     <Badge
-                                      variant="outline"
+                                      key={index}
+                                      variant="secondary"
                                       className="text-xs"
                                     >
-                                      +{profile.skills.length - 3} more
+                                      {typeof skill === 'string'
+                                        ? skill
+                                        : skill.name || skill.skillName}
                                     </Badge>
-                                  )}
-                                </div>
+                                  ))}
+                                {profile.skills.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{profile.skills.length - 3} more
+                                  </Badge>
+                                )}
                               </div>
-                            ) : (
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Skills:
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 No skills added
                               </p>
-                            )}
-                          </div>
+                            </div>
+                          )}
+                        </div>
 
-                          {/* Domains */}
-                          <div className="min-h-[60px]">
-                            {profile.domains && profile.domains.length > 0 ? (
-                              <div>
-                                <p className="text-sm font-medium mb-2">
-                                  Domains:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                  {profile.domains
-                                    .slice(0, 2)
-                                    .map((domain: any, i) => (
-                                      <Badge
-                                        key={i}
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {typeof domain === 'string'
-                                          ? domain
-                                          : domain.name || domain.domainName}
-                                      </Badge>
-                                    ))}
-                                  {profile.domains.length > 2 && (
+                        {/* Domains */}
+                        <div className="min-h-[60px]">
+                          {profile.domains && profile.domains.length > 0 ? (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Domains:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {profile.domains
+                                  .slice(0, 2)
+                                  .map((domain: any, index: number) => (
                                     <Badge
+                                      key={index}
                                       variant="outline"
                                       className="text-xs"
                                     >
-                                      +{profile.domains.length - 2} more
+                                      {typeof domain === 'string'
+                                        ? domain
+                                        : domain.name || domain.domainName}
                                     </Badge>
-                                  )}
-                                </div>
+                                  ))}
+                                {profile.domains.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{profile.domains.length - 2} more
+                                  </Badge>
+                                )}
                               </div>
-                            ) : (
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium mb-2">
+                                Domains:
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 No domains added
                               </p>
-                            )}
-                          </div>
-
-                          {/* Projects & Experience */}
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Briefcase className="h-4 w-4" />
-                              <span>
-                                {profile.projects?.length || 0} Projects
-                              </span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              <span>
-                                {profile.experiences?.length || 0} Experience
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Rate */}
-                          <div className="text-sm min-h-[20px]">
-                            {profile.hourlyRate ? (
-                              <>
-                                <span className="font-medium">Rate: </span>
-                                <span className="text-green-600">
-                                  ${profile.hourlyRate}/hr
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                No rate set
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-4 mt-auto">
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/freelancer/settings/profiles/view/${profile._id!}`,
-                              )
-                            }
-                            variant="outline"
-                            className="flex-1 flex items-center gap-2"
-                          >
-                            <Eye className="h-4 w-4" /> View
-                          </Button>
-                          <Button
-                            onClick={() => handleViewProfile(profile._id!)}
-                            className="flex-1 flex items-center gap-2"
-                          >
-                            <Pencil className="h-4 w-4" /> Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() =>
-                              handleDeleteProfile(profile._id!, 'Freelancer')
-                            }
-                            className="flex items-center gap-2"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {/* Create button */}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setProfileType('Freelancer');
-                      setIsCreateDialogOpen(true);
-                    }}
-                    className="my-auto"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            {/* Separator */}
-            <hr className="border-t border-gray-300" />
-
-            {/* Consultant Profiles */}
-            <section>
-              <h2 className="text-xl font-bold mb-4">Consultant Profiles</h2>
-              {isLoading ? (
-                <div className="text-center py-12">
-                  <p>Loading consultant profiles...</p>
-                </div>
-              ) : consultantProfiles.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center py-12">
-                  <p className="text-gray-500 mb-4">
-                    No consultant profiles found
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {consultantProfiles.map((profile: any) => (
-                    <Card
-                      key={profile._id}
-                      className="hover:shadow-lg transition-shadow flex flex-col h-full"
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                              <User className="h-5 w-5" />
-                              Consultant
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {profile.description ||
-                                'No description available'}
-                            </p>
+                        {/* Projects & Experience Count */}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Briefcase className="h-4 w-4" />
+                            <span>
+                              {profile.projects?.length || 0} Projects
+                            </span>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4 flex-1 flex flex-col">
-                        <div className="flex-1 space-y-4">
-                          {/* Skills */}
-                          <div className="min-h-[60px]">
-                            {profile.skills && profile.skills.length > 0 ? (
-                              <div>
-                                <p className="text-sm font-medium mb-2">
-                                  Skills:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                  {profile.skills
-                                    .slice(0, 3)
-                                    .map((s: any, i: number) => (
-                                      <Badge
-                                        key={i}
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        {typeof s === 'string'
-                                          ? s
-                                          : s.name || s.skillName}
-                                      </Badge>
-                                    ))}
-                                  {profile.skills.length > 3 && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      +{profile.skills.length - 3} more
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">
-                                No skills added
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Price */}
-                          <div className="text-sm min-h-[20px]">
-                            <span className="font-medium">Price: </span>
-                            <span className="text-green-600">
-                              ${profile.price || 0}
+                          <div className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            <span>
+                              {profile.experiences?.length || 0} Experience
                             </span>
                           </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-4 mt-auto">
-                          <Button
-                            variant="outline"
-                            className="flex-1 flex items-center gap-2"
-                          >
-                            <Eye className="h-4 w-4" /> View
-                          </Button>
-                          <Button className="flex-1 flex items-center gap-2">
-                            <Pencil className="h-4 w-4" /> Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() =>
-                              handleDeleteProfile(profile._id!, 'Consultant')
-                            }
-                            className="flex items-center gap-2"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        {/* Hourly Rate */}
+                        <div className="text-sm min-h-[20px]">
+                          {profile.hourlyRate ? (
+                            <>
+                              <span className="font-medium">Rate: </span>
+                              <span className="text-green-600">
+                                ${profile.hourlyRate}/hr
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              No rate set
+                            </span>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </section>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-4 mt-auto">
+                        <Button
+                          onClick={() =>
+                            router.push(
+                              `/freelancer/settings/profiles/view/${profile._id!}`,
+                            )
+                          }
+                          variant="outline"
+                          className="flex-1 flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => handleViewProfile(profile._id!)}
+                          className="flex-1 flex items-center gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteProfile(profile._id!)}
+                          className="flex items-center gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="my-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </main>
       </div>

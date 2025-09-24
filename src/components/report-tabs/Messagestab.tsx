@@ -5,7 +5,7 @@ import { toast } from '@/components/ui/use-toast';
 
 interface MessagesTabProps {
   id: string;
-  reportStatus: 'OPEN' | 'CLOSED' | 'IN_PROGRESS';
+  reportStatus: 'OPEN' | 'CLOSED' | 'IN_PROGRESS' | 'RESOLVED';
 }
 
 export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
@@ -74,7 +74,7 @@ export const MessagesTab = ({ id, reportStatus }: MessagesTabProps) => {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-[500px] border border-border rounded-md overflow-hidden bg-card text-card-foreground">
+    <div className="flex flex-col h-[500px] border border-border rounded-md overflow-hidden bg-transparent text-card-foreground">
       <div className="px-4 py-2 border-b border-border bg-card text-center font-semibold">
         Past Reports
       </div>

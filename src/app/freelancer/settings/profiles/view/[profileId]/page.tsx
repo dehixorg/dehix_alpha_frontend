@@ -47,7 +47,7 @@ export default function ProfileViewPage() {
         fetchProfile();
       });
     }
-  });
+  }, [profileId]);
 
   const fetchProfile = async () => {
     if (!profileId) return;

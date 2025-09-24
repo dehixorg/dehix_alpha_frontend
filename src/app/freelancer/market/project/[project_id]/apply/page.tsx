@@ -265,7 +265,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active="Market"
       />
-      <div className="flex flex-col flex-1">
+      <div className="w-full flex flex-col sm:gap-4 mb-8 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -283,7 +283,7 @@ const Page = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="space-y-8 md:pl-12 xl:pl-0"
+              className="space-y-8"
             >
               {/* Header Section */}
               <div className="bg-gradient-to-r from-primary/5 to-background p-6 rounded-lg border">
