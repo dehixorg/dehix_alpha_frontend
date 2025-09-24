@@ -491,7 +491,7 @@ export default function ProfileDetailPage() {
           active="Profiles"
           isKycCheck={true}
         />
-        <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+        <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -503,7 +503,7 @@ export default function ProfileDetailPage() {
               { label: 'Profile Details', link: '#' },
             ]}
           />
-          <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
             <div className="text-center py-12">
               <p>Loading profile...</p>
             </div>
@@ -522,7 +522,7 @@ export default function ProfileDetailPage() {
           active="Profiles"
           isKycCheck={true}
         />
-        <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+        <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
           <Header
             menuItemsTop={menuItemsTop}
             menuItemsBottom={menuItemsBottom}
@@ -534,7 +534,7 @@ export default function ProfileDetailPage() {
               { label: 'Profile Details', link: '#' },
             ]}
           />
-          <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
+          <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
             <div className="text-center py-12">
               <p>Profile not found</p>
               <Button
@@ -558,7 +558,7 @@ export default function ProfileDetailPage() {
         active="Profiles"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -570,7 +570,7 @@ export default function ProfileDetailPage() {
             { label: editingProfileData.profileName, link: '#' },
           ]}
         />
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8">
           <div className="space-y-6">
             <div>
               <Button

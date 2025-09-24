@@ -51,24 +51,6 @@ export default function Education() {
     fetchData();
   }, [user.uid, refresh]);
 
-  // const handleDelete = (index: number) => {
-  //   const updatedEducation = education.filter((_, i) => i !== index);
-  //   setEducation(updatedEducation);
-  //   localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
-  // };
-
-  // const handleEdit = (index: number) => {
-  //   setEditIndex(index);
-  //   const educationInfo = education[index];
-  //   form.setValue('degree', educationInfo.degree);
-  //   form.setValue('universityName', educationInfo.universityName);
-  //   form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
-  //   form.setValue('start', new Date(educationInfo.start));
-  //   form.setValue('end', new Date(educationInfo.end));
-  //   form.setValue('grade', educationInfo.grade);
-  //   setIsDialogOpen(true);
-  // };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <SidebarMenu
@@ -77,7 +59,7 @@ export default function Education() {
         active="Education"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -90,7 +72,7 @@ export default function Education() {
         />
 
         <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {educationInfo.map((education: any, index: number) => (

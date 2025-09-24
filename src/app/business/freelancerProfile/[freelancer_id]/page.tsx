@@ -279,7 +279,7 @@ const FreelancerProfile = () => {
           ]}
         />
 
-        <div className="flex p-3 px-3 md:px-14 relative flex-col sm:gap-8 sm:py-0">
+        <div className="flex p-3 px-3 md:px-14 relative flex-col sm:gap-8 sm:py-4">
           <main className="mt-8 max-w-4xl mx-auto">
             {/* Profile Info */}
             <Card className="mb-8 shadow-md">
