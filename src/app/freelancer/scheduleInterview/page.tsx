@@ -153,7 +153,7 @@ export default function ScheduleInterviewPage() {
                     : 'Schedule Interview'
         }
       />
-      <div className="flex flex-col sm:pb-2 sm:pl-14 mb-8 w-full">
+      <div className="flex flex-col sm:py-0 sm:pl-14 mb-8 w-full">
         <Header
           menuItemsTop={freelancerMenuItemsTop}
           menuItemsBottom={freelancerMenuItemsBottom}

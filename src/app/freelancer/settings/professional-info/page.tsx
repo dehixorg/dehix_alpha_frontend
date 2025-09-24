@@ -67,7 +67,7 @@ export default function ProfessionalInfo() {
         active="Professional Info"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -79,7 +79,7 @@ export default function ProfessionalInfo() {
           ]}
         />
         <main
-          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
+          className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-2 md:gap-8 
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {isLoading ? (

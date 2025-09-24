@@ -81,7 +81,7 @@ export default function NewReportPage() {
         isKycCheck={true}
       />
 
-      <div className="flex flex-col sm:gap-6 sm:py-0 sm:pl-14">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
