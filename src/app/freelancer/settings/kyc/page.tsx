@@ -18,18 +18,18 @@ export default function PersonalInfo() {
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
-        active="kyc"
+        active="KYC"
         isKycCheck={true}
       />
       <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
-          activeMenu="Personal Info"
+          activeMenu="KYC"
           breadcrumbItems={[
             { label: 'Freelancer', link: '/dashboard/freelancer' },
             { label: 'Settings', link: '#' },
-            { label: 'kyc', link: '#' },
+            { label: 'KYC', link: '#' },
           ]}
         />
         <main className="grid flex-1 items-start sm:px-10 md:px-16 py-10 md:gap-12 bg-gradient-to-br">

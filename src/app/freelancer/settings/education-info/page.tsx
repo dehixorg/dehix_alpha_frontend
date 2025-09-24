@@ -52,7 +52,7 @@ export default function Education() {
   }, [user.uid, refresh]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -76,7 +76,11 @@ export default function Education() {
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {educationInfo.map((education: any, index: number) => (
-            <EducationInfoCard key={index} {...education} />
+            <EducationInfoCard
+              key={index}
+              {...education}
+              onDelete={() => education._id}
+            />
           ))}
           <AddEducation onFormSubmit={handleFormSubmit} />
         </main>

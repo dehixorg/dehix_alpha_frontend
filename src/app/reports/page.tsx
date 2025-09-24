@@ -123,39 +123,35 @@ export default function NewReportPage() {
                   </TabsList>
                 </div>
 
-                <div className="p-6">
-                  <TabsContent value="new" className="m-0">
-                    <Card className="border-0 shadow-none bg-transparent">
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          Create New Report
-                        </CardTitle>
-                        <CardDescription>
-                          Fill in the details below to generate a new report
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <NewReportTab reportData={reportData} />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
+                <TabsContent value="new" className="m-0">
+                  <Card className="border-0 shadow-none bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="text-lg">
+                        Create New Report
+                      </CardTitle>
+                      <CardDescription>
+                        Fill in the details below to generate a new report
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <NewReportTab reportData={reportData} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-                  <TabsContent value="history" className="m-0">
-                    <Card className="border-0 shadow-none bg-transparent">
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          Report History
-                        </CardTitle>
-                        <CardDescription>
-                          View and manage your previously generated reports
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <PastReportsTab />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </div>
+                <TabsContent value="history" className="m-0">
+                  <Card className="border-0 shadow-none bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Report History</CardTitle>
+                      <CardDescription>
+                        View and manage your previously generated reports
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PastReportsTab />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
               </Tabs>
             </div>
           </div>
