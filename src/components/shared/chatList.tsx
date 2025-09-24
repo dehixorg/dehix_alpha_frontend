@@ -47,7 +47,15 @@ interface ChatListProps {
   conversations: Conversation[];
   active: Conversation | null;
   setConversation: (activeConversation: Conversation) => void;
-  onOpenProfileSidebar?: (id: string, type: 'user' | 'group') => void;
+  onOpenProfileSidebar?: (
+    id: string,
+    type: 'user' | 'group',
+    initialDetails?: {
+      userName?: string;
+      email?: string;
+      profilePic?: string;
+    },
+  ) => void;
   onOpenNewChatDialog: () => void;
 }
 
@@ -85,13 +93,23 @@ export function ChatList({
     e.stopPropagation();
     if (!onOpenProfileSidebar) return;
     if (conv.type === 'group') {
-      onOpenProfileSidebar(conv.id, 'group');
+      onOpenProfileSidebar(conv.id, 'group', {
+        userName: conv.groupName || 'Group',
+        profilePic: conv.avatar,
+      });
     } else {
       const otherParticipantUid = conv.participants.find(
         (p) => p !== currentUser.uid,
       );
-      if (otherParticipantUid)
-        onOpenProfileSidebar(otherParticipantUid, 'user');
+      if (otherParticipantUid) {
+        const participantDetails =
+          conv.participantDetails?.[otherParticipantUid];
+        onOpenProfileSidebar(otherParticipantUid, 'user', {
+          userName: participantDetails?.userName,
+          email: participantDetails?.email,
+          profilePic: participantDetails?.profilePic,
+        });
+      }
     }
   };
 
@@ -212,8 +230,7 @@ export function ChatList({
                       <AvatarImage
                         src={
                           conversation.type === 'group'
-                            ? conversation.participantDetails?.[conversation.id]
-                                ?.profilePic
+                            ? conversation.avatar
                             : conversation.participantDetails?.[
                                 conversation.participants.find(
                                   (p) => p !== currentUser.uid,

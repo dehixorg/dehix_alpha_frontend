@@ -53,7 +53,6 @@ export function ChangeGroupInfoDialog({
     onSave(groupName.trim(), avatarUrl.trim());
     onClose();
   };
-
   // Fallback character for avatar if groupName is empty or undefined
   const fallbackChar = groupName?.charAt(0)?.toUpperCase() || 'G';
 
@@ -124,7 +123,6 @@ export function ChangeGroupInfoDialog({
               className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-[hsl(var(--ring))]"
             />
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-[hsl(var(--foreground))]">
               Avatar Preview
