@@ -57,6 +57,17 @@
     --dot-hover-border-color: #11a0ff;
   }
 
+  .message-highlight {
+    background-color: #fef08a !important; 
+    box-shadow: 0 0 15px 5px #8B5CF6 !important;
+    transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+  }
+
+  .dark .message-highlight {
+    background-color: #554300 !important;
+    box-shadow: 0 0 15px 5px #9966ccba !important;
+  }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;

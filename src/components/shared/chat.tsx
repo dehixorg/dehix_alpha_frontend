@@ -43,6 +43,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
+import { Input } from '../ui/input';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
@@ -111,6 +112,21 @@ function isSameDay(d1: Date, d2: Date) {
   );
 }
 
+function useDebounce<T> (value: T, delay: number = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler); // cleanup on value change or unmount
+    };
+  })
+
+  return debouncedValue;
+}
+
 type User = {
   userName: string;
   email: string;
@@ -157,6 +173,9 @@ export function CardsChat({
     profilePic: '',
   });
 
+  const [searchValue, setSearchValue] = useState<string>('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const debouncedSearch = useDebounce(searchValue, 500) /* wait for .5 sec */
   const [messages, setMessages] = useState<DocumentData[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -172,6 +191,7 @@ export function CardsChat({
   const prevMessagesLength = useRef(messages.length);
   const [, setOpenDrawer] = useState(false);
 
+  
   // States for voice recording
   type RecordingStatus =
     | 'idle'
@@ -280,6 +300,33 @@ export function CardsChat({
       }
     }
   };
+
+  useEffect(() => {
+    if(debouncedSearch.trim() && messages){
+      /* logic to filter out the conversation/message of the chat */
+      const searchTerm = debouncedSearch.toLowerCase();
+
+      const filteredConversations = messages.filter((message) =>
+        (message.content ?? "").toLowerCase().includes(searchTerm)
+      );
+
+      if(filteredConversations.length > 0) {
+        const firstMatchId = `message-${filteredConversations[0].id}`;
+        const element = document.getElementById(firstMatchId);
+        if(element){
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        
+          /* add temporary style here to highlight the message */
+          element.classList.add('message-highlight');
+
+          /* remove the added style from the matched message element */
+          setTimeout(() => {
+            element.classList.remove('message-highlight');
+          }, 2000);
+        }
+      }
+    }
+  }, [debouncedSearch])
 
   useEffect(() => {
     const handleResize = () => {
@@ -945,78 +992,101 @@ export function CardsChat({
                   </p>
                 </div>
               </button>
+              {/* create a search bar input here to take input from user to search conversation */}
               <div className="flex items-center space-x-0.5 sm:space-x-1">
+              {/* Search Toggle */}
+              {isSearchVisible ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder="Search in conversation..."
+                    className="w-40 sm:w-56 rounded-full text-sm"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Close search"
+                    onClick={() => {
+                      setIsSearchVisible(false);
+                      setSearchValue("");
+                    }}
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="ghost"
                   size="icon"
                   aria-label="Search in chat"
+                  onClick={() => setIsSearchVisible(true)}
                   className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Video call"
-                  onClick={handleCreateMeet}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  <Video className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={isChatExpanded ? 'Collapse chat' : 'Expand chat'}
-                  onClick={() => {
-                    if (onToggleExpand) {
-                      onToggleExpand();
-                    } else {
-                      console.error('[CardsChat] onToggleExpand is undefined!');
-                    }
-                  }}
-                  className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                >
-                  {isChatExpanded ? (
-                    <Minimize2 className="h-5 w-5" />
-                  ) : (
-                    <Maximize2 className="h-5 w-5" />
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={5}
-                    className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+              )}
+
+              {/* Video call */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Video call"
+                onClick={handleCreateMeet}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                <Video className="h-5 w-5" />
+              </Button>
+
+              {/* Expand/collapse */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isChatExpanded ? "Collapse chat" : "Expand chat"}
+                onClick={() => {
+                  if (onToggleExpand) {
+                    onToggleExpand();
+                  } else {
+                    console.error("[CardsChat] onToggleExpand is undefined!");
+                  }
+                }}
+                className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+              >
+                {isChatExpanded ? (
+                  <Minimize2 className="h-5 w-5" />
+                ) : (
+                  <Maximize2 className="h-5 w-5" />
+                )}
+              </Button>
+
+              {/* More options */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="More options"
+                    className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
                   >
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setOpenReport(true);
-                      }}
-                      className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
-                    >
-                      <Flag className="h-4 w-4" />
-                      <span className="text-sm font-medium">Report</span>
-                    </DropdownMenuItem>
-                    {/* <DropdownMenuItem
-                      className="text-black dark:text-[hsl(var(--popover-foreground))] cursor-pointer"
-                      onSelect={() => router.push('/report')} // Use onSelect for dropdowns
-                    >
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      <span>Help</span>
-                    </DropdownMenuItem> */}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={5}
+                  className="w-48 bg-[#d7dae0] dark:bg-[hsl(var(--popover))]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => setOpenReport(true)}
+                    className="text-red-600 hover:text-red-700 focus:text-red-700 dark:text-red-500 dark:hover:text-red-400 px-2 py-1.5 cursor-pointer flex items-center gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm font-medium">Report</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
               <div className="flex flex-col space-y-3 ">
@@ -1109,7 +1179,7 @@ export function CardsChat({
                         )}
 
                         {/* Message content container */}
-                        <div className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
+                        <div id={`message-${message.id}`} className={cn('flex flex-col', isSender ? 'items-end' : 'items-start', 'max-w-[80%]')}>
                           {/* Sender name in group chats */}
                           {isGroupChat && showSenderName && !isSender && (
                             <div className="mb-0.5">
@@ -1119,6 +1189,7 @@ export function CardsChat({
                             </div>
                           )}
                           <div
+                            
                             className={cn(
                               'flex w-max max-w-full flex-col gap-1 rounded-2xl px-4 py-2 text-sm shadow-sm',
                               message.content.match(

@@ -235,90 +235,92 @@ export function ChatList({
                   );
                   const displayText = lastMessageText || 'No messages yet';
 
-              return (
-                <div
-                  key={conversation.id}
-                  className={cn(
-                    'flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
-                    isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]',
-                  )}
-                  onClick={() => setConversation(conversation)}
-                >
-                  <div
-                    className="flex items-center space-x-3 flex-shrink-0"
-                    onClick={(e) => handleProfileIconClick(e, conversation)}
-                  >
-                    <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
-                      <AvatarImage
-                        src={
-                          conversation.type === 'group'
-                            ? conversation.avatar
-                            : conversation.participantDetails?.[
-                                conversation.participants.find(
-                                  (p) => p !== currentUser.uid,
-                                ) || ''
-                              ]?.profilePic
-                        }
-                        alt={
-                          conversation.type === 'group'
-                            ? conversation.groupName
-                            : conversation.participantDetails?.[
-                                conversation.participants.find(
-                                  (p) => p !== currentUser.uid,
-                                ) || ''
-                              ]?.userName
-                        }
-                      />
-                      <AvatarFallback>
-                        {(conversation.type === 'group'
-                          ? conversation.groupName?.charAt(0)
-                          : conversation.participantDetails?.[
-                              conversation.participants.find(
-                                (p) => p !== currentUser.uid,
-                              ) || ''
-                            ]?.userName?.charAt(0)
-                        )?.toUpperCase() || 'P'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="flex-grow overflow-hidden">
-                    <div className="flex justify-between items-baseline">
-                      <p className="text-sm font-medium truncate">
-                        {conversation.type === 'group'
-                          ? conversation.groupName
-                          : conversation.participantDetails?.[
-                              conversation.participants.find(
-                                (p) => p !== currentUser.uid,
-                              ) || ''
-                            ]?.userName || 'Chat User'}
-                      </p>
-                      <p className="text-xs flex-shrink-0 ml-2">
-                        {lastUpdated}
-                      </p>
+                  return (
+                    <div
+                      key={conversation.id}
+                      className={cn(
+                        'flex items-start p-3 rounded-lg cursor-pointer space-x-3 hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]',
+                        isActive && 'bg-[#d6dae2a8] dark:bg-[#35383b9e]',
+                      )}
+                      onClick={() => setConversation(conversation)}
+                    >
+                      <div
+                        className="flex items-center space-x-3 flex-shrink-0"
+                        onClick={(e) => handleProfileIconClick(e, conversation)}
+                      >
+                        <Avatar className="w-10 h-10 flex-shrink-0 mt-1">
+                          <AvatarImage
+                            src={
+                              conversation.type === 'group'
+                                ? conversation.avatar
+                                : conversation.participantDetails?.[
+                                    conversation.participants.find(
+                                      (p) => p !== currentUser.uid,
+                                    ) || ''
+                                  ]?.profilePic
+                            }
+                            alt={
+                              conversation.type === 'group'
+                                ? conversation.groupName
+                                : conversation.participantDetails?.[
+                                    conversation.participants.find(
+                                      (p) => p !== currentUser.uid,
+                                    ) || ''
+                                  ]?.userName
+                            }
+                          />
+                          <AvatarFallback>
+                            {(conversation.type === 'group'
+                              ? conversation.groupName?.charAt(0)
+                              : conversation.participantDetails?.[
+                                  conversation.participants.find(
+                                    (p) => p !== currentUser.uid,
+                                  ) || ''
+                                ]?.userName?.charAt(0)
+                            )?.toUpperCase() || 'P'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="flex-grow overflow-hidden">
+                        <div className="flex justify-between items-baseline">
+                          <p className="text-sm font-medium truncate">
+                            {conversation.type === 'group'
+                              ? conversation.groupName
+                              : conversation.participantDetails?.[
+                                  conversation.participants.find(
+                                    (p) => p !== currentUser.uid,
+                                  ) || ''
+                                ]?.userName || 'Chat User'}
+                          </p>
+                          <p className="text-xs flex-shrink-0 ml-2">
+                            {lastUpdated}
+                          </p>
+                        </div>
+                        <p className="text-xs truncate">
+                          {displayText.length > 40
+                            ? displayText.substring(0, 40) + '...'
+                            : displayText}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs truncate">
-                      {displayText.length > 40
-                        ? displayText.substring(0, 40) + '...'
-                        : displayText}
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
+                  <MessageSquare className="w-10 h-10 mb-2" />
+                  <p className="text-lg font-medium">
+                    {searchTerm
+                      ? 'No matching conversations'
+                      : 'No conversations found'}
+                  </p>
+                  {!searchTerm && (
+                    <p className="text-sm">
+                      Start a new chat or wait for others to connect!
                     </p>
-                  </div>
+                  )}
                 </div>
-              );
-            })
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center text-[hsl(var(--muted-foreground))]">
-              <MessageSquare className="w-10 h-10 mb-2" />
-              <p className="text-lg font-medium">
-                {searchTerm
-                  ? 'No matching conversations'
-                  : 'No conversations found'}
-              </p>
-              {!searchTerm && (
-                <p className="text-sm">
-                  Start a new chat or wait for others to connect!
-                </p>
               )}
-            </div>
+            </>
           )}
         </div>
       </ScrollArea>
