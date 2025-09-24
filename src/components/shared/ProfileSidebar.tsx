@@ -1007,7 +1007,7 @@ export function ProfileSidebar({
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <ScrollArea className="max-h-60 px-4">
+                        <ScrollArea className="h-auto max-h-60 overflow-y-auto px-4 rounded-md border">
                           <ul className="space-y-1 py-2">
                             {(profileData as ProfileGroup).members.map(
                               (member) => (
