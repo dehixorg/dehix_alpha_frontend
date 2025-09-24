@@ -50,6 +50,13 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import ProjectCard from '@/components/cards/freelancerProjectCard';
 import {
   Dialog,
@@ -536,8 +543,41 @@ export default function ProfileDetailPage() {
             ]}
           />
           <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-            <div className="text-center py-12">
-              <p>Loading profile...</p>
+            <div className="grid w-full gap-4 py-6">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-80" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-40" />
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Skeleton className="h-36 w-full" />
+                    <Skeleton className="h-36 w-full" />
+                    <Skeleton className="h-36 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </main>
         </div>
@@ -626,59 +666,157 @@ export default function ProfileDetailPage() {
               </Alert>
             )}
 
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold">
-                  {editingProfileData.profileName}
-                </h1>
-                <p className="text-muted-foreground">
-                  {isEditMode
-                    ? 'Edit your professional profile'
-                    : 'Viewing your professional profile'}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {isEditMode ? (
-                  <>
-                    <Button
-                      onClick={handleUpdateProfile}
-                      disabled={isUpdating}
-                      className="flex items-center gap-2"
-                    >
-                      <Save className="h-4 w-4" />
-                      {isUpdating ? 'Updating...' : 'Save Changes'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleCancelEdit}
-                      className="flex items-center gap-2"
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="default"
-                      onClick={() => setIsEditMode(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Edit
-                    </Button>
+            <Card className="bg-gradient-to-r from-primary/5 to-background shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl font-bold">
+                        {editingProfileData.profileName || 'Untitled Profile'}
+                      </h1>
+                      {!isEditMode && (
+                        <Badge variant="secondary">
+                          {editingProfileData.profileType === 'Consultant'
+                            ? 'Consultant'
+                            : 'Freelancer'}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {isEditMode
+                        ? 'Edit your professional profile'
+                        : 'Viewing your professional profile'}
+                    </p>
 
-                    <Button
-                      variant="destructive"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
+                    {!isEditMode && (
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
+                        {editingProfileData.githubLink && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2"
+                                >
+                                  <a
+                                    href={editingProfileData.githubLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Github className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                      {' '}
+                                      GitHub
+                                    </span>
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Open GitHub</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {editingProfileData.linkedinLink && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2"
+                                >
+                                  <a
+                                    href={editingProfileData.linkedinLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Linkedin className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                      {' '}
+                                      LinkedIn
+                                    </span>
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Open LinkedIn</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {editingProfileData.personalWebsite && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-2"
+                                >
+                                  <a
+                                    href={editingProfileData.personalWebsite}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Globe2 className="h-4 w-4" />
+                                    <span className="hidden md:inline">
+                                      {' '}
+                                      Website
+                                    </span>
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Open Website</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 md:flex-none">
+                    {isEditMode ? (
+                      <>
+                        <Button
+                          onClick={handleUpdateProfile}
+                          disabled={isUpdating}
+                          className="flex items-center gap-2"
+                        >
+                          <Save className="h-4 w-4" />
+                          {isUpdating ? 'Updating...' : 'Save Changes'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                          className="flex items-center gap-2"
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="default"
+                          onClick={() => setIsEditMode(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="bg-muted-foreground/20 dark:bg-muted/20">
               <CardHeader>
@@ -740,13 +878,6 @@ export default function ProfileDetailPage() {
                               ? editingProfileData.profileName
                               : 'Untitled Profile'}
                           </p>
-                          {!isEditMode && (
-                            <Badge variant="secondary">
-                              {editingProfileData.profileType === 'Consultant'
-                                ? 'Consultant'
-                                : 'Freelancer'}
-                            </Badge>
-                          )}
                         </div>
                       </>
                     )}
@@ -1093,7 +1224,7 @@ export default function ProfileDetailPage() {
                   </div>
                 </div>
 
-                <Separator />
+                {isEditMode && <Separator />}
 
                 <div className="flex flex-1 gap-4">
                   <div className="space-y-2">
@@ -1119,23 +1250,7 @@ export default function ProfileDetailPage() {
                         </div>
                       </>
                     ) : editingProfileData.githubLink ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <a
-                            href={editingProfileData.githubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Github className="h-4 w-4" />
-                            GitHub
-                          </a>
-                        </Button>
-                      </div>
+                      <></>
                     ) : (
                       <Card className="bg-muted/30">
                         <CardContent className="py-4 flex items-center gap-3">
@@ -1188,23 +1303,7 @@ export default function ProfileDetailPage() {
                         </div>
                       </>
                     ) : editingProfileData.linkedinLink ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <a
-                            href={editingProfileData.linkedinLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Linkedin className="h-4 w-4" />
-                            LinkedIn
-                          </a>
-                        </Button>
-                      </div>
+                      <></>
                     ) : (
                       <Card className="bg-muted/30">
                         <CardContent className="py-4 flex items-center gap-3">
@@ -1270,23 +1369,7 @@ export default function ProfileDetailPage() {
                         </div>
                       </>
                     ) : editingProfileData.personalWebsite ? (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <a
-                            href={editingProfileData.personalWebsite}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Globe2 className="h-4 w-4" />
-                            Website
-                          </a>
-                        </Button>
-                      </div>
+                      <></>
                     ) : (
                       <Card className="bg-muted/30">
                         <CardContent className="py-4 flex items-center gap-3">
