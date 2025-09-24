@@ -51,26 +51,8 @@ export default function Education() {
     fetchData();
   }, [user.uid, refresh]);
 
-  // const handleDelete = (index: number) => {
-  //   const updatedEducation = education.filter((_, i) => i !== index);
-  //   setEducation(updatedEducation);
-  //   localStorage.setItem('education', JSON.stringify(updatedEducation)); // Update local storage
-  // };
-
-  // const handleEdit = (index: number) => {
-  //   setEditIndex(index);
-  //   const educationInfo = education[index];
-  //   form.setValue('degree', educationInfo.degree);
-  //   form.setValue('universityName', educationInfo.universityName);
-  //   form.setValue('fieldOfStudy', educationInfo.fieldOfStudy);
-  //   form.setValue('start', new Date(educationInfo.start));
-  //   form.setValue('end', new Date(educationInfo.end));
-  //   form.setValue('grade', educationInfo.grade);
-  //   setIsDialogOpen(true);
-  // };
-
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -94,7 +76,11 @@ export default function Education() {
                 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
         >
           {educationInfo.map((education: any, index: number) => (
-            <EducationInfoCard key={index} {...education} />
+            <EducationInfoCard
+              key={index}
+              {...education}
+              onDelete={() => education._id}
+            />
           ))}
           <AddEducation onFormSubmit={handleFormSubmit} />
         </main>
