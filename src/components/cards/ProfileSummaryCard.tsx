@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Eye,
-  Pencil,
-  Trash2,
-  User,
-  Briefcase,
-  MoreVertical,
-} from 'lucide-react';
+import { Eye, Trash2, User, Briefcase, MoreVertical } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,14 +28,12 @@ export type ProfileSummary = {
 export interface ProfileSummaryCardProps {
   profile: ProfileSummary;
   onView: () => void;
-  onEdit: () => void;
   onDelete: () => void;
 }
 
 const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
   profile,
   onView,
-  onEdit,
   onDelete,
 }) => {
   const {
@@ -161,13 +152,6 @@ const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
                       >
                         <Eye className="mr-2 h-4 w-4" />
                         <span>View</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={onEdit}
-                        className="cursor-pointer"
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={onDelete}

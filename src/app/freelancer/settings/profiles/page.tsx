@@ -196,9 +196,6 @@ export default function ProfilesPage() {
   const consultantProfiles = profiles.filter(
     (p) => p.profileType === 'Consultant',
   );
-  const handleViewProfile = (profileId: string) => {
-    router.push(`/freelancer/settings/profiles/${profileId}`);
-  };
 
   // --- Derived stats for Overview ---
   const totalProfiles = profiles.length;
@@ -444,7 +441,6 @@ export default function ProfilesPage() {
                                 `/freelancer/settings/profiles/${profile._id!}`,
                               )
                             }
-                            onEdit={() => handleViewProfile(profile._id!)}
                             onDelete={() => handleDeleteProfile(profile._id!)}
                           />
                         ))}
@@ -494,7 +490,6 @@ export default function ProfilesPage() {
                                 `/freelancer/settings/profiles/${profile._id!}`,
                               )
                             }
-                            onEdit={() => handleViewProfile(profile._id!)}
                             onDelete={() => handleDeleteProfile(profile._id!)}
                           />
                         ))}
