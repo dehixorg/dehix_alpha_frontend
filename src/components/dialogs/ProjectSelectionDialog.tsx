@@ -179,10 +179,15 @@ export default function ProjectSelectionDialog({
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-2">No projects found.</p>
               <p className="text-sm text-muted-foreground mb-4">
-                Create projects from your Projects page to add them to this profile.
+                Create projects from your Projects page to add them to this
+                profile.
               </p>
               <Button asChild>
-                <Link href="/freelancer/settings/projects" target="_blank" rel="noopener noreferrer">
+                <Link
+                  href="/freelancer/settings/projects"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Go to Projects
                 </Link>
               </Button>
