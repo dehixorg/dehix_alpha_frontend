@@ -9,6 +9,7 @@ import {
   LogOut,
   MinusCircle,
   LoaderCircle,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   doc,
@@ -27,13 +28,11 @@ import {
 } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 
-
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
-
 
 // Simple file item type for shared files list
 export type FileItem = {
@@ -144,11 +143,11 @@ export function ProfileSidebar({
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [refreshDataKey, setRefreshDataKey] = useState(0);
+  const [showAllMedia, setShowAllMedia] = useState(false);
   const [showAllMembers, setShowAllMembers] = useState(false);
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
@@ -160,7 +159,6 @@ export function ProfileSidebar({
 
   const { toast } = useToast();
   const db = getFirestore();
-  const user = useSelector((state: RootState) => state.user);
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -273,24 +271,33 @@ export function ProfileSidebar({
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
-      const s3BucketUrl = 'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/';
+      const s3BucketUrl =
+        'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/';
 
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
         let mediaUrl = '';
-        
-        if (message.voiceMessage && typeof message.content === 'string' && message.content.startsWith(s3BucketUrl)) {
-            mediaUrl = message.content;
-        } else if (typeof message.content === 'string' && message.content.startsWith(s3BucketUrl)) {
-            // This handles images, videos, and other files sent as plain links
-            mediaUrl = message.content;
+
+        if (
+          message.voiceMessage &&
+          typeof message.content === 'string' &&
+          message.content.startsWith(s3BucketUrl)
+        ) {
+          mediaUrl = message.content;
+        } else if (
+          typeof message.content === 'string' &&
+          message.content.startsWith(s3BucketUrl)
+        ) {
+          // This handles images, videos, and other files sent as plain links
+          mediaUrl = message.content;
         }
 
         if (mediaUrl) {
           try {
             const url = new URL(mediaUrl);
             const fileName = decodeURIComponent(url.pathname.substring(1));
-            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            const fileExtension =
+              fileName.split('.').pop()?.toLowerCase() || '';
             let type = 'application/octet-stream';
 
             if (message.voiceMessage) {
@@ -298,19 +305,19 @@ export function ProfileSidebar({
             } else {
               // Simple mapping from extension to MIME type
               const mimeTypes: { [key: string]: string } = {
-                'png': 'image/png',
-                'jpg': 'image/jpeg',
-                'jpeg': 'image/jpeg',
-                'gif': 'image/gif',
-                'mp4': 'video/mp4',
-                'webm': 'video/webm',
-                'mp3': 'audio/mpeg',
-                'wav': 'audio/wav',
-                'pdf': 'application/pdf',
-                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'ppt': 'application/vnd.ms-powerpoint',
-                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'doc': 'application/msword',
+                png: 'image/png',
+                jpg: 'image/jpeg',
+                jpeg: 'image/jpeg',
+                gif: 'image/gif',
+                mp4: 'video/mp4',
+                webm: 'video/webm',
+                mp3: 'audio/mpeg',
+                wav: 'audio/wav',
+                pdf: 'application/pdf',
+                pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                ppt: 'application/vnd.ms-powerpoint',
+                docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                doc: 'application/msword',
                 // Add other types as needed
               };
               type = mimeTypes[fileExtension] || 'application/octet-stream';
@@ -324,7 +331,7 @@ export function ProfileSidebar({
               fileName: fileName,
             });
           } catch (e) {
-            console.error("Could not parse media URL:", e);
+            console.error('Could not parse media URL:', e);
           }
         }
       });
@@ -375,9 +382,7 @@ export function ProfileSidebar({
 
     try {
       await updateDoc(doc(db, 'conversations', conversationId), {
-        mutedUsers: isMuted
-          ? arrayRemove(user.uid)
-          : arrayUnion(user.uid),
+        mutedUsers: isMuted ? arrayRemove(user.uid) : arrayUnion(user.uid),
       });
 
       setProfileData((prev) => {
@@ -738,12 +743,44 @@ export function ProfileSidebar({
     }
   };
 
-  if (!isOpen) return null;
-
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
+
+  if (showAllMedia) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+          aria-labelledby="profile-sidebar-title"
+          aria-describedby="profile-sidebar-description"
+        >
+          <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-row items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={() => setShowAllMedia(false)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <SheetTitle
+              id="profile-sidebar-title"
+              className="text-[hsl(var(--card-foreground))]"
+            >
+              Shared Media
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-4">
+              <SharedMediaDisplay mediaItems={sharedMedia} isExpanded />
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -884,9 +921,20 @@ export function ProfileSidebar({
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mt-4 mb-2">
-                            Shared Media
-                          </h3>
+                          <div className="flex justify-between items-center mt-4 mb-2">
+                            <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
+                              Shared Media
+                            </h3>
+                            {sharedMedia.length > 4 && (
+                              <Button
+                                variant="link"
+                                className="h-auto p-0"
+                                onClick={() => setShowAllMedia(true)}
+                              >
+                                View All
+                              </Button>
+                            )}
+                          </div>
                           {isLoadingMedia ? (
                             <div className="flex justify-center items-center h-20">
                               <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
@@ -908,7 +956,8 @@ export function ProfileSidebar({
                             className="w-full justify-start"
                             disabled
                           >
-                            <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
+                            <VolumeX className="h-4 w-4 mr-2" /> Mute
+                            Conversation
                           </Button>
                           <Button
                             variant="outline"
@@ -1087,10 +1136,18 @@ export function ProfileSidebar({
                     </Card>
 
                     <Card>
-                      <CardHeader>
+                      <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base">
                           Shared Media
                         </CardTitle>
+                        {sharedMedia.length > 4 && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowAllMedia(true)}
+                          >
+                            View All
+                          </Button>
+                        )}
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -1102,8 +1159,6 @@ export function ProfileSidebar({
                         ) : (
                           <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
                             <p>No media or files have been shared yet.</p>
-                            {/* Placeholder for future file upload/browsing */}
-                            {/* <Button variant="link" size="sm" className="mt-1">Browse Files</Button> */}
                           </div>
                         )}
                       </CardContent>

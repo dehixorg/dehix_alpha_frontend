@@ -8,8 +8,9 @@ import {
   Download,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { MediaPreviewDialog } from './MediaPreviewDialog';
+
+import { cn } from '@/lib/utils';
 
 export type MediaItem = {
   id: string; // Added id for key prop
@@ -21,14 +22,18 @@ interface SharedMediaDisplayProps {
   mediaItems: MediaItem[];
   onMediaItemClick?: (item: MediaItem) => void;
   className?: string; // Allow passing additional class names for the container
+  isExpanded?: boolean;
 }
 
 const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
   mediaItems,
   onMediaItemClick,
   className,
+  isExpanded = false,
 }) => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+
+  const itemsToShow = isExpanded ? mediaItems : mediaItems.slice(0, 4);
 
   if (!mediaItems || mediaItems.length === 0) {
     return (
@@ -46,7 +51,10 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
   const handleItemClick = (item: MediaItem) => {
     if (onMediaItemClick) {
       onMediaItemClick(item);
-    } else if (item.type.startsWith('image/') || item.type.startsWith('audio/')) {
+    } else if (
+      item.type.startsWith('image/') ||
+      item.type.startsWith('audio/')
+    ) {
       setSelectedMedia(item);
     } else {
       window.open(item.url, '_blank', 'noopener,noreferrer');
@@ -126,10 +134,8 @@ const SharedMediaDisplay: React.FC<SharedMediaDisplayProps> = ({
 
   return (
     <>
-      <div
-        className={cn('grid grid-cols-3 sm:grid-cols-4 gap-2', className)}
-      >
-        {mediaItems.map(renderMediaItem)}
+      <div className={cn('grid grid-cols-3 sm:grid-cols-4 gap-2', className)}>
+        {itemsToShow.map(renderMediaItem)}
       </div>
       {selectedMedia && (
         <MediaPreviewDialog
