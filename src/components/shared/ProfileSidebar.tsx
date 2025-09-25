@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import {
   VolumeX,
   ShieldX,
@@ -10,6 +9,7 @@ import {
   LogOut,
   MinusCircle,
   LoaderCircle,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   doc,
@@ -23,8 +23,10 @@ import {
   query,
   orderBy,
   getDocs,
+  getFirestore,
   writeBatch,
 } from 'firebase/firestore';
+import { useSelector } from 'react-redux';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -32,6 +34,7 @@ import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { ChangeGroupInfoDialog } from './ChangeGroupInfoDialog';
 import SharedMediaDisplay, { type MediaItem } from './SharedMediaDisplay';
 
+// Simple file item type for shared files list
 export type FileItem = {
   id: string;
   name: string;
@@ -60,7 +63,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
 import type { CombinedUser } from '@/hooks/useAllUsers';
@@ -76,6 +78,7 @@ export type ProfileUser = {
   displayName: string;
   status?: string;
   lastSeen?: string;
+  mutedUsers?: string[];
 };
 
 export type ProfileGroupMember = {
@@ -103,6 +106,7 @@ export type ProfileGroup = {
   createdAtFormatted?: string;
   // Placeholder for admin details if needed directly in ProfileGroup
   adminDetails?: ProfileUser[]; // Could be populated if FE needs more admin info than just IDs
+  mutedUsers?: string[];
 };
 
 interface ProfileSidebarProps {
@@ -132,36 +136,29 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [, setSharedFiles] = useState<FileItem[]>([]);
-  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
+  const [showAllMedia, setShowAllMedia] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+  const [isLeaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [refreshDataKey, setRefreshDataKey] = useState(0);
-  const [showAllMembers, setShowAllMembers] = useState(false);
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
-  const { toast } = useToast();
 
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
     onConfirm: () => {},
-    confirmButtonText: '', // Add missing property
-    confirmButtonVariant: 'destructive' as
-      | 'default'
-      | 'destructive'
-      | 'outline'
-      | 'secondary'
-      | 'ghost'
-      | 'link'
-      | null
-      | undefined,
+    confirmButtonText: 'Confirm',
+    confirmButtonVariant: 'default' as 'default' | 'destructive',
   });
+
+  const { toast } = useToast();
+  const db = getFirestore();
 
   const internalFetchProfileData = async () => {
     setLoading(true);
@@ -255,7 +252,7 @@ export function ProfileSidebar({
       }
     } catch (error: any) {
       console.error('Error fetching profile data:', error);
-      setError(error.message || 'Failed to load profile data');
+      setError('Failed to load profile data.');
     } finally {
       setLoading(false);
     }
@@ -266,30 +263,75 @@ export function ProfileSidebar({
     setSharedMedia([]);
 
     try {
-      // Get messages from Firestore
-      const messagesQuery = query(
-        collection(db, `conversations/${conversationId}/messages`),
-        orderBy('timestamp', 'desc'),
+      const messagesRef = collection(
+        db,
+        `conversations/${conversationId}/messages`,
       );
-
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'));
       const messagesSnapshot = await getDocs(messagesQuery);
       const extractedMedia: MediaItem[] = [];
 
+      const s3BucketUrl =
+        'https://de-test-bucket-8285.s3.ap-south-1.amazonaws.com/';
+
       messagesSnapshot.forEach((doc) => {
         const message = doc.data();
+        let mediaUrl = '';
+
         if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
+          message.voiceMessage &&
+          typeof message.content === 'string' &&
+          message.content.startsWith(s3BucketUrl)
         ) {
-          for (const attachment of message.attachments) {
-            if (attachment.url && attachment.type && attachment.fileName) {
-              extractedMedia.push({
-                id: `${doc.id}-${attachment.fileName}`,
-                url: attachment.url,
-                type: attachment.type,
-                fileName: attachment.fileName,
-              });
+          mediaUrl = message.content;
+        } else if (
+          typeof message.content === 'string' &&
+          message.content.startsWith(s3BucketUrl)
+        ) {
+          // This handles images, videos, and other files sent as plain links
+          mediaUrl = message.content;
+        }
+
+        if (mediaUrl) {
+          try {
+            const url = new URL(mediaUrl);
+            const fileName = decodeURIComponent(url.pathname.substring(1));
+            const fileExtension =
+              fileName.split('.').pop()?.toLowerCase() || '';
+            let type = 'application/octet-stream';
+
+            if (message.voiceMessage) {
+              type = 'audio/webm';
+            } else {
+              // Simple mapping from extension to MIME type
+              const mimeTypes: { [key: string]: string } = {
+                png: 'image/png',
+                jpg: 'image/jpeg',
+                jpeg: 'image/jpeg',
+                gif: 'image/gif',
+                mp4: 'video/mp4',
+                webm: 'video/webm',
+                mp3: 'audio/mpeg',
+                wav: 'audio/wav',
+                pdf: 'application/pdf',
+                pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                ppt: 'application/vnd.ms-powerpoint',
+                docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                doc: 'application/msword',
+                // Add other types as needed
+              };
+              type = mimeTypes[fileExtension] || 'application/octet-stream';
             }
+
+            extractedMedia.push({
+              id: `${doc.id}-${fileName}`,
+              url: mediaUrl,
+              type: type,
+
+              fileName: fileName,
+            });
+          } catch (e) {
+            console.error('Could not parse media URL:', e);
           }
         }
       });
@@ -307,123 +349,42 @@ export function ProfileSidebar({
     }
   };
 
-  const fetchSharedFiles = async (conversationId: string) => {
-    setIsLoadingFiles(true);
-    setSharedFiles([]);
-
-    try {
-      // Get messages from Firestore
-      const messagesQuery = query(
-        collection(db, `conversations/${conversationId}/messages`),
-        orderBy('timestamp', 'desc'),
-      );
-
-      const messagesSnapshot = await getDocs(messagesQuery);
-      const extractedFiles: FileItem[] = [];
-
-      messagesSnapshot.forEach((doc) => {
-        const message = doc.data();
-        if (
-          Array.isArray(message.attachments) &&
-          message.attachments.length > 0
-        ) {
-          for (const attachment of message.attachments) {
-            if (attachment.url && attachment.type && attachment.fileName) {
-              extractedFiles.push({
-                id: `${doc.id}-${attachment.fileName}`,
-                name: attachment.fileName,
-                type: attachment.type,
-                size: attachment.size || 'Unknown',
-                url: attachment.url,
-              });
-            }
-          }
-        }
-      });
-
-      setSharedFiles(extractedFiles);
-    } catch (error) {
-      console.error('Error fetching shared files:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to load shared files',
-      });
-    } finally {
-      setIsLoadingFiles(false);
-    }
-  };
-
   useEffect(() => {
     const executeFetches = async () => {
-      if (isOpen && profileId && profileType) {
-        // Initial resets for this effect run
+      if (isOpen && profileId) {
         setProfileData(null);
         setSharedMedia([]);
-        setLoading(true); // For profile data loading
-        setIsLoadingMedia(true); // For media data loading
+        setLoading(true);
+        setIsLoadingMedia(true);
 
-        // Run fetches in parallel
         await Promise.allSettled([
-          internalFetchProfileData(), // This function will set its own setLoading(false)
-          fetchSharedMedia(profileId), // This function will set its own setLoadingMedia(false)
-          fetchSharedFiles(profileId), // This function will set its own setLoadingFiles(false)
+          internalFetchProfileData(),
+          fetchSharedMedia(profileId),
         ]);
 
-        // If one of the above functions didn't manage its loading state properly in case of an early return
-        // or error, ensure they are false here. However, they should manage their own state.
-        // For example, if internalFetchProfileData returns early without error but also without setting setLoading(false)
         if (loading) {
           setLoading(false);
-        } // Only if still true
+        }
         if (isLoadingMedia) {
           setIsLoadingMedia(false);
-        } // Only if still true
-        if (isLoadingFiles) {
-          setIsLoadingFiles(false);
-        } // Only if still true
-      } else {
-        // Clear data and stop loading if sidebar is closed or essential props are missing
-        setProfileData(null);
-        setSharedMedia([]);
-        setLoading(false);
-        setIsLoadingMedia(false);
-        setIsLoadingFiles(false);
+        }
       }
     };
 
     executeFetches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, profileId, profileType, refreshDataKey, initialData]); // Added initialData to dependency array
+  }, [isOpen, profileId, profileType, refreshKey]);
 
-  const handleAddMembersToGroup = async (
-    selectedUsers: CombinedUser[],
-    groupId: string,
-  ) => {
-    if (!selectedUsers || selectedUsers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No users selected',
-        description: 'Please select users to add.',
-      });
-      return;
-    }
+  const handleAddMembers = async (selectedUsers: any[]) => {
+    if (profileType !== 'group' || !profileData) return;
 
-    if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
-      return;
-    }
-
-    const groupDocRef = doc(db, 'conversations', groupId);
+    const groupId = profileData.id;
 
     try {
-      const batch = writeBatch(db);
-      const updates: any = {};
-      const memberUpdates: string[] = [];
+      // Add members to the group
+      const updates: any = {
+        members: arrayUnion(...selectedUsers.map((user) => user.id)),
+        updatedAt: new Date().toISOString(),
+      };
 
       // Prepare participant details updates
       selectedUsers.forEach((user) => {
@@ -435,34 +396,14 @@ export function ProfileSidebar({
           profilePic: user.profilePic || null, // Ensure profilePic is never undefined
           userType: user.userType || 'user', // Default to 'user' if not specified
         };
-
-        memberUpdates.push(user.id);
       });
 
-      if (Object.keys(updates).length === 0) {
-        throw new Error('No valid users to add');
-      }
+      const groupDocRef = doc(db, 'conversations', groupId);
 
-      // Add members to the group
-      updates.members = arrayUnion(...memberUpdates);
-      updates.updatedAt = new Date().toISOString();
+      await updateDoc(groupDocRef, updates);
 
-      // Update the document with all changes
-      batch.update(groupDocRef, updates);
-      await batch.commit();
-
-      // Refresh the profile data to show the new members
-      if (profileData && 'refreshData' in profileData) {
-        await (profileData as any).refreshData();
-      }
-
-      // Update local state to reflect the changes
-      setRefreshDataKey((prev) => prev + 1);
-
-      toast({
-        title: 'Success',
-        description: `${selectedUsers.length} member(s) added successfully.`,
-      });
+      // Trigger data reload
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error adding members:', error);
       toast({
@@ -470,7 +411,6 @@ export function ProfileSidebar({
         title: 'Error',
         description: 'Failed to add members. Please try again.',
       });
-      throw error; // Re-throw to allow caller to handle if needed
     }
   };
 
@@ -479,7 +419,6 @@ export function ProfileSidebar({
     newAvatarUrl: string,
     groupId: string,
   ) => {
-    // ... (existing implementation)
     if (!newName.trim()) {
       toast({
         variant: 'destructive',
@@ -533,7 +472,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'Group information updated successfully.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
       toast({
@@ -547,7 +486,6 @@ export function ProfileSidebar({
   const handleGenerateInviteLink = async (
     groupId: string,
   ): Promise<string | null> => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -568,7 +506,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'New invite link generated and saved.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
@@ -604,7 +542,7 @@ export function ProfileSidebar({
         description: 'Admin privileges have been revoked.',
       });
 
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing admin:', error);
       toast({
@@ -638,7 +576,7 @@ export function ProfileSidebar({
         description: 'Member has been promoted to admin.',
       });
 
-      setRefreshDataKey((prev) => prev + 1); // Refresh data to show updated admin status
+      setRefreshKey((prev) => prev + 1); // Refresh data to show updated admin status
     } catch (error) {
       console.error('Error making member admin:', error);
       toast({
@@ -650,7 +588,6 @@ export function ProfileSidebar({
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
-    // ... (existing implementation)
     if (!profileId) {
       toast({
         variant: 'destructive',
@@ -675,7 +612,7 @@ export function ProfileSidebar({
         updatedAt: new Date().toISOString(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
       toast({
@@ -689,7 +626,6 @@ export function ProfileSidebar({
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -728,12 +664,44 @@ export function ProfileSidebar({
     }
   };
 
-  if (!isOpen) return null;
-
   const getFallbackName = (data: ProfileUser | ProfileGroup | null): string => {
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
+
+  if (showAllMedia) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          className="w-[350px] sm:w-[400px] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] border-[hsl(var(--border))] p-0 flex flex-col shadow-xl"
+          aria-labelledby="profile-sidebar-title"
+          aria-describedby="profile-sidebar-description"
+        >
+          <SheetHeader className="p-4 border-b border-[hsl(var(--border))] flex-row items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={() => setShowAllMedia(false)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <SheetTitle
+              id="profile-sidebar-title"
+              className="text-[hsl(var(--card-foreground))]"
+            >
+              Shared Media
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-4">
+              <SharedMediaDisplay mediaItems={sharedMedia} isExpanded />
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -868,68 +836,72 @@ export function ProfileSidebar({
                           <span className="text-xs text-muted-foreground">
                             Bio
                           </span>
-                          <p className="text-sm whitespace-pre-wrap">
+                          <p className="text-sm text-[hsl(var(--foreground))] whitespace-pre-wrap">
                             {(profileData as ProfileUser).bio ||
                               'No bio available.'}
                           </p>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">
-                          Shared Media
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {isLoadingMedia ? (
-                          <div className="flex justify-center items-center h-20">
-                            <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                        <div>
+                          <div className="flex justify-between items-center mt-4 mb-2">
+                            <h3 className="text-sm font-medium text-[hsl(var(--foreground))]">
+                              Shared Media
+                            </h3>
+                            {sharedMedia.length > 4 && (
+                              <Button
+                                variant="link"
+                                className="h-auto p-0"
+                                onClick={() => setShowAllMedia(true)}
+                              >
+                                View All
+                              </Button>
+                            )}
                           </div>
-                        ) : sharedMedia.length > 0 ? (
-                          <SharedMediaDisplay mediaItems={sharedMedia} />
-                        ) : (
-                          <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
-                            <p>No media has been shared yet.</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <VolumeX className="h-4 w-4 mr-2" /> Mute Conversation
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <ShieldX className="h-4 w-4 mr-2" /> Block User
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="w-full justify-start"
-                          disabled
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
-                        </Button>
+                          {isLoadingMedia ? (
+                            <div className="flex justify-center items-center h-20">
+                              <LoaderCircle className="animate-spin h-6 w-6 text-[hsl(var(--primary))]" />
+                            </div>
+                          ) : sharedMedia.length > 0 ? (
+                            <SharedMediaDisplay mediaItems={sharedMedia} />
+                          ) : (
+                            <div className="text-center text-sm text-[hsl(var(--muted-foreground))] p-4 border border-dashed border-[hsl(var(--border))] rounded-md">
+                              <p>No media has been shared yet.</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-[hsl(var(--border))] space-y-2">
+                          <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-1">
+                            Actions
+                          </h3>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <VolumeX className="h-4 w-4 mr-2" /> Mute
+                            Conversation
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <ShieldX className="h-4 w-4 mr-2" /> Block User
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Clear Chat
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="w-full justify-start"
+                            disabled
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete Chat
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   </>
@@ -1085,10 +1057,18 @@ export function ProfileSidebar({
                     </Card>
 
                     <Card>
-                      <CardHeader>
+                      <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-base">
                           Shared Media
                         </CardTitle>
+                        {sharedMedia.length > 4 && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowAllMedia(true)}
+                          >
+                            View All
+                          </Button>
+                        )}
                       </CardHeader>
                       <CardContent>
                         {isLoadingMedia ? (
@@ -1118,7 +1098,7 @@ export function ProfileSidebar({
                               <Button
                                 variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => setIsAddMembersDialogOpen(true)}
+                                onClick={() => setAddMemberDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
                                 Members
@@ -1175,8 +1155,8 @@ export function ProfileSidebar({
                                       admins: arrayRemove(user.uid),
                                     });
 
-                                    // Close the profile sidebar
-                                    onClose();
+                                    // Trigger data reload
+                                    setRefreshKey((prev) => prev + 1);
 
                                     toast({
                                       title: 'Left group',
@@ -1241,8 +1221,8 @@ export function ProfileSidebar({
       {profileData && profileType === 'group' && (
         <>
           <AddMembersDialog
-            isOpen={isAddMembersDialogOpen}
-            onClose={() => setIsAddMembersDialogOpen(false)}
+            isOpen={isAddMemberDialogOpen}
+            onClose={() => setAddMemberDialogOpen(false)}
             onAddMembers={(selectedUserIds) => {
               if (profileData && profileData.id && profileType === 'group') {
                 handleAddMembersToGroup(
@@ -1250,7 +1230,7 @@ export function ProfileSidebar({
                   (profileData as ProfileGroup).id,
                 );
               }
-              setIsAddMembersDialogOpen(false);
+              setAddMemberDialogOpen(false);
             }}
             currentMemberIds={
               (profileData as ProfileGroup).members?.map((m) => m.id) || []
