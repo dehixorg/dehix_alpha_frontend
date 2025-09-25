@@ -136,15 +136,15 @@ export function ProfileSidebar({
   const [loading, setLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
   const [sharedMedia, setSharedMedia] = useState<MediaItem[]>([]);
-  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
-  const [isAddMembersDialogOpen, setIsAddMembersDialogOpen] = useState(false);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
+  const [showAllMedia, setShowAllMedia] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+  const [isLeaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [, setRefreshDataKey] = useState(0);
-  const [showAllMedia, setShowAllMedia] = useState(false);
-  const [showAllMembers, setShowAllMembers] = useState(false);
 
   // Hooks
   const user = useSelector((state: RootState) => state.user);
@@ -372,36 +372,19 @@ export function ProfileSidebar({
     };
 
     executeFetches();
-  }, [isOpen, profileId, profileType]);
+  }, [isOpen, profileId, profileType, refreshKey]);
 
-  const handleAddMembersToGroup = async (
-    selectedUsers: CombinedUser[],
-    groupId: string,
-  ) => {
-    if (!selectedUsers || selectedUsers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'No users selected',
-        description: 'Please select users to add.',
-      });
-      return;
-    }
+  const handleAddMembers = async (selectedUsers: any[]) => {
+    if (profileType !== 'group' || !profileData) return;
 
-    if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
-      return;
-    }
-
-    const groupDocRef = doc(db, 'conversations', groupId);
+    const groupId = profileData.id;
 
     try {
-      const batch = writeBatch(db);
-      const updates: any = {};
-      const memberUpdates: string[] = [];
+      // Add members to the group
+      const updates: any = {
+        members: arrayUnion(...selectedUsers.map((user) => user.id)),
+        updatedAt: new Date().toISOString(),
+      };
 
       // Prepare participant details updates
       selectedUsers.forEach((user) => {
@@ -413,34 +396,14 @@ export function ProfileSidebar({
           profilePic: user.profilePic || null, // Ensure profilePic is never undefined
           userType: user.userType || 'user', // Default to 'user' if not specified
         };
-
-        memberUpdates.push(user.id);
       });
 
-      if (Object.keys(updates).length === 0) {
-        throw new Error('No valid users to add');
-      }
+      const groupDocRef = doc(db, 'conversations', groupId);
 
-      // Add members to the group
-      updates.members = arrayUnion(...memberUpdates);
-      updates.updatedAt = new Date().toISOString();
+      await updateDoc(groupDocRef, updates);
 
-      // Update the document with all changes
-      batch.update(groupDocRef, updates);
-      await batch.commit();
-
-      // Refresh the profile data to show the new members
-      if (profileData && 'refreshData' in profileData) {
-        await (profileData as any).refreshData();
-      }
-
-      // Update local state to reflect the changes
-      setRefreshDataKey((prev) => prev + 1);
-
-      toast({
-        title: 'Success',
-        description: `${selectedUsers.length} member(s) added successfully.`,
-      });
+      // Trigger data reload
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error adding members:', error);
       toast({
@@ -448,7 +411,6 @@ export function ProfileSidebar({
         title: 'Error',
         description: 'Failed to add members. Please try again.',
       });
-      throw error; // Re-throw to allow caller to handle if needed
     }
   };
 
@@ -457,7 +419,6 @@ export function ProfileSidebar({
     newAvatarUrl: string,
     groupId: string,
   ) => {
-    // ... (existing implementation)
     if (!newName.trim()) {
       toast({
         variant: 'destructive',
@@ -511,7 +472,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'Group information updated successfully.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error updating group info:', error);
       toast({
@@ -525,7 +486,6 @@ export function ProfileSidebar({
   const handleGenerateInviteLink = async (
     groupId: string,
   ): Promise<string | null> => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -546,7 +506,7 @@ export function ProfileSidebar({
         title: 'Success',
         description: 'New invite link generated and saved.',
       });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
       return newInviteLink;
     } catch (error) {
       console.error('Error generating and saving invite link:', error);
@@ -582,7 +542,7 @@ export function ProfileSidebar({
         description: 'Admin privileges have been revoked.',
       });
 
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing admin:', error);
       toast({
@@ -616,7 +576,7 @@ export function ProfileSidebar({
         description: 'Member has been promoted to admin.',
       });
 
-      setRefreshDataKey((prev) => prev + 1); // Refresh data to show updated admin status
+      setRefreshKey((prev) => prev + 1); // Refresh data to show updated admin status
     } catch (error) {
       console.error('Error making member admin:', error);
       toast({
@@ -628,7 +588,6 @@ export function ProfileSidebar({
   };
 
   const handleConfirmRemoveMember = async (memberIdToRemove: string) => {
-    // ... (existing implementation)
     if (!profileId) {
       toast({
         variant: 'destructive',
@@ -653,7 +612,7 @@ export function ProfileSidebar({
         updatedAt: new Date().toISOString(),
       });
       toast({ title: 'Success', description: 'Member removed successfully.' });
-      setRefreshDataKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error removing member:', error);
       toast({
@@ -667,7 +626,6 @@ export function ProfileSidebar({
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    // ... (existing implementation)
     if (!groupId) {
       toast({
         variant: 'destructive',
@@ -1140,7 +1098,7 @@ export function ProfileSidebar({
                               <Button
                                 variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => setIsAddMembersDialogOpen(true)}
+                                onClick={() => setAddMemberDialogOpen(true)}
                               >
                                 <UserPlus className="h-4 w-4 mr-2" /> Add/Remove
                                 Members
@@ -1197,8 +1155,8 @@ export function ProfileSidebar({
                                       admins: arrayRemove(user.uid),
                                     });
 
-                                    // Close the profile sidebar
-                                    onClose();
+                                    // Trigger data reload
+                                    setRefreshKey((prev) => prev + 1);
 
                                     toast({
                                       title: 'Left group',
@@ -1263,8 +1221,8 @@ export function ProfileSidebar({
       {profileData && profileType === 'group' && (
         <>
           <AddMembersDialog
-            isOpen={isAddMembersDialogOpen}
-            onClose={() => setIsAddMembersDialogOpen(false)}
+            isOpen={isAddMemberDialogOpen}
+            onClose={() => setAddMemberDialogOpen(false)}
             onAddMembers={(selectedUserIds) => {
               if (profileData && profileData.id && profileType === 'group') {
                 handleAddMembersToGroup(
@@ -1272,7 +1230,7 @@ export function ProfileSidebar({
                   (profileData as ProfileGroup).id,
                 );
               }
-              setIsAddMembersDialogOpen(false);
+              setAddMemberDialogOpen(false);
             }}
             currentMemberIds={
               (profileData as ProfileGroup).members?.map((m) => m.id) || []
