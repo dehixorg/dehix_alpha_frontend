@@ -24,7 +24,6 @@ import {
   orderBy,
   getDocs,
   getFirestore,
-  writeBatch,
 } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 
@@ -140,7 +139,7 @@ export function ProfileSidebar({
   const [showAllMedia, setShowAllMedia] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isAddMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  const [isLeaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
+  const [showAllMembers, setShowAllMembers] = useState(false);
   const [isChangeGroupInfoDialogOpen, setIsChangeGroupInfoDialogOpen] =
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
@@ -1225,10 +1224,7 @@ export function ProfileSidebar({
             onClose={() => setAddMemberDialogOpen(false)}
             onAddMembers={(selectedUserIds) => {
               if (profileData && profileData.id && profileType === 'group') {
-                handleAddMembersToGroup(
-                  selectedUserIds,
-                  (profileData as ProfileGroup).id,
-                );
+                handleAddMembers(selectedUserIds);
               }
               setAddMemberDialogOpen(false);
             }}

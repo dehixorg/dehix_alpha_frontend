@@ -28,7 +28,7 @@ import { usePathname } from 'next/navigation';
 import { formatDistanceToNow, format } from 'date-fns';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import DOMPurify from 'dompurify'; // <-- add import later
+import DOMPurify from 'dompurify';
 
 import { EmojiPicker } from '../emojiPicker';
 import {
@@ -44,6 +44,7 @@ import {
   DropdownMenuItem,
 } from '../ui/dropdown-menu';
 import { Input } from '../ui/input';
+import { ScrollArea } from '../ui/scroll-area';
 
 import { Conversation } from './chatList'; // Assuming Conversation type includes 'type' field
 import Reactions from './reactions';
@@ -112,20 +113,20 @@ function isSameDay(d1: Date, d2: Date) {
   );
 }
 
-function useDebounce<T> (value: T, delay: number = 500): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  function useDebounce<T> (value: T, delay: number = 500): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler); // cleanup on value change or unmount
+      };
+    }, [value, delay]) // Add [value, delay] as dependencies
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => {
-      clearTimeout(handler); // cleanup on value change or unmount
-    };
-  })
-
-  return debouncedValue;
-}
+    return debouncedValue;
+  }
 
 type User = {
   userName: string;
@@ -900,7 +901,7 @@ export function CardsChat({
         </div>
       )}
       {loading ? (
-        <div className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
+        <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between p-3 border-b border-[hsl(var(--border))]">
             <div className="flex items-center space-x-3">
@@ -944,11 +945,11 @@ export function CardsChat({
               <Skeleton className="h-10 w-10 rounded-full" />
             </div>
           </div>
-        </div>
+        </Card>
       ) : (
         <>
-          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+          <Card className="col-span-3 flex flex-col h-full bg-[hsl(var(--card))] shadow-xl dark:shadow-lg rounded-xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-primary/5 to-background text-[hsl(var(--card-foreground))] p-3 border-b border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-t-xl">
               <button
                 onClick={handleHeaderClick}
                 className="flex px-3 items-center space-x-3 text-left hover:bg-[#e4e7ecd1] dark:hover:bg-[hsl(var(--accent)_/_0.5)] p-1 rounded-md transition-colors"
@@ -1089,8 +1090,7 @@ export function CardsChat({
             </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto p-4 bg-[hsl(var(--background))]">
-              <div className="flex flex-col space-y-3 ">
-                <div />
+              <ScrollArea className="flex flex-col space-y-3">
                 {messages.map((message, index) => {
                   const formattedTimestamp = formatChatTimestamp(
                     message.timestamp,
@@ -1470,9 +1470,9 @@ export function CardsChat({
                     </div>
                   );
                 })}
-              </div>
+              </ScrollArea>
             </CardContent>
-            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm">
+            <CardFooter className="bg-[hsl(var(--card))] p-2 border-t border-[hsl(var(--border))] shadow-md dark:shadow-sm rounded-b-xl">
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -1681,7 +1681,7 @@ export function CardsChat({
                   </TooltipProvider>
 
                   {showFormattingOptions && (
-                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] p-1 rounded-md">
+                    <div className="hidden md:flex items-center space-x-1 bg-[#d7dae0] dark:bg-[hsl(var(--accent))] rounded-md">
                       <Button
                         type="button"
                         variant="ghost"

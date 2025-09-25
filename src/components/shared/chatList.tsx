@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { DocumentData } from 'firebase/firestore';
-import { MessageSquare, Search, SquarePen } from 'lucide-react';
+import { MessageSquare, Search, SquarePen, Loader2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -57,6 +57,9 @@ interface ChatListProps {
     },
   ) => void;
   onOpenNewChatDialog: () => void;
+  // Optional handlers to start a new chat with a specific user
+  onSelectUser?: (user: CombinedUser) => void | Promise<void>;
+  openNewChat?: (user: CombinedUser) => void | Promise<void>;
 }
 
 export function ChatList({
@@ -65,6 +68,8 @@ export function ChatList({
   setConversation,
   onOpenProfileSidebar,
   onOpenNewChatDialog,
+  onSelectUser,
+  openNewChat,
 }: ChatListProps) {
   const [lastUpdatedTimes, setLastUpdatedTimes] = useState<
     Record<string, string>
@@ -81,7 +86,7 @@ export function ChatList({
   }
 
   const selectedUsers: SelectedUser[] = [];
-  const [, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const stripHtml = (html: string): string =>
     html
@@ -203,13 +208,57 @@ export function ChatList({
       </div>
 
       <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="p-2 space-y-1">
+        <div className="p-2 space-y-2">
+          {searchTerm && (
+            <div className="px-2 py-1 text-xs text-muted-foreground flex items-center gap-2">
+              {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>{isSearching ? 'Searching users…' : 'Search results'}</span>
+            </div>
+          )}
           {searchTerm && searchResults.length > 0 ? (
             searchResults.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center p-3 rounded-lg cursor-pointer hover:bg-[#d6dae2a8] dark:hover:bg-[#35383b9e]"
-                onClick={() => console.log('Open user:', user)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Start chat with ${user.displayName || user.email}`}
+                className="flex items-center p-3 rounded-md border border-transparent hover:border-border hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer transition"
+                onClick={async () => {
+                  // Start the new chat flow for this user
+                  setIsSearching(true);
+                  try {
+                    if (onSelectUser) {
+                      await onSelectUser(user);
+                    } else if (openNewChat) {
+                      await openNewChat(user);
+                    } else {
+                      // Fallback: open the generic new chat dialog
+                      onOpenNewChatDialog();
+                      toast({
+                        title: 'Starting new chat',
+                        description: `Preparing a new chat with ${user.displayName || user.email}`,
+                      });
+                    }
+                    // Close search UI
+                    setSearchTerm('');
+                    setSearchResults([]);
+                  } catch (err: any) {
+                    console.error('Failed to start chat:', err);
+                    toast({
+                      variant: 'destructive',
+                      title: 'Could not start chat',
+                      description: err?.message || 'Please try again',
+                    });
+                  } finally {
+                    setIsSearching(false);
+                  }
+                }}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.currentTarget.click();
+                  }
+                }}
               >
                 <Avatar className="w-10 h-10 mr-3">
                   <AvatarImage src={user.profilePic} />
@@ -223,6 +272,10 @@ export function ChatList({
                 </div>
               </div>
             ))
+          ) : searchTerm && !isSearching && searchResults.length === 0 ? (
+            <div className="text-sm text-muted-foreground px-3 py-6 text-center border rounded-md bg-muted/30">
+              No users found for &ldquo;{searchTerm}&rdquo;.
+            </div>
           ) : (
             <>
               {filteredConversations.length > 0 ? (
