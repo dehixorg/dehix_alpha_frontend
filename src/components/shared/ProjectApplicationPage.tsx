@@ -135,43 +135,8 @@ const ProjectApplicationForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [appliedProfileIds, setAppliedProfileIds] = useState<string[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const { toast } = useToast();
   const user = useSelector((state: RootState) => state.user);
-  const [, setUserConnects] = useState(0);
-
-  // Fetch all freelancer profiles on component mount
-  useEffect(() => {
-    const connects = parseInt(localStorage.getItem('DHX_CONNECTS') || '0', 10);
-    setUserConnects(connects);
-    const handleConnectsUpdated = () => {
-      const updatedConnects = parseInt(
-        localStorage.getItem('DHX_CONNECTS') || '0',
-        10,
-      );
-      setUserConnects(updatedConnects);
-    };
-    window.addEventListener('connectsUpdated', handleConnectsUpdated);
-    return () => {
-      window.removeEventListener('connectsUpdated', handleConnectsUpdated);
-    };
-  }, [user.uid]);
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (
-        showProfileDropdown &&
-        !target.closest('.profile-dropdown-container')
-      ) {
-        setShowProfileDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showProfileDropdown]);
   const fetchFreelancerProfiles = useCallback(async () => {
     setIsLoadingProfiles(true);
     try {
@@ -206,15 +171,15 @@ const ProjectApplicationForm = ({
   const filteredFreelancerProfiles = useMemo(() => {
     if (!selectedProfile || !freelancerProfiles.length) return [];
 
-    // Convert profileType to match case
-    const selectedType = selectedProfile.profileType.toLowerCase();
+    const selectedType = selectedProfile.profileType?.toLowerCase();
+    if (!selectedType) {
+      // If project profile lacks a type, don't filter by type
+      return freelancerProfiles;
+    }
 
     return freelancerProfiles.filter((profile) => {
-      if (!profile.profileType) return false;
-
-      // Normalize both profile types for comparison
-      const profileType = profile.profileType.toLowerCase();
-      return profileType === selectedType.toLowerCase();
+      const profileType = profile.profileType?.toLowerCase();
+      return profileType === selectedType;
     });
   }, [selectedProfile, freelancerProfiles]);
 
@@ -255,12 +220,27 @@ const ProjectApplicationForm = ({
   }, [user.uid, project._id, toast]);
   // Initial data load
   useEffect(() => {
+    let isMounted = true;
+
     const loadData = async () => {
-      await fetchAppliedData();
-      await fetchFreelancerProfiles();
+      if (!isMounted) return;
+
+      try {
+        await fetchAppliedData();
+        await fetchFreelancerProfiles();
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error loading data:', error);
+        }
+      }
     };
+
     loadData();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchAppliedData, fetchFreelancerProfiles]);
 
   const handleApplyClick = () => {
     if (!selectedProfile) {
