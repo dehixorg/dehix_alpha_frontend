@@ -133,13 +133,11 @@ export function ProfileRequirements({
               </p>
             </div>
             <div className="flex justify-between">
-              
               {profile.profileType && (
                 <Badge variant="default" className="text-xs font-medium">
                   {profile.profileType}
                 </Badge>
               )}
-              
             </div>
           </div>
         </div>
