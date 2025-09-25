@@ -501,7 +501,8 @@ const ProjectApplicationForm = ({
                                     {profile.domain}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {profile.profileType === 'FREELANCER'
+                                    {profile.profileType?.toLowerCase() ===
+                                    'freelancer'
                                       ? 'Freelancer'
                                       : 'Consultant'}
                                   </p>
