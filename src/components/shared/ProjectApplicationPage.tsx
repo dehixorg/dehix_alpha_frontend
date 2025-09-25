@@ -781,7 +781,10 @@ const ProjectApplicationForm = ({
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleBidSubmit} disabled={isSubmitting || hasAppliedToSelectedProfile}>
+                <Button
+                  onClick={handleBidSubmit}
+                  disabled={isSubmitting || hasAppliedToSelectedProfile}
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
