@@ -56,7 +56,7 @@ export default function ExperienceSelectionDialog({
       fetchExperiences();
       fetchCurrentProfileExperiences();
     }
-  });
+  }, [freelancerId, currentProfileId]);
 
   const fetchExperiences = async () => {
     setIsLoading(true);

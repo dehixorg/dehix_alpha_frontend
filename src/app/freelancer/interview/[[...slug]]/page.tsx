@@ -31,13 +31,13 @@ export default function InterviewPage() {
   }, [slug, router]);
 
   return (
-    <div className="flex min-h-screen bg-muted/40 w-full flex-col pb-10">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Interviews"
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 mb-8">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -47,8 +47,8 @@ export default function InterviewPage() {
             { label: 'Interview', link: '/freelancer/interview/profile' },
           ]}
         />
-        <main className="flex-1 px-4 md:px-6">
-          <div className="w-full px-4">
+        <main className="flex-1 px-4 md:px-6 py-0 md:py-2">
+          <div className="w-full">
             <Tabs
               value={activeTab}
               onValueChange={(val) =>

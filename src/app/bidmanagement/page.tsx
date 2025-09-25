@@ -6,6 +6,12 @@ import { RootState } from '@/lib/store';
 import AppliedBids from '@/components/bidmanagement/appliedbids';
 import { axiosInstance } from '@/lib/axiosinstance';
 import { toast } from '@/components/ui/use-toast';
+import SidebarMenu from '@/components/menu/sidebarMenu';
+import Header from '@/components/header/header';
+import {
+  menuItemsBottom,
+  menuItemsTop,
+} from '@/config/menuItems/business/dashboardMenuItems';
 
 // Define Toast variant type
 type ToastVariant = 'destructive' | 'default' | null | undefined;
@@ -124,13 +130,30 @@ const BidsPage = () => {
   };
 
   return (
-    <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
-      <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
-      {bidsArray.length ? (
-        <AppliedBids bids={bidsArray} onAction={handleAction} />
-      ) : (
-        <p className="">No bids available.</p>
-      )}
+    <div className="flex min-h-screen w-full flex-col">
+      <SidebarMenu
+        menuItemsTop={menuItemsTop}
+        menuItemsBottom={menuItemsBottom}
+        active="Bids"
+      />
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
+        <Header
+          menuItemsTop={menuItemsTop}
+          menuItemsBottom={menuItemsBottom}
+          activeMenu="Bids"
+          breadcrumbItems={[{ label: 'Bids', link: '#' }]}
+        />
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-4 md:gap-8">
+          <div className="bids-page max-w-6xl mx-auto p-8  mb-8">
+            <h1 className="text-3xl font-bold mb-8">Manage Bids</h1>
+            {bidsArray.length ? (
+              <AppliedBids bids={bidsArray} onAction={handleAction} />
+            ) : (
+              <p className="">No bids available.</p>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

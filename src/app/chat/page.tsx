@@ -452,7 +452,7 @@ const HomePage = () => {
         }
         active="Chats"
       />
-      <div className="flex flex-col flex-1 sm:pl-14 overflow-hidden">
+      <div className="flex flex-col flex-1 sm:gap-4 sm:py-0 sm:pl-14 overflow-hidden">
         <Header
           menuItemsTop={
             user.type === 'business'
@@ -474,7 +474,7 @@ const HomePage = () => {
           ]}
           searchPlaceholder="Search chats..."
         />
-        <main className="h-[93vh] p-1 sm:p-2 md:p-0">
+        <main className="h-[93vh] p-4 sm:px-6 sm:py-4">
           <ChatLayout
             chatListComponent={chatListComponentContent}
             chatWindowComponent={chatWindowComponentContent}

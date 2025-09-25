@@ -186,7 +186,7 @@ const Page = () => {
         menuItemsBottom={menuItemsBottom}
         active=""
       />
-      <div className="flex flex-col sm:gap-4 md:py-0 sm:py-4 sm:pl-14 min-w-0">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 min-w-0">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
