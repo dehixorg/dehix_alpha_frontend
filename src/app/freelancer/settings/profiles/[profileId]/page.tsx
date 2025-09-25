@@ -451,35 +451,29 @@ export default function ProfileDetailPage() {
     }
   };
 
-  const handleRemoveExperience = async (experienceId: string) => {
-    if (!profile?._id) return;
-
+  const handleRemoveExperience = async (id: string) => {
     try {
-      const updatedExperiences = (editingProfileData.experiences || []).filter(
-        (experience: any) => experience._id !== experienceId,
+      const updatedExperiences = editingProfileData.experiences.filter(
+        (exp: any) => exp._id !== id,
       );
+
+      await axiosInstance.put(`/freelancer/profile/${profileId}`, {
+        experiences: updatedExperiences.map((e: any) => ({
+          _id: e._id,
+          jobTitle: e.jobTitle,
+          company: e.company,
+          workDescription: e.workDescription,
+          workFrom: e.workFrom,
+          workTo: e.workTo,
+          referencePersonName: e.referencePersonName,
+        })),
+      });
 
       setEditingProfileData((prev: any) => ({
         ...prev,
         experiences: updatedExperiences,
       }));
-
-      const updatePayload = transformProfileForAPI({
-        ...editingProfileData,
-        experiences: updatedExperiences,
-      });
-
-      await axiosInstance.put(
-        `/freelancer/profile/${profile._id}`,
-        updatePayload,
-      );
-
-      toast({
-        title: 'Success',
-        description: 'Experience removed from profile successfully',
-      });
-      await fetchProfile();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error removing experience:', error);
       toast({
         title: 'Error',
@@ -1529,121 +1523,122 @@ export default function ProfileDetailPage() {
 
             <Card className="bg-muted-foreground/20 dark:bg-muted/20">
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-xl font-semibold">
-                    Experience
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground hidden md:block">
-                    Relevant roles and responsibilities you have handled.
-                  </p>
-                  {isEditMode ? (
+                <div className="flex justify-between items-center w-full">
+                  <div>
+                    <CardTitle className="text-xl font-semibold">
+                      Experience
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground hidden md:block">
+                      Relevant roles and responsibilities you have handled.
+                    </p>
+                  </div>
+                  {isEditMode && (
                     <Button
                       variant="outline"
                       onClick={() => setShowExperienceDialog(true)}
                       className="flex items-center gap-2"
                     >
-                      <Plus className="h-4 w-4" />
-                      Add Experience
+                      <Plus className="h-4 w-4" /> Add Experience
                     </Button>
-                  ) : null}
+                  )}
                 </div>
               </CardHeader>
+
               <CardContent>
                 {editingProfileData.experiences &&
                 editingProfileData.experiences.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {editingProfileData.experiences.map(
-                      (experience: any, index: number) => (
-                        <Card
-                          key={experience._id || index}
-                          className="p-4 bg-background border"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-lg mb-1">
-                                {experience.jobTitle || experience.title}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {experience.company}
-                              </p>
-                              <p className="text-xs text-muted-foreground mb-3">
-                                {new Date(
-                                  experience.workFrom,
-                                ).toLocaleDateString('en-US', {
+                    {editingProfileData.experiences.map((experience: any) => (
+                      <Card
+                        key={experience._id}
+                        className="p-4 bg-background border relative"
+                      >
+                        <div className="flex flex-col justify-between h-full">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-lg mb-1">
+                              {experience.jobTitle || experience.title}
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {experience.company}
+                            </p>
+                            <p className="text-xs text-muted-foreground mb-3">
+                              {new Date(experience.workFrom).toLocaleDateString(
+                                'en-US',
+                                {
                                   year: 'numeric',
                                   month: 'short',
-                                })}{' '}
-                                -{' '}
-                                {new Date(experience.workTo).toLocaleDateString(
-                                  'en-US',
-                                  {
+                                },
+                              )}{' '}
+                              -{' '}
+                              {experience.workTo
+                                ? new Date(
+                                    experience.workTo,
+                                  ).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'short',
-                                  },
-                                )}
+                                  })
+                                : 'Present'}
+                            </p>
+                            {experience.workDescription && (
+                              <p className="text-sm text-foreground">
+                                {experience.workDescription}
                               </p>
-                              {experience.workDescription && (
-                                <p className="text-sm text-foreground">
-                                  {experience.workDescription}
-                                </p>
-                              )}
-                            </div>
-                            {isEditMode ? (
+                            )}
+                            {experience.referencePersonName && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                Reference: {experience.referencePersonName}
+                              </p>
+                            )}
+                          </div>
+
+                          {isEditMode && (
+                            <div className="flex justify-end mt-3">
                               <Button
-                                variant="ghost"
+                                variant="destructive"
                                 size="sm"
                                 onClick={() =>
                                   handleRemoveExperience(experience._id)
                                 }
-                                className="text-destructive hover:text-destructive/80 ml-2"
                               >
-                                <X className="h-4 w-4" />
+                                Delete
                               </Button>
-                            ) : null}
-                          </div>
-                        </Card>
-                      ),
-                    )}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 ) : (
                   <Card className="flex flex-col items-center justify-center py-12">
-                    <div className="mb-4 opacity-70">
-                      <svg
-                        width="72"
-                        height="72"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M6 7H18V17C18 18.105 17.105 19 16 19H8C6.895 19 6 18.105 6 17V7Z"
-                          stroke="#9CA3AF"
-                          strokeWidth="1.5"
-                        />
-                        <path
-                          d="M9 7V5C9 3.895 9.895 3 11 3H13C14.105 3 15 3.895 15 5V7"
-                          stroke="#9CA3AF"
-                          strokeWidth="1.5"
-                        />
-                      </svg>
-                    </div>
                     <p className="text-muted-foreground mb-4">
                       No experience added to this profile yet
                     </p>
-                    {isEditMode ? (
+                    {isEditMode && (
                       <Button
                         variant="outline"
                         onClick={() => setShowExperienceDialog(true)}
                         className="flex items-center gap-2"
                       >
-                        <Plus className="h-4 w-4" />
-                        Add Experience
+                        <Plus className="h-4 w-4" /> Add Experience
                       </Button>
-                    ) : null}
+                    )}
                   </Card>
                 )}
               </CardContent>
             </Card>
+
+            <ExperienceSelectionDialog
+              open={showExperienceDialog}
+              onOpenChange={setShowExperienceDialog}
+              freelancerId={user.uid}
+              currentProfileId={profileId}
+              onSuccess={(newExperiences) => {
+                setEditingProfileData((prev: any) => ({
+                  ...prev,
+                  experiences: [...(prev.experiences || []), ...newExperiences], // append multiple
+                }));
+              }}
+            />
           </div>
         </main>
       </div>
