@@ -5,7 +5,6 @@ import {
   FileText as FileTextIcon,
   FileAudio as FileAudioIcon,
   AlertTriangle,
-  Download,
 } from 'lucide-react';
 
 import { MediaPreviewDialog } from './MediaPreviewDialog';

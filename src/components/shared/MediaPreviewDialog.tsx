@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
