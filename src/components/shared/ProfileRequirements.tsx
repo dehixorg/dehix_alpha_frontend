@@ -43,7 +43,6 @@ export function ProfileRequirements({
   variant = 'default',
 }: ProfileRequirementsProps) {
   const DomainIcon = getDomainIcon(profile.domain);
-  console.log(profile.profileType);
   if (variant === 'compact') {
     return (
       <Card
@@ -134,13 +133,13 @@ export function ProfileRequirements({
               </p>
             </div>
             <div className="flex justify-between">
-              {/* --- ADDED: Badge for profileType --- */}
+              
               {profile.profileType && (
                 <Badge variant="default" className="text-xs font-medium">
                   {profile.profileType}
                 </Badge>
               )}
-              {/* --- END ADDITION --- */}
+              
             </div>
           </div>
         </div>
