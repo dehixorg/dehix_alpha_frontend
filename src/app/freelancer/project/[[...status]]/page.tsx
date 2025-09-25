@@ -238,7 +238,11 @@ export default function ProjectPage() {
 
         <div className="flex-1">
           <div className="w-full px-4 sm:px-6 py-2">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col gap-4">
+            <Tabs
+              value={activeTab}
+              onValueChange={handleTabChange}
+              className="w-full flex flex-col gap-4"
+            >
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="current"
