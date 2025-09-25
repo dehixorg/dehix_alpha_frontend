@@ -428,9 +428,6 @@ const Market: React.FC = () => {
           ]}
         />
         <div className="p-4 sm:px-8">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight block text-center ">
-            Marketplace
-          </h1>
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col space-y-2">
