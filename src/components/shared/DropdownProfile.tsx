@@ -140,8 +140,14 @@ export default function DropdownProfile({ setConnects }: DropdownProfileProps) {
 
   return (
     <>
-      <Dialog open={isLoggingOut}>
-        <DialogContent className="max-w-md">
+      <Dialog
+        open={isLoggingOut}
+        onOpenChange={(open) => {
+          // Prevent closing while logging out; allow programmatic close only
+          if (!isLoggingOut) setIsLoggingOut(open);
+        }}
+      >
+        <DialogContent className="max-w-md [&>button]:hidden">
           <DialogHeader className="items-center">
             <DialogTitle className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               Securing Your Account
