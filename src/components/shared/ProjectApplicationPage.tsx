@@ -9,7 +9,7 @@ import {
   Loader2,
   UserX,
   AlertCircle,
-  SendHorizonal,
+  SendHorizontal,
   X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -357,13 +357,6 @@ const ProjectApplicationForm = ({
       // Update applied profile IDs to prevent duplicate submissions
       setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
 
-      // Show success message
-      toast({
-        title: 'Bid Submitted',
-        description: 'Your bid has been submitted successfully!',
-        variant: 'default',
-      });
-
       // Reset form state
       setBidAmount(0);
       setDialogOpen(false);
@@ -507,11 +500,11 @@ const ProjectApplicationForm = ({
                                       : 'Consultant'}
                                   </p>
                                 </div>
-                                {
+                                {profile.rate !== undefined && (
                                   <Badge variant="outline" className="ml-2">
                                     ${profile.rate}/hr
                                   </Badge>
-                                }
+                                )}
                               </div>
                             ))}
                           </div>
@@ -735,25 +728,6 @@ const ProjectApplicationForm = ({
             ) : null}
             Cancel
           </Button>
-          {/* <Button
-            disabled={
-              isLoading ||
-              !selectedProfile ||
-              !selectedFreelancerProfile ||
-              coverLetter.length < minChars ||
-              coverLetter.length > maxChars ||
-              hasAppliedToSelectedProfile
-            }
-            className="w-full sm:w-auto"
-            onClick={() => setDialogOpen(true)}
-          > */}
-          {/* {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <SendHorizonal className="mr-2 h-4 w-4" />
-            )}
-            {hasAppliedToSelectedProfile ? 'Already Applied' : 'Submit Application'}
-          </Button> */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button
@@ -765,7 +739,7 @@ const ProjectApplicationForm = ({
                   coverLetter.length > maxChars
                 }
               >
-                <SendHorizonal className="mr-2 h-4 w-4" />
+                <SendHorizontal className="mr-2 h-4 w-4" />
                 Submit Application
               </Button>
             </DialogTrigger>
@@ -807,7 +781,7 @@ const ProjectApplicationForm = ({
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleBidSubmit} disabled={isSubmitting}>
+                <Button onClick={handleBidSubmit} disabled={isSubmitting || hasAppliedToSelectedProfile}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
