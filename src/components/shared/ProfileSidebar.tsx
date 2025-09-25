@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Pencil } from "lucide-react";
 import {
   VolumeX,
   ShieldX,
@@ -666,6 +667,56 @@ export function ProfileSidebar({
     return data.displayName.charAt(0).toUpperCase();
   };
 
+  const isCurrentlyMuted =
+    profileType === 'group' &&
+    profileData &&
+    user?.mutedGroups?.includes((profileData as ProfileGroup).id);
+
+  let avatarSrc = '';
+  if (profileData) {
+    if (profileType === 'user') {
+      avatarSrc = (profileData as ProfileUser).profilePic || '';
+    } else if (profileType === 'group') {
+      const groupData = profileData as ProfileGroup;
+      avatarSrc =
+        groupData.participantDetails?.[groupData.id]?.profilePic ||
+        `https://api.adorable.io/avatars/285/group-${groupData.id}.png`;
+    }
+  }
+
+function UserBio({ profileData }: { profileData: any }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [bio, setBio] = useState(profileData.bio || "");
+
+  return (
+    <div>
+      {/* Bio Label + Pencil */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">Bio</span>
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className="p-1 hover:bg-gray-100 rounded-full"
+        >
+          <Pencil className="w-3 h-3 text-gray-500" />
+        </button>
+      </div>
+
+      {/* Bio text OR editable textarea */}
+      {isEditing ? (
+        <textarea
+          className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-blue-500"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+        />
+      ) : (
+        <p className="text-sm whitespace-pre-wrap mt-1">
+          {bio || "No bio available."}
+        </p>
+      )}
+    </div>
+  );
+}
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
@@ -795,15 +846,7 @@ export function ProfileSidebar({
                           </p>
                         </div>
                         <Separator />
-                        <div>
-                          <span className="text-xs text-muted-foreground">
-                            Bio
-                          </span>
-                          <p className="text-sm whitespace-pre-wrap">
-                            {(profileData as ProfileUser).bio ||
-                              'No bio available.'}
-                          </p>
-                        </div>
+                        <UserBio profileData={profileData as ProfileUser} />
                       </CardContent>
                     </Card>
 
@@ -896,7 +939,7 @@ export function ProfileSidebar({
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <ScrollArea className="h-auto max-h-60 overflow-y-auto px-4 rounded-md border">
+                        <ScrollArea className="max-h-80 px-4 overflow-y-auto">
                           <ul className="space-y-1 py-2">
                             {(profileData as ProfileGroup).members.map(
                               (member) => (
