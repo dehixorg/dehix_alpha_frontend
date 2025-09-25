@@ -293,10 +293,11 @@ const ProjectApplicationForm = ({
     );
 
     // Check minimum bid amount (minConnect from profile)
-    if (isNaN(bidAmount) || bidAmount < (selectedProfile.minConnect || 1)) {
+    const minBid = selectedProfile?.minConnect ?? 0;
+    if (isNaN(bidAmount) || bidAmount < minBid) {
       toast({
         title: 'Bid Too Low',
-        description: `Minimum bid amount is ${selectedProfile.minConnect || 1} connect(s).`,
+        description: `Minimum bid amount is ${minBid} connects.`,
         variant: 'destructive',
       });
       return;
