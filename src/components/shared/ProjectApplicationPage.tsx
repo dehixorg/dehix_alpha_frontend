@@ -228,15 +228,6 @@ const ProjectApplicationForm = ({
 
   // Handle freelancer profile selection
   const handleFreelancerSelect = (profile: FreelancerProfile) => {
-    if (appliedProfileIds.includes(profile._id)) {
-      toast({
-        title: 'Already Applied',
-        description:
-          'You have already applied to this project with this profile.',
-        variant: 'default',
-      });
-      return;
-    }
     setSelectedFreelancerProfile(profile);
   };
 
@@ -284,28 +275,35 @@ const ProjectApplicationForm = ({
   };
   const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
+    // Validate profile selection
     if (!selectedProfile?._id) {
       toast({
         title: 'Error',
         description: 'No profile selected for bidding',
         variant: 'destructive',
       });
-      setIsSubmitting(false);
       return;
     }
 
+    // Validate bid amount
     const currentConnects = parseInt(
       localStorage.getItem('DHX_CONNECTS') || '0',
       10,
     );
 
-    if (
-      isNaN(bidAmount) ||
-      isNaN(currentConnects) ||
-      bidAmount > currentConnects
-    ) {
+    // Check minimum bid amount (minConnect from profile)
+    if (isNaN(bidAmount) || bidAmount < (selectedProfile.minConnect || 1)) {
+      toast({
+        title: 'Bid Too Low',
+        description: `Minimum bid amount is ${selectedProfile.minConnect || 1} connect(s).`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Check available connects
+    if (isNaN(currentConnects) || bidAmount > currentConnects) {
       toast({
         title: 'Insufficient Connects',
         description: 'You do not have enough connects to place this bid.',
@@ -314,6 +312,7 @@ const ProjectApplicationForm = ({
       return;
     }
 
+    // Validate cover letter length
     if (coverLetter.length < minChars) {
       toast({
         title: 'Cover Letter Too Short',
@@ -331,6 +330,9 @@ const ProjectApplicationForm = ({
       });
       return;
     }
+
+    // All validations passed, proceed with submission
+    setIsSubmitting(true);
     try {
       const bidData = {
         current_price: bidAmount,
@@ -350,6 +352,16 @@ const ProjectApplicationForm = ({
       const updatedConnects = (currentConnects - bidAmount).toString();
       localStorage.setItem('DHX_CONNECTS', updatedConnects);
       window.dispatchEvent(new Event('connectsUpdated'));
+
+      // Update applied profile IDs to prevent duplicate submissions
+      setAppliedProfileIds((prev) => [...prev, selectedProfile._id]);
+
+      // Show success message
+      toast({
+        title: 'Bid Submitted',
+        description: 'Your bid has been submitted successfully!',
+        variant: 'default',
+      });
 
       // Reset form state
       setBidAmount(0);
