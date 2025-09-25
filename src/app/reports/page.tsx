@@ -2,9 +2,17 @@
 
 import { useSelector } from 'react-redux';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { FileText, History as HistoryIcon } from 'lucide-react';
 
 import { RootState } from '@/lib/store';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { NewReportTab } from '@/components/report-tabs/NewReportTabs';
 import PastReportsTab from '@/components/report-tabs/PastReportsTab';
 import SidebarMenu from '@/components/menu/sidebarMenu';
@@ -65,53 +73,87 @@ export default function NewReportPage() {
   };
 
   return (
-    // This `bg-muted/40` is already theme-aware, which is great!
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
-        // UPDATED: Pass the dynamically chosen menu items
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Reports"
         isKycCheck={true}
       />
 
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14">
         <Header
-          // UPDATED: Pass the dynamically chosen menu and breadcrumb items
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
           activeMenu="Reports"
           breadcrumbItems={breadcrumbItems}
         />
 
-        <main className="grid flex-1 items-start sm:px-6 sm:py-0">
-          {/* CHANGE 1: Replaced `bg-white` with `bg-background`.
-              `bg-background` will be white in light mode and a dark color in dark mode. */}
-          <div className="w-full bg-background border rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Reports Center</h2>
+        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0">
+          <div className="w-full mx-auto max-w-6xl">
+            {/* Header Section */}
+            <div className="flex flex-col gap-2 mb-6">
+              <h1 className="text-2xl font-bold tracking-tight">
+                Reports Center
+              </h1>
+              <p className="text-muted-foreground">
+                Generate and manage your reports in one place
+              </p>
+            </div>
 
-            <Tabs defaultValue="new">
-              <TabsList className="mb-4">
-                <TabsTrigger value="new">New Report</TabsTrigger>
-                <TabsTrigger value="history">Past Reports</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="new">
-                {/* CHANGE 2: Removed redundant styling from the inner div.
-                    It will now inherit the `bg-background` from its parent.
-                    This prevents a "card-within-a-card" look. Kept padding. */}
-                <div className="p-4">
-                  <NewReportTab reportData={reportData} />
+            {/* Main Content */}
+            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+              <Tabs defaultValue="new" className="w-full">
+                <div className="border-b px-6">
+                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                    <TabsTrigger
+                      value="new"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      New Report
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="history"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <HistoryIcon className="mr-2 h-4 w-4" />
+                      Past Reports
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
-              </TabsContent>
 
-              <TabsContent value="history">
-                {/* CHANGE 3: Same as above for consistency. */}
-                <div className="p-4">
-                  <PastReportsTab />
-                </div>
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="new" className="m-0">
+                  <Card className="border-0 shadow-none bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="text-lg">
+                        Create New Report
+                      </CardTitle>
+                      <CardDescription>
+                        Fill in the details below to generate a new report
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <NewReportTab reportData={reportData} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="history" className="m-0">
+                  <Card className="border-0 shadow-none bg-transparent">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Report History</CardTitle>
+                      <CardDescription>
+                        View and manage your previously generated reports
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <PastReportsTab />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </main>
       </div>

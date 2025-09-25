@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Trash2, Eye, User, Briefcase, Pencil } from 'lucide-react';
+import { Plus, BarChart3, Sparkles } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 
@@ -24,8 +24,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import DeleteConfirmationDialog from '@/components/shared/DeleteConfirmationDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
 
 export default function ProfilesPage() {
@@ -38,9 +41,9 @@ export default function ProfilesPage() {
   const [newProfileDescription, setNewProfileDescription] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'freelancer' | 'consultant'>(
-    'freelancer',
-  );
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'freelancer' | 'consultant'
+  >('overview');
   const [newProfileType, setNewProfileType] = useState<
     'Freelancer' | 'Consultant'
   >('Freelancer');
@@ -129,11 +132,21 @@ export default function ProfilesPage() {
       );
 
       const newProfile = response.data.data;
+      // Ensure correct local type so it appears in the right tab immediately
+      const localProfile = {
+        ...newProfile,
+        profileType: newProfileType,
+      } as FreelancerProfile;
 
-      setProfiles([...profiles, newProfile]);
+      setProfiles((prev) => [...prev, localProfile]);
       setNewProfileName('');
       setNewProfileDescription('');
       setIsCreateDialogOpen(false);
+
+      // Switch to the relevant tab so the newly created profile is visible immediately
+      setActiveTab(
+        newProfileType === 'Consultant' ? 'consultant' : 'freelancer',
+      );
 
       toast({
         title: 'Success',
@@ -183,19 +196,32 @@ export default function ProfilesPage() {
   const consultantProfiles = profiles.filter(
     (p) => p.profileType === 'Consultant',
   );
-  const handleViewProfile = (profileId: string) => {
-    router.push(`/freelancer/settings/profiles/${profileId}`);
-  };
+
+  // --- Derived stats for Overview ---
+  const totalProfiles = profiles.length;
+  const totalFreelancer = freelancerProfiles.length;
+  const totalConsultant = consultantProfiles.length;
+  const avgProjects =
+    totalProfiles === 0
+      ? 0
+      : Math.round(
+          (profiles.reduce((acc, p) => acc + (p.projects?.length || 0), 0) /
+            totalProfiles) *
+            10,
+        ) / 10;
+  const topProjectProfiles = [...profiles]
+    .sort((a, b) => (b.projects?.length || 0) - (a.projects?.length || 0))
+    .slice(0, 5);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
         active="Profiles"
         isKycCheck={true}
       />
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 mb-8">
+      <div className="flex flex-col sm:gap-6 sm:py-0 sm:pl-14">
         <Header
           menuItemsTop={menuItemsTop}
           menuItemsBottom={menuItemsBottom}
@@ -207,46 +233,191 @@ export default function ProfilesPage() {
           ]}
         />
         <main className="grid flex-1 items-start sm:px-6 sm:py-0 md:gap-8">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold">Professional Profiles</h1>
-                <p className="text-muted-foreground">
-                  Create and manage profiles to showcase your expertise.
-                </p>
-              </div>
+          <div className="w-full mx-auto max-w-6xl">
+            <div className="flex flex-col gap-2 mb-6">
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" /> Profiles Center
+              </h1>
+              <p className="text-muted-foreground">
+                Create and manage profiles to showcase your expertise.
+              </p>
             </div>
 
-            {/* --- TAB NAVIGATION BUTTONS --- */}
-            <div className="flex border-b">
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab('freelancer')}
-                className={`rounded-none ${activeTab === 'freelancer' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+            <div className="bg-muted/20 rounded-xl border shadow-sm overflow-hidden">
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as any)}
+                className="w-full"
               >
-                Freelancer Profiles ({freelancerProfiles.length})
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab('consultant')}
-                className={`rounded-none ${activeTab === 'consultant' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
-              >
-                Consultant Profiles ({consultantProfiles.length})
-              </Button>
-            </div>
+                <div className="border-b px-6">
+                  <TabsList className="bg-transparent h-12 w-full md:w-auto p-0">
+                    <TabsTrigger
+                      value="overview"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      <BarChart3 className="mr-2 h-4 w-4" /> Overview
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="freelancer"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Freelancer ({freelancerProfiles.length})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="consultant"
+                      className="relative h-12 px-4 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                    >
+                      Consultant ({consultantProfiles.length})
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-            {isLoading ? (
-              <div className="text-center py-12">
-                <p>Loading profiles...</p>
-              </div>
-            ) : (
-              <>
-                {/* --- SECTION FOR FREELANCER PROFILES --- */}
-                {activeTab === 'freelancer' && (
-                  <div>
-                    {freelancerProfiles.length === 0 ? (
+                <div className="p-6">
+                  {/* Overview */}
+                  <TabsContent value="overview" className="m-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                      <Card className="bg-background/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm text-muted-foreground">
+                            Total Profiles
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-2xl font-bold">
+                          {totalProfiles}
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-background/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm text-muted-foreground">
+                            Freelancer
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-2xl font-bold">
+                          {totalFreelancer}
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-background/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm text-muted-foreground">
+                            Consultant
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-2xl font-bold">
+                          {totalConsultant}
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-background/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm text-muted-foreground">
+                            Avg Projects / Profile
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-2xl font-bold">
+                          {avgProjects}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card className="bg-background/50">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" /> Top Profiles by
+                          Projects
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {topProjectProfiles.length === 0 ? (
+                          <div className="text-sm text-muted-foreground">
+                            No data available yet. Create your first profile to
+                            see analytics.
+                          </div>
+                        ) : (
+                          <div className="w-full overflow-x-auto">
+                            <svg
+                              viewBox={`0 0 400 ${topProjectProfiles.length * 34}`}
+                              className="min-w-[360px]"
+                            >
+                              {topProjectProfiles.map((p, i) => {
+                                const max = Math.max(
+                                  ...topProjectProfiles.map(
+                                    (tp) => tp.projects?.length || 0,
+                                  ),
+                                  1,
+                                );
+                                const value = p.projects?.length || 0;
+                                const barWidth = (value / max) * 300;
+                                const y = i * 34 + 8;
+                                return (
+                                  <g key={p._id || i}>
+                                    <text
+                                      x={0}
+                                      y={y + 12}
+                                      className="fill-current text-xs"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      {(p.profileName || 'Profile').slice(
+                                        0,
+                                        18,
+                                      )}
+                                    </text>
+                                    <rect
+                                      x={120}
+                                      y={y}
+                                      width={barWidth}
+                                      height={16}
+                                      className="fill-primary/70"
+                                      rx={4}
+                                    />
+                                    <text
+                                      x={120 + barWidth + 8}
+                                      y={y + 12}
+                                      className="fill-current text-xs"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      {value}
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Separator className="my-6" />
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        onClick={() => {
+                          setNewProfileType('Freelancer');
+                          setIsCreateDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Create Freelancer
+                        Profile
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setNewProfileType('Consultant');
+                          setIsCreateDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Create Consultant
+                        Profile
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Freelancer */}
+                  <TabsContent value="freelancer" className="m-0">
+                    {isLoading ? (
                       <div className="text-center py-12">
-                        <p className="text-gray-500 mb-4">
+                        <p>Loading profiles...</p>
+                      </div>
+                    ) : freelancerProfiles.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground mb-4">
                           No Freelancer profiles found.
                         </p>
                         <Button
@@ -262,181 +433,16 @@ export default function ProfilesPage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {freelancerProfiles.map((profile) => (
-                          <Card
+                          <ProfileSummaryCard
                             key={profile._id}
-                            className="hover:shadow-lg transition-shadow flex flex-col h-full"
-                          >
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                                    <User className="h-5 w-5" />
-                                    {profile.profileName}
-                                  </CardTitle>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {profile.description &&
-                                    profile.description.length > 100
-                                      ? `${profile.description.substring(0, 100)}...`
-                                      : profile.description ||
-                                        'No description available'}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4 flex-1 flex flex-col">
-                              <div className="flex-1 space-y-4">
-                                <div className="min-h-[60px]">
-                                  {profile.skills &&
-                                  profile.skills.length > 0 ? (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Skills:
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {profile.skills
-                                          .slice(0, 3)
-                                          .map((skill: any, index: number) => (
-                                            <Badge
-                                              key={index}
-                                              variant="secondary"
-                                              className="text-xs"
-                                            >
-                                              {typeof skill === 'string'
-                                                ? skill
-                                                : skill.name || skill.skillName}
-                                            </Badge>
-                                          ))}
-                                        {profile.skills.length > 3 && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                          >
-                                            +{profile.skills.length - 3} more
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Skills:
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        No skills added
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="min-h-[60px]">
-                                  {profile.domains &&
-                                  profile.domains.length > 0 ? (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Domains:
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {profile.domains
-                                          .slice(0, 2)
-                                          .map((domain: any, index: number) => (
-                                            <Badge
-                                              key={index}
-                                              variant="outline"
-                                              className="text-xs"
-                                            >
-                                              {typeof domain === 'string'
-                                                ? domain
-                                                : domain.name ||
-                                                  domain.domainName}
-                                            </Badge>
-                                          ))}
-                                        {profile.domains.length > 2 && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                          >
-                                            +{profile.domains.length - 2} more
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Domains:
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        No domains added
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Briefcase className="h-4 w-4" />
-                                    <span>
-                                      {profile.projects?.length || 0} Projects
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-4 w-4" />
-                                    <span>
-                                      {profile.experiences?.length || 0}{' '}
-                                      Experience
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-sm min-h-[20px]">
-                                  {profile.hourlyRate ? (
-                                    <>
-                                      <span className="font-medium">
-                                        Rate:{' '}
-                                      </span>
-                                      <span className="text-green-600">
-                                        ${profile.hourlyRate}/hr
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="text-muted-foreground text-xs">
-                                      No rate set
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex gap-2 pt-4 mt-auto">
-                                <Button
-                                  onClick={() =>
-                                    router.push(
-                                      `/freelancer/settings/profiles/view/${profile._id!}`,
-                                    )
-                                  }
-                                  variant="outline"
-                                  className="flex-1 flex items-center gap-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  View
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleViewProfile(profile._id!)
-                                  }
-                                  className="flex-1 flex items-center gap-2"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeleteProfile(profile._id!)
-                                  }
-                                  className="flex items-center gap-2"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
+                            profile={profile}
+                            onView={() =>
+                              router.push(
+                                `/freelancer/settings/profiles/${profile._id!}`,
+                              )
+                            }
+                            onDelete={() => handleDeleteProfile(profile._id!)}
+                          />
                         ))}
                         <Button
                           variant="outline"
@@ -444,21 +450,23 @@ export default function ProfilesPage() {
                             setNewProfileType('Freelancer');
                             setIsCreateDialogOpen(true);
                           }}
-                          className="flex items-center justify-center h-full min-h-[200px]"
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
                         >
                           <Plus className="h-6 w-6" />
                         </Button>
                       </div>
                     )}
-                  </div>
-                )}
+                  </TabsContent>
 
-                {/* --- SECTION FOR CONSULTANT PROFILES --- */}
-                {activeTab === 'consultant' && (
-                  <div>
-                    {consultantProfiles.length === 0 ? (
+                  {/* Consultant */}
+                  <TabsContent value="consultant" className="m-0">
+                    {isLoading ? (
                       <div className="text-center py-12">
-                        <p className="text-gray-500 mb-4">
+                        <p>Loading profiles...</p>
+                      </div>
+                    ) : consultantProfiles.length === 0 ? (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground mb-4">
                           No Consultant profiles found.
                         </p>
                         <Button
@@ -474,183 +482,16 @@ export default function ProfilesPage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {consultantProfiles.map((profile) => (
-                          <Card
+                          <ProfileSummaryCard
                             key={profile._id}
-                            className="hover:shadow-lg transition-shadow flex flex-col h-full"
-                          >
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                                    <User className="h-5 w-5" />
-                                    {profile.profileName}
-                                  </CardTitle>
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {profile.description &&
-                                    profile.description.length > 100
-                                      ? `${profile.description.substring(0, 100)}...`
-                                      : profile.description ||
-                                        'No description available'}
-                                  </p>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4 flex-1 flex flex-col">
-                              <div className="flex-1 space-y-4">
-                                <div className="min-h-[60px]">
-                                  {profile.skills &&
-                                  profile.skills.length > 0 ? (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Skills:
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {profile.skills
-                                          .slice(0, 3)
-                                          .map((skill: any, index: number) => (
-                                            <Badge
-                                              key={index}
-                                              variant="secondary"
-                                              className="text-xs"
-                                            >
-                                              {typeof skill === 'string'
-                                                ? skill
-                                                : skill.name || skill.skillName}
-                                            </Badge>
-                                          ))}
-                                        {profile.skills.length > 3 && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                          >
-                                            +{profile.skills.length - 3} more
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Skills:
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        No skills added
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                                {/* Domains */}
-                                <div className="min-h-[60px]">
-                                  {profile.domains &&
-                                  profile.domains.length > 0 ? (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Domains:
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {profile.domains
-                                          .slice(0, 2)
-                                          .map((domain: any, index: number) => (
-                                            <Badge
-                                              key={index}
-                                              variant="outline"
-                                              className="text-xs"
-                                            >
-                                              {typeof domain === 'string'
-                                                ? domain
-                                                : domain.name ||
-                                                  domain.domainName}
-                                            </Badge>
-                                          ))}
-                                        {profile.domains.length > 2 && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-xs"
-                                          >
-                                            +{profile.domains.length - 2} more
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div>
-                                      <p className="text-sm font-medium mb-2">
-                                        Domains:
-                                      </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        No domains added
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Briefcase className="h-4 w-4" />
-                                    <span>
-                                      {profile.projects?.length || 0} Projects
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-4 w-4" />
-                                    <span>
-                                      {profile.experiences?.length || 0}{' '}
-                                      Experience
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-sm min-h-[20px]">
-                                  {profile.hourlyRate ? (
-                                    <>
-                                      <span className="font-medium">
-                                        Rate:{' '}
-                                      </span>
-                                      <span className="text-green-600">
-                                        ${profile.hourlyRate}/hr
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="text-muted-foreground text-xs">
-                                      No rate set
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex gap-2 pt-4 mt-auto">
-                                <Button
-                                  onClick={() =>
-                                    router.push(
-                                      `/freelancer/settings/profiles/view/${profile._id!}`,
-                                    )
-                                  }
-                                  variant="outline"
-                                  className="flex-1 flex items-center gap-2"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                  View
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleViewProfile(profile._id!)
-                                  }
-                                  className="flex-1 flex items-center gap-2"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleDeleteProfile(profile._id!)
-                                  }
-                                  className="flex items-center gap-2"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
+                            profile={profile}
+                            onView={() =>
+                              router.push(
+                                `/freelancer/settings/profiles/${profile._id!}`,
+                              )
+                            }
+                            onDelete={() => handleDeleteProfile(profile._id!)}
+                          />
                         ))}
                         <Button
                           variant="outline"
@@ -658,16 +499,16 @@ export default function ProfilesPage() {
                             setNewProfileType('Consultant');
                             setIsCreateDialogOpen(true);
                           }}
-                          className="flex items-center justify-center h-full min-h-[200px]"
+                          className="flex items-center justify-center h-full min-h-[200px] bg-muted-foreground/20 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl"
                         >
                           <Plus className="h-6 w-6" />
                         </Button>
                       </div>
                     )}
-                  </div>
-                )}
-              </>
-            )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
           </div>
         </main>
       </div>
@@ -731,28 +572,15 @@ export default function ProfilesPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Profile</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this profile? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteProfile}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Profile"
+        description="Are you sure you want to delete this profile? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteProfile}
+      />
     </div>
   );
 }

@@ -9,7 +9,6 @@ import {
   Link2,
   LogOut,
   MinusCircle,
-  Volume2,
   LoaderCircle,
 } from 'lucide-react';
 import {
@@ -26,8 +25,6 @@ import {
   getDocs,
   writeBatch,
 } from 'firebase/firestore';
-
-import { useToast } from '../ui/use-toast';
 
 import { AddMembersDialog } from './AddMembersDialog';
 import { InviteLinkDialog } from './InviteLinkDialog';
@@ -49,6 +46,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useToast } from '@/components/ui/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -65,7 +63,7 @@ import { Badge } from '@/components/ui/badge';
 import { db } from '@/config/firebaseConfig';
 import { RootState } from '@/lib/store';
 import { axiosInstance } from '@/lib/axiosinstance'; // Import axiosInstance
-import type { CombinedUser } from '@/hooks/useAllUsers'; // Import CombinedUser
+import type { CombinedUser } from '@/hooks/useAllUsers';
 
 export type ProfileUser = {
   _id: string;
@@ -149,7 +147,6 @@ export function ProfileSidebar({
   const user = useSelector((state: RootState) => state.user);
   const { toast } = useToast();
 
-  // Dialog state
   const [confirmDialogProps, setConfirmDialogProps] = useState({
     title: '',
     description: '',
@@ -237,16 +234,20 @@ export function ProfileSidebar({
               | 'offline', // Type assertion to fix the error
           }));
 
+          // Use the avatar from initialData if available, otherwise fall back to groupData.avatar
+          const avatarUrl = initialData?.profilePic || groupData.avatar;
+
           setProfileData({
-            _id: conversationDoc.id, // Add the missing _id field
+            _id: conversationDoc.id,
             id: conversationDoc.id,
-            groupName: groupData.groupName || 'Unnamed Group', // Add the missing groupName field
-            displayName: groupData.groupName || 'Unnamed Group', // Add the missing displayName field
+            groupName: groupData.groupName || 'Unnamed Group',
+            displayName: groupData.groupName || 'Unnamed Group',
             description: groupData.description || '',
+            avatar: avatarUrl, // Set the avatar URL here
             createdAt: groupData.createdAt || new Date().toISOString(),
             members,
             admins: groupData.admins || [],
-            participantDetails: groupData.participantDetails, // Add the missing participantDetails field
+            participantDetails: groupData.participantDetails,
           });
         } else {
           throw new Error('Group not found');
@@ -687,106 +688,6 @@ export function ProfileSidebar({
     }
   };
 
-  const handleToggleMuteGroup = async (
-    groupId: string,
-    isCurrentlyMuted: boolean,
-  ) => {
-    // ... (existing implementation)
-    if (!user || !user.uid) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'User not found or not logged in.',
-      });
-      return;
-    }
-    if (!groupId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group ID is missing.',
-      });
-      return;
-    }
-    const userDocRef = doc(db, 'users', user.uid);
-    try {
-      if (isCurrentlyMuted) {
-        await updateDoc(userDocRef, {
-          mutedGroups: arrayRemove(groupId),
-        });
-        toast({
-          title: 'Success',
-          description: 'Group unmuted. You will now receive notifications.',
-        });
-      } else {
-        await updateDoc(userDocRef, {
-          mutedGroups: arrayUnion(groupId),
-        });
-        toast({
-          title: 'Success',
-          description: 'Group muted. You will no longer receive notifications.',
-        });
-      }
-      // TODO: IMPORTANT - Dispatch an action to update the Redux store for `currentUser.mutedGroups`.
-    } catch (error) {
-      console.error('Error updating mute status:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update mute status.',
-      });
-    }
-  };
-
-  const handleLeaveGroup = async (groupId: string, userIdToLeave: string) => {
-    // ... (existing implementation)
-    if (!groupId || !userIdToLeave) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Group or User ID is missing.',
-      });
-      setIsConfirmDialogOpen(false);
-      return;
-    }
-    const groupDocRef = doc(db, 'conversations', groupId);
-    const updateData: any = {
-      participants: arrayRemove(userIdToLeave),
-      [`participantDetails.${userIdToLeave}`]: deleteField(),
-      updatedAt: new Date().toISOString(),
-    };
-    const groupData = profileData as ProfileGroup;
-    if (groupData && groupData.admins?.includes(userIdToLeave)) {
-      updateData.admins = arrayRemove(userIdToLeave);
-      if (
-        groupData.admins.length === 1 &&
-        groupData.admins[0] === userIdToLeave
-      ) {
-        toast({
-          variant: 'default',
-          title: 'Last Admin Left',
-          description:
-            'The last admin has left the group. The group currently has no administrators.',
-          duration: 7000,
-        });
-      }
-    }
-    try {
-      await updateDoc(groupDocRef, updateData);
-      toast({ title: 'Success', description: 'You have left the group.' });
-      onClose();
-    } catch (error) {
-      console.error('Error leaving group:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to leave group.',
-      });
-    } finally {
-      setIsConfirmDialogOpen(false);
-    }
-  };
-
   const handleDeleteGroup = async (groupId: string) => {
     // ... (existing implementation)
     if (!groupId) {
@@ -833,23 +734,6 @@ export function ProfileSidebar({
     if (!data || !data.displayName || !data.displayName.trim()) return 'P';
     return data.displayName.charAt(0).toUpperCase();
   };
-
-  const isCurrentlyMuted =
-    profileType === 'group' &&
-    profileData &&
-    user?.mutedGroups?.includes((profileData as ProfileGroup).id);
-
-  let avatarSrc = '';
-  if (profileData) {
-    if (profileType === 'user') {
-      avatarSrc = (profileData as ProfileUser).profilePic || '';
-    } else if (profileType === 'group') {
-      const groupData = profileData as ProfileGroup;
-      avatarSrc =
-        groupData.participantDetails?.[groupData.id]?.profilePic ||
-        `https://api.adorable.io/avatars/285/group-${groupData.id}.png`;
-    }
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -902,10 +786,31 @@ export function ProfileSidebar({
                 <Card>
                   <CardHeader className="items-center text-center">
                     <Avatar className="w-24 h-24 border-2 border-[hsl(var(--border))]">
-                      <AvatarImage
-                        src={avatarSrc}
-                        alt={profileData.displayName}
-                      />
+                      {profileType === 'group' ? (
+                        <AvatarImage
+                          src={(profileData as ProfileGroup).avatar || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading group avatar:', e);
+                            console.log(
+                              'Failed to load group avatar with src:',
+                              e.currentTarget.src,
+                            );
+                          }}
+                        />
+                      ) : (
+                        <AvatarImage
+                          src={(profileData as ProfileUser).profilePic || ''}
+                          alt={profileData.displayName}
+                          onError={(e) => {
+                            console.error('Error loading user avatar:', e);
+                            console.log(
+                              'Failed to load user avatar with src:',
+                              e.currentTarget.src,
+                            );
+                          }}
+                        />
+                      )}
                       <AvatarFallback className="text-3xl">
                         {getFallbackName(profileData)}
                       </AvatarFallback>
@@ -1246,25 +1151,53 @@ export function ProfileSidebar({
                           variant="destructive"
                           className="w-full justify-start"
                           onClick={() => {
-                            if (
-                              profileData &&
-                              profileType === 'group' &&
-                              user?.uid
-                            ) {
-                              setConfirmDialogProps({
-                                title: 'Leave Group?',
-                                description:
-                                  'Are you sure you want to leave this group? You will need to be re-invited to join again.',
-                                onConfirm: () =>
-                                  handleLeaveGroup(
-                                    (profileData as ProfileGroup).id,
-                                    user.uid,
-                                  ),
-                                confirmButtonText: 'Leave Group',
-                                confirmButtonVariant: 'destructive',
-                              });
-                              setIsConfirmDialogOpen(true);
-                            }
+                            setConfirmDialogProps({
+                              title: 'Leave Group',
+                              description:
+                                'Are you sure you want to leave this group?',
+                              onConfirm: async () => {
+                                try {
+                                  if (
+                                    profileType === 'group' &&
+                                    profileId &&
+                                    user?.uid
+                                  ) {
+                                    // Remove user from the group
+                                    const groupRef = doc(
+                                      db,
+                                      'conversations',
+                                      profileId,
+                                    );
+                                    await updateDoc(groupRef, {
+                                      [`participantDetails.${user.uid}`]:
+                                        deleteField(),
+                                      members: arrayRemove(user.uid),
+                                      admins: arrayRemove(user.uid),
+                                    });
+
+                                    // Close the profile sidebar
+                                    onClose();
+
+                                    toast({
+                                      title: 'Left group',
+                                      description:
+                                        'You have left the group successfully.',
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('Error leaving group:', error);
+                                  toast({
+                                    title: 'Error',
+                                    description:
+                                      'Failed to leave the group. Please try again.',
+                                    variant: 'destructive',
+                                  });
+                                }
+                              },
+                              confirmButtonText: 'Leave',
+                              confirmButtonVariant: 'destructive',
+                            });
+                            setIsConfirmDialogOpen(true);
                           }}
                         >
                           <LogOut className="h-4 w-4 mr-2" /> Leave Group

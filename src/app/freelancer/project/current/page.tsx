@@ -69,7 +69,7 @@ export default function CurrentProject() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-col sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 md:pl-0">
         <div className="mb-8 ml-6">
           <div className="w-full">
             <h1 className="text-3xl font-bold">Current Projects</h1>

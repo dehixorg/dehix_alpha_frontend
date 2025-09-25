@@ -331,7 +331,7 @@ export function CardsChat({
       profilePic: participantDetails?.profilePic || '',
     });
   }, [conversation, user.uid]);
-
+ 
   useEffect(() => {
     if (messages.length > prevMessagesLength.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -911,10 +911,7 @@ export function CardsChat({
                   <AvatarImage
                     src={
                       conversation.type === 'group'
-                        ? (conversation.participantDetails &&
-                            conversation.participantDetails[conversation.id]
-                              ?.profilePic) ||
-                          `https://api.adorable.io/avatars/285/group-${conversation.id}.png`
+                        ? conversation.avatar || ''
                         : primaryUser.profilePic
                     }
                     alt={
@@ -943,7 +940,7 @@ export function CardsChat({
                   </p>
                   <p className="text-xs text-[hsl(var(--muted-foreground))]">
                     {conversation.type === 'group'
-                      ? `${conversation.participants.length} members`
+                      ? `${Object.keys(conversation.participantDetails || {}).length} members`
                       : primaryUser.email || 'Click to view profile'}
                   </p>
                 </div>
@@ -1101,8 +1098,8 @@ export function CardsChat({
                           <div className="flex-shrink-0 mr-2">
                             <Avatar className="w-8 h-8">
                               <AvatarImage
-                                src={primaryUser.profilePic}
-                                alt={message.senderId}
+                                src={conversation.participantDetails?.[message.senderId]?.profilePic}
+                                alt={conversation.participantDetails?.[message.senderId]?.userName}
                               />
                               <AvatarFallback className="bg-sw-gradient dark:bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))]">
                                 {senderName ? senderName.charAt(0).toUpperCase() : 'U'}
@@ -1434,8 +1431,7 @@ export function CardsChat({
                       </span>
                     </div>
                     <Button
-                      onClick={(e) => setReplyToMessageId('')
-                      }
+                      onClick={() => setReplyToMessageId('')}
                       variant="ghost"
                       size="icon"
                       className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] h-6 w-6 rounded-full"
