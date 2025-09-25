@@ -52,6 +52,7 @@ interface Profile {
   minConnect?: number;
   rate?: number;
   description?: string;
+  totalBid?: string[];
   profileType: 'FREELANCER' | 'CONSULTANT';
 }
 
@@ -89,6 +90,29 @@ const Page = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [project, setProject] = useState<ProjectData | null>(null);
+
+  useEffect(() => {
+    if (project) {
+      console.log('Project data:', project);
+      console.log(
+        'Profiles:',
+        project.profiles?.map((p) => ({
+          id: p._id,
+          totalBid: p.totalBid,
+          bidCount: p.totalBid?.length || 0,
+        })),
+      );
+
+      const totalBids =
+        project.profiles?.reduce((total, profile) => {
+          const bidCount = profile.totalBid?.length || 0;
+          console.log(`Profile ${profile._id} has ${bidCount} bids`);
+          return total + bidCount;
+        }, 0) || 0;
+
+      console.log('Total bids across all profiles:', totalBids);
+    }
+  }, [project]);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -421,8 +445,16 @@ const Page = () => {
                                   Proposals
                                 </p>
                                 <p className="font-medium">
-                                  {project?.bids?.length || 0}{' '}
-                                  {project?.bids?.length === 1
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) || 0}{' '}
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) === 1
                                     ? 'proposal'
                                     : 'proposals'}
                                 </p>
