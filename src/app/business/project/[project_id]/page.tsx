@@ -216,7 +216,7 @@ export default function Dashboard() {
 
   if (!project) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-muted/40 p-6 space-y-6">
+      <div className="flex min-h-screen w-full flex-col p-6 space-y-6">
         {/* Header Skeleton */}
         <div className="flex justify-between items-center">
           <Skeleton className="h-8 w-48" />
@@ -275,7 +275,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
+    <div className="flex min-h-screen w-full flex-col">
       <SidebarMenu
         menuItemsTop={menuItemsTop}
         menuItemsBottom={menuItemsBottom}
@@ -355,10 +355,10 @@ export default function Dashboard() {
                       {project.profiles && project.profiles.length > 0 && (
                         <>
                           <div className="flex">
-                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                            <CarouselPrevious className="absolute  left-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
                               Previous
                             </CarouselPrevious>
-                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors">
+                            <CarouselNext className="absolute right-0 top-1 transform -translate-y-1/2 p-2 shadow-md transition-colors bg-muted-foreground/20 dark:bg-muted/20">
                               Next
                             </CarouselNext>
                           </div>

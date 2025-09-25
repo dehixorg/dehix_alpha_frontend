@@ -1373,7 +1373,7 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
               key={profile._id}
               value={profile._id || ''}
               onClick={() => setProfileId(profile._id)}
-              className="border rounded-lg mb-2"
+              className="border rounded-lg mb-2 bg-muted-foreground/20 dark:bg-muted/20"
             >
               <AccordionTrigger className="px-4 hover:no-underline">
                 <div className="flex justify-between items-center w-full">
@@ -1401,20 +1401,25 @@ const BidsDetails: React.FC<BidsDetailsProps> = ({ id }) => {
                 <div className="px-6 py-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
                     <StatItem
+                      color="green"
                       icon={
-                        <Briefcase className="w-4 h-4 text-foreground/70" />
+                        <Briefcase className="w-4 h-4 text-green-600 dark:text-green-400" />
                       }
                       label="Experience"
                       value={profile.experience ?? 'N/A'}
                     />
                     <StatItem
-                      icon={<Users className="w-4 h-4 text-foreground/70" />}
+                      color="amber"
+                      icon={
+                        <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      }
                       label="Min Connect"
                       value={profile.minConnect ?? 'N/A'}
                     />
                     <StatItem
+                      color="blue"
                       icon={
-                        <PackageOpen className="w-4 h-4 text-foreground/70" />
+                        <PackageOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       }
                       label="Total Bids"
                       value={profile.totalBid?.length || 0}
