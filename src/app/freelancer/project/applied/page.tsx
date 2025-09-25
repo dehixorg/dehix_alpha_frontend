@@ -67,7 +67,7 @@ export default function AppliedProject() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="sm:gap-8 sm:py-0 sm:pl-14 md:pl-0 mb-8">
+      <div className="flex flex-col sm:gap-4 sm:py-0 sm:pl-14 md:pl-0">
         <div className="mb-8 ml-6">
           <h1 className="text-3xl font-bold">Projects Under Verification</h1>
           <p className="text-gray-400 mt-2">

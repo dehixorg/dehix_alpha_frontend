@@ -465,6 +465,12 @@ const Market: React.FC = () => {
                 onReset={handleReset}
               />
             </div>
+            {/* Results count */}
+            <div className="flex items-center justify-between px-1">
+              <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground ml-auto">
+                {jobs.length} {jobs.length === 1 ? 'result' : 'results'}
+              </span>
+            </div>
           </div>
         </div>
 

@@ -26,24 +26,31 @@ const Reactions: React.FC<ReactionProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2 mt-2">
+    <div className="flex items-center gap-1 mt-0">
       {Object.entries(reactions).map(([emoji, users]) => (
         <Badge
           key={emoji}
-          onClick={() => handleEmojiClick(emoji)} // Handle click to toggle reaction
+          onClick={() => handleEmojiClick(emoji)}
           className={`cursor-pointer ${
             Array.isArray(users) && users.includes(user.uid)
               ? 'bg-gray-400'
               : 'bg-green'
-          }`}
+          } flex items-center px-1 py-0.5`}
         >
-          <span className="flex items-center">
-            {emoji} {/* Display emoji */}
-            {users.length > 0 && (
-              <span className="ml-2">{users.length}</span>
-            )}{' '}
-            {/* Display user count */}
+          <span
+            className="inline-flex items-center justify-center rounded-full bg-transparent"
+            style={{
+              width: '1.2em',
+              height: '1.2em',
+              fontSize: '1em',
+              lineHeight: 1,
+            }}
+          >
+            {emoji}
           </span>
+          {users.length > 0 && (
+            <span className="ml-1 text-xs">{users.length}</span>
+          )}
         </Badge>
       ))}
     </div>

@@ -116,7 +116,7 @@ const ProfilePictureUpload = ({
   };
 
   return (
-    <div className="upload-form max-w-md mx-auto rounded shadow-md">
+    <div className="upload-form max-w-md mx-auto rounded">
       <form onSubmit={handleSubmit} className="space-y-6">
         <input
           type="file"
