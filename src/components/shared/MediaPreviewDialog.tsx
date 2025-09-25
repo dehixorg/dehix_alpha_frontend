@@ -47,9 +47,10 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
             <Image
               src={mediaUrl}
               alt={fileName}
-              layout="fill"
-              objectFit="contain"
-              className="rounded-md"
+              fill
+              className="rounded-md object-contain"
+              sizes="(max-width: 768px) 100vw, 80vw"
+              priority
             />
           ) : mediaType.startsWith('audio/') ? (
             <audio controls src={mediaUrl} className="w-full max-w-md">
