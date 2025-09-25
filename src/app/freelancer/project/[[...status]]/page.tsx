@@ -238,32 +238,28 @@ export default function ProjectPage() {
 
         <div className="flex-1">
           <div className="w-full px-4 sm:px-6 py-2">
-            <Tabs value={activeTab} className="w-full flex flex-col gap-4">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col gap-4">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="current"
-                  onClick={() => handleTabChange('current')}
                   className="flex items-center gap-2"
                 >
                   <FolderDot className="h-4 w-4" /> Current
                 </TabsTrigger>
                 <TabsTrigger
                   value="applied"
-                  onClick={() => handleTabChange('applied')}
                   className="flex items-center gap-2"
                 >
                   <Pointer className="h-4 w-4" /> Applied
                 </TabsTrigger>
                 <TabsTrigger
                   value="completed"
-                  onClick={() => handleTabChange('completed')}
                   className="flex items-center gap-2"
                 >
                   <FileCheck className="h-4 w-4" /> Completed
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
-                  onClick={() => handleTabChange('rejected')}
                   className="flex items-center gap-2"
                 >
                   <CircleX className="h-4 w-4" /> Rejected
