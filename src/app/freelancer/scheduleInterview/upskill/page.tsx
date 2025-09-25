@@ -1,9 +1,16 @@
 'use client';
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 import ScheduleInterviewNavbar from '@/components/freelancer/scheduleInterview/ScheduleInterviewNavbar';
 
 export default function UpskillInterviewPage() {
+  const router = useRouter();
+
+  React.useEffect(() => {
+    router.replace('/freelancer/scheduleInterview/upskill?tab=upskill/current');
+  }, [router]);
+
   return (
     <div className="flex min-h-screen w-full">
       <ScheduleInterviewNavbar />

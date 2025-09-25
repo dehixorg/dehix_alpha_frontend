@@ -1,4 +1,5 @@
 'use client';
+
 import {
   PackageOpen,
   FolderDot,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { RootState } from '@/lib/store';
@@ -29,7 +31,7 @@ import {
 } from '@/config/menuItems/business/dashboardMenuItems';
 import { Badge } from '@/components/ui/badge';
 
-// Reusable header component for tab sections
+// Section header component
 function SectionHeader({
   title,
   subtitle,
@@ -50,7 +52,7 @@ function SectionHeader({
   );
 }
 
-// Reusable project type toggle (Consultant <-> Freelancer)
+// Toggle between FREELANCER and CONSULTANT
 function FilterToggle({
   projectType,
   onChange,
@@ -103,6 +105,7 @@ interface Project {
   updatedAt: Date;
 }
 
+// Project list component
 const ProjectList = ({
   status,
   projectType,
@@ -143,10 +146,7 @@ const ProjectList = ({
     <div className="flex w-full flex-col">
       <div className="flex flex-col sm:gap-8 sm:py-0 mb-8">
         {isLoading ? (
-          <div
-            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-                grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-          >
+          <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="border rounded-lg p-6 space-y-4">
                 <div className="flex justify-between items-start">
@@ -175,13 +175,10 @@ const ProjectList = ({
             ))}
           </div>
         ) : (
-          <main
-            className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 
-              grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
-          >
+          <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-2 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
             {projects.length === 0 ? (
               <div className="col-span-full text-center mt-20 w-full">
-                <PackageOpen className="mx-auto text-gray-500" size="100" />
+                <PackageOpen className="mx-auto text-gray-500" size={100} />
                 <p className="text-gray-500">No projects available</p>
               </div>
             ) : (
@@ -196,11 +193,33 @@ const ProjectList = ({
   );
 };
 
+// Main page component
 export default function ProjectPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [projectType, setProjectType] = useState('CONSULTANT');
+  const [activeTab, setActiveTab] = useState('current');
+
+  // Sync tab with URL
+  useEffect(() => {
+    const parts = pathname.split('/');
+    const tabFromUrl = parts[parts.length - 1];
+    if (['current', 'applied', 'completed', 'rejected'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    } else {
+      setActiveTab('current');
+      router.replace('/freelancer/project/current'); // default
+    }
+  }, [pathname, router]);
+
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.push(`/freelancer/project/${tab}`);
+  };
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col pb-10">
       <SidebarMenu
         menuItemsTop={freelancerMenuItemsTop}
         menuItemsBottom={freelancerMenuItemsBottom}
@@ -216,37 +235,38 @@ export default function ProjectPage() {
             { label: 'Projects', link: '/freelancer/project' },
           ]}
         />
+
         <div className="flex-1">
-          <div className="w-full px-6 py-2">
-            <Tabs defaultValue="current" className="w-full flex flex-col gap-4">
+          <div className="w-full px-4 sm:px-6 py-2">
+            <Tabs
+              value={activeTab}
+              onValueChange={handleTabChange}
+              className="w-full flex flex-col gap-4"
+            >
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="current"
                   className="flex items-center gap-2"
                 >
-                  <FolderDot className="h-4 w-4" />
-                  Current
+                  <FolderDot className="h-4 w-4" /> Current
                 </TabsTrigger>
                 <TabsTrigger
                   value="applied"
                   className="flex items-center gap-2"
                 >
-                  <Pointer className="h-4 w-4" />
-                  Applied
+                  <Pointer className="h-4 w-4" /> Applied
                 </TabsTrigger>
                 <TabsTrigger
                   value="completed"
                   className="flex items-center gap-2"
                 >
-                  <FileCheck className="h-4 w-4" />
-                  Completed
+                  <FileCheck className="h-4 w-4" /> Completed
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
                   className="flex items-center gap-2"
                 >
-                  <CircleX className="h-4 w-4" />
-                  Rejected
+                  <CircleX className="h-4 w-4" /> Rejected
                 </TabsTrigger>
               </TabsList>
 
@@ -267,10 +287,10 @@ export default function ProjectPage() {
 
               <TabsContent value="applied">
                 <SectionHeader
-                  title="Applied Projects"
+                  title="Projects Under Verification"
                   subtitle="Track the status of your projects currently undergoing verification before final approval."
                 />
-                <ProjectList status="PENDING" />
+                <ProjectList status="PENDING" projectType={projectType} />
               </TabsContent>
 
               <TabsContent value="completed">
@@ -278,7 +298,7 @@ export default function ProjectPage() {
                   title="Completed Projects"
                   subtitle="Explore and manage your successfully completed freelance projects."
                 />
-                <ProjectList status="COMPLETED" />
+                <ProjectList status="COMPLETED" projectType={projectType} />
               </TabsContent>
 
               <TabsContent value="rejected">
