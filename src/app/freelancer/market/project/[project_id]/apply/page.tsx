@@ -52,6 +52,7 @@ interface Profile {
   minConnect?: number;
   rate?: number;
   description?: string;
+  totalBid?: string[];
   profileType: 'FREELANCER' | 'CONSULTANT';
 }
 
@@ -421,8 +422,16 @@ const Page = () => {
                                   Proposals
                                 </p>
                                 <p className="font-medium">
-                                  {project?.bids?.length || 0}{' '}
-                                  {project?.bids?.length === 1
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) || 0}{' '}
+                                  {project?.profiles?.reduce(
+                                    (total, profile) =>
+                                      total + (profile.totalBid?.length || 0),
+                                    0,
+                                  ) === 1
                                     ? 'proposal'
                                     : 'proposals'}
                                 </p>
