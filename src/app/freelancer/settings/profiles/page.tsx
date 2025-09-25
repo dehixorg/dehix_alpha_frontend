@@ -30,24 +30,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import ProfileSummaryCard from '@/components/cards/ProfileSummaryCard';
 import { FreelancerProfile } from '@/types/freelancer';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 export default function ProfilesPage() {
-  const [profileType, setProfileType] = useState<'Freelancer' | 'Consultant'>(
-    'Freelancer',
-  );
   const user = useSelector((state: RootState) => state.user);
   const router = useRouter();
-  const [freelancerProfiles, setFreelancerProfiles] = useState<
-    FreelancerProfile[]
-  >([]);
-  const [consultantProfiles, setConsultantProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<FreelancerProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
@@ -63,49 +50,29 @@ export default function ProfilesPage() {
 
   const fetchProfiles = useCallback(async () => {
     if (!user.uid) return;
+
     setIsLoading(true);
     try {
       const response = await axiosInstance.get(`/freelancer/profiles`);
       const profilesData = response.data.data || [];
-      setFreelancerProfiles(profilesData);
+      setProfiles(profilesData);
     } catch (error) {
-      console.error('Error fetching freelancer profiles:', error);
+      console.error('Error fetching profiles:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load freelancer profiles',
+        description: 'Failed to load profiles',
         variant: 'destructive',
       });
-      setFreelancerProfiles([]);
+      setProfiles([]);
     } finally {
       setIsLoading(false);
     }
   }, [user.uid]);
 
-  /** Fetch Consultant Profiles */
-  const fetchConsultantProfiles = useCallback(async () => {
-    if (!user.uid) return;
-    try {
-      const response = await axiosInstance.get(`/freelancer/consultant`);
-      const profilesData = response.data.data || [];
-      console.log('consultant data ', profilesData);
-      setConsultantProfiles(Object.values(profilesData.consultant || {}));
-    } catch (error) {
-      console.error('Error fetching consultant profiles:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load consultant profiles',
-        variant: 'destructive',
-      });
-      setConsultantProfiles([]);
-    }
-  }, [user.uid]);
-
   useEffect(() => {
-    fetchFreelancerProfiles();
-    fetchConsultantProfiles();
-  }, [fetchFreelancerProfiles, fetchConsultantProfiles]);
+    fetchProfiles();
+  }, [fetchProfiles]);
 
-  /** Create Profile */
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) {
       toast({
@@ -118,7 +85,7 @@ export default function ProfilesPage() {
 
     const description =
       newProfileDescription.trim() ||
-      `Professional profile for ${newProfileName.trim()}.`;
+      `Professional profile for ${newProfileName.trim()}. This profile showcases my skills and experience in this domain.`;
 
     if (description.length < 10) {
       toast({
@@ -130,7 +97,8 @@ export default function ProfilesPage() {
     }
 
     try {
-      let freelancerData: any = {};
+      // Fetch freelancer's personal links for auto-population
+      let freelancerData = {};
       try {
         const freelancerResponse = await axiosInstance.get(
           `/freelancer/${user.uid}`,
@@ -146,6 +114,7 @@ export default function ProfilesPage() {
       const profilePayload = {
         profileName: newProfileName.trim(),
         description: description,
+        profileType: newProfileType,
         skills: [],
         domains: [],
         projects: [],
@@ -172,7 +141,6 @@ export default function ProfilesPage() {
       setProfiles((prev) => [...prev, localProfile]);
       setNewProfileName('');
       setNewProfileDescription('');
-      setProfileType('Freelancer');
       setIsCreateDialogOpen(false);
 
       // Switch to the relevant tab so the newly created profile is visible immediately
@@ -182,45 +150,34 @@ export default function ProfilesPage() {
 
       toast({
         title: 'Success',
-        description: `${profileType} profile created successfully`,
+        description: 'Profile created successfully',
       });
     } catch (error) {
       console.error('Error creating profile:', error);
       toast({
         title: 'Error',
-        description: `Failed to create ${profileType.toLowerCase()} profile`,
+        description: 'Failed to create profile',
         variant: 'destructive',
       });
     }
   };
 
-  /** Delete Profile */
-  const handleDeleteProfile = (
-    profileId: string,
-    type: 'Freelancer' | 'Consultant',
-  ) => {
+  const handleDeleteProfile = (profileId: string) => {
     setProfileToDelete(profileId);
-    setProfileTypeToDelete(type);
     setDeleteDialogOpen(true);
   };
 
   const confirmDeleteProfile = async () => {
-    if (!profileToDelete || !profileTypeToDelete) return;
-    try {
-      const apiUrl =
-        profileTypeToDelete === 'Freelancer'
-          ? `/freelancer/profile/${profileToDelete}`
-          : `/freelancer/consultant/${profileToDelete}`;
+    if (!profileToDelete) return;
 
-      await axiosInstance.delete(apiUrl);
+    try {
+      await axiosInstance.delete(`/freelancer/profile/${profileToDelete}`);
 
       toast({
         title: 'Profile Deleted',
-        description: `${profileTypeToDelete} profile deleted successfully.`,
+        description: 'Profile has been successfully deleted.',
       });
-
-      fetchFreelancerProfiles();
-      fetchConsultantProfiles();
+      fetchProfiles();
     } catch (error) {
       console.error('Error deleting profile:', error);
       toast({
@@ -231,7 +188,6 @@ export default function ProfilesPage() {
     } finally {
       setDeleteDialogOpen(false);
       setProfileToDelete(null);
-      setProfileTypeToDelete(null);
     }
   };
   const freelancerProfiles = profiles.filter(
@@ -563,7 +519,7 @@ export default function ProfilesPage() {
           <DialogHeader>
             <DialogTitle>Create New Profile</DialogTitle>
             <DialogDescription>
-              Enter details for your new professional profile.
+              Enter a name and description for your new professional profile.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -588,31 +544,15 @@ export default function ProfilesPage() {
               </label>
               <Textarea
                 id="profile-description"
-                placeholder="Describe your expertise... (min 10 chars)"
+                placeholder="Describe your expertise and experience in this area... (minimum 10 characters if provided)"
                 value={newProfileDescription}
                 onChange={(e) => setNewProfileDescription(e.target.value)}
                 className="mt-1"
                 rows={3}
               />
-            </div>
-            <div>
-              <label htmlFor="profile-type" className="text-sm font-medium">
-                Profile Type
-              </label>
-              <Select
-                value={profileType}
-                onValueChange={(val: 'Freelancer' | 'Consultant') =>
-                  setProfileType(val)
-                }
-              >
-                <SelectTrigger id="profile-type" className="mt-1">
-                  <SelectValue placeholder="Select profile type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Freelancer">Freelancer</SelectItem>
-                  <SelectItem value="Consultant">Consultant</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                If left empty, a default description will be generated.
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -622,7 +562,6 @@ export default function ProfilesPage() {
                 setIsCreateDialogOpen(false);
                 setNewProfileName('');
                 setNewProfileDescription('');
-                setProfileType('Freelancer');
               }}
             >
               Cancel
