@@ -48,7 +48,7 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
               src={mediaUrl}
               alt={fileName}
               fill
-              className="rounded-md object-contain"
+              className="rounded-md"
               sizes="(max-width: 768px) 100vw, 80vw"
               priority
             />
