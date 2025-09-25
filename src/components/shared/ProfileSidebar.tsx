@@ -142,7 +142,7 @@ export function ProfileSidebar({
     useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [refreshDataKey, setRefreshDataKey] = useState(0);
+  const [, setRefreshDataKey] = useState(0);
   const [showAllMedia, setShowAllMedia] = useState(false);
   const [showAllMembers, setShowAllMembers] = useState(false);
 
@@ -373,43 +373,6 @@ export function ProfileSidebar({
 
     executeFetches();
   }, [isOpen, profileId, profileType]);
-
-  const handleMuteToggle = async () => {
-    if (!profileData || !user) return;
-
-    const conversationId = profileData.id;
-    const isMuted = profileData.mutedUsers?.includes(user.uid);
-
-    try {
-      await updateDoc(doc(db, 'conversations', conversationId), {
-        mutedUsers: isMuted ? arrayRemove(user.uid) : arrayUnion(user.uid),
-      });
-
-      setProfileData((prev) => {
-        if (!prev) return null;
-        const updatedMutedUsers = isMuted
-          ? prev.mutedUsers?.filter((id) => id !== user.uid)
-          : [...(prev.mutedUsers || []), user.uid];
-
-        return {
-          ...prev,
-          mutedUsers: updatedMutedUsers,
-        };
-      });
-
-      toast({
-        title: isMuted ? 'Unmuted' : 'Muted',
-        description: `You have been ${isMuted ? 'unmuted' : 'muted'} this conversation.`,
-      });
-    } catch (error) {
-      console.error('Error toggling mute:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to update mute status',
-      });
-    }
-  };
 
   const handleAddMembersToGroup = async (
     selectedUsers: CombinedUser[],
