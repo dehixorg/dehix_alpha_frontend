@@ -137,35 +137,50 @@ const ProjectApplicationForm = ({
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const { toast } = useToast();
   const user = useSelector((state: RootState) => state.user);
-  const fetchFreelancerProfiles = useCallback(async () => {
-    setIsLoadingProfiles(true);
-    try {
-      const response = await axiosInstance.get('/freelancer/profiles');
-      const profilesData = response.data.data || [];
-      const validProfiles = Array.isArray(profilesData)
-        ? profilesData.filter((p: any) => p.profileType) // Ensure profileType exists
-        : [];
-      setFreelancerProfiles(validProfiles);
+  const fetchFreelancerProfiles = useCallback(
+    async (signal?: AbortSignal) => {
+      setIsLoadingProfiles(true);
+      try {
+        const response = await axiosInstance.get('/freelancer/profiles', {
+          signal,
+        });
+        const profilesData = response.data.data || [];
+        const validProfiles = Array.isArray(profilesData)
+          ? profilesData.filter((p: any) => p.profileType) // Ensure profileType exists
+          : [];
 
-      // If there's only one profile, select it by default
-      if (validProfiles.length === 1) {
-        setSelectedFreelancerProfile(validProfiles[0]);
+        if (signal?.aborted) return [];
+        setFreelancerProfiles(validProfiles);
+
+        // If there's only one profile, select it by default
+        if (validProfiles.length === 1) {
+          setSelectedFreelancerProfile(validProfiles[0]);
+        }
+
+        return validProfiles;
+      } catch (error: any) {
+        // Ignore abort errors
+        if (
+          error?.code === 'ERR_CANCELED' ||
+          error?.name === 'CanceledError' ||
+          error?.name === 'AbortError'
+        ) {
+          return [];
+        }
+        console.error('Error fetching freelancer profiles:', error);
+        toast({
+          title: 'Error',
+          description:
+            'Failed to load freelancer profiles. Please try again later.',
+          variant: 'destructive',
+        });
+        return [];
+      } finally {
+        if (!signal?.aborted) setIsLoadingProfiles(false);
       }
-
-      return validProfiles;
-    } catch (error) {
-      console.error('Error fetching freelancer profiles:', error);
-      toast({
-        title: 'Error',
-        description:
-          'Failed to load freelancer profiles. Please try again later.',
-        variant: 'destructive',
-      });
-      return [];
-    } finally {
-      setIsLoadingProfiles(false);
-    }
-  }, [toast]);
+    },
+    [toast],
+  );
 
   // Filter freelancer profiles based on selected project profile
   const filteredFreelancerProfiles = useMemo(() => {
@@ -196,40 +211,53 @@ const ProjectApplicationForm = ({
     setSelectedFreelancerProfile(profile);
   };
 
-  const fetchAppliedData = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get(`/bid/${user.uid}/bid`);
-      const profilesUserAppliedFor =
-        response.data?.data
-          ?.filter(
-            (bid: any) =>
-              bid.project_id === project._id && bid.bidder_id === user.uid,
-          )
-          ?.map((bid: any) => bid.profile_id) || [];
-      setAppliedProfileIds(profilesUserAppliedFor);
-      return profilesUserAppliedFor;
-    } catch (error) {
-      console.error('API Error fetching applied data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to retrieve application status. Please try again.',
-      });
-      return [];
-    }
-  }, [user.uid, project._id, toast]);
+  const fetchAppliedData = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await axiosInstance.get(`/bid/${user.uid}/bid`, {
+          signal,
+        });
+        const profilesUserAppliedFor =
+          response.data?.data
+            ?.filter(
+              (bid: any) =>
+                bid.project_id === project._id && bid.bidder_id === user.uid,
+            )
+            ?.map((bid: any) => bid.profile_id) || [];
+        if (signal?.aborted) return [];
+        setAppliedProfileIds(profilesUserAppliedFor);
+        return profilesUserAppliedFor;
+      } catch (error: any) {
+        // Ignore abort errors
+        if (
+          error?.code === 'ERR_CANCELED' ||
+          error?.name === 'CanceledError' ||
+          error?.name === 'AbortError'
+        ) {
+          return [];
+        }
+        console.error('API Error fetching applied data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description:
+            'Failed to retrieve application status. Please try again.',
+        });
+        return [];
+      }
+    },
+    [user.uid, project._id, toast],
+  );
   // Initial data load
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     const loadData = async () => {
-      if (!isMounted) return;
-
       try {
-        await fetchAppliedData();
-        await fetchFreelancerProfiles();
+        await fetchAppliedData(controller.signal);
+        await fetchFreelancerProfiles(controller.signal);
       } catch (error) {
-        if (isMounted) {
+        if (!controller.signal.aborted) {
           console.error('Error loading data:', error);
         }
       }
@@ -238,7 +266,7 @@ const ProjectApplicationForm = ({
     loadData();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [fetchAppliedData, fetchFreelancerProfiles]);
 
